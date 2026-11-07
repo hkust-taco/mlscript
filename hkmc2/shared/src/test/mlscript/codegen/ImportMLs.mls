@@ -21,11 +21,11 @@ open Option
 :sjs
 None isDefined()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let x2;
-//│ x2 = Option.None;
-//│ if (x2 instanceof Option.Some.class) {
+//│ let x1;
+//│ x1 = Option.None;
+//│ if (x1 instanceof Option.Some.class) {
 //│   return true
-//│ } else if (x2 instanceof Option.None.class) {
+//│ } else if (x1 instanceof Option.None.class) {
 //│   return false
 //│ }
 //│ throw globalThis.Object.freeze(new globalThis.Error("match error"));

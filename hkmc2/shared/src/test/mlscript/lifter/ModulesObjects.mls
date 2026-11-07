@@ -129,7 +129,7 @@ fun foo(x, y) =
 //│ };
 //│ define foo⁴ as fun foo⁵(x, y) {
 //│   let M, y1;
-//│   set y1 = y;
+//│   set y1 = (y as! Int⁰);
 //│   define M as object M¹ {
 //│     method foo2¹ = fun foo2⁰() { set y1 = 2; return +⁰(x, y1) }
 //│   };

@@ -646,18 +646,21 @@ final case class RcdField(field: Term, rhs: Term, sym: BlockMemberSymbol)(val ke
     case _ => ()
 
 object RcdField:
-  def apply(field: Term, rhs: Term)(using State): RcdField = make(field, rhs, false, N)
-  def signature(field: Term, sign: Term)(using State): RcdField = make(field, sign, true, N)
+  // Lowering and pattern compilation synthesize fields after source erasure.
+  def apply(field: Term, rhs: Term)(using State): RcdField = make(field, rhs, false, false, N)
+  def source(field: Term, rhs: Term)(using State): RcdField = make(field, rhs, false, true, N)
+  def signature(field: Term, sign: Term)(using State): RcdField = make(field, sign, true, true, N)
   def signature(field: Term, sign: Term, symbol: SymbolKey)(using State): RcdField =
-    make(field, sign, true, S(symbol))
-  private def make(field: Term, rhs: Term, signature: Bool, symbol: Opt[SymbolKey])(using State): RcdField =
+    make(field, sign, true, true, S(symbol))
+  private def make(field: Term, rhs: Term, signature: Bool, source: Bool, symbol: Opt[SymbolKey])(using State): RcdField =
     val name = field match
       case Term.Lit(Tree.StrLit(name)) => name
       case _ => "computed field"
     val id = new Tree.Ident(name)
     id.withLocOf(field)
     val sym = new BlockMemberSymbol(name, Nil)
-    val tsym = TermSymbol(RecordField, N, id, erasure = N)
+    val tsym = TermSymbol(RecordField, N, id)
+    if !source then tsym.initializeErasure(N)
     sym.tsym = S(tsym)
     // Value-field lookup removes the synthetic definition's capture mark, leaving
     // enclosing call-site marks intact. A structural type field instead refers

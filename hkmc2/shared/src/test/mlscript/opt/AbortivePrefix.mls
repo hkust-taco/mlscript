@@ -93,7 +93,7 @@ fun f =
 //│       end
 //│     return "2 long long long long long long long long long long long long long long"
 //│   set tmp1 = tmp;
-//│   return Predef⁰.notImplementedError⁰
+//│   return (Predef⁰.notImplementedError⁰ as! Str⁰)
 //│ };
 //│ end
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————

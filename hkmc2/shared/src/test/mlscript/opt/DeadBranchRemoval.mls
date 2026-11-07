@@ -20,7 +20,11 @@ if C(123) is
   C(x) then print(x)
   D(y) then print(y)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let scrut, arg$C$0$; set scrut = C⁰(123); set arg$C$0$ = scrut.a⁰; return Predef⁰.print⁰(arg$C$0$)
+//│ let scrut, x, arg$C$0$;
+//│ set scrut = C⁰(123);
+//│ set arg$C$0$ = scrut.a⁰;
+//│ set x = (arg$C$0$ as! Int⁰);
+//│ return Predef⁰.print⁰(x)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 123
 
@@ -31,7 +35,11 @@ if C(123) is
   C(x) then print(x)
   else print("?")
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let scrut, arg$C$0$; set scrut = C⁰(123); set arg$C$0$ = scrut.a⁰; return Predef⁰.print⁰(arg$C$0$)
+//│ let scrut, x, arg$C$0$;
+//│ set scrut = C⁰(123);
+//│ set arg$C$0$ = scrut.a⁰;
+//│ set x = (arg$C$0$ as! Int⁰);
+//│ return Predef⁰.print⁰(x)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 123
 
@@ -86,7 +94,7 @@ in
     D(y) then {print(y), y}
     E(z) then {print(z), z}
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let scrut, tmp, arg$D$0$, arg$C$0$;
+//│ let scrut, x, y, tmp, arg$D$0$, arg$C$0$;
 //│ set scrut = Predef⁰.hide⁰(true);
 //│ match scrut
 //│   true =>
@@ -99,12 +107,14 @@ in
 //│ match tmp
 //│   C¹ =>
 //│     set arg$C$0$ = tmp.a⁰;
-//│     do Predef⁰.print⁰(arg$C$0$);
-//│     return arg$C$0$
+//│     set x = (arg$C$0$ as! Int⁰);
+//│     do Predef⁰.print⁰(x);
+//│     return x
 //│   D¹ =>
 //│     set arg$D$0$ = tmp.b⁰;
-//│     do Predef⁰.print⁰(arg$D$0$);
-//│     return arg$D$0$
+//│     set y = (arg$D$0$ as! Int⁰);
+//│     do Predef⁰.print⁰(y);
+//│     return y
 //│   else
 //│     unreachable /* exhaustive match */
 //│ end

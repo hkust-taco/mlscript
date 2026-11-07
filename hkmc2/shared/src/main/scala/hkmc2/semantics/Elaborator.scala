@@ -1197,7 +1197,7 @@ extends Importer:
   private def branch(using Ctx): Cfg[PartialFunction[Tree, (Ctx, SimpleSplit)]] =
     // Interleaved-`let` bindings like `{ x is A then 0; let x = 1; ... }`.
     case LetLike(Keywrd(`let`), ident: Ident, S(rhsTree), N) =>
-      val symbol = VarSymbol(ident, erasedType = N, mut = true)
+      val symbol = VarSymbol(ident, mut = true)
       val head = mkSplitLet(symbol, term(rhsTree, Trm))
       ((ctx + (ident.name -> symbol)), head ~: End)
     // Interleaved-`do` statements like `{ x is A then 0; do log(1); ... }`.
@@ -1403,6 +1403,7 @@ extends Importer:
     */
   private def recordFieldScope(field: RcdField)(using Ctx): RcdField =
     rctx.state.lexicalTypeBinders(field.tsym) = ctx.typeBinders
+    if newResolution then field.tsym.defn.foreach(_.sign.foreach(registerSignature))
     val key = field.key.orElse(symbolKey(field.field, required = false))
     field.copy()(key)
   
@@ -1499,7 +1500,7 @@ extends Importer:
       case _ => N
     withAppendedArg(lhs).getOrElse(App(lhs, Tup(arg :: Nil)))
   
-  private def assignment(lhs: Term, rhs: Term): Term.Assgn =
+  private def assignment(lhs: Term, rhs: Term)(using Ctx): Term.Assgn =
     // Resolve the term interpretation of the l-value before lowering. The
     // selected definition is recorded even when its value publishes no shape.
     // Use this for synthesized assignments as well as source-level `set`.
@@ -1507,6 +1508,7 @@ extends Importer:
       listenTerm(lhs)(_ => ())
       assignArrayElement(lhs, rhs)
       assignVariable(lhs, rhs)
+      assignField(lhs, rhs, ctx.scope)
     Term.Assgn(lhs, rhs)
 
   def ifLike(kw: Keyword.SplitLike, form: IfLikeForm, split: SimpleSplit, loc: Opt[Loc]): Term.IfLike =
@@ -2086,7 +2088,7 @@ extends Importer:
     case Quoted(body) => Term.Quoted(subterm(body))
     case Unquoted(body) => Term.Unquoted(subterm(body))
     case tree @ Case(kw, _) =>
-      val scrut = VarSymbol(Ident("caseScrut"), erasedType = N, mut = false)
+      val scrut = VarSymbol(Ident("caseScrut"), mut = false)
       val body = caseSplit(scrut, tree)
       val params = Param.simple(scrut) :: Nil
       withTypeBinders(Term.Lam(PlainParamList(params)(N), body)).mkLocWith(kw)
@@ -2242,7 +2244,7 @@ extends Importer:
         // * so the parameter and the reference are both located at the `_`,
         // * which lets diagnostics about either point to it.
         val id = new Ident("_" + unds.size).withLocOf(und)
-        val sym = VarSymbol(id, erasedType = N, mut = false)
+        val sym = VarSymbol(id, mut = false)
         unds += sym
         syntheticLocalRef(sym).withLocOf(und)
     case Annotated(lhs, rhs) =>
@@ -2552,9 +2554,9 @@ extends Importer:
             recordFieldScope(MemberKey.symbol(annotations).fold(RcdField.signature(field, rhs_t))(
               key => RcdField.signature(field, rhs_t, key))) :: acc
           case id: Ident =>
-            val sym = new VarSymbol(id, erasedType = N, mut = true)
+            val sym = new VarSymbol(id, mut = true)
             newCtx += id.name -> sym
-            recordFieldScope(RcdField(Term.Lit(StrLit(id.name)).withLocOf(id), Ctx.RefElem(sym).ref(S(id))))
+            recordFieldScope(RcdField.source(Term.Lit(StrLit(id.name)).withLocOf(id), Ctx.RefElem(sym).ref(S(id))))
               :: defineVar(sym, rhs_t)(Loc(rlhs, rhs))
               :: LetDecl(sym, annotations)(id.toLoc)
               :: acc
@@ -2563,16 +2565,16 @@ extends Importer:
             val field = Term.Lit(lit).withLocOf(lit)
             recordFieldScope(if fieldInterpretation == Tpe
               then RcdField.signature(field, rhs_t)
-              else RcdField(field, rhs_t)
+              else RcdField.source(field, rhs_t)
             ) :: acc
           case Bra(Round, inner) =>
             reportUnusedAnnotations
             val key = term(inner, Trm)
             recordFieldScope(if fieldInterpretation == Tpe then RcdField.signature(key, rhs_t)
-              else RcdField(key, rhs_t)) :: acc
+              else RcdField.source(key, rhs_t)) :: acc
           case _ =>
             raise(ErrorReport(msg"Unexpected record key shape." -> rlhs.toLoc :: Nil))
-            recordFieldScope(RcdField(Term.Error().withLocOf(rlhs), rhs_t)) :: acc
+            recordFieldScope(RcdField.source(Term.Error().withLocOf(rlhs), rhs_t)) :: acc
         newCtx.givenIn:
           go(sts, Nil, newAcc)(N)
       case (hd @ LetLike(kw @ Keywrd(`let`), Apps(id: Ident, tups), rhso, N)) :: sts
@@ -3207,8 +3209,8 @@ extends Importer:
     case N => N
   
   def fieldOrVarSym(k: TermDefKind, id: Ident)(using Ctx): TermSymbol | VarSymbol =
-    if ctx.outer.inner.isDefined then TermSymbol(k, ctx.outer.inner, id, erasure = N)
-    else VarSymbol(id, erasedType = N, mut = true)
+    if ctx.outer.inner.isDefined then TermSymbol(k, ctx.outer.inner, id)
+    else VarSymbol(id, mut = true)
   
   def param(t: Tree, inUsing: Bool, inDataClass: Bool, inConstructor: Bool): Ctxl[Diagnostic \/ (Param, Opt[SpreadKind], Ls[Str])] =
     t.desugared.asParam(inUsing).map:
@@ -3632,6 +3634,7 @@ extends Importer:
     val (res, newCtx) = block(sts, hasResult = false, resultInterp = Trm)
     // TODO handle name clashes
     if newResolution then
+      prepareErasure(res)
       InterfaceExposure(this).check(exports, Nil)
     rctx.completeBlock(res)
     (res, newCtx)
@@ -3640,6 +3643,7 @@ extends Importer:
     given UnderCtx = UnderCtx.none
     val (res, ctx) = block(sts, hasResult = false, resultInterp = Trm)
     if newResolution then
+      prepareErasure(res)
       if config.language.strictResolution then
         val exports = res.stats.collect:
           case d: Definition if InterfaceExposure.isPublic(d) => d.bsym

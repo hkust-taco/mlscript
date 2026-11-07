@@ -13,13 +13,71 @@ import hkmc2.Message.MessageContext
   * resolved source declarations. Each instance processes one program or prelude, initializes its
   * symbols' erased signatures, and checks override compatibility during construction. Lowering
   * requires the instance constructed for its program, so it can read those completed signatures.
+  *
+  * Inferred representations bind their slots as declared ones do: lowering rejects unrelated
+  * values and slots whose observed values have no common representation.
   */
 final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
   private given Erasure = this
+  private val valueTypes = mutable.Map.empty[TermShape, Opt[ErasedValueType]]
 
   /** Checks that lowering uses the same source root whose signatures this instance initialized. */
   def requireCompleted(statement: Statement): Unit =
     assert(root is statement, "Lowering requires completed erasure of this program")
+
+  private def valueType(shape: TermShape): Opt[ErasedValueType] = valueTypes.getOrElseUpdate(shape, shape match
+    case MarkedShape(value, _) => valueType(value)
+    case ContextualShape(value, _) => valueType(value)
+    case SpecializedShape(value, _, _) => valueType(value)
+    case nominal: NominalInstanceView => S(nominalType(nominal.defn))
+    case base: BaseShape => S(nominalType(base.defn))
+    case construction: NewShape => S(
+      if construction.isSaturated then ErasedType.ValueLike(S(false), construction.cls)
+      else ErasedType.Function(S(false)))
+    case application: AppShape => S(
+      if !application.isSaturated then ErasedType.Function(S(false))
+      else application.applicationHead._1 match
+        case definition: DefnShape => definition.clsDef.fold[ErasedValueType](ErasedType.Unknown)(nominalType)
+        case _ => ErasedType.Unknown)
+    case definition: DefnShape => S(definition.defn match
+      case module: ModuleOrObjectDef => nominalType(module)
+      case _: TermDefinition => ErasedType.Function(S(false))
+      // A class value denotes the constructor object, not an instance of that class.
+      case _ => ErasedType.Unknown)
+    case intro: IntroShape => intro.trm match
+      case _: Lam => S(ErasedType.Function(S(false)))
+      case UnitVal() => S(ErasedType.Unit)
+      case Lit(_: syntax.Tree.IntLit) => S(ErasedType.Int)
+      case Lit(_: syntax.Tree.DecLit) => S(ErasedType.Num)
+      case Lit(_: syntax.Tree.StrLit) => S(ErasedType.Str)
+      case Lit(_: syntax.Tree.BoolLit) => S(ErasedType.Bool)
+      // Undefined places no constraint on the slot's representation. An undefined-only
+      // slot still receives the ordinary default representation and keeps it across consumers.
+      case Lit(syntax.Tree.UnitLit(false)) => N
+      case Lit(syntax.Tree.UnitLit(true)) => S(ErasedType.Unknown)
+    case _: CallableTypeShape => S(ErasedType.Function(S(false)))
+    case _: TupleShape => S(ErasedType.Array)
+    // An intersection describes one value through several interfaces, not alternative values.
+    // Keep the same conservative representation as an intersection in a declared signature.
+    case _: IntersectionView => S(ErasedType.Unknown)
+    case _: (RecordShape | RecordTypeShape | DynShape | UnknownValueShape | OpaqueTypeShape | RigidTypeShape | ErrShape) =>
+      S(ErasedType.Unknown)
+    case _: InstanceShape =>
+      softAssert(false, "Erasure inputs must interpret contextual instance types before completion")
+      S(ErasedType.Unknown)
+  )
+
+  private def nominalType(definition: ClassLikeDef): ErasedValueType = definition.sym match
+    case symbol: (ClassSymbol | ModuleOrObjectSymbol) => ErasedType.ValueLike(S(false), symbol)
+    case _ => ErasedType.Unknown
+
+  private def inferredType(symbol: Symbol): Opt[ErasedValueType] =
+    if !config.language.useNewResolution then N
+    else summon[State].newResolverState.erasureInputs.shapes(symbol).flatMap(valueType) match
+      case Nil => N
+      // Unknown is a real candidate, not the identity of this join: in particular,
+      // combining it with an unboxed primitive must preserve incompatibility.
+      case types => S(ErasedType.Union.mk(types))
 
   /** Read a delayed type in the context that completed erasure. Cloning can then
     * rename its symbol without retaining the entire cloning substitution in a thunk.
@@ -107,14 +165,14 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
           && !td.flags.hasResultAnnotation && td.params.nonEmpty && !td.modulefulness.isModuleful
       then S(fullResult(td.sign.get.typeInterpretation.get, td.params.length, Set.empty))
       else declaredType(td.resultSignature, td.modulefulness).orElse:
-        // An unannotated override implements the inherited result. Async/generator annotations
-        // describe a body payload; their inherited callable result describes the wrapper.
-        // A structural intersection can give a member several bases: an unannotated one publishes
-        // no result, so inherit from the first base that declares one; representation checking
-        // then reports any other base whose result the override does not fit.
-        if config.language.useNewResolution && td.resultWrapperAnnotation.nonEmpty then N
-        else overrides.validatedBases.getOrElse(td.tsym, Nil).iterator.filter(_.isErased)
-          .flatMap(_.sourceDeclaredResultType).nextOption()
+        // Async/generator bodies produce a payload; inherited callable results describe the wrapper.
+        // An ordinary override keeps the first specified inherited result unchanged. Infer a result
+        // only when no validated base supplies one, as for a definition with no overrides.
+        val inherited =
+          if config.language.useNewResolution && td.resultWrapperAnnotation.nonEmpty then N
+          else overrides.validatedBases.getOrElse(td.tsym, Nil).iterator.filter(_.isErased)
+            .flatMap(_.sourceDeclaredResultType).nextOption()
+        inherited.orElse(inferredType(td.tsym))
     val resultType = candidateResultType.map:
       representable(_, td.resultSignature.orElse(td.sign).flatMap(_.toLoc).orElse(td.tsym.toLoc))
     // The body produces the payload; callers receive the wrapper object instead.
@@ -135,66 +193,25 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
         if physicalParamLists.isEmpty then S(ErasedGetterSignature.Signature(result))
         else S(ErasedFuncSignature.Signature(physicalParamLists, result))
       case _: syntax.Val => resultType
+      case syntax.RecordField => if config.language.useNewResolution then resultType else N
       case _ => N
 
   locally:
-    val (statements, parameters, parentConstructions) =
-      // One ordered identity set both bounds traversal of shared syntax and preserves diagnostic order.
-      // Only this collection step can extend the inputs to the subsequent erasure phases.
-      val visited = mutable.LinkedHashSet.empty[Identity[Statement]]
-      val parameters = List.newBuilder[Param]
-      val parentConstructions = mutable.Set.empty[Identity[Statement]]
-      def parentHead(term: Term): Unit = if parentConstructions.add(Identity(term)) then term match
-        // Legacy resolution can expand a parent reference to an implicit constructor call.
-        // Follow only the class head; constructions in argument expressions are real allocations.
-        case ref: Resolvable if ref.expanded isnt ref => parentHead(ref.expanded)
-        case New(cls, _, _) => parentHead(cls)
-        case App(lhs, _) => parentHead(lhs)
-        case TyApp(lhs, _) => parentHead(lhs)
-        case _ => ()
-      def params(ps: ParamList): Unit = ps.foreach(parameters += _)
-      // Handler continuations and rejected class rest parameters can survive as references after their
-      // parameter list has been removed. The symbol retains the source declaration needed for erasure.
-      def referencedParameter(sym: VarSymbol): Unit = sym.decl match
-        case S(p: Param) =>
-          parameters += p
-          p.subTerms.foreach(visit)
-        case _ => ()
-      def visit(statement: Statement): Unit = if visited.add(Identity(statement)) then
-        statement match
-          case td: TermDefinition => td.params.foreach(params); td.tparams.foreach(_.foreach(parameters += _))
-          case cls: ClassLikeDef =>
-            cls.paramsOpt.foreach(params)
-            cls.auxParams.foreach: ps =>
-              params(ps)
-              ps.subTerms.foreach(visit)
-            cls.ext.foreach: parent =>
-              parentHead(parent)
-              visit(parent)
-            cls match
-              case pat: PatternDef =>
-                parameters ++= pat.parameters
-                pat.parameters.flatMap(_.subTerms).foreach(visit)
-                pat.pattern.subTerms.foreach(visit)
-              case _ => ()
-          case Lam(ps, _) => params(ps)
-          case Handle(defs = definitions) => definitions.foreach: d =>
-            referencedParameter(d.resumeSym)
-            visit(d.td)
-          case Ref(sym: VarSymbol) => referencedParameter(sym)
-          case SimpleRef(sym: VarSymbol) => referencedParameter(sym)
-          case New(_, _, refinement) => refinement.foreach: (symbol, body) =>
-            symbol.defn.fold(visit(body.blk))(visit)
-          case Rcd(_, stats) => stats.foreach(visit)
-          case _ => ()
-        statement.subStatements.foreach(visit)
-        // Legacy resolution may insert executable terms (for example implicit applications).
-        // Expanded nodes may share their children with the source tree; visit their identities only once.
-        statement match
-          case term: Resolvable => visit(term.expanded)
-          case _ => ()
-      visit(root)
-      (visited.iterator.map(_.value).toList, parameters.result(), parentConstructions.toSet)
+    val declarations = new ErasureDeclarations(root)
+    val statements = declarations.statements
+    val parameters = declarations.parameters.values.toList
+    val parentConstructions = mutable.Set.empty[Identity[Statement]]
+    def parentHead(term: Term): Unit = if parentConstructions.add(Identity(term)) then term match
+      // Legacy resolution can expand a parent reference to an implicit constructor call.
+      // Follow only the class head; constructions in argument expressions are real allocations.
+      case ref: Resolvable if ref.expanded isnt ref => parentHead(ref.expanded)
+      case New(cls, _, _) => parentHead(cls)
+      case App(lhs, _) => parentHead(lhs)
+      case TyApp(lhs, _) => parentHead(lhs)
+      case _ => ()
+    statements.foreach:
+      case cls: ClassLikeDef => cls.ext.foreach(parentHead)
+      case _ => ()
 
     val restParameters = statements.iterator.flatMap:
       case td: TermDefinition => td.params.iterator
@@ -296,14 +313,21 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
     // Establish source argument correspondence before inheriting representations. Equal leading
     // counts alone do not suffice: optional and trailing parameters can redistribute the inputs.
     // Retain the traversed declarations: handlers remove the resumption parameter list from them.
-    val definitions = statements.collect { case td: TermDefinition => td }.distinctBy(_.tsym)
-    val overrideChecks = new OverrideChecks(definitions)
+    val observed =
+      if config.language.useNewResolution then summon[State].newResolverState.erasureInputs.symbols
+      else Nil
+    // Observations can refer to earlier worksheet declarations. Reuse their initialized signatures
+    // without reporting their override diagnostics again in this program.
+    val sourceDefinitions = statements.collect { case td: TermDefinition => td }.toList.distinctBy(_.tsym)
+    val definitions = (sourceDefinitions ++ observed.collect {
+      case sym: TermSymbol => sym.defn }.flatten).distinctBy(_.tsym)
+    val overrideChecks = new OverrideChecks(sourceDefinitions)
     overrideChecks.checkExposedSignatures()
     val inheritedParams = overrideChecks.inheritedParameters
     val parameterSymbols = parameters.iterator.map(_.sym).toSet
     /** Initializes a parameter's representation from its annotation or the joined representations
       * of its inherited counterparts. A rest parameter with neither gets `Array`; an ordinary
-      * parameter with neither keeps no known representation. Recursion initializes local inherited
+      * parameter with neither uses its observed values. Recursion initializes local inherited
       * parameters first, while `visiting` breaks inheritance cycles; pending inherited parameters
       * contribute `Unknown`. Making a required inherited parameter optional also admits its null default.
       */
@@ -324,7 +348,7 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
               S(ErasedType.Union.mk(types ::: defaults))
             // Rest binding constructs an Array, including when lowering slices off trailing
             // arguments. Use that representation unless a declared or inherited type supplies one.
-            case N => Option.when(restParameters(p.sym))(ErasedType.Array)
+            case N => Option.when(restParameters(p.sym))(ErasedType.Array).orElse(inferredType(p.sym))
         // Inherited parameter types can also join into a type without a representation.
         p.sym.erasedType = erased.map(representable(_, p.sign.flatMap(_.toLoc).orElse(p.toLoc)))
     parameters.foreach: p =>
@@ -336,7 +360,19 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
         case sym: BlockMemberSymbol => sym.tsym
         case _ => N
       field.foreach: sym =>
-        if !sym.isErased then sym.initializeErasure(p.sym.erasedType)
+        if !sym.isErased then sym.initializeErasure:
+          if p.flags.mut then declaredType(p.sign, p.modulefulness).orElse(inferredType(sym))
+          else p.sym.erasedType
+    // Constructor companions have no source body. Their physical argument lists
+    // are the class's lists, and a saturated call always produces its instance.
+    statements.foreach:
+      case cls: ClassLikeDef => cls.ctorSym.foreach: symbol =>
+        if !symbol.isErased then symbol.initializeErasure:
+          if config.language.useNewResolution then S(ErasedFuncSignature.Signature(
+            (cls.paramsOpt.toList ::: cls.auxParams).map(LoweredParamList.fixedPrefix(_).map(_.sym.erasedType)),
+            ErasedResult.Direct(S(nominalType(cls)))))
+          else N
+      case _ => ()
     // Erase inherited results before their overrides, guarding against erroneous inheritance cycles.
     val definitionsBySymbol = definitions.map(td => td.tsym -> td).toMap
     /** Publishes a declaration's erased signature after initializing its local inherited members,
@@ -349,8 +385,39 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
         td.tsym.overriddenMembers.flatMap(definitionsBySymbol.get).foreach(eraseDefinition(_, visiting + td.tsym))
         td.tsym.initializeErasure(erasedDefinitionSignature(td, overrideChecks))
     definitions.foreach(eraseDefinition(_, Set.empty))
-    statements.foreach:
-      case LetDecl(sym: TermSymbol, _) if !sym.isErased => sym.initializeErasure(N)
+    declarations.variables.foreach:
+      case sym: VarSymbol if !sym.isErased => sym.erasedType = inferredType(sym)
+      case sym: TermSymbol if !sym.isErased => sym.initializeErasure(inferredType(sym))
+      // A temporary's erased type is populated at most once (see TempSymbol); without inferred inputs, it stays
+      // unknown, as it was before erasure.
+      case sym: TempSymbol if sym.erasedType.isEmpty => inferredType(sym).foreach(tpe => sym.erasedType = S(tpe))
       case _ => ()
     // Compare signatures only after every definition has completed erasure.
     overrideChecks.checkSignatures()
+    statements.foreach:
+      case td: TermDefinition => checkExposedMutableField(td)
+      case _ => ()
+
+  /** Other compilation units assign values to a mutable field with the representation of its erased type, which
+    * therefore must not depend on the values that this compilation unit happens to assign to the field. Interface
+    * exposure assigns a value of unknown shape referring to the field itself to the mutable fields reachable from the
+    * unit's interface (see InterfaceExposure); such a field must declare its type. Fields that merely receive unknown
+    * values from this unit's own exposed parameters do not need to: their representation is already the unknown one.
+    * Record fields cannot declare types; their exposed representation is the unknown one.
+    */
+  private def checkExposedMutableField(td: TermDefinition): Unit =
+    // A constructor parameter declares the type of the field it defines.
+    val declared = td.tsym.decl match
+      case S(p: Param) => p.sign.isDefined || p.modulefulness.isModuleful
+      case _ => td.sign.isDefined || td.modulefulness.isModuleful
+    val inputs = summon[State].newResolverState.erasureInputs
+    if config.language.useNewResolution && (td.k is syntax.MutVal) && !declared && !Inheritance.isExternal(td)
+        && inputs.isPrepared(td.tsym) then
+      val exposure = inputs.shapes(td.tsym).iterator.map(_.applicationHead._1).collectFirst:
+        case unknown: UnknownValueShape if unknown.fromPublicInterface && (unknown.source match
+          case ref: MemberRef => ref.sym is td.bsym
+          case _ => false) => unknown
+      exposure.foreach: unknown =>
+        raise(ErrorReport(unknown.provenance.diagnostic(
+          msg"Mutable field '${td.tsym.nme}' is exposed to other compilation units, which can assign to it; annotate its type",
+          td.tsym.toLoc), source = Diagnostic.Source.Compilation))

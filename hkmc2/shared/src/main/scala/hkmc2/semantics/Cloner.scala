@@ -194,7 +194,7 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
   private def prepare(stats: Ls[Statement]): Unit =
     prepareDefinitions(stats)
     prepareLocals(stats)
-    terms.foreach: (source, copy) =>
+    (terms.iterator ++ constructors.iterator).foreach: (source, copy) =>
       copy.initializeErasure:
         source.sourceErasure.map:
           case sig: ErasedCallableSignature => sig.mapTypes(valueType)

@@ -389,11 +389,12 @@ final class ContextualType(val tpe: DeclaredType, val marks: Ls[Marks]) extends 
     case that: ContextualType => tpe == that.tpe && marks == that.marks
     case _ => false
 
-/** An unqualified argument is interpreted separately in the two polarities;
+/** An unqualified argument or mutable field is interpreted separately in the two polarities;
   * these parts coincide only when substitution gives the same type in both.
   * Missing wildcard parts are Nothing on input and Any on output, never holes.
   */
 final class TypeArgument(val input: DeclaredType, val output: DeclaredType) extends ValueKey:
+  def map(f: DeclaredType => DeclaredType): TypeArgument = TypeArgument(f(input), f(output))
   override def toString: Str = s"TypeArgument($input, $output)"
   protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), input.hashCode, output.hashCode)
   protected def sameValue(other: ValueKey): Bool = other match

@@ -291,16 +291,6 @@ length(append(id(1 :: Nil), 2 :: Nil))
 //│ deforest > >>> accumulator syms >>>
 //│ deforest > <<< accumulator syms <<<
 //│ deforest > >>> fusing >>>
-//│ deforest > Cons⁰(h⁰, tmp¹) ->
-//│ deforest > 	match: ls⁰
-//│ deforest > 	fields: ls⁰.h¹
-//│ deforest > 	fields: ls⁰.t⁰
-//│ deforest > Cons⁰(2, Nil⁰) ->
-//│ deforest > 	match: ls⁰
-//│ deforest > 	fields: ls⁰.h¹
-//│ deforest > 	fields: ls⁰.t⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls⁰
 //│ deforest > <<< fusing <<<
 //│ = 2
 
@@ -331,16 +321,6 @@ length(ping(id(1 :: 2 :: Nil), 3 :: 4 :: Nil))
 //│ deforest > >>> accumulator syms >>>
 //│ deforest > <<< accumulator syms <<<
 //│ deforest > >>> fusing >>>
-//│ deforest > Cons⁰(3, tmp²) ->
-//│ deforest > 	match: ls¹
-//│ deforest > 	fields: ls¹.h¹
-//│ deforest > 	fields: ls¹.t⁰
-//│ deforest > Cons⁰(4, Nil⁰) ->
-//│ deforest > 	match: ls¹
-//│ deforest > 	fields: ls¹.h¹
-//│ deforest > 	fields: ls¹.t⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls¹
 //│ deforest > <<< fusing <<<
 //│ = 2
 
@@ -363,12 +343,6 @@ sum(append(id(Nil), Nil), 0)
 //│ deforest > >>> accumulator syms >>>
 //│ deforest > <<< accumulator syms <<<
 //│ deforest > >>> fusing >>>
-//│ deforest > Cons⁰(h², tmp³) ->
-//│ deforest > 	match: ls²
-//│ deforest > 	fields: ls².h¹
-//│ deforest > 	fields: ls².t⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls²
 //│ deforest > <<< fusing <<<
 //│ = 0
 
@@ -408,12 +382,6 @@ length(flatten(id((1 :: Nil) :: Nil)))
 //│ deforest > >>> accumulator syms >>>
 //│ deforest > <<< accumulator syms <<<
 //│ deforest > >>> fusing >>>
-//│ deforest > Cons⁰(h³, tmp⁴) ->
-//│ deforest > 	match: ls³
-//│ deforest > 	fields: ls³.h¹
-//│ deforest > 	fields: ls³.t⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls³
 //│ deforest > <<< fusing <<<
 //│ = 1
 
@@ -426,7 +394,7 @@ fun alias_then_patmat(x) =
 alias_then_patmat(Cons(12, 13))
 //│ deforest > >>> non-affine syms >>>
 //│ deforest > cap_ub_(term:alias_then_patmat,0)_for_alias_then_patmat⁰
-//│ deforest > tmp⁵
+//│ deforest > tmp¹
 //│ deforest > x_for_alias_then_patmat¹
 //│ deforest > x_for_alias_then_patmat⁰
 //│ deforest > <<< non-affine syms <<<
@@ -523,7 +491,7 @@ c(mk(7))
 //│ deforest > p_for_g_for_c⁰
 //│ deforest > p_for_g⁰
 //│ deforest > tmp_for_mk⁰
-//│ deforest > tmp⁵
+//│ deforest > tmp¹
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> accumulator syms >>>
 //│ deforest > <<< accumulator syms <<<
@@ -540,9 +508,11 @@ c(mk(7))
 //│   return AA⁰(tmp1)
 //│ };
 //│ define g⁰ as fun g¹(p)() {
+//│   let arg$AA$0$;
 //│   match p
 //│     AA¹ =>
-//│       return p.x⁰
+//│       set arg$AA$0$ = p.x⁰;
+//│       return (arg$AA$0$ as! Int⁰)
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
@@ -551,7 +521,7 @@ c(mk(7))
 //│   let tmp1, tmp2;
 //│   set tmp1 = g¹(p)();
 //│   set tmp2 = g¹(p)();
-//│   return +⁰(tmp1, tmp2)
+//│   return (+⁰(tmp1, tmp2) as! Int⁰)
 //│ };
 //│ set tmp = mk¹(7);
 //│ return c¹(tmp)
@@ -580,7 +550,7 @@ c(AA(7), AA(8))
 //│ deforest > p_for_g_for_c¹
 //│ deforest > p_for_g_for_c⁰
 //│ deforest > p_for_g⁰
-//│ deforest > tmp⁵
+//│ deforest > tmp¹
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> accumulator syms >>>
 //│ deforest > <<< accumulator syms <<<
@@ -626,7 +596,7 @@ c(mk(7))
 //│ deforest > p_for_g_for_c⁰
 //│ deforest > p_for_g⁰
 //│ deforest > tmp_for_mk⁰
-//│ deforest > tmp⁵
+//│ deforest > tmp¹
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> accumulator syms >>>
 //│ deforest > <<< accumulator syms <<<
@@ -643,9 +613,11 @@ c(mk(7))
 //│   return AA⁰(tmp1)
 //│ };
 //│ define g² as fun g³(p)(q)() {
+//│   let arg$AA$0$;
 //│   match p
 //│     AA¹ =>
-//│       return p.x⁰
+//│       set arg$AA$0$ = p.x⁰;
+//│       return (arg$AA$0$ as! Int⁰)
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
@@ -654,7 +626,7 @@ c(mk(7))
 //│   let tmp1, tmp2;
 //│   set tmp1 = g³(p)(0)();
 //│   set tmp2 = g³(p)(0)();
-//│   return +⁰(tmp1, tmp2)
+//│   return (+⁰(tmp1, tmp2) as! Int⁰)
 //│ };
 //│ set tmp = mk³(7);
 //│ return c³(tmp)
@@ -704,7 +676,7 @@ c(mk(7))
 //│ deforest > p_for_lambda$_for_c⁰
 //│ deforest > p_for_lambda$⁰
 //│ deforest > tmp_for_mk⁰
-//│ deforest > tmp⁵
+//│ deforest > tmp¹
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> accumulator syms >>>
 //│ deforest > <<< accumulator syms <<<
@@ -717,9 +689,11 @@ c(mk(7))
 //│   return lambda²(p)
 //│ };
 //│ define lambda as fun lambda²(p) {
+//│   let arg$AA$0$;
 //│   match p
 //│     AA¹ =>
-//│       return p.x⁰
+//│       set arg$AA$0$ = p.x⁰;
+//│       return (arg$AA$0$ as! Int⁰)
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
@@ -735,7 +709,7 @@ c(mk(7))
 //│ define c⁴ as fun c⁵(p) {
 //│   let lambda$here;
 //│   set lambda$here = lambda$⁰(p);
-//│   return callTwice⁰(lambda$here)
+//│   return (callTwice⁰(lambda$here) as! Int⁰)
 //│ };
 //│ set tmp = mk⁵(7);
 //│ return c⁵(tmp)

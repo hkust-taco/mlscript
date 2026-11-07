@@ -8,8 +8,10 @@ fun nullableLength(value: Str | null) =
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let nullableLength;
 //│ nullableLength = function nullableLength(value) {
+//│   let text;
 //│   if (value === null) { return 0 }
-//│   return value.length;
+//│   text = value /* as! Str */;
+//│   return text.length;
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

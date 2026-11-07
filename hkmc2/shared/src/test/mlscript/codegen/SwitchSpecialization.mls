@@ -60,7 +60,9 @@ fun f(x) =
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f1;
 //│ f1 = function f(x) {
-//│   switch (x) {
+//│   let x1;
+//│   x1 = x /* as! Int */;
+//│   switch (x1) {
 //│     case 0:
 //│       return globalThis.Object.freeze([
 //│         "abcde",
@@ -82,9 +84,9 @@ fun f(x) =
 //│         4
 //│       ]);
 //│     case 4:
-//│       return globalThis.Object.freeze([ "e", x ]);
+//│       return globalThis.Object.freeze([ "e", x1 ]);
 //│   }
-//│   return globalThis.Object.freeze([ "", x ])
+//│   return globalThis.Object.freeze([ "", x1 ])
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -125,7 +127,9 @@ fun f(x) =
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f2;
 //│ f2 = function f(x) {
-//│   switch (x) {
+//│   let x1;
+//│   x1 = x /* as! Int */;
+//│   switch (x1) {
 //│     case 0:
 //│       return "abc";
 //│     case 1:
@@ -187,7 +191,9 @@ fun f(x) =
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f3;
 //│ f3 = function f(x) {
-//│   switch (x) {
+//│   let x1;
+//│   x1 = x /* as! Int */;
+//│   switch (x1) {
 //│     case 0:
 //│       return "M1";
 //│     case 1:
@@ -227,7 +233,9 @@ fun f(x) =
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f4;
 //│ f4 = function f(x) {
-//│   switch (x) {
+//│   let x1;
+//│   x1 = x /* as! Int */;
+//│   switch (x1) {
 //│     case 0:
 //│       return "M1";
 //│     case 1:
@@ -263,8 +271,8 @@ fun f(x, y) =
 //│ let f5;
 //│ f5 = function f(x, y) {
 //│   let x1, scrut;
-//│   x1 = x;
-//│   if (x === 0) {
+//│   x1 = x /* as! Int */;
+//│   if (x1 === 0) {
 //│     scrut = Predef.equals(y, 0);
 //│     if (scrut === true) {
 //│       x1 = 1000;
@@ -303,7 +311,7 @@ fun f(x, y) =
 //│ let f6;
 //│ f6 = function f(x, y) {
 //│   let x1, scrut;
-//│   x1 = x;
+//│   x1 = x /* as! Int */;
 //│   switch (x1) {
 //│     case 0:
 //│       scrut = Predef.equals(y, 0);

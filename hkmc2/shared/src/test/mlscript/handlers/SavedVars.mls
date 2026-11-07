@@ -43,7 +43,7 @@ fun g() =
 //│           return runtime.Unit
 //│         }
 //│       case 3:
-//│         scrut = runtime.resumeValue;
+//│         scrut = runtime.resumeValue /* as! Bool */;
 //│         if (scrut === true) {
 //│           let inlinedVal;
 //│           inlinedVal = runtime.Unit;
@@ -59,7 +59,7 @@ fun g() =
 //│         pc = 1;
 //│         continue main;
 //│       case 2:
-//│         runtime.resumeValue;
+//│         runtime.resumeValue /* as! Runtime.Unit */;
 //│         tmp = 1;
 //│         pc = 1;
 //│         if (1 === 1) { return 1 }

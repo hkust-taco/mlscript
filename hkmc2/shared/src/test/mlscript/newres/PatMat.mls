@@ -113,10 +113,19 @@ test(bz)
 //│ ═══[RUNTIME ERROR] Error: match error
 
 
+// The earlier worksheet block fixed x's representation to Foo.
+:ge
 set x = bz
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Baz' at an unrelated type 'Foo'
+//│ ║  l.+1: 	set x = bz
+//│ ╙──      	    ^^^^^^
 
 :breakme // Note: if compiled together with it, this would make the previous code ambiguous
+:ge
 x = bz
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Baz' at an unrelated type 'Foo'
+//│ ║  l.XX: 	let x = Foo(Bar)
+//│ ╙──      	    ^
 
 
 let x = if maybe then Bar else bz

@@ -161,6 +161,9 @@ i((...args) => [...args], _)(2)
 //│ ║  in ../../mlscript-compile/Predef.mls
 //│ ║  l.XX: 	fun (|>) pipeInto[A, B](x: A, f: A -> B): B = f(x)
 //│ ╙──      	                                 ^^^^^^
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Function'
+//│ ║  l.+1: 	123 |> (_ + 1 >> _ * 2)
+//│ ╙──      	        ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function expected at least 2 arguments but got 1
 
 (_ + 1 + _ * 2) of 123, 456
@@ -201,7 +204,12 @@ let j = _.x.y(1, _) in j((x: y: tuple), 0)
 
 data class C(a, b, c)
 
+// Without parentheses the placeholder abstracts over the whole pipeline, which calls a C instance.
+:ge
 2 |> C(1, _, 3) |> print
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'C' at an unrelated type 'Function'
+//│ ║  l.+1: 	2 |> C(1, _, 3) |> print
+//│ ╙──      	     ^^^^^^^^^^
 //│ = fun
 
 2 |> (C(1, _, 3)) |> print
