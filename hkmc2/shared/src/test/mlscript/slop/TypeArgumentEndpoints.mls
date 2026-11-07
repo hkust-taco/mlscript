@@ -44,3 +44,29 @@ forward()
 private fun read(values: [...Array[in Child out Base]]) = values.0.value
 read([Child(4)])
 //│ = 4
+
+// Constraining the same kind of tuple uses the element's input bound.
+:e
+private fun checkTuple(callbacks: [...Array[in (Base -> Int) out (Child -> Int)]]) = ()
+checkTuple([value => value.extra])
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	checkTuple([value => value.extra])
+//│ ║        	                     ^^^^^^^^^^^
+//│ ╟── Value of type 'Base' does not contain member 'extra'
+//│ ║  l.+1: 	private fun checkTuple(callbacks: [...Array[in (Base -> Int) out (Child -> Int)]]) = ()
+//│ ╙──      	                                                ^^^^
+
+// Aligning a variadic interface with a callback's trailing parameter reads
+// the element's output bound, even when its input bound has more members.
+:e
+private fun callbackTail(callback: (Base, ...Array[in Child out Base]) -> Int) = ()
+callbackTail((...values, last) => last.extra)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	callbackTail((...values, last) => last.extra)
+//│ ║        	                                  ^^^^^^^^^^
+//│ ╟── Value of type 'Base' does not contain member 'extra'
+//│ ║  l.+1: 	private fun callbackTail(callback: (Base, ...Array[in Child out Base]) -> Int) = ()
+//│ ║        	                                    ^^^^
+//│ ╟── Value of type 'Base' does not contain member 'extra'
+//│ ║  l.+1: 	private fun callbackTail(callback: (Base, ...Array[in Child out Base]) -> Int) = ()
+//│ ╙──      	                                                                ^^^^

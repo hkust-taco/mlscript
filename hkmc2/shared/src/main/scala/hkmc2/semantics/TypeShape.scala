@@ -92,11 +92,14 @@ object TypeShape:
       case that: Contextual => reference == that.reference
       case _ => false
   // The same third-party symbol can have different inference in two exporters.
-  // Retain its originating host so importing a result needs no whole-state copy.
-  final case class Parameter(symbol: VarSymbol, host: Publisher.Data[ShapeEvent]) extends TypeShape:
-    protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), System.identityHashCode(symbol), System.identityHashCode(host))
+  // Retain both originating hosts so a consumer sees the exporter's inferred values
+  // and explicit bindings, including bindings added privately by an intermediate exporter.
+  final case class Parameter(symbol: VarSymbol, host: Publisher.Data[ShapeEvent],
+      arguments: Publisher.Data[TypeArgumentBinding]) extends TypeShape:
+    protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), System.identityHashCode(symbol),
+      System.identityHashCode(host), System.identityHashCode(arguments))
     protected def sameValue(other: ValueKey): Bool = other match
-      case that: Parameter => symbol == that.symbol && host == that.host
+      case that: Parameter => symbol == that.symbol && host == that.host && arguments == that.arguments
       case _ => false
   // An omitted argument owns one source inference node. It is not a quantified
   // binder and is never instantiated at a call site; marks distinguish its flows.
@@ -494,6 +497,13 @@ final class TypeArgument(val input: DeclaredType, val output: DeclaredType) exte
 object TypeArgument:
   /** A type already interpreted at a scalar occurrence has the same meaning in both positions. */
   def invariant(tpe: DeclaredType): TypeArgument = TypeArgument(tpe, tpe)
+
+/** An explicit binding at a parameter's declaration scope. `marks` records the
+  * path taken into that scope, so constraints leaving through another activation
+  * cannot reach this argument. The binding keeps both bounds; value flow publishes
+  * only an instance of `argument.output`, and incoming constraints use `argument.input`.
+  */
+final case class TypeArgumentBinding(argument: TypeArgument, marks: Marks)
 
 /** A quantified binder belongs to the source scheme; its bounds retain graph links
   * so mutually dependent bounds do not require expanding or copying their types.

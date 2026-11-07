@@ -282,8 +282,13 @@ final class NewResolverState(val owner: Elaborator.State):
     new Cache(_.omittedTypes, identity)
   val exposedTypeHoles: Seen[(DeclaredType, ShapeIdentity.Key, Ls[Marks])] =
     new Seen(_.exposedTypeHoles)
-  val signatureParameters: Cache[VarSymbol, TypedValueShape] =
+  val signatureParameters: Cache[VarSymbol, TypeArgument] =
     new Cache(_.signatureParameters, identity)
+  // Keep explicit bindings outside value hosts: two arguments can have the same
+  // readable output and different input obligations. Publisher data supplies the
+  // same consumer-local copying and deferred delivery as inferred parameter values.
+  private[semantics] val typeArgumentBindings: Cache[VarSymbol, Host[TypeArgumentBinding]] =
+    new Cache(_.typeArgumentBindings, identity)
   // Synthesized applications share their type graph, including the symbolic arguments.
   val appliedTypeTemplates: Cache[ClassSymbol | TypeAliasSymbol, TypeResolution] =
     new Cache(_.appliedTypeTemplates, identity)
@@ -712,6 +717,12 @@ final class ResolutionContext private[semantics] (
     canonical(tpe.resolution, _.instanceShapes, tpe)(shapeView(tpe.instances)(make))
   def spreadFlow(spread: Term)(make: => IterationFlow): IterationFlow =
     canonical(spread, _.spreadElements, spread)(make)
+  def typeParameter(symbol: VarSymbol): TypeShape.Parameter =
+    val values = symbol.inferenceHost
+    val bindings = canonical(symbol, _.typeArgumentBindings, symbol)(new Host[TypeArgumentBinding]:
+      def showDbg(using DebugPrinter): Str = s"type arguments for ${symbol.nme}"
+    )
+    TypeShape.Parameter(symbol, values, bindings.inferenceHost)
   def memberVariable(symbol: TermSymbol): ShapeHost =
     state.memberVariables.getOrElseUpdate(symbol,
       symbol.getState.newResolverState.memberVariables.get(symbol)(using symbol.getState.newResolverState.context).getOrElse(

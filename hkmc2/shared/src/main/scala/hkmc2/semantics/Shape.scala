@@ -70,7 +70,6 @@ sealed trait Shape extends ShapeEvent:
     case rs: RecordTypeShape => s"RecordTypeShape(${rs.source.showDbg})"
     case view: IntersectionView => s"IntersectionView(${view.values.map(_.shwDbg).mkString(", ")})"
     case ts: InstanceShape => s"InstanceShape(${ts.tpe.resolution.source.showDbg})"
-    case ts: ArgumentInstanceShape => s"ArgumentInstanceShape(${ts.argument})"
     case ts: NominalInstanceView => s"NominalInstanceView(${ts.defn.sym.showDbg})"
     case ts: OpaqueTypeShape => s"OpaqueTypeShape(${ts.source.showDbg})"
     case ts: CallableTypeShape => s"CallableTypeShape(${ts.source.showDbg})"
@@ -95,7 +94,7 @@ object ShapeIdentity:
   private[semantics] def comparison(shape: ShapeEvent): Key = shape match
     case instance: InstanceShape => instance.candidateIdentity
     case _: (MarkedShape[?] | ContextualShape | ClassValueShape | NominalInstanceView |
-        CallableTypeShape | RecordTypeShape | IntersectionView | SpecializedShape | ArgumentInstanceShape | UnknownValueShape |
+        CallableTypeShape | RecordTypeShape | IntersectionView | SpecializedShape | UnknownValueShape |
         OpaqueTypeShape | RigidTypeShape | ActivatedShapeEvent) => new View(shape)
     // These producers own graph nodes, including synthesized inference hosts.
     // Adding a variant requires choosing its equality policy here.
@@ -111,7 +110,6 @@ object ShapeIdentity:
     protected val valueHash: Int = ValueKey.mix(ValueKey.tag(shape), shape match
       case MarkedShape(base, marks) => ValueKey.hash(base.comparison.hashCode, marks.hashCode)
       case ContextualShape(source, instances) => ValueKey.hash(source.comparison.hashCode, instances.hashCode)
-      case view: ArgumentInstanceShape => view.argument.hashCode
       case view: ClassValueShape => ValueKey.hash(System.identityHashCode(view.target), parentHash(view.parent))
       case view: NominalInstanceView => ValueKey.hash(System.identityHashCode(view.defn), ValueKey.mapHash(view.bindings)(System.identityHashCode, _.hashCode), parentHash(view.parent))
       case view: CallableTypeShape => ValueKey.hash(System.identityHashCode(view.source), view.paramLists.hashCode,
@@ -134,9 +132,6 @@ object ShapeIdentity:
           case _ => false
         case a: ContextualShape => that.shape match
           case b: ContextualShape => a.source.comparison == b.source.comparison && a.instances == b.instances
-          case _ => false
-        case a: ArgumentInstanceShape => that.shape match
-          case b: ArgumentInstanceShape => a.argument == b.argument
           case _ => false
         case a: ClassValueShape => that.shape match
           case b: ClassValueShape => (a.target eq b.target) && sameParent(a.parent, b.parent)
@@ -691,33 +686,12 @@ final class IntersectionView(val values: Ls[TermShape]) extends CoreHeadShape:
     MemberLookup.all(values.map(_.getMember(name)))
   override def isInstanceOfClass(cls: ClassLikeDef)(using ResolutionContext): Bool = values.exists(_.isInstanceOfClass(cls))
 
-/** A deferred value interface has a proper type for observations and for constraints.
-  * They can differ when the value comes from a generic argument's two bounds.
-  */
-sealed trait TypedValueShape extends CoreHeadShape:
-  def outputType: DeclaredType
-  def inputType: DeclaredType
-
-/** A type argument supplies both a readable interface and an input obligation.
-  * Explicit specializations and array element flows retain both until their consumer
-  * chooses a direction. Neither the pair nor a wildcard is a DeclaredType.
-  */
-final class ArgumentInstanceShape(val argument: TypeArgument) extends TypedValueShape:
-  def outputType: DeclaredType = argument.output
-  def inputType: DeclaredType = argument.input
-  def describe: Str = "value described by a type argument"
-  def toLoc: Opt[Loc] = outputType.resolution.source.toLoc
-  protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup =
-    lastWords("An argument's member lookup must observe its output type")
-
 /** An instance described by a type, in either position of a constraint. Keep the
   * type reference intact during transport: expanding it to its current positive
   * candidates would lose negative uses of generic arguments and compound types.
   * Operations obtain concrete member/call views through listenInstanceViews.
   */
-final class InstanceShape private (val tpe: DeclaredType, canonical: Opt[InstanceShape]) extends TypedValueShape:
-  def outputType: DeclaredType = tpe
-  def inputType: DeclaredType = tpe
+final class InstanceShape private (val tpe: DeclaredType, canonical: Opt[InstanceShape]) extends CoreHeadShape:
   /** Diagnostic views share the origin-free reference's inference identity. */
   private[semantics] def candidateIdentity: InstanceShape = canonical.getOrElse(this)
   def describe: Str = "value with a declared type"

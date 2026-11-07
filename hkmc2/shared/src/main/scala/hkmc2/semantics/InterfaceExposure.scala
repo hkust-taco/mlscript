@@ -156,7 +156,7 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
         resolver.instantiateShape(specialized.declaration, instances.withOverrides(specialized.instances)).exit(marks) match
           case value: TermShape => valueIn(value, path, instances)
           case NoShape => ()
-      case _: TypedValueShape =>
+      case _: InstanceShape =>
         watch((ShapeIdentity.key(shape), "instance view"))(resolver.listenInstanceViews(shape))(emit(_, path))
       case ds: DefnShape if ds.defn.sym.getState is rctx.owner =>
         parameters(shape.unappliedParams, path)

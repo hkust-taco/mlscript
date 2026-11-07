@@ -196,7 +196,7 @@ class SubstitutionGrowthTest extends AnyFunSuite:
     /** The type denoted by a binder or instance reference. */
     def typeOf(symbol: VarSymbol): DeclaredType =
       val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
-      resolution.publish(TypeShape.Parameter(symbol, symbol.inferenceHost))
+      resolution.publish(rctx.typeParameter(symbol))
       DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)(N)
     def instanceOf(tpe: DeclaredType): InstanceShape = resolver.instanceShape(tpe)
     def instancesOf(shape: TermShape): Map[VarSymbol, TypeParameterInstance] = shape match
@@ -468,7 +468,7 @@ class SubstitutionGrowthTest extends AnyFunSuite:
       h.resolver.listenInstanceViews(h.instanceOf(moved))(seen += _)
       seen
     assert(observations.forall(_.isEmpty))
-    forward.publish(TypeShape.Parameter(a, a.inferenceHost))
+    forward.publish(rctx.typeParameter(a))
     instances.lazyZip(observations).foreach: (instance, seen) =>
       val late = DynShape()
       h.resolver.publishParameter(instance, late)
