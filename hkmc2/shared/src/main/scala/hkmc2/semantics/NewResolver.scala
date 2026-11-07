@@ -1929,28 +1929,18 @@ class NewResolver:
         publishParameter(param, MarkedShape.enter(unknown, ResolutionBoundary(owner), S(site)))
 
   /** Read inferred candidates and derive explicit outputs from their bindings.
-    * Different input bounds can share an output, so deliver each marked value once
-    * per observation. Keep delivery keys in the consuming graph: inherited callbacks
-    * must not share a mutable set with their exporter or sibling consumers.
+    * The derived publisher merges equal outputs and keeps each consumer's candidates
+    * private through ordinary graph copying. Different bindings still retain their
+    * separate input obligations in `arguments`; `host` receives only inferred values.
     */
   private[semantics] def listenTypeParameterValues(parameter: TypeShape.Parameter)(listener: Listener)(using ResolutionContext): Unit =
-    val observation = new Object
-    def receive(value: TermShape)(using ResolutionContext): Unit =
-      // Like publisher candidates, delivery keys belong to the graph independently
-      // of the active substitution. The listener applies its own instantiation.
-      if rctx.state.typeParameterValueDeliveries.add((observation, ShapeIdentity.key(value)))(using rctx.withInstances(TypeSubstitution.empty)) then
-        listener(value)
-    val inferred: ShapeListener[ShapeEvent] =
-      case value: TermShape => receive(value)
+    val values = new TermShapeHost
+    values.listen(listener)
+    parameter.host.subscribe:
+      case value: TermShape => values.publish(value)
       case _ => softAssert(false, "A type parameter's value host cannot contain activation envelopes")
-    val supplied: ShapeListener[TypeArgumentBinding] = binding =>
-      receive(Marked(instanceShape(binding.argument.output), binding.marks))
-    // Replaying either source can publish into the other. Install both listeners
-    // first; the shared delivery keys suppress candidates reached again by replay.
-    parameter.host.addListener(inferred)
-    parameter.arguments.addListener(supplied)
-    parameter.host.replay(inferred)
-    parameter.arguments.replay(supplied)
+    parameter.arguments.subscribe: binding =>
+      values.publish(Marked(instanceShape(binding.argument.output), binding.marks))
 
   private[semantics] def publishParameter(symbol: VarSymbol, shape: TermShape | NoShape)(using ResolutionContext): Unit =
     shape match

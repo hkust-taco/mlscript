@@ -250,10 +250,11 @@ Explicit parameter bindings live in a separate publisher of `TypeArgumentBinding
 Each binding records both bounds and the normalized path into the parameter's
 scope. Reads combine inferred values from `TypeShape.Parameter.host` with
 `InstanceShape`s derived directly from the bindings' output types. Explicit outputs
-never enter the inferred-value host. Each observation deduplicates deliveries in
-the consuming graph, so different bindings with the same output retain their input
-obligations without repeating value flow. Constraints on the parameter subscribe
-to bindings and use their input types. The same entry/exit
+never enter the inferred-value host. Each read connects both sources to an ordinary
+`TermShapeHost`, which deduplicates outputs and uses the publishers' existing graph
+copying to keep consumers independent. Different bindings with the same output
+retain their input obligations without repeating value flow. Constraints on the
+parameter subscribe to bindings and use their input types. The same entry/exit
 marks filter both operations, so another activation cannot constrain the binding.
 `TypeShape.Parameter` retains both originating hosts, allowing importers to copy
 inferred values and explicit bindings independently of their exporters. Repeated

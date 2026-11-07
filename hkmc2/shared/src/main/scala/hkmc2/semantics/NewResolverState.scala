@@ -289,11 +289,6 @@ final class NewResolverState(val owner: Elaborator.State):
   // same consumer-local copying and deferred delivery as inferred parameter values.
   private[semantics] val typeArgumentBindings: Cache[VarSymbol, Host[TypeArgumentBinding]] =
     new Cache(_.typeArgumentBindings, identity)
-  // Per-read delivery keys merge inferred values with explicit output projections.
-  // Inherited listeners extend this consumer's table; no output candidates are
-  // written back into the parameter's inferred-value host.
-  private[semantics] val typeParameterValueDeliveries: Seen[(Object, ShapeIdentity.Key)] =
-    new Seen(_.typeParameterValueDeliveries)
   // Synthesized applications share their type graph, including the symbolic arguments.
   val appliedTypeTemplates: Cache[ClassSymbol | TypeAliasSymbol, TypeResolution] =
     new Cache(_.appliedTypeTemplates, identity)
