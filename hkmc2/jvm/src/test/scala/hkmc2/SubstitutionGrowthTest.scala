@@ -214,7 +214,7 @@ class SubstitutionGrowthTest extends AnyFunSuite:
       TupleShape(source, TupleShape.Field(Fld(FldFlags.empty, Term.UnitVal(), N), Nil) :: Nil)(resolver)
 
   // Diff tests cannot distinguish a shared dependency DAG from a traversal of
-  // all its paths. Each argument below has two edges to the same child, while
+  // all its paths. Each combination below has two views of the same child, while
   // its captured instance requires B even before a bound mentioning B arrives.
   test("synthesized dependency queries do not expand shared interpretation paths"):
     val allocation = allocationCounter
@@ -227,7 +227,7 @@ class SubstitutionGrowthTest extends AnyFunSuite:
     val leaf = h.typeOf(a).instantiate(TypeSubstitution(a1 :: Nil))
     for depth <- 8 :: 16 :: Nil do
       val root = (1 to depth).foldLeft(leaf): (child, _) =>
-        val shape = TypeShape.Argument(TypeArgument(child, child))
+        val shape = TypeShape.Combined(TypeFormula.atom(child).union(TypeFormula.atom(child.withPolarity(false))))
         DeclaredType.synthesized(child.resolution, shape)
       val input = root.instantiate(TypeSubstitution(b1 :: extra :: Nil))
       val expected = root.instantiate(TypeSubstitution(b1 :: Nil))
@@ -375,10 +375,10 @@ class SubstitutionGrowthTest extends AnyFunSuite:
     h.resolver.publishParameter(b1, value)
     assert(seen.toList == List(value))
 
-  // Equal argument uses must share variance interpretation work, even when the
-  // selected endpoint lies behind nested contextual references. This checks
+  // Applying variance must not traverse the selected endpoint, even when it
+  // lies behind nested contextual references. This checks
   // allocation independently of depth; diff tests cover namespaces and witnesses.
-  test("variance cache hits allocate independently of contextual argument depth"):
+  test("applying variance allocates independently of contextual argument depth"):
     val allocation = allocationCounter
     for depth <- 8 :: 32 :: Nil do
       val h = new Harness
@@ -386,17 +386,17 @@ class SubstitutionGrowthTest extends AnyFunSuite:
       val leaf = h.typeOf(h.binder("A"))
       val root = (1 to depth).foldLeft(leaf): (child, _) =>
         DeclaredType.synthesized(child.resolution, TypeShape.Contextual(ContextualType(child, Nil)))
-      val inputs = Vector.tabulate(4)(_ => root.withPolarity(false).withPolarity(true))
+      val inputs = Vector.tabulate(4)(_ => TypeArgument.invariant(root.withPolarity(false).withPolarity(true)))
       for positive <- false :: true :: Nil do
         val parameter = TyParam(FldFlags.empty, S(positive), h.binder("T"))(N)
-        val expected = h.resolver.argumentType(root, parameter)
-        inputs.foreach(input => assert(h.resolver.argumentType(input, parameter) == expected))
+        val expected = h.resolver.argumentType(TypeArgument.invariant(root), parameter, root.resolution.source)
+        inputs.foreach(input => assert(h.resolver.argumentType(input, parameter, root.resolution.source) == expected))
         val repetitions = 1000
         val before = allocation.getCurrentThreadAllocatedBytes
         var result = expected
         var index = 0
         while index < repetitions do
-          result = h.resolver.argumentType(inputs(index % inputs.size), parameter)
+          result = h.resolver.argumentType(inputs(index % inputs.size), parameter, root.resolution.source)
           index += 1
         val bytes = allocation.getCurrentThreadAllocatedBytes - before
         assert(result == expected)
@@ -513,7 +513,7 @@ class SubstitutionGrowthTest extends AnyFunSuite:
       val reference = new TypeResolution(use, _ => fail("Unexpected type error"))
       reference.publish(TypeShape.Alias(symbol, S(body.resolution)))
       val application = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
-      application.publish(TypeShape.Applied(reference, List(h.typeOf(h.binder("C")).resolution)))
+      application.publish(TypeShape.Applied(reference, List(TypeArgumentResolution.Type(h.typeOf(h.binder("C")).resolution))))
       (DeclaredType(reference, Map.empty, TypeSubstitution.empty, true)(N), DeclaredType(application, Map.empty, TypeSubstitution.empty, true)(N), b)
     def observe(h: Harness, tpe: DeclaredType, b: VarSymbol): Map[VarSymbol, TypeParameterInstance] =
       import h.given

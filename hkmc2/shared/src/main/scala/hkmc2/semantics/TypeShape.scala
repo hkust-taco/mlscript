@@ -4,7 +4,7 @@ package semantics
 import hkmc2.utils.*, shorthands.*
 import codegen.Erasure
 
-/** A type interpretation, separate from the value shapes of the same reference syntax.
+/** A proper type interpretation, separate from both type arguments and value shapes.
   * Compound types retain links to their operands so forward aliases need not be expanded eagerly.
   */
 sealed abstract class TypeShape extends ValueKey
@@ -79,28 +79,10 @@ object TypeShape:
     protected def sameValue(other: ValueKey): Bool = other match
       case that: Polymorphic => params == that.params && outer == that.outer && body == that.body
       case _ => false
-  final case class Applied(base: TypeResolution, args: Ls[TypeResolution]) extends TypeShape:
+  final case class Applied(base: TypeResolution, args: Ls[TypeArgumentResolution]) extends TypeShape:
     protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), base.hashCode, args.hashCode)
     protected def sameValue(other: ValueKey): Bool = other match
       case that: Applied => base == that.base && args == that.args
-      case _ => false
-  final case class Wildcard(input: Opt[TypeResolution], output: Opt[TypeResolution]) extends TypeShape:
-    protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), input.hashCode, output.hashCode)
-    protected def sameValue(other: ValueKey): Bool = other match
-      case that: Wildcard => input == that.input && output == that.output
-      case _ => false
-  // Interpreted arguments retain both polarities in the argument's lexical environment.
-  final case class Argument(parts: TypeArgument) extends TypeShape:
-    protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), parts.hashCode)
-    protected def sameValue(other: ValueKey): Bool = other match
-      case that: Argument => parts == that.parts
-      case _ => false
-  // Substitution selects one part before the type is used in further constraints.
-  // The argument stays in its own lexical environment, including delayed parts.
-  final case class SelectedArgument(argument: DeclaredType, positive: Bool) extends TypeShape:
-    protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), argument.hashCode, positive.hashCode)
-    protected def sameValue(other: ValueKey): Bool = other match
-      case that: SelectedArgument => argument == that.argument && positive == that.positive
       case _ => false
   // A transported reference retains its context before any deferred component
   // is observed. The resolver flattens these nodes and normalizes their marks.
@@ -134,7 +116,7 @@ object TypeShape:
   // An open type expression reached through a reference. Unlike Contextual,
   // its free binders still receive the observing declaration's substitution.
   // Qualified references retain the receiver's bindings and lexical path too.
-  final case class Reference(base: TypeResolution, marks: Ls[Marks], bindings: Map[VarSymbol, DeclaredType], instances: TypeSubstitution) extends TypeShape:
+  final case class Reference(base: TypeResolution, marks: Ls[Marks], bindings: Map[VarSymbol, TypeArgument], instances: TypeSubstitution) extends TypeShape:
     protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), base.hashCode, marks.hashCode, bindings.hashCode, instances.hashCode)
     protected def sameValue(other: ValueKey): Bool = other match
       case that: Reference => base == that.base && marks == that.marks && bindings == that.bindings && instances == that.instances
@@ -219,7 +201,7 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
       case Reference(base, _, _, _) => base.validate(visited)
       case Applied(base, args) =>
         base.validate(visited)
-        args.foreach(_.validate(visited))
+        args.foreach(_.foreachType(_.validate(visited)))
         def checkArity(base: TypeResolution, seen: Set[TypeResolution]): Unit = if !seen(base) then
           def check(name: Str, count: Int, loc: Opt[Loc]): Unit = if args.length > count then
             fail(msg"Type '$name' accepts at most $count type ${"argument".pluralized(count)}, but got ${args.length}." ->
@@ -230,9 +212,6 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
             case Reference(inner, _, _, _) :: Nil => checkArity(inner, seen + base)
             case _ => ()
         checkArity(base, Set.empty)
-      case Wildcard(input, output) => input.foreach(_.validate(visited)); output.foreach(_.validate(visited))
-      case Argument(parts) => parts.input.resolution.validate(visited); parts.output.resolution.validate(visited)
-      case SelectedArgument(argument, _) => argument.resolution.validate(visited)
       case Contextual(reference) => reference.tpe.resolution.validate(visited)
       case Function(_, result) => result.validate(visited)
       case Polymorphic(params, _, body) =>
@@ -254,7 +233,7 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
   * direction of a constraint subsequently applied to the interpreted type.
   */
 final class DeclaredType private (private[semantics] val reference: DeclaredType.Reference,
-    val bindings: Map[VarSymbol, DeclaredType])(val origin: Opt[TypeInterfaceReason],
+    val bindings: Map[VarSymbol, TypeArgument])(val origin: Opt[TypeInterfaceReason],
     private[semantics] val namespaces: Opt[TypeNamespaces], private[semantics] val interpretation: Opt[TypeShape]) extends ValueKey:
   def resolution: TypeResolution = reference.resolution
   def instances: TypeSubstitution = reference.instances
@@ -291,10 +270,6 @@ final class DeclaredType private (private[semantics] val reference: DeclaredType
           // Scope paths carry no diagnostic evidence. Even distinct witnesses
           // share the cached path, rather than retaining a freshly rebuilt one.
           TypeShape.Contextual(ContextualType(current.tpe, previous.marks))
-      case (TypeShape.Argument(previous), TypeShape.Argument(current)) =>
-        if previous.input.sameUse(current.input) && previous.output.sameUse(current.output) then canonical else shape
-      case (TypeShape.SelectedArgument(previous, _), TypeShape.SelectedArgument(current, _)) =>
-        if previous.sameUse(current) then canonical else shape
       case (TypeShape.Combined(previous), TypeShape.Combined(current)) =>
         val left = previous.orderedAtoms
         val right = current.orderedAtoms
@@ -309,7 +284,7 @@ final class DeclaredType private (private[semantics] val reference: DeclaredType
   def withOrigin(witness: Opt[TypeInterfaceReason]): DeclaredType =
     if witness.isEmpty then this else new DeclaredType(reference, bindings)(witness, namespaces, interpretation)
 
-  private def rebuilt(bindings: Map[VarSymbol, DeclaredType], instances: TypeSubstitution, positive: Bool,
+  private def rebuilt(bindings: Map[VarSymbol, TypeArgument], instances: TypeSubstitution, positive: Bool,
       plans: Opt[TypeNamespaces])(using ResolutionContext): DeclaredType =
     val references = rctx.state.typeReferences
     val aliases = plans.fold(Nil)(_.aliases)
@@ -361,10 +336,17 @@ object DeclaredType:
   /** Canonical bindings retain only interned references. Per-use diagnostic
     * witnesses stay on DeclaredType and cannot keep extra data in the interner.
     */
-  private[semantics] final class Bindings private[DeclaredType] (val values: Map[VarSymbol, Reference]) extends ValueKey:
+  private[semantics] final class Bindings private[DeclaredType] (val values: Map[VarSymbol, ArgumentReference]) extends ValueKey:
     protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), ValueKey.mapHash(values)(System.identityHashCode, _.hashCode))
     protected def sameValue(other: ValueKey): Bool = other match
       case that: Bindings => values == that.values
+      case _ => false
+
+  /** Both endpoints use this pool's canonical proper-type references. */
+  private[semantics] final class ArgumentReference(val input: Reference, val output: Reference) extends ValueKey:
+    protected val valueHash: Int = ValueKey.hash(input.hashCode, output.hashCode)
+    protected def sameValue(other: ValueKey): Bool = other match
+      case that: ArgumentReference => (input eq that.input) && (output eq that.output)
       case _ => false
 
   private val emptyBindings = new Bindings(Map.empty)
@@ -393,21 +375,21 @@ object DeclaredType:
         val known = imported.get(reference)
         if known != null then known
         else
-          val children = reference.bindings.values.iterator.map((symbol, child) => symbol -> local(child)).toMap
+          val children = reference.bindings.values.iterator.map((symbol, child) => symbol -> new ArgumentReference(local(child.input), local(child.output))).toMap
           val result = intern(reference.resolution, internBindings(children),
             reference.instances, reference.positive, reference.namespaces)
           imported.put(reference, result)
           result
-    def apply(resolution: TypeResolution, values: Map[VarSymbol, DeclaredType], instances: TypeSubstitution,
+    def apply(resolution: TypeResolution, values: Map[VarSymbol, TypeArgument], instances: TypeSubstitution,
         positive: Bool, namespaces: Ls[TypeAliasSymbol]): Reference =
-      val children = if values.isEmpty then Map.empty else values.iterator.map((symbol, tpe) => symbol -> local(tpe.reference)).toMap
+      val children = if values.isEmpty then Map.empty else values.iterator.map((symbol, tpe) => symbol -> new ArgumentReference(local(tpe.input.reference), local(tpe.output.reference))).toMap
       intern(resolution, internBindings(children), instances, positive, namespaces)
     /** Polarity, instances, and local namespaces do not change bound children.
       * Reuse their canonical map, importing it once if the source is foreign.
       */
     def updated(reference: Reference, instances: TypeSubstitution, positive: Bool, namespaces: Ls[TypeAliasSymbol]): Reference =
       intern(reference.resolution, local(reference).bindings, instances, positive, namespaces)
-    private def internBindings(values: Map[VarSymbol, Reference]): Bindings =
+    private def internBindings(values: Map[VarSymbol, ArgumentReference]): Bindings =
       if values.isEmpty then emptyBindings else
         val binding = new Bindings(values)
         bindings.getOrElseUpdate(binding, binding)
@@ -417,7 +399,7 @@ object DeclaredType:
       val reference = new Reference(resolution, bindings, environment, positive, namespaces, this)
       references.getOrElseUpdate(reference, reference)
 
-  def apply(resolution: TypeResolution, bindings: Map[VarSymbol, DeclaredType],
+  def apply(resolution: TypeResolution, bindings: Map[VarSymbol, TypeArgument],
       instances: TypeSubstitution, positive: Bool)(origin: Opt[TypeInterfaceReason])(using ResolutionContext): DeclaredType =
     new DeclaredType(rctx.state.typeReferences(resolution, bindings, instances, positive, Nil), bindings)(origin, N, N)
 
@@ -456,7 +438,9 @@ object DeclaredType:
               else if a.bindings ne b.bindings then
                 a.bindings.values.foreach: (symbol, child) =>
                   b.bindings.values.get(symbol) match
-                    case S(other) => pending.append(child); pending.append(other)
+                    case S(other) =>
+                      pending.append(child.input); pending.append(other.input)
+                      pending.append(child.output); pending.append(other.output)
                     case N => equal = false
         equal
 
@@ -471,16 +455,45 @@ final class ContextualType(val tpe: DeclaredType, val marks: Ls[Marks]) extends 
     case that: ContextualType => tpe == that.tpe && marks == that.marks
     case _ => false
 
+/** Source arguments have their own category: a wildcard is valid only in an argument slot.
+  * Its bounds are proper types and may still await forward resolution.
+  */
+enum TypeArgumentResolution:
+  case Type(resolution: TypeResolution)
+  case Wildcard(tree: Term, input: Opt[TypeResolution], output: Opt[TypeResolution])
+
+  def source: Term = this match
+    case Type(resolution) => resolution.source
+    case Wildcard(tree, _, _) => tree
+
+  def foreachType(f: TypeResolution => Unit): Unit = this match
+    case Type(resolution) => f(resolution)
+    case Wildcard(_, input, output) => input.foreach(f); output.foreach(f)
+
 /** An unqualified argument is interpreted separately in the two polarities;
   * these parts coincide only when substitution gives the same type in both.
   * Missing wildcard parts are Nothing on input and Any on output, never holes.
   */
 final class TypeArgument(val input: DeclaredType, val output: DeclaredType) extends ValueKey:
+  /** Projection fixes the type before any constraint observes it. Deferred endpoints
+    * remain proper type references; their later resolution cannot change this choice.
+    */
+  def at(positive: Bool): DeclaredType = if positive then output else input
+  def map(f: DeclaredType => DeclaredType): TypeArgument =
+    val in = f(input)
+    val out = if input is output then in else f(output)
+    if (in is input) && (out is output) then this else TypeArgument(in, out)
+  def instantiate(instances: TypeSubstitution)(using ResolutionContext): TypeArgument = map(_.instantiate(instances))
+  def swap: TypeArgument = TypeArgument(output, input)
   override def toString: Str = s"TypeArgument($input, $output)"
   protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), input.hashCode, output.hashCode)
   protected def sameValue(other: ValueKey): Bool = other match
     case that: TypeArgument => input == that.input && output == that.output
     case _ => false
+
+object TypeArgument:
+  /** A type already interpreted at a scalar occurrence has the same meaning in both positions. */
+  def invariant(tpe: DeclaredType): TypeArgument = TypeArgument(tpe, tpe)
 
 /** A quantified binder belongs to the source scheme; its bounds retain graph links
   * so mutually dependent bounds do not require expanding or copying their types.

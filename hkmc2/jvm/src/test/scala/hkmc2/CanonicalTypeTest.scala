@@ -62,7 +62,7 @@ class CanonicalTypeTest extends AnyFunSuite:
     val leaf = DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)(N)(using source)
     for size <- 8 :: 128 :: Nil do
       val bindings = (1 to size).iterator.map: index =>
-        VarSymbol(syntax.Tree.Ident(s"T$index"), mut = false) -> leaf
+        VarSymbol(syntax.Tree.Ident(s"T$index"), mut = false) -> TypeArgument.invariant(leaf)
       .toMap
       val tpe = DeclaredType(resolution, bindings, TypeSubstitution.empty, true)(N)(using source)
       def update()(using ResolutionContext): DeclaredType =
@@ -92,7 +92,7 @@ class CanonicalTypeTest extends AnyFunSuite:
     def tree(depth: Int): DeclaredType =
       val leaf = DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)(N)
       (1 to depth).foldLeft(leaf): (child, _) =>
-        DeclaredType(resolution, Map(a -> child, b -> child), TypeSubstitution.empty, true)(N)
+        DeclaredType(resolution, Map(a -> TypeArgument.invariant(child), b -> TypeArgument.invariant(child)), TypeSubstitution.empty, true)(N)
     for depth <- 16 :: 64 :: Nil do
       val left = tree(depth)
       val right = tree(depth)
@@ -147,7 +147,7 @@ class CanonicalTypeTest extends AnyFunSuite:
     def tree(): DeclaredType =
       val leaf = DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)(N)
       (1 to 64).foldLeft(leaf): (child, _) =>
-        DeclaredType(resolution, Map(a -> child, b -> child), TypeSubstitution.empty, true)(N)
+        DeclaredType(resolution, Map(a -> TypeArgument.invariant(child), b -> TypeArgument.invariant(child)), TypeSubstitution.empty, true)(N)
     val first = tree()
     (1 to 20).foreach: _ =>
       val repeated = tree()
@@ -163,13 +163,15 @@ class CanonicalTypeTest extends AnyFunSuite:
     val source = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
     val leaf = DeclaredType(source, Map.empty, TypeSubstitution.empty, true)(N)
     val depth = 32
+    def shape(child: DeclaredType): TypeShape =
+      TypeShape.Combined(TypeFormula.atom(child).union(TypeFormula.atom(child.withPolarity(false))))
     val layers = (1 to depth).scanLeft(leaf): (child, _) =>
-      DeclaredType.synthesized(source, TypeShape.Argument(TypeArgument(child, child)))
+      DeclaredType.synthesized(source, shape(child))
     val retained = scala.collection.mutable.Set.empty[Identity[DeclaredType]]
     for _ <- 0 until 100 do
       var current = DeclaredType(source, Map.empty, TypeSubstitution.empty, true)(N)
       layers.tail.foreach: cached =>
-        current = cached.withInterpretation(TypeShape.Argument(TypeArgument(current, current)))
+        current = cached.withInterpretation(shape(current))
         retained += new Identity(current)
     assert(retained.size <= depth)
 
@@ -184,14 +186,14 @@ class CanonicalTypeTest extends AnyFunSuite:
     def tree()(using ResolutionContext): DeclaredType =
       val leaf = DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)(N)
       (1 to 64).foldLeft(leaf): (child, _) =>
-        DeclaredType(resolution, Map(a -> child, b -> child), TypeSubstitution.empty, true)(N)
+        DeclaredType(resolution, Map(a -> TypeArgument.invariant(child), b -> TypeArgument.invariant(child)), TypeSubstitution.empty, true)(N)
     val original = tree()(using source)
     val independent = tree()(using other)
     assert(original == independent && independent == original)
     assert(original.hashCode == independent.hashCode)
     (1 to 20).foreach: _ =>
-      val imported = DeclaredType(resolution, Map(a -> original, b -> independent), TypeSubstitution.empty, true)(N)(using consumer)
-      val repeated = DeclaredType(resolution, Map(b -> original, a -> independent), TypeSubstitution.empty, true)(N)(using consumer)
+      val imported = DeclaredType(resolution, Map(a -> TypeArgument.invariant(original), b -> TypeArgument.invariant(independent)), TypeSubstitution.empty, true)(N)(using consumer)
+      val repeated = DeclaredType(resolution, Map(b -> TypeArgument.invariant(original), a -> TypeArgument.invariant(independent)), TypeSubstitution.empty, true)(N)(using consumer)
       assert(imported == repeated)
     assert(consumer.state.typeReferences.size == 66)
     assert(consumer.state.typeReferences.importedCount == 130)
@@ -214,7 +216,7 @@ class CanonicalTypeTest extends AnyFunSuite:
       val leaf = DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)(N)
         .withNamespaces(TypeNamespaces.single(alias, witness))
       (1 to 64).foldLeft(leaf): (child, _) =>
-        val parent = DeclaredType(resolution, Map(argument -> child, second -> child), TypeSubstitution.empty, true)(N)
+        val parent = DeclaredType(resolution, Map(argument -> TypeArgument.invariant(child), second -> TypeArgument.invariant(child)), TypeSubstitution.empty, true)(N)
         assert(parent.namespaces.isEmpty)
         parent
     val original = tree(alias)(using source)
@@ -224,8 +226,8 @@ class CanonicalTypeTest extends AnyFunSuite:
       assert(original == independent && independent == original)
       assert(original.hashCode == independent.hashCode)
       assert(original != different)
-      val imported = DeclaredType(resolution, Map(argument -> original), TypeSubstitution.empty, true)(N)(using consumer)
-      assert(imported.bindings(argument) == independent)
+      val imported = DeclaredType(resolution, Map(argument -> TypeArgument.invariant(original)), TypeSubstitution.empty, true)(N)(using consumer)
+      assert(imported.bindings(argument) == TypeArgument.invariant(independent))
     assert(source.state.typeReferences.size == 66)
     assert(source.state.typeReferences.importedCount == 0)
     assert(consumer.state.typeReferences.size == 132)

@@ -3340,7 +3340,7 @@ extends Importer:
     * Call after registering separate signatures so those interfaces remain authoritative.
     */
   private def seedRestParameter(ps: ParamList)(using Ctx): Unit = if newResolution then
-    ps.variadic.map(_.param).filter(parameterSignature(_).isEmpty).foreach: p =>
+    ps.variadic.map(_.param).filter(parameterSignature(_, positive = true).isEmpty).foreach: p =>
       def builtin(name: Str): Term =
         prelude.getBuiltin(name).get.ref(N)
       val initial = Term.TyApp(builtin("Array"), builtin("Nothing") :: Nil)(N).withLoc(p.toLoc)

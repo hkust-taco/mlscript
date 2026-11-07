@@ -86,7 +86,7 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
     val ref = SimpleRef(param.sym)(N)
     val unknown = UnknownValueShape(ref, fromPublicInterface = true)(path.via(
       msg"Parameter '${param.sym.nme}' admits values of unknown shape." -> param.toLoc))
-    resolver.parameterSignature(param) match
+    resolver.parameterSignature(param, positive = true) match
       case N => resolver.constrainParameter(param, unknown.enter(marks), marks)
       case S(tpe) => unknown.enter(marks) match
         case value: TermShape => resolver.exposeTypeHoles(tpe.instantiate(rctx.instances), value, marks)
@@ -156,7 +156,7 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
         resolver.instantiateShape(specialized.declaration, instances.withOverrides(specialized.instances)).exit(marks) match
           case value: TermShape => valueIn(value, path, instances)
           case NoShape => ()
-      case _: InstanceShape =>
+      case _: TypedValueShape =>
         watch((ShapeIdentity.key(shape), "instance view"))(resolver.listenInstanceViews(shape))(emit(_, path))
       case ds: DefnShape if ds.defn.sym.getState is rctx.owner =>
         parameters(shape.unappliedParams, path)
@@ -213,7 +213,7 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
         // declared binding; concrete annotations still hide implementation shapes.
         resolver.arrayElementType(nominal).foreach: binding =>
           watch((ShapeIdentity.key(shape), "array elements"))(listener => { resolver.listenArrayElements(shape)(listener); () }): element =>
-            emit(element, path.via(msg"This value is stored in this array." -> binding.resolution.source.toLoc))
+            emit(element, path.via(msg"This value is stored in this array." -> binding.output.resolution.source.toLoc))
       case view: IntersectionView => view.values.foreach(value => emit(value.exit(marks), path))
       // Structural annotations hide initializer implementations. Unknown and
       // dynamic values have no static graph; namespace probes denote no value.

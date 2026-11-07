@@ -121,7 +121,7 @@ final class NewResolverState(val owner: Elaborator.State):
   // * The `FlowSymbol`s are currently used to uniquely identify terms
   val appShapes: Cache[(ShapeIdentity.Key, FlowSymbol), AppShape] =
     new Cache(_.appShapes, identity)
-  val newShapes: Cache[(ClassValueTarget, Ls[Marks], FlowSymbol, Opt[Ls[DeclaredType]]), NewShape] =
+  val newShapes: Cache[(ClassValueTarget, Ls[Marks], FlowSymbol, Opt[Ls[TypeArgument]]), NewShape] =
     new Cache(_.newShapes, identity)
   val constructorApplications: Seen[(NewShape, TypeSubstitution)] =
     new Seen(_.constructorApplications)
@@ -154,7 +154,7 @@ final class NewResolverState(val owner: Elaborator.State):
   // consumer-local publisher machinery rather than mutating the source symbol.
   private[semantics] val memberVariables: Cache[TermSymbol, ShapeHost] =
     new Cache(_.memberVariables, identity)
-  val declaredSymShapes: Cache[(BlockMemberSymbol, FlowSymbol, Ls[Marks], Map[VarSymbol, DeclaredType], Bool), DeclaredSymShape] =
+  val declaredSymShapes: Cache[(BlockMemberSymbol, FlowSymbol, Ls[Marks], Map[VarSymbol, TypeArgument], Bool), DeclaredSymShape] =
     new Cache(_.declaredSymShapes, identity)
   val selfShapes: Cache[InnerSymbol, BaseShape] =
     new Cache(_.selfShapes, identity)
@@ -233,9 +233,6 @@ final class NewResolverState(val owner: Elaborator.State):
   // Shared by every use of the same formula, so the combinations have no source (see DeclaredType.shared).
   val combinedTypes: Cache[TypeFormula[DeclaredType], DeclaredType] =
     new Cache(_.combinedTypes, identity)
-  // Keyed by the type use whose source the argument keeps (see DeclaredType.synthesized).
-  val argumentTypes: Cache[(TypeResolution, TypeArgument), DeclaredType] =
-    new Cache(_.argumentTypes, identity)
   val pendingTypeDependencies: Cache[TypeResolution, TypeDependencyHost] =
     new Cache(_.pendingTypeDependencies, identity)
   val dependencySubscriptions: Seen[(TypeResolution, TypeResolution)] =
@@ -279,19 +276,13 @@ final class NewResolverState(val owner: Elaborator.State):
     new Cache(_.primitiveTypes, identity)
   val extremeTypes: Cache[Bool, DeclaredType] =
     new Cache(_.extremeTypes, identity)
-  val selectedArguments: Cache[(DeclaredType, Bool), DeclaredType] =
-    new Cache(_.selectedArguments, identity)
-  // Keep one input/result pair per semantic type and variance. The input lets a
-  // hit check its diagnostic evidence without retaining a key for every witness.
-  val variantTypes: Cache[(DeclaredType, Bool), (DeclaredType, DeclaredType)] =
-    new Cache(_.variantTypes, identity)
   val abstractTypes: Cache[TypeResolution, DeclaredType] =
     new Cache(_.abstractTypes, identity)
   val omittedTypes: Cache[(TypeResolution, VarSymbol), DeclaredType] =
     new Cache(_.omittedTypes, identity)
   val exposedTypeHoles: Seen[(DeclaredType, ShapeIdentity.Key, Ls[Marks])] =
     new Seen(_.exposedTypeHoles)
-  val signatureParameters: Cache[VarSymbol, DeclaredType] =
+  val signatureParameters: Cache[VarSymbol, TypedValueShape] =
     new Cache(_.signatureParameters, identity)
   // Synthesized applications share their type graph, including the symbolic arguments.
   val appliedTypeTemplates: Cache[ClassSymbol | TypeAliasSymbol, TypeResolution] =
