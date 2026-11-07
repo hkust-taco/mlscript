@@ -25,9 +25,9 @@ main()
 while
   do print(xs)
   let f = xs.pop()
-  f is Function as resume then
+  f !== () then
     set count += 1
-    resume(count)
+    f{as Function}(count)
     print("?")
 //│ > B a
 //│ > [fun]
@@ -72,9 +72,9 @@ handle h = Effect[Str, Effect[Str, Int]] with
     k(g)
     while xs.pop() is
       null then print("Done.")
-      Function as f then
+      f then
         set count += 1
-        f(count)
+        f{as Function}(count)
 let g = h.perform("hi")
 print(g.perform("a"))
 print("—")
