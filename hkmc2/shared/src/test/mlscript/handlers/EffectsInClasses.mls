@@ -97,9 +97,10 @@ let oops =
       print(arg)
       k("b")
   Lol(h)
-#config(effectHandlers: Some(EffectHandlers()))
 //│ ═══[RUNTIME ERROR] Error: Effect Handler$h$6 is raised in a constructor
 //│ oops = undefined
+
+#config(effectHandlers: Some(EffectHandlers()))
 
 :fixme
 oops.h
