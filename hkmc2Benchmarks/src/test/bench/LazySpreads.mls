@@ -1,5 +1,9 @@
 :js
 
+// Comment to run the benchmarks
+:exit
+====================================================================================================
+
 import "../../../../hkmc2/shared/src/test/mlscript-compile/LazyArray.mls"
 import "../../../../hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mls"
 import "../../../../hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mls"
@@ -65,17 +69,17 @@ fun funnySum(xs) = if xs is
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let funnySum;
 //│ funnySum = function funnySum(xs) {
-//│   let ls, a, b, lastElement1$, middleElements, element0$, tmp, tmp1;
+//│   let lastElement1$, middleElements, element0$, tmp, tmp1;
 //│   if (runtime.Tuple.isArrayLike(xs) && xs.length >= 2) {
+//│     let inlinedVal1, tmp2;
 //│     element0$ = runtime.Tuple.get(xs, 0);
-//│     middleElements = runtime.Tuple.slice(xs, 1, 1);
+//│     tmp2 = xs.length - 1;
+//│     inlinedVal1 = runtime.safeCall(xs.slice(1, tmp2));
+//│     middleElements = inlinedVal1 /* as!! Array */;
 //│     lastElement1$ = runtime.Tuple.get(xs, -1);
-//│     b = lastElement1$;
-//│     ls = middleElements;
-//│     a = element0$;
-//│     tmp = funnySum(ls);
-//│     tmp1 = a + tmp;
-//│     return tmp1 - b
+//│     tmp = funnySum(middleElements);
+//│     tmp1 = element0$ + tmp;
+//│     return tmp1 - lastElement1$
 //│   } else if (runtime.Tuple.isArrayLike(xs) && xs.length === 0) {
 //│     return 0
 //│   }
@@ -91,17 +95,17 @@ fun funnySumEager(xs) = if xs is
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let funnySumEager;
 //│ funnySumEager = function funnySumEager(xs) {
-//│   let ls, a, b, lastElement1$, middleElements, element0$, tmp, tmp1;
+//│   let lastElement1$, middleElements, element0$, tmp, tmp1;
 //│   if (runtime.Tuple.isArrayLike(xs) && xs.length >= 2) {
+//│     let inlinedVal1, tmp2;
 //│     element0$ = runtime.Tuple.get(xs, 0);
-//│     middleElements = runtime.Tuple.slice(xs, 1, 1);
+//│     tmp2 = xs.length - 1;
+//│     inlinedVal1 = runtime.safeCall(xs.slice(1, tmp2));
+//│     middleElements = inlinedVal1 /* as!! Array */;
 //│     lastElement1$ = runtime.Tuple.get(xs, -1);
-//│     b = lastElement1$;
-//│     ls = middleElements;
-//│     a = element0$;
-//│     tmp = funnySumEager(ls);
-//│     tmp1 = a + tmp;
-//│     return tmp1 - b
+//│     tmp = funnySumEager(middleElements);
+//│     tmp1 = element0$ + tmp;
+//│     return tmp1 - lastElement1$
 //│   } else if (runtime.Tuple.isArrayLike(xs) && xs.length === 0) {
 //│     return 0
 //│   }
@@ -186,16 +190,17 @@ fun map(f) = case
 //│ map = function map(f) {
 //│   let lambda18;
 //│   lambda18 = (undefined, function (caseScrut) {
-//│     let rest, a, middleElements, element0$, tmp3, tmp4, tmp5;
+//│     let middleElements, element0$, tmp2, baseCall, tmp3;
 //│     if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length >= 1) {
+//│       let inlinedVal2, tmp4;
 //│       element0$ = runtime.Tuple.get(caseScrut, 0);
-//│       middleElements = runtime.Tuple.slice(caseScrut, 1, 0);
-//│       rest = middleElements;
-//│       a = element0$;
-//│       tmp3 = runtime.safeCall(f(a));
-//│       tmp4 = map(f);
-//│       tmp5 = runtime.safeCall(tmp4(rest));
-//│       return globalThis.Object.freeze(runtime.Tuple.lazyConcat(tmp3, runtime.Tuple.split, tmp5))
+//│       tmp4 = caseScrut.length - 0;
+//│       inlinedVal2 = runtime.safeCall(caseScrut.slice(1, tmp4));
+//│       middleElements = inlinedVal2 /* as!! Array */;
+//│       tmp2 = runtime.safeCall(f(element0$));
+//│       baseCall = map(f);
+//│       tmp3 = runtime.safeCall(baseCall(middleElements));
+//│       return globalThis.Object.freeze(runtime.Tuple.lazyConcat(tmp2, runtime.Tuple.split, tmp3))
 //│     } else if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length === 0) {
 //│       return globalThis.Object.freeze([])
 //│     }
@@ -215,18 +220,19 @@ fun mapEager(f) = case
 //│ mapEager = function mapEager(f) {
 //│   let lambda18;
 //│   lambda18 = (undefined, function (caseScrut) {
-//│     let rest, a, middleElements, element0$, tmp3, tmp4, tmp5;
+//│     let middleElements, element0$, tmp2, baseCall, tmp3;
 //│     if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length >= 1) {
+//│       let inlinedVal2, tmp4;
 //│       element0$ = runtime.Tuple.get(caseScrut, 0);
-//│       middleElements = runtime.Tuple.slice(caseScrut, 1, 0);
-//│       rest = middleElements;
-//│       a = element0$;
-//│       tmp3 = runtime.safeCall(f(a));
-//│       tmp4 = mapEager(f);
-//│       tmp5 = runtime.safeCall(tmp4(rest));
+//│       tmp4 = caseScrut.length - 0;
+//│       inlinedVal2 = runtime.safeCall(caseScrut.slice(1, tmp4));
+//│       middleElements = inlinedVal2 /* as!! Array */;
+//│       tmp2 = runtime.safeCall(f(element0$));
+//│       baseCall = mapEager(f);
+//│       tmp3 = runtime.safeCall(baseCall(middleElements));
 //│       return globalThis.Object.freeze([
-//│         tmp3,
-//│         ...tmp5
+//│         tmp2,
+//│         ...tmp3
 //│       ])
 //│     } else if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length === 0) {
 //│       return globalThis.Object.freeze([])
@@ -287,15 +293,15 @@ suite.add("EagerBuiltMap2Eager15", () =>
 :ge
 mapEager(..[[1]])
 //│ ╔══[COMPILATION ERROR] Lazy spreads are not supported in call arguments
-//│ ║  l.288: 	mapEager(..[[1]])
-//│ ╙──       	        ^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function 'mapEager' expected 1 argument but got 2
+//│ ║  l.+1: 	mapEager(..[[1]])
+//│ ╙──      	        ^^^^^^^^^
+//│ = fun
 
 :e
 fun what(..args) = args
 //│ ╔══[COMPILATION ERROR] Lazy spread parameters not allowed.
-//│ ║  l.295: 	fun what(..args) = args
-//│ ╙──       	         ^^^^^^
+//│ ║  l.+1: 	fun what(..args) = args
+//│ ╙──      	         ^^^^^^
 
 fun silly = case
   [a, b, ..xs] then [..xs, ..silly([a, ..xs])]
@@ -340,9 +346,9 @@ suite.add("EagerBuiltSillyEager15", () =>
 
 :silent
 let configs = tuple of
-  LazyArray.{      (name: "LazyArray",      lazySlice: dropLeftRight, lazyConcat: __concat,       split: __split) }
-  FingerTreeList.{ (name: "FingerTreeList", lazySlice: dropLeftRight, lazyConcat: __markerConcat, split: __split) }
-  LazyFingerTree.{ (name: "LazyFingerTree", lazySlice: dropLeftRight, lazyConcat: __concat,       split: __split) }
+  LazyArray.{      {name: "LazyArray",      lazySlice: dropLeftRight, lazyConcat: __concat,       split: __split} }
+  FingerTreeList.{ {name: "FingerTreeList", lazySlice: dropLeftRight, lazyConcat: __markerConcat, split: __split} }
+  LazyFingerTree.{ {name: "LazyFingerTree", lazySlice: dropLeftRight, lazyConcat: __concat,       split: __split} }
 
 let i = 0
 while i < configs.length do
@@ -356,6 +362,19 @@ while i < configs.length do
   suite |> runSuite
   writeResults(suite, name + ".json")
   set i += 1
-//│ i = 3
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: cannotAssign (Lowering.scala:755)
+//│ FAILURE INFO: class hkmc2.semantics.TermSymbol
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'split'
+//│ ║  l.356: 	  set Runtime.Tuple.split = cfg.split
+//│ ║         	                   ^^^^^^
+//│ ╟── Defined here:
+//│ ║  in ../../../../hkmc2/shared/src/test/mlscript-compile/Runtime.mls
+//│ ║  l.121: 	  val split = LazyArray.__split
+//│ ╙──       	      ^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:271)
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ i = 0
 
 

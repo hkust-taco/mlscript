@@ -15,10 +15,10 @@ fun countdown(h: Eff) =
     countdown(h)
 
 fun run(n) =
-  let s = 0
+  let s = n
   handle h = Eff with
     fun get()(k) = k(s)
     fun setVal(i)(k) =
       set s = i
-      k()
+      k(())
   countdown(h)

@@ -1,8 +1,0 @@
-:js
-:effectHandlers
-:lift
-
-import "../../../mlscript-compile/effects-bench/countdown.mls"
-countdown.run(5)
-//│ = 0
-

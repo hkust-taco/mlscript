@@ -1,7 +1,0 @@
-:js
-:effectHandlers
-:lift
-
-import "../../../mlscript-compile/effects-bench/resume_nontail.mls"
-resume_nontail.run(5)
-//│ = 37

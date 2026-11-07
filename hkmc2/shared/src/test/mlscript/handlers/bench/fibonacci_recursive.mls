@@ -1,8 +1,0 @@
-:js
-:effectHandlers
-:lift
-
-import "../../../mlscript-compile/effects-bench/fibonacci_recursive.mls"
-fibonacci_recursive.run(5)
-//│ = 5
-

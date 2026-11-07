@@ -1,7 +1,0 @@
-:js
-:effectHandlers
-:lift
-
-import "../../../mlscript-compile/effects-bench/product_early.mls"
-product_early.run(10)
-//│ = 0

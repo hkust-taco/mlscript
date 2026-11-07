@@ -1,0 +1,8 @@
+:js
+:effectHandlers
+:lift
+
+import "../../mlscript-compile/handlers-bench/fibonacci_recursive.mls"
+fibonacci_recursive.run(20)
+//│ = 6765
+

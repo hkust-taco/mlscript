@@ -18,6 +18,6 @@ fun run(n: Int) =
   handle h = Emit with
     fun emit(e)(k) =
       set s = s + e
-      k()
+      k(())
   range(0, n, h)
   s

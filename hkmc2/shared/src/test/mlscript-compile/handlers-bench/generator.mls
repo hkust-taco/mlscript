@@ -31,12 +31,14 @@ fun iterate(h: Eff, t: Tree): () = if t is
 
 fun generate(f: Function[(), ()]): Generator =
   handle h = Eff with
-    fun yld(x)(k) = Thunk(x, k)
+    fun yld(x)(k) = Thunk(x, () => k(()))
   f(h)
   new Empty
 
-fun sum(a: Int)(g: Generator) = if g is
-  Empty then 0
-  Thunk(v, f) then sum(v + a)(f())
+fun sum(a: Int, g: Generator) =
+  if g is
+    Empty then a
+    Thunk(v, f) then
+      sum(v + a, f())
 
-fun run(n) = sum(0)(generate of h => iterate of h, make of n)
+fun run(n) = sum(0, generate of h => iterate of h, make of n)

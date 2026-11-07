@@ -1,0 +1,15 @@
+:js
+:silent
+
+import "../../../../hkmc2/shared/src/test/mlscript-compile/Benchmark.mls"
+open Benchmark
+
+
+let suite = mkSuite()
+
+import "../../../../hkmc2/shared/src/test/mlscript-compile/handlers-bench/countdown.mls"
+countdown.run(1000000)
+// suite.add("countdown", () => countdown.run(1000))
+
+runSuite(suite)
+// writeResults(suite, "nofibs1.json")
