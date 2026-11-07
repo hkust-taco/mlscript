@@ -47,3 +47,63 @@ erased(Pick)
 //│ ║  l.+1: 	erased(Pick)
 //│ ╙──      	       ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Recognizing an alias of a lattice identity expands its body. The body of an unguarded
+// recursive alias reaches that alias again, which then remains an atom: only the
+// recursion error is reported, rather than expanding the alias forever.
+:e
+type Loop = Loop
+fun loop(value: Loop | Kept) = value
+//│ ╔══[COMPILATION ERROR] Resolution error in member reference
+//│ ║  l.+1: 	type Loop = Loop
+//│ ║        	            ^^^^
+//│ ╟── Unguarded recursive type alias 'Loop'.
+//│ ║  l.+1: 	type Loop = Loop
+//│ ║        	            ^^^^
+//│ ╟── Recursive references must pass through a record, tuple, function, or nominal type.
+//│ ║  l.+1: 	type Loop = Loop
+//│ ╙──      	     ^^^^
+
+:e
+type Ping = Pong
+type Pong = Ping
+fun pingPong(value: Ping | Kept) = value
+//│ ╔══[COMPILATION ERROR] Resolution error in member reference
+//│ ║  l.+1: 	type Ping = Pong
+//│ ║        	            ^^^^
+//│ ╟── Unguarded recursive type alias 'Ping'.
+//│ ║  l.+2: 	type Pong = Ping
+//│ ║        	            ^^^^
+//│ ╟── Recursive references must pass through a record, tuple, function, or nominal type.
+//│ ║  l.+1: 	type Ping = Pong
+//│ ╙──      	     ^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in member reference
+//│ ║  l.+2: 	type Pong = Ping
+//│ ║        	            ^^^^
+//│ ╟── Unguarded recursive type alias 'Pong'.
+//│ ║  l.+1: 	type Ping = Pong
+//│ ║        	            ^^^^
+//│ ╟── Recursive references must pass through a record, tuple, function, or nominal type.
+//│ ║  l.+2: 	type Pong = Ping
+//│ ╙──      	     ^^^^
+
+:e
+type Grow = Grow | Kept
+fun grow(value: Grow & Kept) = value
+//│ ╔══[COMPILATION ERROR] Resolution error in alternation
+//│ ║  l.+1: 	type Grow = Grow | Kept
+//│ ║        	            ^^^^^^^^^^^
+//│ ╟── Unguarded recursive type alias 'Grow'.
+//│ ║  l.+1: 	type Grow = Grow | Kept
+//│ ║        	            ^^^^
+//│ ╟── Recursive references must pass through a record, tuple, function, or nominal type.
+//│ ║  l.+1: 	type Grow = Grow | Kept
+//│ ╙──      	     ^^^^
+
+// The recognition still sees through an alias of an identity alias.
+type AlsoFull = Full
+
+:expect 1
+fun alsoTop(value: Kept & AlsoFull) = value.value
+alsoTop(Pick)
+//│ = 1

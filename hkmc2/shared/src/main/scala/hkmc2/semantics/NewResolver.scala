@@ -577,10 +577,12 @@ class NewResolver:
 
   private def declaredType(resolution: TypeResolution, bindings: Map[VarSymbol, DeclaredType], positive: Bool)
       (using ResolutionContext): DeclaredType =
-    declaredType(resolution, bindings, positive, asArgument = false)
+    declaredType(resolution, bindings, positive, asArgument = false, Set.empty)
 
-  private def declaredType(resolution: TypeResolution, bindings: Map[VarSymbol, DeclaredType], positive: Bool, asArgument: Bool)
-      (using ResolutionContext): DeclaredType =
+  /** `expanding` are the aliases whose bodies this normalization interprets on behalf of an
+    * enclosing expansion: normalization does not expand them again (see typeFormula). */
+  private def declaredType(resolution: TypeResolution, bindings: Map[VarSymbol, DeclaredType], positive: Bool, asArgument: Bool,
+      expanding: Set[TypeAliasSymbol])(using ResolutionContext): DeclaredType =
     // Splitting each argument visits both polarities. Share work within this
     // traversal so nested alias applications do not repeatedly normalize the
     // same source and environment along an exponential number of paths.
@@ -604,9 +606,9 @@ class NewResolver:
           transportType(loop(reference.base, bindings ++ reference.bindings, aliases, positive)
             .instantiate(reference.instances), reference.marks)
         case TypeShape.Union(left, right) :: Nil =>
-          combinedType(resolution, loop(left, bindings, aliases, positive), loop(right, bindings, aliases, positive), true)
+          combinedType(resolution, loop(left, bindings, aliases, positive), loop(right, bindings, aliases, positive), true, aliases)
         case TypeShape.Intersection(left, right) :: Nil =>
-          combinedType(resolution, loop(left, bindings, aliases, positive), loop(right, bindings, aliases, positive), false)
+          combinedType(resolution, loop(left, bindings, aliases, positive), loop(right, bindings, aliases, positive), false, aliases)
         case TypeShape.Wildcard(input, output) :: Nil =>
           // Normalize both parts before retaining the argument. Otherwise even
           // out A keeps another A-to-wildcard environment at each recursive
@@ -642,8 +644,8 @@ class NewResolver:
             argument(res, bindings, aliases, false), argument(res, bindings, aliases, true))))
           applyAlias(loop(base, bindings, aliases, positive), supplied, Set.empty).getOrElse(retain)
         case _ => retain
-    if asArgument then argument(resolution, bindings, Set.empty, positive)
-    else loop(resolution, bindings, Set.empty, positive)
+    if asArgument then argument(resolution, bindings, expanding, positive)
+    else loop(resolution, bindings, expanding, positive)
 
   /** Preserve both occurrences of an unqualified argument before substitution
     * can select either bound. Applications compose these with their polarity;
@@ -651,7 +653,7 @@ class NewResolver:
     */
   private def declaredArgument(resolution: TypeResolution, context: DeclaredType, positive: Bool)
       (using ResolutionContext): DeclaredType =
-    declaredType(resolution, context.bindings, positive, asArgument = true).instantiate(context.instances).withOrigin(context.origin)
+    declaredType(resolution, context.bindings, positive, asArgument = true, Set.empty).instantiate(context.instances).withOrigin(context.origin)
 
   private def normalizedArgument(source: TypeResolution, parts: TypeArgument)(using ResolutionContext): DeclaredType =
     val shape = TypeShape.Argument(parts)
@@ -661,8 +663,10 @@ class NewResolver:
   /** Normalize Boolean combinations without observing an atom's candidates.
     * Transport distributes over components using the ordinary transportType
     * operation; no exit/entry cancellation is introduced by normalization.
+    * The aliases in `expanding` already have their bodies interpreted by an enclosing
+    * expansion, and remain atoms.
     */
-  private def typeFormula(tpe: DeclaredType)(using ResolutionContext): TypeFormula[DeclaredType] =
+  private def typeFormula(tpe: DeclaredType, expanding: Set[TypeAliasSymbol])(using ResolutionContext): TypeFormula[DeclaredType] =
     tpe.shapes match
       case (parameter: TypeShape.Parameter) :: Nil if !tpe.bindings.contains(parameter.symbol) =>
         // Different written occurrences of A are the same lattice atom. Limit
@@ -673,15 +677,21 @@ class NewResolver:
       case TypeShape.Combined(formula) :: Nil =>
         formula.map(atom => inheritNamespaces(atom.instantiate(tpe.instances), tpe.namespaces))
       case TypeShape.Contextual(reference) :: Nil =>
-        typeFormula(reference.tpe.instantiate(tpe.instances).withOrigin(tpe.origin)).map: atom =>
+        typeFormula(reference.tpe.instantiate(tpe.instances).withOrigin(tpe.origin), expanding).map: atom =>
           val moved = transportType(atom, reference.marks)
           inheritNamespaces(moved, tpe.namespaces)
       case TypeShape.Alias(symbol, _) :: Nil if symbol is prelude.builtins.Any => TypeFormula.top
-      case (alias @ TypeShape.Alias(symbol, S(_))) :: Nil if symbol.defn.exists(_.tparams.isEmpty) =>
+      case TypeShape.Alias(symbol, S(rhs)) :: Nil if symbol.defn.exists(_.tparams.isEmpty) && !expanding(symbol) =>
         // Recognize aliases of the lattice identities without replacing the
         // written witness of an alias whose body still contributes an atom.
-        val body = typeFormula(reduceType(tpe, noTypeArguments, alias).get.tpe)
-        if body.orderedAtoms.isEmpty then body else TypeFormula.atom(tpe)
+        // Normalization otherwise retains unapplied aliases as atoms, so this is the
+        // only expansion of their bodies: the body of an unguarded recursive alias
+        // (which regularType rejects) reaches the alias again, which stays an atom.
+        val inner = expanding + symbol
+        val body = declaredType(rhs, aliasBindings(tpe, noTypeArguments, Nil, tpe.positive), tpe.positive,
+          asArgument = false, inner)
+        val formula = typeFormula(body, inner)
+        if formula.orderedAtoms.isEmpty then formula else TypeFormula.atom(tpe)
       case TypeShape.Top :: Nil => TypeFormula.top
       case TypeShape.Bottom :: Nil => TypeFormula.bottom
       case _ => TypeFormula.atom(tpe)
@@ -699,10 +709,11 @@ class NewResolver:
     outer.fold(tpe): namespaces =>
       tpe.withNamespaces(tpe.namespaces.fold(namespaces)(_.precededBy(namespaces)))
 
-  private def combinedType(source: TypeResolution, left: DeclaredType, right: DeclaredType, union: Bool)
-      (using ResolutionContext): DeclaredType =
-    val lhs = typeFormula(left)
-    val rhs = typeFormula(right)
+  /** `expanding` are the aliases whose bodies enclose the combination (see typeFormula). */
+  private def combinedType(source: TypeResolution, left: DeclaredType, right: DeclaredType, union: Bool,
+      expanding: Set[TypeAliasSymbol])(using ResolutionContext): DeclaredType =
+    val lhs = typeFormula(left, expanding)
+    val rhs = typeFormula(right, expanding)
     val formula = if union then lhs.union(rhs) else lhs.intersection(rhs)
     if formula.clauses.isEmpty then extremeType(false)
     else if formula.clauses.contains(Set.empty) then
@@ -1389,7 +1400,7 @@ class NewResolver:
       val merged = records.tail.foldLeft(first): (left, right) =>
         val fields = right.fields.foldLeft(left.fields):
           case (fields, (name, tpe)) => fields.updated(name, fields.get(name).fold(tpe)(previous =>
-            combinedType(previous.resolution, previous, tpe, false)))
+            combinedType(previous.resolution, previous, tpe, false, Set.empty)))
         val aliases = right.aliases.foldLeft(left.aliases):
           case (aliases, (name, keys)) => aliases.updated(name, aliases.getOrElse(name, Set.empty) ++ keys)
         RecordTypeShape(fields, aliases)(left.source, right.declarations ++ left.declarations)
@@ -3828,9 +3839,9 @@ class NewResolver:
             case TypeShape.Nominal(cls) => classNamespaces(ref, namespaces, cls, reason, provided)
             case TypeShape.Alias(symbol, N) => firstProvider(ref, namespaces, reason, symbol.defn.get)(() => ())
             case TypeShape.Union(left, right) =>
-              follow(combinedType(current.resolution, declaredType(left, current), declaredType(right, current), true), reason, refine)
+              follow(combinedType(current.resolution, declaredType(left, current), declaredType(right, current), true, Set.empty), reason, refine)
             case TypeShape.Intersection(left, right) =>
-              follow(combinedType(current.resolution, declaredType(left, current), declaredType(right, current), false), reason, refine)
+              follow(combinedType(current.resolution, declaredType(left, current), declaredType(right, current), false, Set.empty), reason, refine)
             case TypeShape.Combined(formula) => formula.orderedAtoms.foreach: atom =>
               val bound = atom.instantiate(current.instances)
               follow(bound, if refine then writtenWitness(bound) else reason, refine)
