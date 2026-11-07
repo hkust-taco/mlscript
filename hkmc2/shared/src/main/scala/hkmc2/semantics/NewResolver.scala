@@ -1462,11 +1462,11 @@ class NewResolver:
                   case N => publish(OpaqueTypeShape(source)(TypeInterfaceReason.AbstractDeclaration(symbol, source)))
               case TypeShape.Applied(base, params) =>
                 follow(declaredType(base, current), typeApplication(params, current), aliases, source, publish)
-              case TypeShape.Parameter(symbol, host, _) => current.bindings.get(symbol) match
+              case parameter: TypeShape.Parameter => current.bindings.get(parameter.symbol) match
                 case S(bound) => follow(bound.instantiate(current.instances).at(current.positive), noTypeArguments, aliases, source, publish)
                 case N =>
-                  val target = current.instances.get(symbol).fold(host)(_.inferenceHost)
-                  listenTypeArgument(target): value =>
+                  val target = current.instances.get(parameter.symbol).fold(parameter)(rctx.typeParameter)
+                  listenTypeParameterValues(target): value =>
                     // Report the use of an abstract parameter in a signature, not
                     // just its declaration. This survives substitution through
                     // generic members and nested tuple or function annotations.
@@ -1928,17 +1928,29 @@ class NewResolver:
         val unknown = RigidTypeShape(param, ref)
         publishParameter(param, MarkedShape.enter(unknown, ResolutionBoundary(owner), S(site)))
 
-  /** Observe inferred parameter values or an explicit argument's output type.
-    * Both follow term arguments' entry/exit paths. Input obligations subscribe to
-    * the separate binding host in TypeShape.Parameter.arguments.
+  /** Read inferred candidates and derive explicit outputs from their bindings.
+    * Different input bounds can share an output, so deliver each marked value once
+    * per observation. Keep delivery keys in the consuming graph: inherited callbacks
+    * must not share a mutable set with their exporter or sibling consumers.
     */
-  private def listenTypeArgument(symbol: VarSymbol)(listener: Listener)(using ResolutionContext): Unit =
-    listenTypeArgument(symbol.inferenceHost)(listener)
-
-  private def listenTypeArgument(host: Publisher.Data[ShapeEvent])(listener: Listener)(using ResolutionContext): Unit =
-    host.subscribe:
-      case value: TermShape => listener(value)
-      case _ => softAssert(false, "A type parameter's bounds must contain values without activation envelopes")
+  private[semantics] def listenTypeParameterValues(parameter: TypeShape.Parameter)(listener: Listener)(using ResolutionContext): Unit =
+    val observation = new Object
+    def receive(value: TermShape)(using ResolutionContext): Unit =
+      // Like publisher candidates, delivery keys belong to the graph independently
+      // of the active substitution. The listener applies its own instantiation.
+      if rctx.state.typeParameterValueDeliveries.add((observation, ShapeIdentity.key(value)))(using rctx.withInstances(TypeSubstitution.empty)) then
+        listener(value)
+    val inferred: ShapeListener[ShapeEvent] =
+      case value: TermShape => receive(value)
+      case _ => softAssert(false, "A type parameter's value host cannot contain activation envelopes")
+    val supplied: ShapeListener[TypeArgumentBinding] = binding =>
+      receive(Marked(instanceShape(binding.argument.output), binding.marks))
+    // Replaying either source can publish into the other. Install both listeners
+    // first; the shared delivery keys suppress candidates reached again by replay.
+    parameter.host.addListener(inferred)
+    parameter.arguments.addListener(supplied)
+    parameter.host.replay(inferred)
+    parameter.arguments.replay(supplied)
 
   private[semantics] def publishParameter(symbol: VarSymbol, shape: TermShape | NoShape)(using ResolutionContext): Unit =
     shape match
@@ -1963,7 +1975,6 @@ class NewResolver:
       case Marked(_, context) => parameters.zip(arguments).foreach: (parameter, argument) =>
         val projected = argument.map(projectType)
         parameter.arguments.publish(TypeArgumentBinding(projected, context))
-        publishParameter(parameter.host, Marked(instanceShape(projected.output), context))
       case NoShape => ()
 
   /** Bounds constrain the instantiated references, never the shared checking
@@ -2783,7 +2794,7 @@ class NewResolver:
         case N => false
       case defn: DefnShape if defn.clsDef.contains(cls) && source.isInstanceOfClass(cls) =>
         val parameter = instances.getOrElse(param, param)
-        listenTypeArgument(parameter)(receive)
+        listenTypeParameterValues(rctx.typeParameter(parameter))(receive)
         true
       case _ => false
 
@@ -3380,7 +3391,7 @@ class NewResolver:
     if parameters.nonEmpty && rctx.state.inferredInstantiations.add((owner, site, substitution, marks)) then
       parameters.foreach: parameter =>
         val instance = substitution(parameter)
-        listenTypeArgument(parameter): bound =>
+        listenTypeParameterValues(rctx.typeParameter(parameter)): bound =>
           bound.applicationHead._1 match
             case _: RigidTypeShape => ()
             case _ => inferTypeArguments(instanceType(instance), instantiateShape(bound, substitution), marks, N)
@@ -3831,8 +3842,8 @@ class NewResolver:
               follow(bound, if refine then writtenWitness(bound) else reason, refine)
             case TypeShape.Polymorphic(params, _, body) =>
               walk(declaredType(body, current.withoutBinders(params.map(_.parameter.symbol))), args, reason, refine, next)
-            case TypeShape.Parameter(symbol, host, _) => if provided then
-              listenTypeArgument(current.instances.get(symbol).fold(host)(_.inferenceHost)): value =>
+            case parameter: TypeShape.Parameter => if provided then
+              listenTypeParameterValues(current.instances.get(parameter.symbol).fold(parameter)(rctx.typeParameter)): value =>
                 valueNamespaces(ref, namespaces, instantiateShape(value, current.instances))
             case TypeShape.Hole(host) => if provided then host.subscribe: value =>
               valueNamespaces(ref, namespaces, instantiateShape(value, current.instances))

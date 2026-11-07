@@ -31,6 +31,10 @@ class TypeRelationTest extends AnyFunSuite:
       (symbol, tpe(rctx.typeParameter(symbol)))
     def supply(symbol: VarSymbol, argument: TypeArgument, marks: Ls[Marks])(using ResolutionContext): Unit =
       resolver.bindTypeArguments(rctx.typeParameter(symbol) :: Nil, marks, argument :: Nil)
+    def parameterValues(symbol: VarSymbol): ArrayBuffer[TermShape] =
+      val values = ArrayBuffer.empty[TermShape]
+      resolver.listenTypeParameterValues(rctx.typeParameter(symbol))(values += _)
+      values
     /** A forwarding alias declared in a module, so it contributes a priority step. */
     def forwarding(name: Str, argument: DeclaredType): DeclaredType =
       val (formal, body) = parameter(s"${name}Parameter")
@@ -664,13 +668,14 @@ class TypeRelationTest extends AnyFunSuite:
     val first = IntroShape(Term.UnitVal(), N)
     val second = DynShape()
     h.state.markExplicitTypeArgument(a)
+    val outputs = h.parameterValues(a)
     h.resolver.constrainTypes(ContextualType(h.tpe(TypeShape.Inferred(first)), Nil), ContextualType(at, Nil), N)
     h.supply(a, TypeArgument.invariant(one), Nil)
     h.supply(a, TypeArgument.invariant(two), Nil)
     h.resolver.constrainTypes(ContextualType(h.tpe(TypeShape.Inferred(second)), Nil), ContextualType(at, Nil), N)
     for target <- List(one, two); bound <- List(first, second) do
       assert(h.state.hasTypeConstraint(target, bound, Nil))
-    assert(a.currentShapes.toSet == Set(h.resolver.instanceShape(one), h.resolver.instanceShape(two)))
+    assert(outputs.toSet == Set(h.resolver.instanceShape(one), h.resolver.instanceShape(two)))
 
 
   test("supplied parameter references forward input obligations across marked contexts"):
@@ -688,6 +693,7 @@ class TypeRelationTest extends AnyFunSuite:
     val bound = IntroShape(Term.UnitVal(), N)
     h.state.markExplicitTypeArgument(a)
     h.state.markExplicitTypeArgument(b)
+    val outputs = h.parameterValues(b)
     h.supply(a, TypeArgument.invariant(h.resolver.transportType(bt, sourceMarks)), targetMarks)
     h.supply(b, TypeArgument.invariant(concrete), sourceMarks)
     h.resolver.constrainTypes(ContextualType(h.tpe(TypeShape.Inferred(bound)), Nil), ContextualType(at, targetMarks), N)
@@ -695,7 +701,7 @@ class TypeRelationTest extends AnyFunSuite:
     val expected = h.resolver.instanceShape(concrete).enter(sourceMarks) match
       case value: TermShape => ShapeIdentity.key(value)
       case NoShape => fail("Expected a transported value")
-    assert(b.currentShapes.map(ShapeIdentity.key(_)).toSet == Set(expected))
+    assert(outputs.map(ShapeIdentity.key(_)).toSet == Set(expected))
 
   test("a supplied argument receives only obligations for its marked activation"):
     val h = new Harness
@@ -724,6 +730,8 @@ class TypeRelationTest extends AnyFunSuite:
     val lower = ContextualType(h.tpe(TypeShape.Inferred(bound)), Nil)
     h.state.markExplicitTypeArgument(a)
     h.state.markExplicitTypeArgument(b)
+    val outputsA = h.parameterValues(a)
+    val outputsB = h.parameterValues(b)
     h.supply(a, TypeArgument.invariant(bt), Nil)
     h.supply(b, TypeArgument.invariant(at), Nil)
     h.resolver.constrainTypes(lower, ContextualType(at, Nil), N)
@@ -737,9 +745,9 @@ class TypeRelationTest extends AnyFunSuite:
       h.supply(a, TypeArgument.invariant(bt), Nil)
       h.supply(b, TypeArgument.invariant(at), Nil)
     assert(counts == initialCounts)
-    // Candidates compare by identity: republishing must not add equal copies.
-    assert(a.currentShapes.toList == List(h.resolver.instanceShape(bt)))
-    assert(b.currentShapes.toList == List(h.resolver.instanceShape(at), h.resolver.instanceShape(concrete)))
+    // Republishing must neither add edges nor redeliver an existing output.
+    assert(outputsA.toList == List(h.resolver.instanceShape(bt)))
+    assert(outputsB.toList == List(h.resolver.instanceShape(at), h.resolver.instanceShape(concrete)))
 
   test("repeated deferred views reuse source identities for synthesized interfaces"):
     val h = new Harness
@@ -762,6 +770,12 @@ class TypeRelationTest extends AnyFunSuite:
     val (_, rightInput) = h.parameter("RightInput")
     val (_, localInput) = h.parameter("LocalInput")
     val output = h.tpe(TypeShape.Unit)
+    val values = new TermShapeHost
+    h.resolver.listenTypeParameterValues(rctx.typeParameter(a)): value =>
+      values.publish(value)
+      // Count deliveries with graph-local edges, so an inherited observer does
+      // not capture a mutable counter shared by all importing consumers.
+      values.addShapeListener(_ => ())
     h.supply(a, TypeArgument(input, output), Nil)
     val left = new Elaborator.State().newResolverState.context.inGraph(h.state)
     val right = new Elaborator.State().newResolverState.context.inGraph(h.state)
@@ -795,6 +809,19 @@ class TypeRelationTest extends AnyFunSuite:
       h.resolver.constrainTypes(lower, ContextualType(at, Nil), N)(using consumer)
     assert(bindings(consumer).shapes.size == 3)
     assert(bindings(consumer).listeners.size == listeners)
+    List(h.state, left, right, consumer, sibling).foreach: context =>
+      assert(values.inferenceHost(using context).listeners.size == 1)
+    // Both consumers must deliver the same new output independently, even when
+    // another input binding already delivered it in their sibling's graph.
+    val laterOutput = h.tpe(TypeShape.Abstract)
+    List(consumer, sibling).foreach: context =>
+      h.supply(a, TypeArgument(localInput, laterOutput), Nil)(using context)
+      h.supply(a, TypeArgument(rightInput, laterOutput), Nil)(using context)
+      assert(values.inferenceHost(using context).listeners.size == 2)
+      assert(values.currentShapes(using context).size == 2)
+    List(h.state, left, right).foreach: context =>
+      assert(values.inferenceHost(using context).listeners.size == 1)
+      assert(values.currentShapes(using context).size == 1)
 
   test("importers extend a cyclic relation without mutating the exporter or one another"):
     val h = new Harness
