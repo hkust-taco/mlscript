@@ -317,7 +317,11 @@ class NewResolver:
             // All modes discover the whole source graph. Guardedness alone
             // stops propagating dependencies across a structural constructor.
             def guardedChild(res: TypeResolution): Unit = if unguardedOnly then visit(res) else child(res)
-            def reference(tpe: DeclaredType): Unit =
+            // Binding endpoints can share whole subgraphs. Source-node visitation
+            // alone does not stop the recursive walk through their binding maps.
+            // Keep this set per source node: each node needs its own dependency edges.
+            val references = mutable.Set.empty[DeclaredType]
+            def reference(tpe: DeclaredType): Unit = if references.add(tpe) then
               if throughReferences then
                 child(tpe.resolution)
                 // Reading through the instances the reference already retains
@@ -1266,13 +1270,22 @@ class NewResolver:
     * the types bound to its formals. The formals themselves need no instance.
     */
   private def typeDependencySet(tpe: DeclaredType)(using ResolutionContext): Binders =
-    instanceDependencies(tpe.resolution) match
+    // Input and output endpoints often share nested binding maps. Compute each
+    // reference's support once per query, including its retained instances; a
+    // source-only key would merge endpoints that capture different binders.
+    // Keep results local so later bounds and other consumers see their own graph.
+    val supports = mutable.Map.empty[DeclaredType, Binders]
+    def support(current: DeclaredType): Binders = supports.getOrElseUpdate(current,
+      ambientSupport(dependencies(current), current.instances))
+    def dependencies(current: DeclaredType): Binders = instanceDependencies(current.resolution) match
       case L(_) => N
       case R(binders) =>
         // Synthesized children already contribute through instanceDependencies.
         // Per-use interpretations preserve their canonical types, changing only
         // witnesses and operand order; revisiting them expands shared DAG paths.
-        tpe.bindings.valuesIterator.foldLeft(binders)((acc, bound) => union(acc, argumentSupport(bound)))
+        current.bindings.valuesIterator.foldLeft(binders): (acc, bound) =>
+          union(acc, union(support(bound.input), support(bound.output)))
+    dependencies(tpe)
 
   /** The ambient binders a type nested in another value can still read; see shapeSupport. */
   private def argumentSupport(argument: TypeArgument)(using ResolutionContext): Binders =

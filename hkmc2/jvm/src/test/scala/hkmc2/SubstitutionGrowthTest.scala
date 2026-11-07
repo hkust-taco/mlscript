@@ -243,6 +243,92 @@ class SubstitutionGrowthTest extends AnyFunSuite:
       val bytes = allocation.getCurrentThreadAllocatedBytes - before
       assert(bytes <= repetitions * 2048L, s"Depth $depth dependency queries allocated $bytes bytes")
 
+  // The view count can stay linear while dependency queries traverse every path
+  // through shared argument endpoints. Measure allocations for ordinary programs,
+  // including first-time source analysis, independently of that view counter.
+  test("nested type arguments allocate by graph size rather than binding paths"):
+    val allocation = allocationCounter
+    for nominal <- false :: true :: Nil; bounded <- false :: true :: Nil do
+      val declaration = if nominal then "class Wrap[A](val value: A)" else "type Wrap[A] = [A]"
+      val selection = if nominal then ".value" else ".0"
+      def source(depth: Int): Str =
+        val aliases = if bounded then (1 to depth).map: index =>
+          val child = if index == 1 then "A" else s"Layer${index - 1}[A]"
+          s"type Layer$index[A] = Wrap[in $child out $child]"
+        else Nil
+        val nested = if bounded then s"Layer$depth[A]"
+          else (1 to depth).foldLeft("A")((child, _) => s"Wrap[$child]")
+        s"""#lang(0.3.x)
+          |$declaration
+          |${aliases.mkString("\n")}
+          |private fun nest[A](value: $nested): $nested = value
+          |fun read[A](value: $nested): A = nest[A](value)${selection * depth}
+          |""".stripMargin
+      // Load the prelude and warm up the elaborator outside the measurements.
+      measure("NestedArgumentsWarmup", source(4))
+      for depth <- (if bounded then 8 :: 12 :: 16 :: Nil else 8 :: 16 :: 24 :: Nil) do
+        val before = allocation.getCurrentThreadAllocatedBytes
+        measure(s"NestedArguments$depth", source(depth))
+        val bytes = allocation.getCurrentThreadAllocatedBytes - before
+        // Named alias chains also repeat regularity and normalization work for
+        // their shorter suffixes. Allow that polynomial cost here; the graph
+        // tests below enforce linear allocation for each dependency query.
+        val budget = if bounded then (depth + 1L) * (depth + 1L) * (depth + 1L) * 16384L
+          else depth * 1024L * 1024L
+        assert(bytes <= budget,
+          s"nominal=$nominal, bounded=$bounded, depth=$depth allocated $bytes bytes")
+
+  // Both endpoints can be identical, or distinct references to shared bindings.
+  // Cold queries also traverse source dependencies; warm queries still need the
+  // support of the retained binding DAG. Neither traversal may expand its paths.
+  test("binding support shares cold and warm traversal work"):
+    val allocation = allocationCounter
+    for distinct <- false :: true :: Nil; depth <- 8 :: 16 :: 32 :: Nil do
+      val h = new Harness
+      import h.given
+      val (a, b, unused) = (h.binder("A"), h.binder("B"), h.binder("Unused"))
+      val a1 = h.instanceAt(a, Set.single(b))
+      val b1 = h.instance(b)
+      val extra = h.instance(unused)
+      val leaf = h.typeOf(a).instantiate(TypeSubstitution(a1 :: Nil))
+      val tuple = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+      tuple.publish(TypeShape.Tuple(TypeShape.TupleField(h.typeOf(a).resolution, spread = false) :: Nil))
+      val root = (1 to depth).foldLeft(leaf): (child, _) =>
+        val output = if distinct then child.withPolarity(false) else child
+        DeclaredType(tuple, Map(a -> TypeArgument(child, output)), TypeSubstitution.empty, true)(N)
+      val wrapped = DeclaredType.synthesized(tuple, TypeShape.Contextual(ContextualType(root, Nil)))
+      for tpe <- wrapped :: root :: Nil do
+        val input = tpe.instantiate(TypeSubstitution(b1 :: extra :: Nil))
+        val expected = tpe.instantiate(TypeSubstitution(b1 :: Nil))
+        // Check the cold query before repeating it with source summaries cached.
+        for repetitions <- 1 :: 10 :: Nil do
+          val before = allocation.getCurrentThreadAllocatedBytes
+          (1 to repetitions).foreach(_ => assert(h.resolver.projectType(input) == expected))
+          val bytes = allocation.getCurrentThreadAllocatedBytes - before
+          assert(bytes <= repetitions * (depth + 1) * 16384L,
+            s"distinct=$distinct, depth=$depth, repetitions=$repetitions allocated $bytes bytes")
+
+  test("binding support retains distinct endpoint captures and discovers late bounds"):
+    val h = new Harness
+    import h.given
+    val (a, b, c, unused) = (h.binder("A"), h.binder("B"), h.binder("C"), h.binder("Unused"))
+    val first = h.instanceAt(a, Set.single(b))
+    val second = h.instanceAt(a, Set.single(c))
+    val (b1, c1, extra) = (h.instance(b), h.instance(c), h.instance(unused))
+    val source = h.typeOf(a)
+    val input = source.instantiate(TypeSubstitution(first :: Nil))
+    val output = source.instantiate(TypeSubstitution(second :: Nil))
+    val pending = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val late = DeclaredType(pending, Map(a -> TypeArgument(input, output)), TypeSubstitution.empty, true)(N)
+    val instances = TypeSubstitution(b1 :: c1 :: extra :: Nil)
+    val original = late.instantiate(instances)
+    assert(h.resolver.projectType(original) == original)
+    pending.publish(TypeShape.Tuple(TypeShape.TupleField(source.resolution, spread = false) :: Nil))
+    val expected = late.instantiate(TypeSubstitution(b1 :: c1 :: Nil))
+    assert(h.resolver.projectType(original) == expected)
+    val wrapped = DeclaredType.synthesized(pending, TypeShape.Contextual(ContextualType(late, Nil)))
+    assert(h.resolver.projectType(wrapped.instantiate(instances)) == wrapped.instantiate(TypeSubstitution(b1 :: c1 :: Nil)))
+
   test("a substitution that a value cannot observe allocates no view"):
     val h = new Harness
     import h.given
