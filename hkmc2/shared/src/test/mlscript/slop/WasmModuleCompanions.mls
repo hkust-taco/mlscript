@@ -1,0 +1,43 @@
+:.
+:global
+:!js
+:wasm
+
+
+// A standalone module compiles to a static namespace.
+:expect 3
+module Counter with
+  let count = 0
+  fun next() =
+    set count += 1
+    count
+Counter.next()
+Counter.next()
+Counter.next()
+//│ Wasm result:
+//│ = 3
+
+
+// A class with a companion module has the IR shape of a standalone module. The backend does not support it yet and
+// must not compile it as a namespace, which would drop the class.
+:ge
+class Point(val x) with
+  fun get() = x
+module Point with
+  fun origin() = new Point(0)
+Point.origin().get()
+//│ ╔══[COMPILATION ERROR] WatBuilder::returningTerm for ClsLikeDefn(...) where `companion.isDefined` not implemented yet
+//│ ║  l.+1: 	class Point(val x) with
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	  fun get() = x
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ║  l.+3: 	module Point with
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ║  l.+4: 	  fun origin() = new Point(0)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Instantiating class `Point` is not supported by the WebAssembly backend
+//│ ║  l.+4: 	  fun origin() = new Point(0)
+//│ ╙──      	                 ^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Selecting member 'get' of 'Point' is not supported by the WebAssembly backend
+//│ ║  l.+5: 	Point.origin().get()
+//│ ╙──      	^^^^^^^^^^^^^^^^^^

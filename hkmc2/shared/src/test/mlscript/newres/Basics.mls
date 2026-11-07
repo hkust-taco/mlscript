@@ -25,7 +25,7 @@ id
 :sr
 :sir
 Predef.id
-//│ Elab block List(Sel(Ident(Predef),Ident(id))) LocalScope(block:3)
+//│ Elab block List(Sel(Ident(Predef),Ident(id))) LocalScope(block:3,true)
 //│ | Elab subterm Sel(Ident(Predef),Ident(id))
 //│ | | Elab subterm Ident(Predef)
 //│ | | | listen: trm = member:Predef⁰

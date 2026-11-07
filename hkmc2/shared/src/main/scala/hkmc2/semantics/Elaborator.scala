@@ -48,14 +48,14 @@ object Elaborator:
   enum OuterCtx:
     case Function(returnHandlerSymbol: TempSymbol, sym: Opt[DefinitionSymbol[?]])(val isGenerator: Bool, val isAsync: Bool)
     case InnerScope(innerSymbol: InnerSymbol)
-    case LocalScope(nameHint: Str)
+    case LocalScope(nameHint: Str, isTopLevel: Bool)
     case LambdaOrHandlerBlock
     case NonReturnContext(sym: Opt[DefinitionSymbol[?]])
     
     def showDbg: Str = this match
       case Function(retSym, sym) => s"fun:${retSym.nme}${sym.fold("")(s => s"‹${s}›")}"
       case InnerScope(inner) => inner.toString
-      case LocalScope(hint) => hint
+      case LocalScope(nameHint = hint) => hint
       case LambdaOrHandlerBlock => "LambdaOrHandlerBlock"
       case NonReturnContext(sym) => s"NonReturnContext(${sym})"
     
@@ -168,7 +168,7 @@ object Elaborator:
     
     def nest(outerCtx: OuterCtx): Ctx =
       Ctx(SrcScope(outerCtx, S(scope)), Some(this), Map.empty, mode, Map.empty, Nil)
-    def nestLocal(nameHint: Str): Ctx = nest(OuterCtx.LocalScope(nameHint))
+    def nestLocal(nameHint: Str, isTopLevel: Bool): Ctx = nest(OuterCtx.LocalScope(nameHint, isTopLevel))
     def nestInner(inner: InnerSymbol): Ctx = nest(OuterCtx.InnerScope(inner))
     
     /** Explicit bindings in any enclosing scope take precedence over every wildcard open. */
@@ -534,7 +534,7 @@ object Elaborator:
       def nme: Str = base.nme
     given Conversion[RefSymbol, Elem] = RefElem(_)
     val empty: Ctx =
-      val outer = OuterCtx.LocalScope("top-level")
+      val outer = OuterCtx.LocalScope("top-level", isTopLevel = true)
       Ctx(SrcScope(outer, N), N, Map.empty, Mode.Full, Map.empty, Nil)
     
   /** The interpretation required by the enclosing syntax. Class and pattern
@@ -742,8 +742,6 @@ object Elaborator:
         lastWords("Runtime symbols have not been initialized from Runtime.mls.")
     def runtimeModuleSymbol: BlockMemberSymbol = runtimeSymbols.module
     def unitSymbol: ModuleOrObjectSymbol = runtimeSymbols.unit
-    // Stable symbol for the synthetic Wasm Unit singleton
-    val unitBlockMemberSymbol = BlockMemberSymbol("Unit", Nil)
     def loopEndSymbol: ModuleOrObjectSymbol = runtimeSymbols.loopEnd
     def tupleSymbol: ModuleOrObjectSymbol = runtimeSymbols.tuple
     def strSymbol: ModuleOrObjectSymbol = runtimeSymbols.str
@@ -925,7 +923,7 @@ extends Importer:
       | Keyword.`private`
     )) => S(Annot.Modifier(kw)(tree.toLoc))
     case App(Ident("config"), Tup(args)) =>
-      val modify = ConfigParser.parseOverrides(args)
+      val modify = ConfigParser.parseOverrides(args, allowCompilationTarget = false)
       S(Annot.Config(modify)(tree.toLoc))
     case App(Ident("dbg"), Tup(args)) =>
       val modify = ConfigParser.parseDebugDirective(args, definitionLocal = true, wd)
@@ -1705,7 +1703,7 @@ extends Importer:
     case Block(Nil) =>
       withTypeBinders(Term.Rcd(mut = false, Nil)).withLocOf(tree)
     case b: Block =>
-      ctx.nestLocal("‹block›").givenIn:
+      ctx.nestLocal("‹block›", isTopLevel = false).givenIn:
         block(b, hasResult = true, resultInterp = interp)._1 match
         case Term.Blk(Nil, res) => res
         case res => res
@@ -2211,13 +2209,14 @@ extends Importer:
       raise(ErrorReport(msg"Illegal type declaration in term position." -> tree.toLoc :: Nil))
       error
     case Modified(Keywrd(Keyword.`mut`), body: Block) =>
-      blockOrRcd(body, hasResult = true, resultInterp = interp) match
-      case (Blk(Nil, Term.UnitVal()), ctx) =>
-        withTypeBinders(Rcd(mut = true, Nil)).withLocOf(body)
-      case (blk: Blk, ctx) =>
-        raise(ErrorReport(msg"Expected a record after 'mut' keyword; found a block" -> blk.toLoc :: Nil))
-        blk
-      case (rcd: Rcd, ctx) => withTypeBinders(rcd.copy(mut = true)).withLocOf(rcd)
+      ctx.nestLocal("‹block›", isTopLevel = false).givenIn:
+        blockOrRcd(body, hasResult = true, resultInterp = interp) match
+        case (Blk(Nil, Term.UnitVal()), ctx) =>
+          withTypeBinders(Rcd(mut = true, Nil)).withLocOf(body)
+        case (blk: Blk, ctx) =>
+          raise(ErrorReport(msg"Expected a record after 'mut' keyword; found a block" -> blk.toLoc :: Nil))
+          blk
+        case (rcd: Rcd, ctx) => withTypeBinders(rcd.copy(mut = true)).withLocOf(rcd)
     case Modified(kw, body) =>
       raise(ErrorReport(msg"Illegal position for '${kw.name}' modifier." -> kw.toLoc :: Nil))
       subterm(body)
@@ -2566,7 +2565,7 @@ extends Importer:
         val (newCtx, newAcc) = pathAndAlias match
           case S((StrLit(path), alias)) =>
             val stmt = importPath(path, alias)(statementLoc)
-            (ctx + (stmt.sym.nme -> stmt.sym),
+            (ctx + (alias.fold(stmt.sym.nme)(_.name) -> stmt.sym),
               stmt :: acc)
           case S((pathArg, _)) =>
             raise(ErrorReport(
@@ -3139,7 +3138,10 @@ extends Importer:
         go(Directive(prefix, args) :: sts, annotations, acc)(statementLoc)
       case (directive @ Directive(Ident("config"), Tup(args))) :: sts =>
         reportUnusedAnnotations
-        val modify = ConfigParser.parseOverrides(args)
+        val isTopLevel = ctx.outer match
+          case scope: OuterCtx.LocalScope => scope.isTopLevel
+          case _ => false
+        val modify = ConfigParser.parseOverrides(args, allowCompilationTarget = isTopLevel)
         go(sts, Nil, SetConfig(modify)(statementLoc) :: acc)(N)
       case (directive @ Directive(Ident("lang"), Tup(args))) :: sts =>
         reportUnusedAnnotations

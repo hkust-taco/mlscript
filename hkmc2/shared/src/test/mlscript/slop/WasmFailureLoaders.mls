@@ -1,0 +1,31 @@
+:.
+:js
+
+:silent
+import "node:fs" as fs
+import "node:url" as urls
+let fixturePath = "hkmc2/shared/src/test/mlscript/slop/wasm/FailedImportFixture.mjs"
+// A failed rebuild must invalidate an existing executable loader.
+fs.writeFileSync(fixturePath, "export const wasmExports = {}; export default () => 42;")
+// A static default and named import must reach the compilation failure, with no missing-export error.
+let importStatically = globalThis.eval("""url => import("data:text/javascript," + encodeURIComponent(
+  "import value, {wasmExports} from " + JSON.stringify(url) + "; export default value;"))""")
+
+// Compile the existing unsupported-feature fixture to produce its diagnostic loader.
+:!js
+:wasm
+:ge
+import "./wasm/FailedImportFixture.mls"
+//│ ╔══[COMPILATION ERROR] First-class module values are not supported by the WASM backend
+//│ ║  l.XX: 	fun FailedImportFixture() = M
+//│ ╙──      	                            ^
+//│ ╔══[COMPILATION ERROR] Cannot compile this module: the imported file `FailedImportFixture.mls` could not be compiled due to an error
+//│ ║  l.+1: 	import "./wasm/FailedImportFixture.mls"
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:js
+:await
+:re
+:silent
+importStatically(urls.pathToFileURL(fixturePath).href)
+//│ ═══[RUNTIME ERROR] Error: Cannot run FailedImportFixture.mls because its compilation failed.
