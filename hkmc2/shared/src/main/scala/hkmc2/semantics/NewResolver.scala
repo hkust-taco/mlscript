@@ -1731,10 +1731,7 @@ class NewResolver:
     * The structural interface also admits library implementations without nominal inheritance.
     */
   private def iteratorShape(using ResolutionContext): InstanceShape =
-    val symbol = prelude.builtins.Iterator match
-      case symbol: TypeAliasSymbol => symbol
-      case _ => lastWords("The builtin Iterator must be a structural type alias")
-    instanceShape(appliedType(symbol, new ::(extremeType(true), Nil)))
+    instanceShape(appliedType(prelude.builtins.Iterator, new ::(extremeType(true), Nil)))
 
   /** The object that replaces a function's result once all its written parameter lists are applied. */
   private def wrapperShape(annotation: Annot.Async | Annot.Generator, payload: DeclaredType)
@@ -1747,10 +1744,7 @@ class NewResolver:
     * before a caller can substitute its own type argument.
     */
   private def awaitedType(tpe: DeclaredType)(using ResolutionContext): DeclaredType =
-    val symbol = prelude.builtins.Awaited match
-      case symbol: TypeAliasSymbol => symbol
-      case _ => lastWords("The builtin Awaited must be an abstract type alias")
-    appliedType(symbol, new ::(tpe, Nil))
+    appliedType(prelude.builtins.Awaited, new ::(tpe, Nil))
 
   private def listenAwaitedValue(value: TermShape, source: Term)(listener: Listener)(using ResolutionContext): Unit =
     listenInstanceViews(value)(view => listenAwaitedView(view, source)(listener))

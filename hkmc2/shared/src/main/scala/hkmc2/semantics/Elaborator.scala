@@ -293,6 +293,9 @@ object Elaborator:
       private def assumeBuiltinTpe(nme: Str): TypeSymbol =
         assumeBuiltin(nme).asTpe.getOrElse(throw new NoSuchElementException(
           s"builtin type symbol $nme"))
+      private def assumeBuiltinAls(nme: Str): TypeAliasSymbol =
+        assumeBuiltin(nme).asAls.getOrElse(throw new NoSuchElementException(
+          s"builtin type symbol $nme"))
       private def assumeBuiltinCls(nme: Str): ClassSymbol =
         assumeBuiltin(nme).asCls.getOrElse(throw new NoSuchElementException(
           s"builtin class symbol $nme"))
@@ -314,8 +317,8 @@ object Elaborator:
       val BigInt = assumeBuiltinCls("BigInt")
       val Function = assumeBuiltinCls("Function")
       lazy val Promise = assumeBuiltinCls("Promise")
-      lazy val Iterator = assumeBuiltinTpe("Iterator")
-      lazy val Awaited = assumeBuiltinTpe("Awaited")
+      lazy val Iterator = assumeBuiltinAls("Iterator")
+      lazy val Awaited = assumeBuiltinAls("Awaited")
       lazy val Nothing = assumeBuiltinTpe("Nothing")
       val Error = assumeBuiltinCls("Error")
       val Bool = assumeBuiltinCls("Bool")

@@ -1,12 +1,12 @@
 # Extraction plan for PR #575
 
-Status updated 2026-11-07: E01–E03, B01–B05, E08, E14 and E17–E18 are merged
-upstream; upstream's cast refactor covers E19. The approved reduction keeps
-structural Iterator, E27 and E32 in #575 and defers the other ready extractions:
-E20–E24, E31, E35 and E36. Their independent local branches remain available
-for later PRs. E12, E29–E30 and E33–E34 also remain in #575; this reduction does
-not split those coupled implementations. No extraction PR is a merge gate for
-the retained feature. The historical batch dependencies below describe the
+Status updated 2026-11-07: E01–E03, B01–B05, E08, E14, E17–E18, structural
+Iterator and E27 are merged upstream; upstream's cast refactor covers E19.
+The branch incorporates `hkmc2` through `e62a8c172`. The approved reduction
+retains E12, E29–E30, E32 and E33–E34 and defers E20–E24, E31, E35 and E36.
+No remaining extraction is a prerequisite for the retained feature with the
+agreed targeted fixmes, but the remaining Scala diff is still too large to call
+a small extraction. The historical batch dependencies below describe the
 original extraction order, subject to this revised scope.
 
 ## Scope and baseline
@@ -83,6 +83,42 @@ cast elimination preserve the coercions those rendering tests exercise.
 
 ## Reduced #575 and independent follow-ups
 
+### Latest upstream integration
+
+The latest merge incorporates structural Iterator (`015668cf4`) and E27
+(`e62a8c172`). It adopts upstream's typed alias lookup for Iterator and Awaited.
+Metals compilation and `hkmc2AllTests/test` passed; the full suite ran **1,294
+tests**. The regenerated golden changes only update resolver line numbers in
+the existing override diagnostics. The ten agreed fixmes below remain.
+
+Against `e62a8c172`, the remaining Scala diff is:
+
+| Category | Files | Additions | Deletions | Changed lines |
+| --- | ---: | ---: | ---: | ---: |
+| Compiler Scala | 24 | 1,082 | 250 | 1,332 |
+| Scala tests | 2 | 42 | 8 | 50 |
+| Total Scala | 26 | 1,124 | 258 | 1,382 |
+
+This integration exposes no additional prerequisite for merging the reduced
+feature. Further extraction would reduce review scope:
+
+- E29–E30 still form a separate optimizer transformation: representation
+  retyping and flow-proved cast removal. Their current hunks account for about
+  **420 changed Scala lines across nine files**. Keep parameters, locals,
+  captures, results and caller coercions together; any standalone extraction
+  still needs adaptation and independent validation on `hkmc2`.
+- E33–E34 add mutable-record declaration syntax, roughly **100–150 changed
+  Scala lines** interleaved with E32. They could follow the core feature once
+  its E32 read/write model is available. This is an estimate of the syntax
+  feature's hunks, not a validated standalone patch.
+
+E32 remains necessary for the retained precise mutable-field inference.
+Removing only its assignment tracking or interface-write exposure would make
+that inference unsound. The branch is independently validated with the agreed
+known failures, but it still combines these themes with shape-based erasure.
+
+### Reduction and independently validated follow-ups
+
 The reduction removes the E20 partial-call optimization, E21–E23 constructor
 and match fixes, E24 storage constraints, and E31 shadow-aware exposure. E32
 still observes assigned values and external writes through contextual record
@@ -109,10 +145,10 @@ changed Scala lines**, counting additions and removals. These counts include
 the two retained Scala test files. The commit includes regenerated goldens and
 the restored runtime helper's generated JavaScript.
 
-The following branch counts and test results describe their independently
+The following branch names, counts and test results describe their independently
 validated versions on the old base. After #575 merges, adapt the deferred fixes
 to the retained inference code and regenerate goldens, including removing their
-temporary `:fixme`s. E27 and Iterator need no separate PR if they land in #575.
+temporary `:fixme`s. E27 and Iterator have since landed upstream.
 
 Every branch below starts directly at `hkmc2` / `hkust-taco/hkmc2` commit
 `bae948bd5896748e7fde850785d9fdefd585c925`; none targets or depends on another
@@ -167,14 +203,20 @@ duplicate optional-reset case is covered by the consolidated tail-call cases.
 E36's public-helper removal was explicitly approved on 2026-11-07. Repository
 search found no callers of `Runtime.plus_impl`; the distinct Wasm intrinsic
 remains. The structural Iterator contract was explicitly approved earlier and
-has now been extracted with its generator adaptation and protocol regressions.
+has landed upstream with its generator adaptation and protocol regressions.
+
+The E27 counted-getter fixture already passes on the old base without E27; there
+it checks compatibility, not an independently demonstrated bug. On the reduced
+inference branch, removing E27 makes the same fixture fail with an effect
+producer reaching E29's runtime-slot retyping. Restoring E27 makes it pass.
+E27 prepares the flow-analysis invariant consumed by E29.
 
 ### Coupled work retained in #575
 
 | Retained work | Relationship to deferred fixes | Reason to keep it together |
 | --- | --- | --- |
 | E12: constructor-companion signatures | E21–E22 failures have targeted fixmes | Typed constructor results remove casts that previously hid unsafe constructor fusion. |
-| E29: representation-changing deforestation | Keep E27; defer E21–E24 bugs with targeted fixmes | Parameters, locals, captures, results, instance copies and caller coercions must change together. |
+| E29: representation-changing deforestation | E27 is upstream; defer E21–E24 bugs with targeted fixmes | Parameters, locals, captures, results, instance copies and caller coercions must change together. |
 | E30: flow-proved casts | Keep E29 | Removing representation-observing casts requires complete retyping of the fused value's uses. |
 | E32: mutable-field resolution and exposure | E31's precision improvement can follow | All assignment paths, assigned-value exposure and structural input/output bounds must accompany precise reads. |
 | E33–E34: mutable-record declarations | Keep E32 | Explicit bounds and per-field mutability need the complete read/write constraint model. |
@@ -199,7 +241,8 @@ as `aef07eead` on `codex/pr575-expression-results`). B03 is merged as #599
 (extracted locally as `9afbadaf7` on `codex/pr575-async-generator-results`).
 B04 is merged as #600. E08 and E14 were extracted separately from B05 as #601
 and #602. E15 completed B05 as #606; E17–E18 completed B06's implementation as
-#610. E19 is covered by #614. E20–E24, E27 and E31 have local extraction branches.
+#610. E19 is covered by #614. E27 is upstream; E20–E24 and E31 have independent
+extraction commits listed above.
 The prerequisite column records the original order for extracting all themes
 before inference; it does not require postponing #575 for the deferred fixes.
 
@@ -618,10 +661,10 @@ The earlier #592 reconciliation used an unchanged-tree merge only after exact
 tree equality was established. Do not apply that strategy blindly to future
 extractions, whose patches may have been adapted to a smaller base.
 
-The upstream synchronization target is `bae948bd5896748e7fde850785d9fdefd585c925`,
+The upstream synchronization target is `e62a8c172ca516cd9e9f2ff7d1aa2ee30748d73d`,
 including E17–E18 (#610), the cast refactor (#614), retained MIR definition symbols,
-JDK 25 and Wasm file imports (#576). Measure each proposed extraction against
-this updated target before starting it.
+JDK 25, Wasm file imports (#576), structural Iterator and E27. Measure each
+proposed extraction against this updated target before starting it.
 
 The previous integration kept the upstream override checker, source layouts and unchanged
 inherited result representations while retaining shape-based inference. Override
@@ -656,8 +699,8 @@ with an 8 GB SBT heap. All resulting golden-output changes accompany the merge.
 The independent local branches and measured Scala counts are listed above.
 E20 and the other ready work have now been extracted and validated on `bae948bd5`.
 
-The current order is to review the reduced #575 with Iterator, E27 and E32
-retained, then land the six deferred branches. E21–E24 restore constructor,
+The current order is to review the reduced #575 with E32 retained and Iterator
+and E27 upstream, then land the six deferred branches. E21–E24 restore constructor,
 match and storage correctness; E31 removes conservative exposure diagnostics;
 E20, E35 and E36 restore the optional optimization, test consolidation and cleanup.
 Regenerate shared golden outputs when combining the follow-ups.

@@ -767,8 +767,7 @@ class FlowConstraintsCollector(
   
   private val generatedVars: collection.Map[Symbol, StratVar] = // TODO: tighten `Symbol` type!
     preAnalyzer.res.generatedVars.withDefaultValue(preAnalyzer.res.primitiveStratVar)
-  // Unknown getter effects must not flow into primitiveStratVar: its bounds also
-  // feed runtime value slots, where effect markers have no representation.
+  // Unknown getter effects must not enter primitiveStratVar: it also describes runtime values.
   private val unknownEffect = freshVar("unknown_effect")
   private val generatedEffects: collection.Map[Symbol, StratVar] = // TODO: tighten `Symbol` type! // TODO: use at access sites of getters!
     preAnalyzer.res.generatedEffects.withDefaultValue(unknownEffect)

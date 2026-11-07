@@ -5,9 +5,8 @@
 :lift
 :deforest
 
-// Effect summaries must stay separate from runtime value producers when fusion
-// recomputes erased slot types. Exercise both function scheme copies and the
-// conservative fallback used for getter effects.
+// Getter effects remain conservative through function scheme copies and fusion.
+// Evaluating the getter must preserve its output and run its mutation exactly once.
 :expect [42, 1]
 data class EffectValueBox(value: Int)
 private fun emit(f) = f("getter")
