@@ -186,12 +186,26 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
         val field = segment.element
         watch((tuple, field, marks))(resolver.listenTupleField(field)): shape =>
           emit(shape.exit(marks), path.via(msg"This value is stored in this tuple." -> tuple.source.toLoc))
-      case record: RecordShape => record.elements.foreach:
-        case RecordShape.Field(field) => contextualTerm(field.rhs, marks,
-          path.via(msg"This value is stored in this record field." -> field.toLoc), instances.withOverrides(record.instances))
-        case RecordShape.Spread(inner, context) =>
-          emit(resolver.instantiateShape(inner, instances.withOverrides(record.instances)).exit(context).exit(marks), path)
-        case _ => ()
+      case record: RecordShape =>
+        // A spread copies fields, not its source record. Exposure follows the last value at each
+        // known key; an unknown key cannot prove that an earlier field was overwritten.
+        // Memoize contextual views so repeated spreads walk the shared graph without expanding
+        // it into a tree. Empty marks add no context.
+        val visited = mutable.Map.empty[(RecordShape, Ls[Marks], TypeSubstitution, Set[MemberKey]), Set[MemberKey]]
+        def fields(record: RecordShape, context: Ls[Marks], substitution: TypeSubstitution,
+            shadowed: Set[MemberKey]): Set[MemberKey] =
+          visited.getOrElseUpdate((record, context.filter(_ != NoMarks), substitution, shadowed),
+            record.elements.reverse.foldLeft(shadowed): (shadowed, element) =>
+              element match
+                case RecordShape.Field(field) =>
+                  if !field.key.exists(shadowed) then
+                    contextualTerm(field.rhs, context,
+                      path.via(msg"This value is stored in this record field." -> field.toLoc), substitution)
+                  shadowed ++ field.key
+                case RecordShape.Spread(inner, marks) =>
+                  fields(inner, marks :: context, substitution.withOverrides(inner.instances), shadowed)
+                case _ => shadowed)
+        fields(record, marks, instances.withOverrides(record.instances), Set.empty)
       case base: BaseShape => members(base.defn, marks, path)
       case callable: CallableTypeShape =>
         // Written structure constrains external values; missing output parts

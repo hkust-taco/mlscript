@@ -813,7 +813,8 @@ final case class TermDefinition(
 
 final case class HandlerTermDefinition(
   resumeSym: VarSymbol,
-  td: TermDefinition
+  td: TermDefinition,
+  annots: Ls[Annot],
 )
 
 object ObjBody:

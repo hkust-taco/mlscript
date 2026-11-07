@@ -293,6 +293,9 @@ object Elaborator:
       private def assumeBuiltinTpe(nme: Str): TypeSymbol =
         assumeBuiltin(nme).asTpe.getOrElse(throw new NoSuchElementException(
           s"builtin type symbol $nme"))
+      private def assumeBuiltinAls(nme: Str): TypeAliasSymbol =
+        assumeBuiltin(nme).asAls.getOrElse(throw new NoSuchElementException(
+          s"builtin type symbol $nme"))
       private def assumeBuiltinCls(nme: Str): ClassSymbol =
         assumeBuiltin(nme).asCls.getOrElse(throw new NoSuchElementException(
           s"builtin class symbol $nme"))
@@ -315,8 +318,8 @@ object Elaborator:
       val BigInt = assumeBuiltinCls("BigInt")
       val Function = assumeBuiltinCls("Function")
       lazy val Promise = assumeBuiltinCls("Promise")
-      lazy val Iterator = assumeBuiltinCls("Iterator")
-      lazy val Awaited = assumeBuiltinTpe("Awaited")
+      lazy val Iterator = assumeBuiltinAls("Iterator")
+      lazy val Awaited = assumeBuiltinAls("Awaited")
       lazy val Nothing = assumeBuiltinTpe("Nothing")
       val Error = assumeBuiltinCls("Error")
       val Bool = assumeBuiltinCls("Bool")
@@ -1030,7 +1033,7 @@ extends Importer:
       mtdSym.tsym = S(tsym)
       tsym.defn = S(td)
       mtdSym.complete()
-      HandlerTermDefinition(resumeSym, td)
+      HandlerTermDefinition(resumeSym, td, Nil)
     clsSym.defn = S(ClassDef.Plain(ctx.getOuter, Cls, clsSym, BlockMemberSymbol(effectClassName, Nil), Nil, N,
       ObjBody(Blk(htds.map(_.td), unit)), N, Nil, Nil, N, ctorAnnotations = Nil)(body.toLoc, body.toLoc, N))
     val parent = if newResolution then runtimeMember(State.nonLocalReturnSymbol) else state.nonLocalRetHandlerTrm
@@ -1773,8 +1776,8 @@ extends Importer:
               case ParamList(_, value :: Nil, _) :: newParams =>
                 if newParams.isEmpty then
                   raise(ErrorReport(msg"Handler function must have a parameter list before its continuation parameter list" -> td.toLoc :: Nil))
-                val newTd = TermDefinition(Fun, sym, tsym, newParams.reverse, tparams, sign, body, flags, mf, annotations, comp)(td.toLoc, td.headerLoc, td.scope)
-                S(HandlerTermDefinition(value.sym, newTd))
+                val newTd = TermDefinition(Fun, sym, tsym, newParams.reverse, tparams, sign, body, flags, mf, Nil, comp)(td.toLoc, td.headerLoc, td.scope)
+                S(HandlerTermDefinition(value.sym, newTd, annotations))
               case _ =>
                 raise(ErrorReport(msg"Handler function is missing resumption parameter" -> td.toLoc :: Nil))
                 None
