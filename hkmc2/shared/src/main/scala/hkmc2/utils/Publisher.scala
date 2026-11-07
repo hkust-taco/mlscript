@@ -22,8 +22,10 @@ object CandidateKey:
   * deduplication; the append-only buffer permits bounded replay during callbacks.
   */
 final class Candidates[A](key: CandidateKey[A]) extends Iterable[A]:
-  private val keys = mutable.HashSet.empty[Any]
-  private val ordered = ArrayBuffer.empty[A]
+  // Unused syntax still owns a host. Keep its index and backing array absent
+  // until it receives a candidate; ArrayBuffer.from(Nil) shares empty storage.
+  private lazy val keys = mutable.HashSet.empty[Any]
+  private val ordered = ArrayBuffer.from[A](Nil)
   def add(candidate: A)(using ResolutionContext): Bool =
     val added = keys.add(key(candidate))
     if added then ordered += candidate
@@ -33,8 +35,9 @@ final class Candidates[A](key: CandidateKey[A]) extends Iterable[A]:
     */
   def copyFrom(other: Candidates[A]): Unit =
     assert(isEmpty, "Candidate copies must start with an empty host")
-    keys ++= other.keys
-    ordered ++= other.ordered
+    if other.nonEmpty then
+      keys ++= other.keys
+      ordered ++= other.ordered
   /** A completed graph may be renamed without an inference context. The caller
     * supplies portable keys for the rewritten values, as in `copyFrom` above.
     */
@@ -84,7 +87,9 @@ object Publisher:
   private[hkmc2] final class Data[A](key: CandidateKey[A]):
     private[hkmc2] var owner: NewResolverState | Null = null
     private[hkmc2] var completed = false
-    val listeners: ArrayBuffer[ShapeListener[A]] = ArrayBuffer.empty
+    // Many retained hosts are never observed. Allocate backing storage only
+    // when a listener arrives, with the usual ArrayBuffer growth policy.
+    val listeners = ArrayBuffer.from[ShapeListener[A]](Nil)
     val shapes: Candidates[A] = Candidates(key)
     // Most hosts have no pass-local observers. An immutable sequence shares its
     // empty storage and keeps notification snapshots valid across cancellation.
