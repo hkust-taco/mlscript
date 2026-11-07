@@ -2,7 +2,7 @@
 :effectHandlers
 :lift
 
-// Tail resumptive
+// Tail-resumptive
 :sir
 handle h = Object with
   fun perform(x)(k) =
@@ -29,7 +29,7 @@ handle h = Object with
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
-// Tail resumptive
+// Tail-resumptive
 :sir
 handle h = Object with
   fun perform(x)(k) =
@@ -78,7 +78,7 @@ handle h = Object with
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
-// Tail resumptive
+// Tail-resumptive
 :soir
 handle h = Object with
   fun perform(x)(k) =
@@ -132,7 +132,7 @@ handle h = Object with
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
-// Non-tail resumptive
+// Non-tail-resumptive
 :expect 42
 fun f() =
   handle h = Object with
@@ -143,7 +143,7 @@ fun f() =
 f()
 //│ = 42
 
-// Non tail resumptive
+// Non tail-resumptive
 :expect 100
 handle h = Object with
   fun perform(x)(k) =
@@ -155,7 +155,7 @@ handle h = Object with
 h.perform(3)
 //│ = 100
 
-// Non tail resumptive
+// Non tail-resumptive
 :expect "lol"
 handle h = Object with
   fun perform(x)(k) =
@@ -164,7 +164,7 @@ handle h = Object with
 h.perform(1)
 //│ = "lol"
 
-// Non tail resumptive
+// Non tail-resumptive
 :expect "lol"
 let x =
   handle h = Object with
@@ -178,7 +178,7 @@ x()
 //│ = "lol"
 //│ x = fun
 
-// Non tail resumptive
+// Non tail-resumptive
 :expect 1
 handle h = Object with
   fun perform(x)(k) =

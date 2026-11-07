@@ -389,6 +389,7 @@ fun sum(depth, x) =
   else 0
 sum(0, 30000)
 //│ = 450015000
+#config(effectHandlers: Some(EffectHandlers()))
 
 :re
 fun sum(x) =
