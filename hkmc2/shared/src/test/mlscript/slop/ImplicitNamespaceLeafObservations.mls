@@ -1,0 +1,34 @@
+:.
+#lang(eagerResolution: true)
+
+type FirstNumber = Int
+module FirstNumber with
+  val Pick = 1
+type SecondNumber = Int
+module SecondNumber with
+  val Pick = 2
+
+// These observations have the same concrete interface and no type arguments.
+// Their alias paths still choose different values, in either observation order.
+fun first(x: FirstNumber) = x
+fun second(x: SecondNumber) = x
+
+:expect [1, 2, 2, 1]
+[first(Pick), second(Pick), second(Pick), first(Pick)]
+//│ = [1, 2, 2, 1]
+
+// Joining the requirements must preserve both namespace paths.
+:e
+let shared = Pick
+[first(shared), second(shared)]
+//│ ╔══[COMPILATION ERROR] Reference 'Pick' is ambiguous, as flow requires its value to have types with distinct implicit namespaces.
+//│ ║  l.+1: 	let shared = Pick
+//│ ║        	             ^^^^
+//│ ╟── This type selects 'FirstNumber.Pick'.
+//│ ║  l.XX: 	fun first(x: FirstNumber) = x
+//│ ║        	             ^^^^^^^^^^^
+//│ ╟── This type selects 'SecondNumber.Pick'.
+//│ ║  l.XX: 	fun second(x: SecondNumber) = x
+//│ ╙──      	              ^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ shared = undefined
