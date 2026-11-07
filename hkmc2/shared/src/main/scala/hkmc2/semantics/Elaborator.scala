@@ -701,6 +701,7 @@ object Elaborator:
     case Private(sym: BlockMemberSymbol, modulePath: Str)
   
   class State:
+    val resolutionSources = new ResolutionSources
     val newResolverState: NewResolverState = new NewResolverState(this)
     val suid = new Uid.Symbol.State
     given State = this
@@ -878,8 +879,10 @@ class Elaborator(val tl: TraceLogger, val wd: io.Path, val prelude: Ctx)
 extends Importer:
   import tl.*
   given TraceLogger = tl
-  private given NewResolver = this
-  private given ResolutionContext = state.newResolverState.context.withReporter(raise)
+  val resolver = new NewResolver(prelude, config)
+  export resolver.*
+  private given NewResolver = resolver
+  private given ResolutionContext = state.newResolverState.context
   
   val lang = config.language
   val newResolution: Bool = lang.useNewResolution
@@ -1016,7 +1019,7 @@ extends Importer:
       val resumeSym = VarSymbol(Ident("resume"), erasedType = N, mut = false)
       val mtdSym = BlockMemberSymbol(spec.methodName, Nil, true)
       val tsym = TermSymbol(Fun, S(clsSym), Ident(spec.methodName))
-      rctx.state.lexicalTypeBinders(tsym) = ctx.typeBinders
+      recordDefinitionScope(tsym)
       val td = TermDefinition(
         Fun,
         mtdSym,
@@ -1431,15 +1434,14 @@ extends Importer:
     * record these too, since new-resolution consumers can import them.
     */
   private def recordDefinitionScope(symbol: AnyDefinitionSymbol)(using Ctx): Unit =
-    rctx.state.lexicalTypeBinders(symbol) = ctx.typeBinders
-    rctx.state.lexicalBoundaries(symbol) = ctx.resolutionBoundaries
+    rctx.recordDefinitionScope(symbol, ctx.typeBinders, ctx.resolutionBoundaries)
   
   /** A record field is a term definition (see RcdField.apply) written where its
     * record is. A structural projection of the field can instantiate a by-name
-    * member there (see NewResolverState.siteBinders).
+    * member there (see ResolutionSources.sites).
     */
   private def recordFieldScope(field: RcdField)(using Ctx): RcdField =
-    rctx.state.lexicalTypeBinders(field.tsym) = ctx.typeBinders
+    rctx.recordDefinitionScope(field.tsym, ctx.typeBinders, ctx.resolutionBoundaries)
     val key = field.key.orElse(symbolKey(field.field, required = false))
     field.copy()(key)
   
@@ -1467,11 +1469,7 @@ extends Importer:
         if selected is sym then ref else Term.SimpleRef(selected)(ref.tree).withLocOf(ref)
       case _ => lt
     val res = withTypeBinders(new Term.App(appliedFun, rt)(tree, typ, resSym))
-    if newResolution then appliedFun match
-      // Builtin operators have no shapes of their own; see NewResolver.builtinApplication.
-      case Term.SimpleRef(op: BuiltinSymbol) => builtinApplication(op, rt, res)
-      case Term.Ref(op: BuiltinSymbol) => builtinApplication(op, rt, res)
-      case _ => listenTerm(appliedFun)(shape => appShape(shape, rt, res))
+    if newResolution then resolver.resolveApplication(res)
     res
   
   /** With the new underscore syntax, some operator operands delimit their own implicit lambdas:
@@ -1552,7 +1550,7 @@ extends Importer:
       // Imperative branches are evaluated for effects; lowering discards their
       // values and returns unit, including when a loop executes zero iterations.
       if form.isImperative then
-        if completesNormally(res) then pipeTerm(unit, res)
+        if resolver.completesNormally(res) then pipeTerm(unit, res)
       else split.results.foreach: trm =>
           pipeTerm(trm, res)
     res
@@ -2720,7 +2718,7 @@ extends Importer:
             val tsym = TermSymbol(k, owner, id) // TODO?
             val bindingScope = ctx.scope
             // Recorded before the definition's own type parameters enter scope.
-            rctx.state.lexicalTypeBinders(tsym) = ctx.typeBinders
+            recordDefinitionScope(tsym)
             
             val elaborateDefinition: Ctx ?=> TermDefinition = newCtx ?=>
               
@@ -2912,7 +2910,7 @@ extends Importer:
             fsym.tsym = S(tsym)
             tsym.defn = S(fdef)
             // A generated field is written inside its class, like a member.
-            rctx.state.lexicalTypeBinders(tsym) = ctx.typeBinders
+            recordDefinitionScope(tsym)
             fsym.complete()
             fdef :: Nil
           
@@ -2920,7 +2918,7 @@ extends Importer:
           def paramBinding(p: Param): Ls[Statement] =
             val psym = TermSymbol(ParamBind, owner, p.sym.id)
             psym.sourceAliases = p.sym.sourceAliases
-            rctx.state.lexicalTypeBinders(psym) = ctx.typeBinders
+            recordDefinitionScope(psym)
             val decl = LetDecl(psym, Nil)(p.toLoc) // TODO: never use term symbols on LetDecl LHS
             val defn = defineVar(psym, syntheticLocalRef(p.sym))(p.toLoc)
             p.fldSym = S(psym)
@@ -3215,14 +3213,7 @@ extends Importer:
                     msg"A term declaration cannot have an implemented ${sym.describeKind} companion" -> term.toLoc
                       :: msg"Companion '${sym.nme}' is defined here" -> d.toLoc
                       :: Nil
-            d.ext match
-            case S(ext) =>
-              listenTerm(ext): esh =>
-                val sh = BaseShape(d, S(esh)) // TODO actually use applied shape providing generics?
-                sym.notifyShapeListeners(sh)
-            case N =>
-              val sh = BaseShape(d, N) // TODO actually use applied shape providing generics?
-              sym.notifyShapeListeners(sh)
+            resolver.publishClassParent(sym, d)
         case sym: InnerSymbol =>
           // TODO: patterns
         case _ => ()
@@ -3295,8 +3286,7 @@ extends Importer:
           val initial = sig.orElse:
             if flg.opt then S(Term.Lit(UnitLit(true).withLoc(t.toLoc))) else N
           initial.foreach: sign =>
-            listenTypeInstances(sign): shape =>
-              if sym.currentShapes.add(shape) then sym.notifyShapeListeners(shape)
+            resolver.seedParameter(sym, sign)
         (p, spd, aliases)
   
   /** Variadic parameters are not supported in class parameters. Report them and keep their trailing parameters. */
@@ -3353,8 +3343,7 @@ extends Importer:
       def capture(scope: Ctx): Term =
         val outer = scope.parent.fold[Term](initial)(capture)
         scope.outer.resolutionBoundary.fold(outer)(Term.Capture(outer, _))
-      listenTypeInstances(capture(ctx)): shape =>
-        if p.sym.currentShapes.add(shape) then p.sym.notifyShapeListeners(shape)
+      resolver.seedParameter(p.sym, capture(ctx))
   
   /** Elaborate a subtyping constraint. */
   def constraint(lhs: Tree, op: "<:<" | ">:>", rhs: Tree): Ctxl[SubConstraint] =
@@ -3694,17 +3683,17 @@ extends Importer:
           msg"Expected a type parameter list (a tuple of identifiers), but found ${t.describe}" -> t.toLoc :: Nil
       (Nil, ctx)
   
-  def importFrom(sts: Block, exports: Ls[BlockMemberSymbol]): Ctxl[(Blk, Ctx)] =
+  def importFrom(sts: Block, exports: Ls[BlockMemberSymbol]): Ctxl[(Blk, Ctx)] = rctx.resolving(raise, tl):
     given UnderCtx = UnderCtx.none
     val (res, newCtx) = block(sts, hasResult = false, resultInterp = Trm)
     // TODO handle name clashes
     if newResolution then
       settleUnboundReferences()
-      InterfaceExposure(this).check(exports, Nil)
+      InterfaceExposure(resolver).check(exports, Nil)
     rctx.completeBlock(res)
     (res, newCtx)
   
-  def topLevel(sts: Block): Ctxl[(Blk, Ctx)] =
+  def topLevel(sts: Block): Ctxl[(Blk, Ctx)] = rctx.resolving(raise, tl):
     given UnderCtx = UnderCtx.none
     val (res, ctx) = block(sts, hasResult = false, resultInterp = Trm)
     if newResolution then
@@ -3714,10 +3703,10 @@ extends Importer:
           case d: Definition if InterfaceExposure.isPublic(d) => d.bsym
         val values = res.stats.collect:
           case DefineVar(sym: LocalVarSymbol, rhs) => Term.SimpleRef(sym)(N) -> rhs.toLoc
-        InterfaceExposure(this).check(exports, (res.res -> res.res.toLoc) :: values)
+        InterfaceExposure(resolver).check(exports, (res.res -> res.res.toLoc) :: values)
       else
         // Explicit annotations still check callbacks whose signatures they hide.
-        InterfaceExposure(this).check(Nil, Nil)
+        InterfaceExposure(resolver).check(Nil, Nil)
     rctx.completeBlock(res)
     (res, ctx)
   

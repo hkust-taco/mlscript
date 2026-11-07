@@ -32,6 +32,12 @@ After you are done fixing all the problems and all the tests pass,
 *you need to commit the resulting golden test output changes*.
 Any commit that does not include the latest changes to test outputs will fail the CI.
 
+In general, each individual self-contained change that passes the tests should
+go into its own separate commit. Keep its regression tests and updated golden
+outputs in that commit. Split independent improvements rather than collecting
+them into one large commit; order dependent changes so each commit builds and
+passes the applicable tests on its own.
+
 Please also read the files in `.github/skills/hkmc2-difftests`.
 
 Use `*.mls` diff tests for compiler behavior. Do not add Scala tests that duplicate

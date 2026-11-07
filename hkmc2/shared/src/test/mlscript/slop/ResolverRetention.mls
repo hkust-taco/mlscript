@@ -1,0 +1,111 @@
+:.
+
+// These are compiled artifacts: their workspaces and temporary observers
+// have been released before these calls install any consumer-local inference.
+import "../../mlscript-compile/ResolverRetentionLibrary.mls" as Library
+import "../../mlscript-compile/ResolverRetentionMiddle.mls" as Middle
+
+:expect [1, 2, 3, 4]
+class First(val first: Int)
+class Second(val second: Int)
+[Library.choose(true, First(1)).first,
+ Library.choose(false, Second(2)).second,
+ Middle.choose(true, First(3)).first,
+ Middle.choose(false, Second(4)).second]
+//│ = [1, 2, 3, 4]
+
+// Returned closures retain private helper and captured-variable flow through
+// both the defining file and an intermediate exporter's private graph.
+:expect [5, 6, 7, 8]
+[Library.captured(First(5))().first,
+ Middle.captured(Second(6))().second,
+ Library.callbacks(First(7)).read().first,
+ Middle.callbacks(Second(8)).read().second]
+//│ = [5, 6, 7, 8]
+
+:expect [9, 10]
+[Library.unpack(Library.Box(First(9))).first,
+ Library.unpack(Library.Box(Second(10))).second]
+//│ = [9, 10]
+
+// Public type aliases belong to the interface even when no exported value in
+// their defining module mentions them.
+:expect 11
+fun apply(value: First, callback: Library.Callback[First]) = callback(value).first
+apply(First(11), x => x)
+//│ = 11
+
+// A forward alias must preserve its pending inference continuations.
+:expect 12
+Library.delayed(x => x, First(12)).first
+//│ = 12
+
+// Generated buffer members are first observed after the exporting unit has
+// released its workspace. Their creation must belong to the consumer.
+:expect 13
+Library.Buffered.read(null, 0)()
+//│ = 13
+
+// A re-exported callback enters consumer code which calls the defining library
+// again. The two generic activations must retain their own argument flow.
+:expect [14, 15]
+fun roundTrip[A](value: A) =
+  Middle.callbacks((item: A) => Library.choose(true, item)).read()(value)
+[roundTrip(First(14)).first, roundTrip(Second(15)).second]
+//│ = [14, 15]
+
+// Two bodies wait for the same forward alias before their callbacks can be
+// checked. Completing that shared work must preserve both callback owners.
+fun callbackFirst(): Deferred[First] = value => Middle.choose(true, value)
+fun callbackSecond(): Deferred[Second] = value => Middle.choose(false, value)
+type Deferred[A] = A -> A
+
+:expect [16, 17]
+[Library.delayed(callbackFirst(), First(16)).first,
+ Library.delayed(callbackSecond(), Second(17)).second]
+//│ = [16, 17]
+
+// These equal underlying argument types carry different alias namespaces. The
+// annotations must survive released interning workspaces and intermediate imports.
+:expect [18, 19, 18, 19]
+[Library.firstBox(Library.Box(.Pick)), Library.secondBox(Library.Box(.Pick)),
+ Middle.firstBox(Library.Box(.Pick)), Middle.secondBox(Library.Box(.Pick))]
+//│ = [18, 19, 18, 19]
+
+// A separate signature retains the Array's output bound after finalization:
+// its existing callbacks accept Child, even though writes must accept Parent.
+#lang(strictResolution: true)
+
+:expect 20
+Library.callbackResults(value => value.value)
+//│ = 20
+
+:expect 20
+Library.callbackResults(value => value.extra)
+//│ = 20
+
+// An explicitly bound type parameter has distinct input and output obligations,
+// stored in a separate publisher from its value flow. Both survive import.
+:expect 21
+Library.identity[in Library.Child out Library.Parent](Library.Child(21)).value
+//│ = 21
+
+:e
+Library.identity[in Library.Child out Library.Parent](Library.Child(21)).extra
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	Library.identity[in Library.Child out Library.Parent](Library.Child(21)).extra
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Value of type 'Parent' does not contain member 'extra'
+//│ ║  l.+1: 	Library.identity[in Library.Child out Library.Parent](Library.Child(21)).extra
+//│ ╙──      	                                      ^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+Library.identity[in (Library.Parent -> Int) out (Library.Child -> Int)](value => value.extra)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	Library.identity[in (Library.Parent -> Int) out (Library.Child -> Int)](value => value.extra)
+//│ ║        	                                                                                 ^^^^^^^^^^^
+//│ ╟── Value of type 'Parent' does not contain member 'extra'
+//│ ║  l.+1: 	Library.identity[in (Library.Parent -> Int) out (Library.Child -> Int)](value => value.extra)
+//│ ╙──      	                     ^^^^^^^^^^^^^^
+//│ = fun

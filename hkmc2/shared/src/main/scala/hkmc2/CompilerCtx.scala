@@ -227,6 +227,7 @@ class CompilerCtx(
       state.publishCompilationUnitAbi:
         CompilationUnitAbi:
           CompilerCtx.allocateModulePrivateExportNames(ir)(using state, summon[Raise])
+      state.newResolverState.finish()
       Artifact(parsed, blk0, ir, artifactConfig, prelude, state, compilationUnit, rootConfig,
         dependencies.result, dependencies.sourceImports.toList, hasErrors, lastMod)
     
@@ -293,6 +294,7 @@ class CompilerCtx(
         // must be erased before any compilation unit can use them.
         given Ctx = ctx
         elaborationConfig.givenIn(codegen.Erasure(blk))
+        state.newResolverState.finish()
         PreludeArtifact(parse.resultBlk, blk, ctx, state, rootConfig, lastMod),
     )
   
