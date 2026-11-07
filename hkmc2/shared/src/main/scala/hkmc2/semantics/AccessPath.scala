@@ -31,13 +31,13 @@ object AccessPath:
     */
   private final case class Plan(base: Base, selections: Ls[DefinitionSymbol[?]])
 
-  private def checked(target: DefinitionSymbol[?])(using state: State): Opt[Failure] =
+  private def accessFailure(target: DefinitionSymbol[?])(using state: State): Opt[Failure] =
     if (target.getState isnt state) && codegen.MemberStorage.sourcePrivateDefinition(target).nonEmpty
     then S(Failure.PrivateMember(target))
     else N
 
   private def select(plan: Plan, target: DefinitionSymbol[?])(using State): Either[Failure, Plan] =
-    checked(target).toLeft(plan.copy(selections = plan.selections :+ target))
+    accessFailure(target).toLeft(plan.copy(selections = plan.selections :+ target))
 
   private def member(target: DefinitionSymbol[?]): BlockMemberSymbol =
     target.bms.getOrElse(lastWords("An access path requires a block member"))
@@ -84,13 +84,13 @@ object AccessPath:
         case S(_: Elaborator.ExternalModuleImport.Private) => sym.getState.compilationUnitPrivateName(sym).nonEmpty
         case N => false
     val global = scope.exists(_.outer.inner.isEmpty) && target.defn.exists(_.hasDeclareModifier.nonEmpty)
-    if global || imported then checked(target).toLeft(Plan(Base.Reference(target, N), Nil))
+    if global || imported then accessFailure(target).toLeft(Plan(Base.Reference(target, N), Nil))
     else scope.toRight(Failure.OutOfScope).flatMap: dst =>
       // Different files may share a prelude scope, but only their exported
       // bindings are available to one another, not their lexical receivers.
       if (target.getState is state) && encloses(dst) then dst.outer.inner match
-        case S(owner) => checked(target).toLeft(Plan(Base.Receiver(owner, dst), target :: Nil))
-        case N => checked(target).toLeft(Plan(Base.Reference(target, S(dst)), Nil))
+        case S(owner) => accessFailure(target).toLeft(Plan(Base.Receiver(owner, dst), target :: Nil))
+        case N => accessFailure(target).toLeft(Plan(Base.Reference(target, S(dst)), Nil))
       else dst.outer.inner match
         case S(owner: ModuleOrObjectSymbol) => plan(src, owner).flatMap(select(_, target))
         case _ => L(Failure.OutOfScope)

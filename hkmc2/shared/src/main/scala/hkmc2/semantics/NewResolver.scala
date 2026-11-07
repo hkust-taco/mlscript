@@ -496,24 +496,24 @@ class NewResolver:
             case S(argument) => uses(selectArgument(argument, tpe.positive), inside, next, aliases)
             case N => Set(symbol -> inside)
           tpe.shapes match
-            case TypeShape.Parameter(symbol, _) :: Nil => bound(symbol, wrapped)
-            case TypeShape.Combined(formula) :: Nil => formula.atoms.flatMap(uses(_, wrapped, next, aliases))
-            case TypeShape.Contextual(reference) :: Nil => uses(reference.tpe, wrapped, next, aliases)
-            case TypeShape.Wildcard(input, output) :: Nil =>
-              input.toSet.flatMap(part => uses(declaredType(part, tpe.withPolarity(!tpe.positive)), wrapped, next, aliases)) ++
-                output.toSet.flatMap(part => uses(declaredType(part, tpe), wrapped, next, aliases))
-            case TypeShape.Argument(parts) :: Nil => uses(parts.input, wrapped, next, aliases) ++ uses(parts.output, wrapped, next, aliases)
-            case TypeShape.SelectedArgument(argument, _) :: Nil => uses(argument, wrapped, next, aliases)
-            case TypeShape.Applied(base, args) :: Nil => alias(base) match
-              case S((symbol, rhs)) if !aliases(symbol) =>
-                // Constructor analysis ignores scope crossings, but still follows
-                // the alias's substitution. The guard bounds body expansion;
-                // substitution values are finite immutable reference DAGs.
-                val substitutions = aliasBindings(tpe, typeApplication(args, tpe), symbol.defn.get.tparams, tpe.positive)
-                uses(declaredType(rhs, substitutions, tpe.positive), wrapped, next, aliases + symbol)
-              case S(_) => dependencies(tpe.resolution).flatMap(bound(_, wrapped))
-              case N => dependencies(tpe.resolution).flatMap(bound(_, true))
-            case _ => dependencies(tpe.resolution).flatMap(bound(_, true))
+          case TypeShape.Parameter(symbol, _) :: Nil => bound(symbol, wrapped)
+          case TypeShape.Combined(formula) :: Nil => formula.atoms.flatMap(uses(_, wrapped, next, aliases))
+          case TypeShape.Contextual(reference) :: Nil => uses(reference.tpe, wrapped, next, aliases)
+          case TypeShape.Wildcard(input, output) :: Nil =>
+            input.toSet.flatMap(part => uses(declaredType(part, tpe.withPolarity(!tpe.positive)), wrapped, next, aliases)) ++
+              output.toSet.flatMap(part => uses(declaredType(part, tpe), wrapped, next, aliases))
+          case TypeShape.Argument(parts) :: Nil => uses(parts.input, wrapped, next, aliases) ++ uses(parts.output, wrapped, next, aliases)
+          case TypeShape.SelectedArgument(argument, _) :: Nil => uses(argument, wrapped, next, aliases)
+          case TypeShape.Applied(base, args) :: Nil => alias(base) match
+            case S((symbol, rhs)) if !aliases(symbol) =>
+              // Constructor analysis ignores scope crossings, but still follows
+              // the alias's substitution. The guard bounds body expansion;
+              // substitution values are finite immutable reference DAGs.
+              val substitutions = aliasBindings(tpe, typeApplication(args, tpe), symbol.defn.get.tparams, tpe.positive)
+              uses(declaredType(rhs, substitutions, tpe.positive), wrapped, next, aliases + symbol)
+            case S(_) => dependencies(tpe.resolution).flatMap(bound(_, wrapped))
+            case N => dependencies(tpe.resolution).flatMap(bound(_, true))
+          case _ => dependencies(tpe.resolution).flatMap(bound(_, true))
       val edges = applications.toList.flatMap: (source, symbol, rhs, args) =>
         symbol.defn.get.tparams.zip(args).flatMap: (formal, argument) =>
           if !dependencies(rhs)(formal.sym) then Nil
@@ -939,11 +939,13 @@ class NewResolver:
     */
   private def variantArguments(source: DeclaredType, application: TypeApplication, parameters: Ls[TyParam], positive: Bool)
       (using ResolutionContext): Ls[DeclaredType] =
-    parameters.zipWithIndex.map: (parameter, index) =>
-      application.arguments.lift(index) match
+    parameters.iterator.zipWithIndex
+      .map: (parameter, index) =>
+        application.arguments.lift(index) match
         case S(argument) if argument.wildcard => argument.at(positive)
         case S(argument) => argumentType(argument.at(positive), parameter)
         case N => argumentType(omittedArgument(source, parameter), parameter)
+      .toList
 
   private def typeBindings(source: DeclaredType, arguments: TypeApplication, parameters: Ls[TyParam], positive: Bool)
       (using ResolutionContext): Map[VarSymbol, DeclaredType] =
@@ -4272,7 +4274,7 @@ class NewResolver:
                             val opaque = abstractType(new TypeResolution(sel, msgs => resolError(sel, msgs)))
                             MemberLookup.Declared(bms, cd.tparams.map(_.sym -> opaque).toMap, context :: Nil, nominal.annotation, true)
                       case _ =>
-                        // C# selects a declaration, not an instance of C. Transport
+                        // `C#` in `x.C#m` selects a declaration, not an instance of C. Transport
                         // the member through the actual receiver, never the qualifier.
                         projectedMember(receiver, cd, sel.id.name).map(visible).getOrElse:
                           // Without a path into this class, only its declared

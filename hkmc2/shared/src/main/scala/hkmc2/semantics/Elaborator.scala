@@ -542,13 +542,13 @@ object Elaborator:
     * a runtime value merely because they use the same reference syntax.
     */
   enum Interpretation:
-    case Trm, Specialization, Ptrn, Tpe
+    case Trm, Ptrn, Tpe
     /** The receiver of a selection. The root of a chain of selections of a value or a
       * pattern is `chained`: like the value or pattern head itself, it can name a member
       * of an implicit namespace (see NewResolver.unresolvedRef). The selections of types
       * and annotations are paths through explicit bindings and wildcard opens only.
       */
-    case Receiver(chained: Bool)
+    case Rcvr(chained: Bool)
     /** A class operand. The class `instantiated` by `new` can name a member of an implicit
       * namespace. Other class operands, such as those of `extends` clauses, are needed
       * while their class is elaborated, before flow can reveal a namespace (see newOf).
@@ -556,22 +556,22 @@ object Elaborator:
     case Clss(instantiated: Bool)
     /** An annotation, which is interpreted as soon as it is elaborated (see annotationSymbol),
       * before flow can reveal implicit namespaces. Otherwise as Trm. */
-    case Annotation
+    case Annt
 
     /** Whether a name without an explicit binding can name a member of an implicit namespace
       * (see NewResolver.unresolvedRef), rather than only consult the visible wildcard opens. */
     def implicitNamespacing: Bool = this match
-      case Trm | Specialization | Ptrn => true
-      case Receiver(chained) => chained
+      case Trm | Ptrn => true
+      case Rcvr(chained) => chained
       case Clss(instantiated) => instantiated
-      case Tpe | Annotation => false
+      case Tpe | Annt => false
 
     /** The interpretation of the receiver of a selection with this interpretation. */
-    def selectionReceiver: Interpretation = Receiver(implicitNamespacing)
+    def selectionReceiver: Interpretation = Rcvr(implicitNamespacing)
 
     /** The interpretation of the head of an application with this interpretation. */
     def applicationHead: Interpretation = this match
-      case Annotation => Annotation
+      case Annt => Annt
       case _ => Trm
     
     /** The interpretation of the elements of a tuple or record with this interpretation.
@@ -867,7 +867,7 @@ end Elaborator
 
 
 import Elaborator.*
-import Elaborator.Interpretation.{Trm, Receiver, Specialization, Clss, Ptrn, Tpe, Annotation}
+import Elaborator.Interpretation.{Trm, Rcvr, Clss, Ptrn, Tpe, Annt}
 
 
 class Elaborator(val tl: TraceLogger, val wd: io.Path, val prelude: Ctx)
@@ -930,7 +930,7 @@ extends Importer:
       S(Annot.Debug(modify)(tree.toLoc))
     case App(Ident("affine"), Tup(IntLit(whichParamList) :: Nil)) =>
       S(Annot.Affine(whichParamList.toInt)(tree.toLoc))
-    case _ => term(tree, Annotation) match
+    case _ => term(tree, Annt) match
       case Term.Error() => N
       case trm =>
         val symbol = if newResolution then annotationSymbol(trm) else trm.symbol
@@ -1560,8 +1560,8 @@ extends Importer:
     */
   private def interpretRef(ref: Term, interp: Interpretation): Term =
     if newResolution then interp match
-      case Trm | Annotation => requireTerm(ref)
-      case Receiver(_) => listenReceiver(ref)(_ => ())
+      case Trm | Annt => requireTerm(ref)
+      case Rcvr(_) => listenReceiver(ref)(_ => ())
       case Tpe => ref.typeInterpretation = S(typeResolution(ref))
       case _ => ()
     ref
@@ -1814,7 +1814,7 @@ extends Importer:
       // The whole type application owns a by-name invocation's binder group.
       // Do not observe its underlying reference before its arguments are available.
       val baseInterp = interp match
-        case Trm | Receiver(_) | Specialization => Specialization
+        case Trm | Rcvr(_) => Trm
         case _ => interp
       val result = withTypeBinders(Term.TyApp(subterm(lhs, baseInterp), targs.map {
         case Modified(kw @ Keywrd(Keyword.`in`), arg) => Term.WildcardTy(S(subterm(arg, Tpe)), N).mkLocWith(kw)
@@ -1986,7 +1986,7 @@ extends Importer:
       if interp.implicitNamespacing then
         interpretRef(Ctx.unresolvedRef(Nil, nme, NameLookup.LeadingDot, tree), interp)
       else
-        raise(ErrorReport(msg"A leading-dot selection must denote a value or pattern, whose type determines its namespace." ->
+        raise(ErrorReport(msg"Leading-dot selection can only be used on term or pattern position." ->
           tree.toLoc :: Nil))
         error
     case Sel(Empty(), nme) =>
@@ -3567,7 +3567,9 @@ extends Importer:
           raise(ErrorReport(msg"Unexpected record property pattern." -> t.toLoc :: Nil))
           acc
       val res = new Record(entries.reverse)
-      // Field reads can invoke by-name members, with the type binders in scope here.
+      // Record patterns implicitly select their input's members. These selections
+      // may invoke generic parameterless functions, so record the enclosing type
+      // parameters that their inferred type arguments can depend on.
       if newResolution && res.fields.nonEmpty then rctx.recordPatternReads(res, ctx.typeBinders)
       res
     /** Elaborate a pattern argument. */
