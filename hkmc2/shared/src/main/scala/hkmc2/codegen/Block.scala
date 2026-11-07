@@ -21,6 +21,18 @@ import sem.Elaborator.{Ctx, State}
 
 The Middle IR (MIR) or "Block IR" or just "IR" is an implementation of a form of imperative ANF.
 
+Every function body in a valid executable IR program must return a value explicitly on each path
+that completes normally. This includes FunDefn and Lambda bodies, generated functions, and functions
+returning Unit. Lowering.returnedTerm establishes this property for source functions and handler bodies;
+subsequent IR transformations must preserve it.
+End only falls through the current statement block; it never supplies an implicit Unit result.
+Inner End nodes and unreachable tails are legal, and functions that only throw or diverge need not contain Return.
+
+Program.main and class/module preCtor and ctor blocks are statement blocks that may fall through.
+BufferableTransform and ReflectionInstrumenter temporarily wrap constructor blocks in FunDefn to reuse
+function-processing code. These wrappers do not appear as executable functions; any emitted function
+must satisfy the explicit-return invariant.
+
 While the IR is mostly immutable, for easier manipulation and to enable some optimizations,
 we do assume that each DefinitionSymbol coming from the source program is "owned" by at most one IR definition;
 this is implemented by making the `Define` and `ClsLikeDefn` constructors
@@ -1082,8 +1094,10 @@ final case class Handler(
   lazy val freeVars: Set[FreeSymbol] = body.freeVars -- params.flatMap(_.paramSyms) - sym - resumeSym
 
 
-/* Represents either unreachable code (for functions that must return a result)
- * or the end of a non-returning function or a REPL block */
+/** Falls through the current statement block, or marks an unreachable tail.
+  * Constructor and top-level statement blocks may end normally here. Reaching End at the boundary of an
+  * executable function violates the explicit-return invariant in the design notes above.
+  */
 case class End(msg: Str = "") extends BlockTail with ProductWithTail
 
 case class Unreachable(cause: Str) extends BlockTail with ProductWithTail

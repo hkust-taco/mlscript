@@ -1527,9 +1527,10 @@ class WatBuilder(private val ctx: Ctx, linking: FileCompilation)(using TraceLogg
     end match
   end compilePreCtor
 
-  /** MIR blocks contain statements; only `Return` supplies a function result. Falling off the entire body supplies an
-    * unspecified value in the function's result representation. An inner `End` only continues after its enclosing
-    * block, so matches and labels must not manufacture their own result values.
+  /** MIR function bodies return explicitly, as specified in Block.scala's design notes. This helper also emits
+    * `Program.main`, whose fallthrough supplies an unspecified value in the entry function's result representation.
+    * An inner `End` only continues after its enclosing block, so matches and labels must not manufacture their own
+    * result values.
     *
     * The instructions form the Wasm function body directly. Wrapping them in a `block` would be redundant, and a block
     * ending in a control transfer would also need the function's result type to be valid under the core spec.
