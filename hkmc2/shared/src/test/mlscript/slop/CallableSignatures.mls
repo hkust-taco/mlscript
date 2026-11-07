@@ -141,7 +141,7 @@ fun capturedGenerator(value: Int) =
   generate("unused", 2)
 capturedGenerator(40).next().value
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp: ?, tmp1: Unknown, capturedGenerator_generate$generate, capturedGenerator_generate$generate1, capturedGenerator$capturedGenerator;
+//│ let tmp: ?, tmp1: ?, capturedGenerator_generate$generate, capturedGenerator_generate$generate1, capturedGenerator$capturedGenerator;
 //│ @private @generator
 //│ define capturedGenerator_generate$generate as fun capturedGenerator_generate$generate⁰(value: Int⁰, n: Int⁰): generator Int⁰ {
 //│   return +⁰(value, n)
@@ -176,8 +176,8 @@ fun capturedGeneratorFunction(value: Int) =
   generate
 capturedGeneratorFunction(40)(2).next().value
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let generate, baseCall: ?, tmp: ?, tmp1: Unknown, generate$;
-//│ define generate$ as fun generate$⁰(value: Int⁰)(n: Int⁰): Iterator⁰ {
+//│ let generate, baseCall: ?, tmp: ?, tmp1: ?, generate$;
+//│ define generate$ as fun generate$⁰(value: Int⁰)(n: Int⁰): Unknown {
 //│   return generate⁰(value, n)
 //│ };
 //│ @generator
