@@ -1,0 +1,121 @@
+:.
+
+class List[A](val head: A)
+class Show[A](val label: Str)
+module Show with
+  using Show[Int] = Show[Int]("int")
+  using Show[Str] = Show[Str]("str")
+  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+class First with
+  fun method(using show: Show[List[List[Int]]]) = show.label
+class Same with
+  fun method(using show: Show[List[List[Int]]]) = show.label
+class Different with
+  fun method(using show: Show[List[List[Str]]]) = show.label
+
+:expect ["list(list(int))", "list(list(int))"]
+fun agree(receiver) = receiver.method
+[agree(new First), agree(new Same)]
+//│ = ["list(list(int))", "list(list(int))"]
+
+// The outer and next-level functions agree, but the leaves do not.
+:e
+fun disagree(receiver) = receiver.method
+[disagree(new First), disagree(new Different)]
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	fun disagree(receiver) = receiver.method
+//│ ║        	                         ^^^^^^^^^^^^^^^
+//│ ╟── This value reaches the type of the contextual parameter 'element' after its instance was selected; the selected instance of type Show[Int] does not accept it.
+//│ ║  l.+1: 	fun disagree(receiver) = receiver.method
+//│ ║        	                         ^^^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+//│ ║        	                    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The selected instance is declared here.
+//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This value is incompatible with the selected instance.
+//│ ║  l.XX: 	  fun method(using show: Show[List[List[Str]]]) = show.label
+//│ ╙──      	                                        ^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	fun disagree(receiver) = receiver.method
+//│ ║        	                         ^^^^^^^^^^^^^^^
+//│ ╟── The callees of this call require different instances for the contextual parameter 'element' of type Show[A].
+//│ ║  l.+1: 	fun disagree(receiver) = receiver.method
+//│ ║        	                         ^^^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+//│ ║        	                    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── One callee selects this instance.
+//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Another callee selects this instance.
+//│ ║  l.XX: 	  using Show[Str] = Show[Str]("str")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance function 'list' requires this nested argument.
+//│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance function 'list' requires this nested argument.
+//│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+//│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = ["list(list(int))", "list(list(int))"]
+
+using Different = new Different
+fun reveal(using value: Different) = value
+
+// The incompatible callee arrives during settlement, after nested selection.
+:e
+fun late(receiver) = receiver.method
+[late(new First), late(reveal)]
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	fun late(receiver) = receiver.method
+//│ ║        	                     ^^^^^^^^^^^^^^^
+//│ ╟── This value reaches the type of the contextual parameter 'element' after its instance was selected; the selected instance of type Show[Int] does not accept it.
+//│ ║  l.+1: 	fun late(receiver) = receiver.method
+//│ ║        	                     ^^^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+//│ ║        	                    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The selected instance is declared here.
+//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This value is incompatible with the selected instance.
+//│ ║  l.XX: 	  fun method(using show: Show[List[List[Str]]]) = show.label
+//│ ╙──      	                                        ^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	fun late(receiver) = receiver.method
+//│ ║        	                     ^^^^^^^^^^^^^^^
+//│ ╟── The callees of this call require different instances for the contextual parameter 'element' of type Show[A].
+//│ ║  l.+1: 	fun late(receiver) = receiver.method
+//│ ║        	                     ^^^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+//│ ║        	                    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── One callee selects this instance.
+//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Another callee selects this instance.
+//│ ║  l.XX: 	  using Show[Str] = Show[Str]("str")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance function 'list' requires this nested argument.
+//│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance function 'list' requires this nested argument.
+//│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+//│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = ["list(list(int))", "list(list(int))"]
+
+// Distinct query types can agree recursively on one broad leaf instance.
+class Numeric[A](val label: Str)
+module Numeric with
+  using Numeric[Num] = Numeric[Num]("num")
+  using fun list[A](using element: Numeric[A]): Numeric[List[A]] = Numeric[List[A]](element.label)
+class Integers with
+  fun method(using show: Numeric[List[Int]]) = show.label
+class Numbers with
+  fun method(using show: Numeric[List[Num]]) = show.label
+
+:expect ["num", "num"]
+fun sameLeaf(receiver) = receiver.method
+[sameLeaf(new Integers), sameLeaf(new Numbers)]
+//│ = ["num", "num"]

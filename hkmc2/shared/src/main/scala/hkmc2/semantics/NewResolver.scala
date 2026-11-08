@@ -2830,7 +2830,7 @@ class NewResolver:
     val params = ps.allParams
     zipArgumentShapes(mss, Arity(ps), args, src, funSh)(
       (index, shape) => constrainParameterIn(params(index), shape, mss, instances, S(src)))
-    contextualArguments(args, params.map(p => (p, parameterSignature(p, positive = false).map(_.instantiate(instances)))))
+    contextualArguments(args, mss, params.map(p => (p, parameterSignature(p, positive = false).map(_.instantiate(instances)))))
 
   /** Render the query's written types with explicit substitutions, without guessing a type
     * from its inferred values. Recursive aliases retain their source spelling at the cycle.
@@ -2864,25 +2864,27 @@ class NewResolver:
 
   /** Classification follows written aliases and explicit arguments, never inferred values.
     * Inference supplies the positions of a query; it cannot change its head classification.
+    * Positions retain their path back to the annotation's scope, so derivation can relate
+    * them to another function's result without mixing the two functions' lexical entries.
     */
   private def contextualQuery(tpe: DeclaredType)(using ResolutionContext): Opt[ContextualQuery] =
-    def follow(current: DeclaredType, args: TypeApplication, seen: Set[DeclaredType]): Opt[ContextualQuery] =
+    def follow(current: DeclaredType, args: TypeApplication, captures: Ls[Marks], seen: Set[DeclaredType]): Opt[ContextualQuery] =
       if seen(current) then N else current.shapes match
         case shape :: Nil => reduceType(current, args, shape) match
-          case S(step) => follow(step.tpe, step.args, seen + current)
+          case S(step) => follow(step.tpe, step.args, step.marks ::: captures, seen + current)
           case N => shape match
             case TypeShape.Nominal(cls) =>
-              S(ContextualQuery.Named(cls, variantArguments(current, args, cls.tparams, current.positive).map(_.output)))
+              S(ContextualQuery.Named(cls, variantArguments(current, args, cls.tparams, current.positive).map(arg => transportType(arg.output, captures))))
             case parameter: TypeShape.Parameter =>
               val target = current.instances.get(parameter.symbol).fold(parameter)(rctx.typeParameter)
               if rctx.hasExplicitTypeArgument(target.symbol) then
                 rctx.local(target.arguments).shapes.toList match
-                  case binding :: Nil => follow(binding.argument.output, noTypeArguments, seen + current)
+                  case binding :: Nil => follow(binding.argument.output, noTypeArguments, binding.marks :: captures, seen + current)
                   case _ => N
-              else S(ContextualQuery.Parameter(current, parameter.symbol))
+              else S(ContextualQuery.Parameter(transportType(current, captures), parameter.symbol))
             case _ => N
         case _ => N
-    follow(tpe, noTypeArguments, Set.empty)
+    follow(tpe, noTypeArguments, Nil, Set.empty)
 
   /** Cached observation hosts retain all activations and use the ordinary publisher copy-on-import
     * protocol. Decision snapshots never install callbacks that mutate a captured collection.
@@ -2965,10 +2967,119 @@ class NewResolver:
                 contextualValues(position, observe).forall(contextualAccepts(bound.output, _, Set.empty, observe))
           case _ => false
 
+  private def instanceFunction(symbol: Symbol): Opt[TermDefinition] =
+    symbol.asTrm.flatMap(_.defn).filter(_.flags.isInstanceFunction)
+
+  /** Snapshot the finite observations at decision time. A repeated value on the current
+    * path contributes ?, so cyclic value graphs do not create recursive snapshot trees.
+    */
+  private def contextualFlowType(query: ContextualQuery)(using ResolutionContext): ContextualFlowType =
+    import ContextualFlowType.*
+    def observed(values: Iterable[TermShape], path: Set[ShapeIdentity.Key]): ContextualFlowType =
+      val alternatives = values.iterator.map: value =>
+        val key = ShapeIdentity.key(value)
+        if path(key) then Wildcard else instanceClass(shapeParts(value).value) match
+          case N => Wildcard
+          case S(cls) => Named(cls, cls.tparams.map: parameter =>
+            observed(contextualClassPosition(value, cls, parameter.sym).currentShapes.toList, path + key))
+      .toSet
+      if alternatives.isEmpty || alternatives(Wildcard) then Wildcard
+      else if alternatives.size == 1 then alternatives.head
+      else Union(alternatives)
+    query match
+      case ContextualQuery.Named(cls, positions) => Named(cls,
+        positions.map(position => observed(contextualValues(position, _ => ()), Set.empty)))
+      case ContextualQuery.Parameter(position, _) => observed(contextualValues(position, _ => ()), Set.empty)
+
+  /** Compare only repetitions of the same function and covering set. Each such subsequence
+    * has non-increasing sizes and distinct flow types. There are finitely many functions,
+    * covering sets, and flow types of any bounded size, hence every derivation path is finite.
+    * Filtering a divergent candidate before tier selection preserves alternatives without
+    * backtracking or an arbitrary search-depth limit.
+    */
+  private def contextualDiverges(function: TermDefinition, flowType: ContextualFlowType,
+      path: Ls[ContextualDerivationStep]): Bool = path.exists: previous =>
+    (previous.function.sym is function.sym) && previous.covering == flowType.covering &&
+      (previous.size < flowType.size || previous.flowType == flowType)
+
+  /** Infer through the result's view of the query head, including inherited arguments.
+    * Ordinary type constraints move from the query's scope to the derived function's scope
+    * and retain deferred observations. Feeding expanded query views directly would leave
+    * the query callee's entry marks on values entering the derived function's parameters.
+    */
+  private def inferDerivedResult(result: DeclaredType, query: ContextualQuery, queryMarks: Ls[Marks], marks: Ls[Marks], site: Term)
+      (using ResolutionContext): Unit = query match
+    case ContextualQuery.Parameter(position, _) =>
+      constrainTypes(ContextualType(position, queryMarks), ContextualType(result, marks), S(site))
+    case ContextualQuery.Named(cls, positions) =>
+      listenTypeViews(result):
+        case Marked(nominal: NominalInstanceView, context) => nominal.ancestor(cls).foreach: ancestor =>
+          softAssert(cls.tparams.length == positions.length, "Derived result positions must match the query head")
+          cls.tparams.lazyZip(positions).foreach: (parameter, position) =>
+            ancestor.bindings.get(parameter.sym).foreach: expected =>
+              constrainTypes(ContextualType(position, queryMarks), ContextualType(expected.output, context :: marks), S(site))
+        case _ => softAssert(false, "An instance function result must have a nominal view")
+
+  private def derivedInstance(argument: InstanceArg, parameter: Param, candidate: ContextualCandidate,
+      function: TermDefinition, query: ContextualQuery, queryMarks: Ls[Marks], flowType: ContextualFlowType, reference: => Term)
+      (using ResolutionContext): Term =
+    val environment = argument.environment.getOrElse(lastWords("A derived query needs its lexical environment"))
+    val previous = argument.agreement.getOrElse(argument).derivations.valuesIterator.nextOption()
+    val nested = mutable.ListBuffer.empty[InstanceArg]
+    val applications = mutable.ListBuffer.empty[App]
+    val path = ContextualDerivationStep(function, flowType) :: argument.derivationPath
+    val base = reference
+    var firstApplication: Opt[App] = N
+    val expression = function.params.foldLeft(base): (callee, params) =>
+      softAssert(params.flags.ctx, "An instance function has only contextual parameter lists")
+      val fields = params.allParams.map: _ =>
+        val inner = new InstanceArg()
+        inner.withLocOf(argument)
+        inner.environment = S(environment)
+        inner.derivationPath = path
+        inner.agreement = previous.flatMap(_.arguments.lift(nested.length))
+        nested += inner
+        Fld(FldFlags.empty, inner, N)
+      val tuple = CtxTup(fields)(Tree.DummyTup).withLocOf(argument)
+      val app = new App(callee, tuple)(Tree.DummyApp, N, FlowSymbol.app()).withLocOf(argument)
+      rctx.recordLexicalBinders(app, environment.typeBinders)
+      if firstApplication.isEmpty then firstApplication = S(app)
+      applications += app
+      app
+    softAssert(previous.forall(_.arguments.length == nested.length),
+      "Callees selecting the same instance function must compare every nested argument")
+    val derivation = ContextualDerivation(expression, nested.toList)
+    argument.derivations += parameter.sym -> derivation
+    // Seed inference before ordinary application processing can decide nested arguments.
+    // The same call-site identity then reuses these instantiations in applyValue.
+    listenValueRaw(base, receiver = false): source =>
+      val ShapeParts(core, lexical, _) = shapeParts(source)
+      val captured = rctx.instances.withOverrides(lexical)
+      val marks = core.applicationHead._2
+      firstApplication match
+        case S(app) => core match
+          case Marked(callable: CallableTypeShape, _) =>
+            val viewed = instantiateShape(callable, captured) match
+              case callable: CallableTypeShape => callable
+              case _ => lastWords("A derived callable must retain its interface")
+            val instantiated = instantiateCallable(viewed, app.resSym, lexicalBinders(app), marks)
+            instantiated.result.foreach(result => inferDerivedResult(result, query, queryMarks, marks, app))
+          case Marked(definition: DefnShape, _) =>
+            val instances = instantiateDefinition(definition, app.resSym, lexicalBinders(app), marks, captured, N)
+            inferDerivedResult(candidate.annotation.instantiate(instances), query, queryMarks, marks, app)
+          case _ => softAssert(false, "An instance function reference must be callable")
+        case N => core match
+          case instance: InstanceShape => inferDerivedResult(instance.tpe, query, queryMarks, Nil, base)
+          case Marked(instance: InstanceShape, _) => inferDerivedResult(instance.tpe, query, queryMarks, marks, base)
+          case _ => softAssert(false, "A parameterless instance function must expose its declared result")
+    applications.foreach: app =>
+      listenValueRaw(app.lhs, receiver = false)(value => applyShape(value, app.rhs, app, checked = true))
+    expression
+
   /** The application installs its ordinary argument constraints before calling this helper.
     * Publishing one selected argument therefore informs the next query in the same clause.
     */
-  private def contextualArguments(args: Term, parameters: => Ls[(Param, Opt[DeclaredType])])
+  private def contextualArguments(args: Term, marks: Ls[Marks], parameters: => Ls[(Param, Opt[DeclaredType])])
       (using ResolutionContext): Unit = args match
     case CtxTup(fields) if fields.exists:
       case Fld(_, _: InstanceArg, _) => true
@@ -2978,7 +3089,7 @@ class NewResolver:
       softAssert(fields.length == params.length, "Synthesized contextual arguments must match the callee's clause")
       fields.lazyZip(params).foreach:
         case (Fld(_, argument: InstanceArg, _), (parameter, S(tpe))) =>
-          decideContextualArgument(argument, parameter, tpe)
+          decideContextualArgument(argument, parameter, tpe, marks)
         case (Fld(_, argument: InstanceArg, _), (parameter, N)) =>
           if !argument.isErroneous then
             rctx.markError(argument)
@@ -2986,7 +3097,7 @@ class NewResolver:
         case _ => softAssert(false, "A synthesized contextual clause contains only instance arguments")
     case _ => ()
 
-  private def decideContextualArgument(argument: InstanceArg, parameter: Param, tpe: DeclaredType)
+  private def decideContextualArgument(argument: InstanceArg, parameter: Param, tpe: DeclaredType, queryMarks: Ls[Marks])
       (using ResolutionContext): Unit =
     val first = rctx.state.contextualQueries.add((argument, parameter.sym))
     val query = contextualQuery(tpe)
@@ -2999,26 +3110,46 @@ class NewResolver:
       case S(ContextualQuery.Parameter(position, symbol)) if contextualValues(position, _ => ()).isEmpty =>
         fail(msg"Cannot determine the type of the ${contextualParameterName(parameter)}: type parameter '${symbol.nme}' has no explicit type argument and no value reaches it.", Nil)
       case S(query) =>
+        lazy val flowType = contextualFlowType(query)
+        val divergent = mutable.ListBuffer.empty[TermDefinition]
+        def eligible(symbol: Symbol): Bool = instanceFunction(symbol).forall: function =>
+          val diverges = contextualDiverges(function, flowType, argument.derivationPath)
+          if diverges then divergent += function
+          !diverges
+        def divergenceNotes: Ls[(Message, Opt[Loc])] = divergent.toList.distinct.flatMap: function =>
+          (msg"Instance function '${function.sym.nme}' diverges for ${flowType.display}." -> function.headerLoc) ::
+            argument.derivationPath.reverse.map: step =>
+              msg"Query ${step.flowType.display} selected instance function '${step.function.sym.nme}'." -> step.function.headerLoc
         val environment = argument.environment.getOrElse(lastWords("An undecided instance argument must retain its environment"))
         val matches = environment.instances.iterator.map: tier =>
           tier.bindings.iterator.flatMap: binding =>
             binding.annotation.flatMap: annotation =>
               val candidate = declaredType(typeResolution(annotation), Map.empty)
               contextualQuery(candidate) match
-                case S(_: ContextualQuery.Named) if contextualMatches(candidate, query, _ => ()) => S((tier, binding, candidate))
-                case S(_: ContextualQuery.Parameter) if contextualMatches(candidate, query, _ => ()) => S((tier, binding, candidate))
+                case S(_: ContextualQuery.Named) if contextualMatches(candidate, query, _ => ()) && eligible(binding.symbol) => S((tier, binding, candidate))
+                case S(_: ContextualQuery.Parameter) if contextualMatches(candidate, query, _ => ()) && eligible(binding.symbol) => S((tier, binding, candidate))
                 case _ => N
           .toList
         .find(_.nonEmpty).getOrElse(Nil)
-        def select(candidate: ContextualCandidate)(selected: => Term): Unit = argument.candidate match
-          case S(previous) if previous.symbol != candidate.symbol =>
-            fail(msg"The callees of this call require different instances for the ${contextualParameterName(parameter)} of type ${contextualTypeName(tpe)}.",
-              (msg"One callee selects this instance." -> previous.symbol.toLoc) ::
-              (msg"Another callee selects this instance." -> candidate.symbol.toLoc) :: Nil)
-          case S(_) => ()
-          case N =>
-            argument.candidate = S(candidate)
-            argument.selected = S(selected)
+        def select(candidate: ContextualCandidate)(selected: => Term): Unit =
+          val previous = argument.agreement.getOrElse(argument).candidate
+          previous match
+            case S(previous) if previous.symbol != candidate.symbol =>
+              fail(msg"The callees of this call require different instances for the ${contextualParameterName(parameter)} of type ${contextualTypeName(tpe)}.",
+                (msg"One callee selects this instance." -> previous.symbol.toLoc) ::
+                (msg"Another callee selects this instance." -> candidate.symbol.toLoc) ::
+                argument.derivationPath.reverse.map(step =>
+                  msg"Instance function '${step.function.sym.nme}' requires this nested argument." -> step.function.headerLoc))
+            case _ =>
+              argument.candidate = S(candidate)
+              val expression = instanceFunction(candidate.symbol) match
+                case S(function) => derivedInstance(argument, parameter, candidate, function, query, queryMarks, flowType, selected)
+                case N => argument.selected.getOrElse(selected)
+              if argument.selected.isEmpty then argument.selected = S(expression)
+              // Each callee's derived flow has its own bindings, but lowering retains one
+              // expression. Nested arguments compare against that expression's decisions.
+              if instanceFunction(candidate.symbol).nonEmpty then
+                listenValue(expression, receiver = false)(value => publishCompleted(argument, value))
         matches match
           case (tier, binding, candidate) :: Nil =>
             val elem = environment.instanceElement(tier, binding)
@@ -3027,10 +3158,10 @@ class NewResolver:
               select(ContextualCandidate(binding.symbol, candidate)):
                 elem.ref(N)(using rctx.owner, environment, config, this, rctx).withLocOf(argument)
           case Nil =>
-            val namespaces = new InstanceNamespaces(argument, parameter, tpe, query, environment.scope, environment.typeBinders).local
+            val namespaces = new InstanceNamespaces(argument, parameter, tpe, query, environment.scope, environment.typeBinders, flowType).local
             typeNamespaces(namespaces, tpe, writtenWitness(tpe), refine = true, provided = true)
             val candidates = namespaces.candidates.valuesIterator
-              .filter(candidate => contextualMatches(candidate.annotation, query, _ => ())).toList
+              .filter(candidate => contextualMatches(candidate.annotation, query, _ => ()) && eligible(candidate.definition.sym)).toList
             namespaces.settled = true
             candidates match
               case candidate :: Nil => select(ContextualCandidate(candidate.definition.sym, candidate.annotation)):
@@ -3045,9 +3176,10 @@ class NewResolver:
                     case Namespace.Status.Inaccessible => S(msg"Here, ${describeNamespace(module, namespace)} is not accessible from the contextual site." -> namespace.witness.toLoc)
                     case _ => N
                 .toList
-                val rejected = namespaces.candidates.valuesIterator.take(3).map: candidate =>
+                val rejected = namespaces.candidates.valuesIterator
+                  .filterNot(candidate => contextualMatches(candidate.annotation, query, _ => ())).take(3).map: candidate =>
                   msg"This instance of type ${contextualTypeName(candidate.annotation)} from namespace '${candidate.module.nme}' does not accept all values reaching the query." -> candidate.definition.toLoc
-                fail(msg"No instance found for the ${contextualParameterName(parameter)} of type ${contextualTypeName(tpe)}.", notes ::: rejected.toList)
+                fail(msg"No instance found for the ${contextualParameterName(parameter)} of type ${contextualTypeName(tpe)}.", notes ::: rejected.toList ::: divergenceNotes)
               case many => fail(msg"Ambiguous instances for the ${contextualParameterName(parameter)} of type ${contextualTypeName(tpe)}.",
                 many.map(candidate => msg"This instance of type ${contextualTypeName(candidate.annotation)} comes from namespace '${candidate.module.nme}'." -> candidate.definition.toLoc))
           case many => fail(msg"Ambiguous instances for the ${contextualParameterName(parameter)} of type ${contextualTypeName(tpe)}.",
@@ -3805,7 +3937,7 @@ class NewResolver:
         if checked && callable.sourceParamLists.nonEmpty then
           val parameters = callable.sourceParamLists.head.allParams
           softAssert(parameters.length == ps.allParams.length, "A declared callable must retain its source parameters")
-          contextualArguments(args, parameters.lazyZip(ps.allParams).map((p, declared) => (p, declared.tpe)))
+          contextualArguments(args, context :: Nil, parameters.lazyZip(ps.allParams).map((p, declared) => (p, declared.tpe)))
         def publish(shape: TermShape)(using ResolutionContext): Unit = transportShape(shape, context :: Nil) match
           case value: TermShape =>
             publishViewed(res, value, TypeSubstitution.empty)(using rctx.withInstances(callerInstances))
@@ -4280,6 +4412,7 @@ class NewResolver:
     val argument = namespaces.argument
     if !argument.candidate.exists(_.symbol is member.sym) &&
         contextualMatches(annotation, namespaces.query, _ => ()) &&
+        instanceFunction(member.sym).forall(function => !contextualDiverges(function, namespaces.flowType, argument.derivationPath)) &&
         rctx.state.contextualLateNamespaces.add((argument, member.sym)) then
       rctx.markError(argument)
       val selected = argument.candidate.toList.map: candidate =>

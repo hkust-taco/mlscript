@@ -41,6 +41,12 @@ trait InstanceArgImpl extends PossiblyErroneous:
   var selected: Opt[Term] = N
   private[semantics] var environment: Opt[Elaborator.Ctx] = N
   private[semantics] var candidate: Opt[ContextualCandidate] = N
+  private[semantics] var derivationPath: Ls[ContextualDerivationStep] = Nil
+  private[semantics] var agreement: Opt[InstanceArg] = N
+  /** Different callees infer a derived function independently. Only the first expression
+    * is lowered; the others retain inference and recursive agreement checks across imports.
+    */
+  private[semantics] var derivations: Map[VarSymbol, ContextualDerivation] = Map.empty
 
 type ContextualSite = Term & ContextualSiteImpl
 
@@ -249,7 +255,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
       case _ => written
 
   private def writtenSubTerms: Vector[Term] = this match
-    case argument: InstanceArg => argument.selected.toVector
+    case argument: InstanceArg => argument.selected.toVector ++ argument.derivations.valuesIterator.map(_.expression)
     case ref: MemberRef => ref.keyAccess.toVector
     case Error() | Missing | _: Lit | _: AnyRef_ | _: DynTy | _: UnitVal => Vector.empty
     case Capture(base, thru) => Vector.single(base)

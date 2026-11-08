@@ -705,15 +705,16 @@ object Visibility:
 /** `isMethod` distinguishes methods from functions. `hasResultAnnotation` records whether a
   * signature describes just the result; erasure consumes leading arrows only for full signatures.
   */
-final case class TermDefFlags(isMethod: Bool, hasResultAnnotation: Bool):
+final case class TermDefFlags(isMethod: Bool, hasResultAnnotation: Bool)(val isInstanceFunction: Bool):
   def showDbg: Str = 
     val flags = Buffer.empty[String]
     if isMethod then flags += "method "
     if hasResultAnnotation then flags += "result annotation "
+    if isInstanceFunction then flags += "instance function "
     flags.mkString
   override def toString: String = "‹" + showDbg + "›"
 
-object TermDefFlags { val empty: TermDefFlags = TermDefFlags(false, false) }
+object TermDefFlags { val empty: TermDefFlags = TermDefFlags(false, false)(false) }
 
 /**
  * A case class representing the modulefulness of a declaration.
@@ -769,6 +770,9 @@ final case class TermDefinition(
   require(k is tsym.k)
   def bsym: BlockMemberSymbol = sym
   val owner = tsym.owner
+  /** Private storage for source-lexical class-body instances is not a selectable member. */
+  def isClassLexicalInstance: Bool = owner.exists(_.isInstanceOf[ClassSymbol]) &&
+    ((k is syntax.Ins) || flags.isInstanceFunction)
   /** Only function bodies are wrapped by AsyncLowering; annotations on other
     * definitions are ignored with a warning and must not change their interface.
     */
@@ -823,7 +827,7 @@ object ObjBody:
   
   def extractMembers(blk: Term.Blk): Ls[ErrorReport] \/ Map[Str, BlockMemberSymbol] =
     val (errs, mems) = blk.stats.collect:
-      case td: TermDefinition if td.sym.nameIsMeaningful => td.sym -> td
+      case td: TermDefinition if td.sym.nameIsMeaningful && !td.isClassLexicalInstance => td.sym -> td
       case td: ClassLikeDef => td.bsym -> td
       case td: TypeDef => td.bsym -> td
     .groupBy(_._1.nme)
@@ -981,7 +985,7 @@ case class ModuleOrObjectDef(
     * happens per request, while the body is traversed at most once per module or object.
     */
   lazy val instanceMembers: Ls[TermDefinition] = body.blk.stats.collect:
-    case definition: TermDefinition if (definition.k is syntax.Ins) && definition.owner.contains(sym) => definition
+    case definition: TermDefinition if ((definition.k is syntax.Ins) || definition.flags.isInstanceFunction) && definition.owner.contains(sym) => definition
 
 case class PatternDef(
     owner: Opt[InnerSymbol],

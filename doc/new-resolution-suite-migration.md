@@ -23,7 +23,7 @@ Legacy worksheets require more than enabling the language configuration. The
 following constraints identify the current failing behavior and representative tests.
 
 - **Contextual calls and module checks:** contextual completion, eta-expansion, and
-  namespace instances now work under new resolution, with coverage in
+  namespace and derived instances now work under new resolution, with coverage in
   `slop/contextual/`; `parsing/Lexer` has migrated to `0.3.x`.
   Independent module checks remain: `basics/CyclicModuleForwarders` needs a decision
   about nominal module-forwarding compatibility. Other legacy worksheets must keep

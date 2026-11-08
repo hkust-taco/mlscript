@@ -424,4 +424,119 @@ binding, effects, namespace cutoffs, and late values and callees. Existing
 `ImplicitNamespace*.mls` and `LeadingDotSelections.mls` outputs remain unchanged.
 Partial parent application in anonymous refinements and generic tuple-alias scope
 transport remain independent `:fixme` regressions; they do not authorize skipping
-invariants or changing contextual rules.
+invariants or changing contextual rules. Generic override representation, nested
+companion initialization, and handler-parent/interface gaps also retain explicit
+regression markers in the contextual ports.
+
+### Derived instances
+
+`BlockImpl` normalizes the parser's nested `TermDef(Ins, TermDef(Fun, ...))`
+only in its new-resolution statement view and binding table. This keeps legacy
+syntax and symbols unchanged. The ordinary `TermDefinition` retains a dedicated
+instance-function flag; its kind remains `Fun`, so ordinary inference and call
+lowering apply. The flag occupies a separate constructor parameter list to
+preserve the existing two-field `TermDefFlags` extractors in legacy resolution.
+Blocks without these declarations reuse their original statement lists and
+binding tables.
+
+Class-body instances remain lexical source bindings and are excluded from the
+class's selectable member table. Their runtime definitions use private class
+storage, because a method cannot read a JavaScript constructor's local variable.
+Lexical references lower through the owning receiver, retaining per-object
+captures. Bind instance-function names lexically before elaborating their bodies
+so explicit recursion retains the same meaning. Modules and objects continue to
+provide ordinary instance members. These storage and normalization adjustments
+implement the approved scope rules without changing source visibility.
+
+A selected instance function builds an application chain using fresh `InstanceArg`
+terms. Seed the function's type arguments from its result view of the query head,
+including inherited result positions, before applying its contextual arguments.
+Use the ordinary call-site instantiation cache and type constraints, which invoke
+`inferTypeArguments`; parameter queries infer from the whole result. Query positions
+retain alias and explicit-argument scope transfers. `constrainTypes` carries the
+query endpoint back through its callee to the site, then into the derived function.
+Feeding expanded observations directly would mix the two functions' lexical entry
+marks and lose deferred flows. Each synthesized application drives ordinary
+`applyShape` directly, so its nested queries complete synchronously before the
+next enclosing query.
+
+Each callee needs an independent inference chain: sharing the first callee's
+bindings would conceal different nested selections. Retain those chains on the
+outer `InstanceArg`, link corresponding nested arguments to the first chain's
+canonical decisions, and compare declaration identities recursively. Only the
+first expression is lowered. All chains participate in semantic traversal and
+sealing, so imported activations preserve inference and late-value checks without
+mutating the exporting graph. Post-resolution cloning needs only the selected
+runtime expression, as for direct instance arguments.
+
+A nested argument holds an immutable derivation path. Each path entry snapshots
+the selected function, flow type, size, and covering set at decision time.
+`ContextualFlowType` contains nominal classes, unordered unions, and `?`; it is
+separate from `DeclaredType` and used only for divergence. Cycle detection during
+observation is local to the current value path. Candidate filtering and late
+namespace checks use the same divergence rule and frozen observations.
+
+Termination needs no depth bound. There are finitely many functions and class
+covering sets. Along a derivation path, queries sharing one function and covering
+set have non-increasing sizes and distinct flow types. For a fixed size and
+covering set, only finitely many flow types exist. Thus every derivation path is
+finite. A rejected candidate leaves alternatives available; a failed nested query
+does not backtrack to a different enclosing selection.
+
+`DerivedInstances`, `DerivedDeclarations`, `DerivedCaptures`, `DerivedAgreement`,
+and `DerivedDivergence` cover selection, validation, captures, inherited and
+aliased result inference, recursive agreement, and every divergence case.
+`DerivedImport` and `DerivedImportIsolation`, with `DerivedLibrary`, cover
+imported derivation, frozen nested selections, and independent importer state.
+
+### Contextual resolution performance
+
+Programs without `using` allocate no new per-term state. Potential sites reuse
+one worklist entry; completion records, derived chains, and query observers are
+created on demand. Each module caches one instance-member index, and each request
+bounds provider decisions by its module keys (or module/trigger pairs for parameter
+queries). Investigate regressions above 2% and fix identified causes. The approved
+measurement policy also requires recording unexplained regressions and suspected
+causes while continuing implementation.
+
+Measurements use separate scratch worktrees against `fdddc5842`, JDK 25, and an
+identical temporary `ContextualBenchmark` runner invoked with
+`sbt -batch 'hkmc2DiffTests/Test/runMain hkmc2.ContextualBenchmark'`. It warms shared
+imports, then sequentially runs the same 125 non-WASM `newres` diff files without
+a source `using` clause through `MainDiffMaker`. Allocation uses
+`com.sun.management.ThreadMXBean.getCurrentThreadAllocatedBytes`; CPU uses
+`getCurrentThreadCpuTime`. Wall time includes the harness and JavaScript execution.
+Timed runs have no concurrent builds or tests, and every round has zero failures.
+
+Phase 2 used twelve rounds, reporting medians of the last five:
+
+| Metric (125 files) | Base | Phase 2 | Change |
+| --- | ---: | ---: | ---: |
+| Elapsed time | 7.407372000 s | 7.144443542 s | −3.55% |
+| Current-thread CPU time | 1.409568 s | 1.320953 s | −6.29% |
+| Current-thread allocated bytes | 2,671,442,464 | 2,699,115,096 | +1.04% |
+
+For Phases 3–6, warmup was extended to 24 rounds after CPU time continued declining
+in the initial Phase 3 run. The table reports medians of rounds 20–24 against the
+same 24-round base measurement; parenthesized percentages compare with that base.
+
+| Version | Elapsed seconds | CPU seconds | Allocated bytes |
+| --- | ---: | ---: | ---: |
+| Base | 7.064231750 | 1.241451 | 2,681,793,576 |
+| Phase 3 | 7.237733584 (+2.46%) | 1.345219 (+8.36%) | 2,708,646,216 (+1.00%) |
+| Phase 4 | 7.125541042 (+0.87%) | 1.267291 (+2.08%) | 2,701,078,608 (+0.72%) |
+| Phase 5 | 7.137632667 (+1.04%) | 1.292066 (+4.08%) | 2,693,274,336 (+0.43%) |
+| Phase 6 | 7.016793083 (-0.67%) | 1.228095 (-1.08%) | 2,698,203,216 (+0.61%) |
+
+Phase 3 removed a duplicate local-parameter contextual-observer lookup. Phase 4
+bypasses eta-expansion callbacks when no Abstract step exists. The remaining
+regressions have no isolated cause. Suspicions include contextual classification
+and worklist processing, imported generic observer lookups, and dispatch in the
+shared namespace walk. JVM optimization and warmup also vary: the Phase 5 compiler
+and measured subset were unchanged from Phase 4, yet their measurements differed.
+These are hypotheses, not profiling conclusions, and remain optimization follow-up.
+
+Phase 6 stays below 2% on all three measurements. Derivation state is allocated
+only for contextual queries, with no new state on ordinary terms. The earlier
+regressions and run variation remain recorded above; no semantic rule or invariant
+was relaxed to meet the performance target.

@@ -1017,6 +1017,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         // an alias or have no source identifier at all.
         val name = storageIdent(d.sym.nme, ref.sourceId)
         return setupSelection(SelfRef(State.globalThisSymbol)(Tree.Ident("globalThis")), name, disamb, ref.toLoc)(k)
+      case S(td: TermDefinition) if td.isClassLexicalInstance =>
+        val owner = td.owner.getOrElse(lastWords("A class lexical instance needs its storage owner"))
+        return setupSelection(SelfRef(owner)(Tree.Ident("this")), td.tsym.id, S(td.tsym), ref.toLoc)(k)
       case S(td: TermDefinition) if isImplicitNullaryCall(td.tsym) =>
         // * Functions defined in local scopes with no parameter lists are getters
         // * and are lowered to functions with an empty parameter list

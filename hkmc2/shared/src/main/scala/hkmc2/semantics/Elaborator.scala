@@ -1048,7 +1048,7 @@ extends Importer:
         N,
         N,
         S(spec.methodBody(valueSym)),
-        TermDefFlags.empty.copy(isMethod = true),
+        TermDefFlags.empty.copy(isMethod = true)(false),
         Modulefulness.none,
         Nil,
         N,
@@ -2737,7 +2737,11 @@ extends Importer:
           raise(ErrorReport(msg"Unrecognized definitional assignment left-hand side: ${lhs.describe}"
             -> lhs.toLoc :: Nil)) // TODO BE
           go(sts, Nil, Term.Error().withLocOf(lhs) :: acc)(N)
+      case (td @ TermDef(Ins, _: TypeOrTermDef, _)) :: sts if newResolution =>
+        raise(ErrorReport(msg"Only 'fun' definitions can have a 'using' modifier." -> td.toLoc :: Nil))
+        go(sts, Nil, acc)(N)
       case (td @ TermDef(k, nme, rhs)) :: sts =>
+        val instanceFunction = newResolution && blk.isInstanceFunction(td)
         td.symbName match
         case S(L(d)) => raise(d)
         case _ => ()
@@ -2745,8 +2749,8 @@ extends Importer:
           case R(id) =>
             val sym = members.getOrElse(id.name, die)
             val owner =
-              if k is Ins then
-                if newResolution then ctx.outer.inner.collect { case module: ModuleOrObjectSymbol => module }
+              if (k is Ins) || instanceFunction then
+                if newResolution then ctx.outer.inner
                 else N
               else ctx.outer.inner
             if (k is MutVal) && owner.isEmpty then
@@ -2793,6 +2797,11 @@ extends Importer:
                 newCtx = newCtx2
                 res
               
+              if instanceFunction then
+                if td.annotatedResultType.isEmpty then
+                  raise(ErrorReport(msg"Instance functions require a named result type annotation." -> td.toLoc :: Nil))
+                pss.filterNot(_.flags.ctx).foreach: ps =>
+                  raise(ErrorReport(msg"Instance functions can only have 'using' parameter lists." -> ps.toLoc :: Nil))
               // * Elaborate signature
               val st = td.annotatedResultType.orElse(newSignatureTrees.get(id.name)) // FIXME: may elaborate external sig twice!!
               val s = st.map:
@@ -2839,8 +2848,13 @@ extends Importer:
               
               // Retain the source signature's meaning; Erasure decides which arrows are physical parameters.
               if newResolution then s.foreach(registerSignature)
+              // Class-body instances are lexical in source but need per-object storage:
+              // methods cannot capture a constructor's JavaScript local variables.
+              val instanceMember = newResolution && isMethod && ((k is Ins) || instanceFunction)
+              val definitionAnnotations = if instanceMember then Annot.Modifier(Keyword.`private`)(td.toLoc) :: annotations else annotations
+              val validInstanceFunction = instanceFunction && pss.forall(_.flags.ctx) && td.annotatedResultType.nonEmpty
               val tdf = TermDefinition(k, sym, tsym, pss, tps, s, body, 
-                TermDefFlags.empty.copy(isMethod = isMethod, hasResultAnnotation = td.annotatedResultType.isDefined), mfn, annotations, N)(
+                TermDefFlags.empty.copy(isMethod = isMethod, hasResultAnnotation = td.annotatedResultType.isDefined)(validInstanceFunction), mfn, definitionAnnotations, N)(
                 statementLoc, definitionHeaderLoc(td, annotations, statementLoc), S(bindingScope))
               sym.tsym = S(tsym)
               tsym.defn = S(tdf)
@@ -2852,10 +2866,11 @@ extends Importer:
               ctx.nest(OuterCtx.NonReturnContext(S(tsym))).givenIn(elaborateDefinition)
             
             completeIfReady(sym)
-            val nextCtx = if newResolution && (k is Ins) then
+            val nextCtx = if newResolution && ((k is Ins) || tdf.flags.isInstanceFunction) then
               rctx.state.instanceDeclarations += tdf
-              val elem = owner.fold[Ctx.Elem](Ctx.RefElem(sym)):
-                module => Ctx.SelElem(module, sym.nme, S(sym), isImport = false)
+              val elem = owner match
+                case S(module: ModuleOrObjectSymbol) => Ctx.SelElem(module, sym.nme, S(sym), isImport = false)
+                case _ => Ctx.RefElem(sym)
               ctx.withInstances(Ctx.InstanceBinding(sym, tdf.sign, elem) :: Nil)
             else ctx
             go(sts, Nil, tdf :: acc)(N)(using nextCtx)
@@ -3260,8 +3275,15 @@ extends Importer:
         case _ => go(sts, Nil, res :: acc)(N)
     end go
     
-    val res = ctx.withMembers(members).givenIn:
-      go(blk.desugStmts, Nil, Nil)(N)
+    val memberCtx = ctx.withMembers(members)
+    // Instance functions in classes stay lexical, including recursive references
+    // made before their definitions have finished elaborating.
+    val blockCtx = if newResolution && ctx.outer.inner.exists(_.isInstanceOf[ClassSymbol]) then
+      memberCtx ++ members.iterator.collect:
+        case (name, symbol) if symbol.trmTree.exists(blk.isInstanceFunction) => name -> symbol
+    else memberCtx
+    val res = blockCtx.givenIn:
+      go(blk.statementsFor(newResolution), Nil, Nil)(N)
     
     members.valuesIterator.foreach(_.complete())
     members.valuesIterator.foreach: bms =>

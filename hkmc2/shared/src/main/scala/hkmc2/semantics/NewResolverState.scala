@@ -962,6 +962,33 @@ private[semantics] final class NameNamespaces(val ref: UnresolvedRef, scope: Src
       namespace.status.selectedPath.map(path => path -> (module, namespace))
     .toMap
 
+/** Finite snapshots for divergence only. Unknown observations absorb unions; class
+  * arguments preserve structure, and union equality ignores publication order.
+  */
+private[semantics] enum ContextualFlowType:
+  case Wildcard
+  case Named(cls: ClassLikeDef, arguments: Ls[ContextualFlowType])
+  case Union(alternatives: Set[ContextualFlowType])
+  def size: Int = this match
+    case Wildcard => 1
+    case Named(_, arguments) => 1 + arguments.iterator.map(_.size).sum
+    case Union(alternatives) => alternatives.iterator.map(_.size).sum
+  def covering: Set[ClassLikeDef] = this match
+    case Wildcard => Set.empty
+    case Named(cls, arguments) => arguments.iterator.flatMap(_.covering).toSet + cls
+    case Union(alternatives) => alternatives.iterator.flatMap(_.covering).toSet
+  def display: Str = this match
+    case Wildcard => "?"
+    case Named(cls, Nil) => cls.sym.nme
+    case Named(cls, arguments) => s"${cls.sym.nme}[${arguments.map(_.display).mkString(", ")}]"
+    case Union(alternatives) => alternatives.iterator.map(_.display).toList.sorted.mkString("(", " | ", ")")
+
+private[semantics] final case class ContextualDerivationStep(function: TermDefinition, flowType: ContextualFlowType):
+  val size = flowType.size
+  val covering = flowType.covering
+
+private[semantics] final case class ContextualDerivation(expression: Term, arguments: Ls[InstanceArg])
+
 private[semantics] enum ContextualQuery:
   case Named(cls: ClassLikeDef, positions: Ls[DeclaredType])
   case Parameter(tpe: DeclaredType, symbol: VarSymbol)
@@ -975,7 +1002,8 @@ private[semantics] final case class NamespaceInstance(
   * late-namespace diagnostic. Selected syntax and declarations remain shared and immutable.
   */
 private[semantics] final class InstanceNamespaces(val argument: InstanceArg, val parameter: Param,
-    val annotation: DeclaredType, val query: ContextualQuery, scope: SrcScope, val binders: Set[VarSymbol])
+    val annotation: DeclaredType, val query: ContextualQuery, scope: SrcScope, val binders: Set[VarSymbol],
+    val flowType: ContextualFlowType)
     extends ImplicitNamespaces(scope):
   type Key = ModuleOrObjectSymbol | (ModuleOrObjectSymbol, TypeLikeDef)
   def consultationKey(module: ModuleOrObjectSymbol, definition: => TypeLikeDef): Key = query match
@@ -987,7 +1015,7 @@ private[semantics] final class InstanceNamespaces(val argument: InstanceArg, val
     context.state.instanceNamespaces.getOrElseUpdate((argument, parameter.sym), this)(
       using context.withInstances(TypeSubstitution.empty))
   def copyForImport(): InstanceNamespaces =
-    val copy = new InstanceNamespaces(argument, parameter, annotation, query, scope, binders)
+    val copy = new InstanceNamespaces(argument, parameter, annotation, query, scope, binders, flowType)
     copy.settled = settled
     consulted.foreach: (key, namespace) =>
       val next = new Namespace(namespace.witness, namespace.definition, namespace.companion)

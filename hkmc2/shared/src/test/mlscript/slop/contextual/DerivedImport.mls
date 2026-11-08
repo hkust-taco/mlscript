@@ -1,0 +1,32 @@
+:.
+
+import "./mlscript-compile/DerivedLibrary.mls"
+open DerivedLibrary { List, display, fixed }
+
+:expect "list(list(int))"
+display(List(List(1)))
+//│ = "list(list(int))"
+
+:expect "list(int)"
+fixed(List(1))
+//│ = "list(int)"
+
+:e
+fixed(List("late"))
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.XX: 	    display(value)
+//│ ║        	    ^^^^^^^^^^^^^^
+//│ ╟── This value reaches the type of the contextual parameter 'element' after its instance was selected; the selected instance of type Show[Int] does not accept it.
+//│ ║  l.XX: 	    display(value)
+//│ ║        	    ^^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	    using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The selected instance is declared here.
+//│ ║  l.XX: 	    using Show[Int] = Show[Int]("int")
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This value is incompatible with the selected instance.
+//│ ║  in DerivedImport.mls:+1
+//│ ║  l.+1: 	fixed(List("late"))
+//│ ╙──      	           ^^^^^^
+//│ = "list(int)"

@@ -1,0 +1,165 @@
+:.
+
+class List[A](val head: A)
+class Pair[A, B](val first: A, val second: B)
+class Show[A](val label: Str)
+module Show with
+  using Show[Int] = Show[Int]("int")
+fun display[A](value: A)(using show: Show[A]) = show.label
+
+// Equality excludes only the recursive candidate; the namespace instance remains.
+:expect "loop(int)"
+fun withAlternative() =
+  using fun loop[A](using inner: Show[A]): Show[A] = Show[A]("loop(" + inner.label + ")")
+  display(1)
+withAlternative()
+//│ = "loop(int)"
+
+// No backtracking: failure of the selected function's argument is reported at this site.
+:e
+fun noAlternative() =
+  using fun loop[A](using inner: Show[A]): Show[A] = inner
+  display("missing")
+noAlternative()
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+3: 	  display("missing")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^
+//│ ╟── No instance found for the contextual parameter 'inner' of type Show[A].
+//│ ║  l.+3: 	  display("missing")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.+2: 	  using fun loop[A](using inner: Show[A]): Show[A] = inner
+//│ ║        	                    ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance of type Show[Int] from namespace 'Show' does not accept all values reaching the query.
+//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance function 'loop' diverges for Show[Str].
+//│ ║  l.+2: 	  using fun loop[A](using inner: Show[A]): Show[A] = inner
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Query Show[Str] selected instance function 'loop'.
+//│ ║  l.+2: 	  using fun loop[A](using inner: Show[A]): Show[A] = inner
+//│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Covering sets first differ, then repeat while size grows.
+:e
+fun growth() =
+  using fun bad[A](using inner: Show[List[A]]): Show[A] = Show[A](inner.label)
+  display(1)
+growth()
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+3: 	  display(1)
+//│ ║        	  ^^^^^^^^^^
+//│ ╟── No instance found for the contextual parameter 'inner' of type Show[List[A]].
+//│ ║  l.+3: 	  display(1)
+//│ ║        	  ^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.+2: 	  using fun bad[A](using inner: Show[List[A]]): Show[A] = Show[A](inner.label)
+//│ ║        	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance of type Show[Int] from namespace 'Show' does not accept all values reaching the query.
+//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance function 'bad' diverges for Show[List[List[Int]]].
+//│ ║  l.+2: 	  using fun bad[A](using inner: Show[List[A]]): Show[A] = Show[A](inner.label)
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Query Show[Int] selected instance function 'bad'.
+//│ ║  l.+2: 	  using fun bad[A](using inner: Show[List[A]]): Show[A] = Show[A](inner.label)
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Query Show[List[Int]] selected instance function 'bad'.
+//│ ║  l.+2: 	  using fun bad[A](using inner: Show[List[A]]): Show[A] = Show[A](inner.label)
+//│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A larger query using a different function does not trigger divergence.
+:expect "outer(inner)"
+fun different() =
+  using fun inner[A]: Show[List[A]] = Show[List[A]]("inner")
+  using fun enclosing(using inner: Show[List[Int]]): Show[Int] = Show[Int]("outer(" + inner.label + ")")
+  display(1)
+different()
+//│ = "outer(inner)"
+
+// Permutation repeats the original type after two steps.
+:e
+fun swap() =
+  using fun pair[A, B](using inner: Show[Pair[B, A]]): Show[Pair[A, B]] = Show[Pair[A, B]](inner.label)
+  display(Pair(1, "two"))
+swap()
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+3: 	  display(Pair(1, "two"))
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── No instance found for the contextual parameter 'inner' of type Show[Pair[B, A]].
+//│ ║  l.+3: 	  display(Pair(1, "two"))
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.+2: 	  using fun pair[A, B](using inner: Show[Pair[B, A]]): Show[Pair[A, B]] = Show[Pair[A, B]](inner.label)
+//│ ║        	                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance of type Show[Int] from namespace 'Show' does not accept all values reaching the query.
+//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance function 'pair' diverges for Show[Pair[Int, Str]].
+//│ ║  l.+2: 	  using fun pair[A, B](using inner: Show[Pair[B, A]]): Show[Pair[A, B]] = Show[Pair[A, B]](inner.label)
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Query Show[Pair[Int, Str]] selected instance function 'pair'.
+//│ ║  l.+2: 	  using fun pair[A, B](using inner: Show[Pair[B, A]]): Show[Pair[A, B]] = Show[Pair[A, B]](inner.label)
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Query Show[Pair[Str, Int]] selected instance function 'pair'.
+//│ ║  l.+2: 	  using fun pair[A, B](using inner: Show[Pair[B, A]]): Show[Pair[A, B]] = Show[Pair[A, B]](inner.label)
+//│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+class Rose(val kids: List[Rose])
+
+:e
+fun rose(value: Rose) =
+  using fun list[A](using inner: Show[A]): Show[List[A]] = Show[List[A]](inner.label)
+  using fun tree(using inner: Show[List[Rose]]): Show[Rose] = Show[Rose](inner.label)
+  display(value)
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+4: 	  display(value)
+//│ ║        	  ^^^^^^^^^^^^^^
+//│ ╟── No instance found for the contextual parameter 'inner' of type Show[A].
+//│ ║  l.+4: 	  display(value)
+//│ ║        	  ^^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.+2: 	  using fun list[A](using inner: Show[A]): Show[List[A]] = Show[List[A]](inner.label)
+//│ ║        	                    ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance of type Show[Int] from namespace 'Show' does not accept all values reaching the query.
+//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance function 'tree' diverges for Show[Rose].
+//│ ║  l.+3: 	  using fun tree(using inner: Show[List[Rose]]): Show[Rose] = Show[Rose](inner.label)
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Query Show[Rose] selected instance function 'tree'.
+//│ ║  l.+3: 	  using fun tree(using inner: Show[List[Rose]]): Show[Rose] = Show[Rose](inner.label)
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Query Show[List[Rose]] selected instance function 'list'.
+//│ ║  l.+2: 	  using fun list[A](using inner: Show[A]): Show[List[A]] = Show[List[A]](inner.label)
+//│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+// Cyclic value observations become finite flow types by cutting the current path with ?.
+:!js
+:e
+fun cyclic() = List(cyclic())
+fun cycleCheck() =
+  using fun loop[A](using inner: Show[A]): Show[A] = inner
+  display(cyclic())
+cycleCheck()
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+4: 	  display(cyclic())
+//│ ║        	  ^^^^^^^^^^^^^^^^^
+//│ ╟── No instance found for the contextual parameter 'inner' of type Show[A].
+//│ ║  l.+4: 	  display(cyclic())
+//│ ║        	  ^^^^^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.+3: 	  using fun loop[A](using inner: Show[A]): Show[A] = inner
+//│ ║        	                    ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance of type Show[Int] from namespace 'Show' does not accept all values reaching the query.
+//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance function 'loop' diverges for Show[List[List[?]]].
+//│ ║  l.+3: 	  using fun loop[A](using inner: Show[A]): Show[A] = inner
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Query Show[List[List[?]]] selected instance function 'loop'.
+//│ ║  l.+3: 	  using fun loop[A](using inner: Show[A]): Show[A] = inner
+//│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

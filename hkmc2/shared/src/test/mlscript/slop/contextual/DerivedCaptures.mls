@@ -1,0 +1,89 @@
+:.
+
+class List[A](val head: A)
+class Evidence[A](val label: Str)
+fun display[A](value: A)(using evidence: Evidence[A]) = evidence.label
+
+// The selected function captures its lexical environment as a written reference does.
+:expect "captured:7"
+fun local(prefix: Str) =
+  using Evidence[Int] = Evidence[Int]("7")
+  using fun derived[A](using leaf: Evidence[A]): Evidence[List[A]] = Evidence[List[A]](prefix + leaf.label)
+  () => display(List(1))
+local("captured:")()
+//│ = "captured:7"
+
+:expect "class:7"
+class Owner(val prefix: Str) with
+  using Evidence[Int] = Evidence[Int]("7")
+  using fun derived[A](using leaf: Evidence[A]): Evidence[List[A]] = Evidence[List[A]](prefix + leaf.label)
+  fun run() = display(List(1))
+Owner("class:").run()
+//│ = "class:7"
+
+// Multiple contextual clauses are completed depth-first before the outer query advances.
+:expect "nested:7"
+fun clauses() =
+  using Int = 7
+  using Str = "nested:"
+  using fun derived(using n: Int)(using prefix: Str): Evidence[List[Int]] = Evidence[List[Int]](prefix + n.toString())
+  display(List(1))
+clauses()
+//│ = "nested:7"
+
+// Inherited result positions infer the derived function's own type parameters.
+class SubEvidence[A](label: Str) extends Evidence[List[A]](label)
+
+:expect "sub:7"
+fun inherited() =
+  using Evidence[Int] = Evidence[Int]("7")
+  using fun derived[A](using leaf: Evidence[A]): SubEvidence[A] = SubEvidence[A]("sub:" + leaf.label)
+  display(List(1))
+inherited()
+//│ = "sub:7"
+
+// Runtime storage does not make class lexical instances source members.
+:e
+Owner("hidden:").derived
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	Owner("hidden:").derived
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'Owner' does not contain member 'derived'
+//│ ║  l.+1: 	Owner("hidden:").derived
+//│ ╙──      	^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:expect "plain"
+class PlainOwner with
+  using Evidence[Int] as evidence = Evidence[Int]("plain")
+  fun run() = display(1)
+(new PlainOwner).run()
+//│ = "plain"
+
+:e
+(new PlainOwner).evidence
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	(new PlainOwner).evidence
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'PlainOwner' does not contain member 'evidence'
+//│ ║  l.+1: 	(new PlainOwner).evidence
+//│ ╙──      	 ^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Explicit recursive calls of a lexical instance function keep their lexical binding.
+:expect "recursive"
+class RecursiveOwner with
+  using fun produce(using n: Int): Evidence[Int] =
+    if n > 0 then produce(using n - 1) else Evidence[Int]("recursive")
+  using Int = 1
+  fun run() = display(1)
+(new RecursiveOwner).run()
+//│ = "recursive"
+
+// Parameterless class instance functions use getters on the owning object.
+:expect "getter"
+class ConstantOwner with
+  using fun constant: Evidence[Int] = Evidence[Int]("getter")
+  fun run() = display(1)
+(new ConstantOwner).run()
+//│ = "getter"

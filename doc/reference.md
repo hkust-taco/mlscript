@@ -1658,6 +1658,91 @@ identify the contextual parameter, interpreted query type, relevant declarations
 and locations using source names. The `slop/contextual/` diff tests cover these
 rules; legacy resolution retains its prior behavior.
 
+### Derived Instances
+
+A `using` modifier on `fun` declares an instance function:
+
+```mlscript
+class List[A](val head: A)
+class Show[A](val label: Str)
+module Show with
+  using Show[Int] = Show[Int]("int")
+  using fun list[A](using element: Show[A]): Show[List[A]] =
+    Show[List[A]]("list(" + element.label + ")")
+fun display[A](value: A)(using show: Show[A]) = show.label
+
+display(List(1))           // "list(int)"
+display(List(List(1)))     // "list(list(int))"
+```
+
+The form is `using fun name[A, ...](using ...)...: R = body`. It requires a
+name and a written result annotation `R` that expands to a named type. Type
+parameters are allowed, and every parameter list must be contextual; there may
+be no parameter lists. Other `using <definition>` forms are errors. Instance
+functions can appear wherever instance declarations can: as module or object
+members, or lexically in blocks and class bodies.
+
+The function is a candidate with type `R`; its own type parameters accept every
+value during matching. Direct and derived instances share the same tiers and
+ambiguity rules. Selecting a function instantiates it at a synthesized call
+inside the enclosing site. Values at each query position flow into the
+corresponding result position through ordinary type-argument inference. In the
+example, the elements of the `List` values bind `A`.
+
+The function's contextual lists become nested queries with the enclosing site's
+scope and rules. They run depth-first, before the next enclosing query. The
+result of the synthesized application supplies the enclosing argument. Each
+callee infers its own bindings, and agreement compares the selected function
+and all nested selections recursively. Selecting the same outer function is
+insufficient if its callees require different nested arguments.
+
+#### Divergence
+
+A divergent instance function is excluded before tier selection, allowing other
+candidates to match. There is no depth limit and no backtracking. If a selected
+function's nested query has no remaining match, that is a missing-instance error;
+search does not retry another function for the enclosing query. The diagnostic
+lists excluded functions and the derivation path, outermost first.
+
+The check uses finite observations of flow:
+
+- The observed type of a set of values is the union of their observed types, or
+  `?` if the set is empty or contains a value of unknown class.
+- A value of class `C` contributes `C` applied to the observed types at its exposed
+  argument positions, with `?` at unavailable positions. A value already on the
+  current observation path contributes `?`, so cyclic flows produce finite types.
+- A query's flow type is its query type with each position replaced by these
+  observations. Written positions such as `List[Int]` use their instance views,
+  yielding `List[Int]`. A parameter query uses its observed type directly.
+- Snapshot the flow type when the query is decided; later inference does not
+  enlarge an earlier snapshot. Its size counts class and `?` occurrences, and its
+  covering set contains all classes occurring in it. Equality is structural,
+  treating unions as sets and `?` as equal to `?`.
+
+The derivation path records the earlier queries and functions selected above a
+nested query. A function `f` diverges for query `q` if an earlier query `q'` on
+that path selected `f`, has the same covering set, and either has smaller size
+than `q` or has an equal flow type. Comparisons against other functions do not
+exclude `f`. This follows Scala 3's candidate-specific divergence check, with
+flow observations taking the place of inferred types.
+
+For example, with the namespace instance for `Show[Int]` above:
+
+- `list` on `List[List[Int]]` produces successively smaller queries, ending in
+  `Show[Int]`, and succeeds.
+- `using fun loop[A](using Show[A]): Show[A]` on `Int` repeats `Show[Int]`.
+  The nested search excludes `loop` and selects the direct namespace instance.
+  Without that alternative it reports a missing instance with a divergence note.
+- `using fun bad[A](using Show[List[A]]): Show[A]` first changes `Show[Int]` to
+  `Show[List[Int]]`. Their covering sets differ, so it can continue. The next
+  query, `Show[List[List[Int]]]`, has the same covering set as the preceding
+  query and a larger size, so `bad` is excluded there.
+- An instance that swaps `Pair[Int, Str]` to `Pair[Str, Int]` repeats the root
+  flow type after two steps and diverges.
+- An instance for `class Rose(kids: List[Rose])` requiring `Show[List[Rose]]`
+  cycles back to `Show[Rose]` and diverges. Tying recursive instance knots through
+  by-name contextual parameters is not supported.
+
 ---
 
 ## 14. Types and Type Aliases
