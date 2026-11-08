@@ -29,13 +29,12 @@ Foo.foo
 
 class Bar(using val s: Str)
 
-:breakme // contextual diagnostic not implemented yet
 :e
 Bar
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	Bar
 //│ ║        	^^^
-//│ ╟── No instance found for contextual parameter 's'.
+//│ ╟── No instance found for the contextual parameter 's' of type Str.
 //│ ║  l.+1: 	Bar
 //│ ║        	^^^
 //│ ╟── The contextual parameter is declared here.
@@ -45,13 +44,12 @@ Bar
 
 class Bar(using s: Str)
 
-:breakme // contextual diagnostic not implemented yet
 :e
 Bar
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	Bar
 //│ ║        	^^^
-//│ ╟── No instance found for contextual parameter 's'.
+//│ ╟── No instance found for the contextual parameter 's' of type Str.
 //│ ║  l.+1: 	Bar
 //│ ║        	^^^
 //│ ╟── The contextual parameter is declared here.
@@ -85,13 +83,12 @@ class Foo(using Int)(using Str) with
   fun f = use[Int]
   fun g = use[Str]
 
-:breakme // contextual diagnostic not implemented yet
 :e
 Foo
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	Foo
 //│ ║        	^^^
-//│ ╟── No instance found for contextual parameter ''.
+//│ ╟── No instance found for the unnamed contextual parameter of type Str.
 //│ ║  l.+1: 	Foo
 //│ ║        	^^^
 //│ ╟── The contextual parameter is declared here.

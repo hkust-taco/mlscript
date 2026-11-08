@@ -21,7 +21,6 @@ module N with
 bar
 //│ = 1
 
-:breakme // contextual diagnostic not implemented yet
 :e
 :re
 fun test = M.mtd()
@@ -33,7 +32,7 @@ test
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	fun test = M.mtd()
 //│ ║        	           ^^^^^^^
-//│ ╟── No instance found for contextual parameter 'n'.
+//│ ╟── No instance found for the contextual parameter 'n' of type Int.
 //│ ║  l.+1: 	fun test = M.mtd()
 //│ ║        	           ^^^^^^^
 //│ ╟── The contextual parameter is declared here.
@@ -41,7 +40,6 @@ test
 //│ ╙──      	            ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-:breakme // contextual diagnostic not implemented yet
 :e
 :re
 fun test = Example.foo().mtd()
@@ -53,7 +51,7 @@ test
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	fun test = Example.foo().mtd()
 //│ ║        	           ^^^^^^^^^^^^^^^^^^^
-//│ ╟── No instance found for contextual parameter 'n'.
+//│ ╟── No instance found for the contextual parameter 'n' of type Int.
 //│ ║  l.+1: 	fun test = Example.foo().mtd()
 //│ ║        	           ^^^^^^^^^^^^^^^^^^^
 //│ ╟── The contextual parameter is declared here.

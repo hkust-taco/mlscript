@@ -108,9 +108,9 @@ curried(20).next()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+1: 	curried(20).next()
 //│ ║        	^^^^^^^^^^^^^^^^
-//│ ╟── Function with a declared signature does not contain member 'next'
-//│ ║  l.XX: 	fun curried: Int -> Int -> Int
-//│ ╙──      	                    ^^^^^^^^^^
+//│ ╟── Function 'curried' does not contain member 'next'
+//│ ║  l.XX: 	@generator fun curried(x)(y) =
+//│ ╙──      	           ^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A nominal method interface hides its body but still describes the returned iterator.

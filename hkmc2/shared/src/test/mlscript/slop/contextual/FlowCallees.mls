@@ -32,7 +32,6 @@ class Leading with
 class Other with
   fun read() = 1
 
-:breakme // convention mismatch must be diagnosed even before supplying (Phase 2)
 :e
 fun disagree(value) = value.read()
 [disagree(new Reader), disagree(new Other)]
@@ -53,14 +52,13 @@ fun disagree(value) = value.read()
 class StringReader with
   fun read()(using text: Str) = text
 
-:breakme // equal conventions must agree on the selected instance (Phase 2)
 :e
 fun select(value) = value.read()
 [select(new Reader), select(new StringReader)]
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	fun select(value) = value.read()
 //│ ║        	                    ^^^^^^^^^^^^
-//│ ╟── The callees of this call require different instances for contextual parameter 'text'.
+//│ ╟── The callees of this call require different instances for the contextual parameter 'text' of type Str.
 //│ ║  l.+1: 	fun select(value) = value.read()
 //│ ║        	                    ^^^^^^^^^^^^
 //│ ╟── The contextual parameter is declared here.
@@ -72,21 +70,8 @@ fun select(value) = value.read()
 //│ ╟── Another callee selects this instance.
 //│ ║  l.XX: 	using Str = "selected"
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
-//│ ║  l.+1: 	fun select(value) = value.read()
-//│ ║        	                    ^^^^^^^^^^^^
-//│ ╟── This value reaches the type of contextual parameter 'text' after its instance was selected; the selected instance does not accept it.
-//│ ║  l.+1: 	fun select(value) = value.read()
-//│ ║        	                    ^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
-//│ ║  l.XX: 	  fun read()(using text: Str) = text
-//│ ║        	             ^^^^^^^^^^^^^^^
-//│ ╟── The selected instance is declared here.
-//│ ║  l.XX: 	using Int = 7
-//│ ╙──      	^^^^^^^^^^^^^
 //│ = [7, 7]
 
-:breakme // explicit using does not bypass convention checks (Phase 2)
 :e
 fun explicit(value) = value.read()(using 1)
 [explicit(new Reader), explicit(new Other)]

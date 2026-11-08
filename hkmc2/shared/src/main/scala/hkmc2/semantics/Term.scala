@@ -299,7 +299,7 @@ object SrcScope:
 
 
 
-enum Term extends Statement, AutoLocated, ShapePublisher, ContextualSiteImpl:
+enum Term extends Statement, AutoLocated, ShapePublisher:
   /** Filled by the type interpreter during elaboration; erasure validates the completed result. */
   private[hkmc2] var typeInterpretation: Opt[TypeResolution] = N
 
@@ -314,16 +314,16 @@ enum Term extends Statement, AutoLocated, ShapePublisher, ContextualSiteImpl:
   // --- NEW ---
   case SimpleRef(sym: SimpleRefSymbol)(val tree: Opt[Tree.Ident]) extends Term, NewRefImpl
   case SelfRef(sym: ThisSymbol)(val tree: Tree.Ident) extends Term, NewRefImpl
-  case MemberRef(sym: MemberSymbol)(val tree: Opt[Tree.Ident], val resSym: FlowSymbol) extends Term, NewResolvableImpl, NewRefImpl
+  case MemberRef(sym: MemberSymbol)(val tree: Opt[Tree.Ident], val resSym: FlowSymbol) extends Term, NewResolvableImpl, NewRefImpl, ContextualSiteImpl
   /** A direct reference to an inherited implementation, retaining the lexical receiver. */
-  case Super(receiver: Term, owner: InnerSymbol, id: Tree.Ident)(val resSym: FlowSymbol) extends Term, NewResolvableImpl, ShapeHost
+  case Super(receiver: Term, owner: InnerSymbol, id: Tree.Ident)(val resSym: FlowSymbol) extends Term, NewResolvableImpl, ShapeHost, ContextualSiteImpl
   /** An optional class selection fixes the lookup scope for an explicit member projection. */
-  case NewSel(prefix: Term, id: Tree.Ident, cls: Opt[NewSel])(val resSym: FlowSymbol) extends Term, NewSelImpl, ShapeHost
+  case NewSel(prefix: Term, id: Tree.Ident, cls: Opt[NewSel])(val resSym: FlowSymbol) extends Term, NewSelImpl, ShapeHost, ContextualSiteImpl
   /** A name without an explicit binding, looked up in the wildcard opens visible where it is written
     * (`prefixes`, possibly none) or in implicit namespaces, as `lookup` specifies. */
   case UnresolvedRef(prefixes: Ls[Term], id: Tree.Ident)(val resSym: FlowSymbol, val lookup: NameLookup)
-    extends Term, UnresolvedRefImpl, ShapeHost
-  case Capture(base: Term, thru: AnyDefinitionSymbol) extends Term
+    extends Term, UnresolvedRefImpl, ShapeHost, ContextualSiteImpl
+  case Capture(base: Term, thru: AnyDefinitionSymbol) extends Term, ContextualSiteImpl
   // --- LEGACY ---
   /** A term that wraps another term, indicating that the symbol of the inner term is resolved.
     * This is mainly used to disambiguate overloaded definitions. */
@@ -343,9 +343,9 @@ enum Term extends Statement, AutoLocated, ShapePublisher, ContextualSiteImpl:
   // --- END ---
   
   case App(lhs: Term, rhs: Term)
-    (val tree: Tree.App, val typ: Opt[Type], val resSym: FlowSymbol) extends Term, ResolvableImpl, AppImpl
+    (val tree: Tree.App, val typ: Opt[Type], val resSym: FlowSymbol) extends Term, ResolvableImpl, AppImpl, ContextualSiteImpl
   case TyApp(lhs: Term, targs: Ls[Term])
-    (val typ: Opt[Type]) extends Term, ResolvableImpl
+    (val typ: Opt[Type]) extends Term, ResolvableImpl, ContextualSiteImpl
   /** `checked` asks resolution to validate the receiver and determine the element
     * interface (`obj.[idx]`); it does not require a compile-time index value.
     * `arrayIdx` independently selects array indexing in the generated code. */
@@ -365,7 +365,7 @@ enum Term extends Statement, AutoLocated, ShapePublisher, ContextualSiteImpl:
    *  branch matches. Used by `ups.FixedPointCompiler` to drive the generated
    *  matcher machine. */
   case SynthWhile(split: Split)
-  case Lam(params: ParamList, body: Term)
+  case Lam(params: ParamList, body: Term) extends Term, ContextualSiteImpl
   case FunTy(lhs: Term, rhs: Term, eff: Opt[Term])
   case Forall(tvs: Ls[QuantVar], outer: Opt[VarSymbol], body: Term)
   case Constrained(constraints: Ls[SubConstraint], body: Term)
@@ -375,7 +375,7 @@ enum Term extends Statement, AutoLocated, ShapePublisher, ContextualSiteImpl:
   case Quoted(body: Term)
   case Unquoted(body: Term)
   case New(cls: Term, args: Ls[Term], rft: Opt[ClassSymbol -> ObjBody])
-    (val resSym: FlowSymbol, val typ: Opt[Type]) extends Term, ResolvableImpl
+    (val resSym: FlowSymbol, val typ: Opt[Type]) extends Term, ResolvableImpl, ContextualSiteImpl
   case DynNew(cls: Term, args: Ls[Term])
   case Asc(term: Term, ty: Term)
   case CompType(lhs: Term, rhs: Term, pol: Bool)

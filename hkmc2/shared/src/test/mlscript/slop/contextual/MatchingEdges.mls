@@ -34,30 +34,28 @@ class FunctionAccept extends Accept[Int -> Int] with
   fun label: Str = "function"
 using Accept[Int -> Int] = new FunctionAccept
 
-:todo // structural compatibility is intentionally permissive; insertion is pending
+// TODO: §3.4 deliberately permits structural candidate arguments for now.
 :expect "function"
 accept((x: Int) => x)
 //│ = "function"
-//│ FAILURE: Unexpected lack of error to fix
 
 // Several matching instances in one clause are ambiguous, including subclass heads.
 class Specialized extends Accept[Int] with
   fun label: Str = "specialized"
 
-:breakme // ambiguity diagnostic not implemented yet
 :e
 fun sameTier(using Accept[Int], Specialized) = accept(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
-//│ ║  l.49: 	fun sameTier(using Accept[Int], Specialized) = accept(1)
+//│ ║  l.+1: 	fun sameTier(using Accept[Int], Specialized) = accept(1)
 //│ ║        	                                               ^^^^^^^^^
-//│ ╟── Ambiguous instances for contextual parameter 'a'.
-//│ ║  l.49: 	fun sameTier(using Accept[Int], Specialized) = accept(1)
+//│ ╟── Ambiguous instances for the contextual parameter 'a' of type Accept[A].
+//│ ║  l.+1: 	fun sameTier(using Accept[Int], Specialized) = accept(1)
 //│ ║        	                                               ^^^^^^^^^
 //│ ╟── The contextual parameter is declared here.
-//│ ║  l.13: 	fun accept[A](value: A)(using a: Accept[A]) = a.label
+//│ ║  l.XX: 	fun accept[A](value: A)(using a: Accept[A]) = a.label
 //│ ║        	                        ^^^^^^^^^^^^^^^^^^
-//│ ╟── This lexical instance matches.
-//│ ╙── This lexical instance matches.
+//│ ╟── This lexical instance of type Accept[Int] matches.
+//│ ╙── This lexical instance of type Specialized matches.
 
 // A later incompatible value cannot change the selected candidate.
 class IntAccept extends Accept[Int] with
@@ -69,7 +67,21 @@ fun generic[A](value: A) = accept(value)
 generic(1)
 //│ = "int"
 
-:breakme // late-value diagnostic not implemented yet
 :e
 generic("later")
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.XX: 	fun generic[A](value: A) = accept(value)
+//│ ║        	                           ^^^^^^^^^^^^^
+//│ ╟── This value reaches the type of the contextual parameter 'a' after its instance was selected; the selected instance of type Accept[Int] does not accept it.
+//│ ║  l.XX: 	fun generic[A](value: A) = accept(value)
+//│ ║        	                           ^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	fun accept[A](value: A)(using a: Accept[A]) = a.label
+//│ ║        	                        ^^^^^^^^^^^^^^^^^^
+//│ ╟── The selected instance is declared here.
+//│ ║  l.XX: 	using Accept[Int] = new IntAccept
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This value is incompatible with the selected instance.
+//│ ║  l.+1: 	generic("later")
+//│ ╙──      	        ^^^^^^^
 //│ = "int"

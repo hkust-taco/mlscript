@@ -1,0 +1,66 @@
+:.
+
+import "./mlscript-compile/Generic.mls"
+class Item(val first: Int)
+
+// Inferred imported results retain the type parameter until the caller substitutes it.
+:expect 1
+Generic.identity(Item(1)).first
+//│ = 1
+
+using Int = 7
+fun read(using n: Int) = n
+fun local[A](value: A) =
+  let saved = value
+  saved
+fun close[A](value: A) = () => value
+
+// Each binding stores the completed value, even across a generic call or a closure.
+let saved = read
+let record = { value: local(read) }
+let tuple = [read]
+let closure = close(read)
+//│ closure = fun
+//│ record = {value: 7}
+//│ saved = 7
+//│ tuple = [7]
+
+using Int = 99
+
+:expect [7, 7, 7, 7]
+[Generic.identity(saved), record.value, tuple.(0), closure()]
+//│ = [7, 7, 7, 7]
+
+// A contextual lambda cannot carry a completion obligation through generic flow.
+:w
+:expect 99
+Generic.identity(local((using n: Int) => n))
+//│ ╔══[WARNING] This lambda's contextual parameters are supplied where it is written, so it never produces a contextual function.
+//│ ║  l.+1: 	Generic.identity(local((using n: Int) => n))
+//│ ║        	                       ^^^^^^^^^^^^^^
+//│ ╙── Use a 'fun' definition to define a contextual function.
+//│ = 99
+
+class Reader with
+  fun m()(using n: Int) = n
+
+// An unannotated receiver discovers its contextual callee from a later call.
+:expect 99
+fun throughFlow(receiver) = receiver.m()
+throughFlow(new Reader)
+//│ = 99
+
+// A caller's concrete receiver does not expose members through an opaque type parameter.
+:e
+fun throughParameter[A](receiver: A) = receiver.m()
+throughParameter(new Reader)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	fun throughParameter[A](receiver: A) = receiver.m()
+//│ ║        	                                       ^^^^^^^^^^
+//│ ╟── Cannot resolve member 'm' of a value with unknown shape.
+//│ ║  l.+1: 	fun throughParameter[A](receiver: A) = receiver.m()
+//│ ║        	                                  ^
+//│ ╟── Type parameter 'A' does not specify a member interface.
+//│ ║  l.+1: 	fun throughParameter[A](receiver: A) = receiver.m()
+//│ ╙──      	                     ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

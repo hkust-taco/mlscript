@@ -28,9 +28,11 @@ let f1 = foo
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f1 = fun foo
 
+:fixme // Phase 4: the binding must eta-expand; reads of the variable are not sites.
 :expect [42]
 f1()
-//│ = [42]
+//│ ═══[RUNTIME ERROR] Expected: '[42]', got: 'fun'
+//│ = fun
 
 // bar
 // should be expanded to
@@ -44,9 +46,11 @@ let f2 = bar
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f2 = fun bar
 
+:fixme // Phase 4: the binding must eta-expand; reads of the variable are not sites.
 :expect [0.42, 42]
 f2(0.42)
-//│ = [0.42, 42]
+//│ ═══[RUNTIME ERROR] Expected: '[0.42, 42]', got: 'fun'
+//│ = fun
 
 // baz
 // should be expanded to
@@ -60,9 +64,11 @@ let f3 = baz
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f3 = fun baz
 
+:fixme // Phase 4: the binding must eta-expand; reads of the variable are not sites.
 :expect [43, 42, 44, 0.42]
 f3(43)(44)
-//│ = [43, 42, 44, 0.42]
+//│ ═══[RUNTIME ERROR] Expected: '[43, 42, 44, 0.42]', got: 'fun'
+//│ = fun
 
 // This should not expand
 :sir

@@ -43,6 +43,21 @@ generic(1)
 :breakme // contextual diagnostic not implemented yet
 :e
 generic("later")
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.XX: 	fun generic[A](value: A) = show(value)
+//│ ║        	                           ^^^^^^^^^^^
+//│ ╟── This value reaches the type of the contextual parameter 's' after its instance was selected; the selected instance of type Show[Int] does not accept it.
+//│ ║  l.XX: 	fun generic[A](value: A) = show(value)
+//│ ║        	                           ^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	fun show[A](value: A)(using s: Show[A]) = s.show(value)
+//│ ║        	                      ^^^^^^^^^^^^^^^^
+//│ ╟── The selected instance is declared here.
+//│ ║  l.XX: 	using Show[Int] = new IntShow
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This value is incompatible with the selected instance.
+//│ ║  l.+1: 	generic("later")
+//│ ╙──      	        ^^^^^^^
 //│ = "int"
 
 // Capitalized references and contextual sites settle in one post-order worklist.
@@ -75,7 +90,7 @@ second(first)
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	second(first)
 //│ ║        	^^^^^^^^^^^^^
-//│ ╟── No instance found for contextual parameter 'chosen'.
+//│ ╟── No instance found for the contextual parameter 'chosen' of type A.
 //│ ║  l.+1: 	second(first)
 //│ ║        	^^^^^^^^^^^^^
 //│ ╟── The contextual parameter is declared here.

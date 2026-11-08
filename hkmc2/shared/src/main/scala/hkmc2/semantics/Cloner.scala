@@ -80,11 +80,14 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
 
   private def copyMetadata[A <: Term](source: Term, copy: A): A =
     copy.typeInterpretation = source.typeInterpretation
-    copy.contextualSite = source.contextualSite match
-      case site: ResolutionSite.Contextual => site.role
-      case role => role
-    copy.contextualCompletion = source.contextualCompletion.map(completion =>
-      ContextualCompletion(completionSteps(completion.steps), completion.output))
+    (source, copy) match
+      case (source: ContextualSite, copy: ContextualSite) =>
+        copy.contextualSite = source.contextualSite match
+          case site: ResolutionSite.Contextual => site.role
+          case role => role
+        copy.contextualCompletion = source.contextualCompletion.map(completion =>
+          ContextualCompletion(completionSteps(completion.steps), completion.output))
+      case _ => ()
     // These completed shapes describe source declarations and calling conventions.
     // Executable reference targets are substituted separately below.
     copy.shapes.copyFrom(source.shapes)

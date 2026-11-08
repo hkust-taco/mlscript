@@ -19,7 +19,7 @@ module Test with
   fun main()(using Debugger) =
     test(12) + test(34)
 
-:fixme // contextual completion (Phases 2–4)
+:fixme // Handler-parent resolution is independently incomplete.
 // :rt
 // :lot
 let res =
@@ -33,7 +33,7 @@ let res =
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ res = undefined
 
-:fixme // contextual completion (Phases 2–4)
+:fixme // Handled results have no declared interface for these selections.
 :re
 res.raise()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
@@ -51,7 +51,7 @@ res.raise()
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-:fixme // contextual completion (Phases 2–4)
+:fixme // Handled results have no declared interface for these selections.
 set res = res.resumeWith(42)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+1: 	set res = res.resumeWith(42)
@@ -68,7 +68,7 @@ set res = res.resumeWith(42)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-:fixme // contextual completion (Phases 2–4)
+:fixme // Handled results have no declared interface for these selections.
 :re
 res.raise()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
@@ -86,7 +86,7 @@ res.raise()
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-:fixme // contextual completion (Phases 2–4)
+:fixme // Handled results have no declared interface for these selections.
 :expect 0.33676533676533676
 res.resumeWith(666)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection

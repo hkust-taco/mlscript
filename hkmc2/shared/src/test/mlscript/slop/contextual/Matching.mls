@@ -14,27 +14,36 @@ using IntBox = new IntBox
 box(1)
 //│ = "int"
 
-:breakme // contextual diagnostic not implemented yet
 // A superclass candidate does not satisfy a subclass query.
 :e
-fun requireIntBox(using IntBox) = 42
+class OtherIntBox extends Box[Int] with
+  fun label: Str = "other"
+fun requireIntBox(using OtherIntBox) = 42
 fun onlySuperclass(using Box[Int]) = requireIntBox
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+4: 	fun onlySuperclass(using Box[Int]) = requireIntBox
+//│ ║        	                                     ^^^^^^^^^^^^^
+//│ ╟── No instance found for the unnamed contextual parameter of type OtherIntBox.
+//│ ║  l.+4: 	fun onlySuperclass(using Box[Int]) = requireIntBox
+//│ ║        	                                     ^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.+3: 	fun requireIntBox(using OtherIntBox) = 42
+//│ ╙──      	                  ^^^^^^^^^^^^^^^^^
 
-:breakme // contextual diagnostic not implemented yet
 // X7: both candidates in the same clause accept Int values.
 :e
 fun ambiguous(using Box[Int], Box[Num]) = box(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	fun ambiguous(using Box[Int], Box[Num]) = box(1)
 //│ ║        	                                          ^^^^^^
-//│ ╟── Ambiguous instances for contextual parameter 'b'.
+//│ ╟── Ambiguous instances for the contextual parameter 'b' of type Box[A].
 //│ ║  l.+1: 	fun ambiguous(using Box[Int], Box[Num]) = box(1)
 //│ ║        	                                          ^^^^^^
 //│ ╟── The contextual parameter is declared here.
 //│ ║  l.XX: 	fun box[A](value: A)(using b: Box[A]) = b.label
 //│ ║        	                     ^^^^^^^^^^^^^^^
-//│ ╟── This lexical instance matches.
-//│ ╙── This lexical instance matches.
+//│ ╟── This lexical instance of type Box[Int] matches.
+//│ ╙── This lexical instance of type Box[Num] matches.
 
 // Vacuous named-query argument positions match; declaration tiers decide.
 fun vacuous[A](using b: Box[A]) = b.label
@@ -44,7 +53,6 @@ using Box[Num] = new NumBox
 vacuous
 //│ = "num"
 
-:breakme // contextual diagnostic not implemented yet
 // A top-level parameter query cannot select from an empty position.
 :e
 fun undetermined[T](using t: T) = t
@@ -52,7 +60,7 @@ undetermined
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+2: 	undetermined
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── Cannot determine the type of contextual parameter 't': type parameter 'T' has no explicit type argument and no value reaches it.
+//│ ╟── Cannot determine the type of the contextual parameter 't': type parameter 'T' has no explicit type argument and no value reaches it.
 //│ ║  l.+2: 	undetermined
 //│ ║        	^^^^^^^^^^^^
 //│ ╟── The contextual parameter is declared here.
@@ -65,7 +73,6 @@ undetermined
 box(unsafe.undefined)
 //│ = "num"
 
-:breakme // contextual diagnostic not implemented yet
 // Unsupported query types are errors (§3.2), even if a value could be supplied.
 :e
 fun unsupported(using Int | Str) = 42

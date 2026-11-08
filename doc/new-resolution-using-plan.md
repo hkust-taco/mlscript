@@ -161,9 +161,10 @@ whose next remaining list is a `using` list never flows out of a value site:
 
 The implementation relies on this invariant and asserts it (§4.2). Contextual callees reach sites
 only through references and selections that denote a definition, and through contextual lambda
-literals. This includes a member selected through a receiver whose class only some activation
-reveals, such as `x.m` with `x: A`: that selection is itself the site, and §3.6 governs callees
-that reach it late.
+literals. This includes a member selected through an unannotated receiver whose class only some
+activation reveals: that selection is itself the site, and §3.6 governs callees that reach it
+late. Generic parameters remain opaque: `fun f[A](x: A) = x.m` is rejected because `A` does not
+provide `m`, even if every caller supplies a value with that member.
 
 There are no contextual function types, so a contextual function cannot be passed as an argument.
 A `using` parameter list in a function type, such as `fun foo(arg: (using Int) -> Int)`, is an
@@ -283,9 +284,10 @@ of `fold`, because its argument `A` accepts every value. It is in an inner tier,
 every namespace instance.
 
 Without a lexical instance, as in `fun total[A](xs: List[A]) = fold(xs)`, the position values are
-`A`'s values. These include the values of `total`'s callers, which flow into its body as they do
-for member resolution. So a namespace instance `Monoid[Int]` can be selected while every caller
-passes `Int`s. A later caller passing `Str`s then causes a late-value error (§3.6).
+`A`'s values. These include the values of `total`'s callers for contextual matching; ordinary
+member resolution still treats `A` as opaque (§3.1). So a namespace instance `Monoid[Int]` can be
+selected while every caller passes `Int`s. A later caller passing `Str`s then causes a late-value
+error (§3.6).
 
 ### 3.5 Selection
 
@@ -582,12 +584,20 @@ to this section. Escalate (see §7) if a principle in §3 cannot be met.
     completion obligation. Under the invariant of §3.1, it cannot: no value holds an uncompleted
     contextual function, so a type parameter's values never include one. A contextual callee
     revealed only in some activation can only reach a site that *selects* it, for example `x.m`
-    with `x: A`. That selection is itself the site, and the rules of §3.1 and §3.6 for several
-    and late callees govern it. No obligation travels with values through bindings, returns,
+    with an unannotated `x`. That selection is itself the site, and the rules of §3.1 and §3.6 for
+    several and late callees govern it. No obligation travels with values through bindings, returns,
     aggregates, captures, or imports.
   - **Assertions.** Assert the invariant with `softAssert`. Check that values published into
     variable, field, and parameter hosts and into completion outputs never have a leading `using`
     list. This is a check of the shape's remaining parameter lists, so it is cheap.
+  - **Implementation adjustment (Phase 2).** Forward `InstanceShape` without expanding its
+    deferred type reference for contextual classification. Written types cannot express contextual
+    functions, and inferred type-argument values satisfy the invariant. A selected method with
+    contextual clauses already carries them on `CallableTypeShape`; it still takes the completion
+    path. This avoids observing ordinary generic values solely to prove they need no completion.
+    Expanding them also exposes an existing scope-transport bug in nested generic tuple aliases;
+    `NestedGenericFlow.mls` retains the independent member-selection reproducer as `:fixme`,
+    confirmed on base commit `fdddc5842`. The scope-path assertion remains enabled.
 - **Rejected: deferred completion edges.** The checkpoint's proposal of a `Complete(site, input)`
   resolver graph operation, transported through generic flow, is not adopted. It is unnecessary
   under the invariant of §3.1. It would also have made a generic body's generated code depend on
@@ -660,6 +670,12 @@ to this section. Escalate (see §7) if a principle in §3 cannot be met.
   - Observe the position values with `listenInstanceViews` and `listenTypeParameterValues` on the
     instantiated position types, in the base context, which observes the values of every
     activation. There is no activation-specific matching rule (§3.4).
+    The type interpreter has a contextual observation mode that also observes the call-site
+    instances of an enclosing abstract binder. Ordinary interface observations keep that binder
+    opaque. Demand-created observers share the existing instantiation cache and publisher
+    copy-on-import protocol, so late callers are checked even when a generic body's result does
+    not depend on its type parameter. An already instantiated parameter still observes only its
+    own call site; merging different call-site parameters would create spurious mismatches.
   - Explicit type arguments are visible through `hasExplicitTypeArgument` and the bindings
     published by `bindTypeArguments`.
 - **Lexical candidates.** Build the reference for a selected lexical candidate with the same code
@@ -768,6 +784,25 @@ Centralize the lowering of sites with completions:
   - report the numbers in the commit message;
   - a regression above 2% must be explained or fixed.
 
+Phase 2 measurement against `fdddc5842`: separate scratch worktrees, identical temporary
+`ContextualBenchmark` runners invoked with
+`sbt -batch 'hkmc2DiffTests/Test/runMain hkmc2.ContextualBenchmark'` on JDK 25. Each runner warms shared imports, then
+runs the same 125 non-WASM `newres` diff files without a source `using` clause sequentially via
+`MainDiffMaker`. All benchmark runs had zero failures. The table reports medians of the last
+five of twelve rounds in each JVM; the first seven warm the JIT. The base and candidate ran
+sequentially, without concurrent builds or tests. Allocation uses
+`com.sun.management.ThreadMXBean.getCurrentThreadAllocatedBytes`; CPU time uses
+`getCurrentThreadCpuTime`, and elapsed time includes the diff harness and JS execution.
+
+| Metric (125 files) | Base | Phase 2 | Change |
+| --- | ---: | ---: | ---: |
+| Elapsed time | 7.407372000 s | 7.144443542 s | −3.55% |
+| Current-thread CPU time | 1.409568 s | 1.320953 s | −6.29% |
+| Current-thread allocated bytes | 2,671,442,464 | 2,699,115,096 | +1.04% |
+
+The additional allocation stays below the 2% limit. Ordinary sites share the worklist entry;
+completion work records, output hosts, and contextual query observers are created on demand.
+
 
 ## 5. Phases
 
@@ -794,9 +829,8 @@ gaps remain explicit regressions. Performance comparisons are due at Phases 2 an
 
 ### Phase 2: sites, lexical instances, and direct insertion
 
-Checkpoint status (incomplete): the user requested committing the partial implementation while
-the §4.2 blocker was under review. That blocker is now resolved (§4.2): resume Phase 2 with the
-steps below, before the remaining Phase 2 items.
+Implementation status: complete. The partial checkpoint `0890343a0` recorded the interception
+blocker. The approved revision `49a1d557b` resolved it (§4.2), and Phase 2 resumed in this order:
 
 1. Forward each received shape unchanged when it needs no completion. Then confirm that the
    two import-isolation tests and the `LexicalCaptures` `:fixme` pass.
@@ -805,21 +839,33 @@ steps below, before the remaining Phase 2 items.
 3. Add the invariant assertions (§4.2).
 4. Move the completion mixin back off `Term` (§4.3).
 
-Direct lexical insertion, matching, callable-clause metadata,
-agreement checks, and Supply lowering are prototyped; `FlowCallees.mls` and
-`LexicalCaptures.mls` add coverage, and the contextual ports have updated golden outputs.
-The checkpoint is not a completed phase and does not satisfy the phase exit criteria:
+Resumption status: steps 1–4, direct insertion, and the Phase 2 diagnostics are implemented.
+The two import-isolation tests and `LexicalCaptures` pass with the forwarding fix. The revised
+lambda tests pass, including the existing function-type rejection. `InvariantFlow.mls` adds the
+requested transport cases. `LateValues.mls` and `LateValuesImportIsolation.mls` check later
+callers, nested nominal arguments, separate call-site queries, and shared imported definitions.
+Diagnostics identify query and candidate types, unnamed parameters, and incompatible values.
+`MatchingEdges.mls` no longer has a `:todo` on structural compatibility: its successful result is
+the intended behavior of §3.4. `newres/LexerMigration.mls` no longer needs its `:fixme`.
 
-- `ctest`: 60 passed.
-- `sdtest contextual`: 23 passed, 1 failed. `MatchingEdges.mls` still has the §3.4 `:todo`
-  marker on structural compatibility, but its block now succeeds. The marker needs reconciliation
-  with the harness's requirement that `:todo` blocks fail; this is separate from interception.
-- `hkmc2AllTests/test`: stopped in the Scala.js tests at the two generic-import failures described
-  in §4.2 (50 passed, 2 failed). Later aggregate stages did not run.
-- Late-value diagnostics remain incomplete (for example `generic("later")` in `MatchingEdges`);
-  diagnostic messages still need query types and clearer identification of unnamed parameters.
-  Existing `:fixme` and `:breakme` cases also retain the later phases' pending behavior.
-- Performance comparison has not run; it remains required before completing Phase 2.
+The user confirmed that generic parameters remain opaque, as the reference manual's Resolution
+Interfaces section and `newres/InterfaceExposure.mls` already require. The `x.m` example now uses
+an unannotated receiver for successful late-callee coverage, and the `x: A` case is a rejection
+test. No deferred completion edges or compound-head completion state were added.
+
+Validation and remaining work:
+
+- `ctest`: 62 passed; `sdtest contextual`: 30 passed.
+- `hkmc2AllTests/test`: completed successfully, including both Scala.js import regressions and
+  the existing graph-growth tests. Legacy resolver outputs and the implicit-namespace name
+  tests are unchanged.
+- The Phase 2 performance comparison passes the 2% budget (results in §4.6).
+- Later-phase behavior remains marked explicitly: namespace instances (Phase 3), eta-expansion
+  and cascading (Phase 4), and derived instances (Phase 6).
+- Independent existing gaps remain `:fixme`: handler-parent resolution and the opaque result
+  interface of handled expressions (`Debugging`, `NestedUsingInstances`); generic override
+  representation; and nested generic tuple scope transport (`NestedGenericFlow`, also reproduced
+  on `fdddc5842`). No scope invariant was relaxed to accommodate them.
 - Phases 3–6 have not started. Namespace lookup has not been generalized.
 
 - Implement interception, settlement, Supply steps, `InstanceArg`, query construction, matching,
@@ -975,8 +1021,9 @@ New tests (in `slop/contextual/`):
   - The `LexicalCaptures` `use[Box[T]].value` case.
   - A completed value passed through a generic function, a local binding, a record field, and a
     returned closure.
-  - `x.m` with `x: A`, where `m` has a `using` list and only callers' activations reveal it: an
-    ordinary late callee of that selection (§3.6).
+  - `x.m` with an unannotated `x`, where `m` has a `using` list and only callers' activations
+    reveal it: an ordinary late callee of that selection (§3.6).
+  - `x.m` with `x: A`: rejected because generic parameters remain opaque, regardless of callers.
 - **Flow-revealed callees (X8).**
   - A method with a `using` list selected through a parameter whose class only flow determines.
   - A method with a `using` list selected through an annotated receiver, exercising the

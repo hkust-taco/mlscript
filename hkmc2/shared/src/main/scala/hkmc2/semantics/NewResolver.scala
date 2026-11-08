@@ -994,14 +994,18 @@ class NewResolver:
   private def listenConstraintViews(value: TermShape)(listener: ValueListener)(using ResolutionContext): Unit =
     listenInstanceFlow(value, mergeIntersections = false)(ShapeObserver.values(listener))
 
-  private def listenInstanceFlow(value: TermShape, mergeIntersections: Bool)(listener: Listener)(using ResolutionContext): Unit = value match
+  private def listenInstanceFlow(value: TermShape, mergeIntersections: Bool)(listener: Listener)(using ResolutionContext): Unit =
+    observeInstanceFlow(value, mergeIntersections, contextual = false)(listener)
+
+  private def observeInstanceFlow(value: TermShape, mergeIntersections: Bool, contextual: Bool)
+      (listener: Listener)(using ResolutionContext): Unit = value match
     case Marked(view: IntersectionView, marks) if !mergeIntersections =>
       view.values.foreach: value =>
         transportShape(value, marks :: Nil) match
-          case value: TermShape => listenInstanceFlow(value, mergeIntersections)(listener)
+          case value: TermShape => observeInstanceFlow(value, mergeIntersections, contextual)(listener)
           case NoShape => ()
     case Marked(instance: InstanceShape, marks) =>
-      listenTypeViews(transportType(instance.tpe, marks :: Nil), mergeIntersections)(listener)
+      observeTypeViews(transportType(instance.tpe, marks :: Nil), mergeIntersections, contextual)(listener)
     case _ => listener(value)
 
   private def listenTermViews(term: Term)(listener: ValueListener)(using ResolutionContext): Unit =
@@ -1387,6 +1391,13 @@ class NewResolver:
     * observation separately and retain the choice through deferred references.
     */
   private def listenTypeViews(input: DeclaredType, mergeIntersections: Bool)(listener: Listener)(using ResolutionContext): Unit =
+    observeTypeViews(input, mergeIntersections, contextual = false)(listener)
+
+  /** Contextual matching observes all callers of an enclosing generic parameter. Ordinary
+    * interface lookup keeps that parameter opaque; both observations share type interpretation.
+    */
+  private def observeTypeViews(input: DeclaredType, mergeIntersections: Bool, contextual: Bool)
+      (listener: Listener)(using ResolutionContext): Unit =
     // Formula arms can inherit instances that only another arm reads. Project
     // before caching so those ambient activations share one observation graph.
     val tpe = projectType(input)
@@ -1404,11 +1415,12 @@ class NewResolver:
           case N => listener(shape)
       case _ => listener(shape)
     val key = (tpe, mergeIntersections)
-    typeViews.get(key) match
+    val views = if contextual then rctx.state.contextualTypeViews else typeViews
+    views.get(key) match
       case S(host) => host.listen(observe)
       case N =>
         val host = new TermShapeHost
-        typeViews(key) = host
+        views(key) = host
         host.listen(observe)
         def follow(current: DeclaredType, args: TypeApplication, aliases: Set[TypeResolution], source: Term,
             publish: Listener)(using ResolutionContext): Unit =
@@ -1430,8 +1442,8 @@ class NewResolver:
               // A singleton clause already has its complete view. Rebuilding a
               // record would move its outer marks into every field and prevent
               // subsequent scope crossings from filtering the whole candidate.
-              case head :: Nil if values.isEmpty => listenTypeViews(head, mergeIntersections)(publish)
-              case head :: tail => listenTypeViews(head, mergeIntersections): value =>
+              case head :: Nil if values.isEmpty => observeTypeViews(head, mergeIntersections, contextual)(publish)
+              case head :: tail => observeTypeViews(head, mergeIntersections, contextual): value =>
                 conjunction(tail, value :: values)
               case Nil => intersectViews(values.reverse)(publish)
             shape match
@@ -1439,9 +1451,9 @@ class NewResolver:
               case TypeShape.Top => publish(OpaqueTypeShape(source)(
                 current.origin.getOrElse(TypeInterfaceReason.Unrestricted(source))))
               case TypeShape.Bottom => ()
-              case TypeShape.Inferred(value) => listenInstanceFlow(instantiateShape(value, current.instances), mergeIntersections)(publish)
+              case TypeShape.Inferred(value) => observeInstanceFlow(instantiateShape(value, current.instances), mergeIntersections, contextual)(publish)
               case TypeShape.Hole(host) => host.subscribe: value =>
-                listenInstanceFlow(instantiateShape(value, current.instances), mergeIntersections)(publish)
+                observeInstanceFlow(instantiateShape(value, current.instances), mergeIntersections, contextual)(publish)
               case TypeShape.Nominal(defn) =>
                 val enclosing = lexicalBinders(defn.sym)
                 val own = defn.tparams.map(_.sym).toSet
@@ -1457,12 +1469,12 @@ class NewResolver:
                     val parentType = typeResolution(parent.cls)
                     withTypeDependencies(parentType): dependencies =>
                       val local = captureNominalBindings(defn, bindings.filter((symbol, _) => dependencies(symbol)))
-                      listenTypeViews(declaredType(parentType, local), mergeIntersections): ext =>
+                      observeTypeViews(declaredType(parentType, local), mergeIntersections, contextual): ext =>
                         publish(NominalInstanceView(defn, bindings, S(ext))(S(source), ShapeProvenance.empty)(this))
               case TypeShape.Alias(symbol, _) if symbol is prelude.builtins.Awaited =>
                 val arguments = variantArguments(current, args, symbol.defn.get.tparams, current.positive)
                 softAssert(arguments.length == 1)
-                listenTypeViews(arguments.head.output)(value => listenAwaitedValue(value, source)(publish))
+                observeTypeViews(arguments.head.output, mergeIntersections = true, contextual)(value => listenAwaitedValue(value, source)(publish))
               case TypeShape.Alias(symbol, rhs) =>
                 // Revisiting the same alias reference without reaching a structural
                 // shape supplies no additional interface. Track
@@ -1478,7 +1490,12 @@ class NewResolver:
                 case S(bound) => follow(bound.instantiate(current.instances).at(current.positive), noTypeArguments, aliases, source, publish)
                 case N =>
                   val target = current.instances.get(parameter.symbol).fold(parameter)(rctx.typeParameter)
-                  listenTypeParameterValues(target): value =>
+                  def observeParameter(receive: Listener): Unit =
+                    listenTypeParameterValues(target)(receive)
+                    if contextual && !target.symbol.isInstanceOf[TypeParameterInstance] then
+                      rctx.contextualInstancesOf(target.symbol).subscribeToShapes: instance =>
+                        listenTypeParameterValues(rctx.typeParameter(instance))(receive)
+                  observeParameter: value =>
                     // Report the use of an abstract parameter in a signature, not
                     // just its declaration. This survives substitution through
                     // generic members and nested tuple or function annotations.
@@ -1489,7 +1506,7 @@ class NewResolver:
                         UnknownValueShape(unknown.source, unknown.fromPublicInterface)(unknown.provenance.withTypeOrigin(source)).exit(marks)
                       case _ => value
                     annotated match
-                      case value: TermShape => listenInstanceFlow(instantiateShape(value, current.instances), mergeIntersections)(publish)
+                      case value: TermShape => observeInstanceFlow(instantiateShape(value, current.instances), mergeIntersections, contextual)(publish)
                       case NoShape => ()
               case reference: TypeShape.Reference =>
                 follow(referenceType(reference, current), args, aliases, source, publish)
@@ -1504,7 +1521,7 @@ class NewResolver:
                 // Share the source's interpretation across transported references.
                 // Its cached host also stops cycles before adding subscriptions.
                 // Applications still bind arguments at the template's endpoint.
-                if args.arguments.isEmpty then listenTypeViews(base, mergeIntersections)(transfer)
+                if args.arguments.isEmpty then observeTypeViews(base, mergeIntersections, contextual)(transfer)
                 else follow(base, args.move(inverseMarks(reference.marks)), aliases, source, transfer)
               case TypeShape.Function(params, ret) =>
                 val ps = params match
@@ -1544,7 +1561,7 @@ class NewResolver:
                   case TypeShape.TupleField(field, false) :: tail =>
                     expand(tail, TupleShape.TypedField(TypeArgument.invariant(declaredType(field, current)), Nil) :: reversed)
                   case TypeShape.TupleField(field, true) :: tail =>
-                    listenTypeViews(declaredType(field, current), mergeIntersections = false):
+                    observeTypeViews(declaredType(field, current), mergeIntersections = false, contextual):
                       case Marked(tuple: TupleShape, marks) =>
                         expand(tail, TupleShape.Spread(tuple, marks) :: reversed)
                       case Marked(array: NominalInstanceView, marks) if arrayElementType(array).nonEmpty =>
@@ -1946,7 +1963,7 @@ class NewResolver:
 
   private[semantics] def publishParameter(symbol: VarSymbol, shape: TermShape | NoShape)(using ResolutionContext): Unit =
     shape match
-      case value: TermShape if !symbol.decl.exists(_.isInstanceOf[TyParam]) => publishActivated(symbol, value)
+      case value: TermShape if !symbol.decl.exists(_.isInstanceOf[TyParam]) => publishCompleted(symbol, value)
       case _ => publishParameter(symbol.inferenceHost, shape)
 
   private[semantics] def publishParameter(host: Publisher.Data[ShapeEvent], shape: TermShape | NoShape)(using ResolutionContext): Unit = shape match
@@ -2684,7 +2701,9 @@ class NewResolver:
   private def listenTupleFieldContents(field: TupleShape.Fixed)(value: Listener, argument: ShapeListener[TypeArgument])
       (using ResolutionContext): Unit =
     def receive(shape: TermShape)(using ResolutionContext): Unit = transportShape(shape, field.marks) match
-      case shape: TermShape => value(shape)
+      case shape: TermShape =>
+        assertCompletedValue(shape)
+        value(shape)
       case NoShape => ()
     def declared(bound: TypeArgument)(using ResolutionContext): Unit =
       argument(bound.map(tpe => transportType(projectType(tpe), field.marks)))
@@ -2811,6 +2830,36 @@ class NewResolver:
     case Named(cls: ClassLikeDef, positions: Ls[DeclaredType])
     case Parameter(tpe: DeclaredType, symbol: VarSymbol)
 
+  /** Render the query's written types with explicit substitutions, without guessing a type
+    * from its inferred values. Recursive aliases retain their source spelling at the cycle.
+    */
+  private def contextualTypeName(tpe: DeclaredType)(using ResolutionContext): Str =
+    def written(current: DeclaredType): Str = current.resolution.source.toLoc.fold("?"): loc =>
+      loc.origin.fph.blockStr.slice(loc.spanStart, loc.spanEnd)
+    def follow(current: DeclaredType, args: TypeApplication, seen: Set[DeclaredType]): Str =
+      if seen(current) then written(current) else current.shapes match
+        case shape :: Nil => reduceType(current, args, shape) match
+          case S(step) => follow(step.tpe, step.args, seen + current)
+          case N => shape match
+            case TypeShape.Nominal(cls) =>
+              val arguments = variantArguments(current, args, cls.tparams, current.positive)
+              cls.sym.nme + (if arguments.isEmpty then "" else arguments.iterator
+                .map(arg => follow(arg.output, noTypeArguments, seen + current)).mkString("[", ", ", "]"))
+            case parameter: TypeShape.Parameter =>
+              val target = current.instances.get(parameter.symbol).fold(parameter)(rctx.typeParameter)
+              if rctx.hasExplicitTypeArgument(target.symbol) then
+                rctx.local(target.arguments).shapes.iterator
+                  .map(bound => follow(bound.argument.output, noTypeArguments, seen + current)).mkString(" | ")
+              else parameter.symbol.nme
+            case TypeShape.Top => "Any"
+            case _ => written(current)
+        case _ => written(current)
+    follow(tpe, noTypeArguments, Set.empty)
+
+  private def contextualParameterName(parameter: Param): Message =
+    if parameter.sym.nme.isEmpty then msg"unnamed contextual parameter"
+    else msg"contextual parameter '${parameter.sym.nme}'"
+
   /** Classification follows written aliases and explicit arguments, never inferred values.
     * Inference supplies the positions of a query; it cannot change its head classification.
     */
@@ -2836,13 +2885,14 @@ class NewResolver:
   /** Cached observation hosts retain all activations and use the ordinary publisher copy-on-import
     * protocol. Decision snapshots never install callbacks that mutate a captured collection.
     */
-  private def contextualPosition(tpe: DeclaredType)(using ResolutionContext): TermShapeHost =
+  private def contextualPosition(tpe: DeclaredType)(using activation: ResolutionContext): TermShapeHost =
+    given ResolutionContext = activation.withInstances(TypeSubstitution.empty)
     rctx.state.contextualPositions.get(tpe) match
       case S(host) => host
       case N =>
         val host = new TermShapeHost
         rctx.state.contextualPositions(tpe) = host
-        listenTypeViews(tpe)(host.publish)
+        observeTypeViews(tpe, mergeIntersections = true, contextual = true)(host.publish)
         host
 
   private def contextualValues(tpe: DeclaredType, observe: TermShapeHost => Unit)(using ResolutionContext): Ls[TermShape] =
@@ -2851,14 +2901,16 @@ class NewResolver:
     host.currentShapes.toList
 
   private def contextualClassPosition(value: TermShape, cls: ClassLikeDef, parameter: VarSymbol)
-      (using ResolutionContext): TermShapeHost =
+      (using activation: ResolutionContext): TermShapeHost =
+    given ResolutionContext = activation.withInstances(TypeSubstitution.empty)
     val key = (ShapeIdentity.key(value), parameter)
     rctx.state.contextualClassPositions.get(key) match
       case S(host) => host
       case N =>
         val host = new TermShapeHost
         rctx.state.contextualClassPositions(key) = host
-        listenClassParameter(value, cls, parameter)(host.publish)
+        listenClassParameter(value, cls, parameter)(value =>
+          observeInstanceFlow(value, mergeIntersections = true, contextual = true)(host.publish))
         host
 
   /** Compare value classes and exposed type arguments coinductively. Re-entering the same
@@ -2928,7 +2980,7 @@ class NewResolver:
         case (Fld(_, argument: InstanceArg, _), (parameter, N)) =>
           if !argument.isErroneous then
             rctx.markError(argument)
-            resolError(argument, msg"Contextual parameter '${parameter.sym.nme}' needs a type annotation." -> parameter.toLoc :: Nil)
+            resolError(argument, msg"The ${contextualParameterName(parameter)} needs a type annotation." -> parameter.toLoc :: Nil)
         case _ => softAssert(false, "A synthesized contextual clause contains only instance arguments")
     case _ => ()
 
@@ -2943,7 +2995,7 @@ class NewResolver:
     if first && rctx.canResolve(argument) then query match
       case N => fail(msg"Contextual parameter types must be named types or type parameters.", Nil)
       case S(ContextualQuery.Parameter(position, symbol)) if contextualValues(position, _ => ()).isEmpty =>
-        fail(msg"Cannot determine the type of contextual parameter '${parameter.sym.nme}': type parameter '${symbol.nme}' has no explicit type argument and no value reaches it.", Nil)
+        fail(msg"Cannot determine the type of the ${contextualParameterName(parameter)}: type parameter '${symbol.nme}' has no explicit type argument and no value reaches it.", Nil)
       case S(query) =>
         val environment = argument.environment.getOrElse(lastWords("An undecided instance argument must retain its environment"))
         val matches = environment.instances.iterator.map: tier =>
@@ -2959,7 +3011,7 @@ class NewResolver:
         matches match
           case (tier, binding, candidate) :: Nil => argument.candidate match
             case S(previous) if previous.symbol != binding.symbol =>
-              fail(msg"The callees of this call require different instances for contextual parameter '${parameter.sym.nme}'.",
+              fail(msg"The callees of this call require different instances for the ${contextualParameterName(parameter)} of type ${contextualTypeName(tpe)}.",
                 (msg"One callee selects this instance." -> previous.symbol.toLoc) ::
                 (msg"Another callee selects this instance." -> binding.symbol.toLoc) :: Nil)
             case S(_) => ()
@@ -2970,22 +3022,24 @@ class NewResolver:
                 val selected = elem.ref(N)(using rctx.owner, environment, config, this, rctx).withLocOf(argument)
                 argument.candidate = S(ContextualCandidate(binding.symbol, candidate))
                 argument.selected = S(selected)
-          case Nil => fail(msg"No instance found for contextual parameter '${parameter.sym.nme}'.", Nil)
-          case many => fail(msg"Ambiguous instances for contextual parameter '${parameter.sym.nme}'.",
-            many.map((_, binding, _) => msg"This lexical instance matches." -> binding.symbol.toLoc))
-    def check()(using ResolutionContext): Unit = query.foreach: query =>
+          case Nil => fail(msg"No instance found for the ${contextualParameterName(parameter)} of type ${contextualTypeName(tpe)}.", Nil)
+          case many => fail(msg"Ambiguous instances for the ${contextualParameterName(parameter)} of type ${contextualTypeName(tpe)}.",
+            many.map((_, binding, candidate) => msg"This lexical instance of type ${contextualTypeName(candidate)} matches." -> binding.symbol.toLoc))
+    def check(witness: Opt[TermShape])(using ResolutionContext): Unit = query.foreach: query =>
       argument.candidate.foreach: candidate =>
         def observe(host: TermShapeHost): Unit =
-          if rctx.state.contextualChecks.add((argument, host)) then host.listen(_ => check())
-        if !contextualMatches(candidate.annotation, query, observe) && rctx.state.contextualFailures.add((argument, tpe)) then
+          if rctx.state.contextualChecks.add((argument, host)) then host.listen(value => check(S(value)))
+        if !rctx.hasError(argument) && !contextualMatches(candidate.annotation, query, observe) &&
+            rctx.state.contextualFailures.add((argument, tpe)) then
           rctx.markError(argument)
           resolError(argument,
-            msg"This value reaches the type of contextual parameter '${parameter.sym.nme}' after its instance was selected; the selected instance does not accept it." -> argument.toLoc ::
+            msg"This value reaches the type of the ${contextualParameterName(parameter)} after its instance was selected; the selected instance of type ${contextualTypeName(candidate.annotation)} does not accept it." -> argument.toLoc ::
             (msg"The contextual parameter is declared here." -> parameter.toLoc) ::
-            (msg"The selected instance is declared here." -> candidate.symbol.toLoc) :: Nil)
-    check()
+            (msg"The selected instance is declared here." -> candidate.symbol.toLoc) ::
+            witness.toList.flatMap(_.diagnostic(msg"This value is incompatible with the selected instance.")))
+    check(N)
     argument.selected.foreach: selected =>
-      listenValue(selected, receiver = false)(value => publishActivated(argument, value))
+      listenValue(selected, receiver = false)(value => publishCompleted(argument, value))
 
   private[semantics] def constrainParameter(p: Param, shape: TermShape | NoShape, marks: Ls[Marks])(using ResolutionContext): Unit =
     constrainParameterIn(p, shape, marks, rctx.instances, N)
@@ -2994,6 +3048,7 @@ class NewResolver:
       instances: TypeSubstitution, site: Opt[Term])(using ResolutionContext): Unit = shape match
     case NoShape => ()
     case sh: TermShape =>
+      assertCompletedValue(sh)
       parameterSignature(p, positive = false) match
         case S(tpe) => inferTypeArguments(tpe.instantiate(instances), sh, marks, site)
         case N => publishParameter(p.sym, sh)(using rctx.withInstances(instances))
@@ -3716,7 +3771,9 @@ class NewResolver:
         if checked then zipArgumentShapes(context :: Nil, Arity(ps), args, res, lhs)((index, value) =>
           ps.allParams(index).tpe.foreach: tpe =>
             value match
-              case value: TermShape => inferTypeArguments(tpe, value, context :: Nil, S(res))
+              case value: TermShape =>
+                assertCompletedValue(value)
+                inferTypeArguments(tpe, value, context :: Nil, S(res))
               case NoShape => ())
         if checked && callable.sourceParamLists.nonEmpty then
           val parameters = callable.sourceParamLists.head.allParams
@@ -4548,9 +4605,9 @@ class NewResolver:
           case value: TermShape => assign(base, value)
           case NoShape => ()
       case MemberRef(sym: TermSymbol) if sym.isLetOrParamBinding =>
-        publishActivated(rctx.memberVariable(sym), shape)
-      case SimpleRef(sym: LocalSymbol) => publishActivated(sym, shape)
-      case Ref(sym: LocalSymbol) => publishActivated(sym, shape)
+        publishCompleted(rctx.memberVariable(sym), shape)
+      case SimpleRef(sym: LocalSymbol) => publishCompleted(sym, shape)
+      case Ref(sym: LocalSymbol) => publishCompleted(sym, shape)
       case _ => ()
     listenTerm(rhs)(assign(lhs, _))
 
@@ -4558,10 +4615,10 @@ class NewResolver:
     if newResolution then sym match
       case sym: TermSymbol =>
         listenTerm(rhs): sh =>
-          publishActivated(rctx.memberVariable(sym), sh)
+          publishCompleted(rctx.memberVariable(sym), sh)
       case sym: LocalSymbol =>
-        listen(rhs, discardMarks = false): sh =>
-          publishActivated(sym, sh)
+        listenTerm(rhs): sh =>
+          publishCompleted(sym, sh)
     DefineVar(sym, rhs)(loc)
   
   /** Close recursive getter dependencies before following the body. A cycle with
@@ -4582,13 +4639,13 @@ class NewResolver:
         rctx.state.byNameResults(key) = host
         listenValueHost(host)(listener)
         td.asyncAnnotation match
-          case S(_) => listenDefinitionResult(td, rctx.instances)(publishActivated(host, _))
-          case N => listenResult(body)(publishActivated(host, _))
+          case S(_) => listenDefinitionResult(td, rctx.instances)(publishCompleted(host, _))
+          case N => listenResult(body)(publishCompleted(host, _))
 
   def pipeTerm(from: Term, to: ShapeHost)(using ResolutionContext): Unit =
     log(dbg"pipeTerm: from = ${from.showDbg}, to = ${to.showDbg}; ${to.currentShapes}")
     listenTerm(from): sh =>
-      publishActivated(to, sh)
+      publishCompleted(to, sh)
   
   /** The synthetic handler is an instance with real method definitions. Publish
     * it after building those definitions, so forward selections made while
@@ -4904,10 +4961,11 @@ class NewResolver:
       def fail()(using ResolutionContext): Unit = if !failed then
         failed = true
         resolError(trm, msg"An annotation's main symbol must be uniquely known when the annotation is elaborated." -> N :: Nil)
-      // This listener validates an elaboration decision; it transports no values.
+      // This listener validates a declaration's identity; it consumes no value and
+      // must not materialize the selected definition or complete a contextual site.
       // Keep checking late candidates in the defining block, but never mutate its
       // local bookkeeping when a completed block's listeners run in a consumer.
-      listen(trm, discardMarks = false): shape =>
+      listenRaw(trm, discardMarks = false): shape =>
         if rctx.canResolve(trm) then shape match
           case sh: SymShape =>
             if symbols.add(sh.sym) && !collecting then fail()
@@ -4933,7 +4991,7 @@ class NewResolver:
       if required then annotationSymbol(t)
       else
         val members = mutable.LinkedHashSet.empty[BlockMemberSymbol]
-        listen(t, discardMarks = false):
+        listenRaw(t.withoutCaptures, discardMarks = true):
           case sh: SymShape => members += sh.sym
           case _ => ()
         members.toList match
@@ -5104,10 +5162,11 @@ class NewResolver:
     listenValue(trm, true)(listenInstanceViewsOrProbe(_)(listener, probe))
 
   private def listenValue(trm: Term, receiver: Bool)(listener: Listener)(using ResolutionContext): Unit =
-    if trm.contextualSite == null then listenValueRaw(trm, receiver)(listener)
-    else listen(trm, discardMarks = false):
-      case value: TermShape => listener(value)
-      case _: SymShape => softAssert(false, "A contextual site must materialize its own values")
+    trm match
+      case site: ContextualSite if site.contextualSite != null => listen(trm, discardMarks = false):
+        case value: TermShape => listener(value)
+        case _: SymShape => softAssert(false, "A contextual site must materialize its own values")
+      case _ => listenValueRaw(trm, receiver)(listener)
 
   private def listenValueRaw(trm: Term, receiver: Bool)(listener: Listener)(using ResolutionContext): Unit = trm match
     case Capture(base, thru) =>
@@ -5122,29 +5181,37 @@ class NewResolver:
     * Application heads and receivers therefore keep their own completion roles through blocks,
     * captures, labels, annotations, and deferred definition delivery.
     */
-  private def listenContextual(term: Term, role: ContextualRole, pending: Opt[ResolutionSite.Contextual])
+  private def listenContextual(term: ContextualSite, role: ContextualRole, pending: Opt[ResolutionSite.Contextual])
       (receive: ShapeListener[Shape])(using ResolutionContext): Unit =
     var subscribed = false
     listenValueRaw(term, role == ContextualRole.Receiver): raw =>
-      listenInstanceViewsOrProbe(raw)(value =>
-        val contextual = contextualLists(value).exists(_._1)
-        if !contextual then receive(value)
-        else
-          if term.contextualCompletion.isEmpty && rctx.canResolve(term) then pending match
-            case S(site) =>
-              val work = rctx.state.contextualWork.getOrElseUpdate(new Identity(term), new ContextualWork(site))
-              term.contextualCompletion = S(ContextualCompletion(Nil, work.output))
-            case N => softAssert(false, "An unfinished contextual site must retain its lexical environment")
-          term.contextualCompletion.foreach: completion =>
-            if !subscribed then
-              subscribed = true
-              listenValueHost(completion.output)(receive(_))
-            if !rctx.canResolve(term) then driveContextual(term, value, 0)
-            else rctx.state.contextualWork.get(new Identity(term)).foreach: work =>
-              if work.inputs.add((ShapeIdentity.key(value), rctx.instances)) then
-                if work.site.settled then driveContextual(term, value, 0)
-                else work.pending += ((value, rctx))
-      , receive(_))
+      raw match
+        // Declared value types cannot express contextual functions, and inferred type
+        // arguments contain completed values. Their deferred references need no observation
+        // here. Selected methods retain their clauses on CallableTypeShape itself.
+        case Marked(_: InstanceShape, _) => receive(raw)
+        case _ =>
+          listenInstanceViewsOrProbe(raw)(value =>
+            val contextual = contextualLists(value).exists(_._1)
+            // Views classify the callee; transporting them would discard the received value's
+            // deferred type references before a caller can substitute its generic arguments.
+            if !contextual then receive(raw)
+            else
+              if term.contextualCompletion.isEmpty && rctx.canResolve(term) then pending match
+                case S(site) =>
+                  val work = rctx.state.contextualWork.getOrElseUpdate(new Identity(term), new ContextualWork(site))
+                  term.contextualCompletion = S(ContextualCompletion(Nil, work.output))
+                case N => softAssert(false, "An unfinished contextual site must retain its lexical environment")
+              term.contextualCompletion.foreach: completion =>
+                if !subscribed then
+                  subscribed = true
+                  listenValueHost(completion.output)(receive(_))
+                if !rctx.canResolve(term) then driveContextual(term, value, 0)
+                else rctx.state.contextualWork.get(new Identity(term)).foreach: work =>
+                  if work.inputs.add((ShapeIdentity.key(value), rctx.instances)) then
+                    if work.site.settled then driveContextual(term, value, 0)
+                    else work.pending += ((value, rctx))
+          , receive(_))
 
   /** Declared interfaces retain their written clause metadata independently of their types. */
   private def contextualLists(shape: TermShape): Ls[(Bool, Int)] =
@@ -5155,10 +5222,24 @@ class NewResolver:
       case Marked(callable: CallableTypeShape, _) => callable.paramLists.map(ps => (false, ps.allParams.length))
       case _ => value.unappliedParams.map((ps, _) => (ps.flags.ctx, ps.allParams.length))
 
+  /** Stored values have already passed their producing value site's completion. Inspect only
+    * remaining clauses; the invariant does not require expanding declared value types.
+    */
+  private def assertCompletedValue(shape: TermShape): Unit =
+    val ShapeParts(value, _, _) = shapeParts(shape)
+    val leading = value match
+      case Marked(callable: CallableTypeShape, _) => callable.sourceParamLists.headOption.exists(_.flags.ctx)
+      case _ => value.unappliedParams.headOption.exists(_._1.flags.ctx)
+    softAssert(!leading, "A stored value cannot have an uncompleted contextual parameter list")
+
+  private def publishCompleted(host: ShapeHost, value: TermShape)(using ResolutionContext): Unit =
+    assertCompletedValue(value)
+    publishActivated(host, value)
+
   /** Each stage subscribes once in its resolution context. Callbacks retain only completed
     * syntax and publisher identities: imported activations cannot mutate a source work record.
     */
-  private def driveContextual(term: Term, value: TermShape, index: Int)(using ResolutionContext): Unit =
+  private def driveContextual(term: ContextualSite, value: TermShape, index: Int)(using ResolutionContext): Unit =
     contextualLists(value) match
       case (true, count) :: _ =>
         val completion = term.contextualCompletion.getOrElse(lastWords("A contextual site must have an output host"))
@@ -5195,7 +5276,7 @@ class NewResolver:
       case _ => term.contextualCompletion.foreach: completion =>
         if index < completion.steps.length then
           resolError(term, msg"This reference resolves to members with different contextual parameter lists." -> term.toLoc :: Nil)
-        else publishActivated(completion.output, value)
+        else publishCompleted(completion.output, value)
 
   /** Every symbolic target path uses this gate, including explicit using calls and dynamic
     * alternatives. Comparing declarations here does not depend on whether a site supplies an argument.
@@ -5274,11 +5355,13 @@ class NewResolver:
     listenValueHost(rctx.memberVariable(sym))(receive)
 
   private def listen(trm: Term, discardMarks: Bool)(receive: ShapeListener[Shape])(using ResolutionContext): Unit =
-    trm.contextualSite match
-      case null => listenRaw(trm, discardMarks)(receive)
-      case site: ResolutionSite.Contextual =>
-        listenContextual(trm, site.role, S(site))(receive)
-      case role: ContextualRole => listenContextual(trm, role, N)(receive)
+    trm match
+      case term: ContextualSite => term.contextualSite match
+        case null => listenRaw(trm, discardMarks)(receive)
+        case site: ResolutionSite.Contextual =>
+          listenContextual(term, site.role, S(site))(receive)
+        case role: ContextualRole => listenContextual(term, role, N)(receive)
+      case _ => listenRaw(trm, discardMarks)(receive)
 
   private def listenRaw(trm: Term, discardMarks: Bool)(receive: ShapeListener[Shape])(using ResolutionContext): Unit =
     val listener = activationListener(receive)

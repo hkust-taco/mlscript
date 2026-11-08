@@ -42,7 +42,9 @@ trait InstanceArgImpl extends PossiblyErroneous:
   private[semantics] var environment: Opt[Elaborator.Ctx] = N
   private[semantics] var candidate: Opt[ContextualCandidate] = N
 
-/** Completion attaches to the consuming expression, including a compound application head.
+type ContextualSite = Term & ContextualSiteImpl
+
+/** Completion attaches only to expressions that can introduce a contextual callee.
   * An empty field allocates no helper object. The elaborator's single worklist entry doubles
   * as its pending metadata; completion replaces it before the block is sealed.
   */
@@ -240,7 +242,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
   def subTerms: Vector[Term] =
     val written = writtenSubTerms
     this match
-      case term: Term => term.contextualCompletion.fold(written): completion =>
+      case term: ContextualSite => term.contextualCompletion.fold(written): completion =>
         written ++ completion.steps.iterator.flatMap:
           case ContextualStep.Supply(application) => Iterator.single(application)
           case ContextualStep.Abstract(params, application) => params.subTerms.iterator ++ Iterator.single(application)

@@ -1599,11 +1599,11 @@ extends Importer:
     if newResolution then
       def eligible(term: Term, head: Bool): Bool = term match
         case Term.Capture(base, _) => eligible(base, head)
-        case _: (Term.SimpleRef | Term.MemberRef | Term.NewSel | Term.UnresolvedRef | Term.Super) => true
+        case _: (Term.MemberRef | Term.NewSel | Term.UnresolvedRef | Term.Super) => true
         case Term.App(lhs = lhs) => eligible(lhs, true)
         case Term.TyApp(lhs = lhs) => eligible(lhs, true)
         case Term.New(cls = cls) => eligible(cls, true)
-        case _: Term.Lam => head
+        case Term.Lam(params, _) => head || params.flags.ctx
         case _ => false
       interp match
         case Trm if eligible(result, false) =>
@@ -1915,6 +1915,10 @@ extends Importer:
       case Tup(_) =>
         ctx.nest(OuterCtx.LambdaOrHandlerBlock).givenIn:
           val (syms, nestCtx) = funParams(lhs)
+          if newResolution && syms.flags.ctx then raise:
+            WarningReport(
+              msg"This lambda's contextual parameters are supplied where it is written, so it never produces a contextual function." -> lhs.toLoc ::
+              msg"Use a 'fun' definition to define a contextual function." -> N :: Nil)
           seedRestParameter(syms)
           withTypeBinders(Term.Lam(syms, term(rhs, Trm)(using nestCtx)))
       case TyTup(tys) =>

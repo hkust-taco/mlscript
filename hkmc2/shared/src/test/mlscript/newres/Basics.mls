@@ -34,6 +34,12 @@ Predef.id
 //│ | | | fromBMS: bms = member:Predef⁰, sh = module:Predef¹, flow = Predef², markss = List()
 //│ | | | PUSH module:Predef¹
 //│ | | ~> member:Predef⁰
+//│ | | listenTerm: trm = member:Predef⁰
+//│ | | listen: trm = member:Predef⁰
+//│ | | listenBMS: bms = module
+//│ | | listenedBMS: bms = module
+//│ | | fromBMS: bms = member:Predef⁰, sh = module:Predef¹, flow = Predef², markss = List()
+//│ | | PUSH module:Predef¹
 //│ | | newSel? sel = member:Predef⁰.id
 //│ | | listen: trm = member:Predef⁰
 //│ | | listenBMS: bms = module
@@ -51,6 +57,14 @@ Predef.id
 //│ | | = MarkedShape(member:id¹, ↗⟨term:Predef¹/id⁰⟩%⟨⋅id⁰⟩ϵ)
 //│ | | PUSH MarkedShape(member:id¹, ↗⟨term:Predef¹/id⁰⟩%⟨⋅id⁰⟩ϵ)
 //│ | ~> member:Predef⁰.id‹term:Predef¹/id⁰›
+//│ | listenTerm: trm = member:Predef⁰.id‹term:Predef¹/id⁰›
+//│ | listen: trm = member:Predef⁰.id‹term:Predef¹/id⁰›
+//│ | listenBMS: bms = function
+//│ | listenedBMS: bms = function
+//│ | fromBMS: bms = member:id¹, sh = member:id¹, flow = ⋅id⁰, markss = List()
+//│ | .exit MarkedShape (member:id¹, term:Predef¹/id⁰, ⋅id⁰)
+//│ | = MarkedShape(member:id¹, ↗⟨term:Predef¹/id⁰⟩%⟨⋅id⁰⟩ϵ)
+//│ | PUSH MarkedShape(member:id¹, ↗⟨term:Predef¹/id⁰⟩%⟨⋅id⁰⟩ϵ)
 //│ ~> { member:Predef⁰.id‹term:Predef¹/id⁰› }
 //│ listenTerm: trm = member:Predef⁰.id‹term:Predef¹/id⁰›
 //│ listen: trm = member:Predef⁰.id‹term:Predef¹/id⁰›

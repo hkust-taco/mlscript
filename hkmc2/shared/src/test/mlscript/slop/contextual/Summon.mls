@@ -17,13 +17,12 @@ use[Str]
 use[Num]
 //│ = 42
 
-:breakme // contextual diagnostic not implemented yet
 :e
 use[Bool]
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	use[Bool]
 //│ ║        	^^^^^^^^^
-//│ ╟── No instance found for contextual parameter 'instance'.
+//│ ╟── No instance found for the contextual parameter 'instance' of type Bool.
 //│ ║  l.+1: 	use[Bool]
 //│ ║        	^^^^^^^^^
 //│ ╟── The contextual parameter is declared here.
@@ -38,7 +37,6 @@ x
 //│ = 42
 //│ x = 42
 
-:breakme // contextual diagnostic not implemented yet
 // §3.2: instance declarations require a named type.
 :e
 using Int -> Int = id
@@ -79,16 +77,11 @@ fun f(using Int) = use[Num]
 
 data class Some[T](value: T)
 
-:fixme // contextual completion (Phases 2–4)
 :expect 42
 fun f[T](using Some[T]) = use[Some[T]].value
 using Some[Int] = Some(42)
 f
-//│ ╔══[COMPILATION ERROR] This selection of member 'value' has no resolved target
-//│ ║  l.+1: 	fun f[T](using Some[T]) = use[Some[T]].value
-//│ ╙──      	                          ^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'
+//│ = 42
 
 :e
 :re
@@ -104,7 +97,7 @@ use([Some[Int]].value)
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	use([Some[Int]].value)
 //│ ║        	^^^
-//│ ╟── Cannot determine the type of contextual parameter 'instance': type parameter 'T' has no explicit type argument and no value reaches it.
+//│ ╟── Cannot determine the type of the contextual parameter 'instance': type parameter 'T' has no explicit type argument and no value reaches it.
 //│ ║  l.+1: 	use([Some[Int]].value)
 //│ ║        	^^^
 //│ ╟── The contextual parameter is declared here.
@@ -125,14 +118,13 @@ using Int = 42
 f[Int]
 //│ = 42
 
-:breakme // contextual diagnostic not implemented yet
 :e
 :re
 f
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	f
 //│ ║        	^
-//│ ╟── Cannot determine the type of contextual parameter '': type parameter 'T' has no explicit type argument and no value reaches it.
+//│ ╟── Cannot determine the type of the unnamed contextual parameter: type parameter 'T' has no explicit type argument and no value reaches it.
 //│ ║  l.+1: 	f
 //│ ║        	^
 //│ ╟── The contextual parameter is declared here.

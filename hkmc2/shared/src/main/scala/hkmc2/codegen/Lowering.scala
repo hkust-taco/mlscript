@@ -1059,12 +1059,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case (sym, disamb) =>
         lastWords(s"Unexpected symbol kind ${sym.getClass.getSimpleName}: $sym")
   
-  private def suppliedArguments(term: Term): Ls[Term] = term.contextualCompletion.fold(Nil): completion =>
-    completion.steps.map:
-      case sem.ContextualStep.Supply(application) => application.rhs
-      case sem.ContextualStep.Abstract(_, _) =>
-        softTODO("Contextual eta-expansion lowering is implemented in Phase 4")
-        st.Error().withLocOf(term)
+  private def suppliedArguments(term: Term): Ls[Term] = term match
+    case site: sem.ContextualSite => site.contextualCompletion.fold(Nil): completion =>
+      completion.steps.map:
+        case sem.ContextualStep.Supply(application) => application.rhs
+        case sem.ContextualStep.Abstract(_, _) =>
+          softTODO("Contextual eta-expansion lowering is implemented in Phase 4")
+          st.Error().withLocOf(term)
+    case _ => Nil
 
   final def term(t: st, inStmtPos: Bool = false)(k0: Result => Block)(using LoweringCtx): Block =
     termWithCompletion(t, inStmtPos, true)(k0)
@@ -1147,7 +1149,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         case st.App(inner, innerArg) => collectAppChain(inner, innerArg :: remaining, true)
         case st.TyApp(inner, _) => collectAppChain(inner, remaining, true) // type args are erased
         case expr => (expr, remaining)
-      val (baseF, allArgs) = collectAppChain(call, Nil, complete)
+      // termWithCompletion already expanded the outer application. Start with its
+      // head so legacy expansion and definition-local traces still run exactly once.
+      val (baseF, allArgs) = call match
+        case st.App(inner, argument) =>
+          collectAppChain(inner, argument :: (if complete then suppliedArguments(call) else Nil), true)
+        case _ => collectAppChain(call, Nil, complete)
       
       val isMlsFun = baseF.resolvedSym.fold(baseF.isInstanceOf[st.Lam]):
         case _: sem.BuiltinSymbol => true
@@ -1244,8 +1251,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         subTerm(prefix): p =>
           conclude(Select(p, definitionIdent(nme, sym))(S(sym), trm.toLoc)(false).withLocOf(sel))
       case _ => termWithCompletion(baseF, false, false)(r => subResult(r)(conclude))
-    if complete && trm.contextualCompletion.exists(_.steps.nonEmpty) && !trm.isInstanceOf[st.New] then
-      return appliedCall(trm)
+    trm match
+      case site: sem.ContextualSite if complete && site.contextualCompletion.exists(_.steps.nonEmpty) && !site.isInstanceOf[st.New] =>
+        return appliedCall(site)
+      case _ => ()
     
     trm match
     case argument: st.InstanceArg => argument.selected match

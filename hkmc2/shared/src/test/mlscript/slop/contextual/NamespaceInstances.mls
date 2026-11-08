@@ -23,7 +23,7 @@ render(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	render(1)
 //│ ║        	^^^^^^^^^
-//│ ╟── No instance found for contextual parameter 'show'.
+//│ ╟── No instance found for the contextual parameter 'show' of type Show[A].
 //│ ║  l.+1: 	render(1)
 //│ ║        	^^^^^^^^^
 //│ ╟── The contextual parameter is declared here.
@@ -69,7 +69,7 @@ codec(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	codec(1)
 //│ ║        	^^^^^^^^
-//│ ╟── No instance found for contextual parameter 'c'.
+//│ ╟── No instance found for the contextual parameter 'c' of type Codec[A].
 //│ ║  l.+1: 	codec(1)
 //│ ║        	^^^^^^^^
 //│ ╟── The contextual parameter is declared here.
@@ -90,7 +90,7 @@ choose(new Family.B)
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	choose(new Family.B)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── No instance found for contextual parameter 'chosen'.
+//│ ╟── No instance found for the contextual parameter 'chosen' of type T.
 //│ ║  l.+1: 	choose(new Family.B)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The contextual parameter is declared here.
@@ -115,7 +115,7 @@ tag(new Point)
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	tag(new Point)
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── No instance found for contextual parameter 't'.
+//│ ╟── No instance found for the contextual parameter 't' of type Tag[A].
 //│ ║  l.+1: 	tag(new Point)
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── The contextual parameter is declared here.
@@ -144,7 +144,7 @@ both(new Thing)
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	both(new Thing)
 //│ ║        	^^^^^^^^^^^^^^^
-//│ ╟── No instance found for contextual parameter 'b'.
+//│ ╟── No instance found for the contextual parameter 'b' of type Both[A].
 //│ ║  l.+1: 	both(new Thing)
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── The contextual parameter is declared here.
@@ -163,7 +163,7 @@ use[Secret]
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	use[Secret]
 //│ ║        	^^^^^^^^^^^
-//│ ╟── No instance found for contextual parameter 'instance'.
+//│ ╟── No instance found for the contextual parameter 'instance' of type Secret.
 //│ ║  l.+1: 	use[Secret]
 //│ ║        	^^^^^^^^^^^
 //│ ╟── The contextual parameter is declared here.

@@ -15,7 +15,7 @@ sealed trait ResolutionSite
 
 object ResolutionSite:
   final case class Access(term: NewResolvable | New, scope: SrcScope) extends ResolutionSite
-  final case class Contextual(term: Term, role: ContextualRole, context: Elaborator.Ctx) extends ResolutionSite:
+  final case class Contextual(term: ContextualSite, role: ContextualRole, context: Elaborator.Ctx) extends ResolutionSite:
     var settled: Bool = false
 
 object NewResolverState:
@@ -60,6 +60,11 @@ object NewResolverState:
       assert(this eq select(context.state), "A resolver table must belong to the current consumer")
       assert(value != null, "Resolver cache values must be non-null")
       entries.getOrElseUpdate(context, mutable.Map.empty)(key) = value
+
+    /** Snapshot before publishing can re-enter inference and add another cached instantiation. */
+    def values(using context: ResolutionContext): Ls[V] =
+      entries.get(context).toList.flatMap(_.valuesIterator) ::: context.inherited.toList.flatMap: parent =>
+        select(parent.state).values(using parent)
 
   final class Seen[A](select: NewResolverState => Seen[A]):
     private val entries = mutable.Map.empty[ResolutionContext, mutable.Set[A]]
@@ -269,6 +274,10 @@ final class NewResolverState(val owner: Elaborator.State):
   // of an anonymous quantified annotation. Neither a view nor an instance is an owner.
   private[semantics] val typeInstances: Cache[(AnyDefinitionSymbol | TypeResolution, FlowSymbol), TypeSubstitution] =
     new Cache(_.typeInstances, identity)
+  // Only contextual queries allocate these observers. Ordinary type interpretation
+  // never unions a generic binder's separate call-site instances.
+  private[semantics] val contextualParameterInstances: Cache[VarSymbol, ContextualInstancesHost] =
+    new Cache(_.contextualParameterInstances, identity)
   private[semantics] var allocatedTypeInstances: Int = 0
   private[semantics] val typeApplicationSites: Cache[TyApp, FlowSymbol] =
     new Cache(_.typeApplicationSites, identity)
@@ -277,6 +286,8 @@ final class NewResolverState(val owner: Elaborator.State):
   // The flag selects merged member interfaces versus independent constraint inputs.
   val typeViews: Cache[(DeclaredType, Bool), TermShapeHost] =
     new Cache(_.typeViews, identity)
+  private[semantics] val contextualTypeViews: Cache[(DeclaredType, Bool), TermShapeHost] =
+    new Cache(_.contextualTypeViews, identity)
   val patternTypes: Cache[(Pattern.Constructor, InnerSymbol), DeclaredType] =
     new Cache(_.patternTypes, identity)
   // A pattern's unknown output has one source identity across repeated inputs.
@@ -495,7 +506,11 @@ final class ResolutionContext private[semantics] (
       statement match
         // Bind even unused syntax to this unit. Otherwise its first consumer
         // could become the owner of an imported node's original listener buffer.
-        case term: Term => data(term)
+        case term: Term =>
+          data(term)
+          term match
+            case site: ContextualSite => site.contextualCompletion.foreach(completion => data(completion.output))
+            case _ => ()
         case _ => ()
       statement match
         case application: App => data(application.callableTargets)
@@ -559,7 +574,13 @@ final class ResolutionContext private[semantics] (
   /** Append post-order, sharing the lexical environment. Transparent parentheses can return
     * the same term through several elaborator frames; they must contribute only one site.
     */
-  def recordContextualSite(term: Term, role: ContextualRole, context: Elaborator.Ctx)(using raise: Raise, resolver: NewResolver): Unit =
+  def recordContextualSite(value: Term, role: ContextualRole, context: Elaborator.Ctx)(using raise: Raise, resolver: NewResolver): Unit = value match
+    // Variables and compound heads only carry values completed at their producing sites.
+    case term: ContextualSite => recordCompletableSite(term, role, context)
+    case _ => ()
+
+  private def recordCompletableSite(term: ContextualSite, role: ContextualRole, context: Elaborator.Ctx)
+      (using raise: Raise, resolver: NewResolver): Unit =
     val repeated = state.resolutionSites.lastOption.exists:
       case ResolutionSite.Contextual(previous, previousRole, _) => (previous eq term) && previousRole == role
       case _ => false
@@ -849,7 +870,23 @@ final class ResolutionContext private[semantics] (
       TypeSubstitution(result)
     })(using state.context)
     assert(instances.keySet == parameters.toSet, "A source scheme's binders must remain stable")
+    instances.iterator.foreach: (parameter, instance) =>
+      state.contextualParameterInstances.get(parameter)(using state.context).foreach(_.publish(instance))
     instances
+
+  /** A query written under an abstract binder observes all of that binder's calls,
+    * including calls made after the query's block was sealed. Reuse the canonical
+    * instantiation cache to seed demand-created observers; publisher copies isolate imports.
+    */
+  private[semantics] def contextualInstancesOf(parameter: VarSymbol): ContextualInstancesHost =
+    state.contextualParameterInstances.get(parameter)(using state.context) match
+      case S(host) => host
+      case N =>
+        val host = contextualParameterInstances.get(parameter).getOrElse(new ContextualInstancesHost)
+        state.contextualParameterInstances.update(parameter, host)(using state.context)
+        (state.typeInstances.values(using state.context) ::: typeInstances.values).foreach: instances =>
+          instances.get(parameter).foreach(host.publish)
+        host
   def patternOutput(pattern: Pattern)(make: => UnknownValueShape): UnknownValueShape =
     canonical(pattern, _.patternOutputs, pattern)(make)
   /** Record where the record pattern `pattern` reads its fields, written where `binders` are in scope. */
@@ -946,6 +983,11 @@ private[semantics] enum NamespaceWitness:
   def toLoc: Opt[Loc] = this match
     case Written(tpe) => tpe.toLoc
     case Instance(cls, site) => site.orElse(cls.headerLoc)
+
+private[semantics] final class ContextualInstancesHost extends Host[TypeParameterInstance]:
+  def showDbg(using DebugPrinter): Str = "contextual parameter instantiations"
+  def publish(instance: TypeParameterInstance)(using ResolutionContext): Unit =
+    if currentShapes.add(instance) then notifyShapeListeners(instance)
 
 private[semantics] final class TermShapeHost extends Host[TermShape]:
   def showDbg(using DebugPrinter): Str = "instance views"

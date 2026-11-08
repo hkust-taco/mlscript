@@ -2,13 +2,8 @@
 
 data class Box[T](value: T)
 
-:fixme // Phase 2: preserve generic result templates across contextual interception.
 :expect 42
 fun inside[T](using b: Box[T]) = use[Box[T]].value
 using Box[Int] = Box(42)
 inside
-//│ ╔══[COMPILATION ERROR] This selection of member 'value' has no resolved target
-//│ ║  l.+1: 	fun inside[T](using b: Box[T]) = use[Box[T]].value
-//│ ╙──      	                                 ^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'
+//│ = 42

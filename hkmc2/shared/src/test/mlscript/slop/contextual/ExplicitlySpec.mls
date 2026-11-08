@@ -27,14 +27,13 @@ f(using 42, 3.14)
 
 fun f(using i: Int)(using j: Int)(using k: Int): Int = i + j + k
 
-:breakme // contextual diagnostic not implemented yet
 :e
 :re
 f(using 32)
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	f(using 32)
 //│ ║        	^^^^^^^^^^^
-//│ ╟── No instance found for contextual parameter 'j'.
+//│ ╟── No instance found for the contextual parameter 'j' of type Int.
 //│ ║  l.+1: 	f(using 32)
 //│ ║        	^^^^^^^^^^^
 //│ ╟── The contextual parameter is declared here.
@@ -43,7 +42,7 @@ f(using 32)
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	f(using 32)
 //│ ║        	^^^^^^^^^^^
-//│ ╟── No instance found for contextual parameter 'k'.
+//│ ╟── No instance found for the contextual parameter 'k' of type Int.
 //│ ║  l.+1: 	f(using 32)
 //│ ║        	^^^^^^^^^^^
 //│ ╟── The contextual parameter is declared here.
@@ -51,14 +50,13 @@ f(using 32)
 //│ ╙──      	                                  ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-:breakme // contextual diagnostic not implemented yet
 :e
 :re
 f(using 32)(using 8)
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	f(using 32)(using 8)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── No instance found for contextual parameter 'k'.
+//│ ╟── No instance found for the contextual parameter 'k' of type Int.
 //│ ║  l.+1: 	f(using 32)(using 8)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The contextual parameter is declared here.
@@ -73,20 +71,19 @@ f(using 32)(using 8)(using 2)
 
 fun f(using i: Int)(j: Int)(using k: Int)(l: Num): Int = i + j + k + l
 
-:breakme // contextual diagnostic not implemented yet
+:breakme // Phase 4: eta-expansion must resolve the later contextual clause at this site.
 :e
 :expect fun
 f(using 32)
 //│ = fun
 
-:breakme // contextual diagnostic not implemented yet
 :e
 :re
 f(using 32)(8)
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	f(using 32)(8)
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── No instance found for contextual parameter 'k'.
+//│ ╟── No instance found for the contextual parameter 'k' of type Int.
 //│ ║  l.+1: 	f(using 32)(8)
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── The contextual parameter is declared here.

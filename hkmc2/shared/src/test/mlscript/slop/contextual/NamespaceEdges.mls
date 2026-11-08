@@ -12,7 +12,7 @@ enclosing
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+2: 	enclosing
 //│ ║        	^^^^^^^^^
-//│ ╟── No instance found for contextual parameter ''.
+//│ ╟── No instance found for the unnamed contextual parameter of type Evidence.
 //│ ║  l.+2: 	enclosing
 //│ ║        	^^^^^^^^^
 //│ ╟── The contextual parameter is declared here.
@@ -37,7 +37,7 @@ aliased
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+2: 	aliased
 //│ ║        	^^^^^^^
-//│ ╟── No instance found for contextual parameter 'b'.
+//│ ╟── No instance found for the contextual parameter 'b' of type Base[Int].
 //│ ║  l.+2: 	aliased
 //│ ║        	^^^^^^^
 //│ ╟── The contextual parameter is declared here.
@@ -54,7 +54,7 @@ incompatible
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+2: 	incompatible
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── No instance found for contextual parameter ''.
+//│ ╟── No instance found for the unnamed contextual parameter of type Base[Str].
 //│ ║  l.+2: 	incompatible
 //│ ║        	^^^^^^^^^^^^
 //│ ╟── The contextual parameter is declared here.
@@ -79,7 +79,7 @@ nested
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+2: 	nested
 //│ ║        	^^^^^^
-//│ ╟── No instance found for contextual parameter 'n'.
+//│ ╟── No instance found for the contextual parameter 'n' of type Nested[Wrapped[Data]].
 //│ ║  l.+2: 	nested
 //│ ║        	^^^^^^
 //│ ╟── The contextual parameter is declared here.
@@ -98,7 +98,7 @@ imported
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+2: 	imported
 //│ ║        	^^^^^^^^
-//│ ╟── No instance found for contextual parameter ''.
+//│ ╟── No instance found for the unnamed contextual parameter of type Evidence.
 //│ ║  l.+2: 	imported
 //│ ║        	^^^^^^^^
 //│ ╟── The contextual parameter is declared here.
@@ -123,16 +123,22 @@ later(new Parent)
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	fun later[T](value: T) = use[T].label
 //│ ║        	                         ^^^^^^
-//│ ╟── No instance found for contextual parameter 'instance'.
+//│ ╟── No instance found for the contextual parameter 'instance' of type T.
 //│ ║  l.+1: 	fun later[T](value: T) = use[T].label
 //│ ║        	                         ^^^^^^
 //│ ╟── The contextual parameter is declared here.
 //│ ║  in ../../../mlscript-compile/Predef.mls
 //│ ║  l.XX: 	fun use[T](using instance: T) = instance
 //│ ╙──      	           ^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] This selection of member 'label' has no resolved target
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+1: 	fun later[T](value: T) = use[T].label
-//│ ╙──      	                         ^^^^^^^^^^^^
+//│ ║        	                         ^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'label' of a value with unknown shape.
+//│ ║  l.+1: 	fun later[T](value: T) = use[T].label
+//│ ║        	                             ^
+//│ ╟── Type parameter 'T' does not specify a member interface.
+//│ ║  l.+1: 	fun later[T](value: T) = use[T].label
+//│ ╙──      	          ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '"parent"', got: 'undefined'
 
