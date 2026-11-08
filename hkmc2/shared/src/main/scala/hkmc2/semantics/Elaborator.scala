@@ -521,7 +521,10 @@ object Elaborator:
           val res = new Term.NewSel(prefix, name, N)(FlowSymbol.synthSel(nme)).withLoc(loc)
           rctx.recordLexicalBinders(res, ctx.typeBinders)
           rctx.recordAccessSite(res, ctx.scope)
-          summon[NewResolver].newSel(res, ctx.scope)
+          symOpt match
+            case S(member: BlockMemberSymbol) if !member.nameIsMeaningful =>
+              summon[NewResolver].selectedInstance(res, ctx.scope, member)
+            case _ => summon[NewResolver].newSel(res, ctx.scope)
           res
         else
           Term.SynthSel(prefix, name)(symOpt, FlowSymbol.synthSel(nme), N, S(summon)).withLoc(loc)
@@ -2846,6 +2849,7 @@ extends Importer:
             
             completeIfReady(sym)
             val nextCtx = if newResolution && (k is Ins) then
+              rctx.state.instanceDeclarations += tdf
               val elem = owner.fold[Ctx.Elem](Ctx.RefElem(sym)):
                 module => Ctx.SelElem(module, sym.nme, S(sym), isImport = false)
               ctx.withInstances(Ctx.InstanceBinding(sym, tdf.sign, elem) :: Nil)
@@ -2984,7 +2988,8 @@ extends Importer:
               s"mismatched param list lengths ${ps.params} vs ${cps}")
             ps.params.zip(cps).flatMap: (p, cp) =>
               val isPublicField = p.flags.isVal || isDataClass
-              if isPublicField
+              if newResolution && ps.flags.ctx && p.sym.nme.isEmpty then paramBinding(p)
+              else if isPublicField
                 || newResolution // TODO: rm `|| newResolution`
               then paramField(p, cp, isPublicField)
               else paramBinding(p)

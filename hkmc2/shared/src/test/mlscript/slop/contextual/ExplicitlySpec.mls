@@ -31,13 +31,40 @@ fun f(using i: Int)(using j: Int)(using k: Int): Int = i + j + k
 :e
 :re
 f(using 32)
-//│ = fun
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	f(using 32)
+//│ ║        	^^^^^^^^^^^
+//│ ╟── No instance found for contextual parameter 'j'.
+//│ ║  l.+1: 	f(using 32)
+//│ ║        	^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	fun f(using i: Int)(using j: Int)(using k: Int): Int = i + j + k
+//│ ╙──      	                    ^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	f(using 32)
+//│ ║        	^^^^^^^^^^^
+//│ ╟── No instance found for contextual parameter 'k'.
+//│ ║  l.+1: 	f(using 32)
+//│ ║        	^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	fun f(using i: Int)(using j: Int)(using k: Int): Int = i + j + k
+//│ ╙──      	                                  ^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :breakme // contextual diagnostic not implemented yet
 :e
 :re
 f(using 32)(using 8)
-//│ = fun
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	f(using 32)(using 8)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── No instance found for contextual parameter 'k'.
+//│ ║  l.+1: 	f(using 32)(using 8)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	fun f(using i: Int)(using j: Int)(using k: Int): Int = i + j + k
+//│ ╙──      	                                  ^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :expect 42
 f(using 32)(using 8)(using 2)
@@ -56,7 +83,16 @@ f(using 32)
 :e
 :re
 f(using 32)(8)
-//│ = fun
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	f(using 32)(8)
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── No instance found for contextual parameter 'k'.
+//│ ║  l.+1: 	f(using 32)(8)
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	fun f(using i: Int)(j: Int)(using k: Int)(l: Num): Int = i + j + k + l
+//│ ╙──      	                            ^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :expect fun
 f(using 32)(8)(using 2)

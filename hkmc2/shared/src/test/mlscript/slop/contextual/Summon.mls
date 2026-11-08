@@ -4,60 +4,74 @@
 using Int = 42
 using Str = "42"
 
-:fixme // contextual completion (Phases 2–4)
 :expect 42
 use[Int]
-//│ ═══[RUNTIME ERROR] Expected: '42', got: 'fun use'
-//│ = fun use
+//│ = 42
 
-:fixme // contextual completion (Phases 2–4)
 :expect "42"
 use[Str]
-//│ ═══[RUNTIME ERROR] Expected: '"42"', got: 'fun use'
-//│ = fun use
+//│ = "42"
 
-:fixme // contextual completion (Phases 2–4)
 // §3.4: Int is a subclass of Num.
 :expect 42
 use[Num]
-//│ ═══[RUNTIME ERROR] Expected: '42', got: 'fun use'
-//│ = fun use
+//│ = 42
 
 :breakme // contextual diagnostic not implemented yet
 :e
 use[Bool]
-//│ = fun use
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	use[Bool]
+//│ ║        	^^^^^^^^^
+//│ ╟── No instance found for contextual parameter 'instance'.
+//│ ║  l.+1: 	use[Bool]
+//│ ║        	^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  in ../../../mlscript-compile/Predef.mls
+//│ ║  l.XX: 	fun use[T](using instance: T) = instance
+//│ ╙──      	           ^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-:fixme // contextual completion (Phases 2–4)
 :expect 42
 let x = use[Int]
 x
-//│ ═══[RUNTIME ERROR] Expected: '42', got: 'fun use'
-//│ = fun use
-//│ x = fun use
+//│ = 42
+//│ x = 42
 
 :breakme // contextual diagnostic not implemented yet
 // §3.2: instance declarations require a named type.
 :e
 using Int -> Int = id
 use[Int -> Int](123)
-//│ = 123
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+2: 	use[Int -> Int](123)
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ╟── Contextual parameter types must be named types or type parameters.
+//│ ║  l.+2: 	use[Int -> Int](123)
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  in ../../../mlscript-compile/Predef.mls
+//│ ║  l.XX: 	fun use[T](using instance: T) = instance
+//│ ╙──      	           ^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in function type
+//│ ║  l.+1: 	using Int -> Int = id
+//│ ║        	      ^^^^^^^^^^
+//│ ╟── Instance declaration types must be named types.
+//│ ║  l.+1: 	using Int -> Int = id
+//│ ╙──      	      ^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-:fixme // contextual completion (Phases 2–4)
 :expect -42
 fun f(using Int) = use[Int]
 using Int = -42
 f
-//│ ═══[RUNTIME ERROR] Expected: '-42', got: 'fun f'
-//│ = fun f
+//│ = -42
 
-:fixme // contextual completion (Phases 2–4)
 :expect "42"
 fun f(using Int) = use[Str]
 using Str = "-42"
 f
-//│ ═══[RUNTIME ERROR] Expected: '"42"', got: 'fun f'
-//│ = fun f
+//│ = "42"
 
 // §3.4: a lexical Int also supplies Num.
 fun f(using Int) = use[Num]
@@ -70,15 +84,11 @@ data class Some[T](value: T)
 fun f[T](using Some[T]) = use[Some[T]].value
 using Some[Int] = Some(42)
 f
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ╔══[COMPILATION ERROR] This selection of member 'value' has no resolved target
 //│ ║  l.+1: 	fun f[T](using Some[T]) = use[Some[T]].value
-//│ ║        	                          ^^^^^^^^^^^^^^^^^^
-//│ ╟── Function 'use' does not contain member 'value'
-//│ ║  in ../../../mlscript-compile/Predef.mls
-//│ ║  l.XX: 	fun use[T](using instance: T) = instance
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Expected: '42', got: 'fun f'
-//│ = fun f
+//│ ╙──      	                          ^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'
 
 :e
 :re
@@ -91,6 +101,16 @@ use{[Some[Int]].value}
 :e
 :re
 use([Some[Int]].value)
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	use([Some[Int]].value)
+//│ ║        	^^^
+//│ ╟── Cannot determine the type of contextual parameter 'instance': type parameter 'T' has no explicit type argument and no value reaches it.
+//│ ║  l.+1: 	use([Some[Int]].value)
+//│ ║        	^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  in ../../../mlscript-compile/Predef.mls
+//│ ║  l.XX: 	fun use[T](using instance: T) = instance
+//│ ╙──      	           ^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+1: 	use([Some[Int]].value)
 //│ ║        	    ^^^^^^^^^^^^^^^^^
@@ -99,18 +119,25 @@ use([Some[Int]].value)
 //│ ╙──      	    ^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-:fixme // contextual completion (Phases 2–4)
 :expect 42
 fun f[T](using T) = use[T]
 using Int = 42
 f[Int]
-//│ ═══[RUNTIME ERROR] Expected: '42', got: 'fun f'
-//│ = fun f
+//│ = 42
 
 :breakme // contextual diagnostic not implemented yet
 :e
 :re
 f
-//│ = fun f
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	f
+//│ ║        	^
+//│ ╟── Cannot determine the type of contextual parameter '': type parameter 'T' has no explicit type argument and no value reaches it.
+//│ ║  l.+1: 	f
+//│ ║        	^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	fun f[T](using T) = use[T]
+//│ ╙──      	         ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

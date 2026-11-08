@@ -114,7 +114,7 @@ object ShapeIdentity:
       case view: NominalInstanceView => ValueKey.hash(System.identityHashCode(view.defn), ValueKey.mapHash(view.bindings)(System.identityHashCode, _.hashCode), parentHash(view.parent))
       case view: CallableTypeShape => ValueKey.hash(System.identityHashCode(view.source), view.paramLists.hashCode,
         view.result.hashCode, view.scheme.hashCode, view.supplied.hashCode,
-        view.declaration.fold(0)(System.identityHashCode), view.wrappedResult.hashCode)
+        view.declaration.fold(0)(System.identityHashCode), view.appliedLists, view.wrappedResult.hashCode)
       case view: RecordTypeShape => ValueKey.hash(
         ValueKey.mapHash(view.fields)(_.hashCode, _.hashCode), view.aliases.hashCode)
       case view: IntersectionView => view.values.map(_.comparison).hashCode
@@ -142,7 +142,8 @@ object ShapeIdentity:
         case a: CallableTypeShape => that.shape match
           case b: CallableTypeShape => (a.source eq b.source) && a.paramLists == b.paramLists && a.result == b.result &&
             a.scheme == b.scheme && a.supplied == b.supplied &&
-            a.declaration.fold(b.declaration.isEmpty)(x => b.declaration.exists(_ eq x)) && a.wrappedResult == b.wrappedResult
+            a.declaration.fold(b.declaration.isEmpty)(x => b.declaration.exists(_ eq x)) &&
+            a.appliedLists == b.appliedLists && a.wrappedResult == b.wrappedResult
           case _ => false
         case a: RecordTypeShape => that.shape match
           case b: RecordTypeShape => a.fields == b.fields && a.aliases == b.aliases
@@ -846,7 +847,11 @@ final case class WrappedResult(annotation: Annot.Async | Annot.Generator, remain
   */
 final case class CallableTypeShape(source: Term, paramLists: NELs[DeclaredParams],
     result: Opt[DeclaredType], scheme: Opt[TypeScheme], supplied: Opt[Ls[TypeArgument]],
-    declaration: Opt[TermDefinition], wrappedResult: Opt[WrappedResult]) extends CoreHeadShape:
+    declaration: Opt[TermDefinition], appliedLists: Int, wrappedResult: Opt[WrappedResult]) extends CoreHeadShape:
+  /** Partial applications retain the source clauses, including their contextual flags.
+    * The declared parameter types above remain authoritative for calls through annotations.
+    */
+  def sourceParamLists: Ls[ParamList] = declaration.fold(Nil)(_.params.drop(appliedLists))
   def tparams: Ls[DeclaredTypeParameter] = scheme.toList.flatMap(_.parameters)
   def describe: Str = declaration.fold("function with a declared signature")(d => s"function '${d.bsym.nme}'")
   def toLoc: Opt[Loc] = declaration.fold(source.toLoc)(_.headerLoc)
@@ -976,7 +981,7 @@ class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends CoreHeadS
     case cls: ClassDef if cls.annotations.exists(_.isInstanceOf[Annot.Bufferable]) =>
       name match
         case name: Str => bufferedMembers.get(name).fold[MemberLookup](MemberLookup.Missing)(MemberLookup.Found(_, Nil))
-        case _: SymbolKey => MemberLookup.Missing
+        case _: (SymbolKey | BlockMemberSymbol) => MemberLookup.Missing
     case _: TermDefinition => MemberLookup.Missing
     case _ => MemberLookup.Missing
   /** A definition is identified by its header; a class constructor, by its class's.

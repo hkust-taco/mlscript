@@ -1,6 +1,5 @@
 :.
 
-:fixme // contextual completion (Phases 2–4)
 :expect 42
 fun bar =
   using Int = 42
@@ -14,6 +13,5 @@ print(x)
 bar
 //│ > 1
 //│ > 2
-//│ ═══[RUNTIME ERROR] Expected: '42', got: 'fun foo'
-//│ = fun foo
+//│ = 42
 //│ x = 2

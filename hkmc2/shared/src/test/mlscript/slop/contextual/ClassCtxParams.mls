@@ -6,45 +6,25 @@ using Int = 42
 
 class Foo(using val n: Int)
 
-:fixme // contextual completion (Phases 2–4)
 :expect Foo(42)
 Foo
-//│ ═══[RUNTIME ERROR] Expected: 'Foo(42)', got: 'fun Foo { class: class Foo }'
-//│ = fun Foo { class: class Foo }
+//│ = Foo(42)
 
-:fixme // contextual completion (Phases 2–4)
 :expect 42
 Foo.n
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.+1: 	Foo.n
-//│ ║        	^^^^^
-//│ ╟── Constructor of class 'Foo' does not contain member 'n'
-//│ ║  l.XX: 	class Foo(using val n: Int)
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'
+//│ = 42
 
 
 class Foo(using n: Int) with
   fun foo = n
 
-:fixme // contextual completion (Phases 2–4)
 :expect Foo(_)
 Foo
-//│ ═══[RUNTIME ERROR] Expected: 'Foo(_)', got: 'fun Foo { class: class Foo }'
-//│ = fun Foo { class: class Foo }
+//│ = Foo(_)
 
-:fixme // contextual completion (Phases 2–4)
 :expect 42
 Foo.foo
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.+1: 	Foo.foo
-//│ ║        	^^^^^^^
-//│ ╟── Constructor of class 'Foo' does not contain member 'foo'
-//│ ║  l.XX: 	class Foo(using n: Int) with
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'
+//│ = 42
 
 
 class Bar(using val s: Str)
@@ -52,14 +32,32 @@ class Bar(using val s: Str)
 :breakme // contextual diagnostic not implemented yet
 :e
 Bar
-//│ = fun Bar { class: class Bar }
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	Bar
+//│ ║        	^^^
+//│ ╟── No instance found for contextual parameter 's'.
+//│ ║  l.+1: 	Bar
+//│ ║        	^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	class Bar(using val s: Str)
+//│ ╙──      	          ^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 class Bar(using s: Str)
 
 :breakme // contextual diagnostic not implemented yet
 :e
 Bar
-//│ = fun Bar { class: class Bar }
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	Bar
+//│ ║        	^^^
+//│ ╟── No instance found for contextual parameter 's'.
+//│ ║  l.+1: 	Bar
+//│ ║        	^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	class Bar(using s: Str)
+//│ ╙──      	          ^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 
@@ -71,52 +69,35 @@ class Foo(using Int) with
 
 using Int = 99
 
-:fixme // contextual completion (Phases 2–4)
 :expect Foo(_)
 Foo
-//│ ═══[RUNTIME ERROR] Expected: 'Foo(_)', got: 'fun Foo { class: class Foo }'
-//│ = fun Foo { class: class Foo }
+//│ = Foo(_)
 
-:fixme // contextual completion (Phases 2–4)
 :expect 99
 Foo.foo
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.+1: 	Foo.foo
-//│ ║        	^^^^^^^
-//│ ╟── Constructor of class 'Foo' does not contain member 'foo'
-//│ ║  l.XX: 	class Foo(using Int) with
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '99', got: 'undefined'
+//│ = 99
 
-:fixme // contextual completion (Phases 2–4)
 :expect 99
 Foo.bar
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.+1: 	Foo.bar
-//│ ║        	^^^^^^^
-//│ ╟── Constructor of class 'Foo' does not contain member 'bar'
-//│ ║  l.XX: 	class Foo(using Int) with
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '99', got: 'undefined'
+//│ = 99
 
-:fixme // contextual completion (Phases 2–4)
 class Foo(using Int)(using Str) with
   fun f = use[Int]
   fun g = use[Str]
-//│ ╔══[COMPILATION ERROR] Duplicate definition of member named ''.
-//│ ╟── Defined at: 
-//│ ║  l.+1: 	class Foo(using Int)(using Str) with
-//│ ║        	          ^^^^^^^^^
-//│ ╟── Defined at: 
-//│ ║  l.+1: 	class Foo(using Int)(using Str) with
-//│ ╙──      	                     ^^^^^^^^^
 
 :breakme // contextual diagnostic not implemented yet
 :e
 Foo
-//│ = fun Foo { class: class Foo }
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	Foo
+//│ ║        	^^^
+//│ ╟── No instance found for contextual parameter ''.
+//│ ║  l.+1: 	Foo
+//│ ║        	^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	class Foo(using Int)(using Str) with
+//│ ╙──      	                     ^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // FIXME: the compiler thinks T is a member of Foo!
@@ -129,14 +110,14 @@ class Foo(using T) with
   print(T)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo9;
-//│ Foo9 = function Foo(tmp) {
-//│   return globalThis.Object.freeze(new Foo.class(tmp));
+//│ Foo9 = function Foo(tmp11) {
+//│   return globalThis.Object.freeze(new Foo.class(tmp11));
 //│ };
 //│ (class Foo8 {
 //│   static {
 //│     Foo9.class = this
 //│   }
-//│   constructor(tmp) {
+//│   constructor(tmp11) {
 //│     Predef.print(T1);
 //│   }
 //│   toString() { return runtime.render(this); }

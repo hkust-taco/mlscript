@@ -10,11 +10,9 @@ class NumBox extends Box[Num] with
 fun box[A](value: A)(using b: Box[A]) = b.label
 using IntBox = new IntBox
 
-:fixme // contextual completion (Phases 2–4)
 :expect "int"
 box(1)
-//│ ═══[RUNTIME ERROR] Expected: '"int"', got: 'fun'
-//│ = fun
+//│ = "int"
 
 :breakme // contextual diagnostic not implemented yet
 // A superclass candidate does not satisfy a subclass query.
@@ -26,34 +24,59 @@ fun onlySuperclass(using Box[Int]) = requireIntBox
 // X7: both candidates in the same clause accept Int values.
 :e
 fun ambiguous(using Box[Int], Box[Num]) = box(1)
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	fun ambiguous(using Box[Int], Box[Num]) = box(1)
+//│ ║        	                                          ^^^^^^
+//│ ╟── Ambiguous instances for contextual parameter 'b'.
+//│ ║  l.+1: 	fun ambiguous(using Box[Int], Box[Num]) = box(1)
+//│ ║        	                                          ^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	fun box[A](value: A)(using b: Box[A]) = b.label
+//│ ║        	                     ^^^^^^^^^^^^^^^
+//│ ╟── This lexical instance matches.
+//│ ╙── This lexical instance matches.
 
 // Vacuous named-query argument positions match; declaration tiers decide.
 fun vacuous[A](using b: Box[A]) = b.label
 using Box[Num] = new NumBox
 
-:fixme // contextual completion (Phases 2–4)
 :expect "num"
 vacuous
-//│ ═══[RUNTIME ERROR] Expected: '"num"', got: 'fun vacuous'
-//│ = fun vacuous
+//│ = "num"
 
 :breakme // contextual diagnostic not implemented yet
 // A top-level parameter query cannot select from an empty position.
 :e
 fun undetermined[T](using t: T) = t
 undetermined
-//│ = fun undetermined
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+2: 	undetermined
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── Cannot determine the type of contextual parameter 't': type parameter 'T' has no explicit type argument and no value reaches it.
+//│ ║  l.+2: 	undetermined
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.+1: 	fun undetermined[T](using t: T) = t
+//│ ╙──      	                    ^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-:fixme // contextual completion (Phases 2–4)
 // Unknown and dynamic values do not reject a candidate's argument type.
 :expect "num"
 box(unsafe.undefined)
-//│ ═══[RUNTIME ERROR] Expected: '"num"', got: 'fun'
-//│ = fun
+//│ = "num"
 
 :breakme // contextual diagnostic not implemented yet
 // Unsupported query types are errors (§3.2), even if a value could be supplied.
 :e
 fun unsupported(using Int | Str) = 42
 unsupported
-//│ = fun unsupported
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+2: 	unsupported
+//│ ║        	^^^^^^^^^^^
+//│ ╟── Contextual parameter types must be named types or type parameters.
+//│ ║  l.+2: 	unsupported
+//│ ║        	^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.+1: 	fun unsupported(using Int | Str) = 42
+//│ ╙──      	                ^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

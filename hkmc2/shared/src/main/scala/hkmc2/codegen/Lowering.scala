@@ -1059,8 +1059,17 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case (sym, disamb) =>
         lastWords(s"Unexpected symbol kind ${sym.getClass.getSimpleName}: $sym")
   
-  @tailrec
+  private def suppliedArguments(term: Term): Ls[Term] = term.contextualCompletion.fold(Nil): completion =>
+    completion.steps.map:
+      case sem.ContextualStep.Supply(application) => application.rhs
+      case sem.ContextualStep.Abstract(_, _) =>
+        softTODO("Contextual eta-expansion lowering is implemented in Phase 4")
+        st.Error().withLocOf(term)
+
   final def term(t: st, inStmtPos: Bool = false)(k0: Result => Block)(using LoweringCtx): Block =
+    termWithCompletion(t, inStmtPos, true)(k0)
+
+  private def termWithCompletion(t: st, inStmtPos: Bool, complete: Bool)(k0: Result => Block)(using LoweringCtx): Block =
     tl.log(dbg"Lowering.term ${t.showDbg.truncate(100, "[...]")}${
       if inStmtPos then " (in stmt)" else ""}${
       t.resolvedSym.fold("")(sym => " – symbol " + sym.showDbg)}")
@@ -1118,7 +1127,132 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         // TODO: Does `@untyped` on a primitive make sense? How should be handle it?
         Assign(l, r, k0(l.asSimpleRef))
     
+    def appliedCall(call: Term): Block =
+      call match
+        case app: st.App if app.isErroneous => return compError
+        case _ => ()
+      
+      // Collect chains of App nodes: `f(a)(b)(c)` → (f, [a, b, c])
+      // This allows lowering curried calls as a single `Call` with multiple arg lists.
+      @tailrec
+      def collectAppChain(expr: st, args: Ls[Term], complete: Bool): (st, Ls[Term]) =
+        val supplied = if complete then suppliedArguments(expr) else Nil
+        val remaining = supplied ::: args
+        expr.instantiated match
+        // * Applications of builtin operators, such as `- x` in `(- x)(2)`, are lowered as primitive
+        // * operations by the dedicated case above, so they cannot be part of a curried call chain;
+        // * otherwise, the operator would be lowered as a function value and curried-call handling could
+        // * mistake application of the primitive's result for a partial application of the operator.
+        case app @ st.App(BuiltinRef(_), _) => (app, remaining)
+        case st.App(inner, innerArg) => collectAppChain(inner, innerArg :: remaining, true)
+        case st.TyApp(inner, _) => collectAppChain(inner, remaining, true) // type args are erased
+        case expr => (expr, remaining)
+      val (baseF, allArgs) = collectAppChain(call, Nil, complete)
+      
+      val isMlsFun = baseF.resolvedSym.fold(baseF.isInstanceOf[st.Lam]):
+        case _: sem.BuiltinSymbol => true
+        case sym: sem.BlockMemberSymbol =>
+          sym.trmImplTree.fold(sym.clsTree.isDefined)(_.k is syntax.Fun)
+        case sym: sem.TermSymbol =>
+          // Methods inside a declared class can have no local `declare` modifier.
+          // Only implementations (and generated constructors) promise the MLscript
+          // calling convention; foreign declarations need undefined normalization.
+          (sym.k is syntax.Fun) && sym.defn.exists(d => !d.hasDeclareModifier.isDefined &&
+            (d.body.isDefined || sym.isInstanceOf[ClassCtorSymbol]))
+        // Do not perform safety check on `MatchSuccess` and `MatchFailure`.
+        case sym => (sym is State.matchSuccessClsSymbol) ||
+          (sym is State.matchFailureClsSymbol)
+      
+      def conclude(fr: Path) =
+        lowerMultiCall(fr, isMlsFun, annots, allArgs, t.toLoc)(k)
+      
+      // * We have to instantiate `f` again because, if `f` is a Sel, the `term`
+      // * function is not called again with f. See below `Sel` and `SelProj` cases.
+      // * Note: now the instantiation is done by `collectAppChain`.
+      // * EDIT: seems it's no longer needed
+      val instantiated = baseF
+      
+      instantiated.resolvedSym match
+      case S(sym) =>
+        sym.asBlkMember match
+        case S(ms) =>
+          specialBuiltinSymbols.get(ms) match
+          case S(SpecialBuiltin.RuntimeIntrinsic(runtimeName)) =>
+            return conclude(State.runtimeSymbol.asSimpleRef.selN(Tree.Ident(runtimeName)))
+          case S(SpecialBuiltin.WasmIntrinsic) =>
+            def wasmIntrinsicSubterm(owner: Opt[InnerSymbol]): Path = owner match
+              case S(mod: ModuleOrObjectSymbol) =>
+                if mod is ctx.builtins.wasm.module then
+                  State.wasmSymbol.asSimpleRef
+                else
+                  wasmIntrinsicSubterm(mod.defn.flatMap(_.owner)).sel(mod)
+              case _ => lastWords(s"Unexpected owner '$owner' while traversing wasm intrinsic path")
+            val tsym = ms.tsym.getOrElse:
+              lastWords(s"wasm intrinsic `${ms.nme}` has a missing `TermSymbol`")
+            return conclude:
+              wasmIntrinsicSubterm(tsym.owner).sel(tsym)
+          case S(SpecialBuiltin.DebugPrintStack) =>
+            if !config.effectHandlers.exists(_.debug) then
+              return fail:
+                ErrorReport(
+                  msg"Debugging functions are not enabled" ->
+                    t.toLoc :: Nil,
+                  source = Diagnostic.Source.Compilation)
+            return conclude(State.runtimeSymbol.asSimpleRef.selSN("raisePrintStackEffect").withLocOf(baseF))
+          case S(SpecialBuiltin.ScopeLocally) => return
+            // scope.locally only applies to the innermost call; extra args are applied on top
+            if allArgs.length > 1 then
+              subTerm(baseF)(conclude)
+            else
+              allArgs.head match
+              case Tup(Fld(FldFlags.benign(), body, N) :: Nil) =>
+                LoweringCtx.nestScoped.givenIn:
+                  val res = block(Nil, R(body))(k)
+                  val scopedSyms = loweringCtx.getCollectedSym
+                  // Put the Scoped in the rest, so that the returned result can be found correctly
+                  Scoped(scopedSyms, res)
+              case _ => fail:
+                ErrorReport(
+                  msg"Unsupported form for scope.locally." ->
+                    t.toLoc :: Nil,
+                  source = Diagnostic.Source.Compilation)
+          case N =>
+        case N =>
+      case N =>
+      
+      instantiated match
+      // * Due to whacky JS semantics, we need to make sure that selections leading to a call
+      // * are preserved in the call and not moved to a temporary variable.
+      case sup: st.Super => superReference(sup)(conclude)
+      case sel: NewSel if sel.isClassValue => classOf(sel.prefix, sel)((p, _) => conclude(p))
+      case sel: NewSel => newSelection(sel): (prefix, name, target) =>
+        subTerm_nonTail(prefix): p =>
+          selectionPath(sel, p, name, target)(conclude)
+      case ref: UnresolvedRef => openSelection(ref): (prefix, member, target) =>
+        subTerm_nonTail(prefix): p =>
+          namedSelection(p, memberIdent(ref.id, member), target, ref.keyAccess, ref.toLoc, false)(conclude)
+      case sel @ Sel(prefix, nme) =>
+        subTerm(prefix): p =>
+          conclude(Select(p, nme)(selSymbol(sel), trm.toLoc)(false).withLocOf(sel))
+      case Resolved(sel @ Sel(prefix, nme), sym) =>
+        subTerm(prefix): p =>
+          conclude(Select(p, definitionIdent(nme, sym))(S(sym), trm.toLoc)(false).withLocOf(sel))
+      case sel @ SelProj(prefix, _, nme) =>
+        subTerm(prefix): p =>
+          conclude(Select(p, nme)(N, sel.toLoc)(false))
+      case Resolved(sel @ SelProj(prefix, _, nme), sym) =>
+        subTerm(prefix): p =>
+          conclude(Select(p, definitionIdent(nme, sym))(S(sym), trm.toLoc)(false).withLocOf(sel))
+      case _ => termWithCompletion(baseF, false, false)(r => subResult(r)(conclude))
+    if complete && trm.contextualCompletion.exists(_.steps.nonEmpty) && !trm.isInstanceOf[st.New] then
+      return appliedCall(trm)
+    
     trm match
+    case argument: st.InstanceArg => argument.selected match
+      case S(value) => term(value)(k)
+      case N =>
+        softAssert(argument.isErroneous, "A contextual argument must be selected before lowering")
+        compError
     case st.UnitVal() => k(unit)
     case st.Lit(lit) =>
       if lit =/= Tree.UnitLit(false) then warnStmt
@@ -1259,119 +1393,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           msg"Unexpected arguments for builtin symbol '${sym.nme}'" -> arg.toLoc :: Nil, S(arg),
           source = Diagnostic.Source.Compilation)
     case st.TyApp(f, ts) => term(f)(k) // * Type arguments are erased
-    case app @ st.App(f, arg) =>
-      if app.isErroneous then return compError
-      
-      // Collect chains of App nodes: `f(a)(b)(c)` → (f, [a, b, c])
-      // This allows lowering curried calls as a single `Call` with multiple arg lists.
-      @tailrec
-      def collectAppChain(expr: st, args: Ls[Term]): (st, Ls[Term]) =
-        expr.instantiated match
-        // * Applications of builtin operators, such as `- x` in `(- x)(2)`, are lowered as primitive
-        // * operations by the dedicated case above, so they cannot be part of a curried call chain;
-        // * otherwise, the operator would be lowered as a function value and curried-call handling could
-        // * mistake application of the primitive's result for a partial application of the operator.
-        case app @ st.App(BuiltinRef(_), _) => (app, args)
-        case st.App(inner, innerArg) => collectAppChain(inner, innerArg :: args)
-        case st.TyApp(inner, _) => collectAppChain(inner, args) // type args are erased
-        case expr => (expr, args)
-      val (baseF, allArgs) = collectAppChain(f, arg :: Nil)
-      
-      val isMlsFun = baseF.resolvedSym.fold(baseF.isInstanceOf[st.Lam]):
-        case _: sem.BuiltinSymbol => true
-        case sym: sem.BlockMemberSymbol =>
-          sym.trmImplTree.fold(sym.clsTree.isDefined)(_.k is syntax.Fun)
-        case sym: sem.TermSymbol =>
-          // Methods inside a declared class can have no local `declare` modifier.
-          // Only implementations (and generated constructors) promise the MLscript
-          // calling convention; foreign declarations need undefined normalization.
-          (sym.k is syntax.Fun) && sym.defn.exists(d => !d.hasDeclareModifier.isDefined &&
-            (d.body.isDefined || sym.isInstanceOf[ClassCtorSymbol]))
-        // Do not perform safety check on `MatchSuccess` and `MatchFailure`.
-        case sym => (sym is State.matchSuccessClsSymbol) ||
-          (sym is State.matchFailureClsSymbol)
-      
-      def conclude(fr: Path) =
-        lowerMultiCall(fr, isMlsFun, annots, allArgs, t.toLoc)(k)
-      
-      // * We have to instantiate `f` again because, if `f` is a Sel, the `term`
-      // * function is not called again with f. See below `Sel` and `SelProj` cases.
-      // * Note: now the instantiation is done by `collectAppChain`.
-      // * EDIT: seems it's no longer needed
-      val instantiated = baseF
-      
-      instantiated.resolvedSym match
-      case S(sym) =>
-        sym.asBlkMember match
-        case S(ms) =>
-          specialBuiltinSymbols.get(ms) match
-          case S(SpecialBuiltin.RuntimeIntrinsic(runtimeName)) =>
-            return conclude(State.runtimeSymbol.asSimpleRef.selN(Tree.Ident(runtimeName)))
-          case S(SpecialBuiltin.WasmIntrinsic) =>
-            def wasmIntrinsicSubterm(owner: Opt[InnerSymbol]): Path = owner match
-              case S(mod: ModuleOrObjectSymbol) =>
-                if mod is ctx.builtins.wasm.module then
-                  State.wasmSymbol.asSimpleRef
-                else
-                  wasmIntrinsicSubterm(mod.defn.flatMap(_.owner)).sel(mod)
-              case _ => lastWords(s"Unexpected owner '$owner' while traversing wasm intrinsic path")
-            val tsym = ms.tsym.getOrElse:
-              lastWords(s"wasm intrinsic `${ms.nme}` has a missing `TermSymbol`")
-            return conclude:
-              wasmIntrinsicSubterm(tsym.owner).sel(tsym)
-          case S(SpecialBuiltin.DebugPrintStack) =>
-            if !config.effectHandlers.exists(_.debug) then
-              return fail:
-                ErrorReport(
-                  msg"Debugging functions are not enabled" ->
-                    t.toLoc :: Nil,
-                  source = Diagnostic.Source.Compilation)
-            return conclude(State.runtimeSymbol.asSimpleRef.selSN("raisePrintStackEffect").withLocOf(baseF))
-          case S(SpecialBuiltin.ScopeLocally) => return
-            // scope.locally only applies to the innermost call; extra args are applied on top
-            if allArgs.length > 1 then
-              subTerm(baseF)(conclude)
-            else
-              arg match
-              case Tup(Fld(FldFlags.benign(), body, N) :: Nil) =>
-                LoweringCtx.nestScoped.givenIn:
-                  val res = block(Nil, R(body))(k)
-                  val scopedSyms = loweringCtx.getCollectedSym
-                  // Put the Scoped in the rest, so that the returned result can be found correctly
-                  Scoped(scopedSyms, res)
-              case _ => fail:
-                ErrorReport(
-                  msg"Unsupported form for scope.locally." ->
-                    t.toLoc :: Nil,
-                  source = Diagnostic.Source.Compilation)
-          case N =>
-        case N =>
-      case N =>
-      
-      instantiated match
-      // * Due to whacky JS semantics, we need to make sure that selections leading to a call
-      // * are preserved in the call and not moved to a temporary variable.
-      case sup: st.Super => superReference(sup)(conclude)
-      case sel: NewSel if sel.isClassValue => classOf(sel.prefix, sel)((p, _) => conclude(p))
-      case sel: NewSel => newSelection(sel): (prefix, name, target) =>
-        subTerm_nonTail(prefix): p =>
-          selectionPath(sel, p, name, target)(conclude)
-      case ref: UnresolvedRef => openSelection(ref): (prefix, member, target) =>
-        subTerm_nonTail(prefix): p =>
-          namedSelection(p, memberIdent(ref.id, member), target, ref.keyAccess, ref.toLoc, false)(conclude)
-      case sel @ Sel(prefix, nme) =>
-        subTerm(prefix): p =>
-          conclude(Select(p, nme)(selSymbol(sel), trm.toLoc)(false).withLocOf(sel))
-      case Resolved(sel @ Sel(prefix, nme), sym) =>
-        subTerm(prefix): p =>
-          conclude(Select(p, definitionIdent(nme, sym))(S(sym), trm.toLoc)(false).withLocOf(sel))
-      case sel @ SelProj(prefix, _, nme) =>
-        subTerm(prefix): p =>
-          conclude(Select(p, nme)(N, sel.toLoc)(false))
-      case Resolved(sel @ SelProj(prefix, _, nme), sym) =>
-        subTerm(prefix): p =>
-          conclude(Select(p, definitionIdent(nme, sym))(S(sym), trm.toLoc)(false).withLocOf(sel))
-      case _ => subTerm(baseF)(conclude)
+    case call: st.App => appliedCall(call)
     case h @ Handle(lhs, rhs, as, cls, defs, bod) =>
       if config.effectHandlers.isEmpty then
         return fail:
@@ -1569,7 +1591,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         case _ => spuriousWarning
       classOf(cls, nwtrm): (sr, params) =>
         rft match
-        case N => lowerMultiInstantiate(mut, sr, params, as, annots, trm.toLoc)(k)
+        case N => lowerMultiInstantiate(mut, sr, params, as ::: suppliedArguments(nwtrm), annots, trm.toLoc)(k)
         case S((isym, rft)) =>
           val sym = isym.bms.get
           loweringCtx.collectScopedSym(sym)
@@ -1577,7 +1599,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             methodKeys(rft): keys =>
               val clsDef = LoweringCtx.withSuperBase(isym, parent).givenIn:
                 val (mtds, publicFlds, privateFlds, ctor) = gatherMembers(rft)
-                val pctor = parentConstructor(params, as, nw.toLoc)
+                val pctor = parentConstructor(params, as ::: suppliedArguments(nwtrm), nw.toLoc)
                 ClsLikeDefn(N, isym, sym, N, syntax.Cls, N, Nil, S(parent),
                   mtds, privateFlds, publicFlds, pctor, ctor, N, N, N, keys)(N, Nil)
               val inner = new New(resolvedMemberRef(sym, isym), Nil, N)(FlowSymbol.neww(), N)
@@ -1900,7 +1922,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     subTerm(t, inStmtPos = inStmtPos)(k)
   
   inline def subTerm(t: st, inStmtPos: Bool = false)(k: Path => Block)(using LoweringCtx): Block =
-    term(t, inStmtPos = inStmtPos):
+    term(t, inStmtPos = inStmtPos)(r => subResult(r)(k))
+
+  private def subResult(result: Result)(k: Path => Block)(using LoweringCtx): Block =
+    result match
       case v: Value => k(v)
       case p: Path => k(p)
       case lam @ Lambda(params, body) =>

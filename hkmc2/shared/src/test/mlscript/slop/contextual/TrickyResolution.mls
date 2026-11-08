@@ -9,8 +9,6 @@ using Foo[Int] = Foo(1)
 using Bar[Int] = Bar(2)
 using Bar[Str] = Bar("wrong")
 
-:fixme // contextual completion (Phases 2–4)
 :expect [1, 2]
 foo
-//│ ═══[RUNTIME ERROR] Expected: '[1, 2]', got: 'fun foo'
-//│ = fun foo
+//│ = [1, 2]

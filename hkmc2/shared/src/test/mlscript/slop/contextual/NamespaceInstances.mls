@@ -20,8 +20,17 @@ fun render[A](value: A)(using show: Show[A]) = show.show(value)
 :fixme // namespace instance selection (Phase 3)
 :expect "int"
 render(1)
-//│ ═══[RUNTIME ERROR] Expected: '"int"', got: 'fun'
-//│ = fun
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	render(1)
+//│ ║        	^^^^^^^^^
+//│ ╟── No instance found for contextual parameter 'show'.
+//│ ║  l.+1: 	render(1)
+//│ ║        	^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	fun render[A](value: A)(using show: Show[A]) = show.show(value)
+//│ ╙──      	                        ^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '"int"', got: 'undefined'
 
 :fixme // generic override representation check, independent of contextual insertion
 // A lexical instance shadows the namespace tier.
@@ -57,7 +66,16 @@ fun codec[A](value: A)(using c: Outer.Codec[A]) = c.label
 :breakme // contextual diagnostic not implemented yet
 :e
 codec(1)
-//│ = fun
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	codec(1)
+//│ ║        	^^^^^^^^
+//│ ╟── No instance found for contextual parameter 'c'.
+//│ ║  l.+1: 	codec(1)
+//│ ║        	^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	fun codec[A](value: A)(using c: Outer.Codec[A]) = c.label
+//│ ╙──      	                       ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A parameter query must revisit one module through different triggering heads.
 module Family with
@@ -69,8 +87,17 @@ fun choose[T](value: T)(using chosen: T) = 42
 :fixme // namespace instance selection (Phase 3)
 :expect 42
 choose(new Family.B)
-//│ ═══[RUNTIME ERROR] Expected: '42', got: 'fun'
-//│ = fun
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	choose(new Family.B)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── No instance found for contextual parameter 'chosen'.
+//│ ║  l.+1: 	choose(new Family.B)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	fun choose[T](value: T)(using chosen: T) = 42
+//│ ╙──      	                        ^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'
 
 // Type-argument namespaces contribute instances.
 abstract class Tag[A] with
@@ -85,8 +112,17 @@ fun tag[A](value: A)(using t: Tag[A]) = t.label
 :fixme // namespace instance selection (Phase 3)
 :expect "point"
 tag(new Point)
-//│ ═══[RUNTIME ERROR] Expected: '"point"', got: 'fun'
-//│ = fun
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	tag(new Point)
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── No instance found for contextual parameter 't'.
+//│ ║  l.+1: 	tag(new Point)
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	fun tag[A](value: A)(using t: Tag[A]) = t.label
+//│ ╙──      	                     ^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '"point"', got: 'undefined'
 
 // Namespace ambiguity does not use specificity.
 abstract class Both[A] with
@@ -105,7 +141,16 @@ fun both[A](value: A)(using b: Both[A]) = b.label
 :breakme // contextual diagnostic not implemented yet
 :e
 both(new Thing)
-//│ = fun
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	both(new Thing)
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ╟── No instance found for contextual parameter 'b'.
+//│ ║  l.+1: 	both(new Thing)
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	fun both[A](value: A)(using b: Both[A]) = b.label
+//│ ╙──      	                      ^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Private instances do not escape their declaring scope.
 class Secret
@@ -115,4 +160,14 @@ module Secret with
 :breakme // contextual diagnostic not implemented yet
 :e
 use[Secret]
-//│ = fun use
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	use[Secret]
+//│ ║        	^^^^^^^^^^^
+//│ ╟── No instance found for contextual parameter 'instance'.
+//│ ║  l.+1: 	use[Secret]
+//│ ║        	^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  in ../../../mlscript-compile/Predef.mls
+//│ ║  l.XX: 	fun use[T](using instance: T) = instance
+//│ ╙──      	           ^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

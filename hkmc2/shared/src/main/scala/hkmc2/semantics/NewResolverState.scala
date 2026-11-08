@@ -11,9 +11,12 @@ inline def rctx(using context: ResolutionContext): ResolutionContext = context
 enum ContextualRole:
   case Value, Receiver, ApplicationHead
 
-enum ResolutionSite:
-  case Access(term: NewResolvable | New, scope: SrcScope)
-  case Contextual(term: Term, role: ContextualRole, context: Elaborator.Ctx)
+sealed trait ResolutionSite
+
+object ResolutionSite:
+  final case class Access(term: NewResolvable | New, scope: SrcScope) extends ResolutionSite
+  final case class Contextual(term: Term, role: ContextualRole, context: Elaborator.Ctx) extends ResolutionSite:
+    var settled: Bool = false
 
 object NewResolverState:
   /** Tables belong to a compilation unit; a context only selects a namespace.
@@ -109,6 +112,16 @@ final class NewResolverState(val owner: Elaborator.State):
   // ResolutionContext.checkAccess). Its references without explicit bindings are also
   // the worklist of NewResolver.settleUnboundReferences, which runs before checkAccess.
   private[semantics] val resolutionSites = mutable.ArrayBuffer.empty[ResolutionSite]
+  private[semantics] val contextualWork = mutable.Map.empty[Identity[Term], ContextualWork]
+  private[semantics] val instanceDeclarations = mutable.ArrayBuffer.empty[TermDefinition]
+  private[semantics] val contextualPositions: Cache[DeclaredType, TermShapeHost] =
+    new Cache(_.contextualPositions, identity)
+  private[semantics] val contextualChecks: Seen[(InstanceArg, TermShapeHost)] = new Seen(_.contextualChecks)
+  private[semantics] val contextualClassPositions: Cache[(ShapeIdentity.Key, VarSymbol), TermShapeHost] =
+    new Cache(_.contextualClassPositions, identity)
+  private[semantics] val contextualQueries: Seen[(InstanceArg, VarSymbol)] = new Seen(_.contextualQueries)
+  private[semantics] val contextualFailures: Seen[(InstanceArg, DeclaredType)] = new Seen(_.contextualFailures)
+  private[semantics] val contextualStages: Seen[(Term, Int)] = new Seen(_.contextualStages)
   // What flow has revealed about the implicit namespaces of this unit's references
   // (see NewResolver.unresolvedRef). Unlike the block-local tables, this outlives the
   // reference's block: a later worksheet block can still reveal a namespace, which
@@ -526,7 +539,12 @@ final class ResolutionContext private[semantics] (
         case ref: NewResolvable => ref.keyAccess.foreach(visit)
         case nw: New if nw.args.isEmpty && nw.rft.isEmpty => checkPartialInstantiation(nw)
         case _ => ()
+    state.resolutionSites.foreach:
+      case site: ResolutionSite.Contextual => site.term.contextualSite = site.role
+      case _ => ()
     state.resolutionSites.clear()
+    state.contextualWork.clear()
+    state.instanceDeclarations.clear()
     state.pending.foreach: (key, value) =>
       if state.completedNodes.add(key) then value.completed = true
     state.pending.clear()
@@ -541,11 +559,19 @@ final class ResolutionContext private[semantics] (
   /** Append post-order, sharing the lexical environment. Transparent parentheses can return
     * the same term through several elaborator frames; they must contribute only one site.
     */
-  def recordContextualSite(term: Term, role: ContextualRole, context: Elaborator.Ctx): Unit =
+  def recordContextualSite(term: Term, role: ContextualRole, context: Elaborator.Ctx)(using raise: Raise, resolver: NewResolver): Unit =
     val repeated = state.resolutionSites.lastOption.exists:
       case ResolutionSite.Contextual(previous, previousRole, _) => (previous eq term) && previousRole == role
       case _ => false
-    if !repeated then state.resolutionSites += ResolutionSite.Contextual(term, role, context)
+    if !repeated then
+      val site = ResolutionSite.Contextual(term, role, context)
+      term.contextualSite match
+        case previous: ResolutionSite.Contextual =>
+          softAssert(previous.role == role, "A contextual expression must have one consuming role")
+        case _ => ()
+      term.contextualSite = site
+      state.resolutionSites += site
+      resolver.listenTerm(term)(_ => ())(using this)
 
   /** The references without explicit bindings written in the current block, in elaboration
     * order (see NewResolver.settleUnboundReferences). */
@@ -927,6 +953,16 @@ private[semantics] final class TermShapeHost extends Host[TermShape]:
     if currentShapes.add(shape) then notifyShapeListeners(shape)
   def listen(listener: ResolutionContext.Listener)(using ResolutionContext): Unit =
     subscribeToShapes(listener)
+
+/** Only sites receiving a contextual callable allocate this work record. Its applications
+  * are the ordinary flow sites that lowering also uses to obtain the supplied argument lists.
+  */
+private[semantics] final class ContextualWork(val site: ResolutionSite.Contextual):
+  val steps = mutable.ArrayBuffer.empty[ContextualStep.Supply]
+  val pending = mutable.ArrayBuffer.empty[(TermShape, ResolutionContext)]
+  val inputs = mutable.Set.empty[(ShapeIdentity.Key, TypeSubstitution)]
+  val output = new Host[ShapeEvent]:
+    def showDbg(using DebugPrinter): Str = "completed contextual values"
 
 private[semantics] final class TypeDependencyHost extends Host[Set[VarSymbol]]:
   def showDbg(using DebugPrinter): Str = "type dependencies"

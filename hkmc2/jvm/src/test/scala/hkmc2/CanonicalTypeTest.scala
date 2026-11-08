@@ -119,7 +119,7 @@ class CanonicalTypeTest extends AnyFunSuite:
     val tpe = DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)(N)
     for arity <- 1 :: 64 :: Nil do
       val parameters = List.fill(arity)(DeclaredParam(S(tpe), FldFlags.empty))
-      val callable = CallableTypeShape(Term.UnitVal(), new ::(DeclaredParams(parameters, N), Nil), S(tpe), N, N, N, N)
+      val callable = CallableTypeShape(Term.UnitVal(), new ::(DeclaredParams(parameters, N), Nil), S(tpe), N, N, N, 0, N)
       val left = callable.comparison
       val right = callable.copy().comparison
       val repetitions = 1000

@@ -13,27 +13,21 @@ class TopAccept extends Accept[Any] with
 fun accept[A](value: A)(using a: Accept[A]) = a.label
 using Accept[Parent] = new ParentAccept
 
-:fixme // matching and insertion (Phase 2)
 :expect "parent"
 accept(new Child)
-//│ ═══[RUNTIME ERROR] Expected: '"parent"', got: 'fun'
-//│ = fun
+//│ = "parent"
 
 using Accept[Int | Str] = new UnionAccept
 
-:fixme // matching and insertion (Phase 2)
 :expect "union"
 [accept(1), accept("text")].(0)
-//│ ═══[RUNTIME ERROR] Expected: '"union"', got: 'fun'
-//│ = fun
+//│ = "union"
 
 using Accept[Any] = new TopAccept
 
-:fixme // matching and insertion (Phase 2)
 :expect "top"
 accept(new Child)
-//│ ═══[RUNTIME ERROR] Expected: '"top"', got: 'fun'
-//│ = fun
+//│ = "top"
 
 // §3.4 currently accepts structural forms at candidate argument positions.
 class FunctionAccept extends Accept[Int -> Int] with
@@ -43,8 +37,8 @@ using Accept[Int -> Int] = new FunctionAccept
 :todo // structural compatibility is intentionally permissive; insertion is pending
 :expect "function"
 accept((x: Int) => x)
-//│ ═══[RUNTIME ERROR] Expected: '"function"', got: 'fun'
-//│ = fun
+//│ = "function"
+//│ FAILURE: Unexpected lack of error to fix
 
 // Several matching instances in one clause are ambiguous, including subclass heads.
 class Specialized extends Accept[Int] with
@@ -53,20 +47,29 @@ class Specialized extends Accept[Int] with
 :breakme // ambiguity diagnostic not implemented yet
 :e
 fun sameTier(using Accept[Int], Specialized) = accept(1)
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.49: 	fun sameTier(using Accept[Int], Specialized) = accept(1)
+//│ ║        	                                               ^^^^^^^^^
+//│ ╟── Ambiguous instances for contextual parameter 'a'.
+//│ ║  l.49: 	fun sameTier(using Accept[Int], Specialized) = accept(1)
+//│ ║        	                                               ^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.13: 	fun accept[A](value: A)(using a: Accept[A]) = a.label
+//│ ║        	                        ^^^^^^^^^^^^^^^^^^
+//│ ╟── This lexical instance matches.
+//│ ╙── This lexical instance matches.
 
 // A later incompatible value cannot change the selected candidate.
 class IntAccept extends Accept[Int] with
   fun label: Str = "int"
 using Accept[Int] = new IntAccept
 
-:fixme // late-value checks and insertion (Phases 2–4)
 :expect "int"
 fun generic[A](value: A) = accept(value)
 generic(1)
-//│ ═══[RUNTIME ERROR] Expected: '"int"', got: 'fun'
-//│ = fun
+//│ = "int"
 
 :breakme // late-value diagnostic not implemented yet
 :e
 generic("later")
-//│ = fun
+//│ = "int"

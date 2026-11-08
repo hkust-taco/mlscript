@@ -521,6 +521,94 @@ to this section. Escalate (see §7) if a principle in §3 cannot be met.
 
 ### 4.2 Resolver
 
+- **Phase 2 interception blocker (§7).** The prototype violates the existing distinction between
+  transporting a deferred value and inspecting its current interface. `listenContextual` calls
+  `listenInstanceViewsOrProbe` and forwards the resulting view even when it requires no contextual
+  arguments. For an inferred generic result, this can happen before `publishViewed` substitutes
+  the caller's arguments. Expanding `InstanceShape(A)` to an abstract value discards the reference
+  to `A`; later substitution cannot recover it. This is a flaw in the prototype and in the eager
+  materialization recommendation below, not evidence that the approved language rules conflict.
+
+  A reduced excerpt of the failing imported-inference test is:
+
+  ```mlscript
+  // Generic.mls, compiled first under new resolution
+  module Generic with
+    fun identity[A](x: A) = x
+
+  // A separate importing file, also under new resolution
+  import "./Generic.mls"
+  class Item(val first: Int)
+  Generic.identity(Item(1)).first
+  ```
+
+  The result must retain `A` until the call binds it to `Item`. The prototype reports that
+  `first` has no resolved target. The existing mutable-array import-isolation test fails too;
+  `LexicalCaptures.mls` records the related `use[Box[T]].value` failure as a `:fixme`.
+  These failures occur before the import-isolation assertions, so they do not establish whether
+  the prototype would also mutate the cached source graph.
+
+  Forwarding the original shape fixes the immediate information loss, but is not a complete
+  interception design: when substitution later reveals a contextual callable, the original
+  consuming site still owes a completion. Forgetting that obligation either exposes the raw
+  function or moves instance selection to a downstream scope. Local bindings, aggregate fields,
+  returns, and imports can all carry the deferred value past that original site. Implementation
+  has stopped until the representation of that obligation is settled.
+- **Proposed replacement: deferred completion edges (pending review, not implemented).** Replace
+  eager interface materialization with a resolver graph operation attached to the original site.
+  This proposal preserves §§2–3, including settlement order, one generated completion per site,
+  agreement across activations, and the distinction between creating and consuming a contextual
+  lambda. It changes how the resolver represents that completion:
+  1. Separate the site's raw input producer, its immutable identity/role/lexical environment, its
+     decided runtime completion, and its completed output producer. Transport a symbolic reference
+     to that output when its input is generic. Conceptually this is `Complete(site, input)`;
+     neither a snapshot of the input's current views nor an invocation at the later consumer.
+  2. Instantiation composes the existing flat, support-projected substitution onto the reference
+     before observing the operation's input. Preserve `DeclaredType` bindings, both argument
+     polarities, namespace provenance, and capture marks. Do not expand parameter bounds or
+     consume a returned callable's own scheme during transport. In the identity example, the
+     reference still names `A`; the caller's substitution reveals `Item`, and completion then
+     passes the instantiated value through unchanged.
+  3. Use interface views only to classify the activated input and drive existing `applyShape`
+     steps. For a provably ordinary input, the identity branch preserves the corresponding type
+     reference. An unresolved parameter's current abstract view does not prove that the
+     operation is permanently an identity: transport its completed-output reference, retaining
+     the dependency that can reveal later callees. Do not publish the raw parameter reference as
+     an already completed result that a later substitution could turn into an uncompleted callee.
+     Contextual branches publish only the completed output. Every consumer, including member
+     lookup, constraints, application, local binding flow, and compound-term forwarding, observes
+     this output; none may silently unwrap the raw input.
+  4. Keep selection at the original site and its ordered worklist entry. A caller supplies type
+     bindings and flow information, never a replacement lexical instance environment. Deliveries
+     in other activations use the same selected symbols and synthesized applications and check
+     agreement. After block completion, the runtime plan is frozen, including an empty plan:
+     later deliveries may propagate through it or report a conflict, but cannot add an application
+     to an already compiled exporter. Register the operation's input observation even when its
+     result is unused, so demand from a later consumer does not determine diagnostics or order.
+  5. Integrate producer references with the existing graph ownership and instantiation machinery.
+     Allocate stable producer identities before installing listeners; recursive paths use graph
+     back-edges to those producers. A site has one producer pair in a graph, with consumer-local
+     publisher data on import. Substitutions decorate references through existing canonical
+     instances and flattened views; they do not allocate another producer or fresh type binder
+     per observation, recursive visit, or caller path. Include all observed binder dependencies
+     when projecting substitutions. Copied callbacks use their receiving `ResolutionContext`
+     and cannot retain mutable exporter work records. Never flatten a repeated site by dropping
+     its operation, or bound recursion with a depth limit.
+
+  A useful scope regression for this design is a generic body containing `let saved = x`, then
+  a shadowing `using Int = 99`, then `saved`, with `using Int = 7` visible at the initializer.
+  If `x` receives a contextual lambda `(using n: Int) => n` before the block is sealed, completion
+  of `x` belongs to the initializer and must use `7`. Deferring observation must not move that
+  choice to the later read of `saved`, where `99` is visible. This example is a proposed test,
+  not a claim that the current prototype implements it.
+
+  If this proposal is accepted, first implement and validate this graph boundary on the existing
+  two import-isolation tests and `LexicalCaptures`, then cover transport through locals, returns,
+  captures, aggregates, declared interfaces, and recursive generic calls. Add diff tests for
+  behavior and unit tests only for graph growth and import isolation, which output alone cannot
+  establish. Use `softAssert` for ownership, stable producer identity, and frozen-plan invariants.
+  The finite representation and complete interception coverage must be demonstrated before this
+  proposal is considered implemented; naming a deferred wrapper alone does not solve either.
 - **Interception.** The completion must apply however the site's value is consumed. Two existing
   paths need care:
   1. `listen` forwards `SymShape`s through compound terms: block results, labels, `try`, and
@@ -528,6 +616,7 @@ to this section. Escalate (see §7) if a principle in §3 cannot be met.
   2. `listenValue` converts symbol shapes into definition shapes (`fromSymbol`), at the
      *consumer*.
 
+  The original recommendation below is superseded if the deferred-edge proposal is accepted.
   Prefer materializing a site's values at the site itself, with the site's own role (`receiver`
   or not). Then deliver the shapes that need no completion directly, and hold the contextual
   callables, together with their delivering `ResolutionContext`, for settlement. Do not wrap
@@ -631,6 +720,15 @@ Store the completion on the site term in a mixin, like `keyAccess` (`TermImpl.Ne
 for the term classes that can be sites: `App`, `TyApp`, `New`, `SimpleRef`, `MemberRef`, `NewSel`,
 `UnresolvedRef`, `Super`, `Lam` when it is an ordinary application head, and `Capture` when it is
 the outermost term. `SimpleRef` is necessary for consuming stored contextual lambda values.
+Implementation adjustment (Phase 2, in progress): attach the mixin to `Term`, because §3.1 also
+permits compound application heads (for example a block returning a contextual lambda).
+The pending metadata reuses the single worklist entry; an empty completion allocates no helper.
+Anonymous candidate selections use declaration keys in the ordinary member-lookup path, sharing
+its receiver transport and visibility checks without reintroducing anonymous source names.
+The prototype also stores an output host beside the steps. Under the proposed §4.2 replacement,
+the transported producer reference and its consumer-local graph data must remain separate from
+the frozen runtime steps. `Cloner` must preserve or rebind producer identities along with the
+syntax it clones, and block completion must seal every synthesized producer and application.
 The completion has this shape:
 
 ```scala
@@ -666,6 +764,13 @@ Centralize the lowering of sites with completions:
 ### 4.6 Performance
 
 - Programs that do not use `using` must allocate no new per-term state.
+  **Proposed clarification, pending review:** preserve the direct path for values whose completion
+  is provably an identity, and reuse existing hosts for deferred operations where possible.
+  Absence of local `using` syntax alone does not prove this for generic or imported flow. If
+  preserving a deferred site's obligation requires additional state in such a program, permit
+  bounded state per relevant site and consumer graph, account for it explicitly, and retain the
+  time/allocation benchmark and 2% explanation threshold below. Do not promise zero allocation
+  while the representation needed for correct deferred transport remains unmeasured.
 - Recording a site is one buffer entry, like `accessSites`.
 - Per-module instance indexes are cached. Within a query, provider decisions are bounded by the
   consulted modules for named queries, or by the (module, triggering class or alias) pairs for
@@ -702,6 +807,24 @@ gaps remain explicit regressions. Performance comparisons are due at Phases 2 an
   declare instances, which now become members; review each such diff.
 
 ### Phase 2: sites, lexical instances, and direct insertion
+
+Checkpoint status (incomplete): the user requested committing the partial implementation while
+the §4.2 blocker is under review. Direct lexical insertion, matching, callable-clause metadata,
+agreement checks, and Supply lowering are prototyped; `FlowCallees.mls` and
+`LexicalCaptures.mls` add coverage, and the contextual ports have updated golden outputs.
+The checkpoint is not a completed phase and does not satisfy the phase exit criteria:
+
+- `ctest`: 60 passed.
+- `sdtest contextual`: 23 passed, 1 failed. `MatchingEdges.mls` still has the §3.4 `:todo`
+  marker on structural compatibility, but its block now succeeds. The marker needs reconciliation
+  with the harness's requirement that `:todo` blocks fail; this is separate from interception.
+- `hkmc2AllTests/test`: stopped in the Scala.js tests at the two generic-import failures described
+  in §4.2 (50 passed, 2 failed). Later aggregate stages did not run.
+- Late-value diagnostics remain incomplete (for example `generic("later")` in `MatchingEdges`);
+  diagnostic messages still need query types and clearer identification of unnamed parameters.
+  Existing `:fixme` and `:breakme` cases also retain the later phases' pending behavior.
+- Performance comparison has not run; it remains required before completing Phase 2.
+- Phases 3–6 have not started. Namespace lookup has not been generalized.
 
 - Implement interception, settlement, Supply steps, `InstanceArg`, query construction, matching,
   lexical candidates, completion storage, and lowering of Supply steps. This covers value sites,

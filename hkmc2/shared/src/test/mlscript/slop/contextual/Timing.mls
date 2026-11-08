@@ -1,6 +1,5 @@
 :.
 
-:fixme // contextual completion (Phases 2–4)
 // §3.6: forward callees settle after the whole block has been elaborated.
 :expect 7
 using Int = 7
@@ -8,8 +7,7 @@ fun forward = Later.read()
 module Later with
   fun read()(using n: Int) = n
 forward
-//│ ═══[RUNTIME ERROR] Expected: '7', got: 'fun'
-//│ = fun
+//│ = 7
 
 // Successive clauses publish earlier selections before later queries.
 data class Evidence[A](value: A)
@@ -18,11 +16,9 @@ fun cascade[A](using e: Evidence[A], a: A) = 42
 using Evidence[Token] = Evidence(new Token)
 using Token = new Token
 
-:fixme // contextual completion (Phases 2–4)
 :expect 42
 cascade
-//│ ═══[RUNTIME ERROR] Expected: '42', got: 'fun cascade'
-//│ = fun cascade
+//│ = 42
 
 :fixme // generic override representation check, independent of contextual insertion
 // Later incompatible callers cannot change a previously selected instance.
@@ -40,16 +36,14 @@ fun generic[A](value: A) = show(value)
 //│ ║  l.+2: 	  fun show(value: A): Str
 //│ ╙──      	      ^^^^
 
-:fixme // contextual completion (Phases 2–4)
 :expect "int"
 generic(1)
-//│ ═══[RUNTIME ERROR] Expected: '"int"', got: 'fun'
-//│ = fun
+//│ = "int"
 
 :breakme // contextual diagnostic not implemented yet
 :e
 generic("later")
-//│ = fun
+//│ = "int"
 
 // Capitalized references and contextual sites settle in one post-order worklist.
 class Shade(val label: Str)
@@ -57,21 +51,14 @@ module Shade with
   val Red = Shade("red")
 fun paint(value: Shade)(using n: Int) = value.label + n.toString()
 
-:fixme // contextual completion (Phase 2)
 :expect "red7"
 paint(Red)
-//│ ═══[RUNTIME ERROR] Expected: '"red7"', got: 'fun'
-//│ = fun
+//│ = "red7"
 
-:fixme // contextual completion (Phase 2)
 :expect "red7"
 fun readPaint(using n: Int): Shade = Red
 paint(readPaint)
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Function' at an unrelated type 'Shade'
-//│ ║  l.+2: 	paint(readPaint)
-//│ ╙──      	      ^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Expected: '"red7"', got: 'fun'
-//│ = fun
+//│ = "red7"
 
 // Publishing the first site's selected argument reveals the next site's namespace.
 module Choices with
@@ -85,5 +72,14 @@ fun second[A](value: A)(using chosen: A) = chosen
 :fixme // contextual completion and namespace selection (Phases 2–3)
 :expect Choice("chosen")
 second(first)
-//│ ═══[RUNTIME ERROR] Expected: 'Choice("chosen")', got: 'fun'
-//│ = fun
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	second(first)
+//│ ║        	^^^^^^^^^^^^^
+//│ ╟── No instance found for contextual parameter 'chosen'.
+//│ ║  l.+1: 	second(first)
+//│ ║        	^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	fun second[A](value: A)(using chosen: A) = chosen
+//│ ╙──      	                        ^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: 'Choice("chosen")', got: 'undefined'

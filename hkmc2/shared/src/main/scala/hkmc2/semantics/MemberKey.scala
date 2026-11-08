@@ -6,7 +6,7 @@ import hkmc2.utils.*, shorthands.*
 /** Named source members and fresh values occupy distinct key spaces.
   * A jsSymbol annotation gives a method a source name for its computed property.
   */
-type MemberKey = Str | SymbolKey
+type MemberKey = Str | SymbolKey | BlockMemberSymbol
 
 /** The identity includes the receiver: two instances' fresh fields need not hold
   * the same value. The source expression is retained for diagnostics, but locations
@@ -19,7 +19,7 @@ final case class SymbolKey(path: Ls[Symbol])(val term: Term):
 object MemberKey:
   def index(key: MemberKey): Opt[Int] = key match
     case name: Str => name.toIntOption
-    case _: SymbolKey => N
+    case _: (SymbolKey | BlockMemberSymbol) => N
 
   def symbol(annotations: Ls[Annot]): Opt[SymbolKey] = annotations.collectFirst:
     case Annot.JsSymbol(key) => key
@@ -39,3 +39,6 @@ object MemberKey:
       member.asTrm.flatMap(_.defn).exists(td => (td.k is syntax.Ins) && td.owner.isEmpty)
     case key: SymbolKey =>
       defn.body.methods.find(method => symbol(method).contains(key)).map(_.bsym)
+    case member: BlockMemberSymbol => defn match
+      case module: ModuleOrObjectDef => module.instanceMembers.find(_.sym is member).map(_.sym)
+      case _ => N

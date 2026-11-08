@@ -10,50 +10,18 @@ using Int = 42
 using Num = 4.2
 using Str = "42"
 
-:fixme // contextual completion (Phases 2–4)
 :expect 42
 R.bar.answer
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.+1: 	R.bar.answer
-//│ ║        	^^^^^^^^^^^^
-//│ ╟── Function 'bar' does not contain member 'answer'
-//│ ║  l.XX: 	  fun bar[T](using Int)(using Num)(using Str): module M = M
-//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'
+//│ = 42
 
-:fixme // contextual completion (Phases 2–4)
 :expect 42
 foo.answer
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.+1: 	foo.answer
-//│ ║        	^^^^^^^^^^
-//│ ╟── Function 'foo' does not contain member 'answer'
-//│ ║  l.XX: 	fun foo[T](using Int)(using Num)(using Str): module M = M
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'
+//│ = 42
 
-:fixme // contextual completion (Phases 2–4)
 :expect 42
 R.bar[Int].answer
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.+1: 	R.bar[Int].answer
-//│ ║        	^^^^^^^^^^^^^^^^^
-//│ ╟── Function 'bar' does not contain member 'answer'
-//│ ║  l.XX: 	  fun bar[T](using Int)(using Num)(using Str): module M = M
-//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'
+//│ = 42
 
-:fixme // contextual completion (Phases 2–4)
 :expect 42
 foo[Int].answer
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.+1: 	foo[Int].answer
-//│ ║        	^^^^^^^^^^^^^^^
-//│ ╟── Function 'foo' does not contain member 'answer'
-//│ ║  l.XX: 	fun foo[T](using Int)(using Num)(using Str): module M = M
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'
+//│ = 42

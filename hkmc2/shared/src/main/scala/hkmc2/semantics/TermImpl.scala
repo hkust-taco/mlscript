@@ -35,6 +35,30 @@ trait AnyRefImpl:
 trait NewRefImpl extends AnyRefImpl:
   self: Term.SimpleRef | Term.MemberRef | Term.SelfRef =>
 
+trait InstanceArgImpl extends PossiblyErroneous:
+  self: Term.InstanceArg =>
+  /** Settlement fills this once; later activations reuse the same runtime argument. */
+  var selected: Opt[Term] = N
+  private[semantics] var environment: Opt[Elaborator.Ctx] = N
+  private[semantics] var candidate: Opt[ContextualCandidate] = N
+
+/** Completion attaches to the consuming expression, including a compound application head.
+  * An empty field allocates no helper object. The elaborator's single worklist entry doubles
+  * as its pending metadata; completion replaces it before the block is sealed.
+  */
+trait ContextualSiteImpl:
+  self: Term =>
+  private[semantics] var contextualSite: ResolutionSite.Contextual | ContextualRole | Null = null
+  var contextualCompletion: Opt[ContextualCompletion] = N
+
+final case class ContextualCompletion(steps: Ls[ContextualStep], output: ShapeHost)
+
+enum ContextualStep:
+  case Supply(application: Term.App)
+  case Abstract(params: ParamList, application: Term.App)
+
+private[semantics] final case class ContextualCandidate(symbol: Symbol, annotation: DeclaredType)
+
 trait AppImpl:
   self: Term.App =>
   /** Callable candidates observed by applyShape, independently of the call's results:
@@ -132,6 +156,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
   def describe: Str =
     val desc = this match
       case Error() => "‹error›"
+      case _: InstanceArg => "contextual argument"
       case UnitVal() => "unit value"
       case DynTy() => "dynamic type"
       case _: Rcd => "record literal"
@@ -212,7 +237,17 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
   def subStatements: Vector[Statement] = this match
     case Blk(stats, res) => stats.toVector :+ res
     case _ => subTerms
-  def subTerms: Vector[Term] = this match
+  def subTerms: Vector[Term] =
+    val written = writtenSubTerms
+    this match
+      case term: Term => term.contextualCompletion.fold(written): completion =>
+        written ++ completion.steps.iterator.flatMap:
+          case ContextualStep.Supply(application) => Iterator.single(application)
+          case ContextualStep.Abstract(params, application) => params.subTerms.iterator ++ Iterator.single(application)
+      case _ => written
+
+  private def writtenSubTerms: Vector[Term] = this match
+    case argument: InstanceArg => argument.selected.toVector
     case ref: MemberRef => ref.keyAccess.toVector
     case Error() | Missing | _: Lit | _: AnyRef_ | _: DynTy | _: UnitVal => Vector.empty
     case Capture(base, thru) => Vector.single(base)
@@ -403,6 +438,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
         doc"import ${"\""}.../${imp.file.last}${"\""} as ${imp.sym.showName}"
       case LeadingDotSel(name) => doc"_?_.${name.name}"
       case Error() => doc"‹error›"
+      case argument: InstanceArg => argument.selected.fold(doc"‹contextual argument›")(_.show)
       case IfLike(kw, form, split) =>
         // doc"${kw.name} ${form.headStr} ${split.show}"
         given IfLikeForm = form
@@ -567,6 +603,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     case Neg(ty) => s"~${ty.showDbg}"
     case CompType(lhs, rhs, pol) => s"${lhs.showDbg} ${if pol then "|" else "&"} ${rhs.showDbg}"
     case Error() => "<error>"
+    case argument: InstanceArg => argument.selected.fold("<contextual argument>")(_.showDbg)
     case Tup(fields) => fields.map(_.showDbg).mkString("[", ", ", "]")
     case Mut(und) => s"mut ${und.showDbg}"
     case CtxTup(fields) => fields.map(_.showDbg).mkString("‹using›[", ", ", "]")

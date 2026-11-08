@@ -17,31 +17,45 @@ using Foo[Baz] = new Foo
 :e
 :re
 foo[Baz]
-//│ = fun foo
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	foo[Baz]
+//│ ║        	^^^^^^^^
+//│ ╟── No instance found for contextual parameter ''.
+//│ ║  l.+1: 	foo[Baz]
+//│ ║        	^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	fun foo[A](using Foo[A], A) = 42
+//│ ╙──      	                         ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :breakme // contextual diagnostic not implemented yet
 :e
 :re
 foo
-//│ = fun foo
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	foo
+//│ ║        	^^^
+//│ ╟── No instance found for contextual parameter ''.
+//│ ║  l.+1: 	foo
+//│ ║        	^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	fun foo[A](using Foo[A], A) = 42
+//│ ╙──      	                         ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 using Baz = new Baz
 
-:fixme // contextual completion (Phases 2–4)
 :expect 42
 foo
-//│ ═══[RUNTIME ERROR] Expected: '42', got: 'fun foo'
-//│ = fun foo
+//│ = 42
 
 
 fun foo[A](using Foo[A])(using A) = 42
 
-:fixme // contextual completion (Phases 2–4)
 :expect 42
 foo
-//│ ═══[RUNTIME ERROR] Expected: '42', got: 'fun foo'
-//│ = fun foo
+//│ = 42
 
 
 fun foo[A](using A)(using Foo[A]) = 42
@@ -49,8 +63,17 @@ fun foo[A](using A)(using Foo[A]) = 42
 :fixme // contextual completion (Phases 2–4)
 :expect 42
 foo
-//│ ═══[RUNTIME ERROR] Expected: '42', got: 'fun foo'
-//│ = fun foo
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	foo
+//│ ║        	^^^
+//│ ╟── Cannot determine the type of contextual parameter '': type parameter 'A' has no explicit type argument and no value reaches it.
+//│ ║  l.+1: 	foo
+//│ ║        	^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	fun foo[A](using A)(using Foo[A]) = 42
+//│ ╙──      	           ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'
 
 
 using Foo[Bar[Baz]] = new Foo
@@ -59,7 +82,16 @@ using Foo[Bar[Baz]] = new Foo
 :e
 :re
 foo
-//│ = fun foo
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	foo
+//│ ║        	^^^
+//│ ╟── Cannot determine the type of contextual parameter '': type parameter 'A' has no explicit type argument and no value reaches it.
+//│ ║  l.+1: 	foo
+//│ ║        	^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	fun foo[A](using A)(using Foo[A]) = 42
+//│ ╙──      	           ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 using Bar[Baz] = new Bar
 
@@ -67,7 +99,16 @@ using Bar[Baz] = new Bar
 :e
 :re
 foo
-//│ = fun foo
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	foo
+//│ ║        	^^^
+//│ ╟── Cannot determine the type of contextual parameter '': type parameter 'A' has no explicit type argument and no value reaches it.
+//│ ║  l.+1: 	foo
+//│ ║        	^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	fun foo[A](using A)(using Foo[A]) = 42
+//│ ╙──      	           ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 using Bar[Int] = new Bar
 
@@ -75,14 +116,32 @@ using Bar[Int] = new Bar
 :e
 :re
 foo
-//│ = fun foo
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	foo
+//│ ║        	^^^
+//│ ╟── Cannot determine the type of contextual parameter '': type parameter 'A' has no explicit type argument and no value reaches it.
+//│ ║  l.+1: 	foo
+//│ ║        	^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	fun foo[A](using A)(using Foo[A]) = 42
+//│ ╙──      	           ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 using Bar[Baz] = new Bar
 
 :fixme // contextual completion (Phases 2–4)
 :expect 42
 foo
-//│ ═══[RUNTIME ERROR] Expected: '42', got: 'fun foo'
-//│ = fun foo
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	foo
+//│ ║        	^^^
+//│ ╟── Cannot determine the type of contextual parameter '': type parameter 'A' has no explicit type argument and no value reaches it.
+//│ ║  l.+1: 	foo
+//│ ║        	^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	fun foo[A](using A)(using Foo[A]) = 42
+//│ ╙──      	           ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'
 
 

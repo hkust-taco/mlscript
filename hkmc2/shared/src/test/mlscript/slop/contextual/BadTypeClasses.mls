@@ -21,14 +21,39 @@ module M with
 :breakme // contextual diagnostic not implemented yet
 :e
 M.f
-//│ = fun f
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	M.f
+//│ ║        	^^^
+//│ ╟── No instance found for contextual parameter ''.
+//│ ║  l.+1: 	M.f
+//│ ║        	^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	  fun f(using Int) = ()
+//│ ╙──      	        ^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :breakme // contextual diagnostic not implemented yet
 // §3.2: literal instance types are unsupported.
 :e
 using 42 = 42
 use[42]
-//│ = fun use
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+2: 	use[42]
+//│ ║        	^^^^^^^
+//│ ╟── Contextual parameter types must be named types or type parameters.
+//│ ║  l.+2: 	use[42]
+//│ ║        	^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  in ../../../mlscript-compile/Predef.mls
+//│ ║  l.XX: 	fun use[T](using instance: T) = instance
+//│ ╙──      	           ^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in integer literal
+//│ ║  l.+1: 	using 42 = 42
+//│ ║        	      ^^
+//│ ╟── Instance declaration types must be named types.
+//│ ║  l.+1: 	using 42 = 42
+//│ ╙──      	      ^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 val someInt = 42
 //│ someInt = 42
@@ -41,6 +66,12 @@ using someInt = 42
 //│ ╟── Value symbol 'someInt' cannot be used as a type
 //│ ║  l.XX: 	val someInt = 42
 //│ ╙──      	^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in member reference
+//│ ║  l.+1: 	using someInt = 42
+//│ ║        	      ^^^^^^^
+//│ ╟── Instance declaration types must be named types.
+//│ ║  l.+1: 	using someInt = 42
+//│ ╙──      	      ^^^^^^^
 
 :e
 using someInt: Int = 42
@@ -48,6 +79,12 @@ using someInt: Int = 42
 //│ ║  l.+1: 	using someInt: Int = 42
 //│ ║        	      ^^^^^^^^^^^^
 //│ ╟── Record literal cannot be used as a type
+//│ ║  l.+1: 	using someInt: Int = 42
+//│ ╙──      	      ^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in block
+//│ ║  l.+1: 	using someInt: Int = 42
+//│ ║        	      ^^^^^^^^^^^^
+//│ ╟── Instance declaration types must be named types.
 //│ ║  l.+1: 	using someInt: Int = 42
 //│ ╙──      	      ^^^^^^^^^^^^
 
@@ -79,18 +116,24 @@ using Int = 42
 module M with
   fun foo()(using a: Int) = ()
 
-:fixme // contextual completion (Phases 2–4)
 // §3.1: the value site supplies the trailing contextual clause.
 :expect ()
 M.foo()
-//│ ═══[RUNTIME ERROR] Expected: '()', got: 'fun'
-//│ = fun
 
 :breakme // contextual diagnostic not implemented yet
 :e
 fun f[T](using t: T) = t
 f
-//│ = fun f
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+2: 	f
+//│ ║        	^
+//│ ╟── Cannot determine the type of contextual parameter 't': type parameter 'T' has no explicit type argument and no value reaches it.
+//│ ║  l.+2: 	f
+//│ ║        	^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.+1: 	fun f[T](using t: T) = t
+//│ ╙──      	         ^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 fun f(using t: Int = 42) = t

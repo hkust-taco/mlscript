@@ -7,17 +7,12 @@ fun get(using Int) = use[Int]
 let x =
   using Int = 1
   get
-//│ x = fun get
+//│ x = 1
 
-:fixme // contextual completion (Phases 2–4)
 object Ex with
   using Int = 1
   get
-//│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.+3: 	  get
-//│ ╙──      	  ^^^
 
-:fixme // contextual completion (Phases 2–4)
 :rt
 module Ex with
   using Int = 1
@@ -43,9 +38,6 @@ module Ex with
 //│             modulefulness = Modulefulness of N
 //│         res = MemberRef of member:get⁰
 //│   res = Lit of UnitLit of false
-//│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.+3: 	  get
-//│ ╙──      	  ^^^
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :fixme // handler parent resolution, independent of contextual insertion

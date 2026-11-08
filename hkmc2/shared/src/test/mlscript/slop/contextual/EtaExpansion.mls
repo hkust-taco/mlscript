@@ -28,11 +28,9 @@ let f1 = foo
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f1 = fun foo
 
-:fixme // contextual completion (Phases 2–4)
 :expect [42]
 f1()
-//│ ═══[RUNTIME ERROR] Expected: '[42]', got: 'fun'
-//│ = fun
+//│ = [42]
 
 // bar
 // should be expanded to
@@ -46,11 +44,9 @@ let f2 = bar
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f2 = fun bar
 
-:fixme // contextual completion (Phases 2–4)
 :expect [0.42, 42]
 f2(0.42)
-//│ ═══[RUNTIME ERROR] Expected: '[0.42, 42]', got: 'fun'
-//│ = fun
+//│ = [0.42, 42]
 
 // baz
 // should be expanded to
@@ -64,27 +60,25 @@ let f3 = baz
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f3 = fun baz
 
-:fixme // contextual completion (Phases 2–4)
 :expect [43, 42, 44, 0.42]
 f3(43)(44)
-//│ ═══[RUNTIME ERROR] Expected: '[43, 42, 44, 0.42]', got: 'fun'
-//│ = fun
+//│ = [43, 42, 44, 0.42]
 
 // This should not expand
 :sir
 foo()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ return foo⁰()
+//│ let tmp; set tmp = [contextual_instance_0⁰]; return foo⁰()(...tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = fun
+//│ = [42]
 
 // This should not expand
 :sir
 bar(0.42)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ return bar⁰(0.42)
+//│ let tmp; set tmp = [contextual_instance_0⁰]; return bar⁰(0.42)(...tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = fun
+//│ = [0.42, 42]
 
 
 // :fixme // TODO: fix IR rebinding issue (each symbol should be bound at most once)

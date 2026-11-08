@@ -299,7 +299,7 @@ object SrcScope:
 
 
 
-enum Term extends Statement, AutoLocated, ShapePublisher:
+enum Term extends Statement, AutoLocated, ShapePublisher, ContextualSiteImpl:
   /** Filled by the type interpreter during elaboration; erasure validates the completed result. */
   private[hkmc2] var typeInterpretation: Opt[TypeResolution] = N
 
@@ -307,6 +307,8 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
   case UnitVal()
   case DynTy()
   case Missing // Placeholder terms that were not elaborated due to the "lightweight" elaboration mode `Mode.Light`
+  /** A contextual argument is a stable flow site before its instance has been selected. */
+  case InstanceArg() extends Term, InstanceArgImpl, ShapeHost
   case Lit(lit: Literal)
   
   // --- NEW ---

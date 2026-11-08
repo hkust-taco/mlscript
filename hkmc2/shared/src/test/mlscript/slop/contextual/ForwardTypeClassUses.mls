@@ -7,11 +7,9 @@ fun bar = M.foo()
 module M with
   fun foo()(using s: Str) = s
 
-:fixme // contextual completion (Phases 2–4)
 :expect "ok"
 bar
-//│ ═══[RUNTIME ERROR] Expected: '"ok"', got: 'fun'
-//│ = fun
+//│ = "ok"
 
 fun bar = M.getN.foo()
 module M with
@@ -19,11 +17,9 @@ module M with
 module N with
   fun foo()(using Str) = 1
 
-:fixme // contextual completion (Phases 2–4)
 :expect 1
 bar
-//│ ═══[RUNTIME ERROR] Expected: '1', got: 'fun'
-//│ = fun
+//│ = 1
 
 :breakme // contextual diagnostic not implemented yet
 :e
@@ -34,7 +30,16 @@ module M with
 module Example with
   fun foo(): module M = M
 test
-//│ = fun
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	fun test = M.mtd()
+//│ ║        	           ^^^^^^^
+//│ ╟── No instance found for contextual parameter 'n'.
+//│ ║  l.+1: 	fun test = M.mtd()
+//│ ║        	           ^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.+3: 	  fun mtd()(using n: Int) = n
+//│ ╙──      	            ^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :breakme // contextual diagnostic not implemented yet
 :e
@@ -45,7 +50,16 @@ module M with
 module Example with
   fun foo(): module M = M
 test
-//│ = fun
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	fun test = Example.foo().mtd()
+//│ ║        	           ^^^^^^^^^^^^^^^^^^^
+//│ ╟── No instance found for contextual parameter 'n'.
+//│ ║  l.+1: 	fun test = Example.foo().mtd()
+//│ ║        	           ^^^^^^^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.+3: 	  fun mtd()(using n: Int) = n
+//│ ╙──      	            ^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 using Int = 42
@@ -56,10 +70,8 @@ module M with
 module Example with
   fun foo(): module M = M
 
-:fixme // contextual completion (Phases 2–4)
 :expect 42
 test
-//│ ═══[RUNTIME ERROR] Expected: '42', got: 'fun'
-//│ = fun
+//│ = 42
 
 

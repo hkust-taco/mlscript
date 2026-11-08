@@ -14,21 +14,15 @@ get(using 8)
 
 using Int = 7
 
-:fixme // contextual completion (Phases 2–4)
 :expect 7
 get
-//│ ═══[RUNTIME ERROR] Expected: '7', got: 'fun get'
-//│ = fun get
+//│ = 7
 
-:fixme // contextual completion (Phases 2–4)
 // Direct calls follow the rules for leading and trailing contextual clauses.
 :expect 10
 ((using n: Int) => (x: Int) => n + x)(3)
-//│ ═══[RUNTIME ERROR] Expected: '10', got: 'fun'
-//│ = fun
+//│ = 10
 
-:fixme // contextual completion (Phases 2–4)
 :expect 10
 ((x: Int) => (using n: Int) => x + n)(3)
-//│ ═══[RUNTIME ERROR] Expected: '10', got: 'fun'
-//│ = fun
+//│ = 10
