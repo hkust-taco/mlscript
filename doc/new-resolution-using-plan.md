@@ -860,6 +860,21 @@ Abstract steps. Remaining variation has no isolated cause; the Phase 3 suspicion
 and JVM warmup variation remain optimization follow-up, without blocking progress.
 
 
+Phase 5 reran the same 24-round benchmark after the Lexer migration; all rounds
+had zero failures. The compiler is unchanged from Phase 4, and this subset does
+not import Lexer. The medians quantify run-to-run variation:
+
+| Metric (125 files) | Base | Phase 5 | Change |
+| --- | ---: | ---: | ---: |
+| Elapsed time | 7.064231750 s | 7.137632667 s | +1.04% |
+| Current-thread CPU time | 1.241451 s | 1.292066 s | +4.08% |
+| Current-thread allocated bytes | 2,681,793,576 | 2,693,274,336 | +0.43% |
+
+The remaining CPU difference has no identified source change in this phase.
+JVM warmup and compilation choices remain suspected contributors, alongside the
+previously recorded contextual costs. The phase proceeds under the approved policy.
+
+
 ## 5. Phases
 
 Each phase ends with a full `hkmc2AllTests/test` run that passes, followed by a commit that
@@ -1005,6 +1020,13 @@ independent `:fixme`, including a reproducer without contextual clauses. The ful
   - the late-value error that a later caller with an incompatible type causes.
 
 ### Phase 5: migration and documentation
+
+Implementation status: `parsing/Lexer` compiles with `#lang(0.3.x)`; all 20
+application compilation fixtures pass. Its migration-table row was removed.
+The contextual migration bullet, reference §13, namespace cross-link, and design
+invariants are updated. `hkmc2AllTests/test` passed to completion, with unchanged golden outputs.
+The phase benchmark is recorded in §4.6.
+No architecture or language-rule deviation is required.
 
 - Try migrating `mlscript-compile/apps/parsing/Lexer.mls` to `#lang(0.3.x)`. If unrelated
   new-resolution gaps block the migration, leave the file as it is and record the blocker in

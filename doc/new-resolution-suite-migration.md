@@ -14,7 +14,6 @@ and implementation contracts are in the [design notes](new-resolution-design.md)
 | Fixtures | Remaining work |
 | --- | --- |
 | `CSP`, `QuoteExample1` | Quasiquote type selections and wildcard-reference lowering are unsupported. |
-| `parsing/Lexer` | Token constructors with trailing `using` parameters need automatic contextual argument insertion. `newres/LexerMigration` reproduces the missing behavior. |
 | `parsing/ParseRule` | Recursive rule inference exceeds the compilation time limit when compiling consumers. Callback inputs exposed by `Iter.mapping` also leave `rule.map` with an unknown receiver. |
 | `nofib/sorting` | New resolution exceeds the compilation time limit, including with the required `int_of_char(c: Str)` parameter annotation. |
 
@@ -23,12 +22,13 @@ and implementation contracts are in the [design notes](new-resolution-design.md)
 Legacy worksheets require more than enabling the language configuration. The
 following constraints identify the current failing behavior and representative tests.
 
-- **Contextual calls and module checks:** `basics/CompanionModules_Classes` can
-  produce a function instead of the completed result because implicit `using`
-  arguments are not inserted. Several `ctx` and module worksheets also lose
-  required negative diagnostics. `basics/CyclicModuleForwarders` needs a decision
-  about nominal module-forwarding compatibility. Passing contextual arguments
-  explicitly would bypass the feature these tests exercise.
+- **Contextual calls and module checks:** contextual completion, eta-expansion, and
+  namespace instances now work under new resolution, with coverage in
+  `slop/contextual/`; `parsing/Lexer` has migrated to `0.3.x`.
+  Independent module checks remain: `basics/CyclicModuleForwarders` needs a decision
+  about nominal module-forwarding compatibility. Other legacy worksheets must keep
+  their negative diagnostics when ported. Partial parent application in anonymous
+  refinements remains a `:fixme` in `slop/contextual/EtaEvaluation`.
 - **Constructor and anonymous-object interfaces:** `codegen/ParamClasses`,
   `basics/ValMemberSymbols`, and `lifter/AnonClasses` exercise constructor members, partially
   constructed objects, or anonymous refinements that lack the required interfaces.

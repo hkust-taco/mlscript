@@ -333,9 +333,95 @@ until defined, then missing the name, inaccessible, selected through a path from
 or found late.
 
 `settleUnboundReferences` runs before interface exposure and block completion, and takes
-the references of the current block from `accessSites`. It lets capitalized references
-without namespaces fall back to their wildcard opens in source order, then diagnoses
+the references and contextual sites of the current block from `resolutionSites`. It lets
+capitalized references without namespaces fall back to their wildcard opens in source order, then diagnoses
 missing and ambiguous names. Namespaces revealed afterwards are reported against the
 settled candidates and never change them; `AccessPath.reachable` checks their paths
 without building them. `LeadingDotSelections.mls` and the `ImplicitNamespace*.mls` files
 in `slop/` cover these rules.
+
+## Contextual parameters
+
+The [language reference](reference.md#13-context-parameters-type-classes) specifies
+completion, matching, scope, and timing. The implementation shares the ordinary
+flow graph, application inference, and implicit-namespace walk.
+
+`Ctx` carries a persistent list of lexical instance tiers, shared by sites. Each
+contextual parameter clause contributes one tier; each completed `using`
+declaration contributes another. Module and object declarations own their instance
+members and cache an instance-member index. Anonymous instances have declaration
+keys inaccessible to source; named instances use ordinary member names. Both
+lookup paths share visibility and receiver transport. Legacy binding tables remain
+unchanged. Runtime anonymous bindings occupy a separate symbol-keyed table to
+avoid collisions with named properties and inherited instances.
+
+Elaboration records contextual sites and unresolved references in one
+`resolutionSites` worklist in post-order. The site's pending entry stores its role,
+source scope, lexical instances, and type binders. Settlement processes each entry
+synchronously before exposure and completion. An application head supplies only
+leading contextual lists; a value site also abstracts ordinary lists that precede
+later contextual lists. Calling-convention checks apply when reference targets
+arrive, independently of whether a site supplies arguments.
+
+`listenContextual` materializes definition references at their producing site.
+It uses instance views only to classify the received value, and forwards ordinary
+values unchanged. Forwarding an expanded view would lose deferred substitutions,
+marks, and annotations, breaking generic identity calls across imports. Declared
+`InstanceShape` values pass through without expanding their type references;
+written function types cannot contain contextual lists. Selected declared callable
+interfaces retain their contextual-list metadata and declaration identity.
+
+Every stored value and completed output has no leading contextual list. Check this
+with `softAssert` at variable, field, parameter, and completion publishers.
+Contextual lambdas are completed at their literal sites; generic values cannot
+carry a deferred completion obligation. Generic member lookup remains opaque.
+No deferred completion graph edges or per-term wrapper state are needed.
+
+Only potential site classes mix in `ContextualSiteImpl`: applications, type
+applications, instantiations, definition references and selections, `super`,
+lambdas, and outer captures. `SimpleRef` and compound heads are not sites. Pending
+sites reuse the worklist entry; completion work, output hosts, and observers are
+allocated only on demand. Completed syntax is sealed with its synthesized terms.
+
+A Supply step uses `App(Missing, CtxTup(InstanceArg...))` and ordinary `applyShape`.
+Its argument constraints and call activation exist before queries are decided.
+Each `InstanceArg` records its selected expression and publishes it immediately,
+so the next query can observe its inference consequences. All callees reuse these
+steps, but select under their own bindings and must agree on the runtime arguments.
+Selections never change after their decision. Later incompatible values report
+errors through the same matching relation used for selection.
+
+An Abstract step has a synthesized ordinary lambda for flow and an application
+for its continuation. That application owns further completion steps, and the
+lambda observes its completed result. A fresh rest parameter forwards the exact
+argument tuple: copying the first callee's fixed parameters could turn an omitted
+optional argument into a supplied argument for another callee with an empty list.
+Ordinary application inference still checks each callee's arity and constraints.
+Lowering flattens the continuation steps, interleaves contextual and written
+arguments, and emits lambdas around the ordinary call or constructor operation.
+It captures operands once in source order and reconstructs method selections on
+the captured receiver, preserving receiver binding.
+
+Query observations use all call activations for contextual matching, including
+caller values of otherwise opaque enclosing generic parameters. Demand-created
+observers use the ordinary instantiation cache and publisher copy-on-import
+protocol. An imported generic body's observers are adopted before its first new
+caller publishes values, even if its result does not demand those values. Importers
+must not mutate the exporter's decisions or each other's observations.
+
+`NameNamespaces` and `InstanceNamespaces` implement requests over one shared
+`typeNamespaces`/`valueNamespaces` walk. Name requests retain their existing
+consultation keys and behavior. Named instance requests cache provider decisions
+by module; parameter requests use module and triggering class or alias. The module
+instance index is shared by all requests. Provider checks inspect declaration
+heads, including subclasses, without consulting argument compatibility. Instance
+requests traverse type arguments as well, independently of alias-provider cutoff.
+Late namespace discovery uses consumer-local caches and reports against the fixed
+selection only when the namespace tier participated.
+
+The `slop/contextual/` suite covers completion, imports, nested captures, receiver
+binding, effects, namespace cutoffs, and late values and callees. Existing
+`ImplicitNamespace*.mls` and `LeadingDotSelections.mls` outputs remain unchanged.
+Partial parent application in anonymous refinements and generic tuple-alias scope
+transport remain independent `:fixme` regressions; they do not authorize skipping
+invariants or changing contextual rules.
