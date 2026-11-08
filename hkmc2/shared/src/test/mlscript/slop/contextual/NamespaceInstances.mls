@@ -17,19 +17,10 @@ fun render[A](value: A)(using show: Show[A]) = show.show(value)
 //│ ╙──      	      ^^^^
 //│ ═══[RUNTIME ERROR] TypeError: Class extends value undefined is not a constructor or null
 
-:fixme // namespace instance selection (Phase 3)
+:fixme // The preceding generic override error prevents module initialization.
 :expect "int"
 render(1)
-//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
-//│ ║  l.+1: 	render(1)
-//│ ║        	^^^^^^^^^
-//│ ╟── No instance found for the contextual parameter 'show' of type Show[A].
-//│ ║  l.+1: 	render(1)
-//│ ║        	^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
-//│ ║  l.XX: 	fun render[A](value: A)(using show: Show[A]) = show.show(value)
-//│ ╙──      	                        ^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Symbol(mlscript.contextualInstances)')
 //│ ═══[RUNTIME ERROR] Expected: '"int"', got: 'undefined'
 
 :fixme // generic override representation check, independent of contextual insertion
@@ -48,7 +39,7 @@ render(1)
 //│ ═══[RUNTIME ERROR] TypeError: Class extends value undefined is not a constructor or null
 //│ ═══[RUNTIME ERROR] Expected: '"lexical"', got: 'undefined'
 
-:fixme // namespace instance selection (Phase 3)
+:fixme // Nested companion initialization uses the class before its constructor is available.
 // Declaration heads cut off the walk even when argument compatibility rejects them.
 module Outer with
   abstract class Codec[A] with
@@ -63,7 +54,6 @@ module Outer with
 fun codec[A](value: A)(using c: Outer.Codec[A]) = c.label
 //│ ═══[RUNTIME ERROR] TypeError: Class extends value undefined is not a constructor or null
 
-:breakme // contextual diagnostic not implemented yet
 :e
 codec(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
@@ -74,7 +64,10 @@ codec(1)
 //│ ║        	^^^^^^^^
 //│ ╟── The contextual parameter is declared here.
 //│ ║  l.XX: 	fun codec[A](value: A)(using c: Outer.Codec[A]) = c.label
-//│ ╙──      	                       ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	                       ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance of type Codec[Str] from namespace 'Codec' does not accept all values reaching the query.
+//│ ║  l.XX: 	    using Codec[Str] = new StrCodec
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A parameter query must revisit one module through different triggering heads.
@@ -84,20 +77,9 @@ module Family with
   using A = new A
 fun choose[T](value: T)(using chosen: T) = 42
 
-:fixme // namespace instance selection (Phase 3)
 :expect 42
 choose(new Family.B)
-//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
-//│ ║  l.+1: 	choose(new Family.B)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── No instance found for the contextual parameter 'chosen' of type T.
-//│ ║  l.+1: 	choose(new Family.B)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
-//│ ║  l.XX: 	fun choose[T](value: T)(using chosen: T) = 42
-//│ ╙──      	                        ^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'
+//│ = 42
 
 // Type-argument namespaces contribute instances.
 abstract class Tag[A] with
@@ -109,20 +91,9 @@ module Point with
   using Tag[Point] = new PointTag
 fun tag[A](value: A)(using t: Tag[A]) = t.label
 
-:fixme // namespace instance selection (Phase 3)
 :expect "point"
 tag(new Point)
-//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
-//│ ║  l.+1: 	tag(new Point)
-//│ ║        	^^^^^^^^^^^^^^
-//│ ╟── No instance found for the contextual parameter 't' of type Tag[A].
-//│ ║  l.+1: 	tag(new Point)
-//│ ║        	^^^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
-//│ ║  l.XX: 	fun tag[A](value: A)(using t: Tag[A]) = t.label
-//│ ╙──      	                     ^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '"point"', got: 'undefined'
+//│ = "point"
 
 // Namespace ambiguity does not use specificity.
 abstract class Both[A] with
@@ -138,18 +109,23 @@ module Thing with
   using Both[Thing] = new Second
 fun both[A](value: A)(using b: Both[A]) = b.label
 
-:breakme // contextual diagnostic not implemented yet
 :e
 both(new Thing)
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	both(new Thing)
 //│ ║        	^^^^^^^^^^^^^^^
-//│ ╟── No instance found for the contextual parameter 'b' of type Both[A].
+//│ ╟── Ambiguous instances for the contextual parameter 'b' of type Both[A].
 //│ ║  l.+1: 	both(new Thing)
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── The contextual parameter is declared here.
 //│ ║  l.XX: 	fun both[A](value: A)(using b: Both[A]) = b.label
-//│ ╙──      	                      ^^^^^^^^^^^^^^^^
+//│ ║        	                      ^^^^^^^^^^^^^^^^
+//│ ╟── This instance of type Both[Thing] comes from namespace 'Both'.
+//│ ║  l.XX: 	  using Both[Thing] = new First
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance of type Both[Thing] comes from namespace 'Thing'.
+//│ ║  l.XX: 	  using Both[Thing] = new Second
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Private instances do not escape their declaring scope.
@@ -157,7 +133,6 @@ class Secret
 module Secret with
   private using Secret = new Secret
 
-:breakme // contextual diagnostic not implemented yet
 :e
 use[Secret]
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
@@ -169,5 +144,9 @@ use[Secret]
 //│ ╟── The contextual parameter is declared here.
 //│ ║  in ../../../mlscript-compile/Predef.mls
 //│ ║  l.XX: 	fun use[T](using instance: T) = instance
-//│ ╙──      	           ^^^^^^^^^^^^^^^^^
+//│ ║        	           ^^^^^^^^^^^^^^^^^
+//│ ╟── Here, the companion module 'Secret' of class 'Secret' provides no accessible instance with the required head.
+//│ ║  in NamespaceInstances.mls:+1
+//│ ║  l.+1: 	use[Secret]
+//│ ╙──      	    ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

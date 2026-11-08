@@ -1,0 +1,13 @@
+#lang(0.3.x)
+
+module NamespaceFlow with
+  class Evidence[A](val label: Str)
+  class First
+  class Second
+  module First with
+    using Evidence[Any] = Evidence[Any]("first")
+  module Second with
+    using Evidence[Any] = Evidence[Any]("second")
+  fun consume[A](value: A)(using e: Evidence[A]) = e.label
+  fun generic[A](value: A) = consume(value)
+  val seed = generic(new First)

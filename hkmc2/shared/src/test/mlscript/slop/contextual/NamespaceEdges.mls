@@ -5,21 +5,10 @@ module Enclosing with
   class Evidence
   using Evidence = new Evidence
 
-:fixme // namespace selection (Phase 3)
 :expect 42
 fun enclosing(using Enclosing.Evidence) = 42
 enclosing
-//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
-//│ ║  l.+2: 	enclosing
-//│ ║        	^^^^^^^^^
-//│ ╟── No instance found for the unnamed contextual parameter of type Evidence.
-//│ ║  l.+2: 	enclosing
-//│ ║        	^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
-//│ ║  l.+1: 	fun enclosing(using Enclosing.Evidence) = 42
-//│ ╙──      	              ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'
+//│ = 42
 
 // Alias expansion must retain subclass heads for first-provider cutoff.
 abstract class Base[A] with
@@ -30,24 +19,12 @@ module Base with
   type Alias = Derived
   using Alias = new Derived
 
-:fixme // namespace selection (Phase 3)
 :expect "derived"
 fun aliased(using b: Base[Int]) = b.label
 aliased
-//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
-//│ ║  l.+2: 	aliased
-//│ ║        	^^^^^^^
-//│ ╟── No instance found for the contextual parameter 'b' of type Base[Int].
-//│ ║  l.+2: 	aliased
-//│ ║        	^^^^^^^
-//│ ╟── The contextual parameter is declared here.
-//│ ║  l.+1: 	fun aliased(using b: Base[Int]) = b.label
-//│ ╙──      	            ^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '"derived"', got: 'undefined'
+//│ = "derived"
 
 // The same provider cuts off traversal even for incompatible argument flows.
-:breakme // contextual diagnostic not implemented yet
 :e
 fun incompatible(using Base[Str]) = 42
 incompatible
@@ -59,7 +36,10 @@ incompatible
 //│ ║        	^^^^^^^^^^^^
 //│ ╟── The contextual parameter is declared here.
 //│ ║  l.+1: 	fun incompatible(using Base[Str]) = 42
-//│ ╙──      	                 ^^^^^^^^^^^^^^^
+//│ ║        	                 ^^^^^^^^^^^^^^^
+//│ ╟── This instance of type Derived from namespace 'Base' does not accept all values reaching the query.
+//│ ║  l.XX: 	  using Alias = new Derived
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Nested written arguments contribute their data-type companions.
@@ -72,42 +52,21 @@ module Data with
     fun label: Str = "nested"
   using Nested[Wrapped[Data]] = new Evidence
 
-:fixme // namespace selection (Phase 3)
 :expect "nested"
 fun nested(using n: Nested[Wrapped[Data]]) = n.label
 nested
-//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
-//│ ║  l.+2: 	nested
-//│ ║        	^^^^^^
-//│ ╟── No instance found for the contextual parameter 'n' of type Nested[Wrapped[Data]].
-//│ ║  l.+2: 	nested
-//│ ║        	^^^^^^
-//│ ╟── The contextual parameter is declared here.
-//│ ║  l.+1: 	fun nested(using n: Nested[Wrapped[Data]]) = n.label
-//│ ╙──      	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '"nested"', got: 'undefined'
+//│ = "nested"
 
 // Imported modules contribute the same declaration index.
 import "./mlscript-compile/ImportedInstances.mls"
 
-:fixme // namespace selection (Phase 3)
 :expect 42
 fun imported(using ImportedInstances.Evidence) = 42
 imported
-//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
-//│ ║  l.+2: 	imported
-//│ ║        	^^^^^^^^
-//│ ╟── No instance found for the unnamed contextual parameter of type Evidence.
-//│ ║  l.+2: 	imported
-//│ ║        	^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
-//│ ║  l.+1: 	fun imported(using ImportedInstances.Evidence) = 42
-//│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'
+//│ = 42
 
-// A later subtype adds a namespace whose instance would also have matched.
+// A later subtype adds a provider, but its Child instance cannot accept the earlier Parent.
+// It does not match the whole query, so §3.6 requires no late-namespace error.
 class Parent with
   fun label: Str = "parent"
 module Parent with
@@ -116,33 +75,11 @@ class Child extends Parent
 module Child with
   using Child = new Child
 
-:fixme // namespace selection (Phase 3)
 :expect "parent"
 fun later[T](value: T) = use[T].label
 later(new Parent)
-//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
-//│ ║  l.+1: 	fun later[T](value: T) = use[T].label
-//│ ║        	                         ^^^^^^
-//│ ╟── No instance found for the contextual parameter 'instance' of type T.
-//│ ║  l.+1: 	fun later[T](value: T) = use[T].label
-//│ ║        	                         ^^^^^^
-//│ ╟── The contextual parameter is declared here.
-//│ ║  in ../../../mlscript-compile/Predef.mls
-//│ ║  l.XX: 	fun use[T](using instance: T) = instance
-//│ ╙──      	           ^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.+1: 	fun later[T](value: T) = use[T].label
-//│ ║        	                         ^^^^^^^^^^^^
-//│ ╟── Cannot resolve member 'label' of a value with unknown shape.
-//│ ║  l.+1: 	fun later[T](value: T) = use[T].label
-//│ ║        	                             ^
-//│ ╟── Type parameter 'T' does not specify a member interface.
-//│ ║  l.+1: 	fun later[T](value: T) = use[T].label
-//│ ╙──      	          ^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '"parent"', got: 'undefined'
+//│ = "parent"
 
-:breakme // late namespace diagnostic not implemented yet
-:e
+:expect "parent"
 later(new Child)
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ = "parent"

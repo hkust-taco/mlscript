@@ -700,6 +700,15 @@ to this section. Escalate (see §7) if a principle in §3 cannot be met.
   name request, publishing is `resolveThrough`. The name request's behavior must stay identical:
   all `ImplicitNamespace*.mls` and `LeadingDotSelections.mls` outputs unchanged. Add the
   type-argument extension of §3.3 only for instance requests. Do not copy and adapt the walk.
+  - **Phase 3 implementation.** `NameNamespaces` and `InstanceNamespaces` share that walk and
+    keep their provider decisions in `ImplicitNamespaces`. Name requests retain their original
+    module keys and base context. Instance requests preserve written aliases while observing
+    parameter inputs, and traverse arguments independently of any alias-provider cutoff.
+    Mutable instance-request discoveries use the resolver's copy-on-import cache. A first call
+    of an imported generic definition adopts contextual observers from the parameter's defining
+    graph before publishing its new instance; otherwise a body whose result needs no new flow
+    could miss that first caller. These are applications of the existing graph-isolation rules,
+    with no change to generic opacity or site completion.
 - **Matching.** Implement "may be a value of" (§3.4) as one function, used both for decisions and
   for late-value checks.
 - **Nested sites (Phase 6).** An instance-function argument is a synthesized application chain,
@@ -803,6 +812,26 @@ sequentially, without concurrent builds or tests. Allocation uses
 The additional allocation stays below the 2% limit. Ordinary sites share the worklist entry;
 completion work records, output hosts, and contextual query observers are created on demand.
 
+Phase 3 checkpoint measurement against the same `fdddc5842` base uses the same 125 files,
+temporary runner, JDK, counters, and separate scratch worktrees. The initial twelve-round run
+of the final candidate measured elapsed time +0.89%, current-thread CPU time +5.45%, and
+allocated bytes +0.60%. CPU time was still declining across its final rounds, so both runners
+were extended to 24 rounds, with the last five used for the medians below. The candidate and
+then the base ran sequentially, with no concurrent builds or tests; all rounds had zero failures.
+
+| Metric (125 files) | Base | Phase 3 checkpoint | Change |
+| --- | ---: | ---: | ---: |
+| Elapsed time | 7.064231750 s | 7.237733584 s | +2.46% |
+| Current-thread CPU time | 1.241451 s | 1.345219 s | +8.36% |
+| Current-thread allocated bytes | 2,681,793,576 | 2,708,646,216 | +1.00% |
+
+The elapsed-time regression exceeds the 2% budget. The implementation already avoids looking
+up a local parameter's contextual observer twice; that optimization is included in these numbers
+and passed full validation. The remaining cost has not been isolated to a clear fix. **Work stops
+at the Phase 3 performance gate under §7.** This is a validated functional checkpoint, not a
+completed Phase 3. No bypass of contextual observation or namespace discovery was introduced to
+meet the budget. Profiling and a measured fix are required before proceeding to Phase 4.
+
 
 ## 5. Phases
 
@@ -866,7 +895,7 @@ Validation and remaining work:
   interface of handled expressions (`Debugging`, `NestedUsingInstances`); generic override
   representation; and nested generic tuple scope transport (`NestedGenericFlow`, also reproduced
   on `fdddc5842`). No scope invariant was relaxed to accommodate them.
-- Phases 3–6 have not started. Namespace lookup has not been generalized.
+- At the end of Phase 2, Phases 3–6 had not started and namespace lookup had not been generalized.
 
 - Implement interception, settlement, Supply steps, `InstanceArg`, query construction, matching,
   lexical candidates, completion storage, and lowering of Supply steps. This covers value sites,
@@ -882,6 +911,27 @@ Validation and remaining work:
   Cases requiring Abstract steps remain marked `:fixme` or `:todo` until Phase 4.
 
 ### Phase 3: namespace instances
+
+Implementation status: namespace selection and late-namespace diagnostics pass full validation,
+but the performance gate is blocked (§4.6, §7). Phases 4–6 have not started. The existing namespace
+and timing tests are enabled where their pending behavior now succeeds. `NamespaceQueries.mls`
+adds provider cutoff, alias provenance and argument traversal, consultation keys, deduplication,
+and visibility coverage. `LateNamespaces.mls` covers matching late providers and lexical
+shadowing; two bad importers and an unaffected importer check isolated late discovery.
+`LateValuesFirstImport.mls` also validates a fixed lexical selection on its first imported call.
+
+The old `NamespaceEdges` Parent/Child late-provider case now expects success: the Child instance
+cannot accept the earlier Parent value, so it does not match the whole query and §3.6 requires
+no late-namespace diagnostic. `LateNamespaces` supplies the positive diagnostic case, with two
+`Evidence[Any]` instances that accept all values. Independent generic-override and nested
+companion-initialization failures remain `:fixme`; they do not justify changing instance rules.
+
+Validation: `ctest` passed all 63 compilation tests before individual runs. The contextual,
+namespace, and import regressions pass, and `hkmc2AllTests/test` completed successfully after
+the final code change. All 14 `ImplicitNamespace*.mls` files and `LeadingDotSelections.mls`
+retain identical outputs; legacy resolution and scratch files are unchanged. The full diff was
+reviewed for blank-line and indentation noise. Phase 3 makes no semantic or architectural
+deviation from the plan; its implementation details are recorded in §4.2.
 
 - Generalize the namespace machinery (§4.2) without changing name behavior. Add the instance index
   lookups, the "provides" rule, type-argument namespaces, the namespace tier, and late namespaces.

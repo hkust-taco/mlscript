@@ -1,0 +1,24 @@
+:.
+
+import "./mlscript-compile/LexicalQueries.mls"
+
+// The first consumer call must validate the imported generic body's fixed selection.
+:e
+LexicalQueries.generic("first call")
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.XX: 	  fun generic[A](value: A) = consume(value)
+//│ ║        	                             ^^^^^^^^^^^^^^
+//│ ╟── This value reaches the type of the unnamed contextual parameter after its instance was selected; the selected instance of type Accept[Int] does not accept it.
+//│ ║  l.XX: 	  fun generic[A](value: A) = consume(value)
+//│ ║        	                             ^^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	  fun consume[A](value: A)(using Accept[A]) = 42
+//│ ║        	                           ^^^^^^^^^^^^^^^
+//│ ╟── The selected instance is declared here.
+//│ ║  l.XX: 	  using Accept[Int] = new Accept[Int]
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This value is incompatible with the selected instance.
+//│ ║  in LateValuesFirstImport.mls:+1
+//│ ║  l.+1: 	LexicalQueries.generic("first call")
+//│ ╙──      	                       ^^^^^^^^^^^^
+//│ = 42

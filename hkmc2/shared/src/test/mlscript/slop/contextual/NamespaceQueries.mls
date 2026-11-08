@@ -1,0 +1,136 @@
+:.
+
+class Evidence[A](val label: Str)
+fun evidence[A](value: A)(using e: Evidence[A]) = e.label
+
+// Declaration heads cut off a parent provider even if their arguments cannot match.
+class ParentData
+class ChildData extends ParentData
+module ParentData with
+  using Evidence[ChildData] = Evidence[ChildData]("parent")
+module ChildData with
+  using Evidence[Str] = Evidence[Str]("cutoff")
+
+:e
+evidence(new ChildData)
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	evidence(new ChildData)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── No instance found for the contextual parameter 'e' of type Evidence[A].
+//│ ║  l.+1: 	evidence(new ChildData)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	fun evidence[A](value: A)(using e: Evidence[A]) = e.label
+//│ ║        	                          ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance of type Evidence[Str] from namespace 'ChildData' does not accept all values reaching the query.
+//│ ║  l.XX: 	  using Evidence[Str] = Evidence[Str]("cutoff")
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A lexical match prevents any namespace tier from participating.
+using Evidence[Int] = Evidence[Int]("lexical")
+
+:expect "lexical"
+evidence(1)
+//│ = "lexical"
+
+// Parameter queries consult the same module through aliases and both classes.
+module Family with
+  class A
+  class B extends A
+  type First = A
+  type Second = B
+  using First = new A
+fun choose[A](value: A)(using chosen: A) = 42
+fun throughAlias(value: Family.Second) = choose(value)
+
+:expect 42
+throughAlias(new Family.B)
+//│ = 42
+
+// The same declaration reached through two argument namespaces is one candidate.
+class Pair[A, B]
+class Duplicated[A]
+module Shared with
+  class Left
+  class Right
+  using Duplicated[Pair[Left, Right]] = new Duplicated[Pair[Left, Right]]
+
+:expect 43
+fun duplicated(using Duplicated[Pair[Shared.Left, Shared.Right]]) = 43
+duplicated
+//│ = 43
+
+// Ordinary values of the right type do not become instances.
+class Ordinary
+module Ordinary with
+  val value = new Ordinary
+
+:e
+use[Ordinary]
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	use[Ordinary]
+//│ ║        	^^^^^^^^^^^^^
+//│ ╟── No instance found for the contextual parameter 'instance' of type Ordinary.
+//│ ║  l.+1: 	use[Ordinary]
+//│ ║        	^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  in ../../../mlscript-compile/Predef.mls
+//│ ║  l.XX: 	fun use[T](using instance: T) = instance
+//│ ║        	           ^^^^^^^^^^^^^^^^^
+//│ ╟── Here, the companion module 'Ordinary' of class 'Ordinary' provides no accessible instance with the required head.
+//│ ║  in NamespaceQueries.mls:+1
+//│ ║  l.+1: 	use[Ordinary]
+//│ ╙──      	    ^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Private instance access is allowed within its owner's scope.
+class Private
+module Private with
+  private using Private = new Private
+  fun read = use[Private]
+
+:expect 44
+fun privateRead(value: Private) = 44
+privateRead(Private.read)
+//│ = 44
+
+// A parameter's declared alias retains its own companion before expansion.
+class AliasBase
+type AliasName = AliasBase
+module AliasName with
+  using AliasName = new AliasBase
+fun aliasParameter(value: AliasName) = choose(value)
+
+:expect 42
+aliasParameter(new AliasBase)
+//│ = 42
+
+// An alias provider does not suppress the independent type-argument namespaces.
+class AliasEvidence[A]
+class Data
+type Alias[A] = AliasEvidence[A]
+module Alias with
+  using AliasEvidence[Data] = new AliasEvidence[Data]
+module Data with
+  using AliasEvidence[Data] = new AliasEvidence[Data]
+
+:e
+fun aliasArguments(using Alias[Data]) = 45
+aliasArguments
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+2: 	aliasArguments
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── Ambiguous instances for the unnamed contextual parameter of type AliasEvidence[Data].
+//│ ║  l.+2: 	aliasArguments
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.+1: 	fun aliasArguments(using Alias[Data]) = 45
+//│ ║        	                   ^^^^^^^^^^^^^^^^^
+//│ ╟── This instance of type AliasEvidence[Data] comes from namespace 'Alias'.
+//│ ║  l.XX: 	  using AliasEvidence[Data] = new AliasEvidence[Data]
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance of type AliasEvidence[Data] comes from namespace 'Data'.
+//│ ║  l.XX: 	  using AliasEvidence[Data] = new AliasEvidence[Data]
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

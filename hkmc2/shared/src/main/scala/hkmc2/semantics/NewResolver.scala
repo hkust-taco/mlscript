@@ -1490,12 +1490,7 @@ class NewResolver:
                 case S(bound) => follow(bound.instantiate(current.instances).at(current.positive), noTypeArguments, aliases, source, publish)
                 case N =>
                   val target = current.instances.get(parameter.symbol).fold(parameter)(rctx.typeParameter)
-                  def observeParameter(receive: Listener): Unit =
-                    listenTypeParameterValues(target)(receive)
-                    if contextual && !target.symbol.isInstanceOf[TypeParameterInstance] then
-                      rctx.contextualInstancesOf(target.symbol).subscribeToShapes: instance =>
-                        listenTypeParameterValues(rctx.typeParameter(instance))(receive)
-                  observeParameter: value =>
+                  observeParameterValues(target, contextual): value =>
                     // Report the use of an abstract parameter in a signature, not
                     // just its declaration. This survives substitution through
                     // generic members and nested tuple or function annotations.
@@ -1960,6 +1955,17 @@ class NewResolver:
     parameter.host.subscribe:
       case value: TermShape => listener(value)
       case _ => softAssert(false, "A type parameter's value host cannot contain activation envelopes")
+
+  /** Contextual queries observe callers of abstract binders, while preserving each input's
+    * declared type and alias provenance for namespace discovery. Matching can then expand
+    * the same inputs into views without changing which namespaces those written types name.
+    */
+  private def observeParameterValues(parameter: TypeShape.Parameter, contextual: Bool)
+      (receive: Listener)(using ResolutionContext): Unit =
+    listenTypeParameterValues(parameter)(receive)
+    if contextual && !parameter.symbol.isInstanceOf[TypeParameterInstance] then
+      rctx.contextualInstancesOf(parameter.symbol).subscribeToShapes: instance =>
+        listenTypeParameterValues(rctx.typeParameter(instance))(receive)
 
   private[semantics] def publishParameter(symbol: VarSymbol, shape: TermShape | NoShape)(using ResolutionContext): Unit =
     shape match
@@ -2826,10 +2832,6 @@ class NewResolver:
       (index, shape) => constrainParameterIn(params(index), shape, mss, instances, S(src)))
     contextualArguments(args, params.map(p => (p, parameterSignature(p, positive = false).map(_.instantiate(instances)))))
 
-  private enum ContextualQuery:
-    case Named(cls: ClassLikeDef, positions: Ls[DeclaredType])
-    case Parameter(tpe: DeclaredType, symbol: VarSymbol)
-
   /** Render the query's written types with explicit substitutions, without guessing a type
     * from its inferred values. Recursive aliases retain their source spelling at the cycle.
     */
@@ -3008,21 +3010,46 @@ class NewResolver:
                 case _ => N
           .toList
         .find(_.nonEmpty).getOrElse(Nil)
+        def select(candidate: ContextualCandidate)(selected: => Term): Unit = argument.candidate match
+          case S(previous) if previous.symbol != candidate.symbol =>
+            fail(msg"The callees of this call require different instances for the ${contextualParameterName(parameter)} of type ${contextualTypeName(tpe)}.",
+              (msg"One callee selects this instance." -> previous.symbol.toLoc) ::
+              (msg"Another callee selects this instance." -> candidate.symbol.toLoc) :: Nil)
+          case S(_) => ()
+          case N =>
+            argument.candidate = S(candidate)
+            argument.selected = S(selected)
         matches match
-          case (tier, binding, candidate) :: Nil => argument.candidate match
-            case S(previous) if previous.symbol != binding.symbol =>
-              fail(msg"The callees of this call require different instances for the ${contextualParameterName(parameter)} of type ${contextualTypeName(tpe)}.",
-                (msg"One callee selects this instance." -> previous.symbol.toLoc) ::
-                (msg"Another callee selects this instance." -> binding.symbol.toLoc) :: Nil)
-            case S(_) => ()
-            case N =>
-              val elem = environment.instanceElement(tier, binding)
-              softAssert(elem.nonEmpty, "A lexical instance must be reachable through its recorded scope")
-              elem.foreach: elem =>
-                val selected = elem.ref(N)(using rctx.owner, environment, config, this, rctx).withLocOf(argument)
-                argument.candidate = S(ContextualCandidate(binding.symbol, candidate))
-                argument.selected = S(selected)
-          case Nil => fail(msg"No instance found for the ${contextualParameterName(parameter)} of type ${contextualTypeName(tpe)}.", Nil)
+          case (tier, binding, candidate) :: Nil =>
+            val elem = environment.instanceElement(tier, binding)
+            softAssert(elem.nonEmpty, "A lexical instance must be reachable through its recorded scope")
+            elem.foreach: elem =>
+              select(ContextualCandidate(binding.symbol, candidate)):
+                elem.ref(N)(using rctx.owner, environment, config, this, rctx).withLocOf(argument)
+          case Nil =>
+            val namespaces = new InstanceNamespaces(argument, parameter, tpe, query, environment.scope, environment.typeBinders).local
+            typeNamespaces(namespaces, tpe, writtenWitness(tpe), refine = true, provided = true)
+            val candidates = namespaces.candidates.valuesIterator
+              .filter(candidate => contextualMatches(candidate.annotation, query, _ => ())).toList
+            namespaces.settled = true
+            candidates match
+              case candidate :: Nil => select(ContextualCandidate(candidate.definition.sym, candidate.annotation)):
+                namespaceInstanceTerm(candidate, namespaces)
+              case Nil =>
+                val notes = namespaces.consulted.iterator.flatMap: (key, namespace) =>
+                  val module = key match
+                    case module: ModuleOrObjectSymbol => module
+                    case (module, _) => module
+                  namespace.status match
+                    case Namespace.Status.Missing => S(msg"Here, ${describeNamespace(module, namespace)} provides no accessible instance with the required head." -> namespace.witness.toLoc)
+                    case Namespace.Status.Inaccessible => S(msg"Here, ${describeNamespace(module, namespace)} is not accessible from the contextual site." -> namespace.witness.toLoc)
+                    case _ => N
+                .toList
+                val rejected = namespaces.candidates.valuesIterator.take(3).map: candidate =>
+                  msg"This instance of type ${contextualTypeName(candidate.annotation)} from namespace '${candidate.module.nme}' does not accept all values reaching the query." -> candidate.definition.toLoc
+                fail(msg"No instance found for the ${contextualParameterName(parameter)} of type ${contextualTypeName(tpe)}.", notes ::: rejected.toList)
+              case many => fail(msg"Ambiguous instances for the ${contextualParameterName(parameter)} of type ${contextualTypeName(tpe)}.",
+                many.map(candidate => msg"This instance of type ${contextualTypeName(candidate.annotation)} comes from namespace '${candidate.module.nme}'." -> candidate.definition.toLoc))
           case many => fail(msg"Ambiguous instances for the ${contextualParameterName(parameter)} of type ${contextualTypeName(tpe)}.",
             many.map((_, binding, candidate) => msg"This lexical instance of type ${contextualTypeName(candidate)} matches." -> binding.symbol.toLoc))
     def check(witness: Opt[TermShape])(using ResolutionContext): Unit = query.foreach: query =>
@@ -3573,7 +3600,7 @@ class NewResolver:
   private def scrutineeNamespaces(scrutinee: Shape, pattern: Pattern)(using ResolutionContext): Unit = pattern match
     case ctor: Pattern.Constructor => (chainRoot(ctor.target), scrutinee) match
       case (S(ref), value: TermShape) =>
-        rctx.state.implicitNamespaces.get(ref).foreach(valueNamespaces(ref, _, value))
+        rctx.state.implicitNamespaces.get(ref).foreach(valueNamespaces(_, value))
       case _ => ()
     case Pattern.Alias(inner, _) => scrutineeNamespaces(scrutinee, inner)
     case Pattern.Annotated(inner, _) => scrutineeNamespaces(scrutinee, inner)
@@ -3960,7 +3987,7 @@ class NewResolver:
     */
   def unresolvedRef(ref: UnresolvedRef, scope: SrcScope)(using ResolutionContext): Unit =
     if ref.implicitNamespacing then
-      rctx.state.implicitNamespaces(ref) = ImplicitNamespaces(scope)
+      rctx.state.implicitNamespaces(ref) = NameNamespaces(ref, scope)
       publishActivated(ref, ref.namespaceProbe)
     else ref.prefixes.foreach(resolveThrough(ref, _, scope))
 
@@ -4013,20 +4040,28 @@ class NewResolver:
     // unit's types. Those units settled their references by themselves.
     val ref = ShapeObserver.reference(probe)
     rctx.state.implicitNamespaces.get(ref).foreach: namespaces =>
-      typeNamespaces(ref, namespaces, tpe, writtenWitness(tpe), refine = true, provided = false)
+      typeNamespaces(namespaces, tpe, writtenWitness(tpe), refine = true, provided = false)
 
-  /** `value` reaches the scrutinee of the constructor pattern whose head is `ref`. Like a value
-    * required to have a type, a value of a declared type has the namespaces of that type, while
-    * an instance of a class or object has those of its class (see classNamespaces). Namespaces
-    * are found from definitions, so the scope through which the value is observed is irrelevant.
+  /** A pattern scrutinee or query position supplies namespaces through its declared type
+    * or nominal class. Instance requests also observe its type-argument positions. Definitions
+    * determine the namespaces; scope crossings only transport the position values.
     */
-  private def valueNamespaces(ref: UnresolvedRef, namespaces: ImplicitNamespaces, value: TermShape)
-      (using ResolutionContext): Unit =
+  private def valueNamespaces(request: ImplicitNamespaces, value: TermShape)
+      (using activation: ResolutionContext): Unit =
+    given ResolutionContext = request match
+      case _: InstanceNamespaces => activation.withInstances(TypeSubstitution.empty)
+      case _: NameNamespaces => activation
+    val namespaces = request.local
     ShapeObserver.dispatch(value)(value => shapeParts(value).value match
       case Marked(instance: InstanceShape, _) =>
-        typeNamespaces(ref, namespaces, instance.tpe, writtenWitness(instance.tpe), refine = true, provided = true)
+        typeNamespaces(namespaces, instance.tpe, writtenWitness(instance.tpe), refine = true, provided = true)
       case core => instanceClass(core).foreach: cls =>
-        classNamespaces(ref, namespaces, cls, NamespaceWitness.Instance(cls, core.toLoc), provided = true)
+        classNamespaces(namespaces, cls, NamespaceWitness.Instance(cls, core.toLoc), provided = true)
+        namespaces match
+          case instances: InstanceNamespaces if instances.observedValues.add(ShapeIdentity.key(value)) =>
+            cls.tparams.foreach: parameter =>
+              listenClassParameter(value, cls, parameter.sym)(valueNamespaces(instances, _))
+          case _ => ()
     , _ => ())
 
   private def writtenWitness(tpe: DeclaredType): NamespaceWitness =
@@ -4051,26 +4086,40 @@ class NewResolver:
     * Provided parameters observe values; required parameters already constrain
     * namespace probes through inferTypeArguments.
     */
-  private def typeNamespaces(ref: UnresolvedRef, namespaces: ImplicitNamespaces, tpe: DeclaredType,
-      witness: NamespaceWitness, refine: Bool, provided: Bool)(using ResolutionContext): Unit =
+  private def typeNamespaces(request: ImplicitNamespaces, tpe: DeclaredType,
+      witness: NamespaceWitness, refine: Bool, provided: Bool)(using activation: ResolutionContext): Unit =
+    given ResolutionContext = request match
+      case _: InstanceNamespaces => activation.withInstances(TypeSubstitution.empty)
+      case _: NameNamespaces => activation
     def follow(current: DeclaredType, witness: NamespaceWitness, refine: Bool)(using ResolutionContext): Unit =
+      val namespaces = request.local
       if namespaces.observedTypes.add((current, provided)) then
         withTypeDependencies(current.resolution): _ =>
-          if regularType(current.resolution) then walk(current, noTypeArguments, witness, refine, Set.empty)
+          if regularType(current.resolution) then
+            walk(current, noTypeArguments, witness, refine, Set.empty)
+            // A provider for an alias cuts off its head walk, but its type arguments
+            // independently contribute namespaces to an instance query.
+            namespaces match
+              case _: InstanceNamespaces => contextualQuery(current) match
+                case S(ContextualQuery.Named(_, positions)) => positions.foreach: position =>
+                  typeNamespaces(namespaces, position, writtenWitness(position), refine = true, provided = true)
+                case _ => ()
+              case _ => ()
     def walk(current: DeclaredType, args: TypeApplication, witness: NamespaceWitness, refine: Bool,
         seen: Set[TypeResolution])(using ResolutionContext): Unit = if !seen(current.resolution) then
       val next = seen + current.resolution
       def inspect(reason: NamespaceWitness, refine: Bool)(using ResolutionContext): Unit = current.listen: shape =>
+        val namespaces = request.local
         reduceType(current, args, shape) match
           case S(step) => step.alias match
             case S(alias) =>
               val written = if refine then NamespaceWitness.Written(current.resolution.source) else reason
-              firstProvider(ref, namespaces, written, alias): () =>
+              firstProvider(namespaces, written, alias): () =>
                 walk(step.tpe, step.args, written, false, next)
             case N => walk(step.tpe, step.args, reason, refine, next)
           case N => shape match
-            case TypeShape.Nominal(cls) => classNamespaces(ref, namespaces, cls, reason, provided)
-            case TypeShape.Alias(symbol, N) => firstProvider(ref, namespaces, reason, symbol.defn.get)(() => ())
+            case TypeShape.Nominal(cls) => classNamespaces(namespaces, cls, reason, provided)
+            case TypeShape.Alias(symbol, N) => firstProvider(namespaces, reason, symbol.defn.get)(() => ())
             case TypeShape.Union(left, right) =>
               follow(combinedType(current.resolution, declaredType(left, current), declaredType(right, current), true, Set.empty), reason, refine)
             case TypeShape.Intersection(left, right) =>
@@ -4081,31 +4130,33 @@ class NewResolver:
             case TypeShape.Polymorphic(params, _, body) =>
               walk(declaredType(body, current.withoutBinders(params.map(_.parameter.symbol))), args, reason, refine, next)
             case parameter: TypeShape.Parameter => if provided then
-              listenTypeParameterValues(current.instances.get(parameter.symbol).fold(parameter)(rctx.typeParameter)): value =>
-                valueNamespaces(ref, namespaces, instantiateShape(value, current.instances))
+              observeParameterValues(current.instances.get(parameter.symbol).fold(parameter)(rctx.typeParameter),
+                  contextual = namespaces.isInstanceOf[InstanceNamespaces]): value =>
+                valueNamespaces(namespaces, instantiateShape(value, current.instances))
             case TypeShape.Hole(host) => if provided then host.subscribe: value =>
-              valueNamespaces(ref, namespaces, instantiateShape(value, current.instances))
+              valueNamespaces(namespaces, instantiateShape(value, current.instances))
             case TypeShape.Inferred(value) => if provided then
-              valueNamespaces(ref, namespaces, instantiateShape(value, current.instances))
+              valueNamespaces(namespaces, instantiateShape(value, current.instances))
             case _ => ()
       current.namespaces match
         case N => inspect(witness, refine)
         case S(annotation) =>
           val reason = if refine then annotation.witness else witness
           def choose(aliases: Ls[TypeAliasSymbol])(using ResolutionContext): Unit = aliases match
-            case alias :: rest => firstProvider(ref, namespaces, reason, alias.defn.get)(() => choose(rest))
+            case alias :: rest => firstProvider(request.local, reason, alias.defn.get)(() => choose(rest))
             case Nil => inspect(reason, false)
           choose(annotation.aliases)
     follow(tpe, witness, refine)
 
   /** The namespaces of the instances of `cls`: its companion, then the module or object
     * declaring it, then those of its parent (see typeNamespaces). */
-  private def classNamespaces(ref: UnresolvedRef, namespaces: ImplicitNamespaces, cls: ClassLikeDef,
+  private def classNamespaces(request: ImplicitNamespaces, cls: ClassLikeDef,
       witness: NamespaceWitness, provided: Bool)(using ResolutionContext): Unit =
-    if namespaces.observedClasses.add(cls) then firstProvider(ref, namespaces, witness, cls): () =>
+    val namespaces = request.local
+    if namespaces.observedClasses.add(cls) then firstProvider(namespaces, witness, cls): () =>
       // Only the parent's declared type is relevant here, as in listenTypeViews.
       cls.ext.foreach: parent =>
-        typeNamespaces(ref, namespaces, declaredType(typeResolution(parent.cls), Map.empty), witness, refine = false, provided)
+        typeNamespaces(namespaces, declaredType(typeResolution(parent.cls), Map.empty), witness, refine = false, provided)
 
   /** The namespaces that a class or type alias names by itself, in order of priority: its
     * companion module or object, then the module or object declaring it, if they exist. */
@@ -4121,62 +4172,139 @@ class NewResolver:
     companion.map(_ -> true).toList ::: declaring.map(_ -> false).toList
 
   /** Consult the namespaces that `definition`, named by `witness`, names by itself in order of
-    * priority, until one provides a candidate of `ref`, which is then its only contribution.
-    * If none does, continue with the declarations that it names (`otherwise`). */
-  private def firstProvider(ref: UnresolvedRef, namespaces: ImplicitNamespaces, witness: NamespaceWitness,
+    * priority, until one provides a candidate for the request. If none does, continue with the
+    * declarations that it names (`otherwise`). */
+  private def firstProvider(request: ImplicitNamespaces, witness: NamespaceWitness,
       definition: TypeLikeDef)(otherwise: () => Unit)(using ResolutionContext): Unit =
+    val namespaces = request.local
     def consult(remaining: Ls[(ModuleOrObjectSymbol, Bool)]): Unit = remaining match
       case Nil => otherwise()
       case (module, companion) :: rest =>
-        consultNamespace(ref, namespaces, module, new Namespace(witness, definition, companion)): provides =>
+        consultNamespace(namespaces, module, new Namespace(witness, definition, companion)): provides =>
           if !provides then consult(rest)
     consult(ownNamespaces(definition))
 
-  /** Decide whether `module` provides a candidate of `ref` once its definition is available,
-    * then report it to `decided`. A module declared later in the block has no definition yet.
-    * Until the reference is settled, the member of `module` with its name becomes a candidate,
-    * reached through a path recovered in the reference's scope. Later, it can only be diagnosed
-    * (see lateNamespace). This does not depend on the activation in which flow reached the
-    * namespace, nor on why it is consulted (`namespace` describes the first reason).
+  /** Decide a provider once per request key, waiting for forward module definitions.
+    * Each request publishes its candidates or diagnoses their late discovery. Parameter
+    * queries include the triggering class or alias in the key; name requests keep their
+    * original module-only decisions and base resolution context.
     */
-  private def consultNamespace(ref: UnresolvedRef, namespaces: ImplicitNamespaces, module: ModuleOrObjectSymbol,
+  private def consultNamespace(request: ImplicitNamespaces, module: ModuleOrObjectSymbol,
       namespace: => Namespace)(decided: Bool => Unit)(using ResolutionContext): Unit =
-    val base = rctx.state.context
-    val consulted = namespaces.consulted.getOrElseUpdate(module, namespace)
+    val namespaces = request.local
+    val base = namespaces match
+      case _: NameNamespaces => rctx.state.context
+      case _: InstanceNamespaces => rctx.withInstances(TypeSubstitution.empty)
+    val consulted = namespaces.consulted.getOrElseUpdate(namespaces.consultationKey(module, namespace.definition), namespace)
     def defined(definition: ModuleOrObjectDef): Unit =
       given ResolutionContext = base
-      if consulted.status is Namespace.Status.Pending then
-        val lookup = MemberLookup.inClass(definition, N, ref.id.name)
-          .visibleFrom(namespaces.scope.canAccessPrivatesOf, reportInaccessible = false)
-        val resolved = ref.resolvedMembers.nonEmpty || ref.dynamicPrefixes.nonEmpty
-        lookup match
-          case MemberLookup.Found(member, _) if namespaces.settled || namespaces.fellBack && resolved =>
-            // Planning a path to diagnose it leaves the settled reference unchanged.
-            if AccessPath.reachable(namespaces.scope, module)(using rctx.owner) then
-              consulted.status = Namespace.Status.Late(member.memberSymbol)
-              lateNamespace(ref, namespaces, module, consulted, member.memberSymbol)
-            else consulted.status = Namespace.Status.Inaccessible
-          case MemberLookup.Found(_, _) =>
-            AccessPath.valuePath(namespaces.scope, module, lexicalBinders(ref).getOrElse(Set.empty))(using rctx.owner, this, rctx) match
-              case R(path) =>
-                // Record the decision before resolving through the path, whose
-                // candidates can reveal further namespaces of the same reference.
-                consulted.status = Namespace.Status.Selected(path)
-                recordResolution(ref, false)(ref.namespacePrefixes ::= path)
-                resolveThrough(ref, path, namespaces.scope)
-              case L(_) => consulted.status = Namespace.Status.Inaccessible
-          case _ => consulted.status = Namespace.Status.Missing
+      if consulted.status is Namespace.Status.Pending then namespaces match
+        case names: NameNamespaces => consultNameNamespace(names, module, consulted, definition)
+        case instances: InstanceNamespaces => consultInstanceNamespace(instances, module, consulted, definition)
       decided(consulted.status.provides)
     module.defn match
       case S(definition) => defined(definition)
       case N => module.defnListeners += defined
+
+  private def consultNameNamespace(namespaces: NameNamespaces, module: ModuleOrObjectSymbol,
+      consulted: Namespace, definition: ModuleOrObjectDef)(using ResolutionContext): Unit =
+    val ref = namespaces.ref
+    val lookup = MemberLookup.inClass(definition, N, ref.id.name)
+      .visibleFrom(namespaces.scope.canAccessPrivatesOf, reportInaccessible = false)
+    val resolved = ref.resolvedMembers.nonEmpty || ref.dynamicPrefixes.nonEmpty
+    lookup match
+      case MemberLookup.Found(member, _) if namespaces.settled || namespaces.fellBack && resolved =>
+        // Planning a path to diagnose it leaves the settled reference unchanged.
+        if AccessPath.reachable(namespaces.scope, module)(using rctx.owner) then
+          consulted.status = Namespace.Status.Late(member.memberSymbol)
+          lateNameNamespace(ref, namespaces, module, consulted, member.memberSymbol)
+        else consulted.status = Namespace.Status.Inaccessible
+      case MemberLookup.Found(_, _) =>
+        AccessPath.valuePath(namespaces.scope, module, lexicalBinders(ref).getOrElse(Set.empty))(using rctx.owner, this, rctx) match
+          case R(path) =>
+            // Record the decision before resolving through the path, whose
+            // candidates can reveal further namespaces of the same reference.
+            consulted.status = Namespace.Status.Selected(path)
+            recordResolution(ref, false)(ref.namespacePrefixes ::= path)
+            resolveThrough(ref, path, namespaces.scope)
+          case L(_) => consulted.status = Namespace.Status.Inaccessible
+      case _ => consulted.status = Namespace.Status.Missing
+
+  /** Provider cutoff depends on declaration heads, never on argument compatibility. Alias
+    * heads retain their written identity for parameter-query consultations through an alias.
+    */
+  private def providesInstance(namespaces: InstanceNamespaces, trigger: TypeLikeDef, candidate: DeclaredType)
+      (using ResolutionContext): Bool = namespaces.query match
+    case ContextualQuery.Named(head, _) => contextualQuery(candidate) match
+      case S(_: ContextualQuery.Named) => contextualValues(candidate, _ => ()).exists(_.isInstanceOfClass(head))
+      case _ => false
+    case _: ContextualQuery.Parameter =>
+      def follow(current: DeclaredType, args: TypeApplication, seen: Set[DeclaredType]): Bool =
+        !seen(current) && (current.namespaces.exists(_.aliases.exists(_.defn.contains(trigger))) || current.shapes.exists: shape =>
+          reduceType(current, args, shape) match
+            case S(step) => step.alias.contains(trigger) || follow(step.tpe, step.args, seen + current)
+            case N => shape match
+              case TypeShape.Nominal(cls) => cls is trigger
+              case _ => false)
+      follow(candidate, noTypeArguments, Set.empty)
+
+  private def consultInstanceNamespace(namespaces: InstanceNamespaces, module: ModuleOrObjectSymbol,
+      consulted: Namespace, definition: ModuleOrObjectDef)(using ResolutionContext): Unit =
+    val members = definition.instanceMembers.iterator.flatMap: member =>
+      val key: MemberKey = if member.sym.nameIsMeaningful then member.sym.nme else member.sym
+      val visible = MemberLookup.inClass(definition, N, key)
+        .visibleFrom(namespaces.scope.canAccessPrivatesOf, reportInaccessible = false)
+      visible match
+        case _: MemberLookup.Found => member.sign.flatMap: sign =>
+          val annotation = declaredType(typeResolution(sign), Map.empty)
+          if providesInstance(namespaces, consulted.definition, annotation) then S(member -> annotation) else N
+        case _ => N
+    .toList
+    members match
+      case Nil => consulted.status = Namespace.Status.Missing
+      case (member, _) :: _ if namespaces.settled =>
+        if AccessPath.reachable(namespaces.scope, module)(using rctx.owner) then
+          consulted.status = Namespace.Status.Late(member.sym)
+          members.foreach((member, annotation) => lateInstanceNamespace(namespaces, module, consulted, member, annotation))
+        else consulted.status = Namespace.Status.Inaccessible
+      case _ => AccessPath.valuePath(namespaces.scope, module, namespaces.binders)(using rctx.owner, this, rctx) match
+        case R(path) =>
+          consulted.status = Namespace.Status.Selected(path)
+          members.foreach: (member, annotation) =>
+            namespaces.candidates.getOrElseUpdate(member.sym,
+              NamespaceInstance(member, annotation, module, path, consulted.witness))
+        case L(_) => consulted.status = Namespace.Status.Inaccessible
+
+  private def lateInstanceNamespace(namespaces: InstanceNamespaces, module: ModuleOrObjectSymbol,
+      namespace: Namespace, member: TermDefinition, annotation: DeclaredType)(using ResolutionContext): Unit =
+    val argument = namespaces.argument
+    if !argument.candidate.exists(_.symbol is member.sym) &&
+        contextualMatches(annotation, namespaces.query, _ => ()) &&
+        rctx.state.contextualLateNamespaces.add((argument, member.sym)) then
+      rctx.markError(argument)
+      val selected = argument.candidate.toList.map: candidate =>
+        msg"This instance of type ${contextualTypeName(candidate.annotation)} was selected earlier." -> candidate.symbol.toLoc
+      resolError(argument,
+        msg"The ${contextualParameterName(namespaces.parameter)} of type ${contextualTypeName(namespaces.annotation)} was resolved before flow revealed its implicit namespace ${module.describeKind} '${module.nme}'." -> argument.toLoc ::
+        (msg"Here, ${describeNamespace(module, namespace)} provides this matching instance of type ${contextualTypeName(annotation)}." -> member.toLoc) ::
+        (msg"This ${witnessKind(namespace.witness)} reveals the namespace." -> namespace.witness.toLoc) :: selected)
+
+  private def namespaceInstanceTerm(candidate: NamespaceInstance, namespaces: InstanceNamespaces)
+      (using ResolutionContext): Term =
+    val member = candidate.definition.sym
+    val selection = new NewSel(candidate.path, Tree.Ident(member.nme), N)(FlowSymbol.synthSel(member.nme))
+      .withLocOf(namespaces.argument)
+    rctx.recordLexicalBinders(selection, namespaces.binders)
+    if member.nameIsMeaningful then newSel(selection, namespaces.scope)
+    else selectedInstance(selection, namespaces.scope, member)
+    selection
 
   /** A namespace found after `ref` fell back to its wildcard opens, or after it was settled,
     * cannot change its candidates: other code already depends on them. If the namespace provides
     * another member with the reference's name, report that this member would have been
     * selected, had flow revealed the namespace in time.
     */
-  private def lateNamespace(ref: UnresolvedRef, namespaces: ImplicitNamespaces, module: ModuleOrObjectSymbol,
+  private def lateNameNamespace(ref: UnresolvedRef, namespaces: NameNamespaces, module: ModuleOrObjectSymbol,
       namespace: Namespace, member: BlockMemberSymbol)(using ResolutionContext): Unit =
     val name = ref.id.name
     if !rctx.hasError(ref) && !ref.resolvedMembers.exists(_._2 is member) then
@@ -4200,7 +4328,7 @@ class NewResolver:
         source = Diagnostic.Source.Compilation))
 
   /** How what names a namespace relates to the reference. */
-  private def relation(namespaces: ImplicitNamespaces, witness: NamespaceWitness): Message = witness match
+  private def relation(namespaces: NameNamespaces, witness: NamespaceWitness): Message = witness match
     case NamespaceWitness.Written(_) =>
       if namespaces.scrutinized then msg"Its scrutinee has this type" else msg"Its value is required to have this type"
     case NamespaceWitness.Instance(cls, _) => msg"Its scrutinee can be this instance of ${cls.describeRef}"
@@ -4218,7 +4346,7 @@ class NewResolver:
     else msg"Reference '${ref.writtenName}'"
 
   /** Let `ref` fall back to its wildcard opens if no implicit namespace supplied a candidate. */
-  private def fallBack(ref: UnresolvedRef, namespaces: ImplicitNamespaces)(using ResolutionContext): Unit =
+  private def fallBack(ref: UnresolvedRef, namespaces: NameNamespaces)(using ResolutionContext): Unit =
     if !namespaces.fellBack && ref.resolvedMembers.isEmpty && ref.prefixes.nonEmpty then
       namespaces.fellBack = true
       ref.prefixes.foreach(resolveThrough(ref, _, namespaces.scope))

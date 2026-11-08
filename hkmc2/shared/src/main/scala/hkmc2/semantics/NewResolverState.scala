@@ -124,14 +124,17 @@ final class NewResolverState(val owner: Elaborator.State):
   private[semantics] val contextualChecks: Seen[(InstanceArg, TermShapeHost)] = new Seen(_.contextualChecks)
   private[semantics] val contextualClassPositions: Cache[(ShapeIdentity.Key, VarSymbol), TermShapeHost] =
     new Cache(_.contextualClassPositions, identity)
+  private[semantics] val instanceNamespaces: Cache[(InstanceArg, VarSymbol), InstanceNamespaces] =
+    new Cache(_.instanceNamespaces, _.copyForImport())
   private[semantics] val contextualQueries: Seen[(InstanceArg, VarSymbol)] = new Seen(_.contextualQueries)
+  private[semantics] val contextualLateNamespaces: Seen[(InstanceArg, BlockMemberSymbol)] = new Seen(_.contextualLateNamespaces)
   private[semantics] val contextualFailures: Seen[(InstanceArg, DeclaredType)] = new Seen(_.contextualFailures)
   private[semantics] val contextualStages: Seen[(Term, Int)] = new Seen(_.contextualStages)
   // What flow has revealed about the implicit namespaces of this unit's references
   // (see NewResolver.unresolvedRef). Unlike the block-local tables, this outlives the
   // reference's block: a later worksheet block can still reveal a namespace, which
   // must be diagnosed against the settled reference.
-  private[semantics] val implicitNamespaces = mutable.HashMap.empty[UnresolvedRef, ImplicitNamespaces]
+  private[semantics] val implicitNamespaces = mutable.HashMap.empty[UnresolvedRef, NameNamespaces]
   private[semantics] val errors = mutable.Set.empty[Identity[PossiblyErroneous]]
   private[semantics] val shapeIdentities = mutable.HashMap.empty[ShapeIdentity.View, ShapeIdentity.View]
   private[semantics] val substitutions = mutable.HashMap.empty[TypeSubstitution, TypeSubstitution]
@@ -871,7 +874,16 @@ final class ResolutionContext private[semantics] (
     })(using state.context)
     assert(instances.keySet == parameters.toSet, "A source scheme's binders must remain stable")
     instances.iterator.foreach: (parameter, instance) =>
-      state.contextualParameterInstances.get(parameter)(using state.context).foreach(_.publish(instance))
+      // A first caller of an imported definition must adopt its existing observers
+      // before publishing the new instance, even when its result needs no new flow.
+      val observer = state.contextualParameterInstances.get(parameter)(using state.context).orElse:
+        if state.isOwnedSym(parameter) then N
+        else
+          val defining = inGraph(parameter.getState.newResolverState.context)
+          state.contextualParameterInstances.get(parameter)(using defining).map: inherited =>
+            state.contextualParameterInstances.update(parameter, inherited)(using state.context)
+            inherited
+      observer.foreach(_.publish(instance))
     instances
 
   /** A query written under an abstract binder observes all of that binder's calls,
@@ -922,33 +934,70 @@ private[semantics] final class IterationFlow(
     val elements: TypeResolution, val iterator: Term.App, val next: Term.App,
     val iteratorMember: FlowSymbol, val nextMember: FlowSymbol, val doneMember: FlowSymbol, val valueMember: FlowSymbol)
 
-/** What resolution knows about the implicit namespaces of a reference written in `scope`
-  * (see NewResolver.unresolvedRef).
+/** One namespace walk serves name lookup and contextual queries. Requests choose their
+  * consultation key; names and named queries use modules, parameter queries also use the
+  * triggering class or alias. Only instance requests traverse type arguments.
   */
-private[semantics] final class ImplicitNamespaces(val scope: SrcScope):
-  /** The namespaces consulted for the reference, in the order in which consultation began.
-    * Whether a namespace provides a candidate of the reference does not depend on why it is
-    * consulted, so each is decided once (see NewResolver.consultNamespace). */
-  val consulted = mutable.LinkedHashMap.empty[ModuleOrObjectSymbol, Namespace]
-  /** Repeated observations must not repeat subscriptions (see NewResolver.typeNamespaces).
-    * Observations include the arguments of deferred applications. Required types constrain
-    * probes, whereas provided types also follow inference inputs, hence the direction flag. */
+private[semantics] sealed abstract class ImplicitNamespaces(val scope: SrcScope):
+  type Key
+  def consultationKey(module: ModuleOrObjectSymbol, definition: => TypeLikeDef): Key
+  val consulted = mutable.LinkedHashMap.empty[Key, Namespace]
   val observedTypes = mutable.HashSet.empty[(DeclaredType, Bool)]
   val observedClasses = mutable.HashSet.empty[ClassLikeDef]
-  /** Whether the reference fell back to its wildcard opens when its block was elaborated
-    * because no namespace was known then. A namespace found later cannot override them. */
-  var fellBack: Bool = false
-  /** Whether the reference's block was elaborated, deciding between namespaces and wildcard opens. */
   var settled: Bool = false
-  /** Whether the reference is the head of a constructor pattern, whose namespaces are those of
-    * its scrutinees rather than of the types required of its value. */
+  def local(using ResolutionContext): ImplicitNamespaces
+
+private[semantics] final class NameNamespaces(val ref: UnresolvedRef, scope: SrcScope)
+    extends ImplicitNamespaces(scope):
+  type Key = ModuleOrObjectSymbol
+  def consultationKey(module: ModuleOrObjectSymbol, definition: => TypeLikeDef): Key = module
+  def local(using ResolutionContext): NameNamespaces = this
+  /** Wildcard fallback freezes the namespace candidates even before block completion. */
+  var fellBack: Bool = false
+  /** Constructor patterns observe scrutinee values rather than required value types. */
   var scrutinized: Bool = false
-  /** Diagnostic provenance indexed by candidate path. Build this only when reporting an error:
-    * resolution already stores each selection in `consulted`, and compiled terms need no index. */
+  /** Build diagnostic provenance only when reporting; paths already live in consulted. */
   def selectedOrigins: Map[Term, (ModuleOrObjectSymbol, Namespace)] =
     consulted.iterator.flatMap: (module, namespace) =>
       namespace.status.selectedPath.map(path => path -> (module, namespace))
     .toMap
+
+private[semantics] enum ContextualQuery:
+  case Named(cls: ClassLikeDef, positions: Ls[DeclaredType])
+  case Parameter(tpe: DeclaredType, symbol: VarSymbol)
+
+private[semantics] final case class NamespaceInstance(
+    definition: TermDefinition, annotation: DeclaredType, module: ModuleOrObjectSymbol,
+    path: Term, witness: NamespaceWitness)
+
+/** Completed queries keep observing namespaces in later callers. Copy mutable discovery
+  * state with the resolver's import cache so one importing unit cannot suppress another's
+  * late-namespace diagnostic. Selected syntax and declarations remain shared and immutable.
+  */
+private[semantics] final class InstanceNamespaces(val argument: InstanceArg, val parameter: Param,
+    val annotation: DeclaredType, val query: ContextualQuery, scope: SrcScope, val binders: Set[VarSymbol])
+    extends ImplicitNamespaces(scope):
+  type Key = ModuleOrObjectSymbol | (ModuleOrObjectSymbol, TypeLikeDef)
+  def consultationKey(module: ModuleOrObjectSymbol, definition: => TypeLikeDef): Key = query match
+    case _: ContextualQuery.Named => module
+    case _: ContextualQuery.Parameter => module -> definition
+  val candidates = mutable.LinkedHashMap.empty[BlockMemberSymbol, NamespaceInstance]
+  val observedValues = mutable.HashSet.empty[ShapeIdentity.Key]
+  def local(using context: ResolutionContext): InstanceNamespaces =
+    context.state.instanceNamespaces.getOrElseUpdate((argument, parameter.sym), this)(
+      using context.withInstances(TypeSubstitution.empty))
+  def copyForImport(): InstanceNamespaces =
+    val copy = new InstanceNamespaces(argument, parameter, annotation, query, scope, binders)
+    copy.settled = settled
+    consulted.foreach: (key, namespace) =>
+      val next = new Namespace(namespace.witness, namespace.definition, namespace.companion)
+      next.status = namespace.status
+      copy.consulted(key) = next
+    copy.observedTypes ++= observedTypes
+    copy.observedClasses ++= observedClasses
+    copy.observedValues ++= observedValues
+    copy.candidates ++= candidates
+    copy
 
 /** A namespace consulted for a reference, first because `witness` names `definition`, of
   * which the namespace is the companion (if `companion` holds) or the declaring module. */

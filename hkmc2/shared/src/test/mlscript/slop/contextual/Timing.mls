@@ -40,7 +40,6 @@ fun generic[A](value: A) = show(value)
 generic(1)
 //│ = "int"
 
-:breakme // contextual diagnostic not implemented yet
 :e
 generic("later")
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
@@ -84,17 +83,6 @@ using Wrapper[Choices.Choice] = Wrapper(Choices.Choice("wrapped"))
 fun first[A](using wrapped: Wrapper[A]): A = wrapped.value
 fun second[A](value: A)(using chosen: A) = chosen
 
-:fixme // contextual completion and namespace selection (Phases 2–3)
 :expect Choice("chosen")
 second(first)
-//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
-//│ ║  l.+1: 	second(first)
-//│ ║        	^^^^^^^^^^^^^
-//│ ╟── No instance found for the contextual parameter 'chosen' of type A.
-//│ ║  l.+1: 	second(first)
-//│ ║        	^^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
-//│ ║  l.XX: 	fun second[A](value: A)(using chosen: A) = chosen
-//│ ╙──      	                        ^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: 'Choice("chosen")', got: 'undefined'
+//│ = Choice("chosen")
