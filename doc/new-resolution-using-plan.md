@@ -15,6 +15,7 @@ invariants in `new-resolution-design.md`; this file should then be deleted.
 | Provider heads, parameter-query consultation keys, and recursive instance agreement (§3.1, §3.3, §3.8) | Confirmed by the user. |
 | Contextual lambda literals and direct lambda calls (§3.1) | Revised by the user, superseding the earlier Scala-style rule. No value holds an uncompleted contextual function: a contextual lambda is completed where it is written, with a warning that suggests a `fun` definition. Function types with `using` lists are rejected; contextual function types are future work. |
 | Deferred completion edges (Codex's §4.2 proposal of the Phase 2 checkpoint) | Rejected: the restored invariant (§3.1) makes them unnecessary (§4.2). |
+| Performance follow-up | Revised by the user on 2026-11-09: benchmark every remaining phase, record regressions and suspected causes, and continue when no clear cause has been identified. Performance alone does not block progress in that situation. |
 
 Line numbers in this document are approximate; search by the function names given.
 
@@ -786,12 +787,13 @@ Centralize the lowering of sites with completions:
 - Per-module instance indexes are cached. Within a query, provider decisions are bounded by the
   consulted modules for named queries, or by the (module, triggering class or alias) pairs for
   parameter queries (§3.3). Name-request consultation remains unchanged.
-- Before finishing Phase 2 and Phase 3, compare time and allocated bytes against the base commit:
+- Before finishing each remaining phase, compare time and allocated bytes against the base commit:
   - use `git worktree` checkouts in a scratch directory, `sbt -batch`, and the `ThreadMXBean`
     allocation counter;
   - run on the full diff-test suite, or on a large representative subset;
   - report the numbers in the commit message;
-  - a regression above 2% must be explained or fixed.
+  - investigate regressions above 2%, fix clearly identified causes, and record any remaining
+    regression and suspected causes without stopping implementation.
 
 Phase 2 measurement against `fdddc5842`: separate scratch worktrees, identical temporary
 `ContextualBenchmark` runners invoked with
@@ -827,10 +829,12 @@ then the base ran sequentially, with no concurrent builds or tests; all rounds h
 
 The elapsed-time regression exceeds the 2% budget. The implementation already avoids looking
 up a local parameter's contextual observer twice; that optimization is included in these numbers
-and passed full validation. The remaining cost has not been isolated to a clear fix. **Work stops
-at the Phase 3 performance gate under §7.** This is a validated functional checkpoint, not a
-completed Phase 3. No bypass of contextual observation or namespace discovery was introduced to
-meet the budget. Profiling and a measured fix are required before proceeding to Phase 4.
+and passed full validation. The remaining cost has not been isolated to a clear fix. The user
+approved continuing on 2026-11-09 while retaining measurements for each phase. Suspected costs
+include the contextual classification/worklist added in Phase 2, imported generic observer
+lookups, and additional dispatch in the generalized namespace walk. These are hypotheses,
+not profiling results; JVM optimization and warmup also varied between runs. Phase 3 is complete
+under the revised performance requirement, with optimization follow-up remaining open.
 
 
 ## 5. Phases
@@ -912,8 +916,8 @@ Validation and remaining work:
 
 ### Phase 3: namespace instances
 
-Implementation status: namespace selection and late-namespace diagnostics pass full validation,
-but the performance gate is blocked (§4.6, §7). Phases 4–6 have not started. The existing namespace
+Implementation status: complete under the user's revised performance requirement (§4.6).
+Namespace selection and late-namespace diagnostics pass full validation. The existing namespace
 and timing tests are enabled where their pending behavior now succeeds. `NamespaceQueries.mls`
 adds provider cutoff, alias provenance and argument traversal, consultation keys, deduplication,
 and visibility coverage. `LateNamespaces.mls` covers matching late providers and lexical
@@ -1104,7 +1108,6 @@ that diff tests cannot observe; state that property in the test.
   - a rule of §3 cannot be implemented without changing other language semantics;
   - interception (§4.2) cannot be made uniform across consumption paths;
   - the namespace generalization changes any name-resolution output;
-  - the performance budget (§4.6) is exceeded without a clear fix;
   - an invariant you need cannot be checked. Use `softAssert` for invariants and `softTODO` for
     known temporary gaps; never silently skip a case.
 
