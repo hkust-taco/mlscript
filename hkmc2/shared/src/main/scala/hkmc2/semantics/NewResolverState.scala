@@ -8,6 +8,13 @@ import Term.*
 
 inline def rctx(using context: ResolutionContext): ResolutionContext = context
 
+enum ContextualRole:
+  case Value, Receiver, ApplicationHead
+
+enum ResolutionSite:
+  case Access(term: NewResolvable | New, scope: SrcScope)
+  case Contextual(term: Term, role: ContextualRole, context: Elaborator.Ctx)
+
 object NewResolverState:
   /** Tables belong to a compilation unit; a context only selects a namespace.
     * An inherited lookup is read-only. Mutable values are copied into the
@@ -101,7 +108,7 @@ final class NewResolverState(val owner: Elaborator.State):
   // in elaboration order, with the lexical scope in which each is written (see
   // ResolutionContext.checkAccess). Its references without explicit bindings are also
   // the worklist of NewResolver.settleUnboundReferences, which runs before checkAccess.
-  private[semantics] val accessSites = mutable.ArrayBuffer.empty[(NewResolvable | New, SrcScope)]
+  private[semantics] val resolutionSites = mutable.ArrayBuffer.empty[ResolutionSite]
   // What flow has revealed about the implicit namespaces of this unit's references
   // (see NewResolver.unresolvedRef). Unlike the block-local tables, this outlives the
   // reference's block: a later worksheet block can still reveal a namespace, which
@@ -511,7 +518,7 @@ final class ResolutionContext private[semantics] (
         markError(term)
         reportResolutionError(term, messages)
     state.resolutionProblems.clear()
-    state.accessSites.foreach: (term, scope) =>
+    state.resolutionSites.iterator.collect { case ResolutionSite.Access(term, scope) => (term, scope) }.foreach: (term, scope) =>
       checkAccess(term, scope)
       // Access checks can insert already-resolved key expressions. Bind their
       // hosts to this unit before sealing, just like the written source terms.
@@ -519,7 +526,7 @@ final class ResolutionContext private[semantics] (
         case ref: NewResolvable => ref.keyAccess.foreach(visit)
         case nw: New if nw.args.isEmpty && nw.rft.isEmpty => checkPartialInstantiation(nw)
         case _ => ()
-    state.accessSites.clear()
+    state.resolutionSites.clear()
     state.pending.foreach: (key, value) =>
       if state.completedNodes.add(key) then value.completed = true
     state.pending.clear()
@@ -529,12 +536,21 @@ final class ResolutionContext private[semantics] (
     * records the references, selections, and instantiations written in the source.
     */
   def recordAccessSite(term: NewResolvable | New, scope: SrcScope): Unit =
-    state.accessSites += ((term, scope))
+    state.resolutionSites += ResolutionSite.Access(term, scope)
+
+  /** Append post-order, sharing the lexical environment. Transparent parentheses can return
+    * the same term through several elaborator frames; they must contribute only one site.
+    */
+  def recordContextualSite(term: Term, role: ContextualRole, context: Elaborator.Ctx): Unit =
+    val repeated = state.resolutionSites.lastOption.exists:
+      case ResolutionSite.Contextual(previous, previousRole, _) => (previous eq term) && previousRole == role
+      case _ => false
+    if !repeated then state.resolutionSites += ResolutionSite.Contextual(term, role, context)
 
   /** The references without explicit bindings written in the current block, in elaboration
     * order (see NewResolver.settleUnboundReferences). */
-  def unboundReferences: Ls[Term.UnresolvedRef] = state.accessSites.iterator.collect:
-    case (ref: Term.UnresolvedRef, _) => ref
+  def unboundReferences: Ls[Term.UnresolvedRef] = state.resolutionSites.iterator.collect:
+    case ResolutionSite.Access(ref: Term.UnresolvedRef, _) => ref
   .toList
 
   /** Check written instantiations once their aliases and forward references have

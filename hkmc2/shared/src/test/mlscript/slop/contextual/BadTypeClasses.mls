@@ -1,0 +1,102 @@
+:.
+
+:e
+module M with
+  fun f(foo: Int, using bar: Int)
+//│ ╔══[COMPILATION ERROR] Keyword `using` must occur before all parameters.
+//│ ║  l.+2: 	  fun f(foo: Int, using bar: Int)
+//│ ╙──      	                  ^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Module 'M' has unimplemented members
+//│ ║  l.+1: 	module M with
+//│ ║        	^^^^^^^^^^^^^
+//│ ║  l.+2: 	  fun f(foo: Int, using bar: Int)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Member 'f' requires an implementation
+//│ ║  l.+2: 	  fun f(foo: Int, using bar: Int)
+//│ ╙──      	      ^
+
+module M with
+  fun f(using Int) = ()
+
+:breakme // contextual diagnostic not implemented yet
+:e
+M.f
+//│ = fun f
+
+:breakme // contextual diagnostic not implemented yet
+// §3.2: literal instance types are unsupported.
+:e
+using 42 = 42
+use[42]
+//│ = fun use
+
+val someInt = 42
+//│ someInt = 42
+
+:e
+using someInt = 42
+//│ ╔══[COMPILATION ERROR] Resolution error in member reference
+//│ ║  l.+1: 	using someInt = 42
+//│ ║        	      ^^^^^^^
+//│ ╟── Value symbol 'someInt' cannot be used as a type
+//│ ║  l.XX: 	val someInt = 42
+//│ ╙──      	^^^^^^^^^^^^^^^^
+
+:e
+using someInt: Int = 42
+//│ ╔══[COMPILATION ERROR] Resolution error in block
+//│ ║  l.+1: 	using someInt: Int = 42
+//│ ║        	      ^^^^^^^^^^^^
+//│ ╟── Record literal cannot be used as a type
+//│ ║  l.+1: 	using someInt: Int = 42
+//│ ╙──      	      ^^^^^^^^^^^^
+
+module M with
+  fun bar[A, B](a: A, b: B) = a + b
+
+:e
+M.bar[](1, 2)
+//│ ╔══[COMPILATION ERROR] Resolution error in type application
+//│ ║  l.+1: 	M.bar[](1, 2)
+//│ ║        	^^^^^^^
+//│ ╟── Function 'bar' expected 2 type arguments, but got 0
+//│ ║  l.XX: 	  fun bar[A, B](a: A, b: B) = a + b
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = 3
+
+:e
+M.bar[Int](1, 2)
+//│ ╔══[COMPILATION ERROR] Resolution error in type application
+//│ ║  l.+1: 	M.bar[Int](1, 2)
+//│ ║        	^^^^^^^^^^
+//│ ╟── Function 'bar' expected 2 type arguments, but got 1
+//│ ║  l.XX: 	  fun bar[A, B](a: A, b: B) = a + b
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = 3
+
+using Int = 42
+
+module M with
+  fun foo()(using a: Int) = ()
+
+:fixme // contextual completion (Phases 2–4)
+// §3.1: the value site supplies the trailing contextual clause.
+:expect ()
+M.foo()
+//│ ═══[RUNTIME ERROR] Expected: '()', got: 'fun'
+//│ = fun
+
+:breakme // contextual diagnostic not implemented yet
+:e
+fun f[T](using t: T) = t
+f
+//│ = fun f
+
+:e
+fun f(using t: Int = 42) = t
+//│ ╔══[COMPILATION ERROR] Expected a valid parameter, found term definition
+//│ ║  l.+1: 	fun f(using t: Int = 42) = t
+//│ ╙──      	      ^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Name not found: t
+//│ ║  l.+1: 	fun f(using t: Int = 42) = t
+//│ ╙──      	                           ^

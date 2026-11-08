@@ -1,0 +1,259 @@
+:.
+
+// Syntaxes
+
+using Int = 42
+
+using Int as someInt = 42
+
+module M with
+  fun f(using Int) = 42
+
+module M with
+  fun f(using foo: Int) = 42
+
+module M with
+  fun f(using foo: Int, bar: Int) = 42
+
+module M with
+  fun f(using foo: Int)(bar: Int) = 42
+
+module M with
+  fun f(foo: Int)(using bar: Int) = 42
+
+module M with
+  fun f(using foo: Int)(using bar: Int) = 42
+
+module M with
+  fun f(using foo: Int, bar: Int) = 42
+
+module M with
+  fun f(using Int, Int) = 42
+
+module M with
+  fun foo(using Int, arg: Str) = 42
+
+module M with
+  fun foo(using arg: Str, Int) = 42
+
+
+// Basic Resolution
+
+abstract class Foo[T] with
+  fun foo(): T
+class IntFoo extends Foo[Int] with
+  fun foo(): Int = 42
+class StrFoo extends Foo[Str] with
+  fun foo(): Str = "42"
+module M with
+  fun foo(using someInt: Int): Int = someInt
+  fun strFoo(using someFoo: Foo[Str]): Str = someFoo.foo()
+  fun intFoo(using someFoo: Foo[Int]): Int = someFoo.foo()
+  fun tFoo[T](using someFoo: Foo[T]): T = someFoo.foo()
+
+using Int as i = 24
+
+using Foo[Int] = new IntFoo()
+
+using Foo[Str] = new StrFoo()
+
+:fixme // contextual completion (Phases 2–4)
+// should resolve to foo(i)
+:expect 24
+M.foo
+//│ ═══[RUNTIME ERROR] Expected: '24', got: 'fun foo'
+//│ = fun foo
+
+:fixme // contextual completion (Phases 2–4)
+// should resolve to intFoo(new IntFoo())
+:expect 42
+M.intFoo
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'fun intFoo'
+//│ = fun intFoo
+
+:fixme // contextual completion (Phases 2–4)
+// should resolve to strFoo(new StrFoo())
+:expect "42"
+M.strFoo
+//│ ═══[RUNTIME ERROR] Expected: '"42"', got: 'fun strFoo'
+//│ = fun strFoo
+
+:fixme // contextual completion (Phases 2–4)
+// should resolve to 100 + intFoo(new IntFoo())
+:expect 142
+100 + M.intFoo
+//│ ═══[RUNTIME ERROR] Expected: '142', got: '"100intFoo(someFoo) {     runtime.checkArgs(\"intFoo\", 1, arguments.length);     return runtime.safeCall(someFoo.foo()) /* as! Int */   }"'
+//│ = "100intFoo(someFoo) {     runtime.checkArgs(\"intFoo\", 1, arguments.length);     return runtime.safeCall(someFoo.foo()) /* as! Int */   }"
+
+:fixme // contextual completion (Phases 2–4)
+// should be able to resolve in function body from outer scope
+:expect 42
+fun f: Int = M.intFoo
+f
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Function' at an unrelated type 'Int'
+//│ ║  l.+1: 	fun f: Int = M.intFoo
+//│ ╙──      	             ^^^^^^^^
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'fun intFoo'
+//│ = fun intFoo
+
+:fixme // contextual completion (Phases 2–4)
+// should be able to resolve in function body from parameters
+:expect 3.14
+module N with
+  fun f(using someNum: Num): Num = someNum
+  fun g(using Num): Num = N.f
+using Num = 3.14
+N.g
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Function' at an unrelated type 'Num'
+//│ ║  l.+3: 	  fun g(using Num): Num = N.f
+//│ ╙──      	                          ^^^
+//│ ═══[RUNTIME ERROR] Expected: '3.14', got: 'fun g'
+//│ = fun g
+
+
+// Parameterized Type Resolution
+
+:fixme // contextual completion (Phases 2–4)
+// should resolve to tFoo(new StrFoo())
+:expect "42"
+M.tFoo
+//│ ═══[RUNTIME ERROR] Expected: '"42"', got: 'fun tFoo'
+//│ = fun tFoo
+
+:fixme // contextual completion (Phases 2–4)
+// should resolve to tFoo(new IntFoo())
+:expect 42
+M.tFoo[Int]
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'fun tFoo'
+//│ = fun tFoo
+
+abstract class Bar[A, B] with
+  fun bar(): Str
+class IntStrBar extends Bar[Int, Str] with
+  fun bar(): Str = "IntStr"
+class StrIntBar extends Bar[Str, Int] with
+  fun bar(): Str = "StrInt"
+module M with
+  fun tBar1[T](using someFoo: Bar[Int, T]): Str = someFoo.bar()
+  fun tBar2[T](using someFoo: Bar[Str, T]): Str = someFoo.bar()
+  fun tBar3[A, B](using someFoo: Bar[A, B]): Str = someFoo.bar()
+
+using Bar[Int, Str] = new IntStrBar()
+using Bar[Str, Int] = new StrIntBar()
+
+:fixme // contextual completion (Phases 2–4)
+// should resolve to tFoo1(new IntStrBar())
+:expect "IntStr"
+M.tBar1
+//│ ═══[RUNTIME ERROR] Expected: '"IntStr"', got: 'fun tBar1'
+//│ = fun tBar1
+
+:fixme // contextual completion (Phases 2–4)
+// should resolve to tFoo2(new StrIntBar())
+:expect "StrInt"
+M.tBar2
+//│ ═══[RUNTIME ERROR] Expected: '"StrInt"', got: 'fun tBar2'
+//│ = fun tBar2
+
+:fixme // contextual completion (Phases 2–4)
+// should resolve to tFoo3(new StrIntBar())
+:expect "StrInt"
+M.tBar3
+//│ ═══[RUNTIME ERROR] Expected: '"StrInt"', got: 'fun tBar3'
+//│ = fun tBar3
+
+:fixme // contextual completion (Phases 2–4)
+// should resolve to tFoo3(new IntStrBar())
+:expect "IntStr"
+M.tBar3[Int, Str]
+//│ ═══[RUNTIME ERROR] Expected: '"IntStr"', got: 'fun tBar3'
+//│ = fun tBar3
+
+
+// Monoid Example
+
+abstract class Monoid[T] with
+  fun combine(a: T, b: T): T
+  fun empty: T
+
+:fixme // generic override representation check, independent of contextual insertion
+object IntAddMonoid extends Monoid[Int] with
+  fun combine(a: Int, b: Int): Int = a + b
+  fun empty: Int = 0
+//│ ╔══[COMPILATION ERROR] Parameter 'a' of overriding member 'combine' is represented as 'Int', which cannot hold the values represented as 'Unknown' that the member it overrides accepts
+//│ ║  l.+2: 	  fun combine(a: Int, b: Int): Int = a + b
+//│ ║        	              ^^^^^^
+//│ ╟── The overridden member 'combine' is defined here
+//│ ║  l.XX: 	  fun combine(a: T, b: T): T
+//│ ╙──      	      ^^^^^^^
+//│ ╔══[COMPILATION ERROR] Parameter 'b' of overriding member 'combine' is represented as 'Int', which cannot hold the values represented as 'Unknown' that the member it overrides accepts
+//│ ║  l.+2: 	  fun combine(a: Int, b: Int): Int = a + b
+//│ ║        	                      ^^^^^^
+//│ ╟── The overridden member 'combine' is defined here
+//│ ║  l.XX: 	  fun combine(a: T, b: T): T
+//│ ╙──      	      ^^^^^^^
+
+:fixme // generic override representation check, independent of contextual insertion
+object IntMulMonoid extends Monoid[Int] with
+  fun combine(a: Int, b: Int): Int = a * b
+  fun empty: Int = 1
+//│ ╔══[COMPILATION ERROR] Parameter 'a' of overriding member 'combine' is represented as 'Int', which cannot hold the values represented as 'Unknown' that the member it overrides accepts
+//│ ║  l.+2: 	  fun combine(a: Int, b: Int): Int = a * b
+//│ ║        	              ^^^^^^
+//│ ╟── The overridden member 'combine' is defined here
+//│ ║  l.XX: 	  fun combine(a: T, b: T): T
+//│ ╙──      	      ^^^^^^^
+//│ ╔══[COMPILATION ERROR] Parameter 'b' of overriding member 'combine' is represented as 'Int', which cannot hold the values represented as 'Unknown' that the member it overrides accepts
+//│ ║  l.+2: 	  fun combine(a: Int, b: Int): Int = a * b
+//│ ║        	                      ^^^^^^
+//│ ╟── The overridden member 'combine' is defined here
+//│ ║  l.XX: 	  fun combine(a: T, b: T): T
+//│ ╙──      	      ^^^^^^^
+
+module M with
+  fun foldInt(x1: Int, x2: Int, x3: Int)(using m: Monoid[Int]): Int =
+    m.combine(x1, m.combine(x2, m.combine(x3, m.empty)))
+  fun fold[T](x1: T, x2: T, x3: T)(using m: Monoid[T]): T =
+    m.combine(x1, m.combine(x2, m.combine(x3, m.empty)))
+
+:fixme // contextual completion (Phases 2–4)
+:expect 9
+using Monoid[Int] = IntAddMonoid
+M.foldInt(2, 3, 4)
+//│ ═══[RUNTIME ERROR] Expected: '9', got: 'fun'
+//│ = fun
+
+:fixme // contextual completion (Phases 2–4)
+:expect 24
+using Monoid[Int] = IntMulMonoid
+M.foldInt(2, 3, 4)
+//│ ═══[RUNTIME ERROR] Expected: '24', got: 'fun'
+//│ = fun
+
+:fixme // contextual completion (Phases 2–4)
+:expect 6
+using Monoid[Int] = IntAddMonoid
+M.fold(1, 2, 3)
+//│ ═══[RUNTIME ERROR] Expected: '6', got: 'fun'
+//│ = fun
+
+
+// Generalized Module Methods
+
+using Int = 42
+
+:fixme // contextual completion (Phases 2–4)
+:expect 42
+fun foo()(using i: Int) = i
+foo()
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'fun'
+//│ = fun
+
+:fixme // contextual completion (Phases 2–4)
+:expect 42
+fun main() =
+  fun foo()(using i: Int) = i
+  foo()
+main()
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'fun'
+//│ = fun

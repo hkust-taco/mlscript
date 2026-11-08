@@ -821,7 +821,7 @@ object ObjBody:
   
   def extractMembers(blk: Term.Blk): Ls[ErrorReport] \/ Map[Str, BlockMemberSymbol] =
     val (errs, mems) = blk.stats.collect:
-      case td: TermDefinition => td.sym -> td
+      case td: TermDefinition if td.sym.nameIsMeaningful => td.sym -> td
       case td: ClassLikeDef => td.bsym -> td
       case td: TypeDef => td.bsym -> td
     .groupBy(_._1.nme)
@@ -975,6 +975,11 @@ case class ModuleOrObjectDef(
   val headerLoc: Opt[Loc],
 ) extends ClassLikeDef, CompanionValue:
   val ctorSym: Option[ClassCtorSymbol] = N
+  /** Namespace requests share this declaration index; filtering by visibility and query head
+    * happens per request, while the body is traversed at most once per module or object.
+    */
+  lazy val instanceMembers: Ls[TermDefinition] = body.blk.stats.collect:
+    case definition: TermDefinition if (definition.k is syntax.Ins) && definition.owner.contains(sym) => definition
 
 case class PatternDef(
     owner: Opt[InnerSymbol],

@@ -1,0 +1,34 @@
+:.
+
+// §3.1: creating a contextual lambda preserves the function value.
+let get = (using n: Int) => n
+//│ get = fun get
+
+:expect 8
+get(using 8)
+//│ = 8
+
+:expect 9
+((using n: Int) => n)(using 9)
+//│ = 9
+
+using Int = 7
+
+:fixme // contextual completion (Phases 2–4)
+:expect 7
+get
+//│ ═══[RUNTIME ERROR] Expected: '7', got: 'fun get'
+//│ = fun get
+
+:fixme // contextual completion (Phases 2–4)
+// Direct calls follow the rules for leading and trailing contextual clauses.
+:expect 10
+((using n: Int) => (x: Int) => n + x)(3)
+//│ ═══[RUNTIME ERROR] Expected: '10', got: 'fun'
+//│ = fun
+
+:fixme // contextual completion (Phases 2–4)
+:expect 10
+((x: Int) => (using n: Int) => x + n)(3)
+//│ ═══[RUNTIME ERROR] Expected: '10', got: 'fun'
+//│ = fun

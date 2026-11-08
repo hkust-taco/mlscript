@@ -1,0 +1,19 @@
+:.
+
+:fixme // contextual completion (Phases 2–4)
+:expect 42
+fun bar =
+  using Int = 42
+  Foo.foo
+let x = 1
+print(x)
+module Foo with
+  set x += 1
+  fun foo(using Int) = use[Int]
+print(x)
+bar
+//│ > 1
+//│ > 2
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'fun foo'
+//│ = fun foo
+//│ x = 2

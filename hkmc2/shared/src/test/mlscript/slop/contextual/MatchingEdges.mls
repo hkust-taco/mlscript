@@ -1,0 +1,72 @@
+:.
+
+class Parent
+class Child extends Parent
+abstract class Accept[A] with
+  fun label: Str
+class ParentAccept extends Accept[Parent] with
+  fun label: Str = "parent"
+class UnionAccept extends Accept[Int | Str] with
+  fun label: Str = "union"
+class TopAccept extends Accept[Any] with
+  fun label: Str = "top"
+fun accept[A](value: A)(using a: Accept[A]) = a.label
+using Accept[Parent] = new ParentAccept
+
+:fixme // matching and insertion (Phase 2)
+:expect "parent"
+accept(new Child)
+//│ ═══[RUNTIME ERROR] Expected: '"parent"', got: 'fun'
+//│ = fun
+
+using Accept[Int | Str] = new UnionAccept
+
+:fixme // matching and insertion (Phase 2)
+:expect "union"
+[accept(1), accept("text")].(0)
+//│ ═══[RUNTIME ERROR] Expected: '"union"', got: 'fun'
+//│ = fun
+
+using Accept[Any] = new TopAccept
+
+:fixme // matching and insertion (Phase 2)
+:expect "top"
+accept(new Child)
+//│ ═══[RUNTIME ERROR] Expected: '"top"', got: 'fun'
+//│ = fun
+
+// §3.4 currently accepts structural forms at candidate argument positions.
+class FunctionAccept extends Accept[Int -> Int] with
+  fun label: Str = "function"
+using Accept[Int -> Int] = new FunctionAccept
+
+:todo // structural compatibility is intentionally permissive; insertion is pending
+:expect "function"
+accept((x: Int) => x)
+//│ ═══[RUNTIME ERROR] Expected: '"function"', got: 'fun'
+//│ = fun
+
+// Several matching instances in one clause are ambiguous, including subclass heads.
+class Specialized extends Accept[Int] with
+  fun label: Str = "specialized"
+
+:breakme // ambiguity diagnostic not implemented yet
+:e
+fun sameTier(using Accept[Int], Specialized) = accept(1)
+
+// A later incompatible value cannot change the selected candidate.
+class IntAccept extends Accept[Int] with
+  fun label: Str = "int"
+using Accept[Int] = new IntAccept
+
+:fixme // late-value checks and insertion (Phases 2–4)
+:expect "int"
+fun generic[A](value: A) = accept(value)
+generic(1)
+//│ ═══[RUNTIME ERROR] Expected: '"int"', got: 'fun'
+//│ = fun
+
+:breakme // late-value diagnostic not implemented yet
+:e
+generic("later")
+//│ = fun

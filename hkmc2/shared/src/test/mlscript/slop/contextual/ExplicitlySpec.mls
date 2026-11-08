@@ -1,0 +1,67 @@
+:.
+
+fun f(using i: Int): Int = i
+
+:expect 42
+f(using 42)
+//│ = 42
+
+
+fun f(using i: Int, j: Num): Num = i + j
+
+:e
+:re
+f(using 42)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+1: 	f(using 42)
+//│ ║        	^^^^^^^^^^^
+//│ ╟── Function 'f' expected 2 arguments, but got 1
+//│ ║  l.XX: 	fun f(using i: Int, j: Num): Num = i + j
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function 'f' expected at least 2 arguments but got 1
+
+:expect 45.14
+f(using 42, 3.14)
+//│ = 45.14
+
+
+fun f(using i: Int)(using j: Int)(using k: Int): Int = i + j + k
+
+:breakme // contextual diagnostic not implemented yet
+:e
+:re
+f(using 32)
+//│ = fun
+
+:breakme // contextual diagnostic not implemented yet
+:e
+:re
+f(using 32)(using 8)
+//│ = fun
+
+:expect 42
+f(using 32)(using 8)(using 2)
+//│ = 42
+
+
+fun f(using i: Int)(j: Int)(using k: Int)(l: Num): Int = i + j + k + l
+
+:breakme // contextual diagnostic not implemented yet
+:e
+:expect fun
+f(using 32)
+//│ = fun
+
+:breakme // contextual diagnostic not implemented yet
+:e
+:re
+f(using 32)(8)
+//│ = fun
+
+:expect fun
+f(using 32)(8)(using 2)
+//│ = fun
+
+:expect 45.14
+f(using 32)(8)(using 2)(3.14)
+//│ = 45.14

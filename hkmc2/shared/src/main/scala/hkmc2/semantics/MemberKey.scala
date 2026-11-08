@@ -35,6 +35,7 @@ object MemberKey:
     member.asTrm.flatMap(_.defn).flatMap(td => symbol(td))
 
   def own(defn: ClassLikeDef, key: MemberKey): Opt[BlockMemberSymbol] = key match
-    case name: Str => defn.body.members.get(name)
+    case name: Str => defn.body.members.get(name).filterNot: member =>
+      member.asTrm.flatMap(_.defn).exists(td => (td.k is syntax.Ins) && td.owner.isEmpty)
     case key: SymbolKey =>
       defn.body.methods.find(method => symbol(method).contains(key)).map(_.bsym)

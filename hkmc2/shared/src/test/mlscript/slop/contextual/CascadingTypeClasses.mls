@@ -1,0 +1,88 @@
+:.
+
+
+class Foo[A]
+class Bar[B]
+class Baz
+
+
+fun foo[A](using Foo[A], A) = 42
+
+using Foo[Baz] = new Foo
+
+
+// FIXME: error message refers to `A`
+
+:breakme // contextual diagnostic not implemented yet
+:e
+:re
+foo[Baz]
+//│ = fun foo
+
+:breakme // contextual diagnostic not implemented yet
+:e
+:re
+foo
+//│ = fun foo
+
+
+using Baz = new Baz
+
+:fixme // contextual completion (Phases 2–4)
+:expect 42
+foo
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'fun foo'
+//│ = fun foo
+
+
+fun foo[A](using Foo[A])(using A) = 42
+
+:fixme // contextual completion (Phases 2–4)
+:expect 42
+foo
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'fun foo'
+//│ = fun foo
+
+
+fun foo[A](using A)(using Foo[A]) = 42
+
+:fixme // contextual completion (Phases 2–4)
+:expect 42
+foo
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'fun foo'
+//│ = fun foo
+
+
+using Foo[Bar[Baz]] = new Foo
+
+:breakme // contextual diagnostic not implemented yet
+:e
+:re
+foo
+//│ = fun foo
+
+using Bar[Baz] = new Bar
+
+:breakme // contextual diagnostic not implemented yet
+:e
+:re
+foo
+//│ = fun foo
+
+using Bar[Int] = new Bar
+
+:breakme // contextual diagnostic not implemented yet
+:e
+:re
+foo
+//│ = fun foo
+
+using Bar[Baz] = new Bar
+
+:fixme // contextual completion (Phases 2–4)
+:expect 42
+foo
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'fun foo'
+//│ = fun foo
+
+

@@ -117,6 +117,7 @@ object Elaborator:
       mode: Mode,
       labels: Map[LabelSymbol, LabelBinding],
       wildcardOpens: Ls[Ctx.OpenSource],
+      instances: Ls[Ctx.InstanceTier],
   ):
     
     override def toString: Str = s"${parent.fold("")(_.toString+"/")}${outer.showDbg}"
@@ -144,10 +145,11 @@ object Elaborator:
         // * but they should be allowed to shadow previous imports.
         env.get(kv._1).forall(_.isImport))
     
-    def withMembers(members: Iterable[Str -> BlockMemberSymbol]): Ctx =
-      copy(env = env ++ members.map:
+    def withMembers(members: Iterable[Str -> BlockMemberSymbol])(using Config): Ctx =
+      copy(env = env ++ members.iterator.filter(_._2.nameIsMeaningful).map:
         case (nme, sym) =>
           val elem = outer.inner match
+            case S(_: ClassSymbol) if config.language.useNewResolution && sym.trees.exists(_.k is Ins) => Ctx.RefElem(sym)
             case S(outer) => Ctx.SelElem(outer, sym.nme, S(sym), isImport = false)
             case N => Ctx.RefElem(sym)
           nme -> elem
@@ -167,7 +169,7 @@ object Elaborator:
       )
     
     def nest(outerCtx: OuterCtx): Ctx =
-      Ctx(SrcScope(outerCtx, S(scope)), Some(this), Map.empty, mode, Map.empty, Nil)
+      Ctx(SrcScope(outerCtx, S(scope)), Some(this), Map.empty, mode, Map.empty, Nil, instances)
     def nestLocal(nameHint: Str, isTopLevel: Bool): Ctx = nest(OuterCtx.LocalScope(nameHint, isTopLevel))
     def nestInner(inner: InnerSymbol): Ctx = nest(OuterCtx.InnerScope(inner))
     
@@ -190,6 +192,17 @@ object Elaborator:
 
     private def capture(elem: Ctx.Elem): Ctx.Elem =
       outer.resolutionBoundary.fold(elem)(Ctx.CaptElem(elem, _))
+
+    def withInstances(bindings: Ls[Ctx.InstanceBinding]): Ctx =
+      if bindings.isEmpty then this else copy(instances = Ctx.InstanceTier(scope, bindings) :: instances)
+
+    /** Reconstruct the same boundary crossings as a written reference, without looking up a
+      * name that a later ordinary declaration might have shadowed. Tiers retain their binding
+      * scopes and share their tails with every nested context and contextual site.
+      */
+    def instanceElement(tier: Ctx.InstanceTier, binding: Ctx.InstanceBinding): Opt[Ctx.Elem] =
+      if scope eq tier.scope then S(binding.elem)
+      else parent.flatMap(_.instanceElement(tier, binding)).map(capture)
 
     /** Control handlers have no source name, but references to them cross the same
       * lexical boundaries as named bindings. In particular, a return inside a
@@ -462,6 +475,9 @@ object Elaborator:
   type RefSymbol = SimpleRefSymbol | TermSymbol | BlockMemberSymbol | ThisSymbol
   
   object Ctx:
+    final case class InstanceBinding(symbol: RefSymbol, annotation: Opt[Term], elem: Elem)
+    final case class InstanceTier(scope: SrcScope, bindings: Ls[InstanceBinding])
+
     /** The opening site is diagnostic metadata, excluded from equality so
       * reopening the same receiver still contributes only one candidate.
       * Captures must preserve this site independently of the receiver's definition.
@@ -538,7 +554,7 @@ object Elaborator:
     given Conversion[RefSymbol, Elem] = RefElem(_)
     val empty: Ctx =
       val outer = OuterCtx.LocalScope("top-level", isTopLevel = true)
-      Ctx(SrcScope(outer, N), N, Map.empty, Mode.Full, Map.empty, Nil)
+      Ctx(SrcScope(outer, N), N, Map.empty, Mode.Full, Map.empty, Nil, Nil)
     
   /** The interpretation required by the enclosing syntax. Class and pattern
     * targets are resolved by their enclosing construct; types must not request
@@ -546,6 +562,10 @@ object Elaborator:
     */
   enum Interpretation:
     case Trm, Ptrn, Tpe
+    /** An explicitly applied head. Its parent records any contextual supply after elaborating
+      * the written arguments; a type application or explicit using list suppresses that supply.
+      */
+    case AppHead
     /** The receiver of a selection. The root of a chain of selections of a value or a
       * pattern is `chained`: like the value or pattern head itself, it can name a member
       * of an implicit namespace (see NewResolver.unresolvedRef). The selections of types
@@ -564,7 +584,7 @@ object Elaborator:
     /** Whether a name without an explicit binding can name a member of an implicit namespace
       * (see NewResolver.unresolvedRef), rather than only consult the visible wildcard opens. */
     def implicitNamespacing: Bool = this match
-      case Trm | Ptrn => true
+      case Trm | Ptrn | AppHead => true
       case Rcvr(chained) => chained
       case Clss(instantiated) => instantiated
       case Tpe | Annt => false
@@ -575,7 +595,7 @@ object Elaborator:
     /** The interpretation of the head of an application with this interpretation. */
     def applicationHead: Interpretation = this match
       case Annt => Annt
-      case _ => Trm
+      case _ => AppHead
     
     /** The interpretation of the elements of a tuple or record with this interpretation.
       * Elements are values, even when their aggregate is a receiver or a class operand.
@@ -870,7 +890,7 @@ end Elaborator
 
 
 import Elaborator.*
-import Elaborator.Interpretation.{Trm, Rcvr, Clss, Ptrn, Tpe, Annt}
+import Elaborator.Interpretation.{Trm, Rcvr, Clss, Ptrn, Tpe, Annt, AppHead}
 
 
 class Elaborator(val tl: TraceLogger, val wd: io.Path, val prelude: Ctx)
@@ -1563,7 +1583,7 @@ extends Importer:
     */
   private def interpretRef(ref: Term, interp: Interpretation): Term =
     if newResolution then interp match
-      case Trm | Annt => requireTerm(ref)
+      case Trm | AppHead | Annt => requireTerm(ref)
       case Rcvr(_) => listenReceiver(ref)(_ => ())
       case Tpe => ref.typeInterpretation = S(typeResolution(ref))
       case _ => ()
@@ -1572,6 +1592,25 @@ extends Importer:
   // Most recursive operands are terms. Transparent wrappers must explicitly
   // forward their interpretation; class, pattern, and type operands specify theirs.
   def subterm(tree: Tree, interp: Interpretation = Trm): Ctxl[UnderCtx ?=> Term] =
+    val result = subtermImpl(tree, interp)
+    if newResolution then
+      def eligible(term: Term, head: Bool): Bool = term match
+        case Term.Capture(base, _) => eligible(base, head)
+        case _: (Term.SimpleRef | Term.MemberRef | Term.NewSel | Term.UnresolvedRef | Term.Super) => true
+        case Term.App(lhs = lhs) => eligible(lhs, true)
+        case Term.TyApp(lhs = lhs) => eligible(lhs, true)
+        case Term.New(cls = cls) => eligible(cls, true)
+        case _: Term.Lam => head
+        case _ => false
+      interp match
+        case Trm if eligible(result, false) =>
+          rctx.recordContextualSite(result, ContextualRole.Value, ctx)
+        case Rcvr(_) if eligible(result, false) =>
+          rctx.recordContextualSite(result, ContextualRole.Receiver, ctx)
+        case _ => ()
+    result
+
+  private def subtermImpl(tree: Tree, interp: Interpretation): Ctxl[UnderCtx ?=> Term] =
   trace[Term](dbg"Elab subterm ${tree.showDbg}", r => s"~> ${r.showDbg}"):
     
     def error = Term.Error().withLocOf(tree)
@@ -1644,8 +1683,9 @@ extends Importer:
     /** Fallback to a normal selection + application when label-specific handling does not apply. */
     def mkNonLabelSelectionApp(tree: App, sel: Sel, args: Ls[Tree]): Term =
       val sym = FlowSymbol.app()
-      val lt = subterm(sel)
+      val lt = subterm(sel, interp.applicationHead)
       val rt = subterm(Tup(args))
+      if newResolution && interp != Annt then rctx.recordContextualSite(lt, ContextualRole.ApplicationHead, ctx)
       app(lt, rt)(tree, N, sym)
     
     def elaborateSelection(tree: Sel): Term =
@@ -1817,7 +1857,7 @@ extends Importer:
       // The whole type application owns a by-name invocation's binder group.
       // Do not observe its underlying reference before its arguments are available.
       val baseInterp = interp match
-        case Trm | Rcvr(_) => Trm
+        case Trm | Rcvr(_) | AppHead => AppHead
         case _ => interp
       val result = withTypeBinders(Term.TyApp(subterm(lhs, baseInterp), targs.map {
         case Modified(kw @ Keywrd(Keyword.`in`), arg) => Term.WildcardTy(S(subterm(arg, Tpe)), N).mkLocWith(kw)
@@ -1828,7 +1868,7 @@ extends Importer:
       })(N).withLocOf(tree))
       // A term specialization must validate its arguments even when unused.
       // Type and constructor interpretations have their own argument checks.
-      if newResolution && interp == Trm then listenTerm(result)(_ => ())
+      if newResolution && (interp == Trm || interp == AppHead) then listenTerm(result)(_ => ())
       result
     case InfixApp(TyTup(tvs), Keywrd(Keyword.`->`), body) =>
       val boundVars = mutable.HashMap.empty[Str, VarSymbol]
@@ -1980,6 +2020,8 @@ extends Importer:
       val sym = FlowSymbol.app()
       val lt = subterm(lhs, interp.applicationHead)
       val rt = subterm(rhs)
+      if newResolution && interp != Annt && !rt.isInstanceOf[Term.CtxTup] then
+        rctx.recordContextualSite(lt, ContextualRole.ApplicationHead, ctx)
       app(lt, rt)(tree, N, sym)
     case tree: OpApp => subterm(operatorApp(tree), interp)
     // Under new resolution, a leading-dot selection only consults the implicit namespace
@@ -2241,14 +2283,17 @@ extends Importer:
           val res = go(acc, lhs :: Nil)
           val sym = FlowSymbol.app()
           val fl = Fld(FldFlags.empty, res, N)
-          val ap_ = app(subterm(f), withTypeBinders(Term.Tup(
-            fl :: args.map(fld(_, Trm)))(tup)))(ap, N, sym)
+          val head = subterm(f, interp.applicationHead)
+          val arguments = withTypeBinders(Term.Tup(fl :: args.map(fld(_, Trm)))(tup))
+          if newResolution && interp != Annt then rctx.recordContextualSite(head, ContextualRole.ApplicationHead, ctx)
+          val ap_ = app(head, arguments)(ap, N, sym)
           go(ap_, trees)
         case (ap @ App(f, tup @ Tup(args))) :: trees =>
           val sym = FlowSymbol.app()
-          go(app(subterm(f),
-              withTypeBinders(Term.Tup(Fld(FldFlags.empty, acc, N) :: args.map(fld(_, Trm)))(tup))
-            )(ap, N, sym), trees)
+          val head = subterm(f, interp.applicationHead)
+          val arguments = withTypeBinders(Term.Tup(Fld(FldFlags.empty, acc, N) :: args.map(fld(_, Trm)))(tup))
+          if newResolution && interp != Annt then rctx.recordContextualSite(head, ContextualRole.ApplicationHead, ctx)
+          go(app(head, arguments)(ap, N, sym), trees)
         case Block(sts) :: trees =>
           go(acc, sts ::: trees)
         case tree :: trees =>
@@ -2366,7 +2411,8 @@ extends Importer:
         pre = dbg"Elab block ${blk.desugStmts.showAsPlain.truncate(100, "[...]")} ${ctx.outer}", r => s"~> ${r._1.showDbg}"
       ):
     
-    val members = blk.definedSymbols.toMap
+    val symbols = blk.definedSymbolsFor(newResolution)
+    val members = symbols.toMap
     // A qualified annotation can need a preceding val's receiver before the
     // enclosing block finishes. Publish a member once all its overloads have
     // definitions; waiting for unrelated later statements needlessly hides that
@@ -2383,11 +2429,11 @@ extends Importer:
     val newSignatureTrees = mutable.Map.empty[Str, Tree] // * Store trees of signatures
     
     // * Check for double/incompatible definitions and declarations
-    blk.definedSymbols.foreach: (name, sym) =>
+    symbols.foreach: (name, sym) =>
       if sym.nme === name then // * This is not true when `name` is the symbolic name of a member
         
         sym.trees.foreach: td =>
-          td.symbName match
+          (if sym.nameIsMeaningful then td.symbName else N) match
           case S(R(id)) =>
             val mem = members.getOrElse(id.name, die)
             if mem isnt sym then raise:
@@ -2400,7 +2446,7 @@ extends Importer:
           case _ => ()
         
         val defns = sym.trees.collect:
-          case td: TermDef if td.rhs.isDefined && td.name.exists(_.name === name) => td
+          case td: TermDef if td.rhs.isDefined && blk.definitionName(td, newResolution).exists(_.name === name) => td
           case td: TypeDef if td.name.exists(_.name === name) => td
         if defns.sizeCompare(1) > 0 then
           val groups = defns.groupMapReduce(_.k)(_ :: Nil)(_ ::: _)
@@ -2688,13 +2734,14 @@ extends Importer:
         td.symbName match
         case S(L(d)) => raise(d)
         case _ => ()
-        td.name match
+        blk.definitionName(td, newResolution) match
           case R(id) =>
             val sym = members.getOrElse(id.name, die)
             val owner =
-              // * Instance declarations are not meant to be exported as externally-available members,
-              // * even when declared within some class or module.
-              if (k is Ins) then N else ctx.outer.inner
+              if k is Ins then
+                if newResolution then ctx.outer.inner.collect { case module: ModuleOrObjectSymbol => module }
+                else N
+              else ctx.outer.inner
             if (k is MutVal) && owner.isEmpty then
               raise:
                 ErrorReport:
@@ -2798,7 +2845,12 @@ extends Importer:
               ctx.nest(OuterCtx.NonReturnContext(S(tsym))).givenIn(elaborateDefinition)
             
             completeIfReady(sym)
-            go(sts, Nil, tdf :: acc)(N)
+            val nextCtx = if newResolution && (k is Ins) then
+              val elem = owner.fold[Ctx.Elem](Ctx.RefElem(sym)):
+                module => Ctx.SelElem(module, sym.nme, S(sym), isImport = false)
+              ctx.withInstances(Ctx.InstanceBinding(sym, tdf.sign, elem) :: Nil)
+            else ctx
+            go(sts, Nil, tdf :: acc)(N)(using nextCtx)
           case L(d) =>
             reportUnusedAnnotations
             raise(d)
@@ -2961,7 +3013,26 @@ extends Importer:
                 (f.sym.nme -> f.sym) :: aliases.map(_ -> f.sym)
               case _ =>
                 Nil
-            ctx.withMembers(valParams) ++ params
+            val withFields = ctx.withMembers(valParams) ++ params
+            if newResolution && (pss.exists(_.flags.ctx) || extraParams.exists(_.flags.ctx)) then
+              val replacements = (pss ::: extraParams).iterator.flatMap(_.params).flatMap: p =>
+                p.fldSym.map: field =>
+                  val binding = field match
+                    case member: BlockMemberSymbol =>
+                      Ctx.InstanceBinding(member, p.sign, Ctx.SelElem(owner.get, member.nme, S(member), isImport = false))
+                    case member: TermSymbol => Ctx.InstanceBinding(member, p.sign, Ctx.RefElem(member))
+                    case _ =>
+                      softAssert(false, "Constructor parameters must have a field or lexical parameter binding")
+                      Ctx.InstanceBinding(p.sym, p.sign, Ctx.RefElem(p.sym))
+                  p.sym -> binding
+              .toMap
+              withFields.copy(instances = ctx.instances.mapConserve: tier =>
+                val bindings = tier.bindings.mapConserve: binding =>
+                  binding.symbol match
+                    case parameter: VarSymbol => replacements.getOrElse(parameter, binding)
+                    case _ => binding
+                if bindings eq tier.bindings then tier else Ctx.InstanceTier(ctx.scope, bindings))
+            else withFields
           
           val (blk, c) = fn(using ctxWithFields)
           val blkWithFields: Blk = blk.copy(stats = allFields ::: blk.stats)
@@ -3391,7 +3462,11 @@ extends Importer:
           order: ParameterOrder): (ParamList, Ctx) =
         ps match
         case Nil =>
-          (ParamList(flags, acc.reverse, variadic.map((p, trailing) => Variadic(p, trailing.reverse)))(t.toLoc), ctx)
+          val list = ParamList(flags, acc.reverse, variadic.map((p, trailing) => Variadic(p, trailing.reverse)))(t.toLoc)
+          val nextCtx = if newResolution && flags.ctx then
+            ctx.withInstances(list.params.map(p => Ctx.InstanceBinding(p.sym, p.sign, Ctx.RefElem(p.sym))))
+          else ctx
+          (list, nextCtx)
         case hd :: tl =>
           val isCtxParam = hd.isModified(Ins)
           val inUsing = flags.ctx || isCtxParam

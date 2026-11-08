@@ -1,0 +1,82 @@
+:.
+
+// Contextual constructor coverage from basics/MultiParamListClasses.
+using Int = 123
+class Foo(using val z: Int)
+
+:fixme // contextual completion (Phases 2–4)
+:expect 123
+Foo.z
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	Foo.z
+//│ ║        	^^^^^
+//│ ╟── Constructor of class 'Foo' does not contain member 'z'
+//│ ║  l.XX: 	class Foo(using val z: Int)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '123', got: 'undefined'
+
+:fixme // contextual completion (Phases 2–4)
+:expect 123
+(new Foo).z
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	(new Foo).z
+//│ ║        	^^^^^^^^^^^
+//│ ╟── Instance of class 'Foo' does not contain member 'z'
+//│ ║  l.+1: 	(new Foo).z
+//│ ╙──      	 ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '123', got: 'undefined'
+
+class Bar(val x: Int, val y: Int)(using val z: Int)
+
+:fixme // contextual completion (Phases 2–4)
+:expect 126
+Bar(1, 2).z + Bar(1, 2).x + Bar(1, 2).y
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	Bar(1, 2).z + Bar(1, 2).x + Bar(1, 2).y
+//│ ║        	^^^^^^^^^^^
+//│ ╟── Partially-applied constructor of class 'Bar' does not contain member 'z'
+//│ ║  l.+1: 	Bar(1, 2).z + Bar(1, 2).x + Bar(1, 2).y
+//│ ╙──      	^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	Bar(1, 2).z + Bar(1, 2).x + Bar(1, 2).y
+//│ ║        	              ^^^^^^^^^^^
+//│ ╟── Partially-applied constructor of class 'Bar' does not contain member 'x'
+//│ ║  l.+1: 	Bar(1, 2).z + Bar(1, 2).x + Bar(1, 2).y
+//│ ╙──      	              ^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	Bar(1, 2).z + Bar(1, 2).x + Bar(1, 2).y
+//│ ║        	                            ^^^^^^^^^^^
+//│ ╟── Partially-applied constructor of class 'Bar' does not contain member 'y'
+//│ ║  l.+1: 	Bar(1, 2).z + Bar(1, 2).x + Bar(1, 2).y
+//│ ╙──      	                            ^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '126', got: 'undefined'
+
+:fixme // contextual completion (Phases 2–4)
+:expect 123
+(new Bar(1, 2)).z
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	(new Bar(1, 2)).z
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'Bar' does not contain member 'z'
+//│ ║  l.+1: 	(new Bar(1, 2)).z
+//│ ╙──      	 ^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '123', got: 'undefined'
+
+let f = Bar
+//│ f = fun Bar { class: class Bar }
+
+:fixme // contextual completion (Phases 2–4)
+:expect 123
+f(1, 2).z
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	f(1, 2).z
+//│ ║        	^^^^^^^^^
+//│ ╟── Partially-applied constructor of class 'Bar' does not contain member 'z'
+//│ ║  l.+1: 	f(1, 2).z
+//│ ╙──      	^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '123', got: 'undefined'

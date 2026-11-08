@@ -1,0 +1,116 @@
+:.
+
+
+using Int = 42
+using Str = "42"
+
+:fixme // contextual completion (Phases 2–4)
+:expect 42
+use[Int]
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'fun use'
+//│ = fun use
+
+:fixme // contextual completion (Phases 2–4)
+:expect "42"
+use[Str]
+//│ ═══[RUNTIME ERROR] Expected: '"42"', got: 'fun use'
+//│ = fun use
+
+:fixme // contextual completion (Phases 2–4)
+// §3.4: Int is a subclass of Num.
+:expect 42
+use[Num]
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'fun use'
+//│ = fun use
+
+:breakme // contextual diagnostic not implemented yet
+:e
+use[Bool]
+//│ = fun use
+
+:fixme // contextual completion (Phases 2–4)
+:expect 42
+let x = use[Int]
+x
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'fun use'
+//│ = fun use
+//│ x = fun use
+
+:breakme // contextual diagnostic not implemented yet
+// §3.2: instance declarations require a named type.
+:e
+using Int -> Int = id
+use[Int -> Int](123)
+//│ = 123
+
+:fixme // contextual completion (Phases 2–4)
+:expect -42
+fun f(using Int) = use[Int]
+using Int = -42
+f
+//│ ═══[RUNTIME ERROR] Expected: '-42', got: 'fun f'
+//│ = fun f
+
+:fixme // contextual completion (Phases 2–4)
+:expect "42"
+fun f(using Int) = use[Str]
+using Str = "-42"
+f
+//│ ═══[RUNTIME ERROR] Expected: '"42"', got: 'fun f'
+//│ = fun f
+
+// §3.4: a lexical Int also supplies Num.
+fun f(using Int) = use[Num]
+
+
+data class Some[T](value: T)
+
+:fixme // contextual completion (Phases 2–4)
+:expect 42
+fun f[T](using Some[T]) = use[Some[T]].value
+using Some[Int] = Some(42)
+f
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	fun f[T](using Some[T]) = use[Some[T]].value
+//│ ║        	                          ^^^^^^^^^^^^^^^^^^
+//│ ╟── Function 'use' does not contain member 'value'
+//│ ║  in ../../../mlscript-compile/Predef.mls
+//│ ║  l.XX: 	fun use[T](using instance: T) = instance
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'fun f'
+//│ = fun f
+
+:e
+:re
+use{[Some[Int]].value}
+//│ ╔══[COMPILATION ERROR] Unsupported refinement in this position.
+//│ ║  l.+1: 	use{[Some[Int]].value}
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+:re
+use([Some[Int]].value)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	use([Some[Int]].value)
+//│ ║        	    ^^^^^^^^^^^^^^^^^
+//│ ╟── Tuple literal does not contain member 'value'
+//│ ║  l.+1: 	use([Some[Int]].value)
+//│ ╙──      	    ^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:fixme // contextual completion (Phases 2–4)
+:expect 42
+fun f[T](using T) = use[T]
+using Int = 42
+f[Int]
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'fun f'
+//│ = fun f
+
+:breakme // contextual diagnostic not implemented yet
+:e
+:re
+f
+//│ = fun f
+
+

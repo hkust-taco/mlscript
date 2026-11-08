@@ -89,6 +89,23 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       case S(privates) => doc".#${privates.allocateOrGetName(stored)}"
       case N => doc"[${scope.lookup_!(getPrivateAccessorSymbol(stored), loc)}]"
 
+  /** Anonymous instance names occupy a separate namespace at runtime too. A string field
+    * could hide an inherited named member with the same spelling. Each module/object owns
+    * its own table under this symbol key; generated selections address its declaration slot.
+    */
+  private def contextualStorageKey: Document = doc"""globalThis.Symbol.for("mlscript.contextualInstances")"""
+
+  private def isAnonymousInstance(sym: DefinitionSymbol[?]): Bool = sym match
+    case term: TermSymbol if (term.k is syntax.Ins) && term.owner.nonEmpty && !term.isPrivate =>
+      term.irDefn match
+        case S(value: ValDefn) => !value.sym.nameIsMeaningful
+        case _ => term.defn.exists(!_.sym.nameIsMeaningful)
+    case _ => false
+
+  private def selectStoredField(sym: DefinitionSymbol[?], loc: Opt[Loc])(using Raise, Scope): Opt[Document] =
+    selectPrivateField(sym, loc).orElse:
+      Option.when(isAnonymousInstance(sym))(doc"[$contextualStorageKey]${fieldSelect(sym.nme)}")
+
   private def withPrivateAccessorDecls(doc: Document)(using Raise, Scope): Document =
     val accessors = (
       privateAccessorSymbols.iterator.toList.sortBy(_._1.uid).map: (ts, sym) =>
@@ -385,7 +402,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       val dotClass = s.symbol match
         case S(ds) if ds.shouldBeLifted => doc".class"
         case _ => doc""
-      val field = s.symbol.flatMap(selectPrivateField(_, s.toLoc))
+      val field = s.symbol.flatMap(selectStoredField(_, s.toLoc))
       val name = symbolicSuffixBase(id.name).getOrElse(id.name)
       val fieldDoc = field.getOrElse:
         if isValidFieldName(name)
@@ -517,7 +534,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         } = ${result(r)};${returningTerm(SpecializedSwitch.followingAssignment(assign), endSemi)}"
     case assign @ AssignField(p, n, r, rst) =>
       val field = assign.symbol match
-        case S(member: DefinitionSymbol[?]) => selectPrivateField(member, n.toLoc)
+        case S(member: DefinitionSymbol[?]) => selectStoredField(member, n.toLoc)
         case _ => N
       val name = symbolicSuffixBase(n.name).getOrElse(n.name)
       doc" # ${result(p)}${field.getOrElse(fieldSelect(name))} = ${result(r)};${returningTerm(rst, endSemi)}"
@@ -542,7 +559,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             // * Use Object.defineProperty to override them in module/class static contexts.
             doc"Object.defineProperty(${thisDoc}, ${nme.escaped}, { configurable: true, enumerable: true, writable: true, value: ${result(p)} });${returningTerm(rst, endSemi)}"
           case _ =>
-            val field = selectPrivateField(tsym, tsym.toLoc).getOrElse(fieldSelect(nme))
+            val field = selectStoredField(tsym, tsym.toLoc).getOrElse(fieldSelect(nme))
             doc"${thisDoc}${field} = ${result(p)};${returningTerm(rst, endSemi)}"
       case defn: (FunDefn | ClsLikeDefn) =>
         
@@ -628,6 +645,10 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             def mkPrivs(pubFlds: Ls[BlockMemberSymbol -> TermSymbol], privFlds: Ls[TermSymbol],
                   methods: Ls[FunDefn], ctor: Block,
                   mtdPrefix: Str, owner: InnerSymbol)(using Scope): Document =
+              val contextualStorage =
+                if pubFlds.exists((_, sym) => isAnonymousInstance(sym))
+                then doc" # $mtdPrefix[$contextualStorageKey] = Object.create(null);"
+                else doc""
               def isPlainField(sym: TermSymbol): Bool =
                 // Refreshed symbols carry annotations on their current IR definition.
                 // Declared fields without initializers retain their source definition.
@@ -684,7 +705,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                   }${
                     selectPrivateField(td.dSym, td.dSym.toLoc).get
                   }; }" :: Nil
-              (privDecls ::: accessors ::: privateAccessors ::: privateMethodAccessors).mkDocument(doc"")
+              contextualStorage :: (privDecls ::: accessors ::: privateAccessors ::: privateMethodAccessors).mkDocument(doc"")
             
             val modDoc = modo match
               case N => doc""

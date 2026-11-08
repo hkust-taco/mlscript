@@ -1,0 +1,5 @@
+#lang(0.3.x)
+
+module ImportedInstances with
+  class Evidence
+  using Evidence = new Evidence

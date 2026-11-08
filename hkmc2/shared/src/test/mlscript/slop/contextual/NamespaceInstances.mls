@@ -1,0 +1,118 @@
+:.
+
+:fixme // generic override representation check, independent of contextual insertion
+// §3.3: type-class companion, including a subclass-only provider.
+abstract class Show[A] with
+  fun show(value: A): Str
+class IntShow extends Show[Int] with
+  fun show(value: Int): Str = "int"
+module Show with
+  using IntShow = new IntShow
+fun render[A](value: A)(using show: Show[A]) = show.show(value)
+//│ ╔══[COMPILATION ERROR] Parameter 'value' of overriding member 'show' is represented as 'Int', which cannot hold the values represented as 'Unknown' that the member it overrides accepts
+//│ ║  l.+4: 	  fun show(value: Int): Str = "int"
+//│ ║        	           ^^^^^^^^^^
+//│ ╟── The overridden member 'show' is defined here
+//│ ║  l.+2: 	  fun show(value: A): Str
+//│ ╙──      	      ^^^^
+//│ ═══[RUNTIME ERROR] TypeError: Class extends value undefined is not a constructor or null
+
+:fixme // namespace instance selection (Phase 3)
+:expect "int"
+render(1)
+//│ ═══[RUNTIME ERROR] Expected: '"int"', got: 'fun'
+//│ = fun
+
+:fixme // generic override representation check, independent of contextual insertion
+// A lexical instance shadows the namespace tier.
+:expect "lexical"
+class LocalShow extends Show[Int] with
+  fun show(value: Int): Str = "lexical"
+using Show[Int] = new LocalShow
+render(1)
+//│ ╔══[COMPILATION ERROR] Parameter 'value' of overriding member 'show' is represented as 'Int', which cannot hold the values represented as 'Unknown' that the member it overrides accepts
+//│ ║  l.+2: 	  fun show(value: Int): Str = "lexical"
+//│ ║        	           ^^^^^^^^^^
+//│ ╟── The overridden member 'show' is defined here
+//│ ║  l.XX: 	  fun show(value: A): Str
+//│ ╙──      	      ^^^^
+//│ ═══[RUNTIME ERROR] TypeError: Class extends value undefined is not a constructor or null
+//│ ═══[RUNTIME ERROR] Expected: '"lexical"', got: 'undefined'
+
+:fixme // namespace instance selection (Phase 3)
+// Declaration heads cut off the walk even when argument compatibility rejects them.
+module Outer with
+  abstract class Codec[A] with
+    fun label: Str
+  class IntCodec extends Codec[Int] with
+    fun label: Str = "int"
+  class StrCodec extends Codec[Str] with
+    fun label: Str = "str"
+  using Codec[Int] = new IntCodec
+  module Codec with
+    using Codec[Str] = new StrCodec
+fun codec[A](value: A)(using c: Outer.Codec[A]) = c.label
+//│ ═══[RUNTIME ERROR] TypeError: Class extends value undefined is not a constructor or null
+
+:breakme // contextual diagnostic not implemented yet
+:e
+codec(1)
+//│ = fun
+
+// A parameter query must revisit one module through different triggering heads.
+module Family with
+  class A
+  class B extends A
+  using A = new A
+fun choose[T](value: T)(using chosen: T) = 42
+
+:fixme // namespace instance selection (Phase 3)
+:expect 42
+choose(new Family.B)
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'fun'
+//│ = fun
+
+// Type-argument namespaces contribute instances.
+abstract class Tag[A] with
+  fun label: Str
+class Point
+module Point with
+  class PointTag extends Tag[Point] with
+    fun label: Str = "point"
+  using Tag[Point] = new PointTag
+fun tag[A](value: A)(using t: Tag[A]) = t.label
+
+:fixme // namespace instance selection (Phase 3)
+:expect "point"
+tag(new Point)
+//│ ═══[RUNTIME ERROR] Expected: '"point"', got: 'fun'
+//│ = fun
+
+// Namespace ambiguity does not use specificity.
+abstract class Both[A] with
+  fun label: Str
+class Thing
+module Both with
+  class First extends Both[Thing] with
+    fun label: Str = "first"
+  using Both[Thing] = new First
+module Thing with
+  class Second extends Both[Thing] with
+    fun label: Str = "second"
+  using Both[Thing] = new Second
+fun both[A](value: A)(using b: Both[A]) = b.label
+
+:breakme // contextual diagnostic not implemented yet
+:e
+both(new Thing)
+//│ = fun
+
+// Private instances do not escape their declaring scope.
+class Secret
+module Secret with
+  private using Secret = new Secret
+
+:breakme // contextual diagnostic not implemented yet
+:e
+use[Secret]
+//│ = fun use

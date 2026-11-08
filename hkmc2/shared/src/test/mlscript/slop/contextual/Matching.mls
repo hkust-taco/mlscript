@@ -1,0 +1,59 @@
+:.
+
+// §3.4: nominal inheritance at the query head and at its argument positions.
+abstract class Box[A] with
+  fun label: Str
+class IntBox extends Box[Int] with
+  fun label: Str = "int"
+class NumBox extends Box[Num] with
+  fun label: Str = "num"
+fun box[A](value: A)(using b: Box[A]) = b.label
+using IntBox = new IntBox
+
+:fixme // contextual completion (Phases 2–4)
+:expect "int"
+box(1)
+//│ ═══[RUNTIME ERROR] Expected: '"int"', got: 'fun'
+//│ = fun
+
+:breakme // contextual diagnostic not implemented yet
+// A superclass candidate does not satisfy a subclass query.
+:e
+fun requireIntBox(using IntBox) = 42
+fun onlySuperclass(using Box[Int]) = requireIntBox
+
+:breakme // contextual diagnostic not implemented yet
+// X7: both candidates in the same clause accept Int values.
+:e
+fun ambiguous(using Box[Int], Box[Num]) = box(1)
+
+// Vacuous named-query argument positions match; declaration tiers decide.
+fun vacuous[A](using b: Box[A]) = b.label
+using Box[Num] = new NumBox
+
+:fixme // contextual completion (Phases 2–4)
+:expect "num"
+vacuous
+//│ ═══[RUNTIME ERROR] Expected: '"num"', got: 'fun vacuous'
+//│ = fun vacuous
+
+:breakme // contextual diagnostic not implemented yet
+// A top-level parameter query cannot select from an empty position.
+:e
+fun undetermined[T](using t: T) = t
+undetermined
+//│ = fun undetermined
+
+:fixme // contextual completion (Phases 2–4)
+// Unknown and dynamic values do not reject a candidate's argument type.
+:expect "num"
+box(unsafe.undefined)
+//│ ═══[RUNTIME ERROR] Expected: '"num"', got: 'fun'
+//│ = fun
+
+:breakme // contextual diagnostic not implemented yet
+// Unsupported query types are errors (§3.2), even if a value could be supplied.
+:e
+fun unsupported(using Int | Str) = 42
+unsupported
+//│ = fun unsupported

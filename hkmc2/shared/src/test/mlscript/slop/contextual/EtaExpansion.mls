@@ -1,0 +1,107 @@
+:.
+
+using Int = 42
+
+fun foo()(using Int) = [use[Int]]
+
+fun bar(x)(using Int) = [x, use[Int]]
+
+fun baz(x)(using Int)(y)(using Num) = [x, use[Int], y, use[Num]]
+
+:breakme // contextual diagnostic not implemented yet
+:e
+baz
+//│ = fun baz
+
+
+using Num = 0.42
+
+// foo
+// should be expanded to
+// () => foo()
+// and then resolved to
+// () => foo()(<using> 42)
+:sir
+let f1 = foo
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ set f1⁰ = foo⁰; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ f1 = fun foo
+
+:fixme // contextual completion (Phases 2–4)
+:expect [42]
+f1()
+//│ ═══[RUNTIME ERROR] Expected: '[42]', got: 'fun'
+//│ = fun
+
+// bar
+// should be expanded to
+// (x) => bar(x)
+// and then resolved to
+// (x) => bar(x)(<using> 42)
+:sir
+let f2 = bar
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ set f2⁰ = bar⁰; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ f2 = fun bar
+
+:fixme // contextual completion (Phases 2–4)
+:expect [0.42, 42]
+f2(0.42)
+//│ ═══[RUNTIME ERROR] Expected: '[0.42, 42]', got: 'fun'
+//│ = fun
+
+// baz
+// should be expanded to
+// (x) => baz(x)
+// and then resolved to
+// (x) => baz(x)(<using> 42)
+:sir
+let f3 = baz
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ set f3⁰ = baz⁰; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ f3 = fun baz
+
+:fixme // contextual completion (Phases 2–4)
+:expect [43, 42, 44, 0.42]
+f3(43)(44)
+//│ ═══[RUNTIME ERROR] Expected: '[43, 42, 44, 0.42]', got: 'fun'
+//│ = fun
+
+// This should not expand
+:sir
+foo()
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ return foo⁰()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
+
+// This should not expand
+:sir
+bar(0.42)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ return bar⁰(0.42)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
+
+
+// :fixme // TODO: fix IR rebinding issue (each symbol should be bound at most once)
+// :checkIR
+:sir
+module Test with
+  fun test(j)(using Int) = 0
+  fun main(using Int) = test
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define Test⁰ as class Test¹
+//│ module Test² {
+//│   method test⁰ = fun test¹(j)(tmp) {
+//│     return 0
+//│   }
+//│   method main⁰ = fun main¹(tmp) { return Test².this.test¹ }
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+

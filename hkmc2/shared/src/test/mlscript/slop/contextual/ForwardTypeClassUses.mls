@@ -1,0 +1,65 @@
+:.
+
+
+using Str = "ok"
+
+fun bar = M.foo()
+module M with
+  fun foo()(using s: Str) = s
+
+:fixme // contextual completion (Phases 2–4)
+:expect "ok"
+bar
+//│ ═══[RUNTIME ERROR] Expected: '"ok"', got: 'fun'
+//│ = fun
+
+fun bar = M.getN.foo()
+module M with
+  fun getN: module N = N
+module N with
+  fun foo()(using Str) = 1
+
+:fixme // contextual completion (Phases 2–4)
+:expect 1
+bar
+//│ ═══[RUNTIME ERROR] Expected: '1', got: 'fun'
+//│ = fun
+
+:breakme // contextual diagnostic not implemented yet
+:e
+:re
+fun test = M.mtd()
+module M with
+  fun mtd()(using n: Int) = n
+module Example with
+  fun foo(): module M = M
+test
+//│ = fun
+
+:breakme // contextual diagnostic not implemented yet
+:e
+:re
+fun test = Example.foo().mtd()
+module M with
+  fun mtd()(using n: Int) = n
+module Example with
+  fun foo(): module M = M
+test
+//│ = fun
+
+
+using Int = 42
+
+fun test = Example.foo().mtd()
+module M with
+  fun mtd()(using n: Int) = n
+module Example with
+  fun foo(): module M = M
+
+:fixme // contextual completion (Phases 2–4)
+:expect 42
+test
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'fun'
+//│ = fun
+
+

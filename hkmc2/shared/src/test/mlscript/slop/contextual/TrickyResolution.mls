@@ -1,0 +1,16 @@
+:.
+
+// Port of ctx/TrickyResolution: §3.5 shadows only matching candidates.
+data class Foo[A](value: A)
+data class Bar[A](value: A)
+fun foo[A](using f: Foo[A], b: Bar[A]) = [f.value, b.value]
+using Foo[Str] = Foo("wrong")
+using Foo[Int] = Foo(1)
+using Bar[Int] = Bar(2)
+using Bar[Str] = Bar("wrong")
+
+:fixme // contextual completion (Phases 2–4)
+:expect [1, 2]
+foo
+//│ ═══[RUNTIME ERROR] Expected: '[1, 2]', got: 'fun foo'
+//│ = fun foo

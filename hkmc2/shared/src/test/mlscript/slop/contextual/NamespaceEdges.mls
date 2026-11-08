@@ -1,0 +1,91 @@
+:.
+
+// A declaration in a type's enclosing module provides without a companion.
+module Enclosing with
+  class Evidence
+  using Evidence = new Evidence
+
+:fixme // namespace selection (Phase 3)
+:expect 42
+fun enclosing(using Enclosing.Evidence) = 42
+enclosing
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'fun enclosing'
+//│ = fun enclosing
+
+// Alias expansion must retain subclass heads for first-provider cutoff.
+abstract class Base[A] with
+  fun label: Str
+module Base with
+  class Derived extends Base[Int] with
+    fun label: Str = "derived"
+  type Alias = Derived
+  using Alias = new Derived
+
+:fixme // namespace selection (Phase 3)
+:expect "derived"
+fun aliased(using b: Base[Int]) = b.label
+aliased
+//│ ═══[RUNTIME ERROR] Expected: '"derived"', got: 'fun aliased'
+//│ = fun aliased
+
+// The same provider cuts off traversal even for incompatible argument flows.
+:breakme // contextual diagnostic not implemented yet
+:e
+fun incompatible(using Base[Str]) = 42
+incompatible
+//│ = fun incompatible
+
+// Nested written arguments contribute their data-type companions.
+class Wrapped[A]
+abstract class Nested[A] with
+  fun label: Str
+class Data
+module Data with
+  class Evidence extends Nested[Wrapped[Data]] with
+    fun label: Str = "nested"
+  using Nested[Wrapped[Data]] = new Evidence
+
+:fixme // namespace selection (Phase 3)
+:expect "nested"
+fun nested(using n: Nested[Wrapped[Data]]) = n.label
+nested
+//│ ═══[RUNTIME ERROR] Expected: '"nested"', got: 'fun nested'
+//│ = fun nested
+
+// Imported modules contribute the same declaration index.
+import "./mlscript-compile/ImportedInstances.mls"
+
+:fixme // namespace selection (Phase 3)
+:expect 42
+fun imported(using ImportedInstances.Evidence) = 42
+imported
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'fun imported'
+//│ = fun imported
+
+// A later subtype adds a namespace whose instance would also have matched.
+class Parent with
+  fun label: Str = "parent"
+module Parent with
+  using Parent = new Parent
+class Child extends Parent
+module Child with
+  using Child = new Child
+
+:fixme // namespace selection (Phase 3)
+:expect "parent"
+fun later[T](value: T) = use[T].label
+later(new Parent)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	fun later[T](value: T) = use[T].label
+//│ ║        	                         ^^^^^^^^^^^^
+//│ ╟── Function 'use' does not contain member 'label'
+//│ ║  in ../../../mlscript-compile/Predef.mls
+//│ ║  l.XX: 	fun use[T](using instance: T) = instance
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '"parent"', got: 'undefined'
+
+:breakme // late namespace diagnostic not implemented yet
+:e
+later(new Child)
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

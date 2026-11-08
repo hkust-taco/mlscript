@@ -4665,8 +4665,10 @@ class NewResolver:
   private def staticAnnotationSymbol(trm: Term): Opt[Symbol] = trm.withoutCaptures match
     case ref: NewRefImpl => S(ref.sym)
     case Ref(sym) => S(sym)
-    case sel: NewSel => staticAnnotationSymbol(sel.prefix).flatMap(_.asMod).flatMap(_.tree.definedSymbols.get(sel.id.name))
-    case sel: Sel => staticAnnotationSymbol(sel.prefix).flatMap(_.asMod).flatMap(_.tree.definedSymbols.get(sel.nme.name))
+    case sel: NewSel => staticAnnotationSymbol(sel.prefix).flatMap(_.asMod).flatMap: module =>
+      module.tree.definedSymbolsFor(module.getState.compilationUnitConfig.fold(newResolution)(_.language.useNewResolution)).get(sel.id.name)
+    case sel: Sel => staticAnnotationSymbol(sel.prefix).flatMap(_.asMod).flatMap: module =>
+      module.tree.definedSymbolsFor(module.getState.compilationUnitConfig.fold(newResolution)(_.language.useNewResolution)).get(sel.nme.name)
     case _ => N
 
   /** Only member identity is needed to interpret an annotation. In particular a

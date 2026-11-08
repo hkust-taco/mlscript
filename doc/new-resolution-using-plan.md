@@ -13,6 +13,7 @@ invariants in `new-resolution-design.md`; this file should then be deleted.
 | Language rules in §3.1–§3.7 | Approved by the user, including the extensions and deviations in §3.9. |
 | Derived instances (§3.8) | Approved by the user, including the `using fun` syntax and the divergence check. |
 | Provider heads, parameter-query consultation keys, and recursive instance agreement (§3.1, §3.3, §3.8) | Confirmed by the user. |
+| Contextual lambda literals and direct lambda calls (§3.1) | Confirmed by the user: follow Scala's distinction between creating a contextual function and consuming it. |
 
 Line numbers in this document are approximate; search by the function names given.
 
@@ -64,16 +65,23 @@ A **contextual site** is a point where a callee value is consumed. There are two
 1. **Value sites.** These are expressions in a value position: a term, a selection receiver, an
    argument, a result, a scrutinee, or a spread operand. The expression must be a reference, a
    selection, a leading-dot selection, a `super` reference, or an application, type application or
-   `new` instantiation whose head is (recursively) one of these. It must not itself be the head of an
-   application or a type application.
+   `new` instantiation whose head is (recursively) one of these or a lambda literal. It must not
+   itself be the head of an application or a type application.
    - In `M.f[Int](1)(2)`, only the outermost application is a value site.
    - In `M.f.g`, the receiver `M.f` is a value site.
+   - A bare lambda literal creates a function value; it is not a value site, including when its
+     parameters are contextual. In `let get = (using n: Int) => n`, `get` stores that function.
+     A later reference to `get` supplies its contextual argument, while `get(using 8)` supplies
+     the written argument explicitly.
+   - Direct lambda calls follow the same rules as named calls. With `using Int = 7`, both
+     `((using n: Int) => (x: Int) => n + x)(3)` and
+     `((x: Int) => (using n: Int) => x + n)(3)` evaluate to `10`.
 2. **Application heads.** These are the heads of applications whose argument list is written with
    ordinary parentheses (not `using`). In `f(1)`, `f` is an application head; in `f(using x)`,
    `f` is not.
 
-A site **completes** every callee that flow reveals at it. A callee is a function, method, or
-class constructor definition. Flow can reveal it at the site in any way, for example:
+A site **completes** every callee that flow reveals at it. A callee is a function (including a
+lambda), method, or class constructor definition. Flow can reveal it at the site in any way, for example:
 
 - a reference;
 - a member selected through a receiver whose class flow determines;
@@ -128,9 +136,15 @@ callees. Each callee's queries are resolved separately, in that callee's own cal
   dynamic callee at the same site is an error.
 
 **Consequence.** Every value site completes the callees that flow reveals there. So a callee
-whose next remaining list is a `using` list never flows out of a value site, and the values held by
-variables, fields, and parameters are always completed. This is a consequence of the rule, not an
-additional restriction.
+whose next remaining list is a `using` list never flows out of a value site. Variables, fields,
+and parameters can still hold contextual functions created by lambda literals; consuming those
+functions through a reference completes them according to the site's role.
+
+This follows Scala's distinction between creating a context-function literal and consuming a
+context function, including through a direct lambda call. Scala's additional abstraction driven
+by an expected context-function type is outside this plan; this amendment does not introduce it.
+See [Scala context functions](https://docs.scala-lang.org/scala3/reference/contextual/context-functions.html)
+and [their specification](https://docs.scala-lang.org/scala3/reference/contextual/context-functions-spec.html).
 
 ### 3.2 Queries
 
@@ -479,6 +493,16 @@ to this section. Escalate (see §7) if a principle in §3 cannot be met.
   term-definition case of the elaborator's block processing. Synthesize anonymous names: see
   `Tree.scala` around `case typ if k == Ins` and search for how other synthesized members are
   named. Keep `0.2.x` unchanged.
+  - **Implementation adjustment (Phase 1).** Allocate anonymous names in `BlockImpl`'s cached
+    new-resolution binding table. `Tree.name` is read while parsing, before the language
+    configuration is available, and its legacy names can group distinct anonymous declarations
+    together. The new table gives each declaration its own symbol, while lexical and member
+    name maps exclude those anonymous bindings. Escaped identifiers can spell any string, so
+    merely choosing an unusual spelling would not enforce source inaccessibility. Blocks with
+    no anonymous instances reuse their existing symbols; legacy binding tables stay unchanged.
+    JavaScript stores public anonymous values in a per-namespace table under a symbol key.
+    String properties would collide with inherited named or anonymous fields; the table gives
+    anonymous declarations a distinct runtime binding space as well as a distinct source space.
 - **Instance index.** Give each module or object definition a cached list of its instance members
   (declaration, candidate type, visibility). Namespace lookup must not scan bodies repeatedly.
   All queries and triggering classes or aliases reuse this one index per module or object.
@@ -604,9 +628,10 @@ to this section. Escalate (see §7) if a principle in §3 cannot be met.
 ### 4.3 Representation of completions
 
 Store the completion on the site term in a mixin, like `keyAccess` (`TermImpl.NewResolvableImpl`),
-for the term classes that can be sites: `App`, `TyApp`, `New`, `MemberRef`, `NewSel`,
-`UnresolvedRef`, `Super`, and `Capture` when it is the outermost term. The completion has this
-shape:
+for the term classes that can be sites: `App`, `TyApp`, `New`, `SimpleRef`, `MemberRef`, `NewSel`,
+`UnresolvedRef`, `Super`, `Lam` when it is an ordinary application head, and `Capture` when it is
+the outermost term. `SimpleRef` is necessary for consuming stored contextual lambda values.
+The completion has this shape:
 
 ```scala
 final case class ContextualCompletion(steps: Ls[ContextualStep])
@@ -659,6 +684,13 @@ Each phase ends with a full `hkmc2AllTests/test` run that passes, followed by a 
 includes the golden outputs. Commits use the agent's own identity (AGENTS.md).
 
 ### Phase 1: test ports and elaboration groundwork
+
+Implementation status: groundwork and test ports are complete. The contextual suite contains
+the 14 ports below, seven new behavior files, and an import fixture under its own
+`mlscript-compile/` directory, so `ctest` emits that fixture's JavaScript. Pending behavior uses
+`:fixme`; missing expected diagnostics use `:breakme` because the harness does not allow their
+absence under `:fixme`. Unrelated generic-override representation and handler-parent resolution
+gaps remain explicit regressions. Performance comparisons are due at Phases 2 and 3.
 
 - Create `hkmc2/shared/src/test/mlscript/slop/contextual/` with a `.mls` configuration that only
   contains `:..` (inheriting `slop/.mls`). Each test file starts with `:.`.
@@ -807,6 +839,9 @@ New tests (in `slop/contextual/`):
   - Late values from a later worksheet block.
 - **Generic bodies** (Phase 4, see above).
 - **Application heads (X1)** and `new` with `using` lists.
+- **Contextual lambdas.** A bare literal remains a function; consuming a stored literal through
+  a reference supplies contextual arguments. Direct lambda calls supply leading or trailing
+  contextual lists, and explicit `using` applications retain their written arguments (§3.1).
 - **Flow-revealed callees (X8).**
   - A method with a `using` list selected through a parameter whose class only flow determines.
   - A method with a `using` list selected through an annotated receiver, exercising the
