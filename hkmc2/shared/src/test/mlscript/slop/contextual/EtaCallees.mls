@@ -1,0 +1,63 @@
+:.
+
+using Int = 7
+using Str = "seven"
+class First with
+  fun method(x)(using n: Int) = n
+class Second with
+  fun method(x)(using n: Int) = n
+class Different with
+  fun method(x)(using s: Str) = s
+using Second = new Second
+using Different = new Different
+fun revealSecond(using value: Second) = value
+fun revealDifferent(using value: Different) = value
+
+// The second callee arrives during settlement, after the first expansion has selected Int.
+:expect [7, 7]
+fun bind(receiver) = receiver.method
+let first = bind(new First)
+let second = bind(revealSecond)
+[first(1), second(2)]
+//│ = [7, 7]
+//│ first = fun
+//│ second = fun
+
+:e
+fun mismatch(receiver) = receiver.method
+let initial = mismatch(new First)
+let different = mismatch(revealDifferent)
+[initial(1), different(2)]
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	fun mismatch(receiver) = receiver.method
+//│ ║        	                         ^^^^^^^^^^^^^^^
+//│ ╟── The callees of this call require different instances for the contextual parameter 's' of type Str.
+//│ ║  l.+1: 	fun mismatch(receiver) = receiver.method
+//│ ║        	                         ^^^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	  fun method(x)(using s: Str) = s
+//│ ║        	                ^^^^^^^^^^^^
+//│ ╟── One callee selects this instance.
+//│ ║  l.XX: 	using Int = 7
+//│ ║        	^^^^^^^^^^^^^
+//│ ╟── Another callee selects this instance.
+//│ ║  l.XX: 	using Str = "seven"
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
+//│ = [7, 7]
+//│ different = fun
+//│ initial = fun
+
+// Ordinary parameter arities do not change the contextual calling convention.
+class Optional with
+  fun method(x?: Int)(using n: Int) = n
+class Empty with
+  fun method()(using n: Int) = n
+
+:expect [7, 7]
+fun bindOptional(receiver) = receiver.method
+let optional = bindOptional(new Optional)
+let empty = bindOptional(new Empty)
+[optional(), empty()]
+//│ = [7, 7]
+//│ empty = fun
+//│ optional = fun

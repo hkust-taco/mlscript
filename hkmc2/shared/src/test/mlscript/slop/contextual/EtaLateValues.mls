@@ -1,0 +1,100 @@
+:.
+
+class Evidence[A](val label: Str)
+using Evidence[Int] = Evidence[Int]("int")
+fun consume[A](value: A)(using e: Evidence[A]) = e.label
+
+// Calls of one stored expansion share its already selected contextual argument.
+:expect "int"
+let polymorphic = consume
+polymorphic(1)
+//│ = "int"
+//│ polymorphic = fun polymorphic
+
+:e
+polymorphic("later")
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.XX: 	let polymorphic = consume
+//│ ║        	                  ^^^^^^^
+//│ ╟── This value reaches the type of the contextual parameter 'e' after its instance was selected; the selected instance of type Evidence[Int] does not accept it.
+//│ ║  l.XX: 	let polymorphic = consume
+//│ ║        	                  ^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	fun consume[A](value: A)(using e: Evidence[A]) = e.label
+//│ ║        	                         ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The selected instance is declared here.
+//│ ║  l.XX: 	using Evidence[Int] = Evidence[Int]("int")
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This value is incompatible with the selected instance.
+//│ ║  l.+1: 	polymorphic("later")
+//│ ╙──      	            ^^^^^^^
+//│ = "int"
+
+// The generic body's expansion fixes its instance before a later caller arrives.
+:expect "int"
+fun generic[A](value: A) =
+  fun local(other: A)(using e: Evidence[A]) = e.label
+  local
+let selected = generic(1)
+selected(2)
+//│ = "int"
+//│ selected = fun
+
+:e
+generic("later")
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.XX: 	  local
+//│ ║        	  ^^^^^
+//│ ╟── This value reaches the type of the contextual parameter 'e' after its instance was selected; the selected instance of type Evidence[Int] does not accept it.
+//│ ║  l.XX: 	  local
+//│ ║        	  ^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	  fun local(other: A)(using e: Evidence[A]) = e.label
+//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The selected instance is declared here.
+//│ ║  l.XX: 	using Evidence[Int] = Evidence[Int]("int")
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This value is incompatible with the selected instance.
+//│ ║  l.+1: 	generic("later")
+//│ ╙──      	        ^^^^^^^
+//│ = fun
+
+class Data
+module Data with
+  using Evidence[Data] = Evidence[Data]("data")
+
+// Callers reveal a namespace even though the generic body's receiver stays opaque.
+:expect "data"
+fun namespaceGeneric[A](value: A) =
+  fun local(other: A)(using e: Evidence[A]) = e.label
+  local
+let fromNamespace = namespaceGeneric(new Data)
+fromNamespace(new Data)
+//│ = "data"
+//│ fromNamespace = fun
+
+// A matching lexical instance prevents callers' companions from participating.
+using Evidence[Any] = Evidence[Any]("lexical")
+
+:expect ["lexical", "lexical"]
+fun shadow[A](value: A) =
+  fun local(other: A)(using e: Evidence[A]) = e.label
+  local
+[shadow(new Data)(new Data), shadow(1)(1)]
+//│ = ["lexical", "lexical"]
+
+// Unsupported queries are diagnosed at an expansion, before it is called.
+:e
+fun unsupported(x)(using f: (Int -> Int)) = x
+let invalid = unsupported
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+2: 	let invalid = unsupported
+//│ ║        	              ^^^^^^^^^^^
+//│ ╟── Contextual parameter types must be named types or type parameters.
+//│ ║  l.+2: 	let invalid = unsupported
+//│ ║        	              ^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.+1: 	fun unsupported(x)(using f: (Int -> Int)) = x
+//│ ╙──      	                   ^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ invalid = undefined

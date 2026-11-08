@@ -8,10 +8,12 @@ fun bar(x)(using Int) = [x, use[Int]]
 
 fun baz(x)(using Int)(y)(using Num) = [x, use[Int], y, use[Num]]
 
-:breakme // contextual diagnostic not implemented yet
-:e
-baz
-//│ = fun baz
+// Int is also a Num, so the current Int instance supplies both clauses.
+:expect [1, 42, 2, 42]
+let early = baz
+early(1)(2)
+//│ = [1, 42, 2, 42]
+//│ early = fun early
 
 
 using Num = 0.42
@@ -24,15 +26,21 @@ using Num = 0.42
 :sir
 let f1 = foo
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ set f1⁰ = foo⁰; end
+//│ let tmp, contextualOperand, f1;
+//│ set tmp = [contextual_instance_0⁰];
+//│ set contextualOperand = tmp;
+//│ @private
+//│ define f1 as fun f1⁰(...arguments1) {
+//│   return foo⁰(...arguments1)(...contextualOperand)
+//│ };
+//│ set f1¹ = f1⁰;
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ f1 = fun foo
+//│ f1 = fun f1
 
-:fixme // Phase 4: the binding must eta-expand; reads of the variable are not sites.
 :expect [42]
 f1()
-//│ ═══[RUNTIME ERROR] Expected: '[42]', got: 'fun'
-//│ = fun
+//│ = [42]
 
 // bar
 // should be expanded to
@@ -42,15 +50,21 @@ f1()
 :sir
 let f2 = bar
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ set f2⁰ = bar⁰; end
+//│ let tmp, contextualOperand, f2;
+//│ set tmp = [contextual_instance_0⁰];
+//│ set contextualOperand = tmp;
+//│ @private
+//│ define f2 as fun f2⁰(...arguments1) {
+//│   return bar⁰(...arguments1)(...contextualOperand)
+//│ };
+//│ set f2¹ = f2⁰;
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ f2 = fun bar
+//│ f2 = fun f2
 
-:fixme // Phase 4: the binding must eta-expand; reads of the variable are not sites.
 :expect [0.42, 42]
 f2(0.42)
-//│ ═══[RUNTIME ERROR] Expected: '[0.42, 42]', got: 'fun'
-//│ = fun
+//│ = [0.42, 42]
 
 // baz
 // should be expanded to
@@ -60,15 +74,28 @@ f2(0.42)
 :sir
 let f3 = baz
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ set f3⁰ = baz⁰; end
+//│ let tmp, contextualOperand, tmp1, contextualOperand1, f3;
+//│ set tmp = [contextual_instance_0⁰];
+//│ set contextualOperand = tmp;
+//│ set tmp1 = [contextual_instance_0¹];
+//│ set contextualOperand1 = tmp1;
+//│ @private
+//│ define f3 as fun f3⁰(...arguments1) {
+//│   let lambda;
+//│   @private
+//│   define lambda as fun lambda⁰(...arguments2) {
+//│     return baz⁰(...arguments1)(...contextualOperand)(...arguments2)(...contextualOperand1)
+//│   };
+//│   return lambda⁰
+//│ };
+//│ set f3¹ = f3⁰;
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ f3 = fun baz
+//│ f3 = fun f3
 
-:fixme // Phase 4: the binding must eta-expand; reads of the variable are not sites.
 :expect [43, 42, 44, 0.42]
 f3(43)(44)
-//│ ═══[RUNTIME ERROR] Expected: '[43, 42, 44, 0.42]', got: 'fun'
-//│ = fun
+//│ = [43, 42, 44, 0.42]
 
 // This should not expand
 :sir
@@ -87,8 +114,7 @@ bar(0.42)
 //│ = [0.42, 42]
 
 
-// :fixme // TODO: fix IR rebinding issue (each symbol should be bound at most once)
-// :checkIR
+:checkIR
 :sir
 module Test with
   fun test(j)(using Int) = 0
@@ -99,7 +125,17 @@ module Test with
 //│   method test⁰ = fun test¹(j)(tmp) {
 //│     return 0
 //│   }
-//│   method main⁰ = fun main¹(tmp) { return Test².this.test¹ }
+//│   method main⁰ = fun main¹(tmp) {
+//│     let contextualOperand, tmp1, contextualOperand1, lambda;
+//│     set contextualOperand = Test².this;
+//│     set tmp1 = [tmp];
+//│     set contextualOperand1 = tmp1;
+//│     @private
+//│     define lambda as fun lambda¹(...arguments1) {
+//│       return contextualOperand.test¹(...arguments1)(...contextualOperand1)
+//│     };
+//│     return lambda¹
+//│   }
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

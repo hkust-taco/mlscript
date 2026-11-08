@@ -1059,14 +1059,60 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case (sym, disamb) =>
         lastWords(s"Unexpected symbol kind ${sym.getClass.getSimpleName}: $sym")
   
-  private def suppliedArguments(term: Term): Ls[Term] = term match
+  /** Abstract continuations carry their own completed flow applications. Flatten them for
+    * the single runtime call, retaining ordinary parameter lists for the enclosing lambdas.
+    */
+  private def completionSteps(term: Term): Ls[sem.ContextualStep] = term match
     case site: sem.ContextualSite => site.contextualCompletion.fold(Nil): completion =>
-      completion.steps.map:
-        case sem.ContextualStep.Supply(application) => application.rhs
-        case sem.ContextualStep.Abstract(_, _) =>
-          softTODO("Contextual eta-expansion lowering is implemented in Phase 4")
-          st.Error().withLocOf(term)
+      completion.steps.flatMap:
+        case step @ sem.ContextualStep.Supply(_) => step :: Nil
+        case step @ sem.ContextualStep.Abstract(_, application) => step :: completionSteps(application)
     case _ => Nil
+
+  private def suppliedArguments(term: Term): Ls[Term] = completionSteps(term).map:
+    case sem.ContextualStep.Supply(application) => application.rhs
+    case sem.ContextualStep.Abstract(_, application) => application.rhs
+
+  /** Capture the site's operands before constructing an expansion. A selected method keeps
+    * its selection on the captured receiver, so JavaScript's method receiver stays bound.
+    * Abstract arguments belong to the generated lambdas and are evaluated on invocation.
+    */
+  private def etaCall(callee: Path, arguments: Ls[Term], abstractions: Map[Term, ParamList], loc: Opt[Loc])(
+      invoke: (Path, Ls[Term], Result => Block) => LoweringCtx ?=> Block)(k: Result => Block)(using LoweringCtx): Block =
+    if abstractions.isEmpty then invoke(callee, arguments, k)
+    else
+      def freeze(value: Path)(next: Path => Block): Block =
+        val temp = loweringCtx.registerTempSymbol(N, value.erasedType, "contextualOperand")
+        Assign(temp, value, next(temp.asSimpleRef))
+      def receiver(next: Path => Block): Block = callee match
+        case selection: Select => freeze(selection.qual): prefix =>
+          next(Select(prefix, selection.name)(selection.symbol, selection.toLoc)(selection.sanitize))
+        case selection: DynSelect => freeze(selection.qual): prefix =>
+          freeze(selection.fld): field =>
+            next(DynSelect(prefix, field, selection.kind)(selection.toLoc))
+        case _ => next(callee)
+      receiver: function =>
+        def capture(rest: Ls[Term], reversed: Ls[Term]): Block = rest match
+          case argument :: tail if abstractions.contains(argument) => capture(tail, argument :: reversed)
+          case argument :: tail => subTerm_nonTail(argument): value =>
+            freeze(value): value =>
+              val term = value match
+                case Value.SimpleRef(symbol: LocalVarSymbol) => st.SimpleRef(symbol)(N).withLocOf(argument)
+                case _ => lastWords("A captured contextual operand must be a local reference")
+              capture(tail, term :: reversed)
+          case Nil =>
+            val args = reversed.reverse
+            val parameters = arguments.flatMap(abstractions.get)
+            def lambda(remaining: Ls[ParamList])(using LoweringCtx): Result = remaining match
+              case params :: tail =>
+                val (physical, prologue) = lowerTrailingParams(params, N)
+                val body = LoweringCtx.nestFunc(N).givenIn:
+                  inScopedBlock:
+                    prologue(if tail.isEmpty then invoke(function, args, Ret) else Return(lambda(tail)))
+                Lambda(physical, body)(Nil, loc)
+              case Nil => lastWords("An eta expansion must have an ordinary parameter list")
+            k(lambda(parameters))
+        capture(arguments, Nil)
 
   final def term(t: st, inStmtPos: Bool = false)(k0: Result => Block)(using LoweringCtx): Block =
     termWithCompletion(t, inStmtPos, true)(k0)
@@ -1136,10 +1182,17 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       
       // Collect chains of App nodes: `f(a)(b)(c)` → (f, [a, b, c])
       // This allows lowering curried calls as a single `Call` with multiple arg lists.
+      var abstractions = Map.empty[Term, ParamList]
+      def supplied(expr: Term, complete: Bool): Ls[Term] =
+        if !complete then Nil else completionSteps(expr).map:
+          case sem.ContextualStep.Supply(application) => application.rhs
+          case sem.ContextualStep.Abstract(params, application) =>
+            abstractions += application.rhs -> params
+            application.rhs
       @tailrec
       def collectAppChain(expr: st, args: Ls[Term], complete: Bool): (st, Ls[Term]) =
-        val supplied = if complete then suppliedArguments(expr) else Nil
-        val remaining = supplied ::: args
+        val suppliedArgs = supplied(expr, complete)
+        val remaining = suppliedArgs ::: args
         expr.instantiated match
         // * Applications of builtin operators, such as `- x` in `(- x)(2)`, are lowered as primitive
         // * operations by the dedicated case above, so they cannot be part of a curried call chain;
@@ -1153,7 +1206,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       // head so legacy expansion and definition-local traces still run exactly once.
       val (baseF, allArgs) = call match
         case st.App(inner, argument) =>
-          collectAppChain(inner, argument :: (if complete then suppliedArguments(call) else Nil), true)
+          collectAppChain(inner, argument :: supplied(call, complete), true)
         case _ => collectAppChain(call, Nil, complete)
       
       val isMlsFun = baseF.resolvedSym.fold(baseF.isInstanceOf[st.Lam]):
@@ -1171,7 +1224,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           (sym is State.matchFailureClsSymbol)
       
       def conclude(fr: Path) =
-        lowerMultiCall(fr, isMlsFun, annots, allArgs, t.toLoc)(k)
+        if abstractions.isEmpty then lowerMultiCall(fr, isMlsFun, annots, allArgs, t.toLoc)(k)
+        else etaCall(fr, allArgs, abstractions, t.toLoc)((function, arguments, next) =>
+          lowerMultiCall(function, isMlsFun, annots, arguments, t.toLoc)(next))(k)
       
       // * We have to instantiate `f` again because, if `f` is a Sel, the `term`
       // * function is not called again with f. See below `Sel` and `SelProj` cases.
@@ -1600,7 +1655,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         case _ => spuriousWarning
       classOf(cls, nwtrm): (sr, params) =>
         rft match
-        case N => lowerMultiInstantiate(mut, sr, params, as ::: suppliedArguments(nwtrm), annots, trm.toLoc)(k)
+        case N =>
+          val abstractions = completionSteps(nwtrm).iterator.collect:
+            case sem.ContextualStep.Abstract(params, application) => application.rhs -> params
+          .toMap
+          val arguments = as ::: suppliedArguments(nwtrm)
+          if abstractions.isEmpty then lowerMultiInstantiate(mut, sr, params, arguments, annots, trm.toLoc)(k)
+          else etaCall(sr, arguments, abstractions, trm.toLoc)((constructor, arguments, next) =>
+            lowerMultiInstantiate(mut, constructor, params, arguments, annots, trm.toLoc)(next))(k)
         case S((isym, rft)) =>
           val sym = isym.bms.get
           loweringCtx.collectScopedSym(sym)

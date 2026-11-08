@@ -1,0 +1,27 @@
+:.
+
+import "./mlscript-compile/EtaFlow.mls"
+
+:expect "int"
+EtaFlow.adapter(1)
+//│ = "int"
+
+:e
+EtaFlow.adapter("later")
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.XX: 	  val adapter = consume
+//│ ║        	                ^^^^^^^
+//│ ╟── This value reaches the type of the contextual parameter 'e' after its instance was selected; the selected instance of type Evidence[Int] does not accept it.
+//│ ║  l.XX: 	  val adapter = consume
+//│ ║        	                ^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	  fun consume[A](value: A)(using e: Evidence[A]) = e.label
+//│ ║        	                           ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The selected instance is declared here.
+//│ ║  l.XX: 	  using Evidence[Int] = Evidence[Int]("int")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This value is incompatible with the selected instance.
+//│ ║  in EtaImport.mls:+1
+//│ ║  l.+1: 	EtaFlow.adapter("later")
+//│ ╙──      	                ^^^^^^^
+//│ = "int"

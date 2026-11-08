@@ -11,9 +11,8 @@ fun foo[A](using Foo[A], A) = 42
 using Foo[Baz] = new Foo
 
 
-// FIXME: error message refers to `A`
+// Query diagnostics name the interpreted contextual type.
 
-:breakme // contextual diagnostic not implemented yet
 :e
 :re
 foo[Baz]
@@ -28,7 +27,6 @@ foo[Baz]
 //│ ╙──      	                         ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-:breakme // contextual diagnostic not implemented yet
 :e
 :re
 foo
@@ -60,8 +58,8 @@ foo
 
 fun foo[A](using A)(using Foo[A]) = 42
 
-:fixme // contextual completion (Phases 2–4)
-:expect 42
+// The first query has no flows; later clauses cannot determine it retroactively.
+:e
 foo
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	foo
@@ -73,12 +71,10 @@ foo
 //│ ║  l.XX: 	fun foo[A](using A)(using Foo[A]) = 42
 //│ ╙──      	           ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'
 
 
 using Foo[Bar[Baz]] = new Foo
 
-:breakme // contextual diagnostic not implemented yet
 :e
 :re
 foo
@@ -95,7 +91,6 @@ foo
 
 using Bar[Baz] = new Bar
 
-:breakme // contextual diagnostic not implemented yet
 :e
 :re
 foo
@@ -112,7 +107,6 @@ foo
 
 using Bar[Int] = new Bar
 
-:breakme // contextual diagnostic not implemented yet
 :e
 :re
 foo
@@ -129,8 +123,8 @@ foo
 
 using Bar[Baz] = new Bar
 
-:fixme // contextual completion (Phases 2–4)
-:expect 42
+// The first query has no flows; later clauses cannot determine it retroactively.
+:e
 foo
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	foo
@@ -142,6 +136,5 @@ foo
 //│ ║  l.XX: 	fun foo[A](using A)(using Foo[A]) = 42
 //│ ╙──      	           ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'
 
 

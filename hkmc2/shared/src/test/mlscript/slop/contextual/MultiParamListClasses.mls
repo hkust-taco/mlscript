@@ -23,16 +23,8 @@ Bar(1, 2).z + Bar(1, 2).x + Bar(1, 2).y
 //│ = 123
 
 let f = Bar
-//│ f = fun Bar { class: class Bar }
+//│ f = fun f
 
-:fixme // Phase 4: storing Bar must abstract its ordinary list and supply its using list.
 :expect 123
 f(1, 2).z
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.+1: 	f(1, 2).z
-//│ ║        	^^^^^^^^^
-//│ ╟── Partially-applied constructor of class 'Bar' does not contain member 'z'
-//│ ║  l.+1: 	f(1, 2).z
-//│ ╙──      	^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '123', got: 'undefined'
+//│ = 123

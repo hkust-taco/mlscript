@@ -1,0 +1,105 @@
+:.
+
+using Int = 7
+using Str = "context"
+let effects = 0
+class Receiver(val base: Int) with
+  fun method(x: Int)(using n: Int)(y: Int)(using Str) = base + x + y + n
+fun receiver() =
+  set effects = effects + 10
+  Receiver(100)
+fun argument() =
+  set effects = effects + 1
+  effects
+//│ effects = 0
+
+// The receiver and written argument execute once, in source order, at the binding.
+let saved = receiver().method(argument())
+//│ saved = fun saved
+
+:expect [11, 119, 120, 11]
+[effects, saved(1), saved(2), effects]
+//│ = [11, 119, 120, 11]
+
+// Reading a mutable receiver again must not change the bound method.
+let current = Receiver(200)
+let bound = current.method
+set current = Receiver(900)
+//│ bound = fun bound
+//│ current = Receiver(900)
+
+:expect 210
+bound(1)(2)
+//│ = 210
+
+// Constructor operands follow the same capture rule.
+class Constructed(val x: Int)(using Int)(val y: Int)(using Str)
+let construct = new Constructed(argument())
+//│ construct = fun construct
+
+:expect [12, 12, 3, 12]
+let made = construct(3)
+[effects, made.x, made.y, effects]
+//│ = [12, 12, 3, 12]
+//│ made = Constructed(12)
+
+// Variadic and trailing parameters remain ordinary argument lists.
+fun variadic(x: Int, ...middle, last: Int)(using n: Int) = [x, middle, last, n]
+let spread = variadic
+//│ spread = fun spread
+
+:expect [1, [2, 3], 4, 7]
+spread(1, 2, 3, 4)
+//│ = [1, [2, 3], 4, 7]
+
+// Partial parent application in refinements is an existing, independent gap.
+:fixme // Refinements cannot yet extend a partially applied class.
+let refined = (new Constructed(argument()) with { fun extra() = 5 })
+//│ ╔══[COMPILATION ERROR] Extending a partially applied class is not supported
+//│ ║  l.+1: 	let refined = (new Constructed(argument()) with { fun extra() = 5 })
+//│ ╙──      	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ refined = $anon { x: 13, y: undefined }
+
+:fixme // The preceding refinement did not produce an expansion.
+:expect [13, 13, 6, 5, 13]
+let refinedValue = refined(6)
+[effects, refinedValue.x, refinedValue.y, refinedValue.extra(), effects]
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+1: 	let refinedValue = refined(6)
+//│ ║        	                   ^^^^^^^^^^
+//│ ╟── Instance of class 'Constructed' cannot receive more argument lists.
+//│ ║  l.XX: 	let refined = (new Constructed(argument()) with { fun extra() = 5 })
+//│ ╙──      	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	[effects, refinedValue.x, refinedValue.y, refinedValue.extra(), effects]
+//│ ║        	          ^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'x' of a value with unknown shape.
+//│ ╟── The shape of this value is unknown.
+//│ ║  l.+1: 	let refinedValue = refined(6)
+//│ ╙──      	                   ^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	[effects, refinedValue.x, refinedValue.y, refinedValue.extra(), effects]
+//│ ║        	                          ^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'y' of a value with unknown shape.
+//│ ╟── The shape of this value is unknown.
+//│ ║  l.+1: 	let refinedValue = refined(6)
+//│ ╙──      	                   ^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	[effects, refinedValue.x, refinedValue.y, refinedValue.extra(), effects]
+//│ ║        	                                          ^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'extra' of a value with unknown shape.
+//│ ╟── The shape of this value is unknown.
+//│ ║  l.+1: 	let refinedValue = refined(6)
+//│ ╙──      	                   ^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '[13, 13, 6, 5, 13]', got: 'undefined'
+//│ refinedValue = undefined
+
+// The same limitation exists without any contextual parameter list.
+:fixme // Partial parent application in refinements.
+class Plain(val x: Int)(val y: Int)
+let plain = (new Plain(1) with { fun extra() = 5 })
+//│ ╔══[COMPILATION ERROR] Extending a partially applied class is not supported
+//│ ║  l.+2: 	let plain = (new Plain(1) with { fun extra() = 5 })
+//│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ plain = $anon { x: 1, y: undefined }

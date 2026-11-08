@@ -5400,7 +5400,42 @@ class NewResolver:
                   case result: TermShape => driveContextual(term, result, index + 1)
                   case _: SymShape => softAssert(false, "An application must deliver values")
               applyShape(value, app.rhs, app, checked = true)
-          case ContextualStep.Abstract(_, _) => softTODO("Contextual eta-expansion is implemented in Phase 4")
+          case ContextualStep.Abstract(_, _) =>
+            resolError(term, msg"This reference resolves to members with different contextual parameter lists." -> term.toLoc :: Nil)
+      case (false, _) :: remaining if remaining.exists(_._1) && (term.contextualSite match
+          case site: ResolutionSite.Contextual => site.role != ContextualRole.ApplicationHead
+          case role => role != ContextualRole.ApplicationHead) =>
+        val completion = term.contextualCompletion.getOrElse(lastWords("An abstracted site must have an output host"))
+        val step = completion.steps.lift(index).orElse:
+          rctx.state.contextualWork.get(new Identity(term)).filter(_ => rctx.canResolve(term)).map: work =>
+            softAssert(index == work.steps.length, "Contextual application steps must be appended in order")
+            // Forward the exact argument tuple. Callees with one contextual convention
+            // may differ in ordinary arity, and omitted optional arguments must stay omitted.
+            val symbol = new VarSymbol(Tree.Ident("arguments"), mut = false)(using rctx.owner)
+            val parameter = Param.simple(symbol)
+            symbol.decl = S(parameter)
+            val params = ParamList(ParamListFlags.empty, Nil, S(Variadic(parameter, Nil)))(term.toLoc)
+            val args = SimpleRef(symbol)(N).withLocOf(term)
+            val app = new App(Missing, args)(Tree.DummyApp, N, FlowSymbol.app()).withLocOf(term)
+            rctx.recordLexicalBinders(app, work.site.context.typeBinders)
+            // The lambda's body consumes the completed continuation. Its raw application
+            // may produce another contextual list, which must never escape as its result.
+            rctx.recordContextualSite(app, ContextualRole.Value, work.site.context)(using raise, this)
+            app.contextualSite match
+              case site: ResolutionSite.Contextual => site.settled = true
+              case _ => softAssert(false, "A synthesized continuation must retain its contextual site")
+            val step = ContextualStep.Abstract(params, app)
+            work.steps += step
+            term.contextualCompletion = S(ContextualCompletion(work.steps.toList, completion.output))
+            val lambda = Lam(params, app).withLocOf(term)
+            rctx.recordLexicalBinders(lambda, work.site.context.typeBinders)
+            listenTerm(lambda)(publishCompleted(completion.output, _))
+            step
+        softAssert(step.nonEmpty, "A completed site cannot acquire a new abstraction step")
+        step.foreach:
+          case ContextualStep.Abstract(_, app) => applyShape(value, app.rhs, app, checked = true)
+          case ContextualStep.Supply(_) =>
+            resolError(term, msg"This reference resolves to members with different contextual parameter lists." -> term.toLoc :: Nil)
       case _ => term.contextualCompletion.foreach: completion =>
         if index < completion.steps.length then
           resolError(term, msg"This reference resolves to members with different contextual parameter lists." -> term.toLoc :: Nil)

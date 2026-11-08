@@ -653,6 +653,15 @@ to this section. Escalate (see §7) if a principle in §3 cannot be met.
   - The completed value the consumers receive is the shapes of the last step.
   - Model **Abstract** steps with a synthesized `Lam` whose body is the next step's flow site. The
     `Lam` is a flow model only; lowering does not lower it (§4.4).
+    - **Phase 4 representation adjustment.** An Abstract step's application owns the completion
+      of its continuation, and the synthesized lambda observes that completed application.
+      Lowering flattens those nested continuations into one call. This keeps intermediate
+      contextual functions out of the lambda's result using the ordinary interception path.
+      The fresh ordinary parameter list captures one rest tuple, preserving the exact supplied
+      arguments. Copying the first callee's fixed parameters would insert an omitted optional
+      argument when another callee has an empty ordinary list; ordinary arities are deliberately
+      absent from the contextual calling convention. Ordinary application flow still checks
+      each callee's argument arity and constraints.
   - An application head's Supply steps feed the enclosing application's head: that application's
     `applyShape` must receive the completed callable, not the raw one.
 - **Instance arguments.** One argument term per query, a new resolver-synthesized term that stands
@@ -837,6 +846,20 @@ not profiling results; JVM optimization and warmup also varied between runs. Pha
 under the revised performance requirement, with optimization follow-up remaining open.
 
 
+Phase 4 used the same 24-round runner and 125-file subset, with zero failures in all
+rounds, and the same base measurement above. Medians of rounds 20–24:
+
+| Metric (125 files) | Base | Phase 4 | Change |
+| --- | ---: | ---: | ---: |
+| Elapsed time | 7.064231750 s | 7.125541042 s | +0.87% |
+| Current-thread CPU time | 1.241451 s | 1.267291 s | +2.08% |
+| Current-thread allocated bytes | 2,681,793,576 | 2,701,078,608 | +0.72% |
+
+The ordinary lowering path bypasses eta-expansion callbacks when there are no
+Abstract steps. Remaining variation has no isolated cause; the Phase 3 suspicions
+and JVM warmup variation remain optimization follow-up, without blocking progress.
+
+
 ## 5. Phases
 
 Each phase ends with a full `hkmc2AllTests/test` run that passes, followed by a commit that
@@ -957,6 +980,18 @@ deviation from the plan; its implementation details are recorded in §4.2.
   - lexical instances shadowing namespace instances.
 
 ### Phase 4: eta-expansion, cascading, and late values
+
+Implementation status: Abstract steps, nested continuation flow, and operand capture are
+implemented. `EtaExpansion`, `ExplicitlySpec`, `MultiParamListClasses`, `CascadingTypeClasses`,
+and `TrickyResolution` exercise the completed behavior. The reversed cascading query that asks
+for unconstrained `A` first remains an undetermined-query error under §3.2; its old success
+expectation was corrected. Likewise `Int` supplies the initial `Num` query in `EtaExpansion`.
+`EtaEvaluation`, `EtaCallees`, and `EtaLateValues` add effects, receiver binding, constructors,
+variadic/optional forwarding, late callees, generic bodies, unsupported queries, and frozen
+selection coverage. `EtaImport`, `EtaImportIsolation`, and the `EtaFlow` compilation fixture
+cover imported expansions. Partial parent application in anonymous refinements remains an
+independent `:fixme`, including a reproducer without contextual clauses. The full `hkmc2AllTests/test` suite passed; the focused contextual regressions and
+`ctest` passed too. Performance results are in §4.6. Representation adjustments are recorded in §4.2.
 
 - Implement Abstract steps in flow and lowering (X4), complete the `EtaExpansion`, `Cascading`,
   and `Tricky` ports, and enable the eta-expansion cases deferred from the other ports in Phase 2.

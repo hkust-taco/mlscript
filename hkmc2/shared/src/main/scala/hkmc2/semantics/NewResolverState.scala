@@ -1049,7 +1049,7 @@ private[semantics] final class TermShapeHost extends Host[TermShape]:
   * are the ordinary flow sites that lowering also uses to obtain the supplied argument lists.
   */
 private[semantics] final class ContextualWork(val site: ResolutionSite.Contextual):
-  val steps = mutable.ArrayBuffer.empty[ContextualStep.Supply]
+  val steps = mutable.ArrayBuffer.empty[ContextualStep]
   val pending = mutable.ArrayBuffer.empty[(TermShape, ResolutionContext)]
   val inputs = mutable.Set.empty[(ShapeIdentity.Key, TypeSubstitution)]
   val output = new Host[ShapeEvent]:
