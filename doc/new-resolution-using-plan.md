@@ -13,7 +13,8 @@ invariants in `new-resolution-design.md`; this file should then be deleted.
 | Language rules in §3.1–§3.7 | Approved by the user, including the extensions and deviations in §3.9. |
 | Derived instances (§3.8) | Approved by the user, including the `using fun` syntax and the divergence check. |
 | Provider heads, parameter-query consultation keys, and recursive instance agreement (§3.1, §3.3, §3.8) | Confirmed by the user. |
-| Contextual lambda literals and direct lambda calls (§3.1) | Confirmed by the user: follow Scala's distinction between creating a contextual function and consuming it. |
+| Contextual lambda literals and direct lambda calls (§3.1) | Revised by the user, superseding the earlier Scala-style rule. No value holds an uncompleted contextual function: a contextual lambda is completed where it is written, with a warning that suggests a `fun` definition. Function types with `using` lists are rejected; contextual function types are future work. |
+| Deferred completion edges (Codex's §4.2 proposal of the Phase 2 checkpoint) | Rejected: the restored invariant (§3.1) makes them unnecessary (§4.2). |
 
 Line numbers in this document are approximate; search by the function names given.
 
@@ -36,7 +37,10 @@ to new resolution with a different design:
 
 Non-goals:
 - changing the legacy resolver or the behavior of `0.2.x` files and legacy diff tests;
-- instance selection based on inferred types, specificity, or trial and backtracking.
+- instance selection based on inferred types, specificity, or trial and backtracking;
+- contextual (implicit) function types, as in `fun foo(arg: (using Int) -> Int)`, which would
+  let callers pass contextual functions as arguments. They may be added later, with a mechanism
+  that is unrelated to the completion of sites; this plan only rejects them (§3.1).
 
 
 ## 2. Confirmed decisions
@@ -63,25 +67,36 @@ Non-goals:
 A **contextual site** is a point where a callee value is consumed. There are two kinds:
 
 1. **Value sites.** These are expressions in a value position: a term, a selection receiver, an
-   argument, a result, a scrutinee, or a spread operand. The expression must be a reference, a
-   selection, a leading-dot selection, a `super` reference, or an application, type application or
-   `new` instantiation whose head is (recursively) one of these or a lambda literal. It must not
-   itself be the head of an application or a type application.
+   argument, a result, a scrutinee, or a spread operand. The expression must be one of:
+   - a reference, a selection, a leading-dot selection, or a `super` reference;
+   - a contextual lambda literal (see below);
+   - an application, type application, or `new` instantiation whose head is (recursively) one of
+     these or a lambda literal.
+
+   It must not itself be the head of an application or a type application.
    - In `M.f[Int](1)(2)`, only the outermost application is a value site.
    - In `M.f.g`, the receiver `M.f` is a value site.
-   - A bare lambda literal creates a function value; it is not a value site, including when its
-     parameters are contextual. In `let get = (using n: Int) => n`, `get` stores that function.
-     A later reference to `get` supplies its contextual argument, while `get(using 8)` supplies
-     the written argument explicitly.
-   - Direct lambda calls follow the same rules as named calls. With `using Int = 7`, both
-     `((using n: Int) => (x: Int) => n + x)(3)` and
-     `((x: Int) => (using n: Int) => x + n)(3)` evaluate to `10`.
+   - A lambda literal whose parameter list is a `using` list is a *contextual lambda*. In a value
+     position, it is itself a value site, so it is completed where it is written, like any other
+     contextual callee.
+     - With `using Int = 7`, `let get = (using n: Int) => n` binds `get` to `7`, not to a function.
+     - Such a lambda is therefore useless, and the compiler warns about it (§3.7). A reusable
+       contextual function is a `fun` definition: `fun get(using n: Int) = n`.
+   - Direct lambda calls follow the same rules as named calls; the lambda is then an application
+     head. With `using Int = 7`:
+     - `((using n: Int) => (x: Int) => n + x)(3)` evaluates to `10`;
+     - `((x: Int) => (using n: Int) => x + n)(3)` evaluates to `10`, because the inner contextual
+       lambda is a value site in the outer lambda's body;
+     - `((using n: Int) => n)(using 9)` evaluates to `9`.
+
+     Every contextual lambda in these examples gets the same warning.
 2. **Application heads.** These are the heads of applications whose argument list is written with
    ordinary parentheses (not `using`). In `f(1)`, `f` is an application head; in `f(using x)`,
    `f` is not.
 
-A site **completes** every callee that flow reveals at it. A callee is a function (including a
-lambda), method, or class constructor definition. Flow can reveal it at the site in any way, for example:
+A site **completes** every callee that flow reveals at it. A callee is a function definition, a
+contextual lambda, a method, or a class constructor. Flow can reveal it at the site in any way,
+for example:
 
 - a reference;
 - a member selected through a receiver whose class flow determines;
@@ -135,16 +150,24 @@ callees. Each callee's queries are resolved separately, in that callee's own cal
 - **Errors.** A convention mismatch, a selection mismatch, or a contextual callee together with a
   dynamic callee at the same site is an error.
 
-**Consequence.** Every value site completes the callees that flow reveals there. So a callee
-whose next remaining list is a `using` list never flows out of a value site. Variables, fields,
-and parameters can still hold contextual functions created by lambda literals; consuming those
-functions through a reference completes them according to the site's role.
+**Invariant: no value holds an uncompleted contextual function.** Every value site completes the
+callees that flow reveals there, and contextual lambdas are value sites themselves. So a callee
+whose next remaining list is a `using` list never flows out of a value site:
 
-This follows Scala's distinction between creating a context-function literal and consuming a
-context function, including through a direct lambda call. Scala's additional abstraction driven
-by an expected context-function type is outside this plan; this amendment does not introduce it.
-See [Scala context functions](https://docs.scala-lang.org/scala3/reference/contextual/context-functions.html)
-and [their specification](https://docs.scala-lang.org/scala3/reference/contextual/context-functions-spec.html).
+- variables, fields, parameters, tuple and record elements, and function results never hold
+  one;
+- a value that reaches a site through a variable, a parameter, or a generic type parameter is
+  never a contextual callee, so passing it through needs no completion.
+
+The implementation relies on this invariant and asserts it (§4.2). Contextual callees reach sites
+only through references and selections that denote a definition, and through contextual lambda
+literals. This includes a member selected through a receiver whose class only some activation
+reveals, such as `x.m` with `x: A`: that selection is itself the site, and §3.6 governs callees
+that reach it late.
+
+There are no contextual function types, so a contextual function cannot be passed as an argument.
+A `using` parameter list in a function type, such as `fun foo(arg: (using Int) -> Int)`, is an
+error (§3.7). Contextual function types may be added later, with a different mechanism (§1).
 
 ### 3.2 Queries
 
@@ -327,6 +350,14 @@ Suggested messages:
 - *Undetermined*: "Cannot determine the type of contextual parameter 'instance': type parameter
   'T' has no explicit type argument and no value reaches it."
 - *Unsupported query or declaration type*: see §3.2.
+- *Contextual lambda* (warning, at the lambda's `using` parameter list): "This lambda's contextual
+  parameters are supplied where it is written, so it never produces a contextual function." A
+  note suggests the alternative: "Use a 'fun' definition to define a contextual function." The
+  warning applies to every lambda literal whose parameter list is a `using` list, including
+  directly applied ones. It is new-resolution only.
+- *Contextual function type* (error, at the `using` list): "Function types cannot have 'using'
+  parameter lists." If the parser or the elaborator already rejects this syntax, keep the existing
+  error and add a test.
 - *Calling-convention mismatch*: "This reference resolves to members with different contextual
   parameter lists." Each member is listed with its parameter lists' declaration. Use the same
   message for the callees of a site.
@@ -479,6 +510,9 @@ this argument in the implementation.
 - **X8.** Every callee that flow reveals is completed (§3.1), including members selected through
   flow-typed receivers and several overriding targets. The legacy resolver only completes callees
   whose definitions it knows statically.
+- **X9.** A contextual lambda is completed where it is written, with a warning (§3.1, §3.7). The
+  legacy resolver never completes lambdas, so a contextual lambda there stays a function that only
+  receives explicit arguments.
 
 
 ## 4. Architecture
@@ -521,15 +555,12 @@ to this section. Escalate (see §7) if a principle in §3 cannot be met.
 
 ### 4.2 Resolver
 
-- **Phase 2 interception blocker (§7).** The prototype violates the existing distinction between
-  transporting a deferred value and inspecting its current interface. `listenContextual` calls
-  `listenInstanceViewsOrProbe` and forwards the resulting view even when it requires no contextual
-  arguments. For an inferred generic result, this can happen before `publishViewed` substitutes
-  the caller's arguments. Expanding `InstanceShape(A)` to an abstract value discards the reference
-  to `A`; later substitution cannot recover it. This is a flaw in the prototype and in the eager
-  materialization recommendation below, not evidence that the approved language rules conflict.
-
-  A reduced excerpt of the failing imported-inference test is:
+- **Phase 2 interception blocker (resolved).** The Phase 2 checkpoint's `listenContextual`
+  expands each value with `listenInstanceViewsOrProbe` and forwards the resulting *view* even when
+  the value requires no contextual arguments. Expanding `InstanceShape(A)` to its current views
+  discards the reference to `A` before the caller's substitution reaches it, so a later
+  substitution cannot recover it. This breaks programs without any `using` clause. A reduced
+  excerpt of the failing imported-inference test:
 
   ```mlscript
   // Generic.mls, compiled first under new resolution
@@ -542,73 +573,28 @@ to this section. Escalate (see §7) if a principle in §3 cannot be met.
   Generic.identity(Item(1)).first
   ```
 
-  The result must retain `A` until the call binds it to `Item`. The prototype reports that
-  `first` has no resolved target. The existing mutable-array import-isolation test fails too;
-  `LexicalCaptures.mls` records the related `use[Box[T]].value` failure as a `:fixme`.
-  These failures occur before the import-isolation assertions, so they do not establish whether
-  the prototype would also mutate the cached source graph.
-
-  Forwarding the original shape fixes the immediate information loss, but is not a complete
-  interception design: when substitution later reveals a contextual callable, the original
-  consuming site still owes a completion. Forgetting that obligation either exposes the raw
-  function or moves instance selection to a downstream scope. Local bindings, aggregate fields,
-  returns, and imports can all carry the deferred value past that original site. Implementation
-  has stopped until the representation of that obligation is settled.
-- **Proposed replacement: deferred completion edges (pending review, not implemented).** Replace
-  eager interface materialization with a resolver graph operation attached to the original site.
-  This proposal preserves §§2–3, including settlement order, one generated completion per site,
-  agreement across activations, and the distinction between creating and consuming a contextual
-  lambda. It changes how the resolver represents that completion:
-  1. Separate the site's raw input producer, its immutable identity/role/lexical environment, its
-     decided runtime completion, and its completed output producer. Transport a symbolic reference
-     to that output when its input is generic. Conceptually this is `Complete(site, input)`;
-     neither a snapshot of the input's current views nor an invocation at the later consumer.
-  2. Instantiation composes the existing flat, support-projected substitution onto the reference
-     before observing the operation's input. Preserve `DeclaredType` bindings, both argument
-     polarities, namespace provenance, and capture marks. Do not expand parameter bounds or
-     consume a returned callable's own scheme during transport. In the identity example, the
-     reference still names `A`; the caller's substitution reveals `Item`, and completion then
-     passes the instantiated value through unchanged.
-  3. Use interface views only to classify the activated input and drive existing `applyShape`
-     steps. For a provably ordinary input, the identity branch preserves the corresponding type
-     reference. An unresolved parameter's current abstract view does not prove that the
-     operation is permanently an identity: transport its completed-output reference, retaining
-     the dependency that can reveal later callees. Do not publish the raw parameter reference as
-     an already completed result that a later substitution could turn into an uncompleted callee.
-     Contextual branches publish only the completed output. Every consumer, including member
-     lookup, constraints, application, local binding flow, and compound-term forwarding, observes
-     this output; none may silently unwrap the raw input.
-  4. Keep selection at the original site and its ordered worklist entry. A caller supplies type
-     bindings and flow information, never a replacement lexical instance environment. Deliveries
-     in other activations use the same selected symbols and synthesized applications and check
-     agreement. After block completion, the runtime plan is frozen, including an empty plan:
-     later deliveries may propagate through it or report a conflict, but cannot add an application
-     to an already compiled exporter. Register the operation's input observation even when its
-     result is unused, so demand from a later consumer does not determine diagnostics or order.
-  5. Integrate producer references with the existing graph ownership and instantiation machinery.
-     Allocate stable producer identities before installing listeners; recursive paths use graph
-     back-edges to those producers. A site has one producer pair in a graph, with consumer-local
-     publisher data on import. Substitutions decorate references through existing canonical
-     instances and flattened views; they do not allocate another producer or fresh type binder
-     per observation, recursive visit, or caller path. Include all observed binder dependencies
-     when projecting substitutions. Copied callbacks use their receiving `ResolutionContext`
-     and cannot retain mutable exporter work records. Never flatten a repeated site by dropping
-     its operation, or bound recursion with a depth limit.
-
-  A useful scope regression for this design is a generic body containing `let saved = x`, then
-  a shadowing `using Int = 99`, then `saved`, with `using Int = 7` visible at the initializer.
-  If `x` receives a contextual lambda `(using n: Int) => n` before the block is sealed, completion
-  of `x` belongs to the initializer and must use `7`. Deferring observation must not move that
-  choice to the later read of `saved`, where `99` is visible. This example is a proposed test,
-  not a claim that the current prototype implements it.
-
-  If this proposal is accepted, first implement and validate this graph boundary on the existing
-  two import-isolation tests and `LexicalCaptures`, then cover transport through locals, returns,
-  captures, aggregates, declared interfaces, and recursive generic calls. Add diff tests for
-  behavior and unit tests only for graph growth and import isolation, which output alone cannot
-  establish. Use `softAssert` for ownership, stable producer identity, and frozen-plan invariants.
-  The finite representation and complete interception coverage must be demonstrated before this
-  proposal is considered implemented; naming a deferred wrapper alone does not solve either.
+  - **Fix.** Use views only to classify a value; never forward a view in place of the value. A
+    value that needs no completion is forwarded exactly as the site received it, with its marks,
+    annotations, declared types, and pending substitutions. Only contextual callees are held for
+    their completion.
+  - **Why this is complete.** The checkpoint asked whether a later substitution could reveal a
+    contextual callee in a value that a site already forwarded, leaving that site with a
+    completion obligation. Under the invariant of §3.1, it cannot: no value holds an uncompleted
+    contextual function, so a type parameter's values never include one. A contextual callee
+    revealed only in some activation can only reach a site that *selects* it, for example `x.m`
+    with `x: A`. That selection is itself the site, and the rules of §3.1 and §3.6 for several
+    and late callees govern it. No obligation travels with values through bindings, returns,
+    aggregates, captures, or imports.
+  - **Assertions.** Assert the invariant with `softAssert`. Check that values published into
+    variable, field, and parameter hosts and into completion outputs never have a leading `using`
+    list. This is a check of the shape's remaining parameter lists, so it is cheap.
+- **Rejected: deferred completion edges.** The checkpoint's proposal of a `Complete(site, input)`
+  resolver graph operation, transported through generic flow, is not adopted. It is unnecessary
+  under the invariant of §3.1. It would also have made a generic body's generated code depend on
+  what its callers pass, and it would have treated local and imported generic functions
+  differently, because imported code is frozen. Contextual lambdas are completed where they are
+  written, so the proposal's `let saved = x` example cannot arise: `x` never holds a contextual
+  lambda.
 - **Interception.** The completion must apply however the site's value is consumed. Two existing
   paths need care:
   1. `listen` forwards `SymShape`s through compound terms: block results, labels, `try`, and
@@ -616,10 +602,10 @@ to this section. Escalate (see §7) if a principle in §3 cannot be met.
   2. `listenValue` converts symbol shapes into definition shapes (`fromSymbol`), at the
      *consumer*.
 
-  The original recommendation below is superseded if the deferred-edge proposal is accepted.
   Prefer materializing a site's values at the site itself, with the site's own role (`receiver`
-  or not). Then deliver the shapes that need no completion directly, and hold the contextual
-  callables, together with their delivering `ResolutionContext`, for settlement. Do not wrap
+  or not). Then forward each shape that needs no completion unchanged, as the site received it and
+  never as one of its views (see the resolved blocker above). Hold the contextual callables,
+  together with their delivering `ResolutionContext`, for settlement. Do not wrap
   every term: allocate per-site state only when a contextual callable first arrives.
   Centralize access to the remaining parameter lists, their contextual flags, and their
   instantiated annotations for both definition shapes and declared callable interfaces.
@@ -717,19 +703,24 @@ to this section. Escalate (see §7) if a principle in §3 cannot be met.
 ### 4.3 Representation of completions
 
 Store the completion on the site term in a mixin, like `keyAccess` (`TermImpl.NewResolvableImpl`),
-for the term classes that can be sites: `App`, `TyApp`, `New`, `SimpleRef`, `MemberRef`, `NewSel`,
-`UnresolvedRef`, `Super`, `Lam` when it is an ordinary application head, and `Capture` when it is
-the outermost term. `SimpleRef` is necessary for consuming stored contextual lambda values.
-Implementation adjustment (Phase 2, in progress): attach the mixin to `Term`, because §3.1 also
-permits compound application heads (for example a block returning a contextual lambda).
+for the term classes that can be sites: `App`, `TyApp`, `New`, `MemberRef`, `NewSel`,
+`UnresolvedRef`, `Super`, `Lam` (a contextual lambda in a value position, or a lambda that is an
+ordinary application head), and `Capture` when it is the outermost term.
+
+- `SimpleRef` is not a site: under the invariant of §3.1, a variable never holds a contextual
+  callee.
+- Compound application heads need no completion either. In `(if c then f else g)(1)` or in a
+  block returning a contextual lambda, the head's result expressions are value sites themselves.
+- The Phase 2 checkpoint attached the mixin to every `Term` for these two reasons. Both are gone,
+  so move it back to the classes above unless another reason remains. A field on every term
+  breaks the per-term state budget of §4.6.
+
 The pending metadata reuses the single worklist entry; an empty completion allocates no helper.
 Anonymous candidate selections use declaration keys in the ordinary member-lookup path, sharing
 its receiver transport and visibility checks without reintroducing anonymous source names.
-The prototype also stores an output host beside the steps. Under the proposed §4.2 replacement,
-the transported producer reference and its consumer-local graph data must remain separate from
-the frozen runtime steps. `Cloner` must preserve or rebind producer identities along with the
-syntax it clones, and block completion must seal every synthesized producer and application.
-The completion has this shape:
+The prototype also stores an output host beside the steps, which the consumers of a completed site
+observe. Keep it, allocated only for sites that receive a contextual callee; block completion must
+seal it with the synthesized applications. The completion has this shape:
 
 ```scala
 final case class ContextualCompletion(steps: Ls[ContextualStep])
@@ -763,14 +754,9 @@ Centralize the lowering of sites with completions:
 
 ### 4.6 Performance
 
-- Programs that do not use `using` must allocate no new per-term state.
-  **Proposed clarification, pending review:** preserve the direct path for values whose completion
-  is provably an identity, and reuse existing hosts for deferred operations where possible.
-  Absence of local `using` syntax alone does not prove this for generic or imported flow. If
-  preserving a deferred site's obligation requires additional state in such a program, permit
-  bounded state per relevant site and consumer graph, account for it explicitly, and retain the
-  time/allocation benchmark and 2% explanation threshold below. Do not promise zero allocation
-  while the representation needed for correct deferred transport remains unmeasured.
+- Programs that do not use `using` must allocate no new per-term state. The checkpoint's proposed
+  relaxation of this requirement for deferred generic flow is withdrawn along with the deferred
+  completion edges (§4.2).
 - Recording a site is one buffer entry, like `accessSites`.
 - Per-module instance indexes are cached. Within a query, provider decisions are bounded by the
   consulted modules for named queries, or by the (module, triggering class or alias) pairs for
@@ -809,7 +795,17 @@ gaps remain explicit regressions. Performance comparisons are due at Phases 2 an
 ### Phase 2: sites, lexical instances, and direct insertion
 
 Checkpoint status (incomplete): the user requested committing the partial implementation while
-the §4.2 blocker is under review. Direct lexical insertion, matching, callable-clause metadata,
+the §4.2 blocker was under review. That blocker is now resolved (§4.2): resume Phase 2 with the
+steps below, before the remaining Phase 2 items.
+
+1. Forward each received shape unchanged when it needs no completion. Then confirm that the
+   two import-isolation tests and the `LexicalCaptures` `:fixme` pass.
+2. Make contextual lambdas value sites, with the warning, and add the function-type error (§3.1,
+   §3.7). Rewrite `ContextualLambdas.mls` (§6).
+3. Add the invariant assertions (§4.2).
+4. Move the completion mixin back off `Term` (§4.3).
+
+Direct lexical insertion, matching, callable-clause metadata,
 agreement checks, and Supply lowering are prototyped; `FlowCallees.mls` and
 `LexicalCaptures.mls` add coverage, and the contextual ports have updated golden outputs.
 The checkpoint is not a completed phase and does not satisfy the phase exit criteria:
@@ -962,9 +958,25 @@ New tests (in `slop/contextual/`):
   - Late values from a later worksheet block.
 - **Generic bodies** (Phase 4, see above).
 - **Application heads (X1)** and `new` with `using` lists.
-- **Contextual lambdas.** A bare literal remains a function; consuming a stored literal through
-  a reference supplies contextual arguments. Direct lambda calls supply leading or trailing
-  contextual lists, and explicit `using` applications retain their written arguments (§3.1).
+- **Contextual lambdas** (§3.1). Rewrite `ContextualLambdas.mls` for the revised rule, with
+  the warning on each contextual lambda:
+  - `let get = (using n: Int) => n`, with an `Int` instance in scope: `get` is the instance's
+    value. Calling it is an error.
+  - The same binding without an `Int` instance in scope: a missing-instance error at the lambda.
+  - A contextual lambda passed as an argument is completed at the argument.
+  - The direct calls of §3.1, including `((using n: Int) => n)(using 9)`.
+  - The inner contextual lambda of `(x: Int) => (using n: Int) => x + n`, completed when the outer
+    lambda's body runs, with the instance visible at the inner lambda.
+  - A contextual lambda as the result of an `if` or a block in application-head position.
+  - A function type with a `using` list (error).
+- **Invariant and generic flow** (§4.2).
+  - The imported `Generic.identity(Item(1)).first` case.
+  - The existing import-isolation tests, unchanged.
+  - The `LexicalCaptures` `use[Box[T]].value` case.
+  - A completed value passed through a generic function, a local binding, a record field, and a
+    returned closure.
+  - `x.m` with `x: A`, where `m` has a `using` list and only callers' activations reveal it: an
+    ordinary late callee of that selection (§3.6).
 - **Flow-revealed callees (X8).**
   - A method with a `using` list selected through a parameter whose class only flow determines.
   - A method with a `using` list selected through an annotated receiver, exercising the
