@@ -55,15 +55,24 @@ fun observed[A](value: A) =
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+3: 	  display(List(value))
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^
-//│ ╟── No instance found for the contextual parameter 'element' of type Show[A].
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+3: 	  display(List(value))
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.+2: 	  using fun wrap(using element: Show[A]): Show[List[A]] = Show[List[A]]("derived:" + element.label)
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This instance of type Show[Int] from namespace 'Show' does not accept all values reaching the query.
+//│ ╟── This instance function was selected for an enclosing contextual argument of type Show[List[?]].
+//│ ║  l.+2: 	  using fun wrap(using element: Show[A]): Show[List[A]] = Show[List[A]]("derived:" + element.label)
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Int].
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This instance of type Show[Str] from namespace 'Show' does not accept all values reaching the query.
+//│ ╟── A value of type parameter 'A' flows into the type of the contextual argument.
+//│ ║  l.+2: 	  using fun wrap(using element: Show[A]): Show[List[A]] = Show[List[A]]("derived:" + element.label)
+//│ ║        	                                     ^
+//│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Str].
 //│ ║  l.XX: 	  using Show[Str] = Show[Str]("str")
-//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of type parameter 'A' flows into the type of the contextual argument.
+//│ ║  l.+2: 	  using fun wrap(using element: Show[A]): Show[List[A]] = Show[List[A]]("derived:" + element.label)
+//│ ╙──      	                                     ^

@@ -14,18 +14,24 @@ opaque(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	fun opaque[A](value: A) = display(value)
 //│ ║        	                          ^^^^^^^^^^^^^^
-//│ ╟── No instance found for the contextual parameter 'show' of type Show[A].
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+1: 	fun opaque[A](value: A) = display(value)
 //│ ║        	                          ^^^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	fun display[A](value: A)(using show: Show[A]) = show.label
 //│ ║        	                         ^^^^^^^^^^^^^^^^^^^
-//│ ╟── This instance of type Show[Int] from namespace 'Show' does not accept all values reaching the query.
+//│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Int].
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This instance of type Show[Str] from namespace 'Show' does not accept all values reaching the query.
+//│ ╟── A value of type parameter 'A' flows into the type of the contextual argument.
+//│ ║  l.+1: 	fun opaque[A](value: A) = display(value)
+//│ ║        	                     ^
+//│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Str].
 //│ ║  l.XX: 	  using Show[Str] = Show[Str]("str")
-//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of type parameter 'A' flows into the type of the contextual argument.
+//│ ║  l.+1: 	fun opaque[A](value: A) = display(value)
+//│ ╙──      	                     ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // The generic function asks its callers for the instance instead; each caller selects it.
@@ -48,18 +54,24 @@ fun enclosing[A](value: A)(using Show[A]) =
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+2: 	  fun inner[B](other: B) = display(other)
 //│ ║        	                           ^^^^^^^^^^^^^^
-//│ ╟── No instance found for the contextual parameter 'show' of type Show[A].
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+2: 	  fun inner[B](other: B) = display(other)
 //│ ║        	                           ^^^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	fun display[A](value: A)(using show: Show[A]) = show.label
 //│ ║        	                         ^^^^^^^^^^^^^^^^^^^
-//│ ╟── This instance of type Show[Int] from namespace 'Show' does not accept all values reaching the query.
+//│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Int].
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This instance of type Show[Str] from namespace 'Show' does not accept all values reaching the query.
+//│ ╟── A value of type parameter 'B' flows into the type of the contextual argument.
+//│ ║  l.+2: 	  fun inner[B](other: B) = display(other)
+//│ ║        	                      ^
+//│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Str].
 //│ ║  l.XX: 	  using Show[Str] = Show[Str]("str")
-//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of type parameter 'B' flows into the type of the contextual argument.
+//│ ║  l.+2: 	  fun inner[B](other: B) = display(other)
+//│ ╙──      	                      ^
 
 // An instance for every type serves an abstract type parameter.
 class Describe[A](val label: Str)
@@ -79,18 +91,24 @@ class Unboxed[A](val value: A) with
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+2: 	  fun shown = display(value)
 //│ ║        	              ^^^^^^^^^^^^^^
-//│ ╟── No instance found for the contextual parameter 'show' of type Show[A].
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+2: 	  fun shown = display(value)
 //│ ║        	              ^^^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	fun display[A](value: A)(using show: Show[A]) = show.label
 //│ ║        	                         ^^^^^^^^^^^^^^^^^^^
-//│ ╟── This instance of type Show[Int] from namespace 'Show' does not accept all values reaching the query.
+//│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Int].
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This instance of type Show[Str] from namespace 'Show' does not accept all values reaching the query.
+//│ ╟── A value of type parameter 'A' flows into the type of the contextual argument.
+//│ ║  l.+1: 	class Unboxed[A](val value: A) with
+//│ ║        	                            ^
+//│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Str].
 //│ ║  l.XX: 	  using Show[Str] = Show[Str]("str")
-//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of type parameter 'A' flows into the type of the contextual argument.
+//│ ║  l.+1: 	class Unboxed[A](val value: A) with
+//│ ╙──      	                            ^
 
 // A method's site is completed by the values of its own body, where `A` is abstract. Calling
 // the method on a receiver views that completion through the receiver's type argument, so the

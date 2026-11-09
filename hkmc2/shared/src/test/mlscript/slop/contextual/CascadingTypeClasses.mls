@@ -19,10 +19,10 @@ foo[Baz]
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	foo[Baz]
 //│ ║        	^^^^^^^^
-//│ ╟── No instance found for the unnamed contextual parameter of type Baz.
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+1: 	foo[Baz]
 //│ ║        	^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	fun foo[A](using Foo[A], A) = 42
 //│ ╙──      	                         ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -33,10 +33,10 @@ foo
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	foo
 //│ ║        	^^^
-//│ ╟── No instance found for the unnamed contextual parameter of type A.
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+1: 	foo
 //│ ║        	^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	fun foo[A](using Foo[A], A) = 42
 //│ ╙──      	                         ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -64,10 +64,10 @@ foo
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	foo
 //│ ║        	^^^
-//│ ╟── Cannot determine the type of the unnamed contextual parameter: type parameter 'A' has no explicit type argument and no value reaches it.
+//│ ╟── The type of the contextual argument supplied implicitly here cannot be determined, as neither an explicit type argument nor a value determines the type parameter that it refers to.
 //│ ║  l.+1: 	foo
 //│ ║        	^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter, whose type is the type parameter 'A'.
 //│ ║  l.XX: 	fun foo[A](using A)(using Foo[A]) = 42
 //│ ╙──      	           ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -81,10 +81,10 @@ foo
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	foo
 //│ ║        	^^^
-//│ ╟── Cannot determine the type of the unnamed contextual parameter: type parameter 'A' has no explicit type argument and no value reaches it.
+//│ ╟── The type of the contextual argument supplied implicitly here cannot be determined, as neither an explicit type argument nor a value determines the type parameter that it refers to.
 //│ ║  l.+1: 	foo
 //│ ║        	^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter, whose type is the type parameter 'A'.
 //│ ║  l.XX: 	fun foo[A](using A)(using Foo[A]) = 42
 //│ ╙──      	           ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -97,10 +97,10 @@ foo
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	foo
 //│ ║        	^^^
-//│ ╟── Cannot determine the type of the unnamed contextual parameter: type parameter 'A' has no explicit type argument and no value reaches it.
+//│ ╟── The type of the contextual argument supplied implicitly here cannot be determined, as neither an explicit type argument nor a value determines the type parameter that it refers to.
 //│ ║  l.+1: 	foo
 //│ ║        	^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter, whose type is the type parameter 'A'.
 //│ ║  l.XX: 	fun foo[A](using A)(using Foo[A]) = 42
 //│ ╙──      	           ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -113,10 +113,10 @@ foo
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	foo
 //│ ║        	^^^
-//│ ╟── Cannot determine the type of the unnamed contextual parameter: type parameter 'A' has no explicit type argument and no value reaches it.
+//│ ╟── The type of the contextual argument supplied implicitly here cannot be determined, as neither an explicit type argument nor a value determines the type parameter that it refers to.
 //│ ║  l.+1: 	foo
 //│ ║        	^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter, whose type is the type parameter 'A'.
 //│ ║  l.XX: 	fun foo[A](using A)(using Foo[A]) = 42
 //│ ╙──      	           ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -129,10 +129,10 @@ foo
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	foo
 //│ ║        	^^^
-//│ ╟── Cannot determine the type of the unnamed contextual parameter: type parameter 'A' has no explicit type argument and no value reaches it.
+//│ ╟── The type of the contextual argument supplied implicitly here cannot be determined, as neither an explicit type argument nor a value determines the type parameter that it refers to.
 //│ ║  l.+1: 	foo
 //│ ║        	^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter, whose type is the type parameter 'A'.
 //│ ║  l.XX: 	fun foo[A](using A)(using Foo[A]) = 42
 //│ ╙──      	           ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

@@ -32,10 +32,10 @@ test
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	fun test = M.mtd()
 //│ ║        	           ^^^^^^^
-//│ ╟── No instance found for the contextual parameter 'n' of type Int.
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+1: 	fun test = M.mtd()
 //│ ║        	           ^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.+3: 	  fun mtd()(using n: Int) = n
 //│ ╙──      	            ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -51,10 +51,10 @@ test
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	fun test = Example.foo().mtd()
 //│ ║        	           ^^^^^^^^^^^^^^^^^^^
-//│ ╟── No instance found for the contextual parameter 'n' of type Int.
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+1: 	fun test = Example.foo().mtd()
 //│ ║        	           ^^^^^^^^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.+3: 	  fun mtd()(using n: Int) = n
 //│ ╙──      	            ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

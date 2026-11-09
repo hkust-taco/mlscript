@@ -39,10 +39,10 @@ fun generic[A](value: A) =
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+3: 	  local
 //│ ║        	  ^^^^^
-//│ ╟── No instance found for the contextual parameter 'e' of type Evidence[A].
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+3: 	  local
 //│ ║        	  ^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.+2: 	  fun local(other: A)(using e: Evidence[A]) = e.label
 //│ ╙──      	                      ^^^^^^^^^^^^^^^^^^^^
 
@@ -78,10 +78,10 @@ let invalid = unsupported
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+2: 	let invalid = unsupported
 //│ ║        	              ^^^^^^^^^^^
-//│ ╟── Contextual parameter types must be named types or type parameters.
+//│ ╟── No instance can be selected for the contextual argument supplied implicitly here.
 //│ ║  l.+2: 	let invalid = unsupported
 //│ ║        	              ^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter, whose type is neither a named type nor a type parameter.
 //│ ║  l.+1: 	fun unsupported(x)(using f: (Int -> Int)) = x
 //│ ╙──      	                   ^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

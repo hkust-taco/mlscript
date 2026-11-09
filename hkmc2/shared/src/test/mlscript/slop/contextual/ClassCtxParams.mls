@@ -34,10 +34,10 @@ Bar
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	Bar
 //│ ║        	^^^
-//│ ╟── No instance found for the contextual parameter 's' of type Str.
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+1: 	Bar
 //│ ║        	^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	class Bar(using val s: Str)
 //│ ╙──      	          ^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -49,10 +49,10 @@ Bar
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	Bar
 //│ ║        	^^^
-//│ ╟── No instance found for the contextual parameter 's' of type Str.
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+1: 	Bar
 //│ ║        	^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	class Bar(using s: Str)
 //│ ╙──      	          ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -88,10 +88,10 @@ Foo
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	Foo
 //│ ║        	^^^
-//│ ╟── No instance found for the unnamed contextual parameter of type Str.
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+1: 	Foo
 //│ ║        	^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	class Foo(using Int)(using Str) with
 //│ ╙──      	                     ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

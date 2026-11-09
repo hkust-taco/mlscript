@@ -24,19 +24,22 @@ noAlternative()
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+3: 	  display("missing")
 //│ ║        	  ^^^^^^^^^^^^^^^^^^
-//│ ╟── No instance found for the contextual parameter 'inner' of type Show[A].
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+3: 	  display("missing")
 //│ ║        	  ^^^^^^^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.+2: 	  using fun loop[A](using inner: Show[A]): Show[A] = inner
 //│ ║        	                    ^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This instance of type Show[Int] from namespace 'Show' does not accept all values reaching the query.
-//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
-//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Instance function 'loop' diverges for Show[Str].
+//│ ╟── This instance function was selected for an enclosing contextual argument of type Show[Str].
 //│ ║  l.+2: 	  using fun loop[A](using inner: Show[A]): Show[A] = inner
 //│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Query Show[Str] selected instance function 'loop'.
+//│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Int].
+//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of class 'Str' flows into the type of the contextual argument.
+//│ ║  l.+3: 	  display("missing")
+//│ ║        	          ^^^^^^^^^
+//│ ╟── Selecting this instance function again for the type Show[Str] would diverge.
 //│ ║  l.+2: 	  using fun loop[A](using inner: Show[A]): Show[A] = inner
 //│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -50,22 +53,25 @@ growth()
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+3: 	  display(1)
 //│ ║        	  ^^^^^^^^^^
-//│ ╟── No instance found for the contextual parameter 'inner' of type Show[List[A]].
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+3: 	  display(1)
 //│ ║        	  ^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.+2: 	  using fun bad[A](using inner: Show[List[A]]): Show[A] = Show[A](inner.label)
 //│ ║        	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This instance of type Show[Int] from namespace 'Show' does not accept all values reaching the query.
+//│ ╟── This instance function was selected for an enclosing contextual argument of type Show[Int].
+//│ ║  l.+2: 	  using fun bad[A](using inner: Show[List[A]]): Show[A] = Show[A](inner.label)
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance function was selected for an enclosing contextual argument of type Show[List[Int]].
+//│ ║  l.+2: 	  using fun bad[A](using inner: Show[List[A]]): Show[A] = Show[A](inner.label)
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Int].
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Instance function 'bad' diverges for Show[List[List[Int]]].
+//│ ╟── A value of class 'List' flows into the type of the contextual argument.
 //│ ║  l.+2: 	  using fun bad[A](using inner: Show[List[A]]): Show[A] = Show[A](inner.label)
-//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Query Show[Int] selected instance function 'bad'.
-//│ ║  l.+2: 	  using fun bad[A](using inner: Show[List[A]]): Show[A] = Show[A](inner.label)
-//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Query Show[List[Int]] selected instance function 'bad'.
+//│ ║        	                                     ^^^^^^^
+//│ ╟── Selecting this instance function again for the type Show[List[List[Int]]] would diverge.
 //│ ║  l.+2: 	  using fun bad[A](using inner: Show[List[A]]): Show[A] = Show[A](inner.label)
 //│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -88,22 +94,25 @@ swap()
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+3: 	  display(Pair(1, "two"))
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── No instance found for the contextual parameter 'inner' of type Show[Pair[B, A]].
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+3: 	  display(Pair(1, "two"))
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.+2: 	  using fun pair[A, B](using inner: Show[Pair[B, A]]): Show[Pair[A, B]] = Show[Pair[A, B]](inner.label)
 //│ ║        	                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This instance of type Show[Int] from namespace 'Show' does not accept all values reaching the query.
+//│ ╟── This instance function was selected for an enclosing contextual argument of type Show[Pair[Int, Str]].
+//│ ║  l.+2: 	  using fun pair[A, B](using inner: Show[Pair[B, A]]): Show[Pair[A, B]] = Show[Pair[A, B]](inner.label)
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance function was selected for an enclosing contextual argument of type Show[Pair[Str, Int]].
+//│ ║  l.+2: 	  using fun pair[A, B](using inner: Show[Pair[B, A]]): Show[Pair[A, B]] = Show[Pair[A, B]](inner.label)
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Int].
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Instance function 'pair' diverges for Show[Pair[Int, Str]].
+//│ ╟── A value of class 'Pair' flows into the type of the contextual argument.
 //│ ║  l.+2: 	  using fun pair[A, B](using inner: Show[Pair[B, A]]): Show[Pair[A, B]] = Show[Pair[A, B]](inner.label)
-//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Query Show[Pair[Int, Str]] selected instance function 'pair'.
-//│ ║  l.+2: 	  using fun pair[A, B](using inner: Show[Pair[B, A]]): Show[Pair[A, B]] = Show[Pair[A, B]](inner.label)
-//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Query Show[Pair[Str, Int]] selected instance function 'pair'.
+//│ ║        	                                         ^^^^^^^^^^
+//│ ╟── Selecting this instance function again for the type Show[Pair[Int, Str]] would diverge.
 //│ ║  l.+2: 	  using fun pair[A, B](using inner: Show[Pair[B, A]]): Show[Pair[A, B]] = Show[Pair[A, B]](inner.label)
 //│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -118,24 +127,27 @@ fun rose(value: Rose) =
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+4: 	  display(value)
 //│ ║        	  ^^^^^^^^^^^^^^
-//│ ╟── No instance found for the contextual parameter 'inner' of type Show[A].
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+4: 	  display(value)
 //│ ║        	  ^^^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.+2: 	  using fun list[A](using inner: Show[A]): Show[List[A]] = Show[List[A]](inner.label)
 //│ ║        	                    ^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This instance of type Show[Int] from namespace 'Show' does not accept all values reaching the query.
+//│ ╟── This instance function was selected for an enclosing contextual argument of type Show[Rose].
+//│ ║  l.+3: 	  using fun tree(using inner: Show[List[Rose]]): Show[Rose] = Show[Rose](inner.label)
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance function was selected for an enclosing contextual argument of type Show[List[Rose]].
+//│ ║  l.+2: 	  using fun list[A](using inner: Show[A]): Show[List[A]] = Show[List[A]](inner.label)
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Int].
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Instance function 'tree' diverges for Show[Rose].
+//│ ╟── A value of class 'Rose' flows into the type of the contextual argument.
 //│ ║  l.+3: 	  using fun tree(using inner: Show[List[Rose]]): Show[Rose] = Show[Rose](inner.label)
-//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Query Show[Rose] selected instance function 'tree'.
+//│ ║        	                                        ^^^^
+//│ ╟── Selecting this instance function again for the type Show[Rose] would diverge.
 //│ ║  l.+3: 	  using fun tree(using inner: Show[List[Rose]]): Show[Rose] = Show[Rose](inner.label)
-//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Query Show[List[Rose]] selected instance function 'list'.
-//│ ║  l.+2: 	  using fun list[A](using inner: Show[A]): Show[List[A]] = Show[List[A]](inner.label)
-//│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 // Cyclic value observations become finite flow types by cutting the current path with ?.
 :!js
@@ -148,19 +160,22 @@ cycleCheck()
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+4: 	  display(cyclic())
 //│ ║        	  ^^^^^^^^^^^^^^^^^
-//│ ╟── No instance found for the contextual parameter 'inner' of type Show[A].
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+4: 	  display(cyclic())
 //│ ║        	  ^^^^^^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.+3: 	  using fun loop[A](using inner: Show[A]): Show[A] = inner
 //│ ║        	                    ^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This instance of type Show[Int] from namespace 'Show' does not accept all values reaching the query.
-//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
-//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Instance function 'loop' diverges for Show[List[List[?]]].
+//│ ╟── This instance function was selected for an enclosing contextual argument of type Show[List[List[?]]].
 //│ ║  l.+3: 	  using fun loop[A](using inner: Show[A]): Show[A] = inner
 //│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Query Show[List[List[?]]] selected instance function 'loop'.
+//│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Int].
+//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of class 'List' flows into the type of the contextual argument.
+//│ ║  l.+1: 	fun cyclic() = List(cyclic())
+//│ ║        	               ^^^^^^^^^^^^^^
+//│ ╟── Selecting this instance function again for the type Show[List[List[?]]] would diverge.
 //│ ║  l.+3: 	  using fun loop[A](using inner: Show[A]): Show[A] = inner
 //│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -174,21 +189,24 @@ fun unspecified() =
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+4: 	  request
 //│ ║        	  ^^^^^^^
-//│ ╟── No instance found for the contextual parameter 'inner' of type Show[List[A]].
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+4: 	  request
 //│ ║        	  ^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.+2: 	  using fun bad[A](using inner: Show[List[A]]): Show[A] = Show[A](inner.label)
 //│ ║        	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This instance of type Show[Int] from namespace 'Show' does not accept all values reaching the query.
+//│ ╟── This instance function was selected for an enclosing contextual argument of type Show[?].
+//│ ║  l.+2: 	  using fun bad[A](using inner: Show[List[A]]): Show[A] = Show[A](inner.label)
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance function was selected for an enclosing contextual argument of type Show[List[?]].
+//│ ║  l.+2: 	  using fun bad[A](using inner: Show[List[A]]): Show[A] = Show[A](inner.label)
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Int].
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Instance function 'bad' diverges for Show[List[List[?]]].
+//│ ╟── A value of class 'List' flows into the type of the contextual argument.
 //│ ║  l.+2: 	  using fun bad[A](using inner: Show[List[A]]): Show[A] = Show[A](inner.label)
-//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Query Show[?] selected instance function 'bad'.
-//│ ║  l.+2: 	  using fun bad[A](using inner: Show[List[A]]): Show[A] = Show[A](inner.label)
-//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Query Show[List[?]] selected instance function 'bad'.
+//│ ║        	                                     ^^^^^^^
+//│ ╟── Selecting this instance function again for the type Show[List[List[?]]] would diverge.
 //│ ║  l.+2: 	  using fun bad[A](using inner: Show[List[A]]): Show[A] = Show[A](inner.label)
 //│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

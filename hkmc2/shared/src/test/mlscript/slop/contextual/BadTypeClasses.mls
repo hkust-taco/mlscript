@@ -23,10 +23,10 @@ M.f
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	M.f
 //│ ║        	^^^
-//│ ╟── No instance found for the unnamed contextual parameter of type Int.
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+1: 	M.f
 //│ ║        	^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	  fun f(using Int) = ()
 //│ ╙──      	        ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -38,10 +38,10 @@ use[42]
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+2: 	use[42]
 //│ ║        	^^^^^^^
-//│ ╟── Contextual parameter types must be named types or type parameters.
+//│ ╟── No instance can be selected for the contextual argument supplied implicitly here.
 //│ ║  l.+2: 	use[42]
 //│ ║        	^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter, whose type is neither a named type nor a type parameter.
 //│ ║  in ../../../mlscript-compile/Predef.mls
 //│ ║  l.XX: 	fun use[T](using instance: T) = instance
 //│ ╙──      	           ^^^^^^^^^^^^^^^^^
@@ -124,10 +124,10 @@ f
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+2: 	f
 //│ ║        	^
-//│ ╟── Cannot determine the type of the contextual parameter 't': type parameter 'T' has no explicit type argument and no value reaches it.
+//│ ╟── The type of the contextual argument supplied implicitly here cannot be determined, as neither an explicit type argument nor a value determines the type parameter that it refers to.
 //│ ║  l.+2: 	f
 //│ ║        	^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter, whose type is the type parameter 'T'.
 //│ ║  l.+1: 	fun f[T](using t: T) = t
 //│ ╙──      	         ^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

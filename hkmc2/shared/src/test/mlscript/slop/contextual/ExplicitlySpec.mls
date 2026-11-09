@@ -33,19 +33,19 @@ f(using 32)
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	f(using 32)
 //│ ║        	^^^^^^^^^^^
-//│ ╟── No instance found for the contextual parameter 'j' of type Int.
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+1: 	f(using 32)
 //│ ║        	^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	fun f(using i: Int)(using j: Int)(using k: Int): Int = i + j + k
 //│ ╙──      	                    ^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	f(using 32)
 //│ ║        	^^^^^^^^^^^
-//│ ╟── No instance found for the contextual parameter 'k' of type Int.
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+1: 	f(using 32)
 //│ ║        	^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	fun f(using i: Int)(using j: Int)(using k: Int): Int = i + j + k
 //│ ╙──      	                                  ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -56,10 +56,10 @@ f(using 32)(using 8)
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	f(using 32)(using 8)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── No instance found for the contextual parameter 'k' of type Int.
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+1: 	f(using 32)(using 8)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	fun f(using i: Int)(using j: Int)(using k: Int): Int = i + j + k
 //│ ╙──      	                                  ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -76,10 +76,10 @@ f(using 32)
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	f(using 32)
 //│ ║        	^^^^^^^^^^^
-//│ ╟── No instance found for the contextual parameter 'k' of type Int.
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+1: 	f(using 32)
 //│ ║        	^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	fun f(using i: Int)(j: Int)(using k: Int)(l: Num): Int = i + j + k + l
 //│ ╙──      	                            ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -90,10 +90,10 @@ f(using 32)(8)
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	f(using 32)(8)
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── No instance found for the contextual parameter 'k' of type Int.
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+1: 	f(using 32)(8)
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	fun f(using i: Int)(j: Int)(using k: Int)(l: Num): Int = i + j + k + l
 //│ ╙──      	                            ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

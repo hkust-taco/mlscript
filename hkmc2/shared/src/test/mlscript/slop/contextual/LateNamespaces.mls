@@ -18,19 +18,22 @@ unannotated(new First)
 // Both instances accept all of the query's values, so the new provider must be diagnosed.
 :e
 unannotated(new Second)
-//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error in application
+//│ ║  l.+1: 	unannotated(new Second)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The instance of the contextual argument supplied implicitly here was selected before flow revealed the implicit namespace module 'Second' of its type.
 //│ ║  l.XX: 	fun unannotated(value) = consume(value)
 //│ ║        	                         ^^^^^^^^^^^^^^
-//│ ╟── The contextual parameter 'e' of type Evidence[A] was resolved before flow revealed its implicit namespace module 'Second'.
-//│ ║  l.XX: 	fun unannotated(value) = consume(value)
-//│ ║        	                         ^^^^^^^^^^^^^^
-//│ ╟── Here, the companion module 'Second' of class 'Second' provides this matching instance of type Evidence[Any].
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	fun consume[A](value: A)(using e: Evidence[A]) = e.label
+//│ ║        	                         ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Here, the companion module 'Second' of class 'Second' provides this instance, which has a compatible type, Evidence[Any].
 //│ ║  l.XX: 	  using Evidence[Any] = Evidence[Any]("second")
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── This value reveals the namespace.
 //│ ║  l.+1: 	unannotated(new Second)
 //│ ║        	            ^^^^^^^^^^
-//│ ╟── This instance of type Evidence[Any] was selected earlier.
+//│ ╟── This instance, of type Evidence[Any], was selected earlier.
 //│ ║  l.XX: 	  using Evidence[Any] = Evidence[Any]("first")
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = "first"

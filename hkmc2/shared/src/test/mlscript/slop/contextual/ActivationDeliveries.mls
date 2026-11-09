@@ -16,18 +16,24 @@ fun twice[A](value: A, y) = y.show(value)
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	fun twice[A](value: A, y) = y.show(value)
 //│ ║        	                            ^^^^^^^^^^^^^
-//│ ╟── No instance found for the contextual parameter 's' of type Show[T].
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+1: 	fun twice[A](value: A, y) = y.show(value)
 //│ ║        	                            ^^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	  fun show[T](value: T)(using s: Show[T]) = s.label
 //│ ║        	                        ^^^^^^^^^^^^^^^^
-//│ ╟── This instance of type Show[Int] from namespace 'Show' does not accept all values reaching the query.
+//│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Int].
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This instance of type Show[Str] from namespace 'Show' does not accept all values reaching the query.
+//│ ╟── A value of class 'Str' flows into the type of the contextual argument.
+//│ ║  l.+2: 	[twice(1, new C), twice("text", new C)]
+//│ ║        	                        ^^^^^^
+//│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Str].
 //│ ║  l.XX: 	  using Show[Str] = Show[Str]("str")
-//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of class 'Int' flows into the type of the contextual argument.
+//│ ║  l.+2: 	[twice(1, new C), twice("text", new C)]
+//│ ╙──      	       ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // FIXME: explicit type parameters should be opaque, so the query should see the abstract `A`.

@@ -5,20 +5,24 @@ import "./mlscript-compile/NamespaceFlow.mls"
 // Each importer must independently report the provider revealed after selection.
 :e
 NamespaceFlow.unannotated(new NamespaceFlow.Second)
-//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error in application
+//│ ║  l.+1: 	NamespaceFlow.unannotated(new NamespaceFlow.Second)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The instance of the contextual argument supplied implicitly here was selected before flow revealed the implicit namespace module 'Second' of its type.
+//│ ║  in mlscript-compile/NamespaceFlow.mls
 //│ ║  l.XX: 	  fun unannotated(value) = consume(value)
 //│ ║        	                           ^^^^^^^^^^^^^^
-//│ ╟── The contextual parameter 'e' of type Evidence[A] was resolved before flow revealed its implicit namespace module 'Second'.
-//│ ║  l.XX: 	  fun unannotated(value) = consume(value)
-//│ ║        	                           ^^^^^^^^^^^^^^
-//│ ╟── Here, the companion module 'Second' of class 'Second' provides this matching instance of type Evidence[Any].
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	  fun consume[A](value: A)(using e: Evidence[A]) = e.label
+//│ ║        	                           ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Here, the companion module 'Second' of class 'Second' provides this instance, which has a compatible type, Evidence[Any].
 //│ ║  l.XX: 	    using Evidence[Any] = Evidence[Any]("second")
 //│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── This value reveals the namespace.
 //│ ║  in LateNamespaceImportA.mls:+1
 //│ ║  l.+1: 	NamespaceFlow.unannotated(new NamespaceFlow.Second)
 //│ ║        	                          ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This instance of type Evidence[Any] was selected earlier.
+//│ ╟── This instance, of type Evidence[Any], was selected earlier.
 //│ ║  in mlscript-compile/NamespaceFlow.mls
 //│ ║  l.XX: 	    using Evidence[Any] = Evidence[Any]("first")
 //│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

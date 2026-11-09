@@ -31,15 +31,18 @@ incompatible
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+2: 	incompatible
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── No instance found for the unnamed contextual parameter of type Base[Str].
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+2: 	incompatible
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.+1: 	fun incompatible(using Base[Str]) = 42
 //│ ║        	                 ^^^^^^^^^^^^^^^
-//│ ╟── This instance of type Derived from namespace 'Base' does not accept all values reaching the query.
+//│ ╟── This instance from namespace 'Base' has an incompatible type, Derived.
 //│ ║  l.XX: 	  using Alias = new Derived
-//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of class 'Str' flows into the type of the contextual argument.
+//│ ║  l.+1: 	fun incompatible(using Base[Str]) = 42
+//│ ╙──      	                            ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Nested written arguments contribute their data-type companions.

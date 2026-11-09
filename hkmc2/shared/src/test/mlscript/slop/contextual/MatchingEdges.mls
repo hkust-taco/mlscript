@@ -48,14 +48,14 @@ fun sameTier(using Accept[Int], Specialized) = accept(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	fun sameTier(using Accept[Int], Specialized) = accept(1)
 //│ ║        	                                               ^^^^^^^^^
-//│ ╟── Ambiguous instances for the contextual parameter 'a' of type Accept[A].
+//│ ╟── Multiple instances are compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+1: 	fun sameTier(using Accept[Int], Specialized) = accept(1)
 //│ ║        	                                               ^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	fun accept[A](value: A)(using a: Accept[A]) = a.label
 //│ ║        	                        ^^^^^^^^^^^^^^^^^^
-//│ ╟── This lexical instance of type Accept[Int] matches.
-//│ ╙── This lexical instance of type Specialized matches.
+//│ ╟── This lexical instance has a compatible type, Accept[Int].
+//│ ╙── This lexical instance has a compatible type, Specialized.
 
 // A later incompatible value cannot change the selected candidate.
 class IntAccept extends Accept[Int] with

@@ -34,30 +34,36 @@ fun disagree(receiver) = receiver.method
 //│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
 //│ ║        	                    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance function was selected for an enclosing contextual argument of type Show[List[List[Int]]].
+//│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance function was selected for an enclosing contextual argument of type Show[List[Int]].
+//│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The selected instance is declared here, with type Show[Int].
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	fun disagree(receiver) = receiver.method
 //│ ║        	                         ^^^^^^^^^^^^^^^
-//│ ╟── The callees of this call require different instances for the contextual parameter 'element' of type Show[A].
+//│ ╟── This expression's callees select different instances for the contextual argument supplied implicitly here.
 //│ ║  l.+1: 	fun disagree(receiver) = receiver.method
 //│ ║        	                         ^^^^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
 //│ ║        	                    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance function was selected for an enclosing contextual argument of type Show[List[List[Str]]].
+//│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance function was selected for an enclosing contextual argument of type Show[List[Str]].
+//│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── One callee selects this instance.
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Another callee selects this instance.
 //│ ║  l.XX: 	  using Show[Str] = Show[Str]("str")
-//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Instance function 'list' requires this nested argument.
-//│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
-//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Instance function 'list' requires this nested argument.
-//│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
-//│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = ["list(list(int))", "list(list(int))"]
 
 using Different = new Different
@@ -79,30 +85,36 @@ fun late(receiver) = receiver.method
 //│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
 //│ ║        	                    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance function was selected for an enclosing contextual argument of type Show[List[List[Int]]].
+//│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance function was selected for an enclosing contextual argument of type Show[List[Int]].
+//│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The selected instance is declared here, with type Show[Int].
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	fun late(receiver) = receiver.method
 //│ ║        	                     ^^^^^^^^^^^^^^^
-//│ ╟── The callees of this call require different instances for the contextual parameter 'element' of type Show[A].
+//│ ╟── This expression's callees select different instances for the contextual argument supplied implicitly here.
 //│ ║  l.+1: 	fun late(receiver) = receiver.method
 //│ ║        	                     ^^^^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
 //│ ║        	                    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance function was selected for an enclosing contextual argument of type Show[List[List[Str]]].
+//│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance function was selected for an enclosing contextual argument of type Show[List[Str]].
+//│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── One callee selects this instance.
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Another callee selects this instance.
 //│ ║  l.XX: 	  using Show[Str] = Show[Str]("str")
-//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Instance function 'list' requires this nested argument.
-//│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
-//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Instance function 'list' requires this nested argument.
-//│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
-//│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = ["list(list(int))", "list(list(int))"]
 
 // Distinct query types can agree recursively on one broad leaf instance.
@@ -152,25 +164,28 @@ fun differentClauses(receiver) = receiver.method
 //│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	  using fun show[A, B](using first: Show[A])(using second: Show[B]): Show[Pair[A, B]] =
 //│ ║        	                                             ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance function was selected for an enclosing contextual argument of type Show[Pair[Int, Int]].
+//│ ║  l.XX: 	  using fun show[A, B](using first: Show[A])(using second: Show[B]): Show[Pair[A, B]] =
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The selected instance is declared here, with type Show[Int].
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	fun differentClauses(receiver) = receiver.method
 //│ ║        	                                 ^^^^^^^^^^^^^^^
-//│ ╟── The callees of this call require different instances for the contextual parameter 'second' of type Show[B].
+//│ ╟── This expression's callees select different instances for the contextual argument supplied implicitly here.
 //│ ║  l.+1: 	fun differentClauses(receiver) = receiver.method
 //│ ║        	                                 ^^^^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	  using fun show[A, B](using first: Show[A])(using second: Show[B]): Show[Pair[A, B]] =
 //│ ║        	                                             ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance function was selected for an enclosing contextual argument of type Show[Pair[Int, Str]].
+//│ ║  l.XX: 	  using fun show[A, B](using first: Show[A])(using second: Show[B]): Show[Pair[A, B]] =
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── One callee selects this instance.
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Another callee selects this instance.
 //│ ║  l.XX: 	  using Show[Str] = Show[Str]("str")
-//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Instance function 'show' requires this nested argument.
-//│ ║  l.XX: 	  using fun show[A, B](using first: Show[A])(using second: Show[B]): Show[Pair[A, B]] =
-//│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = ["int/int", "int/int"]

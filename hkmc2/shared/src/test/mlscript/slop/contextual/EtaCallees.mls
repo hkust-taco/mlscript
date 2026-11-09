@@ -31,10 +31,10 @@ let different = mismatch(revealDifferent)
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	fun mismatch(receiver) = receiver.method
 //│ ║        	                         ^^^^^^^^^^^^^^^
-//│ ╟── The callees of this call require different instances for the contextual parameter 's' of type Str.
+//│ ╟── This expression's callees select different instances for the contextual argument supplied implicitly here.
 //│ ║  l.+1: 	fun mismatch(receiver) = receiver.method
 //│ ║        	                         ^^^^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	  fun method(x)(using s: Str) = s
 //│ ║        	                ^^^^^^^^^^^^
 //│ ╟── One callee selects this instance.

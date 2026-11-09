@@ -25,21 +25,33 @@ display(List(true))
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	display(List(true))
 //│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ╟── No instance found for the contextual parameter 'element' of type Show[A].
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+1: 	display(List(true))
 //│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
 //│ ║        	                    ^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This instance of type Show[Int] from namespace 'Show' does not accept all values reaching the query.
+//│ ╟── This instance function was selected for an enclosing contextual argument of type Show[List[Bool]].
+//│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Int].
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This instance of type Show[Str] from namespace 'Show' does not accept all values reaching the query.
+//│ ╟── A value of class 'Bool' flows into the type of the contextual argument.
+//│ ║  l.+1: 	display(List(true))
+//│ ║        	             ^^^^
+//│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Str].
 //│ ║  l.XX: 	  using fun text: Show[Str] = Show[Str]("str")
 //│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This instance of type Show[List[A]] from namespace 'Show' does not accept all values reaching the query.
+//│ ╟── A value of class 'Bool' flows into the type of the contextual argument.
+//│ ║  l.+1: 	display(List(true))
+//│ ║        	             ^^^^
+//│ ╟── This instance from namespace 'Show' has an incompatible type, Show[List[A]].
 //│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
-//│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of class 'Bool' flows into the type of the contextual argument.
+//│ ║  l.+1: 	display(List(true))
+//│ ╙──      	             ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A lexical derived instance shadows matching namespace instances.
@@ -62,16 +74,16 @@ ambiguous(List(1))
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	ambiguous(List(1))
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ╟── Ambiguous instances for the contextual parameter 'instance' of type Ambiguous[A].
+//│ ╟── Multiple instances are compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+1: 	ambiguous(List(1))
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	fun ambiguous[A](value: A)(using instance: Ambiguous[A]) = instance.label
 //│ ║        	                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This instance of type Ambiguous[List[Int]] comes from namespace 'Ambiguous'.
+//│ ╟── This instance from namespace 'Ambiguous' has a compatible type, Ambiguous[List[Int]].
 //│ ║  l.XX: 	  using Ambiguous[List[Int]] = Ambiguous[List[Int]]("direct")
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This instance of type Ambiguous[List[A]] comes from namespace 'Ambiguous'.
+//│ ╟── This instance from namespace 'Ambiguous' has a compatible type, Ambiguous[List[A]].
 //│ ║  l.XX: 	  using fun list[A]: Ambiguous[List[A]] = Ambiguous[List[A]]("derived")
 //│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

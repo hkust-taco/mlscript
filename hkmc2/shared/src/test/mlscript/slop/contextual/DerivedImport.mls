@@ -26,6 +26,9 @@ fixed(List("late"))
 //│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	    using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance function was selected for an enclosing contextual argument of type Show[List[Int]].
+//│ ║  l.XX: 	    using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+//│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The selected instance is declared here, with type Show[Int].
 //│ ║  l.XX: 	    using Show[Int] = Show[Int]("int")
 //│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -59,15 +59,18 @@ codec(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	codec(1)
 //│ ║        	^^^^^^^^
-//│ ╟── No instance found for the contextual parameter 'c' of type Codec[A].
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+1: 	codec(1)
 //│ ║        	^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	fun codec[A](value: A)(using c: Outer.Codec[A]) = c.label
 //│ ║        	                       ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This instance of type Codec[Str] from namespace 'Codec' does not accept all values reaching the query.
+//│ ╟── This instance from namespace 'Codec' has an incompatible type, Codec[Str].
 //│ ║  l.XX: 	    using Codec[Str] = new StrCodec
-//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of class 'Int' flows into the type of the contextual argument.
+//│ ║  l.+1: 	codec(1)
+//│ ╙──      	      ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A parameter query must revisit one module through different triggering heads.
@@ -114,16 +117,16 @@ both(new Thing)
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	both(new Thing)
 //│ ║        	^^^^^^^^^^^^^^^
-//│ ╟── Ambiguous instances for the contextual parameter 'b' of type Both[A].
+//│ ╟── Multiple instances are compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+1: 	both(new Thing)
 //│ ║        	^^^^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	fun both[A](value: A)(using b: Both[A]) = b.label
 //│ ║        	                      ^^^^^^^^^^^^^^^^
-//│ ╟── This instance of type Both[Thing] comes from namespace 'Both'.
+//│ ╟── This instance from namespace 'Both' has a compatible type, Both[Thing].
 //│ ║  l.XX: 	  using Both[Thing] = new First
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This instance of type Both[Thing] comes from namespace 'Thing'.
+//│ ╟── This instance from namespace 'Thing' has a compatible type, Both[Thing].
 //│ ║  l.XX: 	  using Both[Thing] = new Second
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -138,10 +141,10 @@ use[Secret]
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	use[Secret]
 //│ ║        	^^^^^^^^^^^
-//│ ╟── No instance found for the contextual parameter 'instance' of type Secret.
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+1: 	use[Secret]
 //│ ║        	^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  in ../../../mlscript-compile/Predef.mls
 //│ ║  l.XX: 	fun use[T](using instance: T) = instance
 //│ ║        	           ^^^^^^^^^^^^^^^^^

@@ -2854,10 +2854,6 @@ class NewResolver:
         case _ => written(current)
     follow(tpe, noTypeArguments, Set.empty)
 
-  private def contextualParameterName(parameter: Param): Message =
-    if parameter.sym.nme.isEmpty then msg"unnamed contextual parameter"
-    else msg"contextual parameter '${parameter.sym.nme}'"
-
   /** Classification follows written aliases and explicit arguments, never inferred values.
     * Inference supplies the positions of a query; it cannot change its head classification.
     * Positions retain their path back to the annotation's scope, so derivation can relate
@@ -3164,7 +3160,9 @@ class NewResolver:
         case (Fld(_, argument: InstanceArg, _), (parameter, N)) =>
           if !argument.isErroneous then
             rctx.markError(argument)
-            resolError(argument, msg"The ${contextualParameterName(parameter)} needs a type annotation." -> parameter.toLoc :: Nil)
+            resolError(argument,
+              msg"No instance can be selected for the contextual argument supplied implicitly here." -> argument.toLoc ::
+              (msg"The contextual argument is passed to this parameter, which has no type annotation." -> parameter.toLoc) :: Nil)
         case _ => softAssert(false, "A synthesized contextual clause contains only instance arguments")
     case _ => ()
 
@@ -3179,28 +3177,56 @@ class NewResolver:
   private def siteContext(using activation: ResolutionContext): ResolutionContext =
     activation.withInstances(TypeSubstitution.empty)
 
-  /** A rejected value's location can be a type annotation rather than an expression, as for the
-    * values of a declared parameter type, so describe the value by its class. */
-  private def contextualValueDescription(value: TermShape)(using ResolutionContext): Message =
-    abstractParameter(value) match
+  /** A nested argument of a derived instance has no site of its own: name the instance
+    * functions that require it, from the one selected at the site inwards. */
+  private def contextualDerivationNotes(argument: InstanceArg): Ls[(Message, Opt[Loc])] =
+    argument.derivationPath.reverse.map: step =>
+      msg"This instance function was selected for an enclosing contextual argument of type ${step.flowType.display}." -> step.function.headerLoc
+
+  /** Report that a flow invalidates the decision of a contextual argument after it was made.
+    * Start at the expression whose flow did it (see NewResolverState.trigger), as the site
+    * was resolved correctly for the flows it had seen; without one, start at the site. */
+  private def reportLateContextual(argument: InstanceArg, notes: Ls[(Message, Opt[Loc])])(using ResolutionContext): Unit =
+    val header = rctx.state.trigger.filter(_.toLoc.nonEmpty) match
+      case S(trigger) => msg"Contextual argument resolution error in ${trigger.describe}" -> trigger.toLoc
+      case N => msg"Resolution error in ${argument.describe}" -> argument.toLoc
+    rctx.report(ErrorReport(header :: notes, source = Diagnostic.Source.Compilation))
+
+  /** A note for a value whose flow into a contextual argument's type makes it incompatible
+    * with an instance's type. The value's location can be a type annotation rather than an
+    * expression, as for the values of a declared parameter type, so `describe` receives a
+    * description of the value by its class. Only the location that `diagnostic` gives its
+    * own message is kept: its other notes explain the interfaces of member lookups. */
+  private def contextualValueNote(value: TermShape)(describe: Message => Message)
+      (using ResolutionContext): (Message, Opt[Loc]) =
+    val description = abstractParameter(value) match
       case S(parameter) => msg"A value of type parameter '${parameter.nme}'"
       case N => instanceClass(shapeParts(value).value) match
         case S(cls) => msg"A value of ${cls.sym.describeKind} '${cls.sym.nme}'"
         case N => msg"A value"
+    val message = describe(description)
+    val located = value.diagnostic(message).find(_._1 eq message)
+    softAssert(located.nonEmpty, "A value's diagnostic must locate its own message")
+    located.getOrElse(message -> N)
 
   private def decideContextualArgument(argument: InstanceArg, parameter: Param, tpe: DeclaredType, queryMarks: Ls[Marks])
       (using ResolutionContext): Unit =
     val first = rctx.state.contextualQueries.add((argument, parameter.sym))(using siteContext)
     val query = contextualQuery(tpe)
-    def fail(message: Message, notes: Ls[(Message, Opt[Loc])]): Unit =
+    // The site does not show the parameter, so the site's message describes the argument it
+    // supplies and the parameter's note describes the parameter.
+    def fail(problem: Message, parameterNote: Message, notes: Ls[(Message, Opt[Loc])]): Unit =
       rctx.markError(argument)
-      resolError(argument, message -> argument.toLoc ::
-        (msg"The contextual parameter is declared here." -> parameter.toLoc) :: notes)
+      resolError(argument, problem -> argument.toLoc :: (parameterNote -> parameter.toLoc) ::
+        contextualDerivationNotes(argument) ::: notes)
+    val passed = msg"The contextual argument is passed to this parameter."
     if first && rctx.canResolve(argument) then query match
-      case N => fail(msg"Contextual parameter types must be named types or type parameters.", Nil)
+      case N => fail(msg"No instance can be selected for the contextual argument supplied implicitly here.",
+        msg"The contextual argument is passed to this parameter, whose type is neither a named type nor a type parameter.", Nil)
       case S(ContextualQuery.Parameter(position, symbol))
           if queryValues(contextualValues(position, _ => ()), argument.environment.fold(Set.empty)(_.typeBinders)).isEmpty =>
-        fail(msg"Cannot determine the type of the ${contextualParameterName(parameter)}: type parameter '${symbol.nme}' has no explicit type argument and no value reaches it.", Nil)
+        fail(msg"The type of the contextual argument supplied implicitly here cannot be determined, as neither an explicit type argument nor a value determines the type parameter that it refers to.",
+          msg"The contextual argument is passed to this parameter, whose type is the type parameter '${symbol.nme}'.", Nil)
       case S(query) =>
         lazy val flowType = contextualFlowType(query)
         val divergent = mutable.ListBuffer.empty[TermDefinition]
@@ -3208,10 +3234,8 @@ class NewResolver:
           val diverges = contextualDiverges(function, flowType, argument.derivationPath)
           if diverges then divergent += function
           !diverges
-        def divergenceNotes: Ls[(Message, Opt[Loc])] = divergent.toList.distinct.flatMap: function =>
-          (msg"Instance function '${function.sym.nme}' diverges for ${flowType.display}." -> function.headerLoc) ::
-            argument.derivationPath.reverse.map: step =>
-              msg"Query ${step.flowType.display} selected instance function '${step.function.sym.nme}'." -> step.function.headerLoc
+        def divergenceNotes: Ls[(Message, Opt[Loc])] = divergent.toList.distinct.map: function =>
+          msg"Selecting this instance function again for the type ${flowType.display} would diverge." -> function.headerLoc
         val environment = argument.environment.getOrElse(lastWords("An undecided instance argument must retain its environment"))
         val matches = environment.instances.iterator.map: tier =>
           tier.bindings.iterator.flatMap: binding =>
@@ -3227,11 +3251,9 @@ class NewResolver:
           val previous = argument.agreement.getOrElse(argument).candidate
           previous match
             case S(previous) if previous.symbol != candidate.symbol =>
-              fail(msg"The callees of this call require different instances for the ${contextualParameterName(parameter)} of type ${contextualTypeName(tpe)}.",
+              fail(msg"This expression's callees select different instances for the contextual argument supplied implicitly here.", passed,
                 (msg"One callee selects this instance." -> previous.symbol.toLoc) ::
-                (msg"Another callee selects this instance." -> candidate.symbol.toLoc) ::
-                argument.derivationPath.reverse.map(step =>
-                  msg"Instance function '${step.function.sym.nme}' requires this nested argument." -> step.function.headerLoc))
+                (msg"Another callee selects this instance." -> candidate.symbol.toLoc) :: Nil)
             case _ =>
               argument.candidate = S(candidate)
               val expression = instanceFunction(candidate.symbol) match
@@ -3268,14 +3290,19 @@ class NewResolver:
                     case Namespace.Status.Inaccessible => S(msg"Here, ${describeNamespace(module, namespace)} is not accessible from the contextual site." -> namespace.witness.toLoc)
                     case _ => N
                 .toList
-                val rejected = namespaces.candidates.valuesIterator
-                  .filterNot(candidate => contextualMatches(candidate.annotation, candidateBinders(candidate.definition.sym), environment.typeBinders, query, _ => ())).take(3).map: candidate =>
-                  msg"This instance of type ${contextualTypeName(candidate.annotation)} from namespace '${candidate.module.nme}' does not accept all values reaching the query." -> candidate.definition.toLoc
-                fail(msg"No instance found for the ${contextualParameterName(parameter)} of type ${contextualTypeName(tpe)}.", notes ::: rejected.toList ::: divergenceNotes)
-              case many => fail(msg"Ambiguous instances for the ${contextualParameterName(parameter)} of type ${contextualTypeName(tpe)}.",
-                many.map(candidate => msg"This instance of type ${contextualTypeName(candidate.annotation)} comes from namespace '${candidate.module.nme}'." -> candidate.definition.toLoc))
-          case many => fail(msg"Ambiguous instances for the ${contextualParameterName(parameter)} of type ${contextualTypeName(tpe)}.",
-            many.map((_, binding, candidate) => msg"This lexical instance of type ${contextualTypeName(candidate)} matches." -> binding.symbol.toLoc))
+                val rejected = namespaces.candidates.valuesIterator.flatMap: candidate =>
+                  contextualMatch(candidate.annotation, candidateBinders(candidate.definition.sym), environment.typeBinders, query, _ => ()) match
+                    case ContextualMatch.Rejected(witness) => S((candidate, witness))
+                    case ContextualMatch.Accepted => N
+                .take(3).flatMap: (candidate, witness) =>
+                  (msg"This instance from namespace '${candidate.module.nme}' has an incompatible type, ${contextualTypeName(candidate.annotation)}." -> candidate.definition.toLoc) ::
+                    witness.toList.map(contextualValueNote(_)(value => msg"${value} flows into the type of the contextual argument."))
+                fail(msg"No instance is compatible with the type of the contextual argument supplied implicitly here.", passed,
+                  notes ::: rejected.toList ::: divergenceNotes)
+              case many => fail(msg"Multiple instances are compatible with the type of the contextual argument supplied implicitly here.", passed,
+                many.map(candidate => msg"This instance from namespace '${candidate.module.nme}' has a compatible type, ${contextualTypeName(candidate.annotation)}." -> candidate.definition.toLoc))
+          case many => fail(msg"Multiple instances are compatible with the type of the contextual argument supplied implicitly here.", passed,
+            many.map((_, binding, candidate) => msg"This lexical instance has a compatible type, ${contextualTypeName(candidate)}." -> binding.symbol.toLoc))
     def check()(using ResolutionContext): Unit = query.foreach: query =>
       argument.candidate.foreach: candidate =>
         def observe(host: TermShapeHost): Unit =
@@ -3284,25 +3311,16 @@ class NewResolver:
           contextualMatch(candidate.annotation, candidateBinders(candidate.symbol), argument.environment.fold(Set.empty)(_.typeBinders), query, observe) match
             case ContextualMatch.Rejected(witness) if rctx.state.contextualFailures.add((argument, tpe))(using siteContext) =>
               rctx.markError(argument)
-              // Start at the expression whose flow sent the value: the site was resolved
-              // correctly for the values that had reached it.
-              val header = rctx.state.trigger.filter(_.toLoc.nonEmpty) match
-                case S(trigger) => msg"Contextual argument resolution error in ${trigger.describe}" -> trigger.toLoc
-                case N => msg"Resolution error in ${argument.describe}" -> argument.toLoc
               val problem = witness match
-                case S(value) =>
-                  val message = msg"${contextualValueDescription(value)} flows into the type of a contextual argument after its instance was selected, making that type incompatible with the instance's type."
-                  // `diagnostic` lists the notes leading to the value's type origin before its own message.
-                  val (located, path) = value.diagnostic(message).partition(_._1 eq message)
-                  located ::: path
+                case S(witness) => contextualValueNote(witness)(value =>
+                  msg"${value} flows into the type of a contextual argument after its instance was selected, making that type incompatible with the instance's type.") :: Nil
                 // No value explains a rejection when none reaches a parameter query of this use of
                 // the site, or when the instance's own type has no view of the queried class.
                 case N => (msg"The type of a contextual argument became incompatible with the type of its instance after the instance was selected." -> N) :: Nil
-              rctx.report(ErrorReport(header :: problem :::
+              reportLateContextual(argument, problem :::
                 (msg"The contextual argument is supplied implicitly here, where its instance was selected." -> argument.toLoc) ::
-                (msg"The contextual argument is passed to this parameter." -> parameter.toLoc) ::
-                (msg"The selected instance is declared here, with type ${contextualTypeName(candidate.annotation)}." -> candidate.symbol.toLoc) :: Nil,
-                source = Diagnostic.Source.Compilation))
+                (passed -> parameter.toLoc) :: contextualDerivationNotes(argument) :::
+                (msg"The selected instance is declared here, with type ${contextualTypeName(candidate.annotation)}." -> candidate.symbol.toLoc) :: Nil)
             case _ => ()
     check()
     argument.selected.foreach: selected =>
@@ -4527,10 +4545,11 @@ class NewResolver:
         rctx.state.contextualLateNamespaces.add((argument, member.sym))(using siteContext) then
       rctx.markError(argument)
       val selected = argument.candidate.toList.map: candidate =>
-        msg"This instance of type ${contextualTypeName(candidate.annotation)} was selected earlier." -> candidate.symbol.toLoc
-      resolError(argument,
-        msg"The ${contextualParameterName(namespaces.parameter)} of type ${contextualTypeName(namespaces.annotation)} was resolved before flow revealed its implicit namespace ${module.describeKind} '${module.nme}'." -> argument.toLoc ::
-        (msg"Here, ${describeNamespace(module, namespace)} provides this matching instance of type ${contextualTypeName(annotation)}." -> member.toLoc) ::
+        msg"This instance, of type ${contextualTypeName(candidate.annotation)}, was selected earlier." -> candidate.symbol.toLoc
+      reportLateContextual(argument,
+        msg"The instance of the contextual argument supplied implicitly here was selected before flow revealed the implicit namespace ${module.describeKind} '${module.nme}' of its type." -> argument.toLoc ::
+        (msg"The contextual argument is passed to this parameter." -> namespaces.parameter.toLoc) :: contextualDerivationNotes(argument) :::
+        (msg"Here, ${describeNamespace(module, namespace)} provides this instance, which has a compatible type, ${contextualTypeName(annotation)}." -> member.toLoc) ::
         (msg"This ${witnessKind(namespace.witness)} reveals the namespace." -> namespace.witness.toLoc) :: selected)
 
   private def namespaceInstanceTerm(candidate: NamespaceInstance, namespaces: InstanceNamespaces)

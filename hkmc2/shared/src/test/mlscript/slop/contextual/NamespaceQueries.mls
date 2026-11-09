@@ -16,15 +16,18 @@ evidence(new ChildData)
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	evidence(new ChildData)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── No instance found for the contextual parameter 'e' of type Evidence[A].
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+1: 	evidence(new ChildData)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	fun evidence[A](value: A)(using e: Evidence[A]) = e.label
 //│ ║        	                          ^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This instance of type Evidence[Str] from namespace 'ChildData' does not accept all values reaching the query.
+//│ ╟── This instance from namespace 'ChildData' has an incompatible type, Evidence[Str].
 //│ ║  l.XX: 	  using Evidence[Str] = Evidence[Str]("cutoff")
-//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of class 'ChildData' flows into the type of the contextual argument.
+//│ ║  l.+1: 	evidence(new ChildData)
+//│ ╙──      	         ^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A lexical match prevents any namespace tier from participating.
@@ -71,10 +74,10 @@ use[Ordinary]
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	use[Ordinary]
 //│ ║        	^^^^^^^^^^^^^
-//│ ╟── No instance found for the contextual parameter 'instance' of type Ordinary.
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+1: 	use[Ordinary]
 //│ ║        	^^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  in ../../../mlscript-compile/Predef.mls
 //│ ║  l.XX: 	fun use[T](using instance: T) = instance
 //│ ║        	           ^^^^^^^^^^^^^^^^^
@@ -121,16 +124,16 @@ aliasArguments
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+2: 	aliasArguments
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── Ambiguous instances for the unnamed contextual parameter of type AliasEvidence[Data].
+//│ ╟── Multiple instances are compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+2: 	aliasArguments
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.+1: 	fun aliasArguments(using Alias[Data]) = 45
 //│ ║        	                   ^^^^^^^^^^^^^^^^^
-//│ ╟── This instance of type AliasEvidence[Data] comes from namespace 'Alias'.
+//│ ╟── This instance from namespace 'Alias' has a compatible type, AliasEvidence[Data].
 //│ ║  l.XX: 	  using AliasEvidence[Data] = new AliasEvidence[Data]
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This instance of type AliasEvidence[Data] comes from namespace 'Data'.
+//│ ╟── This instance from namespace 'Data' has a compatible type, AliasEvidence[Data].
 //│ ║  l.XX: 	  using AliasEvidence[Data] = new AliasEvidence[Data]
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

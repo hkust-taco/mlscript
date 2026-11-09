@@ -23,10 +23,10 @@ fun onlySuperclass(using Box[Int]) = requireIntBox
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+4: 	fun onlySuperclass(using Box[Int]) = requireIntBox
 //│ ║        	                                     ^^^^^^^^^^^^^
-//│ ╟── No instance found for the unnamed contextual parameter of type OtherIntBox.
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+4: 	fun onlySuperclass(using Box[Int]) = requireIntBox
 //│ ║        	                                     ^^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.+3: 	fun requireIntBox(using OtherIntBox) = 42
 //│ ╙──      	                  ^^^^^^^^^^^^^^^^^
 
@@ -36,14 +36,14 @@ fun ambiguous(using Box[Int], Box[Num]) = box(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	fun ambiguous(using Box[Int], Box[Num]) = box(1)
 //│ ║        	                                          ^^^^^^
-//│ ╟── Ambiguous instances for the contextual parameter 'b' of type Box[A].
+//│ ╟── Multiple instances are compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+1: 	fun ambiguous(using Box[Int], Box[Num]) = box(1)
 //│ ║        	                                          ^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	fun box[A](value: A)(using b: Box[A]) = b.label
 //│ ║        	                     ^^^^^^^^^^^^^^^
-//│ ╟── This lexical instance of type Box[Int] matches.
-//│ ╙── This lexical instance of type Box[Num] matches.
+//│ ╟── This lexical instance has a compatible type, Box[Int].
+//│ ╙── This lexical instance has a compatible type, Box[Num].
 
 // Vacuous named-query argument positions match; declaration tiers decide.
 fun vacuous[A](using b: Box[A]) = b.label
@@ -60,10 +60,10 @@ undetermined
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+2: 	undetermined
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── Cannot determine the type of the contextual parameter 't': type parameter 'T' has no explicit type argument and no value reaches it.
+//│ ╟── The type of the contextual argument supplied implicitly here cannot be determined, as neither an explicit type argument nor a value determines the type parameter that it refers to.
 //│ ║  l.+2: 	undetermined
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter, whose type is the type parameter 'T'.
 //│ ║  l.+1: 	fun undetermined[T](using t: T) = t
 //│ ╙──      	                    ^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -80,10 +80,10 @@ unsupported
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+2: 	unsupported
 //│ ║        	^^^^^^^^^^^
-//│ ╟── Contextual parameter types must be named types or type parameters.
+//│ ╟── No instance can be selected for the contextual argument supplied implicitly here.
 //│ ║  l.+2: 	unsupported
 //│ ║        	^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter, whose type is neither a named type nor a type parameter.
 //│ ║  l.+1: 	fun unsupported(using Int | Str) = 42
 //│ ╙──      	                ^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
