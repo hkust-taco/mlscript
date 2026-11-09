@@ -1665,11 +1665,12 @@ is reported as late; lexical selections suppress these namespace searches.
 Diagnostics distinguish missing, ambiguous, undetermined, and unsupported queries,
 calling-convention and selection mismatches, and late values or namespaces. They
 identify the contextual parameter, interpreted query type, relevant declarations,
-and locations using source names. A late value is reported at the expression whose
-flow sent it, then at the value that makes the contextual argument's type incompatible
-with the selected instance's type, and at the site that selected the instance. The
-`slop/contextual/` diff tests cover these rules; legacy resolution retains its prior
-behavior.
+and locations using source names. A late value, or a callee whose calling convention
+or instances conflict with an earlier callee's, is reported starting at the expression
+whose flow sent it. A late-value report then shows the value that makes the contextual
+argument's type incompatible with the selected instance's type, and the site that
+selected the instance. The `slop/contextual/` diff tests cover these rules; legacy
+resolution retains its prior behavior.
 
 ### Derived Instances
 

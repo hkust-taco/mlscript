@@ -28,8 +28,8 @@ fun mismatch(receiver) = receiver.method
 let initial = mismatch(new First)
 let different = mismatch(revealDifferent)
 [initial(1), different(2)]
-//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
-//│ ║  l.+1: 	fun mismatch(receiver) = receiver.method
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error in member reference
+//│ ║  l.+3: 	let different = mismatch(revealDifferent)
 //│ ║        	                         ^^^^^^^^^^^^^^^
 //│ ╟── This expression's callees select different instances for the contextual argument supplied implicitly here.
 //│ ║  l.+1: 	fun mismatch(receiver) = receiver.method
@@ -66,9 +66,9 @@ fun bindOptional(receiver) = receiver.method
 let optional = bindOptional(new Optional)
 let empty = bindOptional(new Empty)
 [optional(), empty()]
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.+1: 	fun bindOptional(receiver) = receiver.method
-//│ ║        	                             ^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error in application
+//│ ║  l.+3: 	let empty = bindOptional(new Empty)
+//│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── This selection cannot be eta-expanded, as its callees take parameter lists of different shapes before their contextual parameter lists.
 //│ ║  l.+1: 	fun bindOptional(receiver) = receiver.method
 //│ ║        	                             ^^^^^^^^^^^^^^^
@@ -91,9 +91,9 @@ class Rest with
 :e
 fun bindMixed(receiver) = receiver.method
 [bindMixed(new Mixed), bindMixed(new Rest)]
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.+1: 	fun bindMixed(receiver) = receiver.method
-//│ ║        	                          ^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error in application
+//│ ║  l.+2: 	[bindMixed(new Mixed), bindMixed(new Rest)]
+//│ ║        	                       ^^^^^^^^^^^^^^^^^^^
 //│ ╟── This selection cannot be eta-expanded, as its callees take parameter lists of different shapes before their contextual parameter lists.
 //│ ║  l.+1: 	fun bindMixed(receiver) = receiver.method
 //│ ║        	                          ^^^^^^^^^^^^^^^

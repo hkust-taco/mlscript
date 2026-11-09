@@ -43,9 +43,9 @@ fun disagree(receiver) = receiver.method
 //│ ╟── The selected instance is declared here, with type Show[Int].
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
-//│ ║  l.+1: 	fun disagree(receiver) = receiver.method
-//│ ║        	                         ^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error in application
+//│ ║  l.+2: 	[disagree(new First), disagree(new Different)]
+//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── This expression's callees select different instances for the contextual argument supplied implicitly here.
 //│ ║  l.+1: 	fun disagree(receiver) = receiver.method
 //│ ║        	                         ^^^^^^^^^^^^^^^
@@ -94,9 +94,9 @@ fun late(receiver) = receiver.method
 //│ ╟── The selected instance is declared here, with type Show[Int].
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
-//│ ║  l.+1: 	fun late(receiver) = receiver.method
-//│ ║        	                     ^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error in member reference
+//│ ║  l.+2: 	[late(new First), late(reveal)]
+//│ ║        	                       ^^^^^^
 //│ ╟── This expression's callees select different instances for the contextual argument supplied implicitly here.
 //│ ║  l.+1: 	fun late(receiver) = receiver.method
 //│ ║        	                     ^^^^^^^^^^^^^^^
@@ -170,9 +170,9 @@ fun differentClauses(receiver) = receiver.method
 //│ ╟── The selected instance is declared here, with type Show[Int].
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
-//│ ║  l.+1: 	fun differentClauses(receiver) = receiver.method
-//│ ║        	                                 ^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error in application
+//│ ║  l.+2: 	[differentClauses(new BothInt), differentClauses(new IntStr)]
+//│ ║        	                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── This expression's callees select different instances for the contextual argument supplied implicitly here.
 //│ ║  l.+1: 	fun differentClauses(receiver) = receiver.method
 //│ ║        	                                 ^^^^^^^^^^^^^^^

@@ -3183,13 +3183,15 @@ class NewResolver:
     argument.derivationPath.reverse.map: step =>
       msg"This instance function was selected for an enclosing contextual argument of type ${step.flowType.display}." -> step.function.headerLoc
 
-  /** Report that a flow invalidates the decision of a contextual argument after it was made.
-    * Start at the expression whose flow did it (see NewResolverState.trigger), as the site
-    * was resolved correctly for the flows it had seen; without one, start at the site. */
-  private def reportLateContextual(argument: InstanceArg, notes: Ls[(Message, Opt[Loc])])(using ResolutionContext): Unit =
+  /** Report that a flow conflicts with the flows that a contextual site had already seen: a
+    * value or namespace reaching a decided argument, or a callee whose calling convention,
+    * parameter list, or instances differ from an earlier callee's. Start at the expression
+    * whose flow did it (see NewResolverState.trigger), as the site was resolved correctly for
+    * the flows it had seen; without one, start at `site`. */
+  private def reportContextualConflict(site: Term, notes: Ls[(Message, Opt[Loc])])(using ResolutionContext): Unit =
     val header = rctx.state.trigger.filter(_.toLoc.nonEmpty) match
       case S(trigger) => msg"Contextual argument resolution error in ${trigger.describe}" -> trigger.toLoc
-      case N => msg"Resolution error in ${argument.describe}" -> argument.toLoc
+      case N => msg"Resolution error in ${site.describe}" -> site.toLoc
     rctx.report(ErrorReport(header :: notes, source = Diagnostic.Source.Compilation))
 
   /** A note for a value whose flow into a contextual argument's type makes it incompatible
@@ -3215,10 +3217,11 @@ class NewResolver:
     val query = contextualQuery(tpe)
     // The site does not show the parameter, so the site's message describes the argument it
     // supplies and the parameter's note describes the parameter.
-    def fail(problem: Message, parameterNote: Message, notes: Ls[(Message, Opt[Loc])]): Unit =
+    def problem(message: Message, parameterNote: Message, notes: Ls[(Message, Opt[Loc])]): Ls[(Message, Opt[Loc])] =
+      message -> argument.toLoc :: (parameterNote -> parameter.toLoc) :: contextualDerivationNotes(argument) ::: notes
+    def fail(message: Message, parameterNote: Message, notes: Ls[(Message, Opt[Loc])]): Unit =
       rctx.markError(argument)
-      resolError(argument, problem -> argument.toLoc :: (parameterNote -> parameter.toLoc) ::
-        contextualDerivationNotes(argument) ::: notes)
+      resolError(argument, problem(message, parameterNote, notes))
     val passed = msg"The contextual argument is passed to this parameter."
     if first && rctx.canResolve(argument) then query match
       case N => fail(msg"No instance can be selected for the contextual argument supplied implicitly here.",
@@ -3251,9 +3254,10 @@ class NewResolver:
           val previous = argument.agreement.getOrElse(argument).candidate
           previous match
             case S(previous) if previous.symbol != candidate.symbol =>
-              fail(msg"This expression's callees select different instances for the contextual argument supplied implicitly here.", passed,
+              rctx.markError(argument)
+              reportContextualConflict(argument, problem(msg"This expression's callees select different instances for the contextual argument supplied implicitly here.", passed,
                 (msg"One callee selects this instance." -> previous.symbol.toLoc) ::
-                (msg"Another callee selects this instance." -> candidate.symbol.toLoc) :: Nil)
+                (msg"Another callee selects this instance." -> candidate.symbol.toLoc) :: Nil))
             case _ =>
               argument.candidate = S(candidate)
               val expression = instanceFunction(candidate.symbol) match
@@ -3317,7 +3321,7 @@ class NewResolver:
                 // No value explains a rejection when none reaches a parameter query of this use of
                 // the site, or when the instance's own type has no view of the queried class.
                 case N => (msg"The type of a contextual argument became incompatible with the type of its instance after the instance was selected." -> N) :: Nil
-              reportLateContextual(argument, problem :::
+              reportContextualConflict(argument, problem :::
                 (msg"The contextual argument is supplied implicitly here, where its instance was selected." -> argument.toLoc) ::
                 (passed -> parameter.toLoc) :: contextualDerivationNotes(argument) :::
                 (msg"The selected instance is declared here, with type ${contextualTypeName(candidate.annotation)}." -> candidate.symbol.toLoc) :: Nil)
@@ -4546,7 +4550,7 @@ class NewResolver:
       rctx.markError(argument)
       val selected = argument.candidate.toList.map: candidate =>
         msg"This instance, of type ${contextualTypeName(candidate.annotation)}, was selected earlier." -> candidate.symbol.toLoc
-      reportLateContextual(argument,
+      reportContextualConflict(argument,
         msg"The instance of the contextual argument supplied implicitly here was selected before flow revealed the implicit namespace ${module.describeKind} '${module.nme}' of its type." -> argument.toLoc ::
         (msg"The contextual argument is passed to this parameter." -> namespaces.parameter.toLoc) :: contextualDerivationNotes(argument) :::
         (msg"Here, ${describeNamespace(module, namespace)} provides this instance, which has a compatible type, ${contextualTypeName(annotation)}." -> member.toLoc) ::
@@ -5643,8 +5647,8 @@ class NewResolver:
     case site: (Term & PossiblyErroneous) =>
       if !rctx.hasError(site) then
         rctx.markError(site)
-        resolError(term, message -> term.toLoc :: notes)
-    case _ => resolError(term, message -> term.toLoc :: notes)
+        reportContextualConflict(term, message -> term.toLoc :: notes)
+    case _ => reportContextualConflict(term, message -> term.toLoc :: notes)
 
   /** The source parameter list that an Abstract step mirrors: the callee's next remaining list. */
   private def abstractedParamList(shape: TermShape): Opt[ParamList] =
@@ -5828,7 +5832,7 @@ class NewResolver:
             val message = if dynamic then
               msg"Contextual arguments cannot be supplied to a dynamically accessed callee together with these contextual callees."
             else msg"This ${ref.describe} resolves to members with different contextual parameter lists."
-            resolError(ref, message -> ref.toLoc :: targets.map(target =>
+            reportContextualConflict(ref, message -> ref.toLoc :: targets.map(target =>
               msg"This ${target.kind} is a target of the ${ref.describe}; it takes ${describeCallingConvention(target.lists)}." -> target.header))
       case _ => ()
 

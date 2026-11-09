@@ -402,10 +402,13 @@ a query that selected a `Show[A]`. The site's decisions, checks, reports, and st
 subscriptions belong to the consuming unit's base context, which each activation
 inherits, so sibling activations neither decide nor report again.
 
-A late-value report starts at the source expression whose flow sent the value
+A flow can conflict with what a site has already seen: a late value or namespace
+reaches a decided argument, or a callee's calling convention, parameter list before
+an eta-expanded contextual list, or selected instances differ from an earlier
+callee's. Such a report starts at the source expression whose flow did it
 (`NewResolverState.trigger`): the elaborator sets it while subscribing a term it has
-just created, and a site's pending inputs carry it to settlement. The report then
-names the value that the matching relation finds incompatible with the selected
+just created, and a site's pending inputs carry it to settlement. A late-value report
+then names the value that the matching relation finds incompatible with the selected
 instance's type at its position, followed by the site that selected the instance.
 
 An Abstract step has a synthesized ordinary lambda for flow and an application

@@ -35,9 +35,9 @@ class Other with
 :e
 fun disagree(value) = value.read()
 [disagree(new Reader), disagree(new Other)]
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.+1: 	fun disagree(value) = value.read()
-//│ ║        	                      ^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error in application
+//│ ║  l.+2: 	[disagree(new Reader), disagree(new Other)]
+//│ ║        	                       ^^^^^^^^^^^^^^^^^^^
 //│ ╟── This selection resolves to members with different contextual parameter lists.
 //│ ║  l.+1: 	fun disagree(value) = value.read()
 //│ ║        	                      ^^^^^^^^^^
@@ -55,9 +55,9 @@ class StringReader with
 :e
 fun select(value) = value.read()
 [select(new Reader), select(new StringReader)]
-//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
-//│ ║  l.+1: 	fun select(value) = value.read()
-//│ ║        	                    ^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error in application
+//│ ║  l.+2: 	[select(new Reader), select(new StringReader)]
+//│ ║        	                     ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── This expression's callees select different instances for the contextual argument supplied implicitly here.
 //│ ║  l.+1: 	fun select(value) = value.read()
 //│ ║        	                    ^^^^^^^^^^^^
@@ -75,9 +75,9 @@ fun select(value) = value.read()
 :e
 fun explicit(value) = value.read()(using 1)
 [explicit(new Reader), explicit(new Other)]
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.+1: 	fun explicit(value) = value.read()(using 1)
-//│ ║        	                      ^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error in application
+//│ ║  l.+2: 	[explicit(new Reader), explicit(new Other)]
+//│ ║        	                       ^^^^^^^^^^^^^^^^^^^
 //│ ╟── This selection resolves to members with different contextual parameter lists.
 //│ ║  l.+1: 	fun explicit(value) = value.read()(using 1)
 //│ ║        	                      ^^^^^^^^^^
