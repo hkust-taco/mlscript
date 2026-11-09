@@ -1,4 +1,4 @@
-#lang(0.3.x, useNewResolution: false)
+#lang(0.3.x)
 
 import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Predef.mls"
 open Predef

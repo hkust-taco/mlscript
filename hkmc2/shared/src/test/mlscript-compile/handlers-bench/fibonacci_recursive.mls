@@ -1,4 +1,4 @@
-#lang(0.3.x, useNewResolution: false)
+#lang(0.3.x)
 #config(effectHandlers: Some(EffectHandlers()))
 
 module fibonacci_recursive with ...
