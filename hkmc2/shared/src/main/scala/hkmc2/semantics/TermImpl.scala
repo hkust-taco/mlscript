@@ -63,7 +63,10 @@ final case class ContextualCompletion(steps: Ls[ContextualStep], output: ShapeHo
 
 enum ContextualStep:
   case Supply(application: Term.App)
-  case Abstract(params: ParamList, application: Term.App)
+  /** `params` are fresh parameters with the shape of `mirrored`, the written parameter list of
+    * the first callee that the site received. Diagnostics cite `mirrored` when another callee's
+    * parameter list does not have that shape; it belongs to that callee's declaration. */
+  case Abstract(params: ParamList, application: Term.App, mirrored: ParamList)
 
 private[semantics] final case class ContextualCandidate(symbol: Symbol, annotation: DeclaredType)
 
@@ -251,7 +254,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
       case term: ContextualSite => term.contextualCompletion.fold(written): completion =>
         written ++ completion.steps.iterator.flatMap:
           case ContextualStep.Supply(application) => Iterator.single(application)
-          case ContextualStep.Abstract(params, application) => params.subTerms.iterator ++ Iterator.single(application)
+          case ContextualStep.Abstract(params = params, application = application) => params.subTerms.iterator ++ Iterator.single(application)
       case _ => written
 
   private def writtenSubTerms: Vector[Term] = this match

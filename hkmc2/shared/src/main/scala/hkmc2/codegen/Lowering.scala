@@ -1079,12 +1079,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     case site: sem.ContextualSite => site.contextualCompletion.fold(Nil): completion =>
       completion.steps.flatMap:
         case step @ sem.ContextualStep.Supply(_) => step :: Nil
-        case step @ sem.ContextualStep.Abstract(_, application) => step :: completionSteps(application)
+        case step @ sem.ContextualStep.Abstract(application = application) => step :: completionSteps(application)
     case _ => Nil
 
   private def suppliedArguments(term: Term): Ls[Term] = completionSteps(term).map:
     case sem.ContextualStep.Supply(application) => application.rhs
-    case sem.ContextualStep.Abstract(_, application) => application.rhs
+    case sem.ContextualStep.Abstract(application = application) => application.rhs
 
   /** Capture the site's operands before constructing an expansion. A selected method keeps
     * its selection on the captured receiver, so JavaScript's method receiver stays bound.
@@ -1217,7 +1217,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       def supplied(expr: Term, complete: Bool): Ls[Term] =
         if !complete then Nil else completionSteps(expr).map:
           case sem.ContextualStep.Supply(application) => application.rhs
-          case sem.ContextualStep.Abstract(params, application) =>
+          case sem.ContextualStep.Abstract(params = params, application = application) =>
             abstractions += application.rhs -> params
             application.rhs
       @tailrec
@@ -1688,7 +1688,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         rft match
         case N =>
           val abstractions = completionSteps(nwtrm).iterator.collect:
-            case sem.ContextualStep.Abstract(params, application) => application.rhs -> params
+            case sem.ContextualStep.Abstract(params = params, application = application) => application.rhs -> params
           .toMap
           val arguments = as ::: suppliedArguments(nwtrm)
           if abstractions.isEmpty then lowerMultiInstantiate(mut, sr, params, arguments, annots, trm.toLoc)(k)

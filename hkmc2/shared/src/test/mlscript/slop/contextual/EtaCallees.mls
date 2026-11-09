@@ -69,12 +69,41 @@ let empty = bindOptional(new Empty)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+1: 	fun bindOptional(receiver) = receiver.method
 //│ ║        	                             ^^^^^^^^^^^^^^^
-//│ ╟── The callees of this reference take different parameter lists before a contextual parameter list, so it cannot be eta-expanded.
+//│ ╟── This selection cannot be eta-expanded, as its callees take parameter lists of different shapes before their contextual parameter lists.
 //│ ║  l.+1: 	fun bindOptional(receiver) = receiver.method
-//│ ╙──      	                             ^^^^^^^^^^^^^^^
+//│ ║        	                             ^^^^^^^^^^^^^^^
+//│ ╟── The eta-expansion is a single function, whose parameters mirror this parameter list of one callee, which has an optional parameter.
+//│ ║  l.XX: 	  fun method(x?: Int)(using n: Int) = n
+//│ ║        	            ^^^^^^^^^
+//│ ╟── This parameter list of another callee has no parameters.
+//│ ║  l.XX: 	  fun method()(using n: Int) = n
+//│ ╙──      	            ^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ empty = undefined
 //│ optional = undefined
+
+// The report describes each parameter list's shape: its kinds of parameters, in order.
+class Mixed with
+  fun method(a: Int, b: Int, c?: Int)(using n: Int) = n
+class Rest with
+  fun method(a: Int, ...rest)(using n: Int) = n
+
+:e
+fun bindMixed(receiver) = receiver.method
+[bindMixed(new Mixed), bindMixed(new Rest)]
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	fun bindMixed(receiver) = receiver.method
+//│ ║        	                          ^^^^^^^^^^^^^^^
+//│ ╟── This selection cannot be eta-expanded, as its callees take parameter lists of different shapes before their contextual parameter lists.
+//│ ║  l.+1: 	fun bindMixed(receiver) = receiver.method
+//│ ║        	                          ^^^^^^^^^^^^^^^
+//│ ╟── The eta-expansion is a single function, whose parameters mirror this parameter list of one callee, which has 2 required parameters and an optional parameter.
+//│ ║  l.XX: 	  fun method(a: Int, b: Int, c?: Int)(using n: Int) = n
+//│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This parameter list of another callee has a required parameter and a rest parameter.
+//│ ║  l.XX: 	  fun method(a: Int, ...rest)(using n: Int) = n
+//│ ╙──      	            ^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 class AlsoOptional with
   fun method(x?: Int)(using n: Int) = n + 1

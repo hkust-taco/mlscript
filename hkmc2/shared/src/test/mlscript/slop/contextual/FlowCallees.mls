@@ -38,15 +38,15 @@ fun disagree(value) = value.read()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+1: 	fun disagree(value) = value.read()
 //│ ║        	                      ^^^^^^^^^^
-//│ ╟── This reference resolves to members with different contextual parameter lists.
+//│ ╟── This selection resolves to members with different contextual parameter lists.
 //│ ║  l.+1: 	fun disagree(value) = value.read()
 //│ ║        	                      ^^^^^^^^^^
-//│ ╟── This function is a target of the reference.
+//│ ╟── This function is a target of the selection; it takes an ordinary parameter list.
 //│ ║  l.XX: 	  fun read() = 1
-//│ ║        	      ^^^^
-//│ ╟── This function is a target of the reference.
+//│ ║        	  ^^^^^^^^^^
+//│ ╟── This function is a target of the selection; it takes an ordinary parameter list, then a contextual parameter list of 1 parameter.
 //│ ║  l.XX: 	  fun read()(using n: Int) = n
-//│ ╙──      	      ^^^^
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 class StringReader with
@@ -78,13 +78,13 @@ fun explicit(value) = value.read()(using 1)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+1: 	fun explicit(value) = value.read()(using 1)
 //│ ║        	                      ^^^^^^^^^^
-//│ ╟── This reference resolves to members with different contextual parameter lists.
+//│ ╟── This selection resolves to members with different contextual parameter lists.
 //│ ║  l.+1: 	fun explicit(value) = value.read()(using 1)
 //│ ║        	                      ^^^^^^^^^^
-//│ ╟── This function is a target of the reference.
+//│ ╟── This function is a target of the selection; it takes an ordinary parameter list.
 //│ ║  l.XX: 	  fun read() = 1
-//│ ║        	      ^^^^
-//│ ╟── This function is a target of the reference.
+//│ ║        	  ^^^^^^^^^^
+//│ ╟── This function is a target of the selection; it takes an ordinary parameter list, then a contextual parameter list of 1 parameter.
 //│ ║  l.XX: 	  fun read()(using n: Int) = n
-//│ ╙──      	      ^^^^
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

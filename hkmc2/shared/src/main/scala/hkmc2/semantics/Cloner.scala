@@ -100,13 +100,13 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
     steps match
       case Nil => Nil
       case ContextualStep.Supply(app) :: tail => ContextualStep.Supply(application(app)) :: completionSteps(tail)
-      case ContextualStep.Abstract(params, app) :: tail =>
+      case ContextualStep.Abstract(params, app, mirrored) :: tail =>
         val scope = nested
         scope.bindParameters(params :: Nil)
         val copied = scope.term(app) match
           case copy: App => copy
           case _ => lastWords("A cloned contextual application must remain an application")
-        ContextualStep.Abstract(scope.parameterList(params), copied) :: scope.completionSteps(tail)
+        ContextualStep.Abstract(scope.parameterList(params), copied, mirrored) :: scope.completionSteps(tail)
 
   extension (source: Term)
     private def cloned: Term = term(source)

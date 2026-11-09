@@ -5638,12 +5638,13 @@ class NewResolver:
     * lowering emits an error instead of a call that some callee does not accept. Each callee
     * delivery, in each activation, reaches the same check; report the conflict once.
     */
-  private def contextualSiteError(term: ContextualSite, message: Message)(using ResolutionContext): Unit = term match
+  private def contextualSiteError(term: ContextualSite, message: Message, notes: Ls[(Message, Opt[Loc])])
+      (using ResolutionContext): Unit = term match
     case site: (Term & PossiblyErroneous) =>
       if !rctx.hasError(site) then
         rctx.markError(site)
-        resolError(term, message -> term.toLoc :: Nil)
-    case _ => resolError(term, message -> term.toLoc :: Nil)
+        resolError(term, message -> term.toLoc :: notes)
+    case _ => resolError(term, message -> term.toLoc :: notes)
 
   /** The source parameter list that an Abstract step mirrors: the callee's next remaining list. */
   private def abstractedParamList(shape: TermShape): Opt[ParamList] =
@@ -5655,6 +5656,35 @@ class NewResolver:
   /** What a mirrored parameter list must preserve to accept the same arguments as its source. */
   private def parameterListShape(params: ParamList): (Ls[Bool], Opt[Int]) =
     (params.params.map(_.flags.opt), params.variadic.map(_.trailing.length))
+
+  /** Describe what `parameterListShape` retains of a parameter list, such as
+    * "2 required parameters and an optional parameter". */
+  private def describeParameterListShape(params: ParamList): Message =
+    def counted(count: Int, kind: Str): Str =
+      if count == 1 then s"${if kind.headOption.exists("aeiou".contains(_)) then "an" else "a"} $kind parameter"
+      else s"$count $kind parameters"
+    // Group consecutive parameters of the same kind, keeping their order.
+    val runs = params.params.foldRight(List.empty[(Bool, Int)]):
+      case (param, (optional, count) :: rest) if optional == param.flags.opt => (optional, count + 1) :: rest
+      case (param, runs) => (param.flags.opt, 1) :: runs
+    val parts = runs.map((optional, count) => counted(count, if optional then "optional" else "required")) :::
+      params.variadic.toList.map: variadic =>
+        if variadic.trailing.isEmpty then "a rest parameter"
+        else s"a rest parameter followed by ${variadic.trailing.length} parameter${if variadic.trailing.length == 1 then "" else "s"}"
+    parts match
+      case Nil => msg"no parameters"
+      case last :: Nil => msg"${last}"
+      case _ => msg"${parts.init.mkString(", ")} and ${parts.last}"
+
+  /** Describe the parameter lists that determine a callee's contextual calling convention:
+    * its contextual lists, their lengths, and the ordinary lists between them. */
+  private def describeCallingConvention(lists: Ls[ParamList]): Message =
+    val parts = lists.map: params =>
+      if params.flags.ctx then
+        val count = params.allParams.length
+        s"a contextual parameter list of $count parameter${if count == 1 then "" else "s"}"
+      else "an ordinary parameter list"
+    if parts.isEmpty then msg"no parameter lists" else msg"${parts.mkString(", then ")}"
 
   /** Stored values have already passed their producing value site's completion. Inspect only
     * remaining clauses; the invariant does not require expanding declared value types.
@@ -5700,7 +5730,7 @@ class NewResolver:
               case CtxTup(fields) => fields.length
               case _ => -1
             if count != expectedCount then
-              contextualSiteError(term, msg"This reference resolves to members with different contextual parameter lists.")
+              contextualSiteError(term, msg"The callees of this ${term.describe} take different contextual parameter lists.", Nil)
             else
               // Like the site's own driver (see listenContextual), the next stage's driver
               // must accept every activation and run each value in its own activation.
@@ -5710,8 +5740,8 @@ class NewResolver:
                   case _: SymShape => softAssert(false, "An application must deliver values")
                 })(using siteContext)
               applyShape(value, app.rhs, app, checked = true)
-          case ContextualStep.Abstract(_, _) =>
-            contextualSiteError(term, msg"This reference resolves to members with different contextual parameter lists.")
+          case _: ContextualStep.Abstract =>
+            contextualSiteError(term, msg"The callees of this ${term.describe} take different contextual parameter lists.", Nil)
       case (false, _) :: remaining if remaining.exists(_._1) && (term.contextualSite match
           case site: ResolutionSite.Contextual => site.role != ContextualRole.ApplicationHead
           case role => role != ContextualRole.ApplicationHead) =>
@@ -5746,7 +5776,7 @@ class NewResolver:
             app.contextualSite match
               case site: ResolutionSite.Contextual => site.settled = true
               case _ => softAssert(false, "A synthesized continuation must retain its contextual site")
-            val step = ContextualStep.Abstract(params, app)
+            val step = ContextualStep.Abstract(params, app, written)
             work.steps += step
             term.contextualCompletion = S(ContextualCompletion(work.steps.toList, completion.output))
             val lambda = Lam(params, app).withLocOf(term)
@@ -5757,15 +5787,18 @@ class NewResolver:
         step.foreach:
           // The expansion is a single lambda, so every callee must accept the parameter
           // list that the first callee's expansion mirrors.
-          case ContextualStep.Abstract(params, app) =>
-            if source.exists(written => parameterListShape(written) != parameterListShape(params)) then
-              contextualSiteError(term, msg"The callees of this reference take different parameter lists before a contextual parameter list, so it cannot be eta-expanded.")
-            else applyShape(value, app.rhs, app, checked = true)
+          case ContextualStep.Abstract(params, app, mirrored) =>
+            source.filter(written => parameterListShape(written) != parameterListShape(params)) match
+              case S(written) =>
+                contextualSiteError(term, msg"This ${term.describe} cannot be eta-expanded, as its callees take parameter lists of different shapes before their contextual parameter lists.",
+                  (msg"The eta-expansion is a single function, whose parameters mirror this parameter list of one callee, which has ${describeParameterListShape(mirrored)}." -> mirrored.toLoc) ::
+                  (msg"This parameter list of another callee has ${describeParameterListShape(written)}." -> written.toLoc) :: Nil)
+              case N => applyShape(value, app.rhs, app, checked = true)
           case ContextualStep.Supply(_) =>
-            contextualSiteError(term, msg"This reference resolves to members with different contextual parameter lists.")
+            contextualSiteError(term, msg"The callees of this ${term.describe} take different contextual parameter lists.", Nil)
       case _ => term.contextualCompletion.foreach: completion =>
         if index < completion.steps.length then
-          contextualSiteError(term, msg"This reference resolves to members with different contextual parameter lists.")
+          contextualSiteError(term, msg"The callees of this ${term.describe} take different contextual parameter lists.", Nil)
         else publishCompleted(completion.output, value)
 
   /** Every symbolic target path uses this gate, including explicit using calls and dynamic
@@ -5775,27 +5808,28 @@ class NewResolver:
     rctx.recordResolution(host, unchanged)(update)
     if !unchanged then host match
       case ref: NewResolvable if !rctx.hasError(ref) =>
+        final case class Target(kind: Str, lists: Ls[ParamList], header: Opt[Loc]):
+          // Ordinary list lengths do not change which instances a call supplies.
+          val convention = lists.map(ps => (ps.flags.ctx, if ps.flags.ctx then ps.allParams.length else 0))
         val targets = ref.resolvedTargets.flatMap: symbol =>
-          symbol.defn.map: definition =>
-            val lists = definition match
-              case definition: TermDefinition => definition.params
-              case definition: ClassDef => definition.paramsOpt.toList ::: definition.auxParams
-              case _ => Nil
-            (symbol, lists.map(ps => (ps.flags.ctx, if ps.flags.ctx then ps.allParams.length else 0)))
-        val contextual = targets.find(_._2.exists(_._1))
+          symbol.defn.map:
+            case definition: TermDefinition => Target(symbol.describeKind, definition.params, definition.headerLoc)
+            case definition: ClassDef => Target(symbol.describeKind, definition.paramsOpt.toList ::: definition.auxParams, definition.headerLoc)
+            case _ => Target(symbol.describeKind, Nil, symbol.toLoc)
+        val contextual = targets.find(_.convention.exists(_._1))
         val dynamic = ref match
           case selection: NewSel => selection.hasDynamicTarget
           case reference: UnresolvedRef => reference.dynamicPrefixes.nonEmpty
           case _ => false
-        contextual.foreach: (_, convention) =>
-          val incompatible = dynamic || targets.exists(_._2 != convention)
+        contextual.foreach: first =>
+          val incompatible = dynamic || targets.exists(_.convention != first.convention)
           if incompatible then
             rctx.markError(ref)
             val message = if dynamic then
               msg"Contextual arguments cannot be supplied to a dynamically accessed callee together with these contextual callees."
-            else msg"This reference resolves to members with different contextual parameter lists."
-            resolError(ref, message -> ref.toLoc :: targets.map((symbol, _) =>
-              msg"This ${symbol.describeKind} is a target of the reference." -> symbol.toLoc))
+            else msg"This ${ref.describe} resolves to members with different contextual parameter lists."
+            resolError(ref, message -> ref.toLoc :: targets.map(target =>
+              msg"This ${target.kind} is a target of the ${ref.describe}; it takes ${describeCallingConvention(target.lists)}." -> target.header))
       case _ => ()
 
   private def recordValueTarget(term: Term, symbol: DefinitionSymbol[?])(using ResolutionContext): Unit =
