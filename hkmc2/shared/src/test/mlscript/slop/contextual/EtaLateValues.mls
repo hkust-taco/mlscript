@@ -30,42 +30,30 @@ polymorphic("later")
 //│ ╙──      	            ^^^^^^^
 //│ = "int"
 
-// The generic body's expansion fixes its instance before a later caller arrives.
-:expect "int"
+// Explicit type parameters are opaque: a generic body's expansion cannot select an
+// instance from its callers' types, so `Evidence[Int]` cannot serve `Evidence[A]`.
+:e
 fun generic[A](value: A) =
   fun local(other: A)(using e: Evidence[A]) = e.label
   local
-let selected = generic(1)
-selected(2)
-//│ = "int"
-//│ selected = fun
-
-:e
-generic("later")
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
-//│ ║  l.XX: 	  local
+//│ ║  l.+3: 	  local
 //│ ║        	  ^^^^^
-//│ ╟── This value reaches the type of the contextual parameter 'e' after its instance was selected; the selected instance of type Evidence[Int] does not accept it.
-//│ ║  l.XX: 	  local
+//│ ╟── No instance found for the contextual parameter 'e' of type Evidence[A].
+//│ ║  l.+3: 	  local
 //│ ║        	  ^^^^^
 //│ ╟── The contextual parameter is declared here.
-//│ ║  l.XX: 	  fun local(other: A)(using e: Evidence[A]) = e.label
-//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^
-//│ ╟── The selected instance is declared here.
-//│ ║  l.XX: 	using Evidence[Int] = Evidence[Int]("int")
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This value is incompatible with the selected instance.
-//│ ║  l.+1: 	generic("later")
-//│ ╙──      	        ^^^^^^^
-//│ = fun
+//│ ║  l.+2: 	  fun local(other: A)(using e: Evidence[A]) = e.label
+//│ ╙──      	                      ^^^^^^^^^^^^^^^^^^^^
 
 class Data
 module Data with
   using Evidence[Data] = Evidence[Data]("data")
 
-// Callers reveal a namespace even though the generic body's receiver stays opaque.
+// Callers select the instance of a generic function's contextual parameter, here from the
+// companion of `Data`; the generic body's expansion selects that parameter.
 :expect "data"
-fun namespaceGeneric[A](value: A) =
+fun namespaceGeneric[A](value: A)(using Evidence[A]) =
   fun local(other: A)(using e: Evidence[A]) = e.label
   local
 let fromNamespace = namespaceGeneric(new Data)

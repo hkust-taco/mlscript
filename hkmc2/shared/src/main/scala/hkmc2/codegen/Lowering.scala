@@ -729,9 +729,19 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           case Nil => k(acc.reverse)
         Assign(tuple, Tuple(false, args)(arg.toLoc), bind(ps.params.zipWithIndex, Nil))
   
+  /** The elements of an argument list written as a tuple. A contextual list, whether written as
+    * `f(using x)` or supplied by contextual resolution, has the same runtime layout as an
+    * ordinary one; lowering it as a spread would allocate an array at every call.
+    */
+  private object ArgumentTuple:
+    def unapply(arg: Term): Opt[Ls[Elem]] = arg match
+      case Tup(fs) => S(fs)
+      case CtxTup(fs) => S(fs)
+      case _ => N
+
   def lowerArgs(arg: Term, expectedTypes: Ls[Opt[ErasedValueType]])(k: Ls[Arg] => Block)(using LoweringCtx): Block =
     arg match
-    case Tup(fs) =>
+    case ArgumentTuple(fs) =>
       if fs.exists(e => e match
         case Spd(SpreadKind.Lazy, _, _) => true // is lazy spread
         case _ => false)
@@ -1095,14 +1105,32 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             next(DynSelect(prefix, field, selection.kind)(selection.toLoc))
         case _ => next(callee)
       receiver: function =>
+        def operand(term: Term)(next: Term => Block): Block = subTerm_nonTail(term): value =>
+          freeze(value): value =>
+            value match
+              case Value.SimpleRef(symbol: LocalVarSymbol) => next(st.SimpleRef(symbol)(N).withLocOf(term))
+              case _ => lastWords("A captured contextual operand must be a local reference")
+        def capturable(element: Elem): Bool = element match
+          case Fld(_, _, N) | Spd(_, _, _) => true
+          case _ => false
+        def elements(rest: Ls[Elem], reversed: Ls[Elem])(next: Ls[Elem] => Block): Block = rest match
+          case Fld(flags, term, N) :: tail => operand(term)(captured => elements(tail, Fld(flags, captured, N) :: reversed)(next))
+          case Spd(kind, term, droppable) :: tail => operand(term)(captured => elements(tail, Spd(kind, captured, droppable) :: reversed)(next))
+          case _ :: _ => lastWords("Only plain fields and spreads are captured one by one")
+          case Nil => next(reversed.reverse)
+        // Capture each argument of a tuple list on its own, so that the expansion still passes
+        // ordinary argument lists. Capturing a whole list as one value would allocate an array
+        // at the site and spread it at every call. A list that is a single spread operand, as
+        // in `f(...xs)`, or that has record fields is captured as one value.
+        def list(argument: Term)(next: Term => Block): Block = argument match
+          case tuple @ st.Tup(fields) if fields.forall(capturable) =>
+            elements(fields, Nil)(fields => next(st.Tup(fields)(tuple.tree).withLocOf(argument)))
+          case tuple @ st.CtxTup(fields) if fields.forall(capturable) =>
+            elements(fields, Nil)(fields => next(st.CtxTup(fields)(tuple.tree).withLocOf(argument)))
+          case _ => operand(argument)(next)
         def capture(rest: Ls[Term], reversed: Ls[Term]): Block = rest match
           case argument :: tail if abstractions.contains(argument) => capture(tail, argument :: reversed)
-          case argument :: tail => subTerm_nonTail(argument): value =>
-            freeze(value): value =>
-              val term = value match
-                case Value.SimpleRef(symbol: LocalVarSymbol) => st.SimpleRef(symbol)(N).withLocOf(argument)
-                case _ => lastWords("A captured contextual operand must be a local reference")
-              capture(tail, term :: reversed)
+          case argument :: tail => list(argument)(captured => capture(tail, captured :: reversed))
           case Nil =>
             val args = reversed.reverse
             val parameters = arguments.flatMap(abstractions.get)
@@ -2039,7 +2067,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case N => ps.params.map(_.sym.erasedType)
       case S(layout) =>
         val count = args match
-          case Tup(fields) if fields.forall {
+          case ArgumentTuple(fields) if fields.forall {
             case Fld(FldFlags.benign(), _, N) => true
             case _ => false
           } => S(fields.length)

@@ -4,20 +4,20 @@ import "./mlscript-compile/NamespaceFlow.mls"
 
 // Each importer must independently report the provider revealed after selection.
 :e
-NamespaceFlow.generic(new NamespaceFlow.Second)
+NamespaceFlow.unannotated(new NamespaceFlow.Second)
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
-//│ ║  l.XX: 	  fun generic[A](value: A) = consume(value)
-//│ ║        	                             ^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  fun unannotated(value) = consume(value)
+//│ ║        	                           ^^^^^^^^^^^^^^
 //│ ╟── The contextual parameter 'e' of type Evidence[A] was resolved before flow revealed its implicit namespace module 'Second'.
-//│ ║  l.XX: 	  fun generic[A](value: A) = consume(value)
-//│ ║        	                             ^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  fun unannotated(value) = consume(value)
+//│ ║        	                           ^^^^^^^^^^^^^^
 //│ ╟── Here, the companion module 'Second' of class 'Second' provides this matching instance of type Evidence[Any].
 //│ ║  l.XX: 	    using Evidence[Any] = Evidence[Any]("second")
 //│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── This value reveals the namespace.
 //│ ║  in LateNamespaceImportA.mls:+1
-//│ ║  l.+1: 	NamespaceFlow.generic(new NamespaceFlow.Second)
-//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	NamespaceFlow.unannotated(new NamespaceFlow.Second)
+//│ ║        	                          ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── This instance of type Evidence[Any] was selected earlier.
 //│ ║  in mlscript-compile/NamespaceFlow.mls
 //│ ║  l.XX: 	    using Evidence[Any] = Evidence[Any]("first")

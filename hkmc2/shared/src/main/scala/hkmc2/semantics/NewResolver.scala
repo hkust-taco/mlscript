@@ -995,17 +995,18 @@ class NewResolver:
     listenInstanceFlow(value, mergeIntersections = false)(ShapeObserver.values(listener))
 
   private def listenInstanceFlow(value: TermShape, mergeIntersections: Bool)(listener: Listener)(using ResolutionContext): Unit =
-    observeInstanceFlow(value, mergeIntersections, contextual = false)(listener)
+    observeInstanceFlow(value, mergeIntersections, opaque = false)(listener)
 
-  private def observeInstanceFlow(value: TermShape, mergeIntersections: Bool, contextual: Bool)
+  /** `opaque` reads explicit type parameters as contextual matching does (see observeTypeViews). */
+  private def observeInstanceFlow(value: TermShape, mergeIntersections: Bool, opaque: Bool)
       (listener: Listener)(using ResolutionContext): Unit = value match
     case Marked(view: IntersectionView, marks) if !mergeIntersections =>
       view.values.foreach: value =>
         transportShape(value, marks :: Nil) match
-          case value: TermShape => observeInstanceFlow(value, mergeIntersections, contextual)(listener)
+          case value: TermShape => observeInstanceFlow(value, mergeIntersections, opaque)(listener)
           case NoShape => ()
     case Marked(instance: InstanceShape, marks) =>
-      observeTypeViews(transportType(instance.tpe, marks :: Nil), mergeIntersections, contextual)(listener)
+      observeTypeViews(transportType(instance.tpe, marks :: Nil), mergeIntersections, opaque)(listener)
     case _ => listener(value)
 
   private def listenTermViews(term: Term)(listener: ValueListener)(using ResolutionContext): Unit =
@@ -1391,12 +1392,16 @@ class NewResolver:
     * observation separately and retain the choice through deferred references.
     */
   private def listenTypeViews(input: DeclaredType, mergeIntersections: Bool)(listener: Listener)(using ResolutionContext): Unit =
-    observeTypeViews(input, mergeIntersections, contextual = false)(listener)
+    observeTypeViews(input, mergeIntersections, opaque = false)(listener)
 
-  /** Contextual matching observes all callers of an enclosing generic parameter. Ordinary
-    * interface lookup keeps that parameter opaque; both observations share type interpretation.
+  /** With `opaque`, an explicit type parameter that this type does not instantiate is read
+    * only as its abstract value (see registerTypeParameters). Contextual matching needs this
+    * reading: explicit type parameters are opaque, so inside the parameter's definition its
+    * values do not depend on callers. Ordinary views also include the values that constraints
+    * add to the parameter's host, for instance through an unannotated lambda parameter that
+    * code outside the definition calls.
     */
-  private def observeTypeViews(input: DeclaredType, mergeIntersections: Bool, contextual: Bool)
+  private def observeTypeViews(input: DeclaredType, mergeIntersections: Bool, opaque: Bool)
       (listener: Listener)(using ResolutionContext): Unit =
     // Formula arms can inherit instances that only another arm reads. Project
     // before caching so those ambient activations share one observation graph.
@@ -1415,7 +1420,7 @@ class NewResolver:
           case N => listener(shape)
       case _ => listener(shape)
     val key = (tpe, mergeIntersections)
-    val views = if contextual then rctx.state.contextualTypeViews else typeViews
+    val views = if opaque then rctx.state.opaqueTypeViews else typeViews
     views.get(key) match
       case S(host) => host.listen(observe)
       case N =>
@@ -1442,8 +1447,8 @@ class NewResolver:
               // A singleton clause already has its complete view. Rebuilding a
               // record would move its outer marks into every field and prevent
               // subsequent scope crossings from filtering the whole candidate.
-              case head :: Nil if values.isEmpty => observeTypeViews(head, mergeIntersections, contextual)(publish)
-              case head :: tail => observeTypeViews(head, mergeIntersections, contextual): value =>
+              case head :: Nil if values.isEmpty => observeTypeViews(head, mergeIntersections, opaque)(publish)
+              case head :: tail => observeTypeViews(head, mergeIntersections, opaque): value =>
                 conjunction(tail, value :: values)
               case Nil => intersectViews(values.reverse)(publish)
             shape match
@@ -1451,9 +1456,9 @@ class NewResolver:
               case TypeShape.Top => publish(OpaqueTypeShape(source)(
                 current.origin.getOrElse(TypeInterfaceReason.Unrestricted(source))))
               case TypeShape.Bottom => ()
-              case TypeShape.Inferred(value) => observeInstanceFlow(instantiateShape(value, current.instances), mergeIntersections, contextual)(publish)
+              case TypeShape.Inferred(value) => observeInstanceFlow(instantiateShape(value, current.instances), mergeIntersections, opaque)(publish)
               case TypeShape.Hole(host) => host.subscribe: value =>
-                observeInstanceFlow(instantiateShape(value, current.instances), mergeIntersections, contextual)(publish)
+                observeInstanceFlow(instantiateShape(value, current.instances), mergeIntersections, opaque)(publish)
               case TypeShape.Nominal(defn) =>
                 val enclosing = lexicalBinders(defn.sym)
                 val own = defn.tparams.map(_.sym).toSet
@@ -1469,12 +1474,12 @@ class NewResolver:
                     val parentType = typeResolution(parent.cls)
                     withTypeDependencies(parentType): dependencies =>
                       val local = captureNominalBindings(defn, bindings.filter((symbol, _) => dependencies(symbol)))
-                      observeTypeViews(declaredType(parentType, local), mergeIntersections, contextual): ext =>
+                      observeTypeViews(declaredType(parentType, local), mergeIntersections, opaque): ext =>
                         publish(NominalInstanceView(defn, bindings, S(ext))(S(source), ShapeProvenance.empty)(this))
               case TypeShape.Alias(symbol, _) if symbol is prelude.builtins.Awaited =>
                 val arguments = variantArguments(current, args, symbol.defn.get.tparams, current.positive)
                 softAssert(arguments.length == 1)
-                observeTypeViews(arguments.head.output, mergeIntersections = true, contextual)(value => listenAwaitedValue(value, source)(publish))
+                observeTypeViews(arguments.head.output, mergeIntersections = true, opaque)(value => listenAwaitedValue(value, source)(publish))
               case TypeShape.Alias(symbol, rhs) =>
                 // Revisiting the same alias reference without reaching a structural
                 // shape supplies no additional interface. Track
@@ -1490,19 +1495,21 @@ class NewResolver:
                 case S(bound) => follow(bound.instantiate(current.instances).at(current.positive), noTypeArguments, aliases, source, publish)
                 case N =>
                   val target = current.instances.get(parameter.symbol).fold(parameter)(rctx.typeParameter)
-                  observeParameterValues(target, contextual): value =>
-                    // Report the use of an abstract parameter in a signature, not
-                    // just its declaration. This survives substitution through
-                    // generic members and nested tuple or function annotations.
-                    val annotated = value match
-                      case Marked(rigid: RigidTypeShape, marks) =>
-                        UnknownValueShape(rigid.source, fromPublicInterface = false)(rigid.provenance.withTypeOrigin(source)).exit(marks)
-                      case Marked(unknown: UnknownValueShape, marks) =>
-                        UnknownValueShape(unknown.source, unknown.fromPublicInterface)(unknown.provenance.withTypeOrigin(source)).exit(marks)
-                      case _ => value
-                    annotated match
-                      case value: TermShape => observeInstanceFlow(instantiateShape(value, current.instances), mergeIntersections, contextual)(publish)
-                      case NoShape => ()
+                  val abstractOnly = opaque && isUninstantiated(target)
+                  listenTypeParameterValues(target): value =>
+                    if !abstractOnly || abstractParameter(value).nonEmpty then
+                      // Report the use of an abstract parameter in a signature, not
+                      // just its declaration. This survives substitution through
+                      // generic members and nested tuple or function annotations.
+                      val annotated = value match
+                        case Marked(rigid: RigidTypeShape, marks) =>
+                          AbstractParameterValue(rigid.parameter, rigid.source)(rigid.provenance.withTypeOrigin(source)).exit(marks)
+                        case Marked(unknown: UnknownValueShape, marks) =>
+                          unknown.explainedBy(unknown.provenance.withTypeOrigin(source)).exit(marks)
+                        case _ => value
+                      annotated match
+                        case value: TermShape => observeInstanceFlow(instantiateShape(value, current.instances), mergeIntersections, opaque)(publish)
+                        case NoShape => ()
               case reference: TypeShape.Reference =>
                 follow(referenceType(reference, current), args, aliases, source, publish)
               case TypeShape.Contextual(reference) =>
@@ -1516,7 +1523,7 @@ class NewResolver:
                 // Share the source's interpretation across transported references.
                 // Its cached host also stops cycles before adding subscriptions.
                 // Applications still bind arguments at the template's endpoint.
-                if args.arguments.isEmpty then observeTypeViews(base, mergeIntersections, contextual)(transfer)
+                if args.arguments.isEmpty then observeTypeViews(base, mergeIntersections, opaque)(transfer)
                 else follow(base, args.move(inverseMarks(reference.marks)), aliases, source, transfer)
               case TypeShape.Function(params, ret) =>
                 val ps = params match
@@ -1556,7 +1563,7 @@ class NewResolver:
                   case TypeShape.TupleField(field, false) :: tail =>
                     expand(tail, TupleShape.TypedField(TypeArgument.invariant(declaredType(field, current)), Nil) :: reversed)
                   case TypeShape.TupleField(field, true) :: tail =>
-                    observeTypeViews(declaredType(field, current), mergeIntersections = false, contextual):
+                    observeTypeViews(declaredType(field, current), mergeIntersections = false, opaque):
                       case Marked(tuple: TupleShape, marks) =>
                         expand(tail, TupleShape.Spread(tuple, marks) :: reversed)
                       case Marked(array: NominalInstanceView, marks) if arrayElementType(array).nonEmpty =>
@@ -1955,17 +1962,6 @@ class NewResolver:
     parameter.host.subscribe:
       case value: TermShape => listener(value)
       case _ => softAssert(false, "A type parameter's value host cannot contain activation envelopes")
-
-  /** Contextual queries observe callers of abstract binders, while preserving each input's
-    * declared type and alias provenance for namespace discovery. Matching can then expand
-    * the same inputs into views without changing which namespaces those written types name.
-    */
-  private def observeParameterValues(parameter: TypeShape.Parameter, contextual: Bool)
-      (receive: Listener)(using ResolutionContext): Unit =
-    listenTypeParameterValues(parameter)(receive)
-    if contextual && !parameter.symbol.isInstanceOf[TypeParameterInstance] then
-      rctx.contextualInstancesOf(parameter.symbol).subscribeToShapes: instance =>
-        listenTypeParameterValues(rctx.typeParameter(instance))(receive)
 
   private[semantics] def publishParameter(symbol: VarSymbol, shape: TermShape | NoShape)(using ResolutionContext): Unit =
     shape match
@@ -2896,7 +2892,7 @@ class NewResolver:
       case N =>
         val host = new TermShapeHost
         rctx.state.contextualPositions(tpe) = host
-        observeTypeViews(tpe, mergeIntersections = true, contextual = true)(host.publish)
+        observeTypeViews(tpe, mergeIntersections = true, opaque = true)(host.publish)
         host
 
   private def contextualValues(tpe: DeclaredType, observe: TermShapeHost => Unit)(using ResolutionContext): Ls[TermShape] =
@@ -2914,31 +2910,70 @@ class NewResolver:
         val host = new TermShapeHost
         rctx.state.contextualClassPositions(key) = host
         listenClassParameter(value, cls, parameter)(value =>
-          observeInstanceFlow(value, mergeIntersections = true, contextual = true)(host.publish))
+          observeInstanceFlow(value, mergeIntersections = true, opaque = true)(host.publish))
         host
+
+  /** The explicit type parameter whose abstract value `value` is: the checking witness that
+    * registerTypeParameters publishes in its definition, or that witness's view elsewhere. */
+  private def abstractParameter(value: TermShape): Opt[VarSymbol] = shapeParts(value).value match
+    case Marked(rigid: RigidTypeShape, _) => S(rigid.parameter)
+    case Marked(abstractValue: AbstractParameterValue, _) => S(abstractValue.parameter)
+    case _ => N
+
+  /** Whether `parameter` is an explicit type parameter itself, not one of its call-site
+    * instances. Inside its definition, its only value is its abstract value. */
+  private def isUninstantiated(parameter: TypeShape.Parameter): Bool =
+    !parameter.symbol.isInstanceOf[TypeParameterInstance]
+
+  private def isAnyAlias(shape: TypeShape): Bool = shape match
+    case TypeShape.Alias(symbol, _) => symbol is prelude.builtins.Any
+    case _ => false
+
+  /** The values that a query written where `binders` are in scope can observe. The abstract
+    * value of another type parameter is the checking witness of another generic definition's
+    * body. It can reach a position that the two definitions share, such as a type argument of
+    * a class, but it is no value of this query.
+    */
+  private def queryValues(values: Iterable[TermShape], binders: Set[VarSymbol]): Ls[TermShape] =
+    values.iterator.filter(value => abstractParameter(value).forall(binders)).toList
 
   /** Compare value classes and exposed type arguments coinductively. Re-entering the same
     * type/value pair closes a recursive comparison; it imposes no instance-search depth bound.
+    *
+    * Explicit type parameters are opaque. Inside a generic definition, the values of one of its
+    * type parameters are that parameter's abstract value, whatever its callers pass: callers'
+    * activations are never observed. So the abstract value of `A` is accepted only by `A`
+    * itself, by `Any`, or by the candidate's own type parameters (`free`, those of an instance
+    * function, which each use instantiates). Conversely, a value of a known class is not known
+    * to be a value of an enclosing definition's type parameter. Values of unknown class are
+    * accepted by every type.
     */
-  private def contextualAccepts(tpe: DeclaredType, value: TermShape,
+  private def contextualAccepts(tpe: DeclaredType, value: TermShape, free: Set[VarSymbol], binders: Set[VarSymbol],
       seen: Set[(DeclaredType, ShapeIdentity.Key)], observe: TermShapeHost => Unit)(using ResolutionContext): Bool =
     val pair = (tpe, ShapeIdentity.key(value))
-    if seen(pair) || instanceClass(shapeParts(value).value).isEmpty then true else
+    val abstractOf = abstractParameter(value)
+    if seen(pair) || abstractOf.isEmpty && instanceClass(shapeParts(value).value).isEmpty then true else
       val visited = seen + pair
       def follow(current: DeclaredType, args: TypeApplication, aliases: Set[DeclaredType]): Bool =
         if aliases(current) then true else current.shapes.forall: shape =>
-          reduceType(current, args, shape) match
+          // `Any` is the top type, as in the type formulas, and accepts abstract values too.
+          if isAnyAlias(shape) then true
+          else reduceType(current, args, shape) match
             case S(step) => follow(step.tpe, step.args, aliases + current)
             case N => shape match
+              case parameter: TypeShape.Parameter =>
+                val symbol = parameter.symbol
+                free(symbol) || abstractOf.contains(symbol)
+              case TypeShape.Top => true
               case TypeShape.Nominal(cls) =>
                 val ShapeParts(core, instances, _) = shapeParts(value)
-                core.isInstanceOfClass(cls) && {
+                abstractOf.isEmpty && core.isInstanceOfClass(cls) && {
                   val expected = variantArguments(current, args, cls.tparams, current.positive)
                   softAssert(expected.length == cls.tparams.length, "Nominal arguments must match their parameters")
                   cls.tparams.lazyZip(expected).forall: (parameter, argument) =>
                     val values = contextualClassPosition(value, cls, parameter.sym)
                     observe(values)
-                    values.currentShapes.forall(actual => contextualAccepts(argument.output, actual, visited, observe))
+                    queryValues(values.currentShapes, binders).forall(actual => contextualAccepts(argument.output, actual, free, binders, visited, observe))
                 }
               case TypeShape.Union(left, right) =>
                 follow(declaredType(left, current), noTypeArguments, aliases + current) ||
@@ -2949,14 +2984,19 @@ class NewResolver:
               case TypeShape.Combined(formula) => formula.clauses.exists(_.forall(atom =>
                 follow(atom.instantiate(current.instances), noTypeArguments, aliases + current)))
               case TypeShape.Bottom => false
-              case _ => true
+              // Other forms accept conservatively, but no form describes an abstract value.
+              case _ => abstractOf.isEmpty
       follow(tpe, noTypeArguments, Set.empty)
 
-  private def contextualMatches(candidate: DeclaredType, query: ContextualQuery, observe: TermShapeHost => Unit)
-      (using ResolutionContext): Bool = query match
+  /** The type parameters of `candidate` that each use instantiates: those of an instance function. */
+  private def candidateBinders(candidate: Symbol): Set[VarSymbol] =
+    instanceFunction(candidate).fold(Set.empty)(_.tparams.toList.flatten.iterator.map(_.sym).toSet)
+
+  private def contextualMatches(candidate: DeclaredType, free: Set[VarSymbol], binders: Set[VarSymbol],
+      query: ContextualQuery, observe: TermShapeHost => Unit)(using ResolutionContext): Bool = query match
     case ContextualQuery.Parameter(tpe, _) =>
-      val values = contextualValues(tpe, observe)
-      values.nonEmpty && values.forall(contextualAccepts(candidate, _, Set.empty, observe))
+      val values = queryValues(contextualValues(tpe, observe), binders)
+      values.nonEmpty && values.forall(contextualAccepts(candidate, _, free, binders, Set.empty, observe))
     case ContextualQuery.Named(cls, positions) =>
       contextualValues(candidate, observe).exists: value =>
         shapeParts(value).value match
@@ -2964,7 +3004,7 @@ class NewResolver:
             softAssert(positions.length == cls.tparams.length, "Query positions must match their head parameters")
             cls.tparams.lazyZip(positions).forall: (parameter, position) =>
               ancestor.bindings.get(parameter.sym).forall: bound =>
-                contextualValues(position, observe).forall(contextualAccepts(bound.output, _, Set.empty, observe))
+                queryValues(contextualValues(position, observe), binders).forall(contextualAccepts(bound.output, _, free, binders, Set.empty, observe))
           case _ => false
 
   private def instanceFunction(symbol: Symbol): Opt[TermDefinition] =
@@ -3041,6 +3081,7 @@ class NewResolver:
         nested += inner
         Fld(FldFlags.empty, inner, N)
       val tuple = CtxTup(fields)(Tree.DummyTup).withLocOf(argument)
+      rctx.recordLexicalBinders(tuple, environment.typeBinders)
       val app = new App(callee, tuple)(Tree.DummyApp, N, FlowSymbol.app()).withLocOf(argument)
       rctx.recordLexicalBinders(app, environment.typeBinders)
       if firstApplication.isEmpty then firstApplication = S(app)
@@ -3107,7 +3148,8 @@ class NewResolver:
         (msg"The contextual parameter is declared here." -> parameter.toLoc) :: notes)
     if first && rctx.canResolve(argument) then query match
       case N => fail(msg"Contextual parameter types must be named types or type parameters.", Nil)
-      case S(ContextualQuery.Parameter(position, symbol)) if contextualValues(position, _ => ()).isEmpty =>
+      case S(ContextualQuery.Parameter(position, symbol))
+          if queryValues(contextualValues(position, _ => ()), argument.environment.fold(Set.empty)(_.typeBinders)).isEmpty =>
         fail(msg"Cannot determine the type of the ${contextualParameterName(parameter)}: type parameter '${symbol.nme}' has no explicit type argument and no value reaches it.", Nil)
       case S(query) =>
         lazy val flowType = contextualFlowType(query)
@@ -3126,8 +3168,8 @@ class NewResolver:
             binding.annotation.flatMap: annotation =>
               val candidate = declaredType(typeResolution(annotation), Map.empty)
               contextualQuery(candidate) match
-                case S(_: ContextualQuery.Named) if contextualMatches(candidate, query, _ => ()) && eligible(binding.symbol) => S((tier, binding, candidate))
-                case S(_: ContextualQuery.Parameter) if contextualMatches(candidate, query, _ => ()) && eligible(binding.symbol) => S((tier, binding, candidate))
+                case S(_: ContextualQuery.Named) if contextualMatches(candidate, candidateBinders(binding.symbol), environment.typeBinders, query, _ => ()) && eligible(binding.symbol) => S((tier, binding, candidate))
+                case S(_: ContextualQuery.Parameter) if contextualMatches(candidate, candidateBinders(binding.symbol), environment.typeBinders, query, _ => ()) && eligible(binding.symbol) => S((tier, binding, candidate))
                 case _ => N
           .toList
         .find(_.nonEmpty).getOrElse(Nil)
@@ -3161,7 +3203,7 @@ class NewResolver:
             val namespaces = new InstanceNamespaces(argument, parameter, tpe, query, environment.scope, environment.typeBinders, flowType).local
             typeNamespaces(namespaces, tpe, writtenWitness(tpe), refine = true, provided = true)
             val candidates = namespaces.candidates.valuesIterator
-              .filter(candidate => contextualMatches(candidate.annotation, query, _ => ()) && eligible(candidate.definition.sym)).toList
+              .filter(candidate => contextualMatches(candidate.annotation, candidateBinders(candidate.definition.sym), environment.typeBinders, query, _ => ()) && eligible(candidate.definition.sym)).toList
             namespaces.settled = true
             candidates match
               case candidate :: Nil => select(ContextualCandidate(candidate.definition.sym, candidate.annotation)):
@@ -3177,7 +3219,7 @@ class NewResolver:
                     case _ => N
                 .toList
                 val rejected = namespaces.candidates.valuesIterator
-                  .filterNot(candidate => contextualMatches(candidate.annotation, query, _ => ())).take(3).map: candidate =>
+                  .filterNot(candidate => contextualMatches(candidate.annotation, candidateBinders(candidate.definition.sym), environment.typeBinders, query, _ => ())).take(3).map: candidate =>
                   msg"This instance of type ${contextualTypeName(candidate.annotation)} from namespace '${candidate.module.nme}' does not accept all values reaching the query." -> candidate.definition.toLoc
                 fail(msg"No instance found for the ${contextualParameterName(parameter)} of type ${contextualTypeName(tpe)}.", notes ::: rejected.toList ::: divergenceNotes)
               case many => fail(msg"Ambiguous instances for the ${contextualParameterName(parameter)} of type ${contextualTypeName(tpe)}.",
@@ -3188,7 +3230,7 @@ class NewResolver:
       argument.candidate.foreach: candidate =>
         def observe(host: TermShapeHost): Unit =
           if rctx.state.contextualChecks.add((argument, host)) then host.listen(value => check(S(value)))
-        if !rctx.hasError(argument) && !contextualMatches(candidate.annotation, query, observe) &&
+        if !rctx.hasError(argument) && !contextualMatches(candidate.annotation, candidateBinders(candidate.symbol), argument.environment.fold(Set.empty)(_.typeBinders), query, observe) &&
             rctx.state.contextualFailures.add((argument, tpe)) then
           rctx.markError(argument)
           resolError(argument,
@@ -3602,7 +3644,7 @@ class NewResolver:
                             case value: TermShape =>
                               val field = (value.applicationHead._1, unknown) match
                                 case (_: UnknownValueShape, S(Marked(origin: UnknownValueShape, marks))) =>
-                                  UnknownValueShape(origin.source, origin.fromPublicInterface)(origin.provenance.via(
+                                  origin.explainedBy(origin.provenance.via(
                                     msg"This constructor field may contain a value of unknown shape." -> member.toLoc)).exit(marks)
                                 case _ => value
                               field match
@@ -4262,9 +4304,12 @@ class NewResolver:
             case TypeShape.Polymorphic(params, _, body) =>
               walk(declaredType(body, current.withoutBinders(params.map(_.parameter.symbol))), args, reason, refine, next)
             case parameter: TypeShape.Parameter => if provided then
-              observeParameterValues(current.instances.get(parameter.symbol).fold(parameter)(rctx.typeParameter),
-                  contextual = namespaces.isInstanceOf[InstanceNamespaces]): value =>
-                valueNamespaces(namespaces, instantiateShape(value, current.instances))
+              val target = current.instances.get(parameter.symbol).fold(parameter)(rctx.typeParameter)
+              // An instance request reads explicit type parameters opaquely (see observeTypeViews):
+              // their abstract value names no namespace.
+              if !(namespaces.isInstanceOf[InstanceNamespaces] && isUninstantiated(target)) then
+                listenTypeParameterValues(target): value =>
+                  valueNamespaces(namespaces, instantiateShape(value, current.instances))
             case TypeShape.Hole(host) => if provided then host.subscribe: value =>
               valueNamespaces(namespaces, instantiateShape(value, current.instances))
             case TypeShape.Inferred(value) => if provided then
@@ -4411,7 +4456,7 @@ class NewResolver:
       namespace: Namespace, member: TermDefinition, annotation: DeclaredType)(using ResolutionContext): Unit =
     val argument = namespaces.argument
     if !argument.candidate.exists(_.symbol is member.sym) &&
-        contextualMatches(annotation, namespaces.query, _ => ()) &&
+        contextualMatches(annotation, candidateBinders(member.sym), namespaces.binders, namespaces.query, _ => ()) &&
         instanceFunction(member.sym).forall(function => !contextualDiverges(function, namespaces.flowType, argument.derivationPath)) &&
         rctx.state.contextualLateNamespaces.add((argument, member.sym)) then
       rctx.markError(argument)
@@ -5539,6 +5584,7 @@ class NewResolver:
               Fld(FldFlags.empty, arg, N)
             .toList
             val arguments = CtxTup(fields)(Tree.DummyTup).withLocOf(term)
+            rctx.recordLexicalBinders(arguments, work.site.context.typeBinders)
             val app = new App(Missing, arguments)(Tree.DummyApp, N, FlowSymbol.app()).withLocOf(term)
             rctx.recordLexicalBinders(app, work.site.context.typeBinders)
             val step = new ContextualStep.Supply(app)

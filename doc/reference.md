@@ -1553,10 +1553,11 @@ and receives the same warning. A `using` list in a function type is an error;
 contextual function types are not supported.
 
 No variable, field, parameter, aggregate element, or function result holds a
-function with an uncompleted leading contextual list. Generic parameters remain
-opaque for ordinary member lookup: `fun f[A](x: A) = x.m` is rejected even if all
-callers supply an object with `m`. A selection on an unannotated receiver can
-resolve several contextual methods, subject to the agreement rules below.
+function with an uncompleted leading contextual list. Explicit type parameters are
+opaque, for member lookup as for contextual queries: `fun f[A](x: A) = x.m` is
+rejected even if all callers supply an object with `m`. A selection on an
+unannotated receiver can resolve several contextual methods, subject to the
+agreement rules below.
 
 ### Queries and Matching
 
@@ -1578,9 +1579,13 @@ reaching that parameter. When no value reaches it, the query is undetermined and
 reports an error. Empty argument positions of a named query do accept vacuously.
 
 Acceptance compares value classes and, recursively, exposed type arguments.
-`Any` and type parameters of enclosing definitions accept every value. An unknown
-class, including dynamic, opaque, erroneous, probe, or rigid-parameter flow, is
-accepted. A named candidate position accepts its class and subclasses; missing
+`Any` accepts every value. Inside a generic definition, the only value of one of its
+explicit type parameters `A` is `A`'s abstract value, whatever its callers pass. That
+value is accepted by `A` itself, by `Any`, and by the type parameters of an instance
+function, which each use instantiates; it is not accepted by a named candidate
+position. Conversely, an enclosing definition's type parameter accepts no value of a
+known class. Other values of unknown class, such as dynamic, opaque, erroneous, or
+probe flow, are accepted. A named candidate position accepts its class and subclasses; missing
 argument views impose no further restriction. A union accepts if one component
 accepts, and an intersection requires all components. Other candidate position
 forms (functions, records, tuples) currently accept conservatively.
@@ -1627,10 +1632,13 @@ class or alias that led to that namespace. Consultation is once per namespace fo
 a named query, and once per namespace and triggering class or alias for a parameter
 query. Reaching the same declaration along multiple paths does not duplicate it.
 
-A lexical `Monoid[A]` parameter matches inside a generic function because its
-`A` accepts every value, and its tier shadows namespaces. Without that parameter,
-callers' flows can select a namespace instance such as `Monoid[Int]`. This affects
-contextual matching, while ordinary member lookup still treats `A` as opaque.
+Generic signatures are opaque to their callers. In
+`fun sum[A](xs: List[A])(using Monoid[A]) = fold(xs)`, the lexical `Monoid[A]`
+parameter accepts `A`'s abstract value, and its tier shadows namespaces. Without that
+parameter, no instance such as `Monoid[Int]` serves the query, even if every caller
+passes `Int`s; the generic function must take the instance from its callers, as
+`sum` does. An instance for `Any` serves every type parameter. An unannotated
+parameter is not opaque: its callers' values are ordinary flow.
 
 ### Timing, Agreement, and Errors
 

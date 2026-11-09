@@ -28,7 +28,7 @@ class IntShow extends Show[Int] with
   fun show(value: Int): Str = "int"
 using Show[Int] = new IntShow
 fun show[A](value: A)(using s: Show[A]) = s.show(value)
-fun generic[A](value: A) = show(value)
+fun unannotated(value) = show(value)
 //│ ╔══[COMPILATION ERROR] Parameter 'value' of overriding member 'show' is represented as 'Int', which cannot hold the values represented as 'Unknown' that the member it overrides accepts
 //│ ║  l.+4: 	  fun show(value: Int): Str = "int"
 //│ ║        	           ^^^^^^^^^^
@@ -37,17 +37,17 @@ fun generic[A](value: A) = show(value)
 //│ ╙──      	      ^^^^
 
 :expect "int"
-generic(1)
+unannotated(1)
 //│ = "int"
 
 :e
-generic("later")
+unannotated("later")
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
-//│ ║  l.XX: 	fun generic[A](value: A) = show(value)
-//│ ║        	                           ^^^^^^^^^^^
+//│ ║  l.XX: 	fun unannotated(value) = show(value)
+//│ ║        	                         ^^^^^^^^^^^
 //│ ╟── This value reaches the type of the contextual parameter 's' after its instance was selected; the selected instance of type Show[Int] does not accept it.
-//│ ║  l.XX: 	fun generic[A](value: A) = show(value)
-//│ ║        	                           ^^^^^^^^^^^
+//│ ║  l.XX: 	fun unannotated(value) = show(value)
+//│ ║        	                         ^^^^^^^^^^^
 //│ ╟── The contextual parameter is declared here.
 //│ ║  l.XX: 	fun show[A](value: A)(using s: Show[A]) = s.show(value)
 //│ ║        	                      ^^^^^^^^^^^^^^^^
@@ -55,8 +55,8 @@ generic("later")
 //│ ║  l.XX: 	using Show[Int] = new IntShow
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── This value is incompatible with the selected instance.
-//│ ║  l.+1: 	generic("later")
-//│ ╙──      	        ^^^^^^^
+//│ ║  l.+1: 	unannotated("later")
+//│ ╙──      	            ^^^^^^^
 //│ = "int"
 
 // Capitalized references and contextual sites settle in one post-order worklist.

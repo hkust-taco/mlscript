@@ -76,7 +76,8 @@ module Child with
   using Child = new Child
 
 :expect "parent"
-fun later[T](value: T) = use[T].label
+fun instanceFor[T](value: T)(using instance: T): T = instance
+fun later(value) = instanceFor(value).label
 later(new Parent)
 //│ = "parent"
 

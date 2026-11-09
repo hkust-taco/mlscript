@@ -12,7 +12,7 @@ fun display[A](value: A)(using show: Show[A]) = show.label
 fun captured[A](value: A) =
   using Show[A] = Show[A]("local")
   using fun list[B](using element: Show[B]): Show[List[B]] = Show[List[B]]("list(" + element.label + ")")
-  fun nested[C](value: C) = display(List(List(value)))
+  fun nested(value: A) = display(List(List(value)))
   nested(value)
 [captured(1), captured("text")]
 //│ = ["list(list(local))", "list(list(local))"]
@@ -31,31 +31,12 @@ fun aliased[A](value: A) =
 class Middle[A](label: Str) extends Show[List[A]](label)
 class Leaf[A](label: Str) extends Middle[A](label)
 
-:expect "inherited:int"
-fun inherited[A](value: A) =
+:expect ["inherited:int", "inherited:str"]
+fun inherited[A](value: A)(using Show[A]) =
   using fun derive[B](using element: Show[B]): Leaf[B] = Leaf[B]("inherited:" + element.label)
   display(List(value))
-inherited(1)
-//│ = "inherited:int"
-
-:e
-inherited("later")
-//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
-//│ ║  l.XX: 	  display(List(value))
-//│ ║        	  ^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This value reaches the type of the contextual parameter 'element' after its instance was selected; the selected instance of type Show[Int] does not accept it.
-//│ ║  l.XX: 	  display(List(value))
-//│ ║        	  ^^^^^^^^^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
-//│ ║  l.XX: 	  using fun derive[B](using element: Show[B]): Leaf[B] = Leaf[B]("inherited:" + element.label)
-//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── The selected instance is declared here.
-//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
-//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This value is incompatible with the selected instance.
-//│ ║  l.+1: 	inherited("later")
-//│ ╙──      	          ^^^^^^^
-//│ = "inherited:int"
+[inherited(1), inherited("text")]
+//│ = ["inherited:int", "inherited:str"]
 
 // Parameterless instance functions still instantiate their own generic result at each site.
 :expect ["constant", "constant"]
@@ -65,29 +46,24 @@ fun parameterless[A](value: A) =
 [parameterless(1), parameterless("text")]
 //│ = ["constant", "constant"]
 
-// A nested query must see caller flows even though ordinary lookup keeps A opaque.
-:expect "derived:int"
+// Explicit type parameters are opaque: the nested query for `Show[A]` has no instance in
+// this generic body, whatever its callers pass.
+:e
 fun observed[A](value: A) =
   using fun wrap(using element: Show[A]): Show[List[A]] = Show[List[A]]("derived:" + element.label)
   display(List(value))
-observed(1)
-//│ = "derived:int"
-
-:e
-observed("later")
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
-//│ ║  l.XX: 	  display(List(value))
+//│ ║  l.+3: 	  display(List(value))
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This value reaches the type of the contextual parameter 'element' after its instance was selected; the selected instance of type Show[Int] does not accept it.
-//│ ║  l.XX: 	  display(List(value))
+//│ ╟── No instance found for the contextual parameter 'element' of type Show[A].
+//│ ║  l.+3: 	  display(List(value))
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The contextual parameter is declared here.
-//│ ║  l.XX: 	  using fun wrap(using element: Show[A]): Show[List[A]] = Show[List[A]]("derived:" + element.label)
+//│ ║  l.+2: 	  using fun wrap(using element: Show[A]): Show[List[A]] = Show[List[A]]("derived:" + element.label)
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── The selected instance is declared here.
+//│ ╟── This instance of type Show[Int] from namespace 'Show' does not accept all values reaching the query.
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This value is incompatible with the selected instance.
-//│ ║  l.+1: 	observed("later")
-//│ ╙──      	         ^^^^^^^
-//│ = "derived:int"
+//│ ╟── This instance of type Show[Str] from namespace 'Show' does not accept all values reaching the query.
+//│ ║  l.XX: 	  using Show[Str] = Show[Str]("str")
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

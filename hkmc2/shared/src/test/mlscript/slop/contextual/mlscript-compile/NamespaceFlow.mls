@@ -9,5 +9,6 @@ module NamespaceFlow with
   module Second with
     using Evidence[Any] = Evidence[Any]("second")
   fun consume[A](value: A)(using e: Evidence[A]) = e.label
-  fun generic[A](value: A) = consume(value)
-  val seed = generic(new First)
+  // Callers' values reach an unannotated parameter, unlike an explicit type parameter.
+  fun unannotated(value) = consume(value)
+  val seed = unannotated(new First)

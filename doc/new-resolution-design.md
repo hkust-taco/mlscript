@@ -404,15 +404,23 @@ has a different shape is a site error, since the site has one expansion. Ordinar
 application inference still checks each callee's arity and constraints.
 Lowering flattens the continuation steps, interleaves contextual and written
 arguments, and emits lambdas around the ordinary call or constructor operation.
-It captures operands once in source order and reconstructs method selections on
-the captured receiver, preserving receiver binding.
+A contextual argument list has the runtime layout of an ordinary one, so lowering
+passes its elements directly rather than spreading an array. An expansion captures
+its operands once in source order, each argument in its own temporary, and
+reconstructs method selections on the captured receiver, preserving receiver binding.
 
-Query observations use all call activations for contextual matching, including
-caller values of otherwise opaque enclosing generic parameters. Demand-created
-observers use the ordinary instantiation cache and publisher copy-on-import
-protocol. An imported generic body's observers are adopted before its first new
-caller publishes values, even if its result does not demand those values. Importers
-must not mutate the exporter's decisions or each other's observations.
+Query positions are observed in the base activation, through `observeTypeViews`
+with `opaque` set. An explicit type parameter that the position does not instantiate
+then contributes only its abstract value: the `RigidTypeShape` that
+`registerTypeParameters` publishes, viewed as an `AbstractParameterValue`. Ordinary
+views turn that witness into a plain `UnknownValueShape`, and they also include the
+values that constraints add to the parameter's host, for instance through an
+unannotated lambda parameter that code outside the definition calls; neither would
+keep the signature opaque. Matching then ignores the abstract values of type
+parameters that are not in scope at the site, since they are other generic bodies'
+checking witnesses. No caller activation is observed, so a generic body's decisions
+never depend on its callers or importers. Importers must not mutate the exporter's
+decisions or each other's observations.
 
 `NameNamespaces` and `InstanceNamespaces` implement requests over one shared
 `typeNamespaces`/`valueNamespaces` walk. Name requests retain their existing
@@ -494,7 +502,8 @@ aliased result inference, recursive agreement, and every divergence case.
 `DerivedImport` and `DerivedImportIsolation`, with `DerivedLibrary`, cover
 imported derivation, frozen nested selections, and independent importer state.
 `DerivedGenericScopes` covers enclosing generic binders, captured result aliases,
-inherited result positions, parameterless generic instances, and late caller flows.
+inherited result positions, parameterless generic instances, and opaque nested
+queries. `GenericOpacity` covers opaque type parameters in functions and classes.
 
 ### Contextual resolution performance
 

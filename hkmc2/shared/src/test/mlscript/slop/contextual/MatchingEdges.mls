@@ -63,18 +63,18 @@ class IntAccept extends Accept[Int] with
 using Accept[Int] = new IntAccept
 
 :expect "int"
-fun generic[A](value: A) = accept(value)
-generic(1)
+fun unannotated(value) = accept(value)
+unannotated(1)
 //│ = "int"
 
 :e
-generic("later")
+unannotated("later")
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
-//│ ║  l.XX: 	fun generic[A](value: A) = accept(value)
-//│ ║        	                           ^^^^^^^^^^^^^
+//│ ║  l.XX: 	fun unannotated(value) = accept(value)
+//│ ║        	                         ^^^^^^^^^^^^^
 //│ ╟── This value reaches the type of the contextual parameter 'a' after its instance was selected; the selected instance of type Accept[Int] does not accept it.
-//│ ║  l.XX: 	fun generic[A](value: A) = accept(value)
-//│ ║        	                           ^^^^^^^^^^^^^
+//│ ║  l.XX: 	fun unannotated(value) = accept(value)
+//│ ║        	                         ^^^^^^^^^^^^^
 //│ ╟── The contextual parameter is declared here.
 //│ ║  l.XX: 	fun accept[A](value: A)(using a: Accept[A]) = a.label
 //│ ║        	                        ^^^^^^^^^^^^^^^^^^
@@ -82,6 +82,6 @@ generic("later")
 //│ ║  l.XX: 	using Accept[Int] = new IntAccept
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── This value is incompatible with the selected instance.
-//│ ║  l.+1: 	generic("later")
-//│ ╙──      	        ^^^^^^^
+//│ ║  l.+1: 	unannotated("later")
+//│ ╙──      	            ^^^^^^^
 //│ = "int"

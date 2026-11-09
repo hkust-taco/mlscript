@@ -1131,13 +1131,27 @@ object ShapeProvenance:
   * Provenance is outside the semantic key: another diagnostic witness must
   * not turn the same unknown into a new inference candidate.
   */
-final class UnknownValueShape(val source: Term, val fromPublicInterface: Bool)(val provenance: ShapeProvenance) extends CoreHeadShape:
+class UnknownValueShape(val source: Term, val fromPublicInterface: Bool)(val provenance: ShapeProvenance) extends CoreHeadShape:
   override def isSelfContained: Bool = true
   def describe: Str = "value of unknown shape"
   override def toString: Str = s"UnknownValueShape($source, $fromPublicInterface)"
   def toLoc: Opt[Loc] = source.toLoc
   protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup =
     MemberLookup.Unknown(MemberLookup.Uncertainty.ValueShape, fromPublicInterface, provenance)
+  /** The same unknown value, explained by `provenance`. */
+  def explainedBy(provenance: ShapeProvenance): UnknownValueShape =
+    UnknownValueShape(source, fromPublicInterface)(provenance)
+
+/** The view of an explicit type parameter's abstract value (see RigidTypeShape). Member lookup
+  * treats it as any unknown value: the parameter specifies no member interface. Contextual
+  * matching also needs to know which parameter it stands for, because a generic signature
+  * is opaque to its callers: only an instance for that same parameter accepts it.
+  */
+final class AbstractParameterValue(val parameter: VarSymbol, source: Term)(provenance: ShapeProvenance)
+    extends UnknownValueShape(source, fromPublicInterface = false)(provenance):
+  override def toString: Str = s"AbstractParameterValue($parameter, $source)"
+  override def explainedBy(provenance: ShapeProvenance): UnknownValueShape =
+    AbstractParameterValue(parameter, source)(provenance)
 
 /** A generic definition must be valid without choosing a caller's type. This
   * checking witness is not an inferred bound on any call-site parameter.

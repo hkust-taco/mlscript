@@ -1,0 +1,149 @@
+:.
+
+class Show[A](val label: Str)
+module Show with
+  using Show[Int] = Show[Int]("int")
+  using Show[Str] = Show[Str]("str")
+fun display[A](value: A)(using show: Show[A]) = show.label
+
+// Explicit type parameters are opaque: a generic body cannot select an instance from the
+// types its callers pass, even when every caller passes an `Int`.
+:e
+fun opaque[A](value: A) = display(value)
+opaque(1)
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	fun opaque[A](value: A) = display(value)
+//│ ║        	                          ^^^^^^^^^^^^^^
+//│ ╟── No instance found for the contextual parameter 'show' of type Show[A].
+//│ ║  l.+1: 	fun opaque[A](value: A) = display(value)
+//│ ║        	                          ^^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	fun display[A](value: A)(using show: Show[A]) = show.label
+//│ ║        	                         ^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance of type Show[Int] from namespace 'Show' does not accept all values reaching the query.
+//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance of type Show[Str] from namespace 'Show' does not accept all values reaching the query.
+//│ ║  l.XX: 	  using Show[Str] = Show[Str]("str")
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// The generic function asks its callers for the instance instead; each caller selects it.
+:expect ["int", "str"]
+fun forwarded[A](value: A)(using Show[A]) = display(value)
+[forwarded(1), forwarded("text")]
+//│ = ["int", "str"]
+
+// A lexical instance for the parameter does not serve a value of a known class in the body.
+:expect "int"
+fun concrete[A](value: A)(using Show[A]) = display(1)
+concrete("text")
+//│ = "int"
+
+// A nested generic function has its own opaque parameter, which the outer `Show[A]` does not serve.
+:e
+fun enclosing[A](value: A)(using Show[A]) =
+  fun inner[B](other: B) = display(other)
+  inner(value)
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+2: 	  fun inner[B](other: B) = display(other)
+//│ ║        	                           ^^^^^^^^^^^^^^
+//│ ╟── No instance found for the contextual parameter 'show' of type Show[A].
+//│ ║  l.+2: 	  fun inner[B](other: B) = display(other)
+//│ ║        	                           ^^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	fun display[A](value: A)(using show: Show[A]) = show.label
+//│ ║        	                         ^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance of type Show[Int] from namespace 'Show' does not accept all values reaching the query.
+//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance of type Show[Str] from namespace 'Show' does not accept all values reaching the query.
+//│ ║  l.XX: 	  using Show[Str] = Show[Str]("str")
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+// An instance for every type serves an abstract type parameter.
+class Describe[A](val label: Str)
+module Describe with
+  using Describe[Any] = Describe[Any]("anything")
+fun describe[A](value: A)(using d: Describe[A]) = d.label
+
+:expect ["anything", "anything"]
+fun general[A](value: A) = describe(value)
+[general(1), general("text")]
+//│ = ["anything", "anything"]
+
+// Generic classes are opaque in the same way: a method query sees the abstract `A`.
+:e
+class Unboxed[A](val value: A) with
+  fun shown = display(value)
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+2: 	  fun shown = display(value)
+//│ ║        	              ^^^^^^^^^^^^^^
+//│ ╟── No instance found for the contextual parameter 'show' of type Show[A].
+//│ ║  l.+2: 	  fun shown = display(value)
+//│ ║        	              ^^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	fun display[A](value: A)(using show: Show[A]) = show.label
+//│ ║        	                         ^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance of type Show[Int] from namespace 'Show' does not accept all values reaching the query.
+//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance of type Show[Str] from namespace 'Show' does not accept all values reaching the query.
+//│ ║  l.XX: 	  using Show[Str] = Show[Str]("str")
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+// FIXME: a class parameter carries the actual arguments of every construction into the
+// class body, so they reach the method's query as late values, and through it the queries
+// of other construction sites. Ordinary member lookup in the body does not use them.
+:fixme
+:expect ["int", "str"]
+class Boxed[A](val value: A)(using s: Show[A]) with
+  fun shown = display(value)
+[Boxed(1).shown, Boxed("text").shown]
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+2: 	  fun shown = display(value)
+//│ ║        	              ^^^^^^^^^^^^^^
+//│ ╟── This value reaches the type of the contextual parameter 'show' after its instance was selected; the selected instance of type Show[A] does not accept it.
+//│ ║  l.+2: 	  fun shown = display(value)
+//│ ║        	              ^^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	fun display[A](value: A)(using show: Show[A]) = show.label
+//│ ║        	                         ^^^^^^^^^^^^^^^^^^^
+//│ ╟── The selected instance is declared here.
+//│ ║  l.+1: 	class Boxed[A](val value: A)(using s: Show[A]) with
+//│ ║        	                                   ^
+//│ ╟── This value is incompatible with the selected instance.
+//│ ║  l.+3: 	[Boxed(1).shown, Boxed("text").shown]
+//│ ╙──      	       ^
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+3: 	[Boxed(1).shown, Boxed("text").shown]
+//│ ║        	                 ^^^^^^^^^^^^^
+//│ ╟── No instance found for the contextual parameter 's' of type Show[A].
+//│ ║  l.+3: 	[Boxed(1).shown, Boxed("text").shown]
+//│ ║        	                 ^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.+1: 	class Boxed[A](val value: A)(using s: Show[A]) with
+//│ ║        	                             ^^^^^^^^^^^^^^^^
+//│ ╟── This instance of type Show[Int] from namespace 'Show' does not accept all values reaching the query.
+//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance of type Show[Str] from namespace 'Show' does not accept all values reaching the query.
+//│ ║  l.XX: 	  using Show[Str] = Show[Str]("str")
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+3: 	[Boxed(1).shown, Boxed("text").shown]
+//│ ║        	 ^^^^^^^^
+//│ ╟── This value reaches the type of the contextual parameter 's' after its instance was selected; the selected instance of type Show[Int] does not accept it.
+//│ ║  l.+3: 	[Boxed(1).shown, Boxed("text").shown]
+//│ ║        	 ^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.+1: 	class Boxed[A](val value: A)(using s: Show[A]) with
+//│ ║        	                             ^^^^^^^^^^^^^^^^
+//│ ╟── The selected instance is declared here.
+//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This value is incompatible with the selected instance.
+//│ ║  l.+3: 	[Boxed(1).shown, Boxed("text").shown]
+//│ ╙──      	                       ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '["int", "str"]', got: 'undefined'

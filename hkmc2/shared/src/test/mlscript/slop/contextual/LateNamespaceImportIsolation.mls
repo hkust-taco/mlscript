@@ -4,5 +4,5 @@ import "./mlscript-compile/NamespaceFlow.mls"
 
 // Errors discovered by either bad importer cannot change this import's selected argument.
 :expect "first"
-NamespaceFlow.generic(new NamespaceFlow.First)
+NamespaceFlow.unannotated(new NamespaceFlow.First)
 //│ = "first"

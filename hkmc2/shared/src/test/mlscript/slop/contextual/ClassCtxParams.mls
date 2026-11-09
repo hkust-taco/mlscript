@@ -107,14 +107,14 @@ class Foo(using T) with
   print(T)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo9;
-//│ Foo9 = function Foo(tmp11) {
-//│   return globalThis.Object.freeze(new Foo.class(tmp11));
+//│ Foo9 = function Foo(tmp4) {
+//│   return globalThis.Object.freeze(new Foo.class(tmp4));
 //│ };
 //│ (class Foo8 {
 //│   static {
 //│     Foo9.class = this
 //│   }
-//│   constructor(tmp11) {
+//│   constructor(tmp4) {
 //│     Predef.print(T1);
 //│   }
 //│   toString() { return runtime.render(this); }

@@ -26,11 +26,10 @@ using Num = 0.42
 :sir
 let f1 = foo
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp, contextualOperand, f1;
-//│ set tmp = [contextual_instance_0⁰];
-//│ set contextualOperand = tmp;
+//│ let contextualOperand, f1;
+//│ set contextualOperand = contextual_instance_0⁰;
 //│ @private
-//│ define f1 as fun f1⁰() { return foo⁰()(...contextualOperand) };
+//│ define f1 as fun f1⁰() { return foo⁰()(contextualOperand) };
 //│ set f1¹ = f1⁰;
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -48,11 +47,10 @@ f1()
 :sir
 let f2 = bar
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp, contextualOperand, f2;
-//│ set tmp = [contextual_instance_0⁰];
-//│ set contextualOperand = tmp;
+//│ let contextualOperand, f2;
+//│ set contextualOperand = contextual_instance_0⁰;
 //│ @private
-//│ define f2 as fun f2⁰(x) { return bar⁰(x)(...contextualOperand) };
+//│ define f2 as fun f2⁰(x) { return bar⁰(x)(contextualOperand) };
 //│ set f2¹ = f2⁰;
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -70,17 +68,15 @@ f2(0.42)
 :sir
 let f3 = baz
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp, contextualOperand, tmp1, contextualOperand1, f3;
-//│ set tmp = [contextual_instance_0⁰];
-//│ set contextualOperand = tmp;
-//│ set tmp1 = [contextual_instance_0¹];
-//│ set contextualOperand1 = tmp1;
+//│ let contextualOperand, contextualOperand1, f3;
+//│ set contextualOperand = contextual_instance_0⁰;
+//│ set contextualOperand1 = contextual_instance_0¹;
 //│ @private
 //│ define f3 as fun f3⁰(x) {
 //│   let lambda;
 //│   @private
 //│   define lambda as fun lambda⁰(y) {
-//│     return baz⁰(x)(...contextualOperand)(y)(...contextualOperand1)
+//│     return baz⁰(x)(contextualOperand)(y)(contextualOperand1)
 //│   };
 //│   return lambda⁰
 //│ };
@@ -97,7 +93,7 @@ f3(43)(44)
 :sir
 foo()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp; set tmp = [contextual_instance_0⁰]; return foo⁰()(...tmp)
+//│ return foo⁰()(contextual_instance_0⁰)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [42]
 
@@ -105,7 +101,7 @@ foo()
 :sir
 bar(0.42)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp; set tmp = [contextual_instance_0⁰]; return bar⁰(0.42)(...tmp)
+//│ return bar⁰(0.42)(contextual_instance_0⁰)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [0.42, 42]
 
@@ -122,13 +118,12 @@ module Test with
 //│     return 0
 //│   }
 //│   method main⁰ = fun main¹(tmp) {
-//│     let contextualOperand, tmp1, contextualOperand1, lambda;
+//│     let contextualOperand, contextualOperand1, lambda;
 //│     set contextualOperand = Test².this;
-//│     set tmp1 = [tmp];
-//│     set contextualOperand1 = tmp1;
+//│     set contextualOperand1 = tmp;
 //│     @private
 //│     define lambda as fun lambda¹(j) {
-//│       return contextualOperand.test¹(j)(...contextualOperand1)
+//│       return contextualOperand.test¹(j)(contextualOperand1)
 //│     };
 //│     return lambda¹
 //│   }
