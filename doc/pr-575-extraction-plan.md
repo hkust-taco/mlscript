@@ -1,3 +1,7 @@
+NOTE: This is a temporary tracking document for the decomposition of the original PR #575 into smaller reviewable units.
+  It should be removed once the extraction is complete (ie, the remaining PRs are merged).
+
+
 # Extraction plan for PR #575
 
 Status updated 2026-11-09: E01–E03, B01–B05, E08, E14, E17–E18, structural
