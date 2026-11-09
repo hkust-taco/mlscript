@@ -1489,23 +1489,23 @@ foo()
 
 ## 13. Context Parameters (Type Classes)
 
-In new resolution (`#lang(0.3.x)`), a `using` parameter asks the compiler to
-supply an instance from the expression's lexical scope or implicit namespaces.
+In new resolution (`#lang(0.3.x)`), a `using` parameter list asks the compiler to
+supply arguments from the caller's lexical scope or implicit namespaces,
+unless it is supplied explicitly through a `using` argument list.
 
 ```mlscript
 using Int = 42
 fun answer(using n: Int) = n
 answer                    // 42
-answer(using 7)            // 7: an explicit list needs no search
+answer(using 7)            // 7: through an explicit `using` argument list
 fun add(using n: Int)(x: Int) = n + x
 add(1)                    // 43: supply the leading contextual list first
 ```
 
 A clause can contain named or anonymous parameters: `(using n: Int, Str)`.
-The predefined `use[T]` has the behavior of
+Querying a contextual parameter of type `T` can be done with `use[T]`, predefined as
 `fun use[T](using instance: T) = instance`.
-Classes also accept `using` clauses; `class Box(using val n: Int)` exposes `n`
-as a field. A class's contextual parameters are visible in its body and methods.
+Classes also accept `using` clauses, eg, `class Box(using val n: Int)`.
 
 ### Where Contextual Arguments Are Supplied
 
