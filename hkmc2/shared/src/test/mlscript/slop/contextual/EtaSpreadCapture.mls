@@ -1,0 +1,35 @@
+:.
+
+using Int = 7
+using Str = "context"
+fun collect(first: Int, ...rest)(using Int)(last: Int)(using Str) = [first, rest, last]
+
+// An eager spread captures its elements and length when the expansion is created.
+let items = mut [1, 2]
+let saved = collect(0, ...items)
+set items.[0] = 99
+items.push(5)
+//│ = 3
+//│ items = [99, 2, 5]
+//│ saved = fun saved
+
+:fixme // The expansion currently retains the mutable spread operand by reference.
+:expect [[0, [1, 2], 3], [0, [1, 2], 4]]
+[saved(3), saved(4)]
+//│ ═══[RUNTIME ERROR] Expected: '[[0, [1, 2], 3], [0, [1, 2], 4]]', got: '[[0, [99, 2, 5], 3], [0, [99, 2, 5], 4]]'
+//│ = [[0, [99, 2, 5], 3], [0, [99, 2, 5], 4]]
+
+// A later argument must not change the elements of an earlier eager spread.
+let earlier = mut [1, 2]
+fun change() =
+  set earlier.[0] = 88
+  3
+let ordered = collect(0, ...earlier, change())
+//│ earlier = [88, 2]
+//│ ordered = fun ordered
+
+:fixme // Spreading currently happens after the later argument has mutated its source.
+:expect [0, [1, 2, 3], 4]
+ordered(4)
+//│ ═══[RUNTIME ERROR] Expected: '[0, [1, 2, 3], 4]', got: '[0, [88, 2, 3], 4]'
+//│ = [0, [88, 2, 3], 4]

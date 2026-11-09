@@ -1,0 +1,38 @@
+:.
+
+import "../../../js/ContextualDefaults.mjs" as foreign
+declare class Foreign with
+  fun run(x?: Int)(using n: Int): Int
+  fun rest(x?: Int, ...xs)(using n: Int): Array[Any]
+let typed = foreign as Foreign
+using Int = 7
+//│ typed = {run: fun run, rest: fun rest}
+
+// Direct calls leave optional defaults to the foreign callee.
+:expect [42, 5, null]
+[typed.run(), typed.run(5), typed.run(null)]
+//│ = [42, 5, null]
+
+let saved = typed.run
+//│ saved = fun saved
+
+:fixme // The generated lambda binds null before the foreign default can run.
+:expect [42, 5, null]
+[saved(), saved(5), saved(null)]
+//│ ═══[RUNTIME ERROR] Expected: '[42, 5, null]', got: '[null, 5, null]'
+//│ = [null, 5, null]
+
+// Optional parameters before a rest parameter must retain the same distinction.
+let spread = typed.rest
+//│ spread = fun spread
+
+:fixme // Optional arguments must remain absent even when followed by a rest parameter.
+:expect [[42, []], [5, [6, 7]], [null, [8]]]
+[spread(), spread(5, 6, 7), spread(null, 8)]
+//│ ═══[RUNTIME ERROR] Expected: '[[42, []], [5, [6, 7]], [null, [8]]]', got: '[[null, []], [5, [6, 7]], [null, [8]]]'
+//│ = [[null, []], [5, [6, 7]], [null, [8]]]
+
+// Mirroring a fixed list still discards the extra index and array supplied by map.
+:expect [1, 2]
+[1, 2].map(saved)
+//│ = [1, 2]
