@@ -9,7 +9,7 @@ LexicalQueries.unannotated(1)
 
 :e
 LexicalQueries.unannotated("later")
-//│ ╔══[COMPILATION ERROR] Contextual argument resolution error in application
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
 //│ ║  l.+1: 	LexicalQueries.unannotated("later")
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── A value of class 'Str' flows into the type of a contextual argument after its instance was selected, making that type incompatible with the instance's type.
@@ -40,7 +40,7 @@ boxed(new Box[Int](1))
 
 :e
 boxed(new Box[Str]("later"))
-//│ ╔══[COMPILATION ERROR] Contextual argument resolution error in application
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
 //│ ║  l.+1: 	boxed(new Box[Str]("later"))
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── A value of class 'Str' flows into the type of a contextual argument after its instance was selected, making that type incompatible with the instance's type.
@@ -67,7 +67,7 @@ boxedAgain(new Box[Int](1))
 :e
 fun either(flag) = if flag then 1 else "late"
 boxedAgain(new Box(either(true)))
-//│ ╔══[COMPILATION ERROR] Contextual argument resolution error in application
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
 //│ ║  l.+2: 	boxedAgain(new Box(either(true)))
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── A value of class 'Str' flows into the type of a contextual argument after its instance was selected, making that type incompatible with the instance's type.

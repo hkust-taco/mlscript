@@ -3190,7 +3190,7 @@ class NewResolver:
     * the flows it had seen; without one, start at `site`. */
   private def reportContextualConflict(site: Term, notes: Ls[(Message, Opt[Loc])])(using ResolutionContext): Unit =
     val header = rctx.state.trigger.filter(_.toLoc.nonEmpty) match
-      case S(trigger) => msg"Contextual argument resolution error in ${trigger.describe}" -> trigger.toLoc
+      case S(trigger) => msg"Contextual argument resolution error caused by ${trigger.describe}" -> trigger.toLoc
       case N => msg"Resolution error in ${site.describe}" -> site.toLoc
     rctx.report(ErrorReport(header :: notes, source = Diagnostic.Source.Compilation))
 

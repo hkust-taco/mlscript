@@ -8,7 +8,7 @@ EtaFlow.adapter(1)
 
 :e
 EtaFlow.adapter("later")
-//│ ╔══[COMPILATION ERROR] Contextual argument resolution error in application
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
 //│ ║  l.+1: 	EtaFlow.adapter("later")
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── A value of class 'Str' flows into the type of a contextual argument after its instance was selected, making that type incompatible with the instance's type.

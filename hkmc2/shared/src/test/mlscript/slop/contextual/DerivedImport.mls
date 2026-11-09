@@ -13,7 +13,7 @@ fixed(List(1))
 
 :e
 fixed(List("late"))
-//│ ╔══[COMPILATION ERROR] Contextual argument resolution error in application
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
 //│ ║  l.+1: 	fixed(List("late"))
 //│ ║        	^^^^^^^^^^^^^^^^^^^
 //│ ╟── A value of class 'Str' flows into the type of a contextual argument after its instance was selected, making that type incompatible with the instance's type.

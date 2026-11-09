@@ -22,7 +22,7 @@ fun agree(receiver) = receiver.method
 :e
 fun disagree(receiver) = receiver.method
 [disagree(new First), disagree(new Different)]
-//│ ╔══[COMPILATION ERROR] Contextual argument resolution error in application
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
 //│ ║  l.+2: 	[disagree(new First), disagree(new Different)]
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── A value of class 'Str' flows into the type of a contextual argument after its instance was selected, making that type incompatible with the instance's type.
@@ -43,7 +43,7 @@ fun disagree(receiver) = receiver.method
 //│ ╟── The selected instance is declared here, with type Show[Int].
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Contextual argument resolution error in application
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
 //│ ║  l.+2: 	[disagree(new First), disagree(new Different)]
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── This expression's callees select different instances for the contextual argument supplied implicitly here.
@@ -73,7 +73,7 @@ fun reveal(using value: Different) = value
 :e
 fun late(receiver) = receiver.method
 [late(new First), late(reveal)]
-//│ ╔══[COMPILATION ERROR] Contextual argument resolution error in member reference
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by member reference
 //│ ║  l.+2: 	[late(new First), late(reveal)]
 //│ ║        	                       ^^^^^^
 //│ ╟── A value of class 'Str' flows into the type of a contextual argument after its instance was selected, making that type incompatible with the instance's type.
@@ -94,7 +94,7 @@ fun late(receiver) = receiver.method
 //│ ╟── The selected instance is declared here, with type Show[Int].
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Contextual argument resolution error in member reference
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by member reference
 //│ ║  l.+2: 	[late(new First), late(reveal)]
 //│ ║        	                       ^^^^^^
 //│ ╟── This expression's callees select different instances for the contextual argument supplied implicitly here.
@@ -152,7 +152,7 @@ fun sameClauses(receiver) = receiver.method
 :e
 fun differentClauses(receiver) = receiver.method
 [differentClauses(new BothInt), differentClauses(new IntStr)]
-//│ ╔══[COMPILATION ERROR] Contextual argument resolution error in application
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
 //│ ║  l.+2: 	[differentClauses(new BothInt), differentClauses(new IntStr)]
 //│ ║        	                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── A value of class 'Str' flows into the type of a contextual argument after its instance was selected, making that type incompatible with the instance's type.
@@ -170,7 +170,7 @@ fun differentClauses(receiver) = receiver.method
 //│ ╟── The selected instance is declared here, with type Show[Int].
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Contextual argument resolution error in application
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
 //│ ║  l.+2: 	[differentClauses(new BothInt), differentClauses(new IntStr)]
 //│ ║        	                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── This expression's callees select different instances for the contextual argument supplied implicitly here.

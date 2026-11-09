@@ -35,7 +35,7 @@ class Other with
 :e
 fun disagree(value) = value.read()
 [disagree(new Reader), disagree(new Other)]
-//│ ╔══[COMPILATION ERROR] Contextual argument resolution error in application
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
 //│ ║  l.+2: 	[disagree(new Reader), disagree(new Other)]
 //│ ║        	                       ^^^^^^^^^^^^^^^^^^^
 //│ ╟── This selection resolves to members with different contextual parameter lists.
@@ -55,7 +55,7 @@ class StringReader with
 :e
 fun select(value) = value.read()
 [select(new Reader), select(new StringReader)]
-//│ ╔══[COMPILATION ERROR] Contextual argument resolution error in application
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
 //│ ║  l.+2: 	[select(new Reader), select(new StringReader)]
 //│ ║        	                     ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── This expression's callees select different instances for the contextual argument supplied implicitly here.
@@ -75,7 +75,7 @@ fun select(value) = value.read()
 :e
 fun explicit(value) = value.read()(using 1)
 [explicit(new Reader), explicit(new Other)]
-//│ ╔══[COMPILATION ERROR] Contextual argument resolution error in application
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
 //│ ║  l.+2: 	[explicit(new Reader), explicit(new Other)]
 //│ ║        	                       ^^^^^^^^^^^^^^^^^^^
 //│ ╟── This selection resolves to members with different contextual parameter lists.

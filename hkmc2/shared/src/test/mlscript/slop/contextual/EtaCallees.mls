@@ -28,7 +28,7 @@ fun mismatch(receiver) = receiver.method
 let initial = mismatch(new First)
 let different = mismatch(revealDifferent)
 [initial(1), different(2)]
-//│ ╔══[COMPILATION ERROR] Contextual argument resolution error in member reference
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by member reference
 //│ ║  l.+3: 	let different = mismatch(revealDifferent)
 //│ ║        	                         ^^^^^^^^^^^^^^^
 //│ ╟── This expression's callees select different instances for the contextual argument supplied implicitly here.
@@ -66,7 +66,7 @@ fun bindOptional(receiver) = receiver.method
 let optional = bindOptional(new Optional)
 let empty = bindOptional(new Empty)
 [optional(), empty()]
-//│ ╔══[COMPILATION ERROR] Contextual argument resolution error in application
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
 //│ ║  l.+3: 	let empty = bindOptional(new Empty)
 //│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── This selection cannot be eta-expanded, as its callees take parameter lists of different shapes before their contextual parameter lists.
@@ -91,7 +91,7 @@ class Rest with
 :e
 fun bindMixed(receiver) = receiver.method
 [bindMixed(new Mixed), bindMixed(new Rest)]
-//│ ╔══[COMPILATION ERROR] Contextual argument resolution error in application
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
 //│ ║  l.+2: 	[bindMixed(new Mixed), bindMixed(new Rest)]
 //│ ║        	                       ^^^^^^^^^^^^^^^^^^^
 //│ ╟── This selection cannot be eta-expanded, as its callees take parameter lists of different shapes before their contextual parameter lists.

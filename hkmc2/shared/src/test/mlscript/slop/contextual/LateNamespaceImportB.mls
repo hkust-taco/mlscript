@@ -5,7 +5,7 @@ import "./mlscript-compile/NamespaceFlow.mls"
 // Each importer must independently report the provider revealed after selection.
 :e
 NamespaceFlow.unannotated(new NamespaceFlow.Second)
-//│ ╔══[COMPILATION ERROR] Contextual argument resolution error in application
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
 //│ ║  l.+1: 	NamespaceFlow.unannotated(new NamespaceFlow.Second)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The instance of the contextual argument supplied implicitly here was selected before flow revealed the implicit namespace module 'Second' of its type.
