@@ -47,17 +47,43 @@ let different = mismatch(revealDifferent)
 //│ different = fun
 //│ initial = fun
 
-// Ordinary parameter arities do not change the contextual calling convention.
+// Ordinary parameter arities do not change the contextual calling convention:
+// a call passes its written arguments and the same instances to every callee.
 class Optional with
   fun method(x?: Int)(using n: Int) = n
 class Empty with
   fun method()(using n: Int) = n
 
 :expect [7, 7]
+fun callOptional(receiver) = receiver.method()
+[callOptional(new Optional), callOptional(new Empty)]
+//│ = [7, 7]
+
+// An eta-expansion is one lambda that mirrors its callee's parameter list, so its
+// callees must have parameter lists of the same shape before the contextual list.
+:e
 fun bindOptional(receiver) = receiver.method
 let optional = bindOptional(new Optional)
 let empty = bindOptional(new Empty)
 [optional(), empty()]
-//│ = [7, 7]
-//│ empty = fun
-//│ optional = fun
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	fun bindOptional(receiver) = receiver.method
+//│ ║        	                             ^^^^^^^^^^^^^^^
+//│ ╟── The callees of this reference take different parameter lists before a contextual parameter list, so it cannot be eta-expanded.
+//│ ║  l.+1: 	fun bindOptional(receiver) = receiver.method
+//│ ╙──      	                             ^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ empty = undefined
+//│ optional = undefined
+
+class AlsoOptional with
+  fun method(x?: Int)(using n: Int) = n + 1
+
+:expect [7, 8]
+fun bindBoth(receiver) = receiver.method
+let first = bindBoth(new Optional)
+let second = bindBoth(new AlsoOptional)
+[first(), second(1)]
+//│ = [7, 8]
+//│ first = fun
+//│ second = fun

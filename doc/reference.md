@@ -1541,7 +1541,9 @@ Eta-expansion resolves all its contextual arguments where the expansion is
 written. It evaluates the receiver and written arguments once there, in source
 order, and retains method receiver binding. The callee runs when the expansion
 receives its last abstracted ordinary list. Later instance declarations cannot
-change an existing expansion.
+change an existing expansion. The expansion takes the callee's parameter list, as the
+lambda `x => scale(x)(using 7)` does, so the callees of one reference must have
+parameter lists of the same shape before the contextual list.
 
 A lambda whose parameter list is contextual is itself completed where written:
 `let get = (using n: Int) => n` binds `get` to `7` in the example above. The compiler

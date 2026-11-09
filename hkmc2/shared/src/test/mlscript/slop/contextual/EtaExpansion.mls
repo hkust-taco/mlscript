@@ -30,9 +30,7 @@ let f1 = foo
 //│ set tmp = [contextual_instance_0⁰];
 //│ set contextualOperand = tmp;
 //│ @private
-//│ define f1 as fun f1⁰(...arguments1) {
-//│   return foo⁰(...arguments1)(...contextualOperand)
-//│ };
+//│ define f1 as fun f1⁰() { return foo⁰()(...contextualOperand) };
 //│ set f1¹ = f1⁰;
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -54,9 +52,7 @@ let f2 = bar
 //│ set tmp = [contextual_instance_0⁰];
 //│ set contextualOperand = tmp;
 //│ @private
-//│ define f2 as fun f2⁰(...arguments1) {
-//│   return bar⁰(...arguments1)(...contextualOperand)
-//│ };
+//│ define f2 as fun f2⁰(x) { return bar⁰(x)(...contextualOperand) };
 //│ set f2¹ = f2⁰;
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -80,11 +76,11 @@ let f3 = baz
 //│ set tmp1 = [contextual_instance_0¹];
 //│ set contextualOperand1 = tmp1;
 //│ @private
-//│ define f3 as fun f3⁰(...arguments1) {
+//│ define f3 as fun f3⁰(x) {
 //│   let lambda;
 //│   @private
-//│   define lambda as fun lambda⁰(...arguments2) {
-//│     return baz⁰(...arguments1)(...contextualOperand)(...arguments2)(...contextualOperand1)
+//│   define lambda as fun lambda⁰(y) {
+//│     return baz⁰(x)(...contextualOperand)(y)(...contextualOperand1)
 //│   };
 //│   return lambda⁰
 //│ };
@@ -131,8 +127,8 @@ module Test with
 //│     set tmp1 = [tmp];
 //│     set contextualOperand1 = tmp1;
 //│     @private
-//│     define lambda as fun lambda¹(...arguments1) {
-//│       return contextualOperand.test¹(...arguments1)(...contextualOperand1)
+//│     define lambda as fun lambda¹(j) {
+//│       return contextualOperand.test¹(j)(...contextualOperand1)
 //│     };
 //│     return lambda¹
 //│   }
@@ -141,3 +137,20 @@ module Test with
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
+// An expansion mirrors its callee's parameter list, as `x => shift(x)(using 42)` does,
+// so a callback receiving extra arguments (`map` also passes the index and the array)
+// does not pass them on to a callee that does not accept them.
+fun shift(x)(using n: Int) = x + n
+
+:expect [43, 44]
+[1, 2].map(shift)
+//│ = [43, 44]
+
+// An omitted optional parameter of the expansion is forwarded as null, as when omitted.
+fun optional(x, y?)(using n: Int) = [x, y, n]
+
+:expect [[1, null, 42], [1, 2, 42]]
+let partial = optional
+[partial(1), partial(1, 2)]
+//│ = [[1, null, 42], [1, 2, 42]]
+//│ partial = fun partial

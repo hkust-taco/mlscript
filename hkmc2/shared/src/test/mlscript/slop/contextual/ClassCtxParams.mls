@@ -141,3 +141,30 @@ x => x.Foo#S
 //│ = fun
 
 
+// An explicit contextual list in an `extends` clause reaches the parent constructor.
+class Parent(using val n: Int)
+class ExplicitChild extends Parent(using 7)
+
+:expect 7
+new ExplicitChild().n
+//│ = 7
+
+// TODO: `extends` clauses are class operands, not contextual sites, so they do not yet
+// supply a parent constructor's contextual lists; lowering rejects the partial application.
+:todo
+class ImplicitChild extends Parent
+//│ ╔══[COMPILATION ERROR] Extending a partially applied class is not supported
+//│ ║  l.+1: 	class ImplicitChild extends Parent
+//│ ╙──      	                            ^^^^^^
+
+:todo
+:expect 99
+new ImplicitChild().n
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	new ImplicitChild().n
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'ImplicitChild' does not contain member 'n'
+//│ ║  l.+1: 	new ImplicitChild().n
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '99', got: 'undefined'

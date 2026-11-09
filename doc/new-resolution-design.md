@@ -393,10 +393,15 @@ errors through the same matching relation used for selection.
 
 An Abstract step has a synthesized ordinary lambda for flow and an application
 for its continuation. That application owns further completion steps, and the
-lambda observes its completed result. A fresh rest parameter forwards the exact
-argument tuple: copying the first callee's fixed parameters could turn an omitted
-optional argument into a supplied argument for another callee with an empty list.
-Ordinary application inference still checks each callee's arity and constraints.
+lambda observes its completed result. The lambda mirrors the abstracted parameter
+list of the first callee, with fresh unannotated parameters that keep its optional
+markers and variadic structure, so it accepts the arguments that a direct reference to
+the callee accepts. A variadic wrapper would instead forward every argument that its
+caller passes, such as the index and array that `map` passes to its callback, to a
+callee that does not accept them. An omitted optional parameter is null in the lambda,
+and forwarding null is equivalent to omitting the argument. A later callee whose list
+has a different shape is a site error, since the site has one expansion. Ordinary
+application inference still checks each callee's arity and constraints.
 Lowering flattens the continuation steps, interleaves contextual and written
 arguments, and emits lambdas around the ordinary call or constructor operation.
 It captures operands once in source order and reconstructs method selections on

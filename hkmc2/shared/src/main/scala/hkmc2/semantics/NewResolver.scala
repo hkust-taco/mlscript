@@ -5463,6 +5463,10 @@ class NewResolver:
                   val work = rctx.state.contextualWork.getOrElseUpdate(new Identity(term), new ContextualWork(site))
                   term.contextualCompletion = S(ContextualCompletion(Nil, work.output))
                 case N => softAssert(false, "An unfinished contextual site must retain its lexical environment")
+              // A completed block cannot gain targets, and stored values are completed, so a
+              // contextual callee only reaches a sealed site that already decided its completion.
+              // Otherwise the value would reach no consumer.
+              softAssert(term.contextualCompletion.nonEmpty, "A sealed contextual site cannot receive a new contextual callee")
               term.contextualCompletion.foreach: completion =>
                 if !subscribed then
                   subscribed = true
@@ -5482,6 +5486,28 @@ class NewResolver:
         callable.sourceParamLists.map(ps => (ps.flags.ctx, ps.allParams.length))
       case Marked(callable: CallableTypeShape, _) => callable.paramLists.map(ps => (false, ps.allParams.length))
       case _ => value.unappliedParams.map((ps, _) => (ps.flags.ctx, ps.allParams.length))
+
+  /** A site whose callees cannot share its completion must not be lowered: mark it, so that
+    * lowering emits an error instead of a call that some callee does not accept. Each callee
+    * delivery, in each activation, reaches the same check; report the conflict once.
+    */
+  private def contextualSiteError(term: ContextualSite, message: Message)(using ResolutionContext): Unit = term match
+    case site: (Term & PossiblyErroneous) =>
+      if !rctx.hasError(site) then
+        rctx.markError(site)
+        resolError(term, message -> term.toLoc :: Nil)
+    case _ => resolError(term, message -> term.toLoc :: Nil)
+
+  /** The source parameter list that an Abstract step mirrors: the callee's next remaining list. */
+  private def abstractedParamList(shape: TermShape): Opt[ParamList] =
+    val ShapeParts(value, _, _) = shapeParts(shape)
+    value match
+      case Marked(callable: CallableTypeShape, _) => callable.sourceParamLists.headOption
+      case _ => value.unappliedParams.headOption.map(_._1)
+
+  /** What a mirrored parameter list must preserve to accept the same arguments as its source. */
+  private def parameterListShape(params: ParamList): (Ls[Bool], Opt[Int]) =
+    (params.params.map(_.flags.opt), params.variadic.map(_.trailing.length))
 
   /** Stored values have already passed their producing value site's completion. Inspect only
     * remaining clauses; the invariant does not require expanding declared value types.
@@ -5526,7 +5552,7 @@ class NewResolver:
               case CtxTup(fields) => fields.length
               case _ => -1
             if count != expectedCount then
-              resolError(term, msg"This reference resolves to members with different contextual parameter lists." -> term.toLoc :: Nil)
+              contextualSiteError(term, msg"This reference resolves to members with different contextual parameter lists.")
             else
               if rctx.state.contextualStages.add((term, index)) then
                 listenRaw(app, discardMarks = false):
@@ -5534,21 +5560,33 @@ class NewResolver:
                   case _: SymShape => softAssert(false, "An application must deliver values")
               applyShape(value, app.rhs, app, checked = true)
           case ContextualStep.Abstract(_, _) =>
-            resolError(term, msg"This reference resolves to members with different contextual parameter lists." -> term.toLoc :: Nil)
+            contextualSiteError(term, msg"This reference resolves to members with different contextual parameter lists.")
       case (false, _) :: remaining if remaining.exists(_._1) && (term.contextualSite match
           case site: ResolutionSite.Contextual => site.role != ContextualRole.ApplicationHead
           case role => role != ContextualRole.ApplicationHead) =>
         val completion = term.contextualCompletion.getOrElse(lastWords("An abstracted site must have an output host"))
+        val source = abstractedParamList(value)
+        softAssert(source.nonEmpty, "An abstracted callee must expose its ordinary parameter list")
         val step = completion.steps.lift(index).orElse:
-          rctx.state.contextualWork.get(new Identity(term)).filter(_ => rctx.canResolve(term)).map: work =>
+          rctx.state.contextualWork.get(new Identity(term)).filter(_ => rctx.canResolve(term)).zip(source).map: (work, written) =>
             softAssert(index == work.steps.length, "Contextual application steps must be appended in order")
-            // Forward the exact argument tuple. Callees with one contextual convention
-            // may differ in ordinary arity, and omitted optional arguments must stay omitted.
-            val symbol = new VarSymbol(Tree.Ident("arguments"), mut = false)(using rctx.owner)
-            val parameter = Param.simple(symbol)
-            symbol.decl = S(parameter)
-            val params = ParamList(ParamListFlags.empty, Nil, S(Variadic(parameter, Nil)))(term.toLoc)
-            val args = SimpleRef(symbol)(N).withLocOf(term)
+            // Mirror the callee's parameter list, as for `x => f(x)(using ...)`. A variadic
+            // wrapper would forward every argument that its caller passes, so a callback
+            // invoked with extra arguments, as `map` invokes its callback, would pass them
+            // to a callee that does not accept them. An omitted optional parameter is null
+            // in the lambda, and forwarding null is equivalent to omitting the argument.
+            def mirror(parameter: Param): Param =
+              val name = if parameter.sym.nme.isEmpty then "argument" else parameter.sym.nme
+              val symbol = new VarSymbol(Tree.Ident(name), mut = false)(using rctx.owner)
+              val mirrored = Param(FldFlags.empty.copy(opt = parameter.flags.opt), symbol, N, Modulefulness.none, Nil)(term.toLoc)
+              symbol.decl = S(mirrored)
+              mirrored
+            val params = ParamList(ParamListFlags.empty, written.params.map(mirror), written.variadic.map(_.map(mirror)))(term.toLoc)
+            def forward(parameter: Param): Elem = Fld(FldFlags.empty, SimpleRef(parameter.sym)(N).withLocOf(term), N)
+            val fields = params.params.map(forward) ::: params.variadic.toList.flatMap: variadic =>
+              Spd(SpreadKind.Eager, SimpleRef(variadic.param.sym)(N).withLocOf(term), false) :: variadic.trailing.map(forward)
+            val args = Tup(fields)(Tree.DummyTup).withLocOf(term)
+            rctx.recordLexicalBinders(args, work.site.context.typeBinders)
             val app = new App(Missing, args)(Tree.DummyApp, N, FlowSymbol.app()).withLocOf(term)
             rctx.recordLexicalBinders(app, work.site.context.typeBinders)
             // The lambda's body consumes the completed continuation. Its raw application
@@ -5566,12 +5604,17 @@ class NewResolver:
             step
         softAssert(step.nonEmpty, "A completed site cannot acquire a new abstraction step")
         step.foreach:
-          case ContextualStep.Abstract(_, app) => applyShape(value, app.rhs, app, checked = true)
+          // The expansion is a single lambda, so every callee must accept the parameter
+          // list that the first callee's expansion mirrors.
+          case ContextualStep.Abstract(params, app) =>
+            if source.exists(written => parameterListShape(written) != parameterListShape(params)) then
+              contextualSiteError(term, msg"The callees of this reference take different parameter lists before a contextual parameter list, so it cannot be eta-expanded.")
+            else applyShape(value, app.rhs, app, checked = true)
           case ContextualStep.Supply(_) =>
-            resolError(term, msg"This reference resolves to members with different contextual parameter lists." -> term.toLoc :: Nil)
+            contextualSiteError(term, msg"This reference resolves to members with different contextual parameter lists.")
       case _ => term.contextualCompletion.foreach: completion =>
         if index < completion.steps.length then
-          resolError(term, msg"This reference resolves to members with different contextual parameter lists." -> term.toLoc :: Nil)
+          contextualSiteError(term, msg"This reference resolves to members with different contextual parameter lists.")
         else publishCompleted(completion.output, value)
 
   /** Every symbolic target path uses this gate, including explicit using calls and dynamic
