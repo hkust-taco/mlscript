@@ -1,0 +1,134 @@
+:.
+
+using Int = 7
+using Str = "context"
+
+// Generated rest and trailing parameters retain their source representations.
+fun layout(first: Int, optional?: Str, ...middle, last: Int)(using n: Int) =
+  [first, optional, middle, last, n]
+
+:sir
+:siret
+let forwarded = layout
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let contextualOperand: Int⁰, forwarded;
+//│ set contextualOperand = contextual_instance_0⁰;
+//│ @private
+//│ define forwarded as fun forwarded⁰(first: Int⁰, ...args: Array⁰): ? {
+//│   let optional: Unknown, middle: Array⁰, last: Int⁰;
+//│   do runtime⁰.checkVariadicArgs⁰("", 2, 1, args);
+//│   match args
+//│     Array(2+) =>
+//│       set optional = args.0;
+//│       end
+//│     else
+//│       set optional = null;
+//│       end
+//│   set middle = runtime⁰.Tuple⁰.sliceArray⁰(args, 1, 1);
+//│   set last = (args.-1 as! Int⁰);
+//│   return layout⁰(first, optional, ...middle, last)(contextualOperand)
+//│ };
+//│ set forwarded¹ = forwarded⁰;
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ forwarded = fun forwarded
+
+:expect [[1, null, [], 9, 7], [1, "x", [2, 3], 9, 7]]
+[forwarded(1, 9), forwarded(1, "x", 2, 3, 9)]
+//│ = [[1, null, [], 9, 7], [1, "x", [2, 3], 9, 7]]
+
+// Erasure must consider every callee, including a later unannotated one.
+class Typed with
+  fun take(value: Int)(using n: Int) = n
+class Untyped with
+  fun take(value)(using n: Int) = n + 1
+
+:sir
+:siret
+:expect [7, 8]
+fun bind(receiver) = receiver.take
+let typed = bind(new Typed)
+let untyped = bind(new Untyped)
+[typed(1), untyped(2)]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Typed⁰, tmp1: Untyped⁰, tmp2: ?, tmp3: ?;
+//│ define bind⁰ as fun bind¹(receiver: ?): ? {
+//│   let contextualOperand: ?, contextualOperand1: Int⁰, lambda;
+//│   set contextualOperand = receiver;
+//│   set contextualOperand1 = contextual_instance_0⁰;
+//│   @private
+//│   define lambda as fun lambda⁰(value: Unknown): ? {
+//│     let callPrefix: ?;
+//│     set callPrefix = contextualOperand.take﹖(value);
+//│     return callPrefix(contextualOperand1)
+//│   };
+//│   return lambda⁰
+//│ };
+//│ set tmp = new Typed⁰();
+//│ set typed⁰ = bind¹(tmp);
+//│ set tmp1 = new Untyped⁰();
+//│ set untyped⁰ = bind¹(tmp1);
+//│ set tmp2 = typed⁰(1);
+//│ set tmp3 = untyped⁰(2);
+//│ return [tmp2, tmp3]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [7, 8]
+//│ typed = fun
+//│ untyped = fun
+
+// Each invocation owns the locals extracted from its rest array, including across currying.
+fun curried(first: Int, ...middle, last: Int)(using Int)(end: Int)(using Str) =
+  [first, middle, last, end]
+let expanded = curried
+let left = expanded(1, 2, 3)
+let right = expanded(4, 5, 6)
+//│ expanded = fun expanded
+//│ left = fun
+//│ right = fun
+
+:expect [[1, [2], 3, 7], [4, [5], 6, 8]]
+[left(7), right(8)]
+//│ = [[1, [2], 3, 7], [4, [5], 6, 8]]
+
+// Explicit specialization does not change a generic declaration's runtime convention.
+import "./mlscript-compile/EtaFlow.mls"
+
+:sir
+:siret
+let imported = EtaFlow.consume[Int]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let contextualOperand: module EtaFlow⁰, contextualOperand1: Evidence⁰, imported;
+//│ set contextualOperand = EtaFlow⁰;
+//│ set contextualOperand1 = EtaFlow⁰.contextual_instance_0¹;
+//│ @private
+//│ define imported as fun imported⁰(value: Unknown): ? {
+//│   return contextualOperand.consume⁰(value)(contextualOperand1)
+//│ };
+//│ set imported¹ = imported⁰;
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ imported = fun imported
+
+:expect "int"
+imported(1)
+//│ = "int"
+
+// An unboxed parameter must not require a cast from an unknown wrapper parameter.
+// This block checks lowering; it does not execute the target-specific primitive ABI in JS.
+:!js
+:sir
+:siret
+fun unboxed(value: Int32)(using n: Int): Int = n
+let forwardUnboxed = unboxed
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let contextualOperand: Int⁰, forwardUnboxed;
+//│ define unboxed⁰ as fun unboxed¹(value: Int32)(n: Int⁰): Int⁰ {
+//│   return n
+//│ };
+//│ set contextualOperand = contextual_instance_0⁰;
+//│ @private
+//│ define forwardUnboxed as fun forwardUnboxed⁰(value: Int32): ? {
+//│   return unboxed¹(value)(contextualOperand)
+//│ };
+//│ set forwardUnboxed¹ = forwardUnboxed⁰;
+//│ end

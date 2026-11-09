@@ -1151,19 +1151,22 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       def expand(rest: Ls[PendingArgs], reversed: Ls[CallArgs])(next: Result => Block)(using LoweringCtx): Block = rest match
         case R(args) :: tail => expand(tail, args :: reversed)(next)
         case L(params) :: tail =>
-          val (physical, prologue, forwarded) = if isMls then
-            val (physical, prologue) = lowerTrailingParams(params, N)
+          // Tuple destructuring would apply the contextual prologue in the enclosing scope.
+          // Keep it contextual until the lambda's scope exists: its extracted locals must
+          // belong to each invocation, including when it returns another lambda.
+          val wrapper: (LoweredParamList, LoweringCtx ?=> Block => Block, Ls[Arg]) = if isMls then
+            val lowered = lowerTrailingParams(params, N)
             val values = params.params.map(_.sym.asSimpleRef.asArg) ::: params.variadic.toList.flatMap: variadic =>
               Arg(S(SpreadKind.Eager), variadic.param.sym.asSimpleRef) :: variadic.trailing.map(_.sym.asSimpleRef.asArg)
-            (physical, prologue, values)
+            (lowered._1, lowered._2, values)
           else
             val forwarding = OptionalParams.forwarding(LoweredParamList.callingConvention(params),
               fixedArity = params.variadic.isEmpty)
             (forwarding.params, (body: Block) => body, forwarding.args)
           val body = LoweringCtx.nestFunc(N).givenIn:
             inScopedBlock:
-              prologue(expand(tail, LoweredArgs(forwarded)(params.toLoc) :: reversed)(Ret))
-          next(Lambda(physical, body)(Nil, loc))
+              wrapper._2(expand(tail, LoweredArgs(wrapper._3)(params.toLoc) :: reversed)(Ret))
+          next(Lambda(wrapper._1, body)(Nil, loc))
         case Nil => invoke(function, reversed.reverse, next)
       def capture(rest: Ls[Term], reversed: Ls[PendingArgs]): Block = rest match
         case argument :: tail => abstractions.get(argument) match

@@ -416,7 +416,11 @@ for its continuation. That application owns further completion steps, and the
 lambda observes its completed result. The lambda mirrors the abstracted parameter
 list of the first callee, with fresh unannotated parameters that keep its optional
 markers and variadic structure, so it accepts the arguments that a direct reference to
-the callee accepts. A variadic wrapper would instead forward every argument that its
+the callee accepts. Erasure joins the corresponding parameter representations of all
+completed targets of the synthesized forwarding call, including imported declarations.
+This preserves concrete and rest-parameter representations without copying annotations
+across generic scopes or specializing a generic declaration's runtime convention.
+A variadic wrapper would instead forward every argument that its
 caller passes, such as the index and array that `map` passes to its callback, to a
 callee that does not accept them. MLscript wrappers bind omitted optional parameters
 to null. Foreign wrappers reuse optional-argument forwarding: absent fixed slots stay

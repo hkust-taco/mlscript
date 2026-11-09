@@ -79,6 +79,10 @@ trait AppImpl:
     * completeBlock seals this host along with the application; mkClone copies its snapshot.
     */
   private[semantics] val callableTargets: Publisher[TermShape] = new Publisher[TermShape] {}
+  /** Completed call targets retain source clauses even when a callee returns no value.
+    * Erasure reads these declarations without subscribing to or specializing their flow. */
+  private[hkmc2] def calledParamLists: Iterator[ParamList] =
+    callableTargets.shapes.iterator.flatMap(_.nextSourceParamList)
 
 trait NewSelImpl extends NewResolvableImpl:
   self: Term.NewSel =>

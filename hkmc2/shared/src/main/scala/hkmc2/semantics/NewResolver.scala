@@ -5650,13 +5650,6 @@ class NewResolver:
         reportContextualConflict(term, message -> term.toLoc :: notes)
     case _ => reportContextualConflict(term, message -> term.toLoc :: notes)
 
-  /** The source parameter list that an Abstract step mirrors: the callee's next remaining list. */
-  private def abstractedParamList(shape: TermShape): Opt[ParamList] =
-    val ShapeParts(value, _, _) = shapeParts(shape)
-    value match
-      case Marked(callable: CallableTypeShape, _) => callable.sourceParamLists.headOption
-      case _ => value.unappliedParams.headOption.map(_._1)
-
   /** What a mirrored parameter list must preserve to accept the same arguments as its source. */
   private def parameterListShape(params: ParamList): (Ls[Bool], Opt[Int]) =
     (params.params.map(_.flags.opt), params.variadic.map(_.trailing.length))
@@ -5750,7 +5743,7 @@ class NewResolver:
           case site: ResolutionSite.Contextual => site.role != ContextualRole.ApplicationHead
           case role => role != ContextualRole.ApplicationHead) =>
         val completion = term.contextualCompletion.getOrElse(lastWords("An abstracted site must have an output host"))
-        val source = abstractedParamList(value)
+        val source = value.nextSourceParamList
         softAssert(source.nonEmpty, "An abstracted callee must expose its ordinary parameter list")
         val step = completion.steps.lift(index).orElse:
           rctx.state.contextualWork.get(new Identity(term)).filter(_ => rctx.canResolve(term)).zip(source).map: (work, written) =>

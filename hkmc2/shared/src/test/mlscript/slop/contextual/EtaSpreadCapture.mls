@@ -5,10 +5,27 @@ using Str = "context"
 fun collect(first: Int, ...rest)(using Int)(last: Int)(using Str) = [first, rest, last]
 
 // An eager spread captures its elements and length when the expansion is created.
+:sir
+:siret
 let items = mut [1, 2]
 let saved = collect(0, ...items)
 set items.[0] = 99
 items.push(5)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let contextualOperand: Int⁰, contextualOperand1: Array⁰, contextualOperand2: Int⁰, contextualOperand3: Str⁰, saved;
+//│ set items⁰ = mut [1, 2];
+//│ set contextualOperand = 0;
+//│ set contextualOperand1 = [...items⁰];
+//│ set contextualOperand2 = contextual_instance_0⁰;
+//│ set contextualOperand3 = contextual_instance_1⁰;
+//│ @private
+//│ define saved as fun saved⁰(last: Int⁰): ? {
+//│   return collect⁰(contextualOperand, ...contextualOperand1)(contextualOperand2)(last)(contextualOperand3)
+//│ };
+//│ set saved¹ = saved⁰;
+//│ set items⁰.0 = 99;
+//│ return items⁰.push⁰(5)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
 //│ items = [99, 2, 5]
 //│ saved = fun saved

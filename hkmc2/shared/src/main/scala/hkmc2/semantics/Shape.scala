@@ -412,6 +412,14 @@ sealed trait TermShape extends Shape, ShapeLike:
     // sharing of the already paired tail when this public view is requested.
     case as: AppShape => as.receiver.unappliedParams.drop(1)
     case _ => unappliedParamLists.map(_ -> applicationMarks)
+  /** The next declaration-level clause, without instantiating its types. Contextual wrappers
+    * mirror its layout during resolution and inherit its runtime representations during erasure. */
+  private[hkmc2] def nextSourceParamList: Opt[ParamList] = this match
+    case MarkedShape(value, _) => value.nextSourceParamList
+    case ContextualShape(source, _) => source.nextSourceParamList
+    case SpecializedShape(declaration, _, _) => declaration.nextSourceParamList
+    case callable: CallableTypeShape => callable.sourceParamLists.headOption
+    case _ => unappliedParams.headOption.map(_._1)
   
   def exit(marks: Marks)(using TL): TermShape | NoShape =
   tl.trace[TermShape | NoShape](dbg".exit $shwDbg (${marks.showDbg})", res => s"= ${res.shwDbg}"):
