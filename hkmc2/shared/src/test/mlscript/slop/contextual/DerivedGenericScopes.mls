@@ -1,0 +1,93 @@
+:.
+
+class List[A](val head: A)
+class Show[A](val label: Str)
+module Show with
+  using Show[Int] = Show[Int]("int")
+  using Show[Str] = Show[Str]("str")
+fun display[A](value: A)(using show: Show[A]) = show.label
+
+// Each nested derived activation retains the captured outer type parameter.
+:expect ["list(list(local))", "list(list(local))"]
+fun captured[A](value: A) =
+  using Show[A] = Show[A]("local")
+  using fun list[B](using element: Show[B]): Show[List[B]] = Show[List[B]]("list(" + element.label + ")")
+  fun nested[C](value: C) = display(List(List(value)))
+  nested(value)
+[captured(1), captured("text")]
+//│ = ["list(list(local))", "list(list(local))"]
+
+// Result aliases can capture an enclosing binder independently of the function's own binders.
+:expect ["alias:local", "alias:local"]
+fun aliased[A](value: A) =
+  type Wrapped = List[A]
+  using Show[A] = Show[A]("local")
+  using fun wrap(using element: Show[A]): Show[Wrapped] = Show[Wrapped]("alias:" + element.label)
+  display(List(value))
+[aliased(1), aliased("text")]
+//│ = ["alias:local", "alias:local"]
+
+// Inherited result positions cross both class binders before inferring B from the captured A.
+class Middle[A](label: Str) extends Show[List[A]](label)
+class Leaf[A](label: Str) extends Middle[A](label)
+
+:expect "inherited:int"
+fun inherited[A](value: A) =
+  using fun derive[B](using element: Show[B]): Leaf[B] = Leaf[B]("inherited:" + element.label)
+  display(List(value))
+inherited(1)
+//│ = "inherited:int"
+
+:e
+inherited("later")
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.XX: 	  display(List(value))
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This value reaches the type of the contextual parameter 'element' after its instance was selected; the selected instance of type Show[Int] does not accept it.
+//│ ║  l.XX: 	  display(List(value))
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	  using fun derive[B](using element: Show[B]): Leaf[B] = Leaf[B]("inherited:" + element.label)
+//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The selected instance is declared here.
+//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This value is incompatible with the selected instance.
+//│ ║  l.+1: 	inherited("later")
+//│ ╙──      	          ^^^^^^^
+//│ = "inherited:int"
+
+// Parameterless instance functions still instantiate their own generic result at each site.
+:expect ["constant", "constant"]
+fun parameterless[A](value: A) =
+  using fun constant[B]: Show[B] = Show[B]("constant")
+  display(value)
+[parameterless(1), parameterless("text")]
+//│ = ["constant", "constant"]
+
+// A nested query must see caller flows even though ordinary lookup keeps A opaque.
+:expect "derived:int"
+fun observed[A](value: A) =
+  using fun wrap(using element: Show[A]): Show[List[A]] = Show[List[A]]("derived:" + element.label)
+  display(List(value))
+observed(1)
+//│ = "derived:int"
+
+:e
+observed("later")
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.XX: 	  display(List(value))
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This value reaches the type of the contextual parameter 'element' after its instance was selected; the selected instance of type Show[Int] does not accept it.
+//│ ║  l.XX: 	  display(List(value))
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	  using fun wrap(using element: Show[A]): Show[List[A]] = Show[List[A]]("derived:" + element.label)
+//│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The selected instance is declared here.
+//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This value is incompatible with the selected instance.
+//│ ║  l.+1: 	observed("later")
+//│ ╙──      	         ^^^^^^^
+//│ = "derived:int"

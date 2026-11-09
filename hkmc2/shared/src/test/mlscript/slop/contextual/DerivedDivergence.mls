@@ -163,3 +163,32 @@ cycleCheck()
 //│ ╟── Query Show[List[List[?]]] selected instance function 'loop'.
 //│ ║  l.+3: 	  using fun loop[A](using inner: Show[A]): Show[A] = inner
 //│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+// A query can start with an unknown position; its frozen snapshot must not grow
+// when the derived function's nested requirements introduce List positions.
+:e
+fun unspecified() =
+  using fun bad[A](using inner: Show[List[A]]): Show[A] = Show[A](inner.label)
+  fun request[A](using show: Show[A]) = show.label
+  request
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+4: 	  request
+//│ ║        	  ^^^^^^^
+//│ ╟── No instance found for the contextual parameter 'inner' of type Show[List[A]].
+//│ ║  l.+4: 	  request
+//│ ║        	  ^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.+2: 	  using fun bad[A](using inner: Show[List[A]]): Show[A] = Show[A](inner.label)
+//│ ║        	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance of type Show[Int] from namespace 'Show' does not accept all values reaching the query.
+//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance function 'bad' diverges for Show[List[List[?]]].
+//│ ║  l.+2: 	  using fun bad[A](using inner: Show[List[A]]): Show[A] = Show[A](inner.label)
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Query Show[?] selected instance function 'bad'.
+//│ ║  l.+2: 	  using fun bad[A](using inner: Show[List[A]]): Show[A] = Show[A](inner.label)
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Query Show[List[?]] selected instance function 'bad'.
+//│ ║  l.+2: 	  using fun bad[A](using inner: Show[List[A]]): Show[A] = Show[A](inner.label)
+//│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

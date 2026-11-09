@@ -119,3 +119,58 @@ class Numbers with
 fun sameLeaf(receiver) = receiver.method
 [sameLeaf(new Integers), sameLeaf(new Numbers)]
 //│ = ["num", "num"]
+
+// Agreement checks later clauses even when every earlier nested argument agrees.
+class Pair[A, B](val first: A, val second: B)
+module Pair with
+  using fun show[A, B](using first: Show[A])(using second: Show[B]): Show[Pair[A, B]] =
+    Show[Pair[A, B]](first.label + "/" + second.label)
+class BothInt with
+  fun method(using show: Show[Pair[Int, Int]]) = show.label
+class OtherBothInt with
+  fun method(using show: Show[Pair[Int, Int]]) = show.label
+class IntStr with
+  fun method(using show: Show[Pair[Int, Str]]) = show.label
+
+:expect ["int/int", "int/int"]
+fun sameClauses(receiver) = receiver.method
+[sameClauses(new BothInt), sameClauses(new OtherBothInt)]
+//│ = ["int/int", "int/int"]
+
+:e
+fun differentClauses(receiver) = receiver.method
+[differentClauses(new BothInt), differentClauses(new IntStr)]
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	fun differentClauses(receiver) = receiver.method
+//│ ║        	                                 ^^^^^^^^^^^^^^^
+//│ ╟── This value reaches the type of the contextual parameter 'second' after its instance was selected; the selected instance of type Show[Int] does not accept it.
+//│ ║  l.+1: 	fun differentClauses(receiver) = receiver.method
+//│ ║        	                                 ^^^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	  using fun show[A, B](using first: Show[A])(using second: Show[B]): Show[Pair[A, B]] =
+//│ ║        	                                             ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The selected instance is declared here.
+//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This value is incompatible with the selected instance.
+//│ ║  l.XX: 	  fun method(using show: Show[Pair[Int, Str]]) = show.label
+//│ ╙──      	                                        ^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	fun differentClauses(receiver) = receiver.method
+//│ ║        	                                 ^^^^^^^^^^^^^^^
+//│ ╟── The callees of this call require different instances for the contextual parameter 'second' of type Show[B].
+//│ ║  l.+1: 	fun differentClauses(receiver) = receiver.method
+//│ ║        	                                 ^^^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	  using fun show[A, B](using first: Show[A])(using second: Show[B]): Show[Pair[A, B]] =
+//│ ║        	                                             ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── One callee selects this instance.
+//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Another callee selects this instance.
+//│ ║  l.XX: 	  using Show[Str] = Show[Str]("str")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance function 'show' requires this nested argument.
+//│ ║  l.XX: 	  using fun show[A, B](using first: Show[A])(using second: Show[B]): Show[Pair[A, B]] =
+//│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = ["int/int", "int/int"]

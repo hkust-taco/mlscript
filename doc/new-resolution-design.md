@@ -488,11 +488,14 @@ and `DerivedDivergence` cover selection, validation, captures, inherited and
 aliased result inference, recursive agreement, and every divergence case.
 `DerivedImport` and `DerivedImportIsolation`, with `DerivedLibrary`, cover
 imported derivation, frozen nested selections, and independent importer state.
+`DerivedGenericScopes` covers enclosing generic binders, captured result aliases,
+inherited result positions, parameterless generic instances, and late caller flows.
 
 ### Contextual resolution performance
 
-Programs without `using` allocate no new per-term state. Potential sites reuse
-one worklist entry; completion records, derived chains, and query observers are
+Completion metadata lives on potential site classes, not on every `Term`.
+An empty completion allocates no helper object. Potential sites reuse one
+worklist entry; completion records, derived chains, and query observers are
 created on demand. Each module caches one instance-member index, and each request
 bounds provider decisions by its module keys (or module/trigger pairs for parameter
 queries). Investigate regressions above 2% and fix identified causes. The approved
@@ -507,6 +510,11 @@ a source `using` clause through `MainDiffMaker`. Allocation uses
 `com.sun.management.ThreadMXBean.getCurrentThreadAllocatedBytes`; CPU uses
 `getCurrentThreadCpuTime`. Wall time includes the harness and JavaScript execution.
 Timed runs have no concurrent builds or tests, and every round has zero failures.
+Each version has one JVM run; the later phases reuse an earlier baseline run.
+These measurements check overhead on this subset, rather than establish a speedup
+for HKMC2. They have no paired repetitions or confidence intervals. CPU time and
+allocation count only the runner thread, excluding other threads such as the JIT
+and garbage collector.
 
 Phase 2 used twelve rounds, reporting medians of the last five:
 
@@ -537,6 +545,8 @@ and measured subset were unchanged from Phase 4, yet their measurements differed
 These are hypotheses, not profiling conclusions, and remain optimization follow-up.
 
 Phase 6 stays below 2% on all three measurements. Derivation state is allocated
-only for contextual queries, with no new state on ordinary terms. The earlier
+only for contextual queries, with no derivation state on ordinary terms. The earlier
 regressions and run variation remain recorded above; no semantic rule or invariant
 was relaxed to meet the performance target.
+Its elapsed-time difference from the base is about 47 ms across 125 files; the
+available measurements do not distinguish a real speedup from JVM and run variation.
