@@ -1,0 +1,29 @@
+:.
+:js
+
+:silent
+import "../../mlscript-compile/RuntimeWasm.mls"
+import "node:fs" as fs
+import "node:os" as os
+import "node:url" as urls
+let directory = fs.mkdtempSync(os.tmpdir() + "/mlscript-wasm-output-")
+let missingUrl = urls.pathToFileURL(directory + "/Missing.wat").href
+let directoryUrl = urls.pathToFileURL(directory).href
+
+// Missing WAT reports how to recover while retaining the filesystem error as its cause.
+:await
+:expect "Cannot load WASM module Missing.wat: compiled WAT output is missing. Rebuild before running."
+RuntimeWasm.instantiate(missingUrl, {}, 0).then(
+  _ => "unexpected success",
+  (error: dyn) =>
+    assert error.cause.code === "ENOENT"
+    error.message.replace(missingUrl, "Missing.wat"))
+//│ = "Cannot load WASM module Missing.wat: compiled WAT output is missing. Rebuild before running."
+
+// Other filesystem errors retain their original diagnostics.
+:await
+:expect "EISDIR"
+RuntimeWasm.instantiate(directoryUrl, {}, 0).then(_ => "unexpected success", (error: dyn) => error.code)
+//│ = "EISDIR"
+
+fs.rmdirSync(directory)

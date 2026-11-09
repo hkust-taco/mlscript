@@ -1,0 +1,44 @@
+#lang(0.3.x)
+#config(effectHandlers: Some(EffectHandlers()))
+
+import "./BaseEffects.mls"
+open BaseEffects
+open GeneratorEffects
+
+module generator with ...
+
+data class Leaf
+data class Node(left: Tree, value: Int, right: Tree)
+type Tree = Leaf | Node
+
+data class Empty
+data class Thunk(n: Int, thunk: Function[(), Generator])
+type Generator = Empty | Thunk
+
+fun make(n: Int): Tree =
+  if n ===
+    0 then new Leaf
+    else
+      let t = make(n - 1)
+      Node(t, n, t)
+
+fun iterate(h: Eff, t: Tree): () = if t is
+  Leaf then ()
+  Node(l, v, r) then
+    iterate(h, l)
+    h.yld(v)
+    iterate(h, r)
+
+fun generate(f: Function[(), ()]): Generator =
+  handle h = Eff with
+    fun yld(x)(k) = Thunk(x, () => k(()))
+  f(h)
+  new Empty
+
+fun sum(a: Int, g: Generator) =
+  if g is
+    Empty then a
+    Thunk(v, f) then
+      sum(v + a, f())
+
+fun run(n) = sum(0, generate of h => iterate of h, make of n)

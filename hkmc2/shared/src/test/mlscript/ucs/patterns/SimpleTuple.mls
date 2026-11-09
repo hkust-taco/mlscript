@@ -18,18 +18,18 @@ sum([1, 2])
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found tuple
 //│ ║  l.+1: 	fun sum([x, y]) = x + y
 //│ ╙──      	        ^^^^^^
-//│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.+1: 	fun sum([x, y]) = x + y
-//│ ╙──      	                  ^
-//│ ╔══[COMPILATION ERROR] Name not found: y
-//│ ║  l.+1: 	fun sum([x, y]) = x + y
-//│ ╙──      	                      ^
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.+2: 	sum([1, 2])
 //│ ║        	^^^^^^^^^^^
 //│ ╟── Function 'sum' expected 0 arguments, but got 1
 //│ ║  l.+1: 	fun sum([x, y]) = x + y
 //│ ╙──      	^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Name not found: x
+//│ ║  l.+1: 	fun sum([x, y]) = x + y
+//│ ╙──      	                  ^
+//│ ╔══[COMPILATION ERROR] Name not found: y
+//│ ║  l.+1: 	fun sum([x, y]) = x + y
+//│ ╙──      	                      ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 fun sum(pair) =

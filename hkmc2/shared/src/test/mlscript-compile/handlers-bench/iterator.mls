@@ -1,0 +1,23 @@
+#lang(0.3.x)
+#config(effectHandlers: Some(EffectHandlers()))
+
+import "./BaseEffects.mls"
+open BaseEffects
+open IteratorEffects
+
+module iterator with ...
+
+fun range(l: Int, u: Int, h: Emit) =
+  if l > u then ()
+  else
+    h.emit(l)
+    range(l + 1, u, h)
+
+fun run(n: Int) =
+  let s = 0
+  handle h = Emit with
+    fun emit(e)(k) =
+      set s = s + e
+      k(())
+  range(0, n, h)
+  s

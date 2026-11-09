@@ -140,9 +140,6 @@ class D extends id(C)
 //│ ║  l.+1: 	class D extends id(C)
 //│ ║        	                ^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
-//│ ╔══[COMPILATION ERROR] Too many parameter lists for parent class
-//│ ║  l.+1: 	class D extends id(C)
-//│ ╙──      	                ^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let D1, superBase;
 //│ superBase = Predef.id;

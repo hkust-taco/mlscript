@@ -1,0 +1,22 @@
+:.
+
+
+// Source target selection and diagnostic cast comments must agree on the JS backend.
+:soir
+:expect 42
+import "../../mlscript-compile/ExplicitJsTarget.mls"
+ExplicitJsTarget.answer()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ import "..." as ExplicitJsTarget; return 42
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+:noCastComments
+:soir
+:expect 42
+import "../../mlscript-compile/ExplicitJsTarget.mls" as Quiet
+Quiet.answer()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ import "..." as ExplicitJsTarget; return 42
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42

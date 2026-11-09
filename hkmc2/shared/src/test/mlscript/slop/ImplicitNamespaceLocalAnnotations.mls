@@ -1,0 +1,51 @@
+:.
+#lang(eagerResolution: true)
+
+module First with
+  data class Some[T](value: T)
+module Second with
+  data class Some[T](value: T)
+type Preferred[A] = A
+module Preferred with
+  val Some = First.Some
+  val Pick = First.Some(99)
+type Other[A] = A
+module Other with
+  val Some = Second.Some
+
+class Box[A](val value: A)
+module Box with
+  val Pick = Box(First.Some(1))
+
+// The argument's Pick must not compete with Box.Pick. Its Some becomes relevant
+// only after selecting value, including through repeated, interleaved aliases.
+fun root[A](box: Box[Preferred[A]]) = if box.value is Some(n) then n else 0
+fun nested[A](box: Box[Preferred[Other[Preferred[A]]]]) = if box.value is Some(n) then n else 0
+
+:expect [1, 2]
+[root(Pick), nested(Box(First.Some(2)))]
+//│ = [1, 2]
+
+type Either[A, B] = A | B
+module Either with
+  val Some = First.Some
+
+// Combining an annotated formula again must preserve the outer alias's priority
+// on each surviving atom, rather than exposing the arguments' Other.Some.
+fun combined[A, B](value: Either[Other[A], Other[B]] | Nothing) =
+  if value is Some(n) then n else 0
+
+:expect 3
+combined(First.Some(3))
+//│ = 3
+
+// Forwarding a probe through a bare parameter needs no interface observation.
+// The alias still supplies its own namespace when its body is that parameter.
+fun identity[A](value: A): A = value
+fun preferred[A](value: Preferred[A]) = value
+
+:expect 99
+let pending = identity(.Pick)
+preferred(pending).value
+//│ = 99
+//│ pending = Some(99)

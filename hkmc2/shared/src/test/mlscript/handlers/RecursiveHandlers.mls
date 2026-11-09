@@ -1,3 +1,4 @@
+:.
 :js
 :effectHandlers
 :lift
@@ -33,29 +34,29 @@ h1.perform("oops")
 :re
 handle h = Object with
   fun write(x)(k) =
-    if x < 10 do write(10)
+    if x < 10 do this.'write(10)
     [x, k(())]
-h.write(1)
-h.write(2)
+h.'write(1)
+h.'write(2)
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
 
 handle h = Object with
   fun write(x)(k) =
     if x < 10 do
-      print(enterHandleBlock(this, () => write(10)))
+      print(enterHandleBlock(this, () => this.'write(10)))
     [x, k(())]
-h.write(1)
-h.write(2)
+h.'write(1)
+h.'write(2)
 //│ > [10, ()]
 //│ > [10, ()]
 //│ = [1, [2, ()]]
 
 handle h = Object with
   fun write(x)(k) = enterHandleBlock of this, () =>
-    if x < 10 do write(10)
+    if x < 10 do this.'write(10)
     [x, k(())]
-h.write(1)
-h.write(2)
+h.'write(1)
+h.'write(2)
 //│ = [10, [1, [10, [2, ()]]]]
 
 // deep handler
@@ -80,9 +81,12 @@ handle h2 = Effect with
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
+abstract class HandlerEffect with
+  fun perform(arg: Str): Effect[Str]
+
 // passing additional handlers to the handler body
 let res =
-  handle h = Effect with
+  handle h = HandlerEffect with
     fun perform(arg)(k) =
       print("A " + arg)
       handle g = Effect with
@@ -96,7 +100,7 @@ let res =
   set g = h.perform("hola")
   g.perform("adios")
   g.perform("amigos")
-in res.toString()
+in (res as Array).toString()
 //│ > A hi
 //│ > B hi bye
 //│ > B hi friend
@@ -126,7 +130,7 @@ let res =
       g2.perform("amigos")
     )()]
   )()]
-in res.toString()
+in (res as Array).toString()
 //│ > A hi
 //│ > B hi bye
 //│ > B hi friend
@@ -152,7 +156,7 @@ if true do
   h1.perform(())
 str
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let str, h11, handleBlock$9, Handler$h2$perform1, Handler$h2$3, handleBlock$10, Handler$h1$perform1, Handler$h1$3, handleBlock$$2, Handler$h2$perform$1, Handler$h1$perform$1;
+//│ let str, h11, handleBlock$9, Handler$h2$perform, Handler$h2$3, handleBlock$10, Handler$h1$perform1, Handler$h1$3, handleBlock$$2, Handler$h2$perform$, Handler$h1$perform$1;
 //│ runtime.resetEffects();
 //│ Handler$h1$perform$1 = function Handler$h1$perform$(arg) {
 //│   return (k) => {
@@ -175,7 +179,7 @@ str
 //│       if (runtime.curEffect === null) {
 //│         pc = 1;
 //│       } else {
-//│         runtime.unwind(Handler$h1$perform1, 1, "RecursiveHandlers.mls:144:7", null, null, 1, 2, arg, k, 0);
+//│         runtime.unwind(Handler$h1$perform1, 1, "RecursiveHandlers.mls:148:7", null, null, 1, 2, arg, k, 0);
 //│         return runtime.Unit
 //│       }
 //│     case 1:
@@ -185,12 +189,12 @@ str
 //│       return runtime.Unit;
 //│   }
 //│ };
-//│ Handler$h2$perform$1 = function Handler$h2$perform$(arg) {
+//│ Handler$h2$perform$ = function Handler$h2$perform$(arg) {
 //│   return (k) => {
-//│     return Handler$h2$perform1(arg, k)
+//│     return Handler$h2$perform(arg, k)
 //│   }
 //│ };
-//│ Handler$h2$perform1 = function Handler$h2$perform(arg, k) {
+//│ Handler$h2$perform = function Handler$h2$perform(arg, k) {
 //│   let tmp9, tmp10, tmp11, tmp12, pc;
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
@@ -207,7 +211,7 @@ str
 //│       if (runtime.curEffect === null) {
 //│         pc = 1;
 //│       } else {
-//│         runtime.unwind(Handler$h2$perform1, 1, "RecursiveHandlers.mls:149:7", null, null, 1, 2, arg, k, 0);
+//│         runtime.unwind(Handler$h2$perform, 1, "RecursiveHandlers.mls:153:7", null, null, 1, 2, arg, k, 0);
 //│         return runtime.Unit
 //│       }
 //│     case 1:
@@ -235,7 +239,7 @@ str
 //│   }
 //│   perform(arg) {
 //│     let Handler$h2$perform$here;
-//│     Handler$h2$perform$here = Handler$h2$perform$1(arg);
+//│     Handler$h2$perform$here = Handler$h2$perform$(arg);
 //│     return runtime.mkEffect(this, Handler$h2$perform$here)
 //│   }
 //│   toString() { return runtime.render(this); }
@@ -255,7 +259,7 @@ str
 //│       if (runtime.curEffect === null) {
 //│         pc = 1;
 //│       } else {
-//│         runtime.unwind(handleBlock$9, 1, "RecursiveHandlers.mls:151:3", null, null, 1, 1, h22, 0);
+//│         runtime.unwind(handleBlock$9, 1, "RecursiveHandlers.mls:155:3", null, null, 1, 1, h22, 0);
 //│         return runtime.Unit
 //│       }
 //│     case 1:

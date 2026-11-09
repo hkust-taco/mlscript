@@ -140,7 +140,7 @@ fun sameClass(value) = value.Entry#get()
 
 :e
 fun missingClass(value) = value.Unknown#get()
-//│ ╔══[COMPILATION ERROR] Cannot resolve the projection class
+//│ ╔══[COMPILATION ERROR] Name not found: Unknown
 //│ ║  l.+1: 	fun missingClass(value) = value.Unknown#get()
 //│ ╙──      	                               ^^^^^^^^
 

@@ -1,0 +1,27 @@
+:.
+:noInline
+
+import "../../../mlscript-compile/wasm/modules/Representations.mls" as Repr
+//│ Wasm result:
+//│ = {}
+
+
+// An unannotated override inherits its unboxed signature from a separately compiled base.
+class Child() extends Repr.Base() {
+  override fun add(value) = wasm.i32.add(super.add(value), wasm.i32.const(1))
+}
+//│ Wasm result:
+//│ = {}
+
+:expect 42
+Repr.dispatch(new Child(), wasm.i32.const(40))
+//│ Wasm result:
+//│ = 42
+
+
+// Static module functions need the declared result slot for undefined and tail-recursive bodies.
+:expect 42
+Repr.absent()
+Repr.count(42, wasm.i32.const(0))
+//│ Wasm result:
+//│ = 42
