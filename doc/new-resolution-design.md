@@ -405,8 +405,8 @@ inherits, so sibling activations neither decide nor report again.
 A late-value report starts at the source expression whose flow sent the value
 (`NewResolverState.trigger`): the elaborator sets it while subscribing a term it has
 just created, and a site's pending inputs carry it to settlement. The report then
-names a value that the selected instance rejects, which the matching relation returns,
-followed by the site that selected the instance.
+names the value that the matching relation finds incompatible with the selected
+instance's type at its position, followed by the site that selected the instance.
 
 An Abstract step has a synthesized ordinary lambda for flow and an application
 for its continuation. That application owns further completion steps, and the

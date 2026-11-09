@@ -22,19 +22,19 @@ fun agree(receiver) = receiver.method
 :e
 fun disagree(receiver) = receiver.method
 [disagree(new First), disagree(new Different)]
-//│ ╔══[COMPILATION ERROR] This expression makes a value reach the type of the contextual parameter 'element' after its instance was selected.
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error in application
 //│ ║  l.+2: 	[disagree(new First), disagree(new Different)]
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── The selected instance of type Show[Int] does not accept this value.
+//│ ╟── A value of class 'Str' flows into the type of a contextual argument after its instance was selected, making that type incompatible with the instance's type.
 //│ ║  l.XX: 	  fun method(using show: Show[List[List[Str]]]) = show.label
 //│ ║        	                                        ^^^
-//│ ╟── The instance was selected here.
+//│ ╟── The contextual argument is supplied implicitly here, where its instance was selected.
 //│ ║  l.+1: 	fun disagree(receiver) = receiver.method
 //│ ║        	                         ^^^^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
 //│ ║        	                    ^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── The selected instance is declared here.
+//│ ╟── The selected instance is declared here, with type Show[Int].
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
@@ -67,19 +67,19 @@ fun reveal(using value: Different) = value
 :e
 fun late(receiver) = receiver.method
 [late(new First), late(reveal)]
-//│ ╔══[COMPILATION ERROR] This expression makes a value reach the type of the contextual parameter 'element' after its instance was selected.
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error in member reference
 //│ ║  l.+2: 	[late(new First), late(reveal)]
 //│ ║        	                       ^^^^^^
-//│ ╟── The selected instance of type Show[Int] does not accept this value.
+//│ ╟── A value of class 'Str' flows into the type of a contextual argument after its instance was selected, making that type incompatible with the instance's type.
 //│ ║  l.XX: 	  fun method(using show: Show[List[List[Str]]]) = show.label
 //│ ║        	                                        ^^^
-//│ ╟── The instance was selected here.
+//│ ╟── The contextual argument is supplied implicitly here, where its instance was selected.
 //│ ║  l.+1: 	fun late(receiver) = receiver.method
 //│ ║        	                     ^^^^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
 //│ ║        	                    ^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── The selected instance is declared here.
+//│ ╟── The selected instance is declared here, with type Show[Int].
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
@@ -140,19 +140,19 @@ fun sameClauses(receiver) = receiver.method
 :e
 fun differentClauses(receiver) = receiver.method
 [differentClauses(new BothInt), differentClauses(new IntStr)]
-//│ ╔══[COMPILATION ERROR] This expression makes a value reach the type of the contextual parameter 'second' after its instance was selected.
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error in application
 //│ ║  l.+2: 	[differentClauses(new BothInt), differentClauses(new IntStr)]
 //│ ║        	                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── The selected instance of type Show[Int] does not accept this value.
+//│ ╟── A value of class 'Str' flows into the type of a contextual argument after its instance was selected, making that type incompatible with the instance's type.
 //│ ║  l.XX: 	  fun method(using show: Show[Pair[Int, Str]]) = show.label
 //│ ║        	                                        ^^^
-//│ ╟── The instance was selected here.
+//│ ╟── The contextual argument is supplied implicitly here, where its instance was selected.
 //│ ║  l.+1: 	fun differentClauses(receiver) = receiver.method
 //│ ║        	                                 ^^^^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	  using fun show[A, B](using first: Show[A])(using second: Show[B]): Show[Pair[A, B]] =
 //│ ║        	                                             ^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── The selected instance is declared here.
+//│ ╟── The selected instance is declared here, with type Show[Int].
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument

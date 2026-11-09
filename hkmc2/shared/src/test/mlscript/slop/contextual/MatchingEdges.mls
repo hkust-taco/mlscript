@@ -69,19 +69,19 @@ unannotated(1)
 
 :e
 unannotated("later")
-//│ ╔══[COMPILATION ERROR] This expression makes a value reach the type of the contextual parameter 'a' after its instance was selected.
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error in application
 //│ ║  l.+1: 	unannotated("later")
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── The selected instance of type Accept[Int] does not accept this value.
+//│ ╟── A value of class 'Str' flows into the type of a contextual argument after its instance was selected, making that type incompatible with the instance's type.
 //│ ║  l.+1: 	unannotated("later")
 //│ ║        	            ^^^^^^^
-//│ ╟── The instance was selected here.
+//│ ╟── The contextual argument is supplied implicitly here, where its instance was selected.
 //│ ║  l.XX: 	fun unannotated(value) = accept(value)
 //│ ║        	                         ^^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	fun accept[A](value: A)(using a: Accept[A]) = a.label
 //│ ║        	                        ^^^^^^^^^^^^^^^^^^
-//│ ╟── The selected instance is declared here.
+//│ ╟── The selected instance is declared here, with type Accept[Int].
 //│ ║  l.XX: 	using Accept[Int] = new IntAccept
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = "int"

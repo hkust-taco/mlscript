@@ -8,20 +8,20 @@ EtaFlow.adapter(1)
 
 :e
 EtaFlow.adapter("later")
-//│ ╔══[COMPILATION ERROR] This expression makes a value reach the type of the contextual parameter 'e' after its instance was selected.
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error in application
 //│ ║  l.+1: 	EtaFlow.adapter("later")
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── The selected instance of type Evidence[Int] does not accept this value.
+//│ ╟── A value of class 'Str' flows into the type of a contextual argument after its instance was selected, making that type incompatible with the instance's type.
 //│ ║  l.+1: 	EtaFlow.adapter("later")
 //│ ║        	                ^^^^^^^
-//│ ╟── The instance was selected here.
+//│ ╟── The contextual argument is supplied implicitly here, where its instance was selected.
 //│ ║  in mlscript-compile/EtaFlow.mls
 //│ ║  l.XX: 	  val adapter = consume
 //│ ║        	                ^^^^^^^
-//│ ╟── The contextual parameter is declared here.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	  fun consume[A](value: A)(using e: Evidence[A]) = e.label
 //│ ║        	                           ^^^^^^^^^^^^^^^^^^^^
-//│ ╟── The selected instance is declared here.
+//│ ╟── The selected instance is declared here, with type Evidence[Int].
 //│ ║  l.XX: 	  using Evidence[Int] = Evidence[Int]("int")
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = "int"

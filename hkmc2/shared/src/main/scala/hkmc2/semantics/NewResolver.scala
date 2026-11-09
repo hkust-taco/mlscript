@@ -3179,6 +3179,15 @@ class NewResolver:
   private def siteContext(using activation: ResolutionContext): ResolutionContext =
     activation.withInstances(TypeSubstitution.empty)
 
+  /** A rejected value's location can be a type annotation rather than an expression, as for the
+    * values of a declared parameter type, so describe the value by its class. */
+  private def contextualValueDescription(value: TermShape)(using ResolutionContext): Message =
+    abstractParameter(value) match
+      case S(parameter) => msg"A value of type parameter '${parameter.nme}'"
+      case N => instanceClass(shapeParts(value).value) match
+        case S(cls) => msg"A value of ${cls.sym.describeKind} '${cls.sym.nme}'"
+        case N => msg"A value"
+
   private def decideContextualArgument(argument: InstanceArg, parameter: Param, tpe: DeclaredType, queryMarks: Ls[Marks])
       (using ResolutionContext): Unit =
     val first = rctx.state.contextualQueries.add((argument, parameter.sym))(using siteContext)
@@ -3275,30 +3284,25 @@ class NewResolver:
           contextualMatch(candidate.annotation, candidateBinders(candidate.symbol), argument.environment.fold(Set.empty)(_.typeBinders), query, observe) match
             case ContextualMatch.Rejected(witness) if rctx.state.contextualFailures.add((argument, tpe))(using siteContext) =>
               rctx.markError(argument)
-              val notes =
-                (msg"The instance was selected here." -> argument.toLoc) ::
-                (msg"The contextual parameter is declared here." -> parameter.toLoc) ::
-                (msg"The selected instance is declared here." -> candidate.symbol.toLoc) :: Nil
-              witness match
+              // Start at the expression whose flow sent the value: the site was resolved
+              // correctly for the values that had reached it.
+              val header = rctx.state.trigger.filter(_.toLoc.nonEmpty) match
+                case S(trigger) => msg"Contextual argument resolution error in ${trigger.describe}" -> trigger.toLoc
+                case N => msg"Resolution error in ${argument.describe}" -> argument.toLoc
+              val problem = witness match
                 case S(value) =>
+                  val message = msg"${contextualValueDescription(value)} flows into the type of a contextual argument after its instance was selected, making that type incompatible with the instance's type."
                   // `diagnostic` lists the notes leading to the value's type origin before its own message.
-                  def describe(message: Message): Ls[(Message, Opt[Loc])] =
-                    val (located, path) = value.diagnostic(message).partition(_._1 eq message)
-                    located ::: path
-                  val rejection = describe(msg"The selected instance of type ${contextualTypeName(candidate.annotation)} does not accept this value.")
-                  // Start at the expression whose flow sent the value: the site was resolved
-                  // correctly for the values that had reached it.
-                  val trigger = rctx.state.trigger.flatMap(_.toLoc).filter(loc => !rejection.headOption.exists(_._2.contains(loc)))
-                  val messages = trigger match
-                    case S(loc) =>
-                      (msg"This expression makes a value reach the type of the ${contextualParameterName(parameter)} after its instance was selected." -> S(loc)) :: rejection
-                    case N =>
-                      describe(msg"This value reaches the type of the ${contextualParameterName(parameter)} after its instance was selected; the selected instance of type ${contextualTypeName(candidate.annotation)} does not accept it.")
-                  rctx.report(ErrorReport(messages ::: notes, source = Diagnostic.Source.Compilation))
+                  val (located, path) = value.diagnostic(message).partition(_._1 eq message)
+                  located ::: path
                 // No value explains a rejection when none reaches a parameter query of this use of
                 // the site, or when the instance's own type has no view of the queried class.
-                case N =>
-                  resolError(argument, msg"The selected instance of type ${contextualTypeName(candidate.annotation)} does not serve the ${contextualParameterName(parameter)} in this use." -> argument.toLoc :: notes.tail)
+                case N => (msg"The type of a contextual argument became incompatible with the type of its instance after the instance was selected." -> N) :: Nil
+              rctx.report(ErrorReport(header :: problem :::
+                (msg"The contextual argument is supplied implicitly here, where its instance was selected." -> argument.toLoc) ::
+                (msg"The contextual argument is passed to this parameter." -> parameter.toLoc) ::
+                (msg"The selected instance is declared here, with type ${contextualTypeName(candidate.annotation)}." -> candidate.symbol.toLoc) :: Nil,
+                source = Diagnostic.Source.Compilation))
             case _ => ()
     check()
     argument.selected.foreach: selected =>
