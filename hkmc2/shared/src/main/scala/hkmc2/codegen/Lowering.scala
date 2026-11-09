@@ -1124,55 +1124,57 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         freeze(selection.fld): field =>
           next(DynSelect(prefix, field, selection.kind)(selection.toLoc))
       case _ => next(callee)
-    receiver: function =>
-      def operand(term: Term, spread: Opt[SpreadKind])(next: Arg => Block): Block = subTerm_nonTail(term): value =>
-        // Consume each eager spread before later operands run. The saved tuple owns its
-        // elements and length even if the source array changes before the lambda is called.
-        val captured = if spread.contains(SpreadKind.Eager) then Tuple(false, Arg(spread, value) :: Nil)(term.toLoc) else value
-        freeze(captured)(value => next(Arg(spread, value)))
-      def elements(rest: Ls[Elem], reversed: Ls[Arg])(next: Ls[Arg] => Block): Block = rest match
-        case Fld(FldFlags.benign(), term, N) :: tail => operand(term, N)(arg => elements(tail, arg :: reversed)(next))
-        case Spd(kind, term, _) :: tail => operand(term, S(kind))(arg => elements(tail, arg :: reversed)(next))
+    // An eager spread is consumed before later operands run: the saved tuple keeps its elements
+    // and length even if the source array changes before the expansion is called.
+    def operand(term: Term, spread: Opt[SpreadKind])(next: Arg => Block): Block = subTerm_nonTail(term): value =>
+      freeze(if spread.contains(SpreadKind.Eager) then Tuple(false, Arg(spread, value) :: Nil)(term.toLoc) else value): saved =>
+        next(Arg(spread, saved))
+    // Capture each argument of a tuple list on its own, so that the expansion still passes an
+    // ordinary argument list: saving the list as one array would allocate it at the site and
+    // spread it at every call. Other lists are saved as one spread: a single spread operand, as
+    // in `f(...xs)`, and a list with named fields, which lowers to a fresh tuple ending with the
+    // record of those fields. Saving that tuple copies it once more, which this rare case accepts.
+    def written(argument: Term)(next: LoweredArgs => Block): Block =
+      def elements(rest: Ls[Elem], reversed: Ls[Arg]): Block = rest match
+        case Fld(FldFlags.benign(), term, N) :: tail => operand(term, N)(arg => elements(tail, arg :: reversed))
+        case Spd(kind, term, _) :: tail => operand(term, S(kind))(arg => elements(tail, arg :: reversed))
         case _ :: _ => lastWords("Only plain fields and spreads are captured one by one")
-        case Nil => next(reversed.reverse)
-      def list(argument: Term)(next: LoweredArgs => Block): Block =
-        def finish(values: Ls[Arg]): Block = next(LoweredArgs(values)(argument.toLoc))
-        argument match
-          case ArgumentTuple(fields) if fields.forall {
-            case Fld(FldFlags.benign(), _, N) | Spd(_, _, _) => true
-            case _ => false
-          } => elements(fields, Nil)(finish)
-          // Record fields already lower to a tuple containing the trailing record.
-          case ArgumentTuple(_) => subTerm_nonTail(argument)(value => freeze(value)(value => finish(Arg(S(SpreadKind.Eager), value) :: Nil)))
-          case _ => operand(argument, S(SpreadKind.Eager))(arg => finish(arg :: Nil))
-      type PendingArgs = ParamList \/ LoweredArgs
+        case Nil => next(LoweredArgs(reversed.reverse)(argument.toLoc))
+      argument match
+        case ArgumentTuple(fields) if fields.forall {
+          case Fld(FldFlags.benign(), _, N) | Spd(_, _, _) => true
+          case _ => false
+        } => elements(fields, Nil)
+        case _ => operand(argument, S(SpreadKind.Eager))(arg => next(LoweredArgs(arg :: Nil)(argument.toLoc)))
+    // The resolver's argument term for an abstracted list refers to the mirrored parameters that
+    // its lambda binds. An MLscript callee binds omitted optional arguments to null, so the lambda
+    // binds the parameters the same way and passes that term on. A foreign callee receives omitted
+    // optional arguments as undefined, so that its own defaults run, through IR forwarding
+    // arguments; a fixed list still discards extra arguments, such as the index and array that
+    // `map` passes to a callback.
+    def abstraction(argument: Term, params: ParamList)(call: CallArgs => LoweringCtx ?=> Block)(using LoweringCtx): Lambda =
+      def lambda(physical: LoweredParamList)(body: LoweringCtx ?=> Block): Lambda =
+        Lambda(physical, LoweringCtx.nestFunc(N).givenIn(inScopedBlock(body)))(Nil, loc)
+      if isMls then
+        val (physical, prologue) = lowerTrailingParams(params, N)
+        lambda(physical)(prologue(call(argument)))
+      else
+        val forwarding = OptionalParams.forwarding(LoweredParamList.callingConvention(params),
+          fixedArity = params.variadic.isEmpty)
+        lambda(forwarding.params)(call(LoweredArgs(forwarding.args)(argument.toLoc)))
+    receiver: function =>
       // Capture every written operand before building any lambda. Then walk the lists in
-      // call order, introducing each abstracted list's bindings around the remaining call.
-      def expand(rest: Ls[PendingArgs], reversed: Ls[CallArgs])(next: Result => Block)(using LoweringCtx): Block = rest match
-        case R(args) :: tail => expand(tail, args :: reversed)(next)
-        case L(params) :: tail =>
-          // Tuple destructuring would apply the contextual prologue in the enclosing scope.
-          // Keep it contextual until the lambda's scope exists: its extracted locals must
-          // belong to each invocation, including when it returns another lambda.
-          val wrapper: (LoweredParamList, LoweringCtx ?=> Block => Block, Ls[Arg]) = if isMls then
-            val lowered = lowerTrailingParams(params, N)
-            val values = params.params.map(_.sym.asSimpleRef.asArg) ::: params.variadic.toList.flatMap: variadic =>
-              Arg(S(SpreadKind.Eager), variadic.param.sym.asSimpleRef) :: variadic.trailing.map(_.sym.asSimpleRef.asArg)
-            (lowered._1, lowered._2, values)
-          else
-            val forwarding = OptionalParams.forwarding(LoweredParamList.callingConvention(params),
-              fixedArity = params.variadic.isEmpty)
-            (forwarding.params, (body: Block) => body, forwarding.args)
-          val body = LoweringCtx.nestFunc(N).givenIn:
-            inScopedBlock:
-              wrapper._2(expand(tail, LoweredArgs(wrapper._3)(params.toLoc) :: reversed)(Ret))
-          next(Lambda(wrapper._1, body)(Nil, loc))
-        case Nil => invoke(function, reversed.reverse, next)
-      def capture(rest: Ls[Term], reversed: Ls[PendingArgs]): Block = rest match
+      // call order, introducing a lambda around the rest of the call for each abstracted list.
+      def capture(rest: Ls[Term], reversed: Ls[(Term, ParamList) \/ LoweredArgs]): Block = rest match
         case argument :: tail => abstractions.get(argument) match
-          case S(params) => capture(tail, L(params) :: reversed)
-          case N => list(argument)(args => capture(tail, R(args) :: reversed))
+          case S(params) => capture(tail, L(argument -> params) :: reversed)
+          case N => written(argument)(args => capture(tail, R(args) :: reversed))
         case Nil => expand(reversed.reverse, Nil)(k)
+      def expand(rest: Ls[(Term, ParamList) \/ LoweredArgs], reversed: Ls[CallArgs])(next: Result => Block)(using LoweringCtx): Block = rest match
+        case R(args) :: tail => expand(tail, args :: reversed)(next)
+        case L((argument, params)) :: tail =>
+          next(abstraction(argument, params)(forwarded => expand(tail, forwarded :: reversed)(Ret)))
+        case Nil => invoke(function, reversed.reverse, next)
       capture(arguments, Nil)
 
   final def term(t: st, inStmtPos: Bool = false)(k0: Result => Block)(using LoweringCtx): Block =
@@ -2164,8 +2166,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     * which JavaScript does not support. The lowered parameter list keeps the required leading parameters (`x`)
     * and gathers all the other arguments into a fresh rest parameter `args`, from which the returned prologue
     * extracts the other parameters using the same [[ArgumentLayout]] as call-site coercions.
-    * Passes running after lowering thus only see `LoweredParamList`, which cannot contain trailing parameters. */
-  protected def lowerTrailingParams(ps: ParamList, name: Opt[Str]): (LoweredParamList, LoweringCtx ?=> Block => Block) =
+    * Passes running after lowering thus only see `LoweredParamList`, which cannot contain trailing parameters.
+    * The prologue registers the extracted parameters as locals of the scope whose context it receives, which
+    * must be the function body's: registered in an enclosing scope, they would be shared by all invocations.
+    * It receives that context after the body because a context function stored in the returned pair would be
+    * applied to the context in scope wherever the pair is destructured. */
+  protected def lowerTrailingParams(ps: ParamList, name: Opt[Str]): (LoweredParamList, Block => LoweringCtx ?=> Block) =
     val loweredParams = LoweredParamList.callingConvention(ps)
     ArgumentLayout.trailing(ps) match
     case S(layout) =>
@@ -2182,7 +2188,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         Call(State.runtimeSymbol.asSimpleRef.sel(State.checkVariadicArgsSymbol),
           (Value.Lit(Tree.StrLit(name.getOrElse("")))(N) :: int(layout.minimumCount) :: int(layout.required.length) :: args :: Nil)
             .map(_.asArg) ne_:: Nil)(CallMetadata.defaultMlsFun, N)
-      val prologue: LoweringCtx ?=> Block => Block = body =>
+      val prologue: Block => LoweringCtx ?=> Block = body =>
         layout.extracted.foreach((param, _) => loweringCtx.collectScopedSym(param.sym))
         val extracted = layout.extracted.foldRight(body):
           case ((param, ArgumentLayout.Source.Element(index, minimumLength)), rest) =>

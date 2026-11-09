@@ -431,7 +431,9 @@ application inference still checks each callee's arity and constraints.
 Lowering flattens the continuation steps, interleaves contextual and written
 arguments, and emits lambdas around the ordinary call or constructor operation.
 It captures written arguments as IR operands, then walks the lists in call order
-to introduce the lambdas and their forwarding arguments. Call construction accepts
+to introduce the lambdas and their forwarding arguments. An MLscript callee's lambda
+binds the mirrored parameters and passes on the abstracted application's own argument
+term; a foreign callee's lambda passes IR forwarding arguments. Call construction accepts
 these prepared IR lists alongside source arguments, sharing coercions and constructor
 defaults without converting IR operands back into semantic terms.
 A contextual argument list has the runtime layout of an ordinary one, so lowering
