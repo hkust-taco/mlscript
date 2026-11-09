@@ -418,12 +418,18 @@ list of the first callee, with fresh unannotated parameters that keep its option
 markers and variadic structure, so it accepts the arguments that a direct reference to
 the callee accepts. A variadic wrapper would instead forward every argument that its
 caller passes, such as the index and array that `map` passes to its callback, to a
-callee that does not accept them. An omitted optional parameter is null in the lambda,
-and forwarding null is equivalent to omitting the argument. A later callee whose list
+callee that does not accept them. MLscript wrappers bind omitted optional parameters
+to null. Foreign wrappers reuse optional-argument forwarding: absent fixed slots stay
+undefined so native defaults run, explicit null stays null, and variadic lists forward
+their raw suffix without binding defaults. A later callee whose list
 has a different shape is a site error, since the site has one expansion. Ordinary
 application inference still checks each callee's arity and constraints.
 Lowering flattens the continuation steps, interleaves contextual and written
 arguments, and emits lambdas around the ordinary call or constructor operation.
+It captures written arguments as IR operands, then walks the lists in call order
+to introduce the lambdas and their forwarding arguments. Call construction accepts
+these prepared IR lists alongside source arguments, sharing coercions and constructor
+defaults without converting IR operands back into semantic terms.
 A contextual argument list has the runtime layout of an ordinary one, so lowering
 passes its elements directly rather than spreading an array. An expansion captures
 its operands once in source order, each argument in its own temporary. Each eager

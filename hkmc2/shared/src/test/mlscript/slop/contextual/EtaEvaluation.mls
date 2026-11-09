@@ -43,6 +43,20 @@ let made = construct(3)
 //│ = [12, 12, 3, 12]
 //│ made = Constructed(12)
 
+// Prepared argument lists retain constructor defaults and the boundary between lists.
+class OptionalConstructed(val x: Int, val y?)(using Int)(val z?)(using Str) with
+  fun values() = [x, y, z]
+let constructOptional = new OptionalConstructed
+let fromShortSpread = new OptionalConstructed(...[1])
+let fromFullSpread = new OptionalConstructed(...[2, 3])
+//│ constructOptional = fun constructOptional
+//│ fromFullSpread = fun fromFullSpread
+//│ fromShortSpread = fun fromShortSpread
+
+:expect [[4, null, null], [1, null, 5], [2, 3, null]]
+[constructOptional(4)().values(), fromShortSpread(5).values(), fromFullSpread().values()]
+//│ = [[4, null, null], [1, null, 5], [2, 3, null]]
+
 // Variadic and trailing parameters remain ordinary argument lists.
 fun variadic(x: Int, ...middle, last: Int)(using n: Int) = [x, middle, last, n]
 let spread = variadic

@@ -5758,8 +5758,8 @@ class NewResolver:
             // Mirror the callee's parameter list, as for `x => f(x)(using ...)`. A variadic
             // wrapper would forward every argument that its caller passes, so a callback
             // invoked with extra arguments, as `map` invokes its callback, would pass them
-            // to a callee that does not accept them. An omitted optional parameter is null
-            // in the lambda, and forwarding null is equivalent to omitting the argument.
+            // to a callee that does not accept them. Lowering preserves this argument layout
+            // while leaving foreign optional defaults to the callee.
             def mirror(parameter: Param): Param =
               val name = if parameter.sym.nme.isEmpty then "argument" else parameter.sym.nme
               val symbol = new VarSymbol(Tree.Ident(name), mut = false)(using rctx.owner)

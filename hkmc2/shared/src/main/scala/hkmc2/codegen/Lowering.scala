@@ -556,6 +556,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     * Foreign constructors own their argument defaults; MLscript constructors bind absent slots to null. */
   case class ConstructorParams(lists: Ls[ParamList], isMls: Bool)
 
+  /** Captures and forwarding wrappers already have IR operands. Keep them in IR while sharing
+    * call-site coercions and constructor defaults with arguments lowered from source terms. */
+  private case class LoweredArgs(values: Ls[Arg])(val toLoc: Opt[Loc]) extends Located
+  private type CallArgs = Term | LoweredArgs
+
   private def classParamLists(cls: ClassLikeDef): ConstructorParams =
     ConstructorParams(cls.paramsOpt.toList ::: cls.auxParams, cls.hasDeclareModifier.isEmpty)
 
@@ -597,11 +602,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   /** Lower a call with multiple argument lists into `Call` nodes,
     * trying to group as many as possible into a single one
     * when they correspond to parameter lists of the same callee. */
-  def lowerMultiCall(fr: Path, isMlsFun: Bool, annotations: Ls[Annot], args: Ls[Term], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
+  private def lowerMultiCall(fr: Path, isMlsFun: Bool, annotations: Ls[Annot], args: Ls[CallArgs], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
     val isConstructor = fr.targetSymbol.exists:
       case _: ClassCtorSymbol => true
       case _ => false
-    def zipArgs(remainingParamss: Ls[ParamList], remainingArgss: Ls[Term], acc: Ls[Ls[Arg]], mayRaiseEffects: Bool): Block =
+    def zipArgs(remainingParamss: Ls[ParamList], remainingArgss: Ls[CallArgs], acc: Ls[Ls[Arg]], mayRaiseEffects: Bool): Block =
       (remainingParamss, remainingArgss) match
       case (ps :: remainingParams, args :: remainingArgs) =>
         def next(as: Ls[Arg]): Block = zipArgs(remainingParams, remainingArgs, as :: acc, mayRaiseEffects)
@@ -626,7 +631,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case _ => zipArgs(Nil, args, Nil, fs.mayRaiseEffects)
     case _ => zipArgs(Nil, args, Nil, true)
   
-  def lowerRemainingCalls(base: Path, args: Term, remainingArgss: Ls[Term], annotations: Ls[Annot], loc: Opt[Loc])
+  private def lowerRemainingCalls(base: Path, args: CallArgs, remainingArgss: Ls[CallArgs], annotations: Ls[Annot], loc: Opt[Loc])
         (k: Result => Block)(using LoweringCtx): Block =
     lowerArgs(args, Nil): as =>
       val call = Call(base, as ne_:: Nil)(CallMetadata(false, true, annotations), loc)
@@ -642,7 +647,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     * when they correspond to constructor parameter lists of the same class.
     * If fewer argument lists are provided than constructor parameter lists, eta-expands
     * the missing ones with fresh lambdas (avoiding reliance on mutable JS class curry semantics). */
-  def lowerMultiInstantiate(mut: Bool, cls: Path, ctorParamLists: ConstructorParams, args: Ls[Term], annotations: Ls[Annot], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
+  private def lowerMultiInstantiate(mut: Bool, cls: Path, ctorParamLists: ConstructorParams, args: Ls[CallArgs], annotations: Ls[Annot], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
     // Nullary instantiations are represented with one empty argument list, matching existing `Instantiate` usage.
     def buildInstantiate(argss: Ls[Ls[Arg]]): Instantiate =
       Instantiate(mut, cls, if argss.isEmpty then Nil :: Nil else argss)(InstantiateMetadata(annotations), loc)
@@ -650,7 +655,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     // * Consumes one argument list per constructor param list; when all ctor params are
     // * consumed but extra args remain, falls back to `Call` nodes on the result.
     // * When args run out before ctor params are consumed, eta-expands the remaining ones.
-    def zipArgs(remainingCtorParamss: Ls[ParamList], remainingArgss: Ls[Term], acc: Ls[Ls[Arg]]): Block =
+    def zipArgs(remainingCtorParamss: Ls[ParamList], remainingArgss: Ls[CallArgs], acc: Ls[Ls[Arg]]): Block =
       (remainingCtorParamss, remainingArgss) match
       case (ps :: remainingParams, args :: remainingArgs) =>
         lowerConstructorArgs(args, ps, ctorParamLists.isMls)(as => zipArgs(remainingParams, remainingArgs, as :: acc))
@@ -704,7 +709,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     * and keep later lists from shifting into those slots. Foreign constructors retain undefined
     * in their optional slots so their native defaults can run.
     */
-  private def lowerConstructorArgs(arg: Term, ps: ParamList, isMls: Bool)(k: Ls[Arg] => Block)(using LoweringCtx): Block =
+  private def lowerConstructorArgs(arg: CallArgs, ps: ParamList, isMls: Bool)(k: Ls[Arg] => Block)(using LoweringCtx): Block =
     def capture(args: Ls[Arg]): Block =
       def loop(args: Ls[Arg], params: Ls[Param], acc: Ls[Arg]): Block = (args, params) match
         case (arg :: rest, param :: params) if isMls && param.flags.opt =>
@@ -720,10 +725,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         capture(padded)
       else
         assert(ps.variadic.isEmpty, "Constructor parameters must have a fixed layout")
-        val tuple = loweringCtx.registerTempSymbol(S(arg), erasedType = S(ErasedType.Array), "constructorArgs")
+        val source = arg match
+          case term: Term => S(term)
+          case _: LoweredArgs => N
+        val tuple = loweringCtx.registerTempSymbol(source, erasedType = S(ErasedType.Array), "constructorArgs")
         def bind(params: Ls[(Param, Int)], acc: Ls[Arg]): Block = params match
           case (param, index) :: rest =>
-            val slot = loweringCtx.registerTempSymbol(S(arg), erasedType = param.sym.erasedType, "constructorArg")
+            val slot = loweringCtx.registerTempSymbol(source, erasedType = param.sym.erasedType, "constructorArg")
             OptionalParams.bindFromTuple(tuple.asSimpleRef, index, slot, Option.when(isMls && param.flags.opt)(index + 1),
               bind(rest, slot.asSimpleRef.asArg :: acc))
           case Nil => k(acc.reverse)
@@ -734,23 +742,36 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     * ordinary one; lowering it as a spread would allocate an array at every call.
     */
   private object ArgumentTuple:
-    def unapply(arg: Term): Opt[Ls[Elem]] = arg match
+    def unapply(arg: CallArgs): Opt[Ls[Elem]] = arg match
       case Tup(fs) => S(fs)
       case CtxTup(fs) => S(fs)
       case _ => N
 
-  def lowerArgs(arg: Term, expectedTypes: Ls[Opt[ErasedValueType]])(k: Ls[Arg] => Block)(using LoweringCtx): Block =
+  private def lowerArgs(arg: CallArgs, expectedTypes: Ls[Opt[ErasedValueType]])(k: Ls[Arg] => Block)(using LoweringCtx): Block =
+    def rejectLazySpread(): Unit =
+      raise(ErrorReport(
+        msg"Lazy spreads are not supported in call arguments" -> arg.toLoc :: Nil, S(arg),
+        source = Diagnostic.Source.Compilation))
     arg match
+    case LoweredArgs(values) =>
+      if values.exists(_.spread.contains(SpreadKind.Lazy)) then rejectLazySpread()
+      // As for source arguments, a spread ends positional alignment with the parameter types.
+      var expected = expectedTypes
+      k(values.map: arg =>
+        if arg.spread.nonEmpty then
+          expected = Nil
+          arg
+        else
+          val typ = expected.headOption.flatten
+          expected = expected.drop(1)
+          Arg(N, castPathTo(arg.value, typ, arg.value.toLoc)))
     case ArgumentTuple(fs) =>
-      if fs.exists(e => e match
-        case Spd(SpreadKind.Lazy, _, _) => true // is lazy spread
-        case _ => false)
-      then
-        raise(ErrorReport(
-          msg"Lazy spreads are not supported in call arguments" -> arg.toLoc :: Nil, S(arg),
-          source = Diagnostic.Source.Compilation))
+      if fs.exists {
+        case Spd(SpreadKind.Lazy, _, _) => true
+        case _ => false
+      } then rejectLazySpread()
       args(fs, expectedTypes)(as => k(as))
-    case _ =>
+    case arg: Term =>
       // Application arguments that are not tuples represent spreads, as in `f(...arg)`
       subTerm_nonTail(arg): ar =>
         k(Arg(spread = S(SpreadKind.Eager), ar) :: Nil)
@@ -1090,67 +1111,66 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     * its selection on the captured receiver, so JavaScript's method receiver stays bound.
     * Abstract arguments belong to the generated lambdas and are evaluated on invocation.
     */
-  private def etaCall(callee: Path, arguments: Ls[Term], abstractions: Map[Term, ParamList], loc: Opt[Loc])(
-      invoke: (Path, Ls[Term], Result => Block) => LoweringCtx ?=> Block)(k: Result => Block)(using LoweringCtx): Block =
-    if abstractions.isEmpty then invoke(callee, arguments, k)
-    else
-      def freeze(value: Path)(next: Path => Block): Block =
-        val temp = loweringCtx.registerTempSymbol(N, value.erasedType, "contextualOperand")
-        Assign(temp, value, next(temp.asSimpleRef))
-      def receiver(next: Path => Block): Block = callee match
-        case selection: Select => freeze(selection.qual): prefix =>
-          next(Select(prefix, selection.name)(selection.symbol, selection.toLoc)(selection.sanitize))
-        case selection: DynSelect => freeze(selection.qual): prefix =>
-          freeze(selection.fld): field =>
-            next(DynSelect(prefix, field, selection.kind)(selection.toLoc))
-        case _ => next(callee)
-      receiver: function =>
-        def operand(term: Term)(next: Term => Block): Block = subTerm_nonTail(term): value =>
-          freeze(value): value =>
-            value match
-              case Value.SimpleRef(symbol: LocalVarSymbol) => next(st.SimpleRef(symbol)(N).withLocOf(term))
-              case _ => lastWords("A captured contextual operand must be a local reference")
-        def capturable(element: Elem): Bool = element match
-          case Fld(_, _, N) | Spd(_, _, _) => true
-          case _ => false
-        // Consume an eager spread before evaluating later operands or constructing the lambda.
-        // Capturing its source alone would let later mutations change the saved argument list.
-        def spread(term: Term)(next: Term => Block): Block =
-          operand(st.Tup(Spd(SpreadKind.Eager, term, false) :: Nil)(Tree.DummyTup).withLocOf(term))(next)
-        def elements(rest: Ls[Elem], reversed: Ls[Elem])(next: Ls[Elem] => Block): Block = rest match
-          case Fld(flags, term, N) :: tail => operand(term)(captured => elements(tail, Fld(flags, captured, N) :: reversed)(next))
-          case Spd(SpreadKind.Eager, term, droppable) :: tail =>
-            spread(term)(captured => elements(tail, Spd(SpreadKind.Eager, captured, droppable) :: reversed)(next))
-          case Spd(kind, term, droppable) :: tail => operand(term)(captured => elements(tail, Spd(kind, captured, droppable) :: reversed)(next))
-          case _ :: _ => lastWords("Only plain fields and spreads are captured one by one")
-          case Nil => next(reversed.reverse)
-        // Capture each argument of a tuple list on its own, so that the expansion still passes
-        // ordinary argument lists. Capturing a whole list as one value would allocate an array
-        // at the site and spread it at every call. Each eager spread captures a fresh tuple;
-        // lists with record fields are captured as one value.
-        def list(argument: Term)(next: Term => Block): Block = argument match
-          case tuple @ st.Tup(fields) if fields.forall(capturable) =>
-            elements(fields, Nil)(fields => next(st.Tup(fields)(tuple.tree).withLocOf(argument)))
-          case tuple @ st.CtxTup(fields) if fields.forall(capturable) =>
-            elements(fields, Nil)(fields => next(st.CtxTup(fields)(tuple.tree).withLocOf(argument)))
-          case ArgumentTuple(_) => operand(argument)(next)
-          case _ => spread(argument)(next)
-        def capture(rest: Ls[Term], reversed: Ls[Term]): Block = rest match
-          case argument :: tail if abstractions.contains(argument) => capture(tail, argument :: reversed)
-          case argument :: tail => list(argument)(captured => capture(tail, captured :: reversed))
-          case Nil =>
-            val args = reversed.reverse
-            val parameters = arguments.flatMap(abstractions.get)
-            def lambda(remaining: Ls[ParamList])(using LoweringCtx): Result = remaining match
-              case params :: tail =>
-                val (physical, prologue) = lowerTrailingParams(params, N)
-                val body = LoweringCtx.nestFunc(N).givenIn:
-                  inScopedBlock:
-                    prologue(if tail.isEmpty then invoke(function, args, Ret) else Return(lambda(tail)))
-                Lambda(physical, body)(Nil, loc)
-              case Nil => lastWords("An eta expansion must have an ordinary parameter list")
-            k(lambda(parameters))
-        capture(arguments, Nil)
+  private def etaCall(callee: Path, arguments: Ls[Term], abstractions: Map[Term, ParamList], isMls: Bool, loc: Opt[Loc])(
+      invoke: (Path, Ls[CallArgs], Result => Block) => LoweringCtx ?=> Block)(k: Result => Block)(using LoweringCtx): Block =
+    softAssert(abstractions.nonEmpty, "An eta expansion must abstract at least one parameter list")
+    def freeze(value: Result)(next: Path => Block): Block =
+      val temp = loweringCtx.registerTempSymbol(N, value.erasedType, "contextualOperand")
+      Assign(temp, value, next(temp.asSimpleRef))
+    def receiver(next: Path => Block): Block = callee match
+      case selection: Select => freeze(selection.qual): prefix =>
+        next(Select(prefix, selection.name)(selection.symbol, selection.toLoc)(selection.sanitize))
+      case selection: DynSelect => freeze(selection.qual): prefix =>
+        freeze(selection.fld): field =>
+          next(DynSelect(prefix, field, selection.kind)(selection.toLoc))
+      case _ => next(callee)
+    receiver: function =>
+      def operand(term: Term, spread: Opt[SpreadKind])(next: Arg => Block): Block = subTerm_nonTail(term): value =>
+        // Consume each eager spread before later operands run. The saved tuple owns its
+        // elements and length even if the source array changes before the lambda is called.
+        val captured = if spread.contains(SpreadKind.Eager) then Tuple(false, Arg(spread, value) :: Nil)(term.toLoc) else value
+        freeze(captured)(value => next(Arg(spread, value)))
+      def elements(rest: Ls[Elem], reversed: Ls[Arg])(next: Ls[Arg] => Block): Block = rest match
+        case Fld(FldFlags.benign(), term, N) :: tail => operand(term, N)(arg => elements(tail, arg :: reversed)(next))
+        case Spd(kind, term, _) :: tail => operand(term, S(kind))(arg => elements(tail, arg :: reversed)(next))
+        case _ :: _ => lastWords("Only plain fields and spreads are captured one by one")
+        case Nil => next(reversed.reverse)
+      def list(argument: Term)(next: LoweredArgs => Block): Block =
+        def finish(values: Ls[Arg]): Block = next(LoweredArgs(values)(argument.toLoc))
+        argument match
+          case ArgumentTuple(fields) if fields.forall {
+            case Fld(FldFlags.benign(), _, N) | Spd(_, _, _) => true
+            case _ => false
+          } => elements(fields, Nil)(finish)
+          // Record fields already lower to a tuple containing the trailing record.
+          case ArgumentTuple(_) => subTerm_nonTail(argument)(value => freeze(value)(value => finish(Arg(S(SpreadKind.Eager), value) :: Nil)))
+          case _ => operand(argument, S(SpreadKind.Eager))(arg => finish(arg :: Nil))
+      type PendingArgs = ParamList \/ LoweredArgs
+      // Capture every written operand before building any lambda. Then walk the lists in
+      // call order, introducing each abstracted list's bindings around the remaining call.
+      def expand(rest: Ls[PendingArgs], reversed: Ls[CallArgs])(next: Result => Block)(using LoweringCtx): Block = rest match
+        case R(args) :: tail => expand(tail, args :: reversed)(next)
+        case L(params) :: tail =>
+          val (physical, prologue, forwarded) = if isMls then
+            val (physical, prologue) = lowerTrailingParams(params, N)
+            val values = params.params.map(_.sym.asSimpleRef.asArg) ::: params.variadic.toList.flatMap: variadic =>
+              Arg(S(SpreadKind.Eager), variadic.param.sym.asSimpleRef) :: variadic.trailing.map(_.sym.asSimpleRef.asArg)
+            (physical, prologue, values)
+          else
+            val forwarding = OptionalParams.forwarding(LoweredParamList.callingConvention(params),
+              fixedArity = params.variadic.isEmpty)
+            (forwarding.params, (body: Block) => body, forwarding.args)
+          val body = LoweringCtx.nestFunc(N).givenIn:
+            inScopedBlock:
+              prologue(expand(tail, LoweredArgs(forwarded)(params.toLoc) :: reversed)(Ret))
+          next(Lambda(physical, body)(Nil, loc))
+        case Nil => invoke(function, reversed.reverse, next)
+      def capture(rest: Ls[Term], reversed: Ls[PendingArgs]): Block = rest match
+        case argument :: tail => abstractions.get(argument) match
+          case S(params) => capture(tail, L(params) :: reversed)
+          case N => list(argument)(args => capture(tail, R(args) :: reversed))
+        case Nil => expand(reversed.reverse, Nil)(k)
+      capture(arguments, Nil)
 
   final def term(t: st, inStmtPos: Bool = false)(k0: Result => Block)(using LoweringCtx): Block =
     termWithCompletion(t, inStmtPos, true)(k0)
@@ -1263,7 +1283,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       
       def conclude(fr: Path) =
         if abstractions.isEmpty then lowerMultiCall(fr, isMlsFun, annots, allArgs, t.toLoc)(k)
-        else etaCall(fr, allArgs, abstractions, t.toLoc)((function, arguments, next) =>
+        else etaCall(fr, allArgs, abstractions, isMlsFun, t.toLoc)((function, arguments, next) =>
           lowerMultiCall(function, isMlsFun, annots, arguments, t.toLoc)(next))(k)
       
       // * We have to instantiate `f` again because, if `f` is a Sel, the `term`
@@ -1699,7 +1719,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           .toMap
           val arguments = as ::: suppliedArguments(nwtrm)
           if abstractions.isEmpty then lowerMultiInstantiate(mut, sr, params, arguments, annots, trm.toLoc)(k)
-          else etaCall(sr, arguments, abstractions, trm.toLoc)((constructor, arguments, next) =>
+          else etaCall(sr, arguments, abstractions, params.isMls, trm.toLoc)((constructor, arguments, next) =>
             lowerMultiInstantiate(mut, constructor, params, arguments, annots, trm.toLoc)(next))(k)
         case S((isym, rft)) =>
           val sym = isym.bms.get
@@ -2069,11 +2089,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     s.collect { case t: TermSymbol => t.sourceErasedType }.flatten
 
   /** Resolve the shared argument binding plan at a statically known argument count. */
-  private def expectedParamTypes(ps: ParamList, args: Term): Ls[Opt[ErasedValueType]] =
+  private def expectedParamTypes(ps: ParamList, args: CallArgs): Ls[Opt[ErasedValueType]] =
     ArgumentLayout.trailing(ps) match
       case N => ps.params.map(_.sym.erasedType)
       case S(layout) =>
         val count = args match
+          case LoweredArgs(values) if values.forall(_.spread.isEmpty) => S(values.length)
           case ArgumentTuple(fields) if fields.forall {
             case Fld(FldFlags.benign(), _, N) => true
             case _ => false
