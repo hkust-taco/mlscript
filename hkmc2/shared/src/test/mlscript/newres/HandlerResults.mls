@@ -2,8 +2,8 @@
 :lift
 :effectHandlers
 
-// FIXME: The handler receiver and its result need shape propagation. This
-// handler aborts: its record, not the rest of the handled body, is the result.
+// FIXME: Propagate the possible results of resumptive handlers. This handler
+// aborts with {answer: 42}; the handled body's final record is unreachable.
 :fixme
 :expect 42
 private abstract class AnswerEffect with
@@ -27,8 +27,5 @@ handled().answer
 //│ ║        	^^^^^^^^^^^^
 //│ ║  l.+7: 	  {answer: 0}
 //│ ╙──      	^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Member reference 'AnswerEffect' has no resolved target
-//│ ║  l.+4: 	  handle h = AnswerEffect with
-//│ ╙──      	             ^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] TypeError: Class extends value undefined is not a constructor or null
 //│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'

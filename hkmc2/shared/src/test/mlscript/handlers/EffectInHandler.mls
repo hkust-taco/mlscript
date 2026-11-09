@@ -1,10 +1,11 @@
+:.
 :js
 :effectHandlers
 :lift
 
 abstract class PrintEffect with
-  fun p(s: String): ()
-  fun aux(s: String): ()
+  fun p(s: Int): ()
+  fun aux(s: Int): ()
 
 :e
 // :sjs
