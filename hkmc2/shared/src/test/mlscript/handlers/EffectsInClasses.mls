@@ -91,6 +91,7 @@ oops
 
 
 :fixme
+#config(effectHandlers: Some(EffectHandlers(optTailResumptiveHandlers:false)))
 let oops = 
   handle h = Effect with
     fun perform(arg)(k) =
@@ -99,6 +100,8 @@ let oops =
   Lol(h)
 //│ ═══[RUNTIME ERROR] Error: Effect Handler$h$6 is raised in a constructor
 //│ oops = undefined
+
+#config(effectHandlers: Some(EffectHandlers()))
 
 :fixme
 oops.h

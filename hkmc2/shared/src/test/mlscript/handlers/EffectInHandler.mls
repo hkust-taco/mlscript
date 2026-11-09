@@ -24,9 +24,6 @@ h.aux(3)
 //│ ╔══[COMPILATION ERROR] Name not found: h
 //│ ║  l.+8: 	    h.p(x)
 //│ ╙──      	    ^
-//│ ╔══[COMPILATION ERROR] This selection of member 'p' has no resolved target
-//│ ║  l.+6: 	    h.p(x)
-//│ ╙──      	    ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 handle h1 = PrintEffect with

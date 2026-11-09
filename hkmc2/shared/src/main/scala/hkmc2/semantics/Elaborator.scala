@@ -179,7 +179,7 @@ object Elaborator:
       getExplicit(name, captureScopes).orElse:
         if config.language.useNewResolution then
           val sources = visibleWildcardOpens.distinct
-          if sources.isEmpty then N else S(Ctx.WildcardElem(name, sources))
+          if sources.isEmpty then N else S(Ctx.WildcardElem(name, sources, NameLookup.Opens))
         else N
 
     private def getExplicit(name: Str, captureScopes: Bool)(using config: Config): Opt[Ctx.Elem] =
@@ -293,6 +293,9 @@ object Elaborator:
       private def assumeBuiltinTpe(nme: Str): TypeSymbol =
         assumeBuiltin(nme).asTpe.getOrElse(throw new NoSuchElementException(
           s"builtin type symbol $nme"))
+      private def assumeBuiltinAls(nme: Str): TypeAliasSymbol =
+        assumeBuiltin(nme).asAls.getOrElse(throw new NoSuchElementException(
+          s"builtin type symbol $nme"))
       private def assumeBuiltinCls(nme: Str): ClassSymbol =
         assumeBuiltin(nme).asCls.getOrElse(throw new NoSuchElementException(
           s"builtin class symbol $nme"))
@@ -303,6 +306,7 @@ object Elaborator:
         assumeBuiltin(nme).asMod.getOrElse(throw new NoSuchElementException(
           s"builtin module symbol $nme"))
       val Anything = assumeBuiltinTpe("Anything")
+      lazy val Any = assumeBuiltinTpe("Any")
       val Int = assumeBuiltinCls("Int")
       val Int31 = assumeBuiltinCls("Int31")
       val Int32 = assumeBuiltinCls("Int32")
@@ -314,8 +318,8 @@ object Elaborator:
       val BigInt = assumeBuiltinCls("BigInt")
       val Function = assumeBuiltinCls("Function")
       lazy val Promise = assumeBuiltinCls("Promise")
-      lazy val Iterator = assumeBuiltinCls("Iterator")
-      lazy val Awaited = assumeBuiltinTpe("Awaited")
+      lazy val Iterator = assumeBuiltinAls("Iterator")
+      lazy val Awaited = assumeBuiltinAls("Awaited")
       lazy val Nothing = assumeBuiltinTpe("Nothing")
       val Error = assumeBuiltinCls("Error")
       val Bool = assumeBuiltinCls("Bool")
@@ -506,19 +510,25 @@ object Elaborator:
         else
           Term.SynthSel(prefix, name)(symOpt, FlowSymbol.synthSel(nme), N, S(summon)).withLoc(loc)
       def symbol = symOpt
-    final case class WildcardElem(nme: Str, sources: Ls[OpenSource]) extends Elem:
+    /** A name without an explicit binding, looked up in the wildcard opens `sources` and,
+      * depending on `lookup`, in implicit namespaces (see Term.UnresolvedRef). */
+    final case class WildcardElem(nme: Str, sources: Ls[OpenSource], lookup: NameLookup) extends Elem:
       def ref(id: Opt[Ident])(using Elaborator.State, Ctx, Config, NewResolver, ResolutionContext): Term =
         // Each ref is fresh. Locate its outer capture at the opening site too;
         // a chained wildcard reference may already have attached this location.
         val prefixes = sources.map(source => source.elem.ref(S(source.id)).withoutLoc.withLocOf(source.id))
         val name: Ident = id.getOrElse(Ident(nme))
-        val res = new Term.UnresolvedRef(prefixes, name)(FlowSymbol.synthSel(nme)).withLocOf(name)
-        rctx.recordLexicalBinders(res, ctx.typeBinders)
-        rctx.recordAccessSite(res, ctx.scope)
-        summon[NewResolver].unresolvedRef(res, ctx.scope)
-        res
+        unresolvedRef(prefixes, name, lookup, name)
       def symbol: Opt[Symbol] = N
       def isImport: Bool = true
+    /** A reference to resolve through `prefixes` and implicit namespaces, located at `source`. */
+    def unresolvedRef(prefixes: Ls[Term], name: Ident, lookup: NameLookup, source: Located)
+        (using Elaborator.State, Ctx, NewResolver, ResolutionContext): Term.UnresolvedRef =
+      val res = new Term.UnresolvedRef(prefixes, name)(FlowSymbol.synthSel(name.name), lookup).withLocOf(source)
+      rctx.recordLexicalBinders(res, ctx.typeBinders)
+      rctx.recordAccessSite(res, ctx.scope)
+      summon[NewResolver].unresolvedRef(res, ctx.scope)
+      res
     final case class CaptElem(base: Elem, thru: DefinitionSymbol[?]) extends Elem:
       def ref(id: Opt[Ident])(using Elaborator.State, Ctx, Config, NewResolver, ResolutionContext): Term =
         Term.Capture(base.ref(id), thru)
@@ -535,7 +545,37 @@ object Elaborator:
     * a runtime value merely because they use the same reference syntax.
     */
   enum Interpretation:
-    case Trm, Receiver, Specialization, Clss, Ptrn, Tpe
+    case Trm, Ptrn, Tpe
+    /** The receiver of a selection. The root of a chain of selections of a value or a
+      * pattern is `chained`: like the value or pattern head itself, it can name a member
+      * of an implicit namespace (see NewResolver.unresolvedRef). The selections of types
+      * and annotations are paths through explicit bindings and wildcard opens only.
+      */
+    case Rcvr(chained: Bool)
+    /** A class operand. The class `instantiated` by `new` can name a member of an implicit
+      * namespace. Other class operands, such as those of `extends` clauses, are needed
+      * while their class is elaborated, before flow can reveal a namespace (see newOf).
+      */
+    case Clss(instantiated: Bool)
+    /** An annotation, which is interpreted as soon as it is elaborated (see annotationSymbol),
+      * before flow can reveal implicit namespaces. Otherwise as Trm. */
+    case Annt
+
+    /** Whether a name without an explicit binding can name a member of an implicit namespace
+      * (see NewResolver.unresolvedRef), rather than only consult the visible wildcard opens. */
+    def implicitNamespacing: Bool = this match
+      case Trm | Ptrn => true
+      case Rcvr(chained) => chained
+      case Clss(instantiated) => instantiated
+      case Tpe | Annt => false
+
+    /** The interpretation of the receiver of a selection with this interpretation. */
+    def selectionReceiver: Interpretation = Rcvr(implicitNamespacing)
+
+    /** The interpretation of the head of an application with this interpretation. */
+    def applicationHead: Interpretation = this match
+      case Annt => Annt
+      case _ => Trm
     
     /** The interpretation of the elements of a tuple or record with this interpretation.
       * Elements are values, even when their aggregate is a receiver or a class operand.
@@ -830,7 +870,7 @@ end Elaborator
 
 
 import Elaborator.*
-import Elaborator.Interpretation.{Trm, Receiver, Specialization, Clss, Ptrn, Tpe}
+import Elaborator.Interpretation.{Trm, Rcvr, Clss, Ptrn, Tpe, Annt}
 
 
 class Elaborator(val tl: TraceLogger, val wd: io.Path, val prelude: Ctx)
@@ -893,7 +933,7 @@ extends Importer:
       S(Annot.Debug(modify)(tree.toLoc))
     case App(Ident("affine"), Tup(IntLit(whichParamList) :: Nil)) =>
       S(Annot.Affine(whichParamList.toInt)(tree.toLoc))
-    case _ => term(tree, Trm) match
+    case _ => term(tree, Annt) match
       case Term.Error() => N
       case trm =>
         val symbol = if newResolution then annotationSymbol(trm) else trm.symbol
@@ -993,7 +1033,7 @@ extends Importer:
       mtdSym.tsym = S(tsym)
       tsym.defn = S(td)
       mtdSym.complete()
-      HandlerTermDefinition(resumeSym, td)
+      HandlerTermDefinition(resumeSym, td, Nil)
     clsSym.defn = S(ClassDef.Plain(ctx.getOuter, Cls, clsSym, BlockMemberSymbol(effectClassName, Nil), Nil, N,
       ObjBody(Blk(htds.map(_.td), unit)), N, Nil, Nil, N, ctorAnnotations = Nil)(body.toLoc, body.toLoc, N))
     val parent = if newResolution then runtimeMember(State.nonLocalReturnSymbol) else state.nonLocalRetHandlerTrm
@@ -1523,8 +1563,8 @@ extends Importer:
     */
   private def interpretRef(ref: Term, interp: Interpretation): Term =
     if newResolution then interp match
-      case Trm => requireTerm(ref)
-      case Receiver => listenReceiver(ref)(_ => ())
+      case Trm | Annt => requireTerm(ref)
+      case Rcvr(_) => listenReceiver(ref)(_ => ())
       case Tpe => ref.typeInterpretation = S(typeResolution(ref))
       case _ => ()
     ref
@@ -1611,7 +1651,8 @@ extends Importer:
     def elaborateSelection(tree: Sel): Term =
       // `.class` chooses the class overload before requesting a receiver value.
       // Interpreting C as a receiver first would also select its companion.
-      val preTrm = subterm(tree.prefix, if newResolution && tree.name.name == "class" then Clss else Receiver)
+      val preTrm = subterm(tree.prefix,
+        if newResolution && tree.name.name == "class" then Clss(instantiated = false) else interp.selectionReceiver)
       // Virtual modules have no runtime object. Recognize their literal members
       // before constructing a runtime selection, in either resolution mode.
       // Compare symbols so user-defined bindings named `source` or `unsafe` stay ordinary.
@@ -1716,7 +1757,7 @@ extends Importer:
       val derivedClsSym = ClassSymbol(Tree.DummyTypeDef(syntax.Cls), Tree.Ident(s"Handler$$${id.name}$$"))
       recordDefinitionScope(derivedClsSym)
       val Apps(base, argss) = c
-      val cp = subterm(base, Clss)
+      val cp = subterm(base, Clss(instantiated = false))
       // A handler always constructs its parent; omitting arguments invokes its
       // first parameter list with no arguments, including optional defaults.
       val args = argss match
@@ -1754,8 +1795,8 @@ extends Importer:
               case ParamList(_, value :: Nil, _) :: newParams =>
                 if newParams.isEmpty then
                   raise(ErrorReport(msg"Handler function must have a parameter list before its continuation parameter list" -> td.toLoc :: Nil))
-                val newTd = TermDefinition(Fun, sym, tsym, newParams.reverse, tparams, sign, body, flags, mf, annotations, comp)(td.toLoc, td.headerLoc, td.scope)
-                S(HandlerTermDefinition(value.sym, newTd))
+                val newTd = TermDefinition(Fun, sym, tsym, newParams.reverse, tparams, sign, body, flags, mf, Nil, comp)(td.toLoc, td.headerLoc, td.scope)
+                S(HandlerTermDefinition(value.sym, newTd, annotations))
               case _ =>
                 raise(ErrorReport(msg"Handler function is missing resumption parameter" -> td.toLoc :: Nil))
                 None
@@ -1791,7 +1832,7 @@ extends Importer:
       // The whole type application owns a by-name invocation's binder group.
       // Do not observe its underlying reference before its arguments are available.
       val baseInterp = interp match
-        case Trm | Receiver | Specialization => Specialization
+        case Trm | Rcvr(_) => Trm
         case _ => interp
       val result = withTypeBinders(Term.TyApp(subterm(lhs, baseInterp), targs.map {
         case Modified(kw @ Keywrd(Keyword.`in`), arg) => Term.WildcardTy(S(subterm(arg, Tpe)), N).mkLocWith(kw)
@@ -1868,7 +1909,7 @@ extends Importer:
     case tree @ InfixApp(lhs, Keywrd(Keyword.`is` | Keyword.`and` | Keyword.`or`), rhs) =>
       ifLike(Keyword.`if`, IfLikeForm.ReturningIf, shorthandSplit(tree), tree.toLoc)
     case InfixApp(Sel(pre, idn: Ident), Keywrd(Keyword.`#`), idp: Ident) =>
-      val c = subterm(idn, Clss)
+      val c = subterm(idn, Clss(instantiated = false))
       if newResolution then
         elaborateProjection(subterm(pre), c, idp)
       else
@@ -1952,10 +1993,20 @@ extends Importer:
     case prefix: PrefixOpApp => subterm(operatorApp(prefix), interp)
     case tree @ App(lhs, rhs) =>
       val sym = FlowSymbol.app()
-      val lt = subterm(lhs)
+      val lt = subterm(lhs, interp.applicationHead)
       val rt = subterm(rhs)
       app(lt, rt)(tree, N, sym)
     case tree: OpApp => subterm(operatorApp(tree), interp)
+    // Under new resolution, a leading-dot selection only consults the implicit namespace
+    // that flow requires of its value, or that of its scrutinee's type in a pattern, as a
+    // capitalized name can.
+    case Sel(Empty(), nme) if newResolution =>
+      if interp.implicitNamespacing then
+        interpretRef(Ctx.unresolvedRef(Nil, nme, NameLookup.LeadingDot, tree), interp)
+      else
+        raise(ErrorReport(msg"Leading-dot selection can only be used on term or pattern position." ->
+          tree.toLoc :: Nil))
+        error
     case Sel(Empty(), nme) =>
       Term.LeadingDotSel(nme)(S(summon)).withLocOf(tree)
     case sel @ Sel(labelId @ Ident(labelName), nme @ Ident("break")) =>
@@ -2003,7 +2054,7 @@ extends Importer:
     case sel @ Sel(pre, nme) =>
       elaborateSelection(sel)
     case MemberProj(ct, nme) =>
-      val c = subterm(ct, Clss)
+      val c = subterm(ct, Clss(instantiated = false))
       val f = if newResolution then N else c.symbol.flatMap(_.asCls) match
         case S(cls: ClassSymbol) =>
           cls.tree.allSymbols.get(nme.name) match
@@ -2066,7 +2117,9 @@ extends Importer:
           case Modified(Keywrd(Keyword.`mut`), c) => (true, c)
           case c => (false, c)
         val inner = mkNew(
-          subterm(c2, Clss), // * Note: we'll catch bad `new` targets during type checking
+          // * Note: we'll catch bad `new` targets during type checking
+          // The instantiation of a parent class is a class operand itself (see newOf).
+          subterm(c2, Clss(instantiated = !interp.isInstanceOf[Clss])),
           args.map(subterm(_)),
           bodo
         )(N)
@@ -2952,7 +3005,7 @@ extends Importer:
             assert(body.isEmpty)
             val d =
               given Ctx = newCtx
-              semantics.TypeDef(alsSym, sym, tps, rhs.map(term(_, Tpe)), N, annotations)(statementLoc, headerLoc)
+              semantics.TypeDef(owner, alsSym, sym, tps, rhs.map(term(_, Tpe)), N, annotations)(statementLoc, headerLoc)
             alsSym.defn = S(d)
             d
         case Pat =>
@@ -3207,7 +3260,9 @@ extends Importer:
   def newOf(td: TypeDef): Ctxl[Opt[Term.New]] =
     td.extension
     match
-    case S(ext) => S(term(ProperNew(S(ext), N), Trm))
+    // Inheritance checks need the parent class while this class is elaborated, so the
+    // instantiation of the parent is a class operand rather than a value.
+    case S(ext) => S(term(ProperNew(S(ext), N), Clss(instantiated = false)))
     case N => N
     match
     case S(n: Term.New) => S(n)
@@ -3303,7 +3358,7 @@ extends Importer:
     * Call after registering separate signatures so those interfaces remain authoritative.
     */
   private def seedRestParameter(ps: ParamList)(using Ctx): Unit = if newResolution then
-    ps.variadic.map(_.param).filter(parameterSignature(_).isEmpty).foreach: p =>
+    ps.variadic.map(_.param).filter(parameterSignature(_, positive = true).isEmpty).foreach: p =>
       def builtin(name: Str): Term =
         prelude.getBuiltin(name).get.ref(N)
       val initial = Term.TyApp(builtin("Array"), builtin("Nothing") :: Nil)(N).withLoc(p.toLoc)
@@ -3406,6 +3461,16 @@ extends Importer:
         // like explicit bindings, they take precedence over wildcard sources.
         state.builtinOpsMap.get(id.name) match
           case S(bi) => S(Ctx.RefElem(bi).ref(S(id)))
+          case N if newResolution =>
+            // New resolution looks the name up in the visible wildcard opens, if any, and
+            // reports a missing name once its block is resolved, uniformly. A capitalized
+            // value, instantiated class, or pattern head, or the root of a chain of selections
+            // of one, can also name a member of an implicit namespace (see
+            // Interpretation.implicitNamespacing). Types and their paths only consult their opens.
+            val sources = candidate.collect { case wildcard: Ctx.WildcardElem => wildcard.sources }.getOrElse(Nil)
+            val lookup = if id.name.isCapitalized && interp.implicitNamespacing then NameLookup.NamespacesThenOpens
+              else NameLookup.Opens
+            S(Ctx.WildcardElem(id.name, sources, lookup).ref(S(id)))
           case N => candidate.map(_.ref(S(id)))
       case S(elem) => S(elem.ref(S(id)))
   
@@ -3519,7 +3584,12 @@ extends Importer:
         case (acc, t) =>
           raise(ErrorReport(msg"Unexpected record property pattern." -> t.toLoc :: Nil))
           acc
-      Record(entries.reverse)
+      val res = new Record(entries.reverse)
+      // Record patterns implicitly select their input's members. These selections
+      // may invoke generic parameterless functions, so record the enclosing type
+      // parameters that their inferred type arguments can depend on.
+      if newResolution && res.fields.nonEmpty then rctx.recordPatternReads(res, ctx.typeBinders)
+      res
     /** Elaborate a pattern argument. */
     def arg(t: Tree): Ctxl[Pattern \/ Pattern] = t match
       case TypeDef(syntax.Pat, body, N) => L(go(body))
@@ -3644,6 +3714,7 @@ extends Importer:
     val (res, newCtx) = block(sts, hasResult = false, resultInterp = Trm)
     // TODO handle name clashes
     if newResolution then
+      settleUnboundReferences()
       InterfaceExposure(this).check(exports, Nil)
     rctx.completeBlock(res)
     (res, newCtx)
@@ -3652,6 +3723,7 @@ extends Importer:
     given UnderCtx = UnderCtx.none
     val (res, ctx) = block(sts, hasResult = false, resultInterp = Trm)
     if newResolution then
+      settleUnboundReferences()
       if config.language.strictResolution then
         val exports = res.stats.collect:
           case d: Definition if InterfaceExposure.isPublic(d) => d.bsym

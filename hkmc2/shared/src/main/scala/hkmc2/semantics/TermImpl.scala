@@ -72,6 +72,15 @@ trait UnresolvedRefImpl extends NewResolvableImpl:
   // the same member symbol without denoting the same storage location.
   var resolvedMembers: Ls[(Term, BlockMemberSymbol)] = Nil
   var dynamicPrefixes: Ls[Term] = Nil
+  /** Paths to the modules and objects that flow selected as implicit namespaces of this reference,
+    * recovered in its scope (see NewResolver.consultNamespace). Like `prefixes`, they are
+    * receivers of candidate members; unlike them, resolution discovers them. */
+  var namespacePrefixes: Ls[Term] = Nil
+  /** The value of this reference before its namespace is known (see NamespaceProbe). */
+  lazy val namespaceProbe: NamespaceProbe = NamespaceProbe(this)
+  def implicitNamespacing: Bool = self.lookup isnt NameLookup.Opens
+  /** The written name, for diagnostics. */
+  def writtenName: Str = if self.lookup is NameLookup.LeadingDot then "." + self.id.name else self.id.name
 
 
 trait FldImpl:
@@ -131,6 +140,8 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
       case Capture(base, thru) => base.describe
       case SimpleRef(sym) => "reference"
       case MemberRef(sym) => "member reference"
+      case ref: UnresolvedRef if ref.lookup is NameLookup.LeadingDot => "leading-dot selection"
+      case UnresolvedRef(Nil, _) => "reference"
       case UnresolvedRef(_, _) => "wildcard-open reference"
       case App(lhs, rhs) => "application"
       case TyApp(lhs, targs) => "type application"
@@ -215,7 +226,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     case SynthSel(pre, _) => Vector.single(pre)
     case sup @ Super(receiver, _, _) => Vector.single(receiver) ++ sup.keyAccess.toVector
     case sel @ NewSel(pre, _, cls) => Vector.single(pre) ++ cls.toVector ++ sel.keyAccess.toVector
-    case ref @ UnresolvedRef(prefixes, _) => prefixes.toVector ++ ref.keyAccess.toVector
+    case ref @ UnresolvedRef(prefixes, _) => prefixes.toVector ++ ref.namespacePrefixes ++ ref.keyAccess.toVector
     case DynSel(o, f, _, _) => Vector.double(o, f)
     case Tup(fields) => fields.flatMap(_.subTerms).toVector
     case Mut(und) => Vector.single(und)
@@ -308,7 +319,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
         case _: BuiltinSymbol => r.sym.nme
         case _ => r.sym.showName
       case r: MemberRef => r.sym.showName
-      case r: UnresolvedRef => doc"${r.id.name}"
+      case r: UnresolvedRef => doc"${r.writtenName}"
       case sr: SelfRef => s"${sr.sym.showName}.this"
       case Capture(base, thru) =>
         // doc"${base.show}⟨${thru.showName}⟩"
@@ -523,6 +534,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     case SynthSel(pre, nme) => s"(${pre.showDbg}.)${nme.name}"
     case Super(_, owner, id) => s"super[${owner.showDbg}].${id.name}"
     case NewSel(pre, nme, cls) => s"${pre.showDbg}.${cls.fold("")(c => s"${c.showDbg}#")}${nme.name}"
+    case ref: UnresolvedRef if ref.lookup is NameLookup.LeadingDot => ref.writtenName
     case UnresolvedRef(_, id) => s"${id.name}‹open›"
     case DynSel(pre, fld, _, _) => s"${pre.showDbg}[${fld.showDbg}]"
     case IfLike(kw, _, split) => s"${kw.name} { ${split.showDbg} }"
@@ -580,7 +592,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     case Continue(label) => s"${label.nme}.continue"
     case Try(body, finallyDo) => s"try ${body.showDbg} finally ${finallyDo.showDbg}"
     case Ret(res) => s"return ${res.showDbg}"
-    case TypeDef(sym, _, tparams, rhs, _, _) =>
+    case TypeDef(_, sym, _, tparams, rhs, _, _) =>
       s"type ${sym.showDbg}${tparams.map(_.showDbg).mkStringOr(", ", "[", "]")} = ${rhs.fold("")(x => x.showDbg)}"
     case Missing => "missing"
     case LeadingDotSel(nme) => s"_?_.${nme.name}"

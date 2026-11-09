@@ -25,7 +25,7 @@ Mod.|>>
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
 //│ ║  l.+1: 	Mod.|>>
 //│ ╙──      	       ^
-//│ ╔══[COMPILATION ERROR] Name not found in wildcard opens: .|>>
+//│ ╔══[COMPILATION ERROR] Name not found: .|>>
 //│ ║  l.+1: 	Mod.|>>
 //│ ╙──      	   ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

@@ -34,11 +34,12 @@ x
 // The continuation cannot be a handler function's only parameter list.
 // :expect 3
 :e
+#config(effectHandlers: Some(EffectHandlers(optTailResumptiveHandlers:false)))
 handle h = Object with
   fun lol(k) = k(())
 h.'lol
 //│ ╔══[COMPILATION ERROR] Handler function must have a parameter list before its continuation parameter list
-//│ ║  l.+2: 	  fun lol(k) = k(())
+//│ ║  l.+3: 	  fun lol(k) = k(())
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Effect Handler$h$6 is raised in a getter
   fun lol(k) = k(1)
@@ -49,6 +50,7 @@ h.'lol + 2
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :re
+#config(effectHandlers: Some(EffectHandlers(optTailResumptiveHandlers:false)))
 handle h = Object with
   fun lol()(k) = k(1)
 class A with

@@ -95,6 +95,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   private def erroneousRef(ref: NewResolvable): Bool =
     ref.isErroneous || ref.resolvedTargets.exists(_.defn.exists(_.isErroneous))
   
+  /** Selections on a name already reported as missing (see NewResolver.settleUnboundReferences)
+    * have no target either, which needs no other error. */
+  private def missingName(prefix: Term): Bool = prefix.withoutCaptures match
+    case ref: UnresolvedRef => ref.isErroneous
+    case _ => false
+  
   /** Lowering introduces references after resolution has finished. Their known
     * targets must be attached directly, including for freshly synthesized definitions.
     * These references have no written identifier or source location. */
@@ -814,7 +820,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     * its runtime receiver, property name, and optional static definition. */
   private def newSelection(sel: NewSel)(k: (Term, Tree.Ident, Opt[DefinitionSymbol[?]]) => Block)(using LoweringCtx): Block =
     val NewSel(prefix, id, _) = sel
-    if erroneousRef(sel) || !checkProjection(sel) then compError
+    if erroneousRef(sel) || missingName(prefix) || !checkProjection(sel) then compError
     else if sel.tupleIndex.nonEmpty && sel.resolvedTargets.nonEmpty then fail:
       ErrorReport(msg"This selection has both tuple and nominal member targets" -> sel.toLoc :: Nil,
         source = Diagnostic.Source.Compilation)
@@ -923,7 +929,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             source = Diagnostic.Source.Compilation)
         false
       else if sel.projectionClasses.isEmpty then
-        raise:
+        if !missingName(cls.prefix) then raise:
           ErrorReport(msg"Cannot resolve the projection class" -> cls.toLoc :: Nil,
             source = Diagnostic.Source.Compilation)
         false
@@ -1366,12 +1372,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             h.toLoc :: Nil,
             source = Diagnostic.Source.Compilation)
       val handlers = defs.map {
-        case HandlerTermDefinition(resumeSym, td) => td.body match
+        case htd @ HandlerTermDefinition(resumeSym, td, annots) => td.body match
           case None =>
             raise(ErrorReport(msg"Handler function definitions cannot be empty" -> td.toLoc :: Nil))
             N
           case Some(bod) =>
             reportAnnotations(td, td.annotations)
+            reportAnnotations(htd, annots)
             val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme), td.tsym.sourceErasedResult.bodyType)
             S(Handler(td.sym, resumeSym, paramLists, bodyBlock))
       }.collect{ case Some(v) => v }
@@ -2027,7 +2034,18 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     case _ => (loweredParams, body => body)
   
   
-  // TODO: reduce duplication between the two `reportAnnotations`
+  // TODO: reduce duplication between the `reportAnnotations` methods
+  
+  def reportAnnotations(target: HandlerTermDefinition, annotations: Ls[Annot]): Unit =
+    def warn(annot: Annot, msg: Opt[Message] = N) = raise:
+      msg match
+        case S(value) => WarningReport(value -> annot.toLoc :: Nil)
+        case N => WarningReport(msg"This annotation has no effect." -> annot.toLoc :: Nil)
+    annotations.foreach:
+      case Annot.Untyped() => ()
+      case a @ (Annot.TailRec() | Annot.Inline() | Annot.NoInline() | Annot.Generator() | Annot.Async() | Annot.RaiseEffects()) =>
+        warn(a, S(msg"This annotation has no effect on handler methods."))
+      case annot => warn(annot)
   
   def reportAnnotations(target: Statement, annotations: Ls[Annot]): Unit =
     def warn(annot: Annot, msg: Opt[Message] = N) = raise:

@@ -21,6 +21,18 @@ import sem.Elaborator.{Ctx, State}
 
 The Middle IR (MIR) or "Block IR" or just "IR" is an implementation of a form of imperative ANF.
 
+Every function body in a valid executable IR program must return a value explicitly on each path
+that completes normally. This includes FunDefn and Lambda bodies, generated functions, and functions
+returning Unit. Lowering.returnedTerm establishes this property for source functions and handler bodies;
+subsequent IR transformations must preserve it.
+`End` nodes only fall through the current statement block; they should never supply an implicit Unit result.
+Inner and unreachable End nodes are legal, and functions that only throw or diverge need not contain Return.
+
+Program.main and class/module preCtor and ctor blocks are statement blocks that may fall through.
+BufferableTransform and ReflectionInstrumenter temporarily wrap constructor blocks in FunDefn to reuse
+function-processing code. These wrappers do not appear as executable functions; any emitted function
+must satisfy the explicit-return invariant.
+
 While the IR is mostly immutable, for easier manipulation and to enable some optimizations,
 we do assume that each DefinitionSymbol coming from the source program is "owned" by at most one IR definition;
 this is implemented by making the `Define` and `ClsLikeDefn` constructors
@@ -576,6 +588,41 @@ object HandleBlock:
     val bms = Elaborator.ctx.builtins.runtime.handle_suspension
     Call(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: bodyFun.asArg :: Nil) ne_:: Nil)(CallMetadata.mlsFunWithEffect, N)
   
+  def optTailResumptive(resumeSym: VarSymbol, body: Block)(using Config): Opt[Block] =
+    if !config.effectHandlers.exists(_.optTailResumptiveHandlers) then N
+    else
+      var hasOtherReturn = false
+      // Nested functions have independent returns, so mapReturn keeps the rewrite shallow.
+      // The recursive free-variable check still covers their captures and the rewritten calls' arguments.
+      val res = body.mapReturn:
+        // A spread argument holds a container whose elements supply the resumption's arguments.
+        case Return(Call(Value.SimpleRef(`resumeSym`), (Arg(N, value) :: Nil) :: Nil)) => Return(value)
+        case ret =>
+          hasOtherReturn = true
+          ret
+      if hasOtherReturn || res.freeVars.contains(resumeSym) then N
+      else S(res)
+  
+  def createHandlerMtd(cls: ClassSymbol)(handler: Handler)(using Config, Elaborator.State, Elaborator.Ctx) =
+    val body = optTailResumptive(handler.resumeSym, handler.body) match
+      case Some(value) => value
+      case None =>
+        val sym = BlockMemberSymbol(cls.nme + handler.sym.nme, Nil, true)
+        val fDef = FunDefn.withFreshSymbol(
+          N, sym, LoweredParamList.plain(Param.simple(handler.resumeSym) :: Nil)(N) :: Nil,
+          handler.body
+          )(N, annotations = Nil)
+        val rSym = TempSymbol(N, initErasedType = N, "suspendRes")
+        Scoped(Set(sym, rSym), Define(
+          fDef,
+          Return(suspend(cls.asThis, sym.asMemberRef(fDef.dSym)))))
+    FunDefn.withFreshSymbol(
+      S(cls),
+      handler.sym,
+      handler.params,
+      body
+    )(N, annotations = Nil)
+
   private def create(
       lhs: LocalVarSymbol,
       res: LocalVarSymbol,
@@ -585,25 +632,12 @@ object HandleBlock:
       handlers: Ls[Handler],
       body: Block,
       rest: Block
-  )(using Elaborator.State, Elaborator.Ctx) =
+  )(using Config, Elaborator.State, Elaborator.Ctx) =
     val sym = new BlockMemberSymbol("handleBlock$", Nil, false)
 
     val bodyDefn = FunDefn.withFreshSymbol(N, sym, LoweredParamList.plain(Nil)(N) :: Nil, body)(N, annotations = Nil)
     
-    val handlerMtds = handlers.map: handler =>
-      val sym = BlockMemberSymbol(cls.nme + handler.sym.nme, Nil, true)
-      val fDef = FunDefn.withFreshSymbol(
-        N, sym, LoweredParamList.plain(Param.simple(handler.resumeSym) :: Nil)(N) :: Nil,
-        handler.body
-        )(N, annotations = Nil)
-      val rSym = TempSymbol(N, initErasedType = N, "suspendRes")
-      FunDefn.withFreshSymbol(
-        S(cls),
-        handler.sym,
-        handler.params,
-        Scoped(Set(sym, rSym), Define(
-          fDef,
-          Return(suspend(cls.asThis, sym.asMemberRef(fDef.dSym))))))(N, annotations = Nil)
+    val handlerMtds = handlers.map(createHandlerMtd(cls))
 
     val clsDefn = ClsLikeDefn(
       N, // no owner
@@ -638,7 +672,7 @@ object HandleBlock:
       handlers: Ls[Handler],
       body: Block,
       rest: Block
-    )(using Elaborator.State, Elaborator.Ctx) =
+    )(using Config, Elaborator.State, Elaborator.Ctx) =
   rest match
   case Scoped(syms, rest) =>
     Scoped(syms, create(lhs, res, par, parentCall, cls, handlers, body, rest))
@@ -1059,8 +1093,10 @@ final case class Handler(
   lazy val freeVars: Set[FreeSymbol] = body.freeVars -- params.flatMap(_.paramSyms) - sym - resumeSym
 
 
-/* Represents either unreachable code (for functions that must return a result)
- * or the end of a non-returning function or a REPL block */
+/** Falls through the current statement block, or marks an unreachable tail.
+  * Constructor and top-level statement blocks may end normally here. Reaching End at the boundary of an
+  * executable function violates the explicit-return invariant in the design notes above.
+  */
 case class End(msg: Str = "") extends BlockTail with ProductWithTail
 
 case class Unreachable(cause: Str) extends BlockTail with ProductWithTail
