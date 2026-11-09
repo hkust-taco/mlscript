@@ -1,0 +1,11 @@
+:.
+:js
+:effectHandlers
+:lift
+
+// Note: Runs in at least 2^n time
+
+import "../../mlscript-compile/handlers-bench/generator.mls"
+generator.run(5)
+//│ = 57
+

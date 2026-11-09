@@ -136,6 +136,7 @@ def hkmc2TestSubproject(dirName: String, compileRunner: Option[String], diffRunn
 }
 
 lazy val hkmc2NofibTests = hkmc2TestSubproject("hkmc2NofibTests", Some("NofibCompileTestRunner"), "NofibDiffTestRunner")
+lazy val hkmc2HandlerTests = hkmc2TestSubproject("hkmc2HandlerTests", Some("HandlerCompileTestRunner"), "HandlerDiffTestRunner")
 lazy val hkmc2AppsTests = hkmc2TestSubproject("hkmc2AppsTests", Some("AppsCompileTestRunner"), "AppsDiffTestRunner")
 lazy val hkmc2WasmTests = hkmc2TestSubproject("hkmc2WasmTests", Some("WasmCompileTestRunner"), "WasmDiffTestRunner")
   .settings(
@@ -167,6 +168,7 @@ lazy val hkmc2MostTests = project.in(file("hkmc2MostTests"))
     Test / test := (
       (hkmc2DiffTests / Test / test)
         .dependsOn(hkmc2NofibTests / Test / test)
+        .dependsOn(hkmc2HandlerTests / Test / test)
         .dependsOn(hkmc2AppsTests / Test / test)
         .dependsOn(hkmc2WasmTests / Test / test)
         .dependsOn(hkmc2SlopTests / Test / test)
@@ -179,6 +181,7 @@ lazy val hkmc2AllTests = project.in(file("hkmc2AllTests"))
     Test / test := (
       (hkmc2DiffTests / Test / test)
         .dependsOn(hkmc2NofibTests / Test / test)
+        .dependsOn(hkmc2HandlerTests / Test / test)
         .dependsOn(hkmc2AppsTests / Test / test)
         .dependsOn(hkmc2WasmTests / Test / test)
         .dependsOn(hkmc2SlopTests / Test / test)
@@ -194,12 +197,14 @@ addCommandAlias("watch", "~hkmc2DiffTests/Test/run")
 // Diff-tests
 addCommandAlias("dtest", "hkmc2DiffTests/testOnly hkmc2.DiffTestRunner -- -z")
 addCommandAlias("ndtest", "hkmc2NofibTests/testOnly hkmc2.NofibDiffTestRunner -- -z")
+addCommandAlias("hdtest", "hkmc2HandlerTests/testOnly hkmc2.HandlerDiffTestRunner -- -z")
 addCommandAlias("adtest", "hkmc2AppsTests/testOnly hkmc2.AppsDiffTestRunner -- -z")
 addCommandAlias("wdtest", "hkmc2WasmTests/testOnly hkmc2.WasmDiffTestRunner -- -z")
 addCommandAlias("sdtest", "hkmc2SlopTests/testOnly hkmc2.SlopDiffTestRunner -- -z")
 // Compilation tests
 addCommandAlias("ctest", "hkmc2JVM/testOnly hkmc2.CompileTestRunner -- -z")
 addCommandAlias("cntest", "hkmc2NofibTests/testOnly hkmc2.NofibCompileTestRunner -- -z")
+addCommandAlias("chtest", "hkmc2HandlerTests/testOnly hkmc2.HandlerCompileTestRunner -- -z")
 addCommandAlias("catest", "hkmc2AppsTests/testOnly hkmc2.AppsCompileTestRunner -- -z")
 addCommandAlias("cwtest", "hkmc2WasmTests/testOnly hkmc2.WasmCompileTestRunner -- -z")
 // Aggregate tests (for validation)

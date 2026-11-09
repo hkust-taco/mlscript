@@ -1,5 +1,8 @@
 :js
 
+:exit
+====================================================================================================
+
 import "../../../../hkmc2/shared/src/test/mlscript-compile/LazyArray.mls"
 import "../../../../hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mls"
 import "../../../../hkmc2/shared/src/test/mlscript-compile/LazyFingerTree.mls"

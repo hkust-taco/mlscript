@@ -1,0 +1,11 @@
+:.
+:js
+:effectHandlers
+:lift
+
+// Note: Runs in at least 2^n time
+
+import "../../mlscript-compile/handlers-bench/fibonacci_recursive.mls"
+fibonacci_recursive.run(5)
+//│ = 5
+
