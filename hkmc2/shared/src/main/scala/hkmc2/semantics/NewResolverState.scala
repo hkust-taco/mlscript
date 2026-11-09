@@ -89,15 +89,25 @@ final class NewResolverState(val owner: Elaborator.State):
   private[semantics] val views = mutable.Map.empty[ResolutionContext, ResolutionContext]
   private[semantics] val inheritedViews = mutable.Map.empty[(NewResolverState, ResolutionContext), ResolutionContext]
   private[semantics] val copies = mutable.Map.empty[Publisher.Data[?], Publisher.Data[?]]
-  private[semantics] val pending = mutable.Map.empty[Identity[Publisher[?]], Publisher.Data[?]]
-  private[semantics] val completedNodes = mutable.Set.empty[Identity[Publisher[?]]]
+  // Each publisher has its own original Data object. Use it as a stable identity
+  // key even when the publisher's syntax has value equality. The pending value
+  // is the data visible through the current graph, which may be a private copy.
+  private[semantics] val pending = mutable.Map.empty[Publisher.Data[?], Publisher.Data[?]]
+  private[semantics] val completedNodes = mutable.Set.empty[Publisher.Data[?]]
   private[semantics] val resolutionProblems =
-    mutable.LinkedHashMap.empty[Identity[NewSel | App], mutable.ListBuffer[() => Ls[(Message, Opt[Loc])]]]
+    mutable.LinkedHashMap.empty[NewSel | App, mutable.ListBuffer[() => Ls[(Message, Opt[Loc])]]]
   private[semantics] val wildcardMisses =
-    mutable.LinkedHashMap.empty[Identity[UnresolvedRef], mutable.LinkedHashMap[Identity[Term], () => Ls[(Message, Opt[Loc])]]]
+    mutable.LinkedHashMap.empty[UnresolvedRef, mutable.LinkedHashMap[Term, () => Ls[(Message, Opt[Loc])]]]
   // The references, selections, and instantiations written in this unit's current block,
-  // with the lexical scope in which each is written (see ResolutionContext.checkAccess).
+  // in elaboration order, with the lexical scope in which each is written (see
+  // ResolutionContext.checkAccess). Its references without explicit bindings are also
+  // the worklist of NewResolver.settleUnboundReferences, which runs before checkAccess.
   private[semantics] val accessSites = mutable.ArrayBuffer.empty[(NewResolvable | New, SrcScope)]
+  // What flow has revealed about the implicit namespaces of this unit's references
+  // (see NewResolver.unresolvedRef). Unlike the block-local tables, this outlives the
+  // reference's block: a later worksheet block can still reveal a namespace, which
+  // must be diagnosed against the settled reference.
+  private[semantics] val implicitNamespaces = mutable.HashMap.empty[UnresolvedRef, ImplicitNamespaces]
   private[semantics] val errors = mutable.Set.empty[Identity[PossiblyErroneous]]
   private[semantics] val shapeIdentities = mutable.HashMap.empty[ShapeIdentity.View, ShapeIdentity.View]
   private[semantics] val substitutions = mutable.HashMap.empty[TypeSubstitution, TypeSubstitution]
@@ -112,7 +122,7 @@ final class NewResolverState(val owner: Elaborator.State):
   // * The `FlowSymbol`s are currently used to uniquely identify terms
   val appShapes: Cache[(ShapeIdentity.Key, FlowSymbol), AppShape] =
     new Cache(_.appShapes, identity)
-  val newShapes: Cache[(ClassValueTarget, Ls[Marks], FlowSymbol, Opt[Ls[DeclaredType]]), NewShape] =
+  val newShapes: Cache[(ClassValueTarget, Ls[Marks], FlowSymbol, Opt[Ls[TypeArgument]]), NewShape] =
     new Cache(_.newShapes, identity)
   val constructorApplications: Seen[(NewShape, TypeSubstitution)] =
     new Seen(_.constructorApplications)
@@ -124,6 +134,8 @@ final class NewResolverState(val owner: Elaborator.State):
     new Cache(_.tupleShapes, identity)
   private[semantics] val recordShapes: Cache[(Term.Rcd, Ls[RecordShape.Element], TypeSubstitution), RecordShape] =
     new Cache(_.recordShapes, identity)
+  // Canonical types include local alias annotations and annotated argument references,
+  // so projecting a field cannot reuse another alias's namespace interpretation.
   private[semantics] val instanceShapes: Cache[DeclaredType, InstanceShape] =
     new Cache(_.instanceShapes, identity)
   // Views constructed by this consumer, for allocation/growth regressions.
@@ -131,9 +143,9 @@ final class NewResolverState(val owner: Elaborator.State):
   private[semantics] var allocatedShapeViews: Int = 0
   private[semantics] var largestShapeViewSubstitution: Int = 0
   // Stable iteration observations and joined elements for each spread operand.
-  private[semantics] val spreadElements: Cache[Identity[Term], IterationFlow] =
+  private[semantics] val spreadElements: Cache[Term, IterationFlow] =
     new Cache(_.spreadElements, identity)
-  val introShapes: Cache[Identity[IntroTerm], IntroShape] =
+  val introShapes: Cache[IntroTerm, IntroShape] =
     new Cache(_.introShapes, identity)
   val symShapes: Cache[(BlockMemberSymbol, FlowSymbol, Ls[Marks]), CoreSymShape] =
     new Cache(_.symShapes, identity)
@@ -153,7 +165,7 @@ final class NewResolverState(val owner: Elaborator.State):
   // input once per activation; callbacks assigned through it must satisfy that input, not the read type.
   val fieldAssignmentTypes: Seen[(Identity[Term], Identity[Term], DeclaredType)] =
     new Seen(_.fieldAssignmentTypes)
-  val declaredSymShapes: Cache[(BlockMemberSymbol, FlowSymbol, Ls[Marks], Map[VarSymbol, DeclaredType], Bool), DeclaredSymShape] =
+  val declaredSymShapes: Cache[(BlockMemberSymbol, FlowSymbol, Ls[Marks], Map[VarSymbol, TypeArgument], Bool), DeclaredSymShape] =
     new Cache(_.declaredSymShapes, identity)
   val selfShapes: Cache[InnerSymbol, BaseShape] =
     new Cache(_.selfShapes, identity)
@@ -166,16 +178,16 @@ final class NewResolverState(val owner: Elaborator.State):
     new Cache(_.byNameResults, identity)
   // Async payloads are deferred type edges, not snapshots of the body's current
   // candidates. Register each host before following recursive function results.
-  val resultTypes: Cache[(Identity[Term], TypeSubstitution), DeclaredType] =
+  val resultTypes: Cache[(Term, TypeSubstitution), DeclaredType] =
     new Cache(_.resultTypes, identity)
   // Keyed like inference candidates (see ShapeIdentity), so each candidate has one awaited type.
   val awaitedValues: Cache[(ShapeIdentity.Key, TypeSubstitution), DeclaredType] =
     new Cache(_.awaitedValues, identity)
-  val typeInterpretations: Cache[Identity[Term], TypeResolution] =
+  val typeInterpretations: Cache[Term, TypeResolution] =
     new Cache(_.typeInterpretations, identity)
   // Qualification can deliver the same declaration in several environments.
   // Its open source type is shared before any environment observes the body.
-  val selectedTypes: Cache[(Identity[Term], TypeSymbol), TypeResolution] =
+  val selectedTypes: Cache[(Term, TypeSymbol), TypeResolution] =
     new Cache(_.selectedTypes, identity)
   // Recorded before elaborating a declaration's members, including in legacy
   // exporters. Nominal interfaces may use any enclosing explicit type binder.
@@ -190,7 +202,7 @@ final class NewResolverState(val owner: Elaborator.State):
   // through that owner (see NewResolver.lexicalBinders), so an unowned term is
   // one that was never recorded. A synthesized record standing in for a tuple's
   // named fields is recorded by the resolver when it creates the record.
-  private[semantics] val lexicalTermBinders: Cache[Identity[Term], Set[VarSymbol]] =
+  private[semantics] val lexicalTermBinders: Cache[Term, Set[VarSymbol]] =
     new Cache(_.lexicalTermBinders, identity)
   // The explicit type binders in scope at the site a flow symbol identifies,
   // for every site where a by-name definition can be instantiated: a reference
@@ -217,7 +229,7 @@ final class NewResolverState(val owner: Elaborator.State):
   // reference, so a cached dependency summary of its resolution does not depend
   // on which traversal reached it first (see NewResolver.dependencies). Read
   // through the reference's owning graph, like lexicalTermBinders.
-  private[semantics] val appliedTypeArguments: Cache[Identity[Term], Int] =
+  private[semantics] val appliedTypeArguments: Cache[Term, Int] =
     new Cache(_.appliedTypeArguments, identity)
   // The scope of the templates that a synthesized inferred-element or
   // omitted-argument host receives: the binders that reading its values through
@@ -229,10 +241,9 @@ final class NewResolverState(val owner: Elaborator.State):
     new Cache(_.unguardedTypeDependencies, identity)
   val regularTypes: Cache[TypeResolution, Bool] =
     new Cache(_.regularTypes, identity)
+  // Shared by every use of the same formula, so the combinations have no source (see DeclaredType.shared).
   val combinedTypes: Cache[TypeFormula[DeclaredType], DeclaredType] =
     new Cache(_.combinedTypes, identity)
-  val argumentTypes: Cache[(TypeResolution, TypeArgument), DeclaredType] =
-    new Cache(_.argumentTypes, identity)
   val pendingTypeDependencies: Cache[TypeResolution, TypeDependencyHost] =
     new Cache(_.pendingTypeDependencies, identity)
   val dependencySubscriptions: Seen[(TypeResolution, TypeResolution)] =
@@ -250,56 +261,62 @@ final class NewResolverState(val owner: Elaborator.State):
   private[semantics] val typeInstances: Cache[(AnyDefinitionSymbol | TypeResolution, FlowSymbol), TypeSubstitution] =
     new Cache(_.typeInstances, identity)
   private[semantics] var allocatedTypeInstances: Int = 0
-  private[semantics] val typeApplicationSites: Cache[Identity[TyApp], FlowSymbol] =
+  private[semantics] val typeApplicationSites: Cache[TyApp, FlowSymbol] =
     new Cache(_.typeApplicationSites, identity)
   private[semantics] val fieldProjectionSites: Cache[BlockMemberSymbol, FlowSymbol] =
     new Cache(_.fieldProjectionSites, identity)
   // The flag selects merged member interfaces versus independent constraint inputs.
   val typeViews: Cache[(DeclaredType, Bool), TermShapeHost] =
     new Cache(_.typeViews, identity)
-  val patternTypes: Cache[(Identity[Pattern.Constructor], InnerSymbol), DeclaredType] =
+  val patternTypes: Cache[(Pattern.Constructor, InnerSymbol), DeclaredType] =
     new Cache(_.patternTypes, identity)
   // A pattern's unknown output has one source identity across repeated inputs.
   // Rebuilding its synthetic term on every match would create fresh candidates
   // in recursive pattern calls, where hosts compare source identities.
-  private[semantics] val patternOutputs: Cache[Identity[Pattern], UnknownValueShape] =
+  private[semantics] val patternOutputs: Cache[Pattern, UnknownValueShape] =
     new Cache(_.patternOutputs, identity)
+  // The site and diagnostic source of the field reads of each record pattern, recorded by
+  // the elaborator, which knows the type binders in scope (see NewResolver.matchShapePat).
+  private[semantics] val recordPatternReads: Cache[Pattern.Record, (FlowSymbol, Term)] =
+    new Cache(_.recordPatternReads, identity)
   // Repeated refinement of one input must reuse its synthesized type hosts.
   // Constructor paths distinguish references to the same captured class.
-  val patternRefinements: Cache[(Identity[Pattern.Constructor], InnerSymbol, Ls[Marks], ShapeIdentity.Key), DeclaredType] =
+  val patternRefinements: Cache[(Pattern.Constructor, InnerSymbol, Ls[Marks], ShapeIdentity.Key), DeclaredType] =
     new Cache(_.patternRefinements, identity)
   val primitiveTypes: Cache[ClassSymbol, DeclaredType] =
     new Cache(_.primitiveTypes, identity)
   val extremeTypes: Cache[Bool, DeclaredType] =
     new Cache(_.extremeTypes, identity)
-  val variantTypes: Cache[(DeclaredType, Bool), DeclaredType] =
-    new Cache(_.variantTypes, identity)
-  val selectedArguments: Cache[(DeclaredType, Bool), DeclaredType] =
-    new Cache(_.selectedArguments, identity)
   val abstractTypes: Cache[TypeResolution, DeclaredType] =
     new Cache(_.abstractTypes, identity)
   val omittedTypes: Cache[(TypeResolution, VarSymbol), DeclaredType] =
     new Cache(_.omittedTypes, identity)
   val exposedTypeHoles: Seen[(DeclaredType, ShapeIdentity.Key, Ls[Marks])] =
     new Seen(_.exposedTypeHoles)
-  val signatureParameters: Cache[VarSymbol, DeclaredType] =
+  val signatureParameters: Cache[VarSymbol, TypeArgument] =
     new Cache(_.signatureParameters, identity)
+  // Keep explicit bindings in their own hosts: two arguments can have the same
+  // readable output, which the parameter's value host merges, and different input
+  // obligations. Publisher data supplies the same consumer-local copying and deferred
+  // delivery as inferred parameter values.
+  private[semantics] val typeArgumentBindings: Cache[VarSymbol, Host[TypeArgumentBinding]] =
+    new Cache(_.typeArgumentBindings, identity)
   // Synthesized applications share their type graph, including the symbolic arguments.
-  val appliedTypes: Cache[(ClassSymbol | TypeAliasSymbol, Ls[DeclaredType]), DeclaredType] =
-    new Cache(_.appliedTypes, identity)
+  val appliedTypeTemplates: Cache[ClassSymbol | TypeAliasSymbol, TypeResolution] =
+    new Cache(_.appliedTypeTemplates, identity)
   val contextualTypes: Cache[ContextualType, DeclaredType] =
     new Cache(_.contextualTypes, identity)
-  val tupleArrayParents: Cache[Identity[TupleShape], NominalInstanceView] =
+  val tupleArrayParents: Cache[TupleShape, NominalInstanceView] =
     new Cache(_.tupleArrayParents, identity)
   val parameterTypes: Cache[TypeShape.Parameter, DeclaredType] =
     new Cache(_.parameterTypes, identity)
-  val mutableArrays: Cache[Identity[Term.Mut], TermShape] =
+  val mutableArrays: Cache[Term.Mut, TermShape] =
     new Cache(_.mutableArrays, identity)
   // Named tuple fields have stable property identities, shared with consumers
   // through the tuple's original graph rather than allocated per spread candidate.
-  val namedTupleRecords: Cache[Identity[Tup | CtxTup], Rcd] =
+  val namedTupleRecords: Cache[Tup | CtxTup, Rcd] =
     new Cache(_.namedTupleRecords, identity)
-  val aggregateProducers: Seen[Identity[Tup | CtxTup | Rcd]] =
+  val aggregateProducers: Seen[Tup | CtxTup | Rcd] =
     new Seen(_.aggregateProducers)
   // Whether a binder is supplied is fixed by its authoritative syntactic site.
   // Each definition/site has its own parameter instances; marks distinguish the
@@ -309,11 +326,9 @@ final class NewResolverState(val owner: Elaborator.State):
   private[semantics] val explicitTypeArguments = mutable.Set.empty[VarSymbol]
   private[semantics] val typeConstraints: Seen[(DeclaredType, ShapeIdentity.Key, Ls[Marks])] =
     new Seen(_.typeConstraints)
-  val typeRelations: Seen[(ContextualType, ContextualType)] =
-    new Seen(_.typeRelations)
-  val typeArgumentArityErrors: Seen[(Identity[TyApp], Int)] =
+  val typeArgumentArityErrors: Seen[(TyApp, Int)] =
     new Seen(_.typeArgumentArityErrors)
-  val arrayIndexErrors: Seen[Identity[Term]] =
+  val arrayIndexErrors: Seen[Term] =
     new Seen(_.arrayIndexErrors)
 
 object ResolutionContext:
@@ -404,8 +419,10 @@ final class ResolutionContext private[semantics] (
   private[hkmc2] def data[A](publisher: Publisher[A]): Publisher.Data[A] =
     val ref = source.fold(publisher.initialData(state))(_.peek(publisher))
     if ref.owner == null then publisher.initialData(state)
-    if publisher.isOwnedBy(state) && !state.completedNodes(new Identity(publisher)) then
-      state.pending.getOrElseUpdate(new Identity(publisher), ref)
+    // Symbols stay live across worksheet blocks; only syntax and auxiliary hosts
+    // need sealing. Their original data identifies them across graph views.
+    if publisher.isOwnedBy(state) && !publisher.isInstanceOf[Symbol] && !state.completedNodes(publisher.originalData) then
+      state.pending.getOrElseUpdate(publisher.originalData, ref)
     local(ref)
 
   /** Number of lazily copied graph nodes, for isolation/scale regressions. */
@@ -417,12 +434,11 @@ final class ResolutionContext private[semantics] (
   // at block completion. Eager problems invalidate the use immediately;
   // delaying their report lets the same error include every relevant witness.
   def resolutionProblem(term: NewSel | App, eager: Bool)(messages: => Ls[(Message, Opt[Loc])]): Unit =
-    val key = new Identity[NewSel | App](term)
     // Accumulate witnesses for this block's error without replaying errors on
     // completed terms or adding follow-on errors to unrelated failures.
-    if !hasError(term) || state.resolutionProblems.contains(key) then
+    if !hasError(term) || state.resolutionProblems.contains(term) then
       if eager then markError(term)
-      state.resolutionProblems.getOrElseUpdate(key, mutable.ListBuffer.empty) += (() =>
+      state.resolutionProblems.getOrElseUpdate(term, mutable.ListBuffer.empty) += (() =>
         // Keep this observation's graph: an intermediate exporter can have
         // callable witnesses in its private copy of a third file's application.
         val unresolved = term match
@@ -439,8 +455,8 @@ final class ResolutionContext private[semantics] (
     */
   def missingWildcardMember(ref: UnresolvedRef, prefix: Term)(messages: => Ls[(Message, Opt[Loc])]): Unit =
     if !hasError(ref) then
-      state.wildcardMisses.getOrElseUpdate(new Identity(ref), mutable.LinkedHashMap.empty)
-        .getOrElseUpdate(new Identity(prefix), () => messages)
+      state.wildcardMisses.getOrElseUpdate(ref, mutable.LinkedHashMap.empty)
+        .getOrElseUpdate(prefix, () => messages)
 
   /** Seal the decisions and original host data read by erasure/lowering. The
     * inference graph keeps private, live host data and all its listeners, so
@@ -490,19 +506,17 @@ final class ResolutionContext private[semantics] (
         case _ => ()
       statement.subStatements.foreach(visit)
     visit(block)
-    state.wildcardMisses.foreach: (key, sources) =>
-      val ref = key.value
+    state.wildcardMisses.foreach: (ref, sources) =>
       if !hasError(ref) then
         val messages = sources.iterator.flatMap: (prefix, witness) =>
-          if ref.resolvedMembers.exists(_._1 eq prefix.value) || ref.dynamicPrefixes.exists(_ eq prefix.value)
+          if ref.resolvedMembers.exists(_._1 eq prefix) || ref.dynamicPrefixes.exists(_ eq prefix)
           then witness() else Nil
         .toList.distinct
         if messages.nonEmpty then
           markError(ref)
           reportResolutionError(ref, messages)
     state.wildcardMisses.clear()
-    state.resolutionProblems.foreach: (key, problems) =>
-      val term = key.value
+    state.resolutionProblems.foreach: (term, problems) =>
       val messages = problems.iterator.flatMap(_()).toList.distinct
       if messages.nonEmpty then
         markError(term)
@@ -518,7 +532,7 @@ final class ResolutionContext private[semantics] (
         case _ => ()
     state.accessSites.clear()
     state.pending.foreach: (key, value) =>
-      if !key.value.isInstanceOf[Symbol] && state.completedNodes.add(key) then value.completed = true
+      if state.completedNodes.add(key) then value.completed = true
     state.pending.clear()
 
   /** Check the accessibility of the definitions that `term`, written in `scope`, refers to once
@@ -527,6 +541,12 @@ final class ResolutionContext private[semantics] (
     */
   def recordAccessSite(term: NewResolvable | New, scope: SrcScope): Unit =
     state.accessSites += ((term, scope))
+
+  /** The references without explicit bindings written in the current block, in elaboration
+    * order (see NewResolver.settleUnboundReferences). */
+  def unboundReferences: Ls[Term.UnresolvedRef] = state.accessSites.iterator.collect:
+    case (ref: Term.UnresolvedRef, _) => ref
+  .toList
 
   /** Check written instantiations once their aliases and forward references have
     * resolved. Using the per-block source sites avoids repeating the warning when
@@ -663,7 +683,7 @@ final class ResolutionContext private[semantics] (
 
   def canResolve(host: Publisher[?]): Bool =
     data(host)
-    host.isOwnedBy(state) && !state.completedNodes(new Identity(host))
+    host.isOwnedBy(state) && !state.completedNodes(host.originalData)
 
   def hasError(host: PossiblyErroneous): Bool = host.isErroneous || state.errors(new Identity(host))
   def markError(host: Publisher[?] & PossiblyErroneous): Unit =
@@ -708,7 +728,13 @@ final class ResolutionContext private[semantics] (
   def canonicalInstance(tpe: DeclaredType)(make: => InstanceShape): InstanceShape =
     canonical(tpe.resolution, _.instanceShapes, tpe)(shapeView(tpe.instances)(make))
   def spreadFlow(spread: Term)(make: => IterationFlow): IterationFlow =
-    canonical(spread, _.spreadElements, new Identity(spread))(make)
+    canonical(spread, _.spreadElements, spread)(make)
+  def typeParameter(symbol: VarSymbol): TypeShape.Parameter =
+    val values = symbol.inferenceHost
+    val bindings = canonical(symbol, _.typeArgumentBindings, symbol)(new Host[TypeArgumentBinding]:
+      def showDbg(using DebugPrinter): Str = s"type arguments for ${symbol.nme}"
+    )
+    TypeShape.Parameter(symbol, values, bindings.inferenceHost)
   def memberVariable(symbol: TermSymbol): ShapeHost =
     state.memberVariables.getOrElseUpdate(symbol,
       symbol.getState.newResolverState.memberVariables.get(symbol)(using symbol.getState.newResolverState.context).getOrElse(
@@ -717,7 +743,7 @@ final class ResolutionContext private[semantics] (
       ))(using state.context)
   def recordLexicalBinders(term: Term, binders: Set[VarSymbol]): Unit =
     term.initialData(state)
-    state.lexicalTermBinders.update(new Identity(term), binders)(using state.context)
+    state.lexicalTermBinders.update(term, binders)(using state.context)
     // A reference or selection is also the site where it invokes a by-name definition.
     val site = term match
       case ref: MemberRef => S(ref.resSym)
@@ -728,7 +754,7 @@ final class ResolutionContext private[semantics] (
     site.foreach(recordSiteBinders(_, binders))
   private[semantics] def lexicalBindersOf(term: Term): Opt[Set[VarSymbol]] =
     val graph = term.originalData.owner
-    if graph == null then N else lexicalTermBinders.get(new Identity(term))(using inGraph(graph.context))
+    if graph == null then N else lexicalTermBinders.get(term)(using inGraph(graph.context))
   def recordSiteBinders(site: FlowSymbol, binders: Set[VarSymbol]): Unit =
     assert(site.getState is owner, "A site's binders belong to the unit that creates its flow symbol")
     state.siteBinders.update(site, binders)(using state.context)
@@ -742,11 +768,10 @@ final class ResolutionContext private[semantics] (
     val graph = symbol.getState.newResolverState
     graph.lexicalTypeBinders.get(symbol)(using graph.context)
   def recordAppliedTypeArguments(base: Term, count: Int): Unit =
-    state.appliedTypeArguments.update(new Identity(base), count)(using state.context)
+    state.appliedTypeArguments.update(base, count)(using state.context)
   private[semantics] def appliedTypeArgumentsOf(base: Term): Opt[Int] =
-    val key = new Identity(base)
     val graph = base.originalData.owner
-    (if graph == null then N else appliedTypeArguments.get(key)(using inGraph(graph.context))).orElse(appliedTypeArguments.get(key))
+    (if graph == null then N else appliedTypeArguments.get(base)(using inGraph(graph.context))).orElse(appliedTypeArguments.get(base))
   def recordTemplateBinders(host: TypeResolution, binders: Opt[Set[VarSymbol]]): Unit =
     host.initialData(state)
     state.templateBinders.update(host, binders)(using state.context)
@@ -758,8 +783,7 @@ final class ResolutionContext private[semantics] (
     * Its site is shared across observations and activation views of the source.
     */
   def typeApplicationSite(application: TyApp): FlowSymbol =
-    val key = new Identity(application)
-    state.typeApplicationSites.getOrElseUpdate(key, typeApplicationSites.get(key).getOrElse:
+    state.typeApplicationSites.getOrElseUpdate(application, typeApplicationSites.get(application).getOrElse:
       val site = FlowSymbol("type application")(using owner)
       lexicalBindersOf(application).foreach(recordSiteBinders(site, _))
       site
@@ -796,7 +820,19 @@ final class ResolutionContext private[semantics] (
     assert(instances.keySet == parameters.toSet, "A source scheme's binders must remain stable")
     instances
   def patternOutput(pattern: Pattern)(make: => UnknownValueShape): UnknownValueShape =
-    canonical(pattern, _.patternOutputs, new Identity(pattern))(make)
+    canonical(pattern, _.patternOutputs, pattern)(make)
+  /** Record where the record pattern `pattern` reads its fields, written where `binders` are in scope. */
+  def recordPatternReads(pattern: Pattern.Record, binders: Set[VarSymbol]): Unit =
+    pattern.initialData(state)
+    val site = FlowSymbol.pat()(using owner)
+    recordSiteBinders(site, binders)
+    state.recordPatternReads.update(pattern, (site, Term.Error().withLocOf(pattern)))(using state.context)
+  /** Imported definitions match their patterns in their consumers too: read through the
+    * pattern's own graph, like canonical. */
+  def patternReads(pattern: Pattern.Record): Opt[(FlowSymbol, Term)] =
+    val graph = pattern.originalData.owner
+    val defining = if graph == null then this else inGraph(graph.context)
+    defining.state.recordPatternReads.get(pattern)(using defining)
   def markExplicitTypeArgument(symbol: VarSymbol): Unit =
     state.explicitTypeArguments += symbol
   def hasExplicitTypeArgument(symbol: VarSymbol): Bool =
@@ -817,6 +853,68 @@ final class ResolutionContext private[semantics] (
 private[semantics] final class IterationFlow(
     val elements: TypeResolution, val iterator: Term.App, val next: Term.App,
     val iteratorMember: FlowSymbol, val nextMember: FlowSymbol, val doneMember: FlowSymbol, val valueMember: FlowSymbol)
+
+/** What resolution knows about the implicit namespaces of a reference written in `scope`
+  * (see NewResolver.unresolvedRef).
+  */
+private[semantics] final class ImplicitNamespaces(val scope: SrcScope):
+  /** The namespaces consulted for the reference, in the order in which consultation began.
+    * Whether a namespace provides a candidate of the reference does not depend on why it is
+    * consulted, so each is decided once (see NewResolver.consultNamespace). */
+  val consulted = mutable.LinkedHashMap.empty[ModuleOrObjectSymbol, Namespace]
+  /** Repeated observations must not repeat subscriptions (see NewResolver.typeNamespaces).
+    * Observations include the arguments of deferred applications. Required types constrain
+    * probes, whereas provided types also follow inference inputs, hence the direction flag. */
+  val observedTypes = mutable.HashSet.empty[(DeclaredType, Bool)]
+  val observedClasses = mutable.HashSet.empty[ClassLikeDef]
+  /** Whether the reference fell back to its wildcard opens when its block was elaborated
+    * because no namespace was known then. A namespace found later cannot override them. */
+  var fellBack: Bool = false
+  /** Whether the reference's block was elaborated, deciding between namespaces and wildcard opens. */
+  var settled: Bool = false
+  /** Whether the reference is the head of a constructor pattern, whose namespaces are those of
+    * its scrutinees rather than of the types required of its value. */
+  var scrutinized: Bool = false
+  /** Diagnostic provenance indexed by candidate path. Build this only when reporting an error:
+    * resolution already stores each selection in `consulted`, and compiled terms need no index. */
+  def selectedOrigins: Map[Term, (ModuleOrObjectSymbol, Namespace)] =
+    consulted.iterator.flatMap: (module, namespace) =>
+      namespace.status.selectedPath.map(path => path -> (module, namespace))
+    .toMap
+
+/** A namespace consulted for a reference, first because `witness` names `definition`, of
+  * which the namespace is the companion (if `companion` holds) or the declaring module. */
+private[semantics] final class Namespace(val witness: NamespaceWitness, val definition: TypeLikeDef, val companion: Bool):
+  var status: Namespace.Status = Namespace.Status.Pending
+
+object Namespace:
+  enum Status:
+    /** The namespace is not defined yet. */
+    case Pending
+    /** The namespace provides no accessible member with the reference's name. */
+    case Missing
+    /** The namespace provides such a member, but no path reaches it from the reference. */
+    case Inaccessible
+    /** The namespace provides a candidate of the reference, reached through `path`. */
+    case Selected(path: Term)
+    /** The namespace provides `member`, found after the reference was settled. */
+    case Late(member: BlockMemberSymbol)
+    def provides: Bool = this match
+      case Selected(_) | Late(_) => true
+      case Pending | Missing | Inaccessible => false
+    def selectedPath: Opt[Term] = this match
+      case Selected(path) => S(path)
+      case _ => N
+
+/** Why a namespace was consulted for a reference. */
+private[semantics] enum NamespaceWitness:
+  /** A written type: required of the reference's value, or of its scrutinee. */
+  case Written(tpe: Term)
+  /** An instance of a class, which reaches the scrutinee of the reference's pattern at `site`. */
+  case Instance(cls: ClassLikeDef, site: Opt[Loc])
+  def toLoc: Opt[Loc] = this match
+    case Written(tpe) => tpe.toLoc
+    case Instance(cls, site) => site.orElse(cls.headerLoc)
 
 private[semantics] final class TermShapeHost extends Host[TermShape]:
   def showDbg(using DebugPrinter): Str = "instance views"

@@ -65,6 +65,8 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
     case _: InstanceShape =>
       softAssert(false, "Erasure inputs must interpret contextual instance types before completion")
       S(ErasedType.Unknown)
+    case _: NamespaceProbe =>
+      lastWords("Erasure inputs must filter namespace probes before completion")
   )
 
   private def nominalType(definition: ClassLikeDef): ErasedValueType = definition.sym match

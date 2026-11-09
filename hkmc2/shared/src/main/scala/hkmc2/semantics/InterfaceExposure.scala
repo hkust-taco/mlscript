@@ -44,7 +44,7 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
   private type Path = ShapeProvenance
 
   private def term(value: Term, marks: Ls[Marks], path: Path)(using ResolutionContext): Unit =
-    watch((new Identity(value), marks))(resolver.listenTerm(value)): shape =>
+    watch((value, marks))(resolver.listenTerm(value)): shape =>
       emit(shape.exit(marks), path)
 
   private def emit(shape: TermShape | NoShape, path: Path)(using ResolutionContext): Unit = shape match
@@ -86,7 +86,7 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
     val ref = SimpleRef(param.sym)(N)
     val unknown = UnknownValueShape(ref, fromPublicInterface = true)(path.via(
       msg"Parameter '${param.sym.nme}' admits values of unknown shape." -> param.toLoc))
-    resolver.parameterSignature(param) match
+    resolver.parameterSignature(param, positive = true) match
       case N => resolver.constrainParameter(param, unknown.enter(marks), marks)
       case S(tpe) => unknown.enter(marks) match
         case value: TermShape => resolver.exposeTypeHoles(tpe.instantiate(rctx.instances), value, marks)
@@ -141,7 +141,7 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
 
   private def result(body: Term, sign: Opt[Term], marks: Ls[Marks], path: Path)(using ResolutionContext): Unit = sign match
     case N =>
-      watch((new Identity(body), marks, "result"))(resolver.listenResult(body)): shape =>
+      watch((body, marks, "result"))(resolver.listenResult(body)): shape =>
         emit(shape.exit(marks), path.via(msg"This value is returned here." -> body.toLoc))
     case S(sign) =>
       // checkDeclaredResult already checks the body during elaboration.
@@ -156,7 +156,7 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
     val (head, marks) = shape.applicationHead
     def contextualTerm(value: Term, context: Ls[Marks], path: Path,
         substitution: TypeSubstitution)(using ResolutionContext): Unit =
-      watch((new Identity(value), context, substitution))(
+      watch((value, context, substitution))(
         listener => resolver.listenTerm(value)(listener)(using rctx.withInstances(substitution))): shape =>
           emit(resolver.instantiateShape(shape, substitution).exit(context), path)
     head match
@@ -188,7 +188,7 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
       case intro: IntroShape => intro.trm match
         case Lam(_, body) =>
           parameters(shape.unappliedParams, path)
-          watch((new Identity(body), marks, instances, "result"))(
+          watch((body, marks, instances, "result"))(
             listener => resolver.listenResult(body)(listener)(using rctx.withInstances(instances))): shape =>
               emit(resolver.instantiateShape(shape, instances).exit(marks),
                 path.via(msg"This value is returned here." -> body.toLoc))
@@ -253,11 +253,11 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
         // declared binding; concrete annotations still hide implementation shapes.
         resolver.arrayElementType(nominal).foreach: binding =>
           watch((ShapeIdentity.key(shape), "array elements"))(listener => { resolver.listenArrayElements(shape)(listener); () }): element =>
-            emit(element, path.via(msg"This value is stored in this array." -> binding.resolution.source.toLoc))
+            emit(element, path.via(msg"This value is stored in this array." -> binding.output.resolution.source.toLoc))
       case view: IntersectionView => view.values.foreach(value => emit(value.exit(marks), path))
       // Structural annotations hide initializer implementations. Unknown and
-      // dynamic values have no static graph.
-      case _: (RecordTypeShape | OpaqueTypeShape | UnknownValueShape | RigidTypeShape | DynShape | ErrShape) => ()
+      // dynamic values have no static graph; namespace probes denote no value.
+      case _: (RecordTypeShape | OpaqueTypeShape | UnknownValueShape | RigidTypeShape | DynShape | ErrShape | NamespaceProbe) => ()
 
   /** An exposed value can be a synthesized local reference. Keep the exposure
     * site's location in its diagnostic provenance, not on that reference. */

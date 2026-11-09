@@ -1,8 +1,8 @@
 # Extraction plan for PR #575
 
-Status updated 2026-11-07: E01–E03, B01–B05, E08, E14, E17–E18, structural
+Status updated 2026-11-09: E01–E03, B01–B05, E08, E14, E17–E18, structural
 Iterator, E27, E31, E35 and E36 are merged upstream; upstream's cast refactor
-covers E19. The branch incorporates `hkmc2` through `4967bcd7d`. The approved
+covers E19. The branch incorporates `hkmc2` through `fdddc58421`. The approved
 split retains E12 and E32 with shape-based erasure and moves E29–E30 and E33–E34
 to separate follow-ups after #575. E20–E24 remain independent fixes. The
 historical batch dependencies below describe the original extraction order,

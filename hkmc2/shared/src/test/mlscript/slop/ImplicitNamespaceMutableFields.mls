@@ -1,0 +1,46 @@
+:.
+#lang(eagerResolution: true)
+
+class Base(val n: Int)
+type Output = Base
+module Output with
+  val Pick = Base(1)
+class Child(val m: Int) extends Base(m)
+type Input = Child
+module Input with
+  val Pick = Child(2)
+class Cell[T](mut val item: T)
+type RecordCell[T] = mut {item: T}
+
+// Assignment constraints discover the write bound's namespace before erasure observes the result.
+:expect 2
+fun nominal(cell: Cell[in Input out Output]) =
+  set cell.item = Pick
+  cell.item.n
+nominal(Cell(Child(0)))
+//│ = 2
+
+// Structural fields retain the same split through alias substitution.
+:expect 2
+fun structural(cell: RecordCell[in Input out Output]) =
+  set cell.item = Pick
+  cell.item.n
+structural(mut {item: Child(0)})
+//│ = 2
+
+// Explicit projections preserve both the input type and the receiver's bindings.
+:expect 2
+fun projected(cell: Cell[in Input out Output]) =
+  set cell.Cell#item = Pick
+  cell.item.n
+projected(Cell(Child(0)))
+//│ = 2
+
+// A wildcard-open assignment still constrains its value through the selected field.
+:expect 2
+fun opened(cell: RecordCell[in Input out Output]) =
+  open cell
+  set item = Pick
+  cell.item.n
+opened(mut {item: Child(0)})
+//│ = 2
