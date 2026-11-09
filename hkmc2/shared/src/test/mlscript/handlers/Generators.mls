@@ -1,3 +1,4 @@
+:.
 :js
 :effectHandlers
 :lift
@@ -9,7 +10,7 @@ fun permutations_impl(gen, l1, l2) =
   if l2 is
     [f, ...t] do
       handle genWithPrefix = Generator with
-        fun produce(result)(resume) =
+        fun produce(result: Array)(resume) =
           result.unshift(f)
           gen.produce(result)
           resume(())

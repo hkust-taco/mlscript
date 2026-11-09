@@ -391,6 +391,7 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
   case Continue(label: LabelSymbol)
   case Try(body: Term, finallyDo: Term)
   case Annotated(annot: Annot, target: Term)
+  // Each argument term represents one constructor argument list, as in New.
   case Handle(lhs: LocalVarSymbol, rhs: Term, args: List[Term],
     derivedClsSym: ClassSymbol, defs: Ls[HandlerTermDefinition], body: Term)(
     // Abortive handlers never resume their body: a method's result is the handled expression's result.

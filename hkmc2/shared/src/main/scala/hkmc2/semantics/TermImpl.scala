@@ -557,7 +557,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     case LetDecl(sym, _) => s"let ${sym.showDbg}"
     case DefineVar(sym, rhs) => s"${sym.showDbg} = ${rhs.showDbg}"
     case Handle(lhs, rhs, args, derivedClsSym, defs, bod) =>
-      s"handle ${lhs.showDbg} = ${rhs.showDbg}(${args.map(_.showDbg).mkString(", ")}) ${defs.showAsPlain} in ${bod.showDbg}"
+      s"handle ${lhs.showDbg} = ${rhs.showDbg}${args.map(_.showDbgAsParams).mkString} ${defs.showAsPlain} in ${bod.showDbg}"
     case Region(name, body) => s"region ${name.nme} in ${body.showDbg}"
     case RegRef(reg, value) => s"(${reg.showDbg}).ref ${value.showDbg}"
     case Assgn(lhs, rhs) => s"${lhs.showDbg} := ${rhs.showDbg}"

@@ -627,7 +627,7 @@ object HandleBlock:
       lhs: LocalVarSymbol,
       res: LocalVarSymbol,
       par: Path,
-      args: Ls[Path],
+      parentCall: Call,
       cls: ClassSymbol,
       handlers: Ls[Handler],
       body: Block,
@@ -647,8 +647,7 @@ object HandleBlock:
       syntax.Cls,
       N, Nil,
       S(par), handlerMtds, Nil, Nil,
-      // Apparently, the lifter is not happy with any assignment in the preCtor...
-      Assign(NoSymbol, Call(State.builtinOpsMap("super").asSimpleRef, args.map(_.asArg) ne_:: Nil)(CallMetadata.mlsFunWithEffect, N), End()),
+      Assign(NoSymbol, parentCall, End()),
       End(),
       N,
       N,
@@ -668,7 +667,7 @@ object HandleBlock:
       lhs: LocalVarSymbol,
       res: LocalVarSymbol,
       par: Path,
-      args: Ls[Path],
+      parentCall: Call,
       cls: ClassSymbol,
       handlers: Ls[Handler],
       body: Block,
@@ -676,8 +675,8 @@ object HandleBlock:
     )(using Config, Elaborator.State, Elaborator.Ctx) =
   rest match
   case Scoped(syms, rest) =>
-    Scoped(syms, create(lhs, res, par, args, cls, handlers, body, rest))
-  case _ => create(lhs, res, par, args, cls, handlers, body, rest)
+    Scoped(syms, create(lhs, res, par, parentCall, cls, handlers, body, rest))
+  case _ => create(lhs, res, par, parentCall, cls, handlers, body, rest)
 
 
 sealed abstract class Defn:
