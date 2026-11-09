@@ -1113,21 +1113,28 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         def capturable(element: Elem): Bool = element match
           case Fld(_, _, N) | Spd(_, _, _) => true
           case _ => false
+        // Consume an eager spread before evaluating later operands or constructing the lambda.
+        // Capturing its source alone would let later mutations change the saved argument list.
+        def spread(term: Term)(next: Term => Block): Block =
+          operand(st.Tup(Spd(SpreadKind.Eager, term, false) :: Nil)(Tree.DummyTup).withLocOf(term))(next)
         def elements(rest: Ls[Elem], reversed: Ls[Elem])(next: Ls[Elem] => Block): Block = rest match
           case Fld(flags, term, N) :: tail => operand(term)(captured => elements(tail, Fld(flags, captured, N) :: reversed)(next))
+          case Spd(SpreadKind.Eager, term, droppable) :: tail =>
+            spread(term)(captured => elements(tail, Spd(SpreadKind.Eager, captured, droppable) :: reversed)(next))
           case Spd(kind, term, droppable) :: tail => operand(term)(captured => elements(tail, Spd(kind, captured, droppable) :: reversed)(next))
           case _ :: _ => lastWords("Only plain fields and spreads are captured one by one")
           case Nil => next(reversed.reverse)
         // Capture each argument of a tuple list on its own, so that the expansion still passes
         // ordinary argument lists. Capturing a whole list as one value would allocate an array
-        // at the site and spread it at every call. A list that is a single spread operand, as
-        // in `f(...xs)`, or that has record fields is captured as one value.
+        // at the site and spread it at every call. Each eager spread captures a fresh tuple;
+        // lists with record fields are captured as one value.
         def list(argument: Term)(next: Term => Block): Block = argument match
           case tuple @ st.Tup(fields) if fields.forall(capturable) =>
             elements(fields, Nil)(fields => next(st.Tup(fields)(tuple.tree).withLocOf(argument)))
           case tuple @ st.CtxTup(fields) if fields.forall(capturable) =>
             elements(fields, Nil)(fields => next(st.CtxTup(fields)(tuple.tree).withLocOf(argument)))
-          case _ => operand(argument)(next)
+          case ArgumentTuple(_) => operand(argument)(next)
+          case _ => spread(argument)(next)
         def capture(rest: Ls[Term], reversed: Ls[Term]): Block = rest match
           case argument :: tail if abstractions.contains(argument) => capture(tail, argument :: reversed)
           case argument :: tail => list(argument)(captured => capture(tail, captured :: reversed))

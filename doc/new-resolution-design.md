@@ -426,8 +426,10 @@ Lowering flattens the continuation steps, interleaves contextual and written
 arguments, and emits lambdas around the ordinary call or constructor operation.
 A contextual argument list has the runtime layout of an ordinary one, so lowering
 passes its elements directly rather than spreading an array. An expansion captures
-its operands once in source order, each argument in its own temporary, and
-reconstructs method selections on the captured receiver, preserving receiver binding.
+its operands once in source order, each argument in its own temporary. Each eager
+spread captures a fresh tuple of its elements before later operands run, so later
+mutation cannot change the saved arguments. Lowering reconstructs method selections
+on the captured receiver, preserving receiver binding.
 
 Query positions are observed in the base activation, through `observeTypeViews`
 with `opaque` set. An explicit type parameter that the position does not instantiate

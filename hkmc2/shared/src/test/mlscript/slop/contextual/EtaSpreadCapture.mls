@@ -13,11 +13,9 @@ items.push(5)
 //│ items = [99, 2, 5]
 //│ saved = fun saved
 
-:fixme // The expansion currently retains the mutable spread operand by reference.
 :expect [[0, [1, 2], 3], [0, [1, 2], 4]]
 [saved(3), saved(4)]
-//│ ═══[RUNTIME ERROR] Expected: '[[0, [1, 2], 3], [0, [1, 2], 4]]', got: '[[0, [99, 2, 5], 3], [0, [99, 2, 5], 4]]'
-//│ = [[0, [99, 2, 5], 3], [0, [99, 2, 5], 4]]
+//│ = [[0, [1, 2], 3], [0, [1, 2], 4]]
 
 // A later argument must not change the elements of an earlier eager spread.
 let earlier = mut [1, 2]
@@ -28,8 +26,19 @@ let ordered = collect(0, ...earlier, change())
 //│ earlier = [88, 2]
 //│ ordered = fun ordered
 
-:fixme // Spreading currently happens after the later argument has mutated its source.
 :expect [0, [1, 2, 3], 4]
 ordered(4)
-//│ ═══[RUNTIME ERROR] Expected: '[0, [1, 2, 3], 4]', got: '[0, [88, 2, 3], 4]'
-//│ = [0, [88, 2, 3], 4]
+//│ = [0, [1, 2, 3], 4]
+
+// A list consisting of a single spread must capture its contents too.
+let single = mut [0, 1, 2]
+let singleSaved = collect(...single)
+set single.[1] = 77
+single.push(5)
+//│ = 4
+//│ single = [0, 77, 2, 5]
+//│ singleSaved = fun singleSaved
+
+:expect [0, [1, 2], 3]
+singleSaved(3)
+//│ = [0, [1, 2], 3]
