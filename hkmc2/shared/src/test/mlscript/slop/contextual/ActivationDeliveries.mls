@@ -1,0 +1,42 @@
+:.
+
+class Show[A](val label: Str)
+module Show with
+  using Show[Int] = Show[Int]("int")
+  using Show[Str] = Show[Str]("str")
+class C with
+  fun show[T](value: T)(using s: Show[T]) = s.label
+
+// The receiver `y` has values only in the activations of the two calls of `twice`. The
+// application of `y.show` in each activation must reach the contextual site, whose query then
+// sees both `Int` and `Str`; the site decides once for all activations and reports once.
+:e
+fun twice[A](value: A, y) = y.show(value)
+[twice(1, new C), twice("text", new C)]
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	fun twice[A](value: A, y) = y.show(value)
+//│ ║        	                            ^^^^^^^^^^^^^
+//│ ╟── No instance found for the contextual parameter 's' of type Show[T].
+//│ ║  l.+1: 	fun twice[A](value: A, y) = y.show(value)
+//│ ║        	                            ^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	  fun show[T](value: T)(using s: Show[T]) = s.label
+//│ ║        	                        ^^^^^^^^^^^^^^^^
+//│ ╟── This instance of type Show[Int] from namespace 'Show' does not accept all values reaching the query.
+//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance of type Show[Str] from namespace 'Show' does not accept all values reaching the query.
+//│ ║  l.XX: 	  using Show[Str] = Show[Str]("str")
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// FIXME: explicit type parameters should be opaque, so the query should see the abstract `A`.
+// The receiver's values arrive only in the caller's activation, where `A` is the caller's type
+// argument, so the query sees `Int` and selects `Show[Int]`. Member lookup in such an
+// activation also sees the caller's type.
+:breakme
+:e
+fun leaky[A](value: A, y) = y.show(value)
+leaky(1, new C)
+//│ = "int"
+

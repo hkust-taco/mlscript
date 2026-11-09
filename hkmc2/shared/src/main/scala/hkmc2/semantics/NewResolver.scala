@@ -2947,45 +2947,52 @@ class NewResolver:
     * function, which each use instantiates). Conversely, a value of a known class is not known
     * to be a value of an enclosing definition's type parameter. Values of unknown class are
     * accepted by every type.
+    *
+    * Return the value that `tpe` does not accept: when a nominal type rejects `value` because
+    * of a value in one of its class positions, that value explains the rejection more
+    * precisely. A union or formula rejects `value` itself, as no alternative alone does.
     */
-  private def contextualAccepts(tpe: DeclaredType, value: TermShape, free: Set[VarSymbol], binders: Set[VarSymbol],
-      seen: Set[(DeclaredType, ShapeIdentity.Key)], observe: TermShapeHost => Unit)(using ResolutionContext): Bool =
+  private def contextualRejection(tpe: DeclaredType, value: TermShape, free: Set[VarSymbol], binders: Set[VarSymbol],
+      seen: Set[(DeclaredType, ShapeIdentity.Key)], observe: TermShapeHost => Unit)(using ResolutionContext): Opt[TermShape] =
     val pair = (tpe, ShapeIdentity.key(value))
     val abstractOf = abstractParameter(value)
-    if seen(pair) || abstractOf.isEmpty && instanceClass(shapeParts(value).value).isEmpty then true else
+    if seen(pair) || abstractOf.isEmpty && instanceClass(shapeParts(value).value).isEmpty then N else
       val visited = seen + pair
-      def follow(current: DeclaredType, args: TypeApplication, aliases: Set[DeclaredType]): Bool =
-        if aliases(current) then true else current.shapes.forall: shape =>
+      def unless(accepted: Bool): Opt[TermShape] = if accepted then N else S(value)
+      def follow(current: DeclaredType, args: TypeApplication, aliases: Set[DeclaredType]): Opt[TermShape] =
+        if aliases(current) then N else current.shapes.iterator.flatMap: shape =>
           // `Any` is the top type, as in the type formulas, and accepts abstract values too.
-          if isAnyAlias(shape) then true
+          if isAnyAlias(shape) then N
           else reduceType(current, args, shape) match
             case S(step) => follow(step.tpe, step.args, aliases + current)
             case N => shape match
               case parameter: TypeShape.Parameter =>
                 val symbol = parameter.symbol
-                free(symbol) || abstractOf.contains(symbol)
-              case TypeShape.Top => true
+                unless(free(symbol) || abstractOf.contains(symbol))
+              case TypeShape.Top => N
               case TypeShape.Nominal(cls) =>
                 val ShapeParts(core, instances, _) = shapeParts(value)
-                abstractOf.isEmpty && core.isInstanceOfClass(cls) && {
+                if abstractOf.nonEmpty || !core.isInstanceOfClass(cls) then S(value) else
                   val expected = variantArguments(current, args, cls.tparams, current.positive)
                   softAssert(expected.length == cls.tparams.length, "Nominal arguments must match their parameters")
-                  cls.tparams.lazyZip(expected).forall: (parameter, argument) =>
+                  // The assertion above makes the zipped sequences equally long.
+                  cls.tparams.iterator.zip(expected).flatMap: (parameter, argument) =>
                     val values = contextualClassPosition(value, cls, parameter.sym)
                     observe(values)
-                    queryValues(values.currentShapes, binders).forall(actual => contextualAccepts(argument.output, actual, free, binders, visited, observe))
-                }
+                    queryValues(values.currentShapes, binders).iterator.flatMap(actual => contextualRejection(argument.output, actual, free, binders, visited, observe))
+                  .nextOption()
               case TypeShape.Union(left, right) =>
-                follow(declaredType(left, current), noTypeArguments, aliases + current) ||
-                  follow(declaredType(right, current), noTypeArguments, aliases + current)
+                unless(follow(declaredType(left, current), noTypeArguments, aliases + current).isEmpty ||
+                  follow(declaredType(right, current), noTypeArguments, aliases + current).isEmpty)
               case TypeShape.Intersection(left, right) =>
-                follow(declaredType(left, current), noTypeArguments, aliases + current) &&
-                  follow(declaredType(right, current), noTypeArguments, aliases + current)
-              case TypeShape.Combined(formula) => formula.clauses.exists(_.forall(atom =>
-                follow(atom.instantiate(current.instances), noTypeArguments, aliases + current)))
-              case TypeShape.Bottom => false
+                follow(declaredType(left, current), noTypeArguments, aliases + current)
+                  .orElse(follow(declaredType(right, current), noTypeArguments, aliases + current))
+              case TypeShape.Combined(formula) => unless(formula.clauses.exists(_.forall(atom =>
+                follow(atom.instantiate(current.instances), noTypeArguments, aliases + current).isEmpty)))
+              case TypeShape.Bottom => S(value)
               // Other forms accept conservatively, but no form describes an abstract value.
-              case _ => abstractOf.isEmpty
+              case _ => unless(abstractOf.isEmpty)
+        .nextOption()
       follow(tpe, noTypeArguments, Set.empty)
 
   /** The type parameters of `candidate` that each use instantiates: those of an instance function. */
@@ -2993,19 +3000,37 @@ class NewResolver:
     instanceFunction(candidate).fold(Set.empty)(_.tparams.toList.flatten.iterator.map(_.sym).toSet)
 
   private def contextualMatches(candidate: DeclaredType, free: Set[VarSymbol], binders: Set[VarSymbol],
-      query: ContextualQuery, observe: TermShapeHost => Unit)(using ResolutionContext): Bool = query match
+      query: ContextualQuery, observe: TermShapeHost => Unit)(using ResolutionContext): Bool =
+    contextualMatch(candidate, free, binders, query, observe) == ContextualMatch.Accepted
+
+  private def contextualMatch(candidate: DeclaredType, free: Set[VarSymbol], binders: Set[VarSymbol],
+      query: ContextualQuery, observe: TermShapeHost => Unit)(using ResolutionContext): ContextualMatch = query match
     case ContextualQuery.Parameter(tpe, _) =>
       val values = queryValues(contextualValues(tpe, observe), binders)
-      values.nonEmpty && values.forall(contextualAccepts(candidate, _, free, binders, Set.empty, observe))
+      if values.isEmpty then ContextualMatch.Rejected(N)
+      else values.iterator.flatMap(contextualRejection(candidate, _, free, binders, Set.empty, observe)).nextOption() match
+        case S(witness) => ContextualMatch.Rejected(S(witness))
+        case N => ContextualMatch.Accepted
     case ContextualQuery.Named(cls, positions) =>
-      contextualValues(candidate, observe).exists: value =>
-        shapeParts(value).value match
-          case Marked(nominal: NominalInstanceView, _) => nominal.ancestor(cls).exists: ancestor =>
-            softAssert(positions.length == cls.tparams.length, "Query positions must match their head parameters")
-            cls.tparams.lazyZip(positions).forall: (parameter, position) =>
-              ancestor.bindings.get(parameter.sym).forall: bound =>
-                queryValues(contextualValues(position, observe), binders).forall(contextualAccepts(bound.output, _, free, binders, Set.empty, observe))
-          case _ => false
+      // One value of the candidate's type that serves every position suffices. Otherwise,
+      // report the first value that one of them rejects.
+      def serve(values: Ls[TermShape], witness: Opt[TermShape]): ContextualMatch = values match
+        case Nil => ContextualMatch.Rejected(witness)
+        case value :: rest =>
+          val rejection = shapeParts(value).value match
+            case Marked(nominal: NominalInstanceView, _) => nominal.ancestor(cls).map: ancestor =>
+              softAssert(positions.length == cls.tparams.length, "Query positions must match their head parameters")
+              // The assertion above makes the zipped sequences equally long.
+              cls.tparams.iterator.zip(positions).flatMap: (parameter, position) =>
+                ancestor.bindings.get(parameter.sym).iterator.flatMap: bound =>
+                  queryValues(contextualValues(position, observe), binders).iterator.flatMap(contextualRejection(bound.output, _, free, binders, Set.empty, observe))
+              .nextOption()
+            case _ => N
+          rejection match
+            case S(N) => ContextualMatch.Accepted
+            case S(found) => serve(rest, witness.orElse(found))
+            case N => serve(rest, witness)
+      serve(contextualValues(candidate, observe), N)
 
   private def instanceFunction(symbol: Symbol): Opt[TermDefinition] =
     symbol.asTrm.flatMap(_.defn).filter(_.flags.isInstanceFunction)
@@ -3062,7 +3087,12 @@ class NewResolver:
 
   private def derivedInstance(argument: InstanceArg, parameter: Param, candidate: ContextualCandidate,
       function: TermDefinition, query: ContextualQuery, queryMarks: Ls[Marks], flowType: ContextualFlowType, reference: => Term)
-      (using ResolutionContext): Term =
+      (using activation: ResolutionContext): Term =
+    // The site lowers one derived expression for all activations, and the listeners below
+    // drive its applications and nested queries. As for the site's own driver (see
+    // listenContextual), they must accept every activation and run each value in the
+    // activation that published it, whichever activation's drive made this decision.
+    given ResolutionContext = activation.withInstances(TypeSubstitution.empty)
     val environment = argument.environment.getOrElse(lastWords("A derived query needs its lexical environment"))
     val previous = argument.agreement.getOrElse(argument).derivations.valuesIterator.nextOption()
     val nested = mutable.ListBuffer.empty[InstanceArg]
@@ -3138,9 +3168,20 @@ class NewResolver:
         case _ => softAssert(false, "A synthesized contextual clause contains only instance arguments")
     case _ => ()
 
+  /** Lowering emits one completion of a contextual site for every activation of its body,
+    * and the positions that its queries read carry no activation envelopes (see
+    * contextualPosition), so every activation of a consumer reads the same values. Record
+    * the site's decisions, checks, reports, and stage subscriptions in the consumer's base
+    * context, which each activation inherits, as InstanceNamespaces.local records its
+    * namespaces. Recorded in the activation that drives the site, they would be invisible
+    * to a sibling activation, which would decide and report again.
+    */
+  private def siteContext(using activation: ResolutionContext): ResolutionContext =
+    activation.withInstances(TypeSubstitution.empty)
+
   private def decideContextualArgument(argument: InstanceArg, parameter: Param, tpe: DeclaredType, queryMarks: Ls[Marks])
       (using ResolutionContext): Unit =
-    val first = rctx.state.contextualQueries.add((argument, parameter.sym))
+    val first = rctx.state.contextualQueries.add((argument, parameter.sym))(using siteContext)
     val query = contextualQuery(tpe)
     def fail(message: Message, notes: Ls[(Message, Opt[Loc])]): Unit =
       rctx.markError(argument)
@@ -3226,19 +3267,40 @@ class NewResolver:
                 many.map(candidate => msg"This instance of type ${contextualTypeName(candidate.annotation)} comes from namespace '${candidate.module.nme}'." -> candidate.definition.toLoc))
           case many => fail(msg"Ambiguous instances for the ${contextualParameterName(parameter)} of type ${contextualTypeName(tpe)}.",
             many.map((_, binding, candidate) => msg"This lexical instance of type ${contextualTypeName(candidate)} matches." -> binding.symbol.toLoc))
-    def check(witness: Opt[TermShape])(using ResolutionContext): Unit = query.foreach: query =>
+    def check()(using ResolutionContext): Unit = query.foreach: query =>
       argument.candidate.foreach: candidate =>
         def observe(host: TermShapeHost): Unit =
-          if rctx.state.contextualChecks.add((argument, host)) then host.listen(value => check(S(value)))
-        if !rctx.hasError(argument) && !contextualMatches(candidate.annotation, candidateBinders(candidate.symbol), argument.environment.fold(Set.empty)(_.typeBinders), query, observe) &&
-            rctx.state.contextualFailures.add((argument, tpe)) then
-          rctx.markError(argument)
-          resolError(argument,
-            msg"This value reaches the type of the ${contextualParameterName(parameter)} after its instance was selected; the selected instance of type ${contextualTypeName(candidate.annotation)} does not accept it." -> argument.toLoc ::
-            (msg"The contextual parameter is declared here." -> parameter.toLoc) ::
-            (msg"The selected instance is declared here." -> candidate.symbol.toLoc) ::
-            witness.toList.flatMap(_.diagnostic(msg"This value is incompatible with the selected instance.")))
-    check(N)
+          if rctx.state.contextualChecks.add((argument, host))(using siteContext) then host.listen(_ => check())
+        if !rctx.hasError(argument) then
+          contextualMatch(candidate.annotation, candidateBinders(candidate.symbol), argument.environment.fold(Set.empty)(_.typeBinders), query, observe) match
+            case ContextualMatch.Rejected(witness) if rctx.state.contextualFailures.add((argument, tpe))(using siteContext) =>
+              rctx.markError(argument)
+              val notes =
+                (msg"The instance was selected here." -> argument.toLoc) ::
+                (msg"The contextual parameter is declared here." -> parameter.toLoc) ::
+                (msg"The selected instance is declared here." -> candidate.symbol.toLoc) :: Nil
+              witness match
+                case S(value) =>
+                  // `diagnostic` lists the notes leading to the value's type origin before its own message.
+                  def describe(message: Message): Ls[(Message, Opt[Loc])] =
+                    val (located, path) = value.diagnostic(message).partition(_._1 eq message)
+                    located ::: path
+                  val rejection = describe(msg"The selected instance of type ${contextualTypeName(candidate.annotation)} does not accept this value.")
+                  // Start at the expression whose flow sent the value: the site was resolved
+                  // correctly for the values that had reached it.
+                  val trigger = rctx.state.trigger.flatMap(_.toLoc).filter(loc => !rejection.headOption.exists(_._2.contains(loc)))
+                  val messages = trigger match
+                    case S(loc) =>
+                      (msg"This expression makes a value reach the type of the ${contextualParameterName(parameter)} after its instance was selected." -> S(loc)) :: rejection
+                    case N =>
+                      describe(msg"This value reaches the type of the ${contextualParameterName(parameter)} after its instance was selected; the selected instance of type ${contextualTypeName(candidate.annotation)} does not accept it.")
+                  rctx.report(ErrorReport(messages ::: notes, source = Diagnostic.Source.Compilation))
+                // No value explains a rejection when none reaches a parameter query of this use of
+                // the site, or when the instance's own type has no view of the queried class.
+                case N =>
+                  resolError(argument, msg"The selected instance of type ${contextualTypeName(candidate.annotation)} does not serve the ${contextualParameterName(parameter)} in this use." -> argument.toLoc :: notes.tail)
+            case _ => ()
+    check()
     argument.selected.foreach: selected =>
       listenValue(selected, receiver = false)(value => publishCompleted(argument, value))
 
@@ -4458,7 +4520,7 @@ class NewResolver:
     if !argument.candidate.exists(_.symbol is member.sym) &&
         contextualMatches(annotation, candidateBinders(member.sym), namespaces.binders, namespaces.query, _ => ()) &&
         instanceFunction(member.sym).forall(function => !contextualDiverges(function, namespaces.flowType, argument.derivationPath)) &&
-        rctx.state.contextualLateNamespaces.add((argument, member.sym)) then
+        rctx.state.contextualLateNamespaces.add((argument, member.sym))(using siteContext) then
       rctx.markError(argument)
       val selected = argument.candidate.toList.map: candidate =>
         msg"This instance of type ${contextualTypeName(candidate.annotation)} was selected earlier." -> candidate.symbol.toLoc
@@ -4547,7 +4609,8 @@ class NewResolver:
         rctx.state.contextualWork.get(new Identity(site.term)).foreach: work =>
           val waiting = work.pending.toList
           work.pending.clear()
-          waiting.foreach((value, context) => driveContextual(work.site.term, value, 0)(using context))
+          waiting.foreach: (value, context, trigger) =>
+            rctx.withTrigger(trigger)(driveContextual(work.site.term, value, 0)(using context))
       case _ => ()
     rctx.state.instanceDeclarations.foreach: definition =>
       definition.sign.foreach: sign =>
@@ -5490,6 +5553,21 @@ class NewResolver:
   private def listenContextual(term: ContextualSite, role: ContextualRole, pending: Opt[ResolutionSite.Contextual])
       (receive: ShapeListener[Shape])(using ResolutionContext): Unit =
     var subscribed = false
+    // Only a request in the empty activation drives the completion. Such a request receives
+    // each raw value in the activation that published it, as the term traversal drives an
+    // ordinary application, and recordCompletableSite installs one for every site. A request
+    // in a body activation views the base values through that activation's instances; driving
+    // the completion there would constrain the shared call-site instances of the callee with
+    // the instantiated types of the site's binders. In `class Boxed[A](val value: A)(using
+    // s: Show[A]) with fun shown = display(value)`, passing `s` in the activation of a
+    // receiver `Boxed(1)` would make `Int` reach the query that selected `s` as a `Show[A]`.
+    val drives = rctx.instances.isEmpty
+    // Each raw callback below runs in the activation of the value it receives. Subscribing to
+    // the output in that context would make this consumer receive only the outputs compatible
+    // with its first value's activation: for `fun h[A](x: A, y) = y.show(x)`, the output of
+    // `y.show` in `h("a", new C)` would never reach the application `y.show(x)` if its first
+    // callee value came from `h(1, new C)`, and the application's query would never see `Str`.
+    val request = rctx
     listenValueRaw(term, role == ContextualRole.Receiver): raw =>
       raw match
         // Declared value types cannot express contextual functions, and inferred type
@@ -5515,12 +5593,13 @@ class NewResolver:
               term.contextualCompletion.foreach: completion =>
                 if !subscribed then
                   subscribed = true
-                  listenValueHost(completion.output)(receive(_))
-                if !rctx.canResolve(term) then driveContextual(term, value, 0)
-                else rctx.state.contextualWork.get(new Identity(term)).foreach: work =>
-                  if work.inputs.add((ShapeIdentity.key(value), rctx.instances)) then
-                    if work.site.settled then driveContextual(term, value, 0)
-                    else work.pending += ((value, rctx))
+                  listenValueHost(completion.output)(receive(_))(using request)
+                if drives then
+                  if !rctx.canResolve(term) then driveContextual(term, value, 0)
+                  else rctx.state.contextualWork.get(new Identity(term)).foreach: work =>
+                    if work.inputs.add((ShapeIdentity.key(value), rctx.instances)) then
+                      if work.site.settled then driveContextual(term, value, 0)
+                      else work.pending += ((value, rctx, rctx.state.trigger))
           , receive(_))
 
   /** Declared interfaces retain their written clause metadata independently of their types. */
@@ -5600,10 +5679,13 @@ class NewResolver:
             if count != expectedCount then
               contextualSiteError(term, msg"This reference resolves to members with different contextual parameter lists.")
             else
-              if rctx.state.contextualStages.add((term, index)) then
-                listenRaw(app, discardMarks = false):
+              // Like the site's own driver (see listenContextual), the next stage's driver
+              // must accept every activation and run each value in its own activation.
+              if rctx.state.contextualStages.add((term, index))(using siteContext) then
+                listenRaw(app, discardMarks = false)({
                   case result: TermShape => driveContextual(term, result, index + 1)
                   case _: SymShape => softAssert(false, "An application must deliver values")
+                })(using siteContext)
               applyShape(value, app.rhs, app, checked = true)
           case ContextualStep.Abstract(_, _) =>
             contextualSiteError(term, msg"This reference resolves to members with different contextual parameter lists.")

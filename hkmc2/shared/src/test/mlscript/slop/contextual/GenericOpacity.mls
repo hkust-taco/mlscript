@@ -92,58 +92,11 @@ class Unboxed[A](val value: A) with
 //│ ║  l.XX: 	  using Show[Str] = Show[Str]("str")
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-// FIXME: a class parameter carries the actual arguments of every construction into the
-// class body, so they reach the method's query as late values, and through it the queries
-// of other construction sites. Ordinary member lookup in the body does not use them.
-:fixme
+// A method's site is completed by the values of its own body, where `A` is abstract. Calling
+// the method on a receiver views that completion through the receiver's type argument, so the
+// `Int` of `Boxed(1)` does not reach the query that selected `s`.
 :expect ["int", "str"]
 class Boxed[A](val value: A)(using s: Show[A]) with
   fun shown = display(value)
 [Boxed(1).shown, Boxed("text").shown]
-//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
-//│ ║  l.+2: 	  fun shown = display(value)
-//│ ║        	              ^^^^^^^^^^^^^^
-//│ ╟── This value reaches the type of the contextual parameter 'show' after its instance was selected; the selected instance of type Show[A] does not accept it.
-//│ ║  l.+2: 	  fun shown = display(value)
-//│ ║        	              ^^^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
-//│ ║  l.XX: 	fun display[A](value: A)(using show: Show[A]) = show.label
-//│ ║        	                         ^^^^^^^^^^^^^^^^^^^
-//│ ╟── The selected instance is declared here.
-//│ ║  l.+1: 	class Boxed[A](val value: A)(using s: Show[A]) with
-//│ ║        	                                   ^
-//│ ╟── This value is incompatible with the selected instance.
-//│ ║  l.+3: 	[Boxed(1).shown, Boxed("text").shown]
-//│ ╙──      	       ^
-//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
-//│ ║  l.+3: 	[Boxed(1).shown, Boxed("text").shown]
-//│ ║        	                 ^^^^^^^^^^^^^
-//│ ╟── No instance found for the contextual parameter 's' of type Show[A].
-//│ ║  l.+3: 	[Boxed(1).shown, Boxed("text").shown]
-//│ ║        	                 ^^^^^^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
-//│ ║  l.+1: 	class Boxed[A](val value: A)(using s: Show[A]) with
-//│ ║        	                             ^^^^^^^^^^^^^^^^
-//│ ╟── This instance of type Show[Int] from namespace 'Show' does not accept all values reaching the query.
-//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
-//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This instance of type Show[Str] from namespace 'Show' does not accept all values reaching the query.
-//│ ║  l.XX: 	  using Show[Str] = Show[Str]("str")
-//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
-//│ ║  l.+3: 	[Boxed(1).shown, Boxed("text").shown]
-//│ ║        	 ^^^^^^^^
-//│ ╟── This value reaches the type of the contextual parameter 's' after its instance was selected; the selected instance of type Show[Int] does not accept it.
-//│ ║  l.+3: 	[Boxed(1).shown, Boxed("text").shown]
-//│ ║        	 ^^^^^^^^
-//│ ╟── The contextual parameter is declared here.
-//│ ║  l.+1: 	class Boxed[A](val value: A)(using s: Show[A]) with
-//│ ║        	                             ^^^^^^^^^^^^^^^^
-//│ ╟── The selected instance is declared here.
-//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
-//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This value is incompatible with the selected instance.
-//│ ║  l.+3: 	[Boxed(1).shown, Boxed("text").shown]
-//│ ╙──      	                       ^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '["int", "str"]', got: 'undefined'
+//│ = ["int", "str"]

@@ -1490,11 +1490,12 @@ extends Importer:
         if selected is sym then ref else Term.SimpleRef(selected)(ref.tree).withLocOf(ref)
       case _ => lt
     val res = withTypeBinders(new Term.App(appliedFun, rt)(tree, typ, resSym))
-    if newResolution then appliedFun match
-      // Builtin operators have no shapes of their own; see NewResolver.builtinApplication.
-      case Term.SimpleRef(op: BuiltinSymbol) => builtinApplication(op, rt, res)
-      case Term.Ref(op: BuiltinSymbol) => builtinApplication(op, rt, res)
-      case _ => listenTerm(appliedFun)(shape => appShape(shape, rt, res))
+    if newResolution then rctx.withTrigger(S(res)):
+      appliedFun match
+        // Builtin operators have no shapes of their own; see NewResolver.builtinApplication.
+        case Term.SimpleRef(op: BuiltinSymbol) => builtinApplication(op, rt, res)
+        case Term.Ref(op: BuiltinSymbol) => builtinApplication(op, rt, res)
+        case _ => listenTerm(appliedFun)(shape => appShape(shape, rt, res))
     res
   
   /** With the new underscore syntax, some operator operands delimit their own implicit lambdas:
@@ -1563,7 +1564,8 @@ extends Importer:
     // Resolve the term interpretation of the l-value before lowering. The
     // selected definition is recorded even when its value publishes no shape.
     // Use this for synthesized assignments as well as source-level `set`.
-    if newResolution then
+    // The assigned value is what this subscription sends to the variable's readers.
+    if newResolution then rctx.withTrigger(S(rhs)):
       listenTerm(lhs)(_ => ())
       assignArrayElement(lhs, rhs)
       assignVariable(lhs, rhs)
@@ -1871,7 +1873,7 @@ extends Importer:
       })(N).withLocOf(tree))
       // A term specialization must validate its arguments even when unused.
       // Type and constructor interpretations have their own argument checks.
-      if newResolution && (interp == Trm || interp == AppHead) then listenTerm(result)(_ => ())
+      if newResolution && (interp == Trm || interp == AppHead) then rctx.withTrigger(S(result))(listenTerm(result)(_ => ()))
       result
     case InfixApp(TyTup(tvs), Keywrd(Keyword.`->`), body) =>
       val boundVars = mutable.HashMap.empty[Str, VarSymbol]
@@ -3319,9 +3321,10 @@ extends Importer:
                       :: Nil
             d.ext match
             case S(ext) =>
-              listenTerm(ext): esh =>
-                val sh = BaseShape(d, S(esh)) // TODO actually use applied shape providing generics?
-                sym.notifyShapeListeners(sh)
+              rctx.withTrigger(S(ext)):
+                listenTerm(ext): esh =>
+                  val sh = BaseShape(d, S(esh)) // TODO actually use applied shape providing generics?
+                  sym.notifyShapeListeners(sh)
             case N =>
               val sh = BaseShape(d, N) // TODO actually use applied shape providing generics?
               sym.notifyShapeListeners(sh)

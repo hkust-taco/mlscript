@@ -391,6 +391,23 @@ steps, but select under their own bindings and must agree on the runtime argumen
 Selections never change after their decision. Later incompatible values report
 errors through the same matching relation used for selection.
 
+Only a subscription in the empty activation drives a site's completion. It receives
+each raw value in the activation that published it, as the term traversal does for
+an ordinary application, and every site has one. A consumer in a body activation
+views the base completion through that activation's instances and subscribes to the
+output in its own context. Driving the completion there would constrain the callee's
+call-site instances, which every activation shares, with instantiated types of the
+site's binders: a receiver `Boxed(1)` of a method in `Boxed[A]` would make `Int` reach
+a query that selected a `Show[A]`. The site's decisions, checks, reports, and stage
+subscriptions belong to the consuming unit's base context, which each activation
+inherits, so sibling activations neither decide nor report again.
+
+A late-value report starts at the source expression whose flow sent the value
+(`NewResolverState.trigger`): the elaborator sets it while subscribing a term it has
+just created, and a site's pending inputs carry it to settlement. The report then
+names a value that the selected instance rejects, which the matching relation returns,
+followed by the site that selected the instance.
+
 An Abstract step has a synthesized ordinary lambda for flow and an application
 for its continuation. That application owns further completion steps, and the
 lambda observes its completed result. The lambda mirrors the abstracted parameter

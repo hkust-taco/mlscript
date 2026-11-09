@@ -5,10 +5,14 @@ import "./mlscript-compile/LexicalQueries.mls"
 // The first consumer call must validate the imported body's fixed selection.
 :e
 LexicalQueries.unannotated("first call")
-//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
-//│ ║  l.XX: 	  fun unannotated(value) = consume(value)
-//│ ║        	                           ^^^^^^^^^^^^^^
-//│ ╟── This value reaches the type of the unnamed contextual parameter after its instance was selected; the selected instance of type Accept[Int] does not accept it.
+//│ ╔══[COMPILATION ERROR] This expression makes a value reach the type of the unnamed contextual parameter after its instance was selected.
+//│ ║  l.+1: 	LexicalQueries.unannotated("first call")
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The selected instance of type Accept[Int] does not accept this value.
+//│ ║  l.+1: 	LexicalQueries.unannotated("first call")
+//│ ║        	                           ^^^^^^^^^^^^
+//│ ╟── The instance was selected here.
+//│ ║  in mlscript-compile/LexicalQueries.mls
 //│ ║  l.XX: 	  fun unannotated(value) = consume(value)
 //│ ║        	                           ^^^^^^^^^^^^^^
 //│ ╟── The contextual parameter is declared here.
@@ -16,9 +20,5 @@ LexicalQueries.unannotated("first call")
 //│ ║        	                           ^^^^^^^^^^^^^^^
 //│ ╟── The selected instance is declared here.
 //│ ║  l.XX: 	  using Accept[Int] = new Accept[Int]
-//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This value is incompatible with the selected instance.
-//│ ║  in LateValuesFirstImport.mls:+1
-//│ ║  l.+1: 	LexicalQueries.unannotated("first call")
-//│ ╙──      	                           ^^^^^^^^^^^^
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = 42

@@ -9,10 +9,14 @@ LexicalQueries.unannotated(1)
 
 :e
 LexicalQueries.unannotated("later")
-//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
-//│ ║  l.XX: 	  fun unannotated(value) = consume(value)
-//│ ║        	                           ^^^^^^^^^^^^^^
-//│ ╟── This value reaches the type of the unnamed contextual parameter after its instance was selected; the selected instance of type Accept[Int] does not accept it.
+//│ ╔══[COMPILATION ERROR] This expression makes a value reach the type of the unnamed contextual parameter after its instance was selected.
+//│ ║  l.+1: 	LexicalQueries.unannotated("later")
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The selected instance of type Accept[Int] does not accept this value.
+//│ ║  l.+1: 	LexicalQueries.unannotated("later")
+//│ ║        	                           ^^^^^^^
+//│ ╟── The instance was selected here.
+//│ ║  in mlscript-compile/LexicalQueries.mls
 //│ ║  l.XX: 	  fun unannotated(value) = consume(value)
 //│ ║        	                           ^^^^^^^^^^^^^^
 //│ ╟── The contextual parameter is declared here.
@@ -20,11 +24,7 @@ LexicalQueries.unannotated("later")
 //│ ║        	                           ^^^^^^^^^^^^^^^
 //│ ╟── The selected instance is declared here.
 //│ ║  l.XX: 	  using Accept[Int] = new Accept[Int]
-//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This value is incompatible with the selected instance.
-//│ ║  in LateValues.mls:+1
-//│ ║  l.+1: 	LexicalQueries.unannotated("later")
-//│ ╙──      	                           ^^^^^^^
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = 42
 
 // Nested nominal argument positions must observe their declared element types.
@@ -40,10 +40,13 @@ boxed(new Box[Int](1))
 
 :e
 boxed(new Box[Str]("later"))
-//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
-//│ ║  l.XX: 	fun boxed(value) = consumeBox(value)
-//│ ║        	                   ^^^^^^^^^^^^^^^^^
-//│ ╟── This value reaches the type of the unnamed contextual parameter after its instance was selected; the selected instance of type AcceptBox[Box[Int]] does not accept it.
+//│ ╔══[COMPILATION ERROR] This expression makes a value reach the type of the unnamed contextual parameter after its instance was selected.
+//│ ║  l.+1: 	boxed(new Box[Str]("later"))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The selected instance of type AcceptBox[Box[Int]] does not accept this value.
+//│ ║  l.+1: 	boxed(new Box[Str]("later"))
+//│ ║        	              ^^^
+//│ ╟── The instance was selected here.
 //│ ║  l.XX: 	fun boxed(value) = consumeBox(value)
 //│ ║        	                   ^^^^^^^^^^^^^^^^^
 //│ ╟── The contextual parameter is declared here.
@@ -51,10 +54,34 @@ boxed(new Box[Str]("later"))
 //│ ║        	                            ^^^^^^^^^^^^^^^^^^
 //│ ╟── The selected instance is declared here.
 //│ ║  l.XX: 	using AcceptBox[Box[Int]] = new AcceptBox[Box[Int]]
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This value is incompatible with the selected instance.
-//│ ║  l.+1: 	boxed(new Box[Str]("later"))
-//│ ╙──      	              ^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = 43
+
+// The report names a value that the selected instance rejects, even when an accepted value
+// precedes it in a class position that the check observes for the first time.
+:expect 43
+fun boxedAgain(value) = consumeBox(value)
+boxedAgain(new Box[Int](1))
+//│ = 43
+
+:e
+fun either(flag) = if flag then 1 else "late"
+boxedAgain(new Box(either(true)))
+//│ ╔══[COMPILATION ERROR] This expression makes a value reach the type of the unnamed contextual parameter after its instance was selected.
+//│ ║  l.+2: 	boxedAgain(new Box(either(true)))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The selected instance of type AcceptBox[Box[Int]] does not accept this value.
+//│ ║  l.+1: 	fun either(flag) = if flag then 1 else "late"
+//│ ║        	                                       ^^^^^^
+//│ ╟── The instance was selected here.
+//│ ║  l.XX: 	fun boxedAgain(value) = consumeBox(value)
+//│ ║        	                        ^^^^^^^^^^^^^^^^^
+//│ ╟── The contextual parameter is declared here.
+//│ ║  l.XX: 	fun consumeBox[A](value: A)(using AcceptBox[A]) = 43
+//│ ║        	                            ^^^^^^^^^^^^^^^^^^
+//│ ╟── The selected instance is declared here.
+//│ ║  l.XX: 	using AcceptBox[Box[Int]] = new AcceptBox[Box[Int]]
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = 43
 
 // Independent call-site instances must not be merged into one query position.

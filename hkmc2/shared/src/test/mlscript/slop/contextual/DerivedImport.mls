@@ -13,10 +13,14 @@ fixed(List(1))
 
 :e
 fixed(List("late"))
-//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
-//│ ║  l.XX: 	    display(value)
-//│ ║        	    ^^^^^^^^^^^^^^
-//│ ╟── This value reaches the type of the contextual parameter 'element' after its instance was selected; the selected instance of type Show[Int] does not accept it.
+//│ ╔══[COMPILATION ERROR] This expression makes a value reach the type of the contextual parameter 'element' after its instance was selected.
+//│ ║  l.+1: 	fixed(List("late"))
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ╟── The selected instance of type Show[Int] does not accept this value.
+//│ ║  l.+1: 	fixed(List("late"))
+//│ ║        	           ^^^^^^
+//│ ╟── The instance was selected here.
+//│ ║  in mlscript-compile/DerivedLibrary.mls
 //│ ║  l.XX: 	    display(value)
 //│ ║        	    ^^^^^^^^^^^^^^
 //│ ╟── The contextual parameter is declared here.
@@ -24,9 +28,5 @@ fixed(List("late"))
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The selected instance is declared here.
 //│ ║  l.XX: 	    using Show[Int] = Show[Int]("int")
-//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This value is incompatible with the selected instance.
-//│ ║  in DerivedImport.mls:+1
-//│ ║  l.+1: 	fixed(List("late"))
-//│ ╙──      	           ^^^^^^
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = "list(int)"

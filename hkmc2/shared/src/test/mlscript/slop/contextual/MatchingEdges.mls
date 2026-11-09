@@ -69,10 +69,13 @@ unannotated(1)
 
 :e
 unannotated("later")
-//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
-//│ ║  l.XX: 	fun unannotated(value) = accept(value)
-//│ ║        	                         ^^^^^^^^^^^^^
-//│ ╟── This value reaches the type of the contextual parameter 'a' after its instance was selected; the selected instance of type Accept[Int] does not accept it.
+//│ ╔══[COMPILATION ERROR] This expression makes a value reach the type of the contextual parameter 'a' after its instance was selected.
+//│ ║  l.+1: 	unannotated("later")
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The selected instance of type Accept[Int] does not accept this value.
+//│ ║  l.+1: 	unannotated("later")
+//│ ║        	            ^^^^^^^
+//│ ╟── The instance was selected here.
 //│ ║  l.XX: 	fun unannotated(value) = accept(value)
 //│ ║        	                         ^^^^^^^^^^^^^
 //│ ╟── The contextual parameter is declared here.
@@ -80,8 +83,5 @@ unannotated("later")
 //│ ║        	                        ^^^^^^^^^^^^^^^^^^
 //│ ╟── The selected instance is declared here.
 //│ ║  l.XX: 	using Accept[Int] = new IntAccept
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This value is incompatible with the selected instance.
-//│ ║  l.+1: 	unannotated("later")
-//│ ╙──      	            ^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = "int"

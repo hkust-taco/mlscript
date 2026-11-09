@@ -83,6 +83,15 @@ final class NewResolverState(val owner: Elaborator.State):
   def isOwnedSym(symbol: Symbol): Bool = symbol.getState is owner
   private[semantics] val contexts = mutable.Map.empty[(ResolutionContext, TypeSubstitution), ResolutionContext]
   private[semantics] var reporter: Raise | Null = null
+  /** The source term whose subscription by the elaborator is propagating flow, so that a
+    * diagnostic about a value reaching a check can blame the expression that sent it there
+    * (see NewResolver.decideContextualArgument, which reports late contextual values).
+    * Only ResolutionContext.withTrigger writes it: the elaborator sets it while it subscribes
+    * a term it has just created, a subscription nested in that propagation keeps the outermost
+    * term, and contextual sites record it with their pending inputs to reinstate it when they
+    * drive those inputs at settlement. Resolution never reads it; contexts cannot carry it,
+    * as they key the resolver's tables. */
+  private[semantics] var trigger: Opt[Term] = N
   private[semantics] val exposureInputs = mutable.LinkedHashMap.empty[(ShapeIdentity.Key, ResolutionContext), InterfaceExposure.Input]
   /** The overridable members of extensible classes and objects that [[InterfaceExposure]] reached,
     * each with the first exposure path that reached it. Erasure, which knows the parameters an
@@ -377,6 +386,12 @@ final class ResolutionContext private[semantics] (
   def withReporter(raise: Raise): this.type =
     state.reporter = raise
     this
+  /** Run `body` with `trigger` as the propagating source term, unless one is already set. */
+  def withTrigger[A](trigger: Opt[Term])(body: => A): A =
+    if state.trigger.nonEmpty || trigger.isEmpty then body
+    else
+      state.trigger = trigger
+      try body finally state.trigger = N
   def report(diagnostic: Diagnostic): Unit =
     assert(state.reporter != null, "Resolution requires a diagnostic collector")
     state.reporter.nn(diagnostic)
@@ -588,7 +603,9 @@ final class ResolutionContext private[semantics] (
         case _ => ()
       term.contextualSite = site
       state.resolutionSites += site
-      resolver.listenTerm(term)(_ => ())(using this)
+      // The site's driver (see NewResolver.listenContextual) must accept every activation.
+      // An eta-expansion records its synthesized site while a drive runs in some activation.
+      withTrigger(S(term))(resolver.listenTerm(term)(_ => ())(using withInstances(TypeSubstitution.empty)))
 
   /** The references without explicit bindings written in the current block, in elaboration
     * order (see NewResolver.settleUnboundReferences). */
@@ -961,6 +978,13 @@ private[semantics] enum ContextualQuery:
   case Named(cls: ClassLikeDef, positions: Ls[DeclaredType])
   case Parameter(tpe: DeclaredType, symbol: VarSymbol)
 
+/** Whether an instance serves a query. A rejection names a value that the instance does not
+  * accept, if any: a parameter query that no value reaches, or an instance whose type has no
+  * view of the queried class, rejects without one. */
+private[semantics] enum ContextualMatch:
+  case Accepted
+  case Rejected(witness: Opt[TermShape])
+
 private[semantics] final case class NamespaceInstance(
     definition: TermDefinition, annotation: DeclaredType, module: ModuleOrObjectSymbol,
     path: Term, witness: NamespaceWitness)
@@ -1041,7 +1065,8 @@ private[semantics] final class TermShapeHost extends Host[TermShape]:
   */
 private[semantics] final class ContextualWork(val site: ResolutionSite.Contextual):
   val steps = mutable.ArrayBuffer.empty[ContextualStep]
-  val pending = mutable.ArrayBuffer.empty[(TermShape, ResolutionContext)]
+  /** Inputs received before settlement, with their activations and propagating source terms. */
+  val pending = mutable.ArrayBuffer.empty[(TermShape, ResolutionContext, Opt[Term])]
   val inputs = mutable.Set.empty[(ShapeIdentity.Key, TypeSubstitution)]
   val output = new Host[ShapeEvent]:
     def showDbg(using DebugPrinter): Str = "completed contextual values"
