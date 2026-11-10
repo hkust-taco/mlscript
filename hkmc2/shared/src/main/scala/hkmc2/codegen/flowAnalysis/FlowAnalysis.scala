@@ -776,6 +776,7 @@ class FlowConstraintsCollector(
   
   
   private case class Ctx(
+    result: ConsStrat,
     fun: Opt[FunCtx],
     suppressEffect: Bool, // e.g., if @pure
   )
@@ -788,7 +789,7 @@ class FlowConstraintsCollector(
       paramLists.exists(_.paramSyms.contains(sym))
   
   private object Ctx:
-    val default = Ctx(fun = N, suppressEffect = false)
+    val default = Ctx(result = UnknownCons, fun = N, suppressEffect = false)
   
   
   /** [[ConstraintScope]] represents the current scope of constraints being
@@ -948,6 +949,7 @@ class FlowConstraintsCollector(
       assert(s.generatedForFun.flatMap(funToSccRep).contains(groupRep))
       copiesOfStratVar.getOrElseUpdate(s, locally:
         val copy = freshVar(s.name, s.sourceSymbol, cc.forFun)
+        cc.strategies += copy
         callbacks.push: () =>
           for lower <- s.lowerBounds do copy.lowerBounds += duplicateProdStrat(lower)
           for upper <- s.upperBounds do copy.upperBounds += duplicateConsStrat(upper)
@@ -1110,7 +1112,7 @@ class FlowConstraintsCollector(
       cc.constrain(preAnalyzer.res.primitiveStratVar, UnknownCons)
       cc.constrain(UnknownProd, preAnalyzer.res.primitiveStratVar)
       cc.constrain(UnsafeEta, unknownEffect)
-      processBlock(preAnalyzer.pgrm.main)(using cc, UnknownCons, Ctx.default)
+      processBlock(preAnalyzer.pgrm.main)(using cc, Ctx.default)
 
       // this places non-affine constraints correctly:
       // - in mono mode there are no per-scc collectors,
@@ -1198,10 +1200,11 @@ class FlowConstraintsCollector(
           effectParamList)
     
     given ctx: Ctx = Ctx(
+      result = res,
       fun = S(FunCtx(effect, params)), 
       suppressEffect = annotations.exists(_.isInstanceOf[Annot.Pure])
     )
-    processBlock(body)(using cc, res)
+    processBlock(body)
     funValueStrat
 
   private def processFunctionDefn(fun: FunDefn)(using cc: ConstraintScope, ctx: Ctx): Unit =
@@ -1214,10 +1217,11 @@ class FlowConstraintsCollector(
       fun.params match
       case Nil =>
         given ctx: Ctx = Ctx(
+          result = generatedVars(fun.dSym),
           fun = S(FunCtx(generatedEffects(fun.dSym), Nil)), 
           suppressEffect = fun.annotations.exists(_.isInstanceOf[Annot.Pure])
         )
-        processBlock(fun.body)(using cc, generatedVars(fun.dSym))
+        processBlock(fun.body)(using cc, ctx)
       case nel: NELs[?] =>
         val funProdStrat = processFunctionBody(
           s"${fun.dSym.nme}_res",
@@ -1236,9 +1240,9 @@ class FlowConstraintsCollector(
     cls.methods.foreach: fun =>
       cc.constrainOpaque(generatedVars(fun.dSym))
       fun.params.foreach(_.allParams.foreach(p => cc.constrainOpaque(generatedVars(p.sym))))
-      processBlock(fun.body)(using cc, UnknownCons, Ctx(S(FunCtx(cc.variable(unknownEffect), fun.params)), fun.annotations.exists(_.isInstanceOf[Annot.Pure])) /* methods are always considered impure; we don't track their effects */)
-    processBlock(cls.preCtor)(using cc, UnknownCons, Ctx(S(FunCtx(cc.variable(unknownEffect), Nil)), suppressEffect = false) /* FIXME: ctor effects should NOT be discarded */)
-    processBlock(cls.ctor)(using cc, UnknownCons, Ctx(S(FunCtx(cc.variable(unknownEffect), Nil)), suppressEffect = false) /* FIXME: ctor effects should NOT be discarded */)
+      processBlock(fun.body)(using cc, Ctx(UnknownCons, S(FunCtx(cc.variable(unknownEffect), fun.params)), fun.annotations.exists(_.isInstanceOf[Annot.Pure])) /* methods are always considered impure; we don't track their effects */)
+    processBlock(cls.preCtor)(using cc, Ctx(UnknownCons, S(FunCtx(cc.variable(unknownEffect), Nil)), suppressEffect = false) /* FIXME: ctor effects should NOT be discarded */)
+    processBlock(cls.ctor)(using cc, Ctx(UnknownCons, S(FunCtx(cc.variable(unknownEffect), Nil)), suppressEffect = false) /* FIXME: ctor effects should NOT be discarded */)
     cls.companion.foreach: mod =>
       mod.methodKeys.valuesIterator.foreach(constrainOpaqueResult)
       mod.privateFields.foreach: sym => 
@@ -1247,7 +1251,7 @@ class FlowConstraintsCollector(
         cc.constrainOpaque(generatedVars(tsym))
       mod.methods.foreach: fun =>
         processFunctionDefn(fun)
-      processBlock(mod.ctor)(using cc, UnknownCons, Ctx(S(FunCtx(cc.variable(unknownEffect), Nil)), suppressEffect = false) /* FIXME: ctor effects should NOT be discarded */)
+      processBlock(mod.ctor)(using cc, Ctx(UnknownCons, S(FunCtx(cc.variable(unknownEffect), Nil)), suppressEffect = false) /* FIXME: ctor effects should NOT be discarded */)
   
   private def constrainOpaqueResult(r: Result)(using cc: ConstraintScope, ctx: Ctx): Unit =
     cc.constrain(processResult(r), UnknownCons)
@@ -1257,10 +1261,10 @@ class FlowConstraintsCollector(
       ctx.fun.foreach: fun =>
         fun.effect.foreach(effect => cc.constrain(prod, effect))
 
-  private def processBlock(b: Block)(using cc: ConstraintScope, blkRes: ConsStrat, ctx: Ctx): Unit =
+  private def processBlock(b: Block)(using cc: ConstraintScope, ctx: Ctx): Unit =
     val instId = cc.instId
     b match
-    case Return(res) => cc.constrain(processResult(res), blkRes)
+    case Return(res) => cc.constrain(processResult(res), ctx.result)
     case Throw(exc, annotations) =>
       if annotations.exists(_.isInstanceOf[Annot.Pure]) then
         // TODO: the @pure annotation on throw also suppresses the effects of

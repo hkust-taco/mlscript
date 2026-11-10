@@ -323,7 +323,9 @@ length(ping(id(1 :: 2 :: Nil), 3 :: 4 :: Nil))
 //│ deforest > cap_ub_(term:ping,0)_for_ping⁰
 //│ deforest > cap_ub_(term:pong,0)_for_pong¹
 //│ deforest > cap_ub_(term:pong,0)_for_pong⁰
+//│ deforest > ping_for_ping¹
 //│ deforest > ping_for_ping⁰
+//│ deforest > pong_for_pong¹
 //│ deforest > pong_for_pong⁰
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> accumulator syms >>>
