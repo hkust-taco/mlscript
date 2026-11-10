@@ -15,6 +15,10 @@ sealed abstract class FinalDest
 case class FinalDestMatch(dtor: CtorDtorId, sels: Set[CtorDtorId]) extends FinalDest
 case class FinalDestSel(dtors: Set[CtorDtorId], field: SelField) extends FinalDest
 
+extension (f: SelField) def erasedFieldType(using Raise): Opt[ErasedValueType] = f match
+  case tSym: TermSymbol => tSym.erasedType
+  case _: Int => N
+
 class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Config, Elaborator.Ctx)
   extends FlowAnalysisSolverResult:
   given preAnalyzer: FlowPreAnalyzer = constraintSolver.preAnalyzer
@@ -96,12 +100,34 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Con
         if dtor.srcs.contains(UnknownProd)
       yield dtor
 
+    val unconsumed = constraintSolver.collector.allRealCtors.iterator.filter: ctor =>
+      ctor.instantiationId.isDefined && ctor.dests.isEmpty
+
+    // constructors stored in `c`'s field that must stay unfused when `c` is unfused,
+    // as `c`'s fields keep their declared types
+    def storedCtorsKeptUnfused(c: Ctor): Iterator[Ctor] =
+      for
+        (field, arg) <- c.args.iterator
+        stored <- arg match
+          case stored: Ctor => Iterator.single(stored)
+          case v: StratVar => v.lowerBounds.iterator.collect:
+            case stored: Ctor => stored
+          case _ => Iterator.empty
+        // Only match fusion replaces a producer with a closure. Unmergeable producers
+        // are already roots; field-projection fusion stays conservative at storage boundaries.
+        if !stored.dests.exists(_.isInstanceOf[Dtor]) || field.erasedFieldType.exists: tpe =>
+          !ErasedType.needsCast(
+            ErasedType.Function(S(false)).canonicalize,
+            tpe.canonicalize).contains(false)
+      yield stored
+
     val result = FlowWebComputation[Ctor, ConcreteCtorConsumer](
       p => p.dests.collect:
         case c: ConcreteCtorConsumer => c,
       c => c.srcs.collect:
         case p: Ctor => p,
-      prodRoots,
+      storedCtorsKeptUnfused,
+      prodRoots.iterator ++ unconsumed,
       consRoots,
     )
     val toRemoveCtor = result.markedProducers
