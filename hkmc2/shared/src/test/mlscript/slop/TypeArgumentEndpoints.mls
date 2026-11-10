@@ -1,0 +1,72 @@
+:.
+
+// Explicit specializations keep separate bounds when the parameter is both
+// an input annotation and the returned value's interface.
+:expect 1
+class Base(val value: Int)
+class Child(val extra: Int) extends Base(extra)
+private fun identity[A](value: A): A = value
+identity[in Child out Base](Child(1)).value
+//│ = 1
+
+// Reading the result sees only the output bound.
+:e
+identity[in Child out Base](Child(2)).extra
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	identity[in Child out Base](Child(2)).extra
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Value of type 'Base' does not contain member 'extra'
+//│ ║  l.+1: 	identity[in Child out Base](Child(2)).extra
+//│ ╙──      	                      ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A callback supplied for the type parameter must satisfy its input bound,
+// even when the output bound would give that callback a more precise domain.
+:e
+private fun consume[A](callback: A) = ()
+consume[in (Base -> Int) out (Child -> Int)](value => value.extra)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	consume[in (Base -> Int) out (Child -> Int)](value => value.extra)
+//│ ║        	                                                      ^^^^^^^^^^^
+//│ ╟── Value of type 'Base' does not contain member 'extra'
+//│ ║  l.+2: 	consume[in (Base -> Int) out (Child -> Int)](value => value.extra)
+//│ ╙──      	            ^^^^
+
+// A forward alias in a wildcard bound remains a deferred proper type.
+:expect 3
+private fun forward() = identity[in Child out Later](Child(3)).value
+type Later = Base
+forward()
+//│ = 3
+
+// Splicing an array type into a tuple keeps its element's output interface.
+:expect 4
+private fun read(values: [...Array[in Child out Base]]) = values.0.value
+read([Child(4)])
+//│ = 4
+
+// Constraining the same kind of tuple uses the element's input bound.
+:e
+private fun checkTuple(callbacks: [...Array[in (Base -> Int) out (Child -> Int)]]) = ()
+checkTuple([value => value.extra])
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	checkTuple([value => value.extra])
+//│ ║        	                     ^^^^^^^^^^^
+//│ ╟── Value of type 'Base' does not contain member 'extra'
+//│ ║  l.+1: 	private fun checkTuple(callbacks: [...Array[in (Base -> Int) out (Child -> Int)]]) = ()
+//│ ╙──      	                                                ^^^^
+
+// Aligning a variadic interface with a callback's trailing parameter reads
+// the element's output bound, even when its input bound has more members.
+:e
+private fun callbackTail(callback: (Base, ...Array[in Child out Base]) -> Int) = ()
+callbackTail((...values, last) => last.extra)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	callbackTail((...values, last) => last.extra)
+//│ ║        	                                  ^^^^^^^^^^
+//│ ╟── Value of type 'Base' does not contain member 'extra'
+//│ ║  l.+1: 	private fun callbackTail(callback: (Base, ...Array[in Child out Base]) -> Int) = ()
+//│ ║        	                                    ^^^^
+//│ ╟── Value of type 'Base' does not contain member 'extra'
+//│ ║  l.+1: 	private fun callbackTail(callback: (Base, ...Array[in Child out Base]) -> Int) = ()
+//│ ╙──      	                                                                ^^^^

@@ -1,0 +1,39 @@
+:.
+#lang(eagerResolution: true)
+
+class Color(val n: Int)
+module Color with
+  val Palette = [Color(3)]
+fun color(c: Color) = c.n
+
+// The required result type supplies the namespace for a chain's root. A qualified
+// checked index and an implicit tuple selection both find the intended element.
+:expect [3, 3]
+[color(Color.Palette.[0]), color(.Palette.0)]
+//│ = [3, 3]
+
+// Checked indexing is a selection too: it forwards the namespace probe of its prefix
+// to its result, while observing the concrete array elements.
+:expect 3
+color(.Palette.[0])
+//│ = 3
+
+module OtherArrays with
+  val Palette = [Color(99)]
+
+// Replacing the tuple selection with a checked index does not change the namespace,
+// which takes precedence over a different wildcard member.
+:expect [3, 3]
+fun staticIndex() =
+  open OtherArrays
+  color(Palette.0)
+fun checkedIndex(i: Int) =
+  open OtherArrays
+  color(Palette.[i])
+[staticIndex(), checkedIndex(0)]
+//│ = [3, 3]
+
+// Dynamic accesses forward the probe of their prefix too.
+:expect 3
+color(.Palette![0])
+//│ = 3

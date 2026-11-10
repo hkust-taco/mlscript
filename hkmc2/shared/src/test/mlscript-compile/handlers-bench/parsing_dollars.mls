@@ -1,0 +1,57 @@
+#lang(0.3.x)
+#config(effectHandlers: Some(EffectHandlers()))
+
+import "./BaseEffects.mls"
+open BaseEffects
+open ParsingDollarsEffects
+
+module parsing_dollars with ...
+
+val newLine = 10
+fun isNewLine(c: Chr) = c === 10
+val dollar = 36
+fun isDollar(c: Chr) = c === 36
+
+fun parse(a: Int, r: Read, e: Emit, s: Stop): () =
+  let c = r.read()
+  if isDollar(c) then
+    parse(a + 1, r, e, s)
+  else if isNewLine(c) then
+    e.emit(a)
+    parse(0, r, e, s)
+  else
+    s.stop()
+
+fun sum(action: Function[Emit, ()]) =
+  let s = 0
+  handle h = Emit with
+    fun emit(e)(k) =
+      set s += e
+      k(())
+  in action(h)
+  s
+
+fun catch(action: Function[Stop, ()]) =
+  handle h = Stop with
+    fun stop()(_) = ()
+  action(h)
+
+fun feed(n: Int, action: Function[Read, ()], e: Emit, s: Stop) =
+  let i = 0
+  let j = 0
+  handle h = Read with
+    fun read()(k) =
+      if i > n then s.stop()
+      else if j === 0 then
+        set i += 1
+        set j = i
+        k(newLine)
+      else
+        set j -= 1
+        k(dollar)
+  action(h)
+
+fun run(n: Int) =
+  sum of (e: Emit) =>
+    catch of (s: Stop) =>
+      feed(n, (r: Read) => parse(0, r, e, s), e, s)

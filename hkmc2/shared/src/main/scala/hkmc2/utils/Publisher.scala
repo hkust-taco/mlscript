@@ -46,8 +46,32 @@ final class Candidates[A](key: CandidateKey[A]) extends Iterable[A]:
   override def size: Int = ordered.size
   override def knownSize: Int = ordered.size
   /** The candidates present when iteration starts. */
-  def snapshot: Iterator[A] = Iterator.range(0, ordered.size).map(ordered(_))
+  def snapshot: Iterator[A] =
+    val limit = ordered.size
+    new Iterator[A]:
+      private var index = 0
+      def hasNext: Bool = index < limit
+      def next(): A =
+        if !hasNext then throw new NoSuchElementException("next on empty candidate iterator")
+        val value = ordered(index)
+        index += 1
+        value
   def iterator: Iterator[A] = snapshot
+  // Callbacks can publish into this buffer. Capture the initial bound for every
+  // ordinary traversal, so publication delivers new candidates only once.
+  override def foreach[U](f: A => U): Unit =
+    val limit = ordered.size
+    var index = 0
+    while index < limit do
+      f(ordered(index))
+      index += 1
+  override def exists(p: A => Bool): Bool =
+    val limit = ordered.size
+    var index = 0
+    while index < limit do
+      if p(ordered(index)) then return true
+      index += 1
+    false
   /** Also visits candidates appended by `f`. */
   def foreachGrowing[U](f: A => U): Unit =
     var i = 0
@@ -102,7 +126,7 @@ object Publisher:
     def replay(listener: ShapeListener[A])(using state: ResolutionContext): Unit =
       val candidates = state.local(this).shapes
       // Apply the contextual listener, rather than discard a contextual thunk.
-      candidates.snapshot.foreach[Unit](shape => listener(shape))
+      candidates.foreach[Unit](shape => listener(shape))
     def subscribe(listener: ShapeListener[A])(using ResolutionContext): Unit =
       addListener(listener)
       replay(listener)

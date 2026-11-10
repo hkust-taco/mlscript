@@ -17,9 +17,9 @@ class Empty {
   fun answer() = 42
 }
 
-:expect [42, 42]
-[(new Empty).answer(), new Empty().answer()]
-//│ = [42, 42]
+:expect [42, 42, 42]
+[(new Empty).answer(), new Empty().answer(), (new Empty() with {}).answer()]
+//│ = [42, 42, 42]
 
 :e
 fun extraArgument() = new Empty(1)
@@ -167,9 +167,6 @@ fun invalidRefinement() = (new Empty(1) with {})
 //│ ╟── Class value expected 0 arguments, but got 1
 //│ ║  l.XX: 	class Empty {
 //│ ╙──      	^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Too many parameter lists for parent class
-//│ ║  l.+1: 	fun invalidRefinement() = (new Empty(1) with {})
-//│ ╙──      	                           ^^^^^^^^^^^^^^^^^
 
 :e
 class InvalidParent extends Empty(1)
@@ -179,9 +176,6 @@ class InvalidParent extends Empty(1)
 //│ ╟── Class value expected 0 arguments, but got 1
 //│ ║  l.XX: 	class Empty {
 //│ ╙──      	^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Too many parameter lists for parent class
-//│ ║  l.+1: 	class InvalidParent extends Empty(1)
-//│ ╙──      	                            ^^^^^^^^
 
 
 // Foreign constructors use their declared parameter lists. Their optional slots

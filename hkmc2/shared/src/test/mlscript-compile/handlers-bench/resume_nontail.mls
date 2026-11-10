@@ -1,0 +1,27 @@
+#lang(0.3.x)
+#config(effectHandlers: Some(EffectHandlers()))
+
+import "./BaseEffects.mls"
+open BaseEffects
+open NontailEffects
+
+module resume_nontail with ...
+
+fun abs(i: Int) = if i < 0 then -i else i
+
+fun loop(i: Int, s: Int, h: Operator) =
+  if i === 0 then s else
+    h.operator(i)
+    loop(i - 1, s, h)
+
+fun run_(n: Int, s: Int) =
+  handle h = Operator with
+    fun operator(x)(k) =
+      let y = k(())
+      abs(x - 503 * y + 37) % 1009
+  loop(n, s, h)
+
+fun run(n: Int) =
+  fun step(l, s) =
+    if l === 0 then s else step(l - 1, run_(n, s))
+  step(1000, 0)

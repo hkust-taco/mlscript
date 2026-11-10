@@ -1,3 +1,4 @@
+:.
 :js
 :effectHandlers
 :lift
@@ -23,10 +24,13 @@ object Lol with
 :e
 :re
 Lol.x
-//│ ╔══[COMPILATION ERROR] Object 'Lol' does not contain member 'x'
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+1: 	Lol.x
-//│ ╙──      	   ^^
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
+//│ ║        	^^^^^
+//│ ╟── Object 'Lol' does not contain member 'x'
+//│ ║  l.XX: 	object Lol with
+//│ ╙──      	^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 object Lol with
@@ -42,10 +46,13 @@ object Lol with
 :e
 :re
 Lol.x
-//│ ╔══[COMPILATION ERROR] Object 'Lol' does not contain member 'x'
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+1: 	Lol.x
-//│ ╙──      	   ^^
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
+//│ ║        	^^^^^
+//│ ╟── Object 'Lol' does not contain member 'x'
+//│ ║  l.XX: 	object Lol with
+//│ ╙──      	^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 data class Lol() with
@@ -61,8 +68,14 @@ let oops = Lol()
 //│ > A
 //│ oops = Lol()
 
-:re
+:e
 oops.x
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	oops.x
+//│ ║        	^^^^^^
+//│ ╟── Instance of class 'Lol' does not contain member 'x'
+//│ ║  l.XX: 	let oops = Lol()
+//│ ╙──      	           ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

@@ -303,7 +303,7 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
           definition(companion) match
             case copy: CompanionValue => copy
             case _ => lastWords("A cloned companion must remain a value definition")
-        val copy = source.copy(sym = source.sym.subst, bsym = source.bsym.subst,
+        val copy = source.copy(owner = source.owner.map(_.subst), sym = source.sym.subst, bsym = source.bsym.subst,
           tparams = source.tparams.map(scope.typeParameter), rhs = source.rhs.map(scope.term),
           companion = companion, annotations = source.annotations.map(scope.annotation))(source.toLoc, source.headerLoc)
         copy.sym.defn = S(copy)
@@ -511,11 +511,16 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
       case term: NewSel => return cloneSel(term)
       case term @ UnresolvedRef(prefixes, id) =>
         val clonedPrefixes = prefixes.map(_.cloned)
-        val copy = UnresolvedRef(clonedPrefixes, id)(term.resSym)
+        val clonedNamespaces = term.namespacePrefixes.map(_.cloned)
+        val copy = UnresolvedRef(clonedPrefixes, id)(term.resSym, term.lookup)
         def cloneReceiver(receiver: Term): Term =
           val index = prefixes.indexWhere(_ is receiver)
-          assert(index >= 0, "A wildcard candidate must belong to an opened prefix")
-          clonedPrefixes(index)
+          if index >= 0 then clonedPrefixes(index)
+          else
+            val namespace = term.namespacePrefixes.indexWhere(_ is receiver)
+            assert(namespace >= 0, "A candidate must belong to an opened prefix or an implicit namespace")
+            clonedNamespaces(namespace)
+        copy.namespacePrefixes = clonedNamespaces
         copy.resolvedMembers = term.resolvedMembers.map((receiver, member) => cloneReceiver(receiver) -> member.subst)
         copy.dynamicPrefixes = term.dynamicPrefixes.map(cloneReceiver)
         copyNewResolution(term, copy)
@@ -613,7 +618,7 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
           // Abortive handlers also expose these same definitions in their synthetic
           // class body. They are one binding, with the resumption symbol in scope.
           scope.definitions(Identity(handler.td)) = definition
-          HandlerTermDefinition(handlerScope.mapVarSym(handler.resumeSym), definition)
+          HandlerTermDefinition(handlerScope.mapVarSym(handler.resumeSym), definition, handler.annots)
         derivedClsSym.defn.foreach(scope.definition)
         Handle(scope.mapLocal(lhs), rhs.cloned, args.map(_.cloned), scope.mapClsSym(derivedClsSym), handlers, scope.term(body))(handle.isAbortive)
     copyMetadata(source, that)

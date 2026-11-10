@@ -1,0 +1,24 @@
+#lang(0.3.x)
+#config(effectHandlers: Some(EffectHandlers()))
+
+import "./BaseEffects.mls"
+open BaseEffects
+open CountdownEffects
+
+module countdown with ...
+
+fun countdown(h: Eff) =
+  let i = h.get()
+  if i === 0 then i
+  else
+    h.setVal(i - 1)
+    countdown(h)
+
+fun run(n) =
+  let s = n
+  handle h = Eff with
+    fun get()(k) = k(s)
+    fun setVal(i)(k) =
+      set s = i
+      k(())
+  countdown(h)
