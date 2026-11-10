@@ -1,0 +1,11 @@
+:.
+:js
+:effectHandlers
+:lift
+
+// Note: computes the sum of positive integers <= the input
+
+import "../../mlscript-compile/handlers-bench/parsing_dollars.mls"
+parsing_dollars.run(10)
+//│ = 55
+

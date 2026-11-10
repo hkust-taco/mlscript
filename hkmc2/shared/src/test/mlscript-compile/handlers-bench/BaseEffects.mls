@@ -1,0 +1,40 @@
+#lang(0.3.x)
+
+import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Predef.mls"
+open Predef
+
+module BaseEffects with ...
+
+module CountdownEffects with
+  abstract class Eff with
+    fun get(): Int
+    fun setVal(x: Int): ()
+
+module GeneratorEffects with
+  abstract class Eff with
+    fun yld(x: Int): ()
+
+module SieveEffects with
+  abstract class Prime with
+    fun isPrime(e: Int): Bool
+
+module IteratorEffects with
+  abstract class Emit with
+    fun emit(e: Int): ()
+
+module ParsingDollarsEffects with
+  type Chr = Int
+  abstract class Read with
+    fun read(): Chr
+  abstract class Emit with
+    fun emit(e: Int): ()
+  abstract class Stop with
+    fun stop(): Nothing
+
+module ProductEarlyEffects with
+  abstract class Abort with
+    fun done[A](i: Int): A
+
+module NontailEffects with
+  abstract class Operator with
+    fun operator(x: Int): ()

@@ -126,7 +126,7 @@ intersection(answer: 5)
 private fun absent(value: Hidden | {other: Int}) =
   open value
   answer
-//│ ╔══[COMPILATION ERROR] Name not found in wildcard opens: answer
+//│ ╔══[COMPILATION ERROR] Name not found: answer
 //│ ║  l.+3: 	  answer
 //│ ╙──      	  ^^^^^^
 

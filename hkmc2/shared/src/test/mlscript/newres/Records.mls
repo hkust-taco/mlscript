@@ -299,7 +299,7 @@ fun allMissingOpen() =
   open unrelated
   nonexistent
 allMissingOpen()
-//│ ╔══[COMPILATION ERROR] Name not found in wildcard opens: nonexistent
+//│ ╔══[COMPILATION ERROR] Name not found: nonexistent
 //│ ║  l.+4: 	  nonexistent
 //│ ╙──      	  ^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

@@ -19,11 +19,11 @@ fun typeTerm(_, set ctx) =
 //│ ║  l.+1: 	fun typeTerm(_, set ctx) =
 //│ ╙──      	                    ^^^
 //│ ╔══[COMPILATION ERROR] Name not found: ctx
-//│ ║  l.+2: 	  print(ctx)
-//│ ╙──      	        ^^^
-//│ ╔══[COMPILATION ERROR] Name not found: ctx
 //│ ║  l.+3: 	  ctx = 123
 //│ ╙──      	  ^^^
+//│ ╔══[COMPILATION ERROR] Name not found: ctx
+//│ ║  l.+2: 	  print(ctx)
+//│ ╙──      	        ^^^
 
 fun typeTerm(_, let ctx) =
   ctx = 123

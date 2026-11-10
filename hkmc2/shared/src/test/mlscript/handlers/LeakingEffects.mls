@@ -1,17 +1,18 @@
+:.
 :js
 :effectHandlers
 :lift
 
 
-abstract class Effect[A] with
-  fun perform(arg: A): A
+abstract class Effect[A, B] with
+  fun perform(arg: A): B
 
 
 let
   xs = mut []
   count = 0
 fun main() =
-  handle g = Effect with
+  handle g = Effect[Str, Int] with
     fun perform(arg1)(k1) =
       print("B " + arg1)
       xs.push(k1)
@@ -26,7 +27,7 @@ while
   let f = xs.pop()
   f !== () then
     set count += 1
-    f(count)
+    f{as Function}(count)
     print("?")
 //│ > B a
 //│ > [fun]
@@ -58,13 +59,13 @@ while
 // g is non-resumptive, which means g.perform("a") does not resume
 // hence it should exit the entire handle block with the return value of xs.push(k1)
 :expect 1
-handle h = Effect with
+handle h = Effect[Str, Effect[Str, Int]] with
   fun perform(arg)(k) =
     print("A " + arg)
     let
       xs = mut []
       count = 0
-    handle g = Effect with
+    handle g = Effect[Str, Int] with
       fun perform(arg1)(k1) =
         print("B " + arg + " " + arg1)
         xs.push(k1)
@@ -73,7 +74,7 @@ handle h = Effect with
       null then print("Done.")
       f then
         set count += 1
-        f(count)
+        f{as Function}(count)
 let g = h.perform("hi")
 print(g.perform("a"))
 print("—")
