@@ -16,7 +16,8 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
   extends PolyInstantiationRewrite(solver.constraintSolver):
   
   type MatchOrLabelId = ResultId | LabelSymbol
-  type BranchId = CtorDtorId -> Opt[CtorCls]
+  /** Identifies the specialized branch function for a match and a constructor. */
+  type BranchId = CtorDtorId -> CtorCls
   type LabelId = LabelSymbol -> InstantiationId
   type RestFunId = CtorDtorId | LabelId
   
@@ -39,9 +40,6 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
   extension (f: SelField) def fieldName: String = f match
     case tSym: TermSymbol => tSym.nme
     case n: Int => n.toString
-  extension (f: SelField) def erasedFieldType: Opt[ErasedValueType] = f match
-    case tSym: TermSymbol => tSym.erasedType
-    case _: Int => N
 
   private def getParentLabelOrMatchesAndRestBefore(
     matchOrLabelId: MatchOrLabelId
@@ -94,7 +92,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
   val restFunSyms = LinkedHashMap.empty[RestFunId, (BlockMemberSymbol, TermSymbol)]
   
   // original bodies of a branch
-  val branchOriginalBodies = MutMap.empty[ResultId -> Opt[CtorCls], Block]
+  val branchOriginalBodies = MutMap.empty[ResultId -> CtorCls, Block]
   // original rest function bodies and their parent matches (if any)
   val restOriginalBodiesAndParentRest = MutMap.empty[MatchOrLabelId, Block -> Opt[MatchOrLabelId]]
   
@@ -121,27 +119,20 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
           )
         
         // ctor dest branch function computations
-        val matchBlk = pre.res.matchScrutToMatchBlock(dest._1)
-        val (whichBranch, whichBranchPreBody) =
-          val tmp =
-            val ctorCls = ctorInfo.ctor
-            matchBlk.arms
-              .find: (cse, _) =>
-                cse match
-                case Case.Cls(cls, path) => cls === ctorCls
-                case Case.Tup(len, inf) => len === ctorCls
-                case _ => die
-              .map(b => ctorCls -> b._2)
-          tmp.map(_._1) ->
-          tmp.fold(matchBlk.dflt.get)(_._2)
+        val whichBranch = ctorInfo.ctor
+        val whichBranchPreBody =
+          solver.selectedBranch(ctorInfo.ctor, dest).getOrElse:
+            lastWords("Fusion requires a statically determined match branch")
         val destBranchId: BranchId = dest -> whichBranch
         // identify the dest branchid for a ctor
         ctorWhichBranch(ctor) = destBranchId
         // compute the function symbols for branch funs
+        // Two constructors can select the same default arm but pass different fields to it.
+        // Each constructor therefore needs its own branch function.
         branchFunSyms.getOrElseUpdate(
           destBranchId,
           locally:
-            val branchName = whichBranch.fold("_dflt")(c => s"_${c.ctorClsName}")
+            val branchName = s"_${whichBranch.ctorClsName}"
             val scrutName = dest._1.getReferredSym.nme
             val branchFnNme = s"${dest.instId.mkFunName}$$$scrutName$branchName"
             new BlockMemberSymbol(branchFnNme, Nil, true)

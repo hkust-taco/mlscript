@@ -15,6 +15,10 @@ sealed abstract class FinalDest
 case class FinalDestMatch(dtor: CtorDtorId, sels: Set[CtorDtorId]) extends FinalDest
 case class FinalDestSel(dtors: Set[CtorDtorId], field: SelField) extends FinalDest
 
+extension (f: SelField) def erasedFieldType(using Raise): Opt[ErasedValueType] = f match
+  case tSym: TermSymbol => tSym.erasedType
+  case _: Int => N
+
 class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Config, Elaborator.Ctx)
   extends FlowAnalysisSolverResult:
   given preAnalyzer: FlowPreAnalyzer = constraintSolver.preAnalyzer
@@ -42,6 +46,32 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Con
         selExpr.getResult.matches:
           case TrackableSelect(from, _, _) => from === dtor.exprId.getResult
   
+  /** Determines whether a constructor's result satisfies a match case without creating the value.
+    * Returns `N` when its class or tuple length does not determine the answer.
+    */
+  private def matches(ctor: CtorCls, cse: Case): Opt[Bool] = (ctor, cse) match
+    case (cls: TypeSymbol, Case.Cls(expected: TypeSymbol, _)) => ErasedType.isSubtypeOf(cls, expected)
+    case (_: Int, Case.Cls(expected: TypeSymbol, _)) => ErasedType.isSubtypeOf(summon[Elaborator.Ctx].builtins.Array, expected)
+    case (length: Int, Case.Tup(expected, inf)) => S(if inf then length >= expected else length == expected)
+    // Objects and tuples cannot satisfy a primitive literal case.
+    case (_, Case.Lit(_)) => S(false)
+    case _ => N
+
+  /** Finds the body selected by match `dtor` for a value constructed by `ctor`.
+    * This lets fusion replace the match with the selected body.
+    * Returns `N` if the choice is unknown, or an empty block if the match falls through.
+    */
+  def selectedBranch(ctor: CtorCls, dtor: CtorDtorId): Opt[Block] =
+    val matched = preAnalyzer.res.matchScrutToMatchBlock(dtor.exprId)
+    def loop(arms: Ls[Case -> Block]): Opt[Block] = arms match
+      case (cse, body) :: rest => matches(ctor, cse) match
+        case S(true) => S(body)
+        case S(false) => loop(rest)
+        // An earlier case may still win even when a later case is known to match.
+        case N => N
+      case Nil => S(matched.dflt.getOrElse(End()))
+    loop(matched.arms)
+
   val finalCtorDests = LinkedHashMap.empty[CtorDtorId, FinalDest]
   val finalDtorSrcs = LinkedHashMap.empty[CtorDtorId, Set[CtorDtorId]]
   val fusingCtorInfo = MutMap.empty[CtorDtorId, Ctor]
@@ -56,17 +86,25 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Con
       ctor.instId :: dtor.instId :: Nil
 
   locally {
-    def mergeDests(dests: Set[ConcreteCtorConsumer | MarkerConsStrat]): Opt[FinalDest] =
+    // TODO: improve this code – inefficient (useless intermediate sets) and nondeterministic (set `head` access)
+    def mergeDests(ctor: Ctor, dests: Set[ConcreteCtorConsumer | MarkerConsStrat]): Opt[FinalDest] =
       def selsSelectingTheSameSymbol(sels: Set[FieldSel]) =
         sels.map(s => s.field).size == 1
-      if dests.exists(_.isInstanceOf[MarkerConsStrat]) then
+      val canSkipConstruction = ctor.exprId.getResult match
+        // Fusion omits the constructor body and qualifier, so neither may have effects.
+        // Matching argument counts prevents the rewrite from dropping argument evaluations.
+        case CtorProducer(_, args, selectedFrom) => args.length == ctor.args.length &&
+          selectedFrom.forall(_.isPure) && ConstructorElision.isHarmless(ctor.ctor)
+        case _ => false
+      if !canSkipConstruction || dests.exists(_.isInstanceOf[MarkerConsStrat]) then
         N
       else
         val (dtors, sels) = dests.partitionMap:
           case d: Dtor => Left(d)
           case fs: FieldSel => Right(fs)
           case _ => die
-        if dtors.size == 0 && selsSelectingTheSameSymbol(sels) then
+        if sels.nonEmpty && !ConstructorElision.preservesParameterFields(ctor) then N
+        else if dtors.size == 0 && selsSelectingTheSameSymbol(sels) then
           S(FinalDestSel(
             sels.map(_.concreteId),
             sels.head.field
@@ -77,7 +115,7 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Con
           if selAndDtorIsSameConsumer(
             dtor.concreteId,
             sels.map(s => s.concreteId)
-          ) then
+          ) && selectedBranch(ctor.ctor, dtor.concreteId).isDefined then
             S(FinalDestMatch(
               dtor.concreteId,
               sels.map(_.concreteId)
@@ -88,7 +126,7 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Con
     val prodRoots =
       for
         ctor <- constraintSolver.ctorsWithDests
-        if mergeDests(ctor.dests.toSet).isEmpty
+        if mergeDests(ctor, ctor.dests.toSet).isEmpty
       yield ctor
     val consRoots =
       for
@@ -96,12 +134,34 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Con
         if dtor.srcs.contains(UnknownProd)
       yield dtor
 
+    val unconsumed = constraintSolver.collector.allRealCtors.iterator.filter: ctor =>
+      ctor.instantiationId.isDefined && ctor.dests.isEmpty
+
+    // constructors stored in `c`'s field that must stay unfused when `c` is unfused,
+    // as `c`'s fields keep their declared types
+    def storedCtorsKeptUnfused(c: Ctor): Iterator[Ctor] =
+      for
+        (field, arg) <- c.args.iterator
+        stored <- arg match
+          case stored: Ctor => Iterator.single(stored)
+          case v: StratVar => v.lowerBounds.iterator.collect:
+            case stored: Ctor => stored
+          case _ => Iterator.empty
+        // Only match fusion replaces a producer with a closure. Unmergeable producers
+        // are already roots; field-projection fusion stays conservative at storage boundaries.
+        if !stored.dests.exists(_.isInstanceOf[Dtor]) || field.erasedFieldType.exists: tpe =>
+          !ErasedType.needsCast(
+            ErasedType.Function(S(false)).canonicalize,
+            tpe.canonicalize).contains(false)
+      yield stored
+
     val result = FlowWebComputation[Ctor, ConcreteCtorConsumer](
       p => p.dests.collect:
         case c: ConcreteCtorConsumer => c,
       c => c.srcs.collect:
         case p: Ctor => p,
-      prodRoots,
+      storedCtorsKeptUnfused,
+      prodRoots.iterator ++ unconsumed,
       consRoots,
     )
     val toRemoveCtor = result.markedProducers
@@ -111,7 +171,7 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Con
       ctor <- constraintSolver.ctorsWithDests
       if !toRemoveCtor(ctor)
     do
-      finalCtorDests(ctor.concreteId) = mergeDests(ctor.dests.toSet).get
+      finalCtorDests(ctor.concreteId) = mergeDests(ctor, ctor.dests.toSet).get
       fusingCtorInfo(ctor.concreteId) = ctor
     for
       dtor <- constraintSolver.consumersWithSrcs

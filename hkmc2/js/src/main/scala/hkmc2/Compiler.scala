@@ -55,11 +55,22 @@ class Compiler(using cctx: CompilerCtx):
     .toJSArray
   
   @JSExport
-  def compile(filePath: Str): js.Array[js.Dynamic] =
-    compiler.compileModule(Path(filePath))
+  def compile(filePath: Str): CompilationResult =
+    val written = compiler.compileModule(Path(filePath))
     val perFileDiagnostics = collectDiagnostics()
     pathDiagnosticsMap = MutMap.empty
-    perFileDiagnostics
+    new CompilationResult:
+      val compiled = written
+      val diagnostics = perFileDiagnostics
+
+/** The result of [[Compiler.compile]], a plain JavaScript object. */
+trait CompilationResult extends js.Object:
+  /** Whether the requested module's code was emitted (see `MLsCompiler.compileModule`); a diagnostic loader does not count.
+    * A request that reuses a cached WASM artifact with errors reports no diagnostics, so only this distinguishes it
+    * from a successful compilation. */
+  val compiled: Bool
+  /** The diagnostics reported by this request, grouped by file, in the order in which the files first reported one. */
+  val diagnostics: js.Array[js.Dynamic]
 
 @JSExportTopLevel("Paths")
 final class Paths(prelude: Str, runtime: Str, runtimeSource: Str, term: Str) extends MLsCompiler.Paths:

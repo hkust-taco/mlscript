@@ -81,9 +81,6 @@ foo.Foo#m()
 //│ ╔══[COMPILATION ERROR] Name not found: Foo
 //│ ║  l.+1: 	foo.Foo#m()
 //│ ╙──      	   ^^^^
-//│ ╔══[COMPILATION ERROR] Cannot resolve the projection class
-//│ ║  l.+1: 	foo.Foo#m()
-//│ ╙──      	   ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
@@ -118,17 +115,11 @@ foo.M.Foo#m()
 //│ ╟── Instance of class 'Foo' does not contain member 'M'
 //│ ║  l.XX: 	let foo = M.Foo(123)
 //│ ╙──      	          ^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Cannot resolve the projection class
-//│ ║  l.+1: 	foo.M.Foo#m()
-//│ ╙──      	     ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 Foo::m
 //│ ╔══[COMPILATION ERROR] Name not found: Foo
-//│ ║  l.+1: 	Foo::m
-//│ ╙──      	^^^
-//│ ╔══[COMPILATION ERROR] Cannot resolve the projection class
 //│ ║  l.+1: 	Foo::m
 //│ ╙──      	^^^
 //│ = fun
@@ -138,9 +129,6 @@ Foo::m
 :noInline
 Foo::n(foo, 2)
 //│ ╔══[COMPILATION ERROR] Name not found: Foo
-//│ ║  l.+1: 	Foo::n(foo, 2)
-//│ ╙──      	^^^
-//│ ╔══[COMPILATION ERROR] Cannot resolve the projection class
 //│ ║  l.+1: 	Foo::n(foo, 2)
 //│ ╙──      	^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————

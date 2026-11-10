@@ -5,7 +5,7 @@ import org.scalajs.linker.interface.OutputPatterns
 enablePlugins(ScalaJSPlugin)
 
 val scala3Version = "3.8.4"
-val directoryWatcherVersion = "0.18.0"
+val directoryWatcherVersion = "0.19.0"
 val scalaTestVersion = "3.2.20"
 
 ThisBuild / scalaVersion     := "2.13.18"
@@ -21,6 +21,17 @@ ThisBuild / scalacOptions ++= Seq(
   if (insideCI.value) "-Wconf:any:error"
   else                "-Wconf:any:warning",
 )
+
+// Published dependencies (including ScalaTest, fansi, and better-files) still use
+// sun.misc.Unsafe for Scala 3 lazy vals. Temporarily suppress JDK 24+ warnings until
+// the dependencies and their transitives ship VarHandle-based implementations:
+// https://github.com/scalatest/scalatest/issues/2448
+// .sbtopts handles sbt itself; forked Test / run runners need this option separately.
+// Older JDKs need no suppression and do not all recognize the option.
+ThisBuild / Test / run / javaOptions ++= {
+  if (scala.util.Properties.isJavaAtLeast("24")) "--sun-misc-unsafe-memory-access=allow" :: Nil
+  else Nil
+}
 
 // CI runners have few physical cores. Compile tests have a wall-clock time limit
 // (see TimeOutTests), which measures contention as much as compilation time when
@@ -54,9 +65,9 @@ lazy val hkmc2 = crossProject(JSPlatform, JVMPlatform).in(file("hkmc2"))
     
     libraryDependencies += "io.methvin" % "directory-watcher" % directoryWatcherVersion,
     libraryDependencies += "io.methvin" %% "directory-watcher-better-files" % directoryWatcherVersion,
-    libraryDependencies += "com.lihaoyi" %%% "fansi" % "0.5.0", // Scala.js or Scala-Native
-    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.4.2", // Scala.js / Scala Native
-    libraryDependencies += "com.lihaoyi" %% "os-lib" % "0.9.3",
+    libraryDependencies += "com.lihaoyi" %%% "fansi" % "0.5.1", // Scala.js or Scala-Native
+    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.4.4", // Scala.js / Scala Native
+    libraryDependencies += "com.lihaoyi" %% "os-lib" % "0.11.10",
     
     libraryDependencies += "org.scalactic" %%% "scalactic" % scalaTestVersion,
     libraryDependencies += "org.scalatest" %%% "scalatest" % scalaTestVersion % "test",
@@ -75,7 +86,7 @@ lazy val hkmc2 = crossProject(JSPlatform, JVMPlatform).in(file("hkmc2"))
       _.withModuleKind(ModuleKind.ESModule)
         .withOutputPatterns(OutputPatterns.fromJSFile("MLscript.mjs"))
     },
-    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.2.0",
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.8.1",
   )
   .dependsOn(core)
 
@@ -125,8 +136,13 @@ def hkmc2TestSubproject(dirName: String, compileRunner: Option[String], diffRunn
 }
 
 lazy val hkmc2NofibTests = hkmc2TestSubproject("hkmc2NofibTests", Some("NofibCompileTestRunner"), "NofibDiffTestRunner")
+lazy val hkmc2HandlerTests = hkmc2TestSubproject("hkmc2HandlerTests", Some("HandlerCompileTestRunner"), "HandlerDiffTestRunner")
 lazy val hkmc2AppsTests = hkmc2TestSubproject("hkmc2AppsTests", Some("AppsCompileTestRunner"), "AppsDiffTestRunner")
 lazy val hkmc2WasmTests = hkmc2TestSubproject("hkmc2WasmTests", Some("WasmCompileTestRunner"), "WasmDiffTestRunner")
+  .settings(
+    // WASM loaders import RuntimeWasm.mjs, which the main compilation tests generate.
+    Test / test := (Test / test).dependsOn(hkmc2JVM / Test / test).value,
+  )
 lazy val hkmc2SlopTests = hkmc2TestSubproject("hkmc2SlopTests", None, "SlopDiffTestRunner")
   .settings(
     // These worksheets load main-suite fixtures such as Iter.mjs and the Wasm.mjs
@@ -152,6 +168,7 @@ lazy val hkmc2MostTests = project.in(file("hkmc2MostTests"))
     Test / test := (
       (hkmc2DiffTests / Test / test)
         .dependsOn(hkmc2NofibTests / Test / test)
+        .dependsOn(hkmc2HandlerTests / Test / test)
         .dependsOn(hkmc2AppsTests / Test / test)
         .dependsOn(hkmc2WasmTests / Test / test)
         .dependsOn(hkmc2SlopTests / Test / test)
@@ -164,6 +181,7 @@ lazy val hkmc2AllTests = project.in(file("hkmc2AllTests"))
     Test / test := (
       (hkmc2DiffTests / Test / test)
         .dependsOn(hkmc2NofibTests / Test / test)
+        .dependsOn(hkmc2HandlerTests / Test / test)
         .dependsOn(hkmc2AppsTests / Test / test)
         .dependsOn(hkmc2WasmTests / Test / test)
         .dependsOn(hkmc2SlopTests / Test / test)
@@ -179,12 +197,14 @@ addCommandAlias("watch", "~hkmc2DiffTests/Test/run")
 // Diff-tests
 addCommandAlias("dtest", "hkmc2DiffTests/testOnly hkmc2.DiffTestRunner -- -z")
 addCommandAlias("ndtest", "hkmc2NofibTests/testOnly hkmc2.NofibDiffTestRunner -- -z")
+addCommandAlias("hdtest", "hkmc2HandlerTests/testOnly hkmc2.HandlerDiffTestRunner -- -z")
 addCommandAlias("adtest", "hkmc2AppsTests/testOnly hkmc2.AppsDiffTestRunner -- -z")
 addCommandAlias("wdtest", "hkmc2WasmTests/testOnly hkmc2.WasmDiffTestRunner -- -z")
 addCommandAlias("sdtest", "hkmc2SlopTests/testOnly hkmc2.SlopDiffTestRunner -- -z")
 // Compilation tests
 addCommandAlias("ctest", "hkmc2JVM/testOnly hkmc2.CompileTestRunner -- -z")
 addCommandAlias("cntest", "hkmc2NofibTests/testOnly hkmc2.NofibCompileTestRunner -- -z")
+addCommandAlias("chtest", "hkmc2HandlerTests/testOnly hkmc2.HandlerCompileTestRunner -- -z")
 addCommandAlias("catest", "hkmc2AppsTests/testOnly hkmc2.AppsCompileTestRunner -- -z")
 addCommandAlias("cwtest", "hkmc2WasmTests/testOnly hkmc2.WasmCompileTestRunner -- -z")
 // Aggregate tests (for validation)

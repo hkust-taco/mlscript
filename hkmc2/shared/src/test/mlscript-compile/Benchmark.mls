@@ -9,7 +9,7 @@ module Benchmark with...
 val benchmark = bm
 let prefixPath = "hkmc2Benchmarks/src/test/logs/"
 
-fun mkSuite() = new! mut bm.Suite()
+fun mkSuite() = new! mut benchmark.Suite()
 
 fun setPrefixPath(path) = set prefixPath = path
 

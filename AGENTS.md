@@ -48,6 +48,11 @@ including diff tests that do not import their directory's `.mls` configuration w
 will be sunset soon. Do not spend effort fixing, extending, or adding tests for behavior
 specific to it; keep its existing tests passing and focus on new-resolution behavior.
 
+Always commit the changes for each completed self-contained task after its required
+validation passes, without waiting for a separate commit request. Include all code,
+documentation, and golden-output changes belonging to the task, and leave unrelated
+changes out of the commit.
+
 When you create a commit, author it under your (the agent's) own identity,
 not under the user's identity.
 Set this identity for the commit command only
@@ -104,16 +109,30 @@ Long positional patterns containing `_, _, _, ...` are a code smell.
 Use named field patterns when matching a few fields of a case class or extractor,
 and preserve named patterns when refactoring the representation they match.
 
+
+## Comments and Documentation
+
 **Document your code**:
-Use comments to explain the intent behind complex logic,
+Doc comments (`/** ... */`) explain a definition's purpose and contract to its users.
+Start with a high-level, self-contained account of what the definition does and why it is needed.
+Describe relevant inputs, results, and limitations without requiring readers to inspect the
+implementation or know its callers. A description of shared implementation machinery or
+interactions between callers does not substitute for explaining the definition itself.
+
+Implementation comments (`// ...` or ordinary `/* ... */`) explain non-obvious choices,
+invariants, and failure modes next to the code they concern. Put implementation details and
+design rationale there, rather than turning a doc comment into a design note.
+
+Use implementation comments to explain the intent behind complex logic,
 especially if it is not immediately clear from the code itself.
-When appropriate, explain the history of what led to the current implementation,
+When appropriate, explain **in a self-contained way** the history
+of what led to the current implementation,
 especially if it involves non-obvious decisions/trade-offs
 or if alternative approaches were considered and rejected.
 
-Comments must be understandable from the current code alone, without the conversation,
-commit history, or an earlier version of the implementation. Explain the concrete
-invariant, behavior, or failure being prevented. Name the relevant data and operations;
+Comments must be understandable from the current code alone. Assume no access to the discussions,
+commit history, or earlier versions of the implementation. Explain the concrete
+invariant, behavior, and failures being prevented. Name the relevant data and operations;
 avoid vague claims about where a "lifecycle" or "responsibility" belongs. If history
 or a rejected alternative matters, include enough context to explain the tradeoff
 after commits are squashed.

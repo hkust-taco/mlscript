@@ -165,9 +165,6 @@ class D extends C(0)
 //│ ╟── Class value expected 0 arguments, but got 1
 //│ ║  l.XX: 	class C
 //│ ╙──      	^^^^^^^
-//│ ╔══[COMPILATION ERROR] Too many parameter lists for parent class
-//│ ║  l.+1: 	class D extends C(0)
-//│ ╙──      	                ^^^^
 
 :e
 new A(1)(2) with

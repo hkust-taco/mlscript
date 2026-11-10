@@ -132,7 +132,9 @@ class ResultId(val result: Result, name: Str)(using eState: Elaborator.State) ex
   def toLoc: Opt[Loc] = result.toLoc
 
 type InstantiationId = Ls[ResultId]
+/** Either the class or the length of a tuple. */
 type CtorCls = ClassLikeSymbol | Int
+/** Either a selection's symbol or a constant index. */
 type SelField = TermSymbol | Int
 type FunId = (funSym: TermSymbol, whichParamList: Int) | ResultId
 type CallId = (exprId: ResultId, whichArgList: Int)
