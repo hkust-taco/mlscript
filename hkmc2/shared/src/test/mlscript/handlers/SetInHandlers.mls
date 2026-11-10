@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -28,7 +29,7 @@ handle h = Object with
     res
 set x += 1 in
   print("init")
-  print(h.test())
+  print(h.'test())
   print(x)
   print("end")
 x
@@ -37,8 +38,8 @@ x
 //│ ║        	    ^^^^^^^^^
 //│ ║  l.+9: 	  print("init")
 //│ ║        	^^^^^^^^^^^^^^^
-//│ ║  l.+10: 	  print(h.test())
-//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.+10: 	  print(h.'test())
+//│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ║  l.+11: 	  print(x)
 //│ ║         	^^^^^^^^^^
 //│ ║  l.+12: 	... (more lines omitted) ...

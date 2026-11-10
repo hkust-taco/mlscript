@@ -54,7 +54,7 @@ classify(Child(42))
 
 
 // Tuple producers have Array's class identity and the implicit Object supertype.
-:fixme // E23: fusion must preserve Array/Object tests for concrete producers.
+// Fusion must preserve Array/Object tests for concrete producers.
 :noInline
 :lift
 :deforest
@@ -70,8 +70,7 @@ private fun objectKind(value: Any) = if value is Object then 1 else 0
 //│ deforest > [1, 2] ->
 //│ deforest > 	match: value¹
 //│ deforest > <<< fusing <<<
-//│ ═══[RUNTIME ERROR] Expected: '[1, 1, 1]', got: '[0, 0, 0]'
-//│ = [0, 0, 0]
+//│ = [1, 1, 1]
 
 
 // Default branches must specialize their field parameters separately for constructors of different arities.

@@ -233,7 +233,7 @@ fun argument(): Int =
 //│ evaluated = 1
 
 // Eliminating constructors must still bind missing fields to null.
-:fixme // E21–E23: constructor fusion must preserve optional-field layouts.
+// Constructor fusion must preserve optional-field layouts.
 :lift
 :deforest
 :expect [true, false]
@@ -248,7 +248,7 @@ private fun read(d: Data) = d.value is null
 //│ deforest > Data⁰(null) ->
 //│ deforest > 	select: value
 //│ deforest > <<< fusing <<<
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached an unexpected state.
+//│ = [true, false]
 
 // Defined values behave consistently across calls, inlining, spreads, and tail-call jumps.
 :expect [true, true, false, false, false, true, true, true, true]
@@ -256,17 +256,9 @@ private fun read(d: Data) = d.value is null
 //│ = [true, true, false, false, false, true, true, true, true]
 
 // Optional trailing slots and constructor fields retain null when calls are rewritten.
-:fixme // E21–E23: the preceding failed Data compilation prevents this dependent check.
 :expect [[true, 0, 3], [true, 0, 3], true, [true, true, 4]]
 [trailing(3), trailingSpread([]), read(Data()), new Fields()()(4).values()]
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'Data'
-//│ ║  l.+1: 	[trailing(3), trailingSpread([]), read(Data()), new Fields()()(4).values()]
-//│ ║        	                                       ^^^^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.XX: 	data class Data(value?)
-//│ ╙──      	           ^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] ReferenceError: Data is not defined
-//│ ═══[RUNTIME ERROR] Expected: '[[true, 0, 3], [true, 0, 3], true, [true, true, 4]]', got: 'undefined'
+//│ = [[true, 0, 3], [true, 0, 3], true, [true, true, 4]]
 
 // Merged dispatchers reset omitted parameters on each transition.
 :expect [true, true]

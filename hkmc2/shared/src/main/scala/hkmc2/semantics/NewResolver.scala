@@ -4606,14 +4606,17 @@ class NewResolver:
     listenTerm(from): sh =>
       publishActivated(to, sh)
   
-  /** The synthetic handler is an instance with real method definitions. Publish
-    * it after building those definitions, so forward selections made while
+  /** User handlers expose the parent effect interface: their implementations
+    * return handled-block results, not effect-invocation results. Compiler-generated
+    * abortive handlers have ordinary methods whose results leave the block.
+    * Publish the receiver after building its definition, so forward selections made while
     * elaborating the handled body resolve through ordinary member lookup. */
-  def resolveAbortiveHandler(handle: Handle)(using ResolutionContext): Unit =
-    assert(handle.isAbortive)
+  def resolveHandlerReceiver(handle: Handle)(using ResolutionContext): Unit =
     val definition = handle.derivedClsSym.defn.get
     listenExt(definition, parent =>
-      val receiver = selfShapes.getOrElseUpdate(handle.derivedClsSym, BaseShape(definition, parent))
+      val receiver = if handle.isAbortive then
+        selfShapes.getOrElseUpdate(handle.derivedClsSym, BaseShape(definition, parent))
+      else parent.getOrElse(lastWords("A user handler must have a parent effect interface"))
       MarkedShape.exit(receiver, ResolutionBoundary(handle.derivedClsSym), N) match
         case value: TermShape => publishActivated(handle.lhs, value)
         case NoShape => lastWords("A new handler instance must be reachable outside its class"))
@@ -5470,7 +5473,7 @@ class NewResolver:
       // for a different stage. Neither has the value interface of its operand.
       listener(UnknownValueShape.at(trm))
     case handle: Handle if handle.isAbortive =>
-      resolveAbortiveHandler(handle)
+      resolveHandlerReceiver(handle)
       listenResult(handle.body)(listener)
       handle.defs.foreach: method =>
         // Parameters arrive through the method and handler-instance boundaries.

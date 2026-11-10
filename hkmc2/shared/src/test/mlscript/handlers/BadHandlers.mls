@@ -1,12 +1,19 @@
+:.
 :js
 :effectHandlers
 :lift
 
 
-:re
+:e
 handle h = Object with {}
 h.oops
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	h.oops
+//│ ║        	^^^^^^
+//│ ╟── Instance of class 'Object' does not contain member 'oops'
+//│ ║  l.+1: 	handle h = Object with {}
+//│ ╙──      	           ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 handle h = Object with {}
 val x = 1
@@ -30,15 +37,15 @@ x
 #config(effectHandlers: Some(EffectHandlers(optTailResumptiveHandlers:false)))
 handle h = Object with
   fun lol(k) = k(())
-h.lol
+h.'lol
 //│ ╔══[COMPILATION ERROR] Handler function must have a parameter list before its continuation parameter list
 //│ ║  l.+3: 	  fun lol(k) = k(())
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Effect Handler$h$6 is raised in a getter
   fun lol(k) = k(1)
-h.lol + 2
+h.'lol + 2
 //│ ╔══[COMPILATION ERROR] Name not found: h
-//│ ║  l.+2: 	h.lol + 2
+//│ ║  l.+2: 	h.'lol + 2
 //│ ╙──      	^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -48,27 +55,30 @@ handle h = Object with
   fun lol()(k) = k(1)
 class A with
   fun f =
-    h.lol()
+    h.'lol()
 new A().f + 2
 //│ ═══[RUNTIME ERROR] Error: Effect Handler$h$8 is raised in a getter
 
 handle h = Object with
   fun lol()(k) = k(42)
-h.lol()
+h.'lol()
 val x = 1
 
 object Foo with
   handle h = Object with
     fun lol()(k) = k(42)
-  val x = h.lol()
+  val x = h.'lol()
   x + 1
 
 :e
 :re
 Foo.x
-//│ ╔══[COMPILATION ERROR] Object 'Foo' does not contain member 'x'
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+1: 	Foo.x
-//│ ╙──      	   ^^
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
+//│ ║        	^^^^^
+//│ ╟── Object 'Foo' does not contain member 'x'
+//│ ║  l.XX: 	object Foo with
+//│ ╙──      	^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

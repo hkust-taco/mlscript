@@ -1,0 +1,111 @@
+:.
+:global
+:noInline
+:lift
+:deforest
+
+// Removing an allocation must preserve effects from its superclass constructor.
+:expect [7, 1]
+let calls = 0
+class Parent with
+  set calls = calls + 1
+data class Child(value: Int) extends Parent
+private fun consume(x) = x.Child#value
+[consume(Child(7)), calls]
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = [7, 1]
+//│ calls = 1
+
+// Field reads observe assignments made by the constructor.
+:expect 9
+data class Replaced(mut val value: Int) with
+  set this.value = 9
+private fun consume(x) = x.Replaced#value
+consume(Replaced(7))
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = 9
+
+// Optional fields distinguish omitted arguments (null) from an explicit Unit value.
+:expect [true, false]
+data class Optional(value?)
+private fun consume(x) = x.Optional#value is null
+[consume(Optional()), consume(Optional(()))]
+//│ deforest > >>> fusing >>>
+//│ deforest > Optional⁰(optionalArg⁰) ->
+//│ deforest > 	select: value
+//│ deforest > runtime⁰.Unit⁰ ->
+//│ deforest > 	match: scrut⁰
+//│ deforest > Optional⁰(null) ->
+//│ deforest > 	select: value
+//│ deforest > <<< fusing <<<
+//│ = [true, false]
+
+// A matching parent case wins over a later case for the exact subclass.
+:expect 1
+class Parent
+data class Child(value: Int) extends Parent
+private fun consume(x) = if x is
+  Parent then 1
+  Child then 2
+  else 3
+consume(Child(7))
+//│ deforest > >>> fusing >>>
+//│ deforest > Child⁰(7) ->
+//│ deforest > 	match: x⁰
+//│ deforest > <<< fusing <<<
+//│ = 1
+
+// An open tuple pattern matches when extra elements follow its required prefix.
+:expect 1
+private fun consume(x) = if x is
+  [_, ..._] then 1
+  else 2
+consume([7, 8])
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = 1
+
+// Constructors with different numbers of fields can both select the same default arm.
+:deforest mono
+:expect [3, 3]
+data class One(value: Int)
+data class Two(first: Int, second: Int)
+data class Other
+private fun consume(x) = if x is Other then 1 else 3
+[consume(One(7)), consume(Two(8, 9))]
+//│ deforest > >>> fusing >>>
+//│ deforest > Two⁰(8, 9) ->
+//│ deforest > 	match: x¹
+//│ deforest > One⁰(7) ->
+//│ deforest > 	match: x¹
+//│ deforest > <<< fusing <<<
+//│ = [3, 3]
+
+// An unused subclass allocation can be removed when its superclass constructor has no effects.
+:flowBasedOpt mono debugDce
+:soir
+:expect 42
+class Empty
+data class Derived() extends Empty
+private fun discard() =
+  Derived()
+  42
+discard()
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ dead-constructor-elim > >>> dead-constructor-elim results >>>
+//│ dead-constructor-elim > eliminable: Call(member:Derived⁰‹term:Derived¹›, [[]])
+//│ dead-constructor-elim > <<< dead-constructor-elim results <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @private
+//│ define discard⁰ as fun discard¹() {
+//│   return 42
+//│ };
+//│ define Empty⁰ as class Empty¹;
+//│ @data
+//│ define Derived⁰ as class Derived² extends Empty¹ { constructor Derived¹ };
+//│ return discard¹()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42

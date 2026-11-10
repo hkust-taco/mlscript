@@ -1,0 +1,18 @@
+:.
+:global
+:lift
+:noInline
+:deforest mono
+
+// A singleton needs no checked argument cast to reach the nominal storage slot.
+:expect 42
+object Token
+data class Holder(token: Token, other: Int)
+private fun read(holder, choose) =
+  if choose then (if holder.Holder#token is Token then 42 else 0)
+  else holder.Holder#other
+read(Holder(Token, 1), true)
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ Wasm result:
+//│ = 42

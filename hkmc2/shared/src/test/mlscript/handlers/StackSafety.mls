@@ -1,3 +1,4 @@
+:.
 :js
 :effectHandlers
 :lift
@@ -29,15 +30,15 @@ hi(0)
 //│     runtime.stackDepth = curDepth;
 //│     return hi(tmp1);
 //│   }
-//│   runtime.unwind(hi, -1, "StackSafety.mls:12:1", null, null, 1, 1, n, 0);
+//│   runtime.unwind(hi, -1, "StackSafety.mls:13:1", null, null, 1, 1, n, 0);
 //│   return runtime.Unit;
 //│ };
 //│ $_stack$_safe$_body$_ = (undefined, function () {
 //│   return hi(0)
 //│ });
-//│ tmp = runtime.runStackSafe(6, $_stack$_safe$_body$_);
+//│ tmp = runtime.runStackSafe(6, $_stack$_safe$_body$_) /* as! Int */;
 //│ if (runtime.curEffect === null) { return tmp }
-//│ return runtime.topLevelEffect(false);
+//│ return runtime.topLevelEffect(false) /* as! Int */;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
@@ -75,24 +76,24 @@ sum(10000)
 //│         if (runtime.curEffect === null) {
 //│           pc = 1;
 //│         } else {
-//│           runtime.unwind(sum, 1, "StackSafety.mls:50:9", null, null, 1, 1, n, 0);
+//│           runtime.unwind(sum, 1, "StackSafety.mls:51:9", null, null, 1, 1, n, 0);
 //│           return runtime.Unit
 //│         }
 //│       case 1:
-//│         tmp3 = runtime.resumeValue;
+//│         tmp3 = runtime.resumeValue /* as! Int */;
 //│         return n + tmp3;
 //│     }
 //│   } else {
-//│     runtime.unwind(sum, pc, "StackSafety.mls:47:1", null, null, 1, 1, n, 0);
+//│     runtime.unwind(sum, pc, "StackSafety.mls:48:1", null, null, 1, 1, n, 0);
 //│     return runtime.Unit
 //│   }
 //│ };
 //│ $_stack$_safe$_body$_1 = (undefined, function () {
 //│   return sum(10000)
 //│ });
-//│ tmp1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_1);
+//│ tmp1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_1) /* as! Int */;
 //│ if (runtime.curEffect === null) { return tmp1 }
-//│ return runtime.topLevelEffect(false);
+//│ return runtime.topLevelEffect(false) /* as! Int */;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 50005000
 
@@ -143,7 +144,7 @@ foo
 //│ foo = 50005000
 
 abstract class Eff with
-  fun perform(a): ()
+  fun perform(): Int
 
 // functions and lambdas inside handlers
 :stackSafe 100
@@ -183,6 +184,9 @@ module A with
   val x = f(10000)
 A.x
 //│ = 50005000
+
+abstract class Eff with
+  fun perform(a): Int
 
 :re
 fun foo(h) = h.perform(2)
@@ -226,8 +230,8 @@ handle h = Object with
     if depth >= 50000 then 0
     else
       set depth += 1
-      enterHandleBlock(this, () => whoops())
-h.whoops()
+      enterHandleBlock(this, () => this.'whoops())
+h.'whoops()
 //│ = 0
 //│ depth = 50000
 
@@ -239,7 +243,7 @@ fun dummy = ()
 fun f(h) =
   let n = 0
   while n < 10000 do
-    h.perform()
+    h.'perform()
     set n += 1
   n
 handle h = Object with
