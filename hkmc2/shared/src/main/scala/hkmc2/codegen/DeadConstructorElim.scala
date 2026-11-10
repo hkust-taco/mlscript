@@ -27,26 +27,26 @@ object NoDeadConstructorElim extends DeadConstructorElimResult:
   val deadCtors = Set.empty[ConcreteCtorId]
 
 
-/** Prove that skipping construction omits only initialization of the discarded instance and
-  * its local slots. This reads the current IR definition, including superclass construction;
-  * missing definitions, cycles, calls, checks, and control flow are not assumed harmless.
-  * Callers separately preserve argument evaluation and any qualified constructor lookup.
+/** Checks whether optimizations can omit object construction or replace field reads with
+  * constructor arguments without changing the program's observable behavior.
   */
 private[codegen] object ConstructorElision:
+  /** Checks whether constructor initialization can be skipped when its instance is discarded.
+    * This check covers initialization, including superclasses, but not argument evaluation.
+    */
   def isHarmless(ctor: CtorCls)(using Elaborator.State): Bool = ctor match
     case _: Int => true
-    // A singleton producer refers to an already initialized object/module.
+    // A singleton reference reuses an initialized instance, so it executes no constructor body.
     case _: ModuleOrObjectSymbol => true
     case cls: ClassSymbol => cls.irClsLikeDefn.exists(harmlessClass(_, Set.empty))
 
-  /** Field projection additionally relies on the flow analysis's positional mapping from source
-    * fields to constructor arguments. Validate that mapping against the current IR parameter list
-    * and stores; harmless updates to an instance can still change the value of a projected field.
+  /** Checks whether construction stores each argument unchanged in its corresponding field.
+    * This allows field reads to use the supplied constructor arguments directly.
     */
   def preservesParameterFields(ctor: Ctor)(using Elaborator.State): Bool = ctor.ctor match
     case cls: ClassSymbol => cls.irClsLikeDefn.exists: definition =>
       val params = (definition.paramsOpt.toList ::: definition.auxParams).flatMap(_.allParams).map(_.sym)
-      // A missing parameter invalidates the positional mapping before any pairs are consumed.
+      // Reject arity mismatches before zip can silently drop an argument or parameter.
       val expected = if params.length != ctor.args.length then Map.empty[TermSymbol, VarSymbol]
         else ctor.args.iterator.zip(params).collect { case ((field: TermSymbol, _), param) => field -> param }.toMap
       if params.length != ctor.args.length || expected.size != ctor.args.length then false

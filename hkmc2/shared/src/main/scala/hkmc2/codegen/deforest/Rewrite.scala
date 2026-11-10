@@ -16,8 +16,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
   extends PolyInstantiationRewrite(solver.constraintSolver):
   
   type MatchOrLabelId = ResultId | LabelSymbol
-  // The producer determines the branch closure's field parameters even when several producers
-  // select the same default body. Different constructor layouts cannot share that closure.
+  /** Identifies the specialized branch function for a match and a constructor. */
   type BranchId = CtorDtorId -> CtorCls
   type LabelId = LabelSymbol -> InstantiationId
   type RestFunId = CtorDtorId | LabelId
@@ -128,6 +127,8 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
         // identify the dest branchid for a ctor
         ctorWhichBranch(ctor) = destBranchId
         // compute the function symbols for branch funs
+        // Two constructors can select the same default arm but pass different fields to it.
+        // Each constructor therefore needs its own branch function.
         branchFunSyms.getOrElseUpdate(
           destBranchId,
           locally:

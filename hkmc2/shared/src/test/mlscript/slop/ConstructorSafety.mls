@@ -4,7 +4,7 @@
 :lift
 :deforest
 
-// Construction performs the superclass effects even when only a field is consumed.
+// Removing an allocation must preserve effects from its superclass constructor.
 :expect [7, 1]
 let calls = 0
 class Parent with
@@ -17,7 +17,7 @@ private fun consume(x) = x.Child#value
 //│ = [7, 1]
 //│ calls = 1
 
-// A constructor can overwrite its parameter field without an external effect.
+// Field reads observe assignments made by the constructor.
 :expect 9
 data class Replaced(mut val value: Int) with
   set this.value = 9
@@ -27,7 +27,7 @@ consume(Replaced(7))
 //│ deforest > <<< fusing <<<
 //│ = 9
 
-// Optional fields use the lowered parameter layout, including omitted arguments.
+// Optional fields distinguish omitted arguments (null) from an explicit Unit value.
 :expect [true, false]
 data class Optional(value?)
 private fun consume(x) = x.Optional#value is null
@@ -42,7 +42,7 @@ private fun consume(x) = x.Optional#value is null
 //│ deforest > <<< fusing <<<
 //│ = [true, false]
 
-// A parent arm precedes the exact class arm.
+// A matching parent case wins over a later case for the exact subclass.
 :expect 1
 class Parent
 data class Child(value: Int) extends Parent
@@ -57,7 +57,7 @@ consume(Child(7))
 //│ deforest > <<< fusing <<<
 //│ = 1
 
-// An open tuple pattern accepts longer tuples.
+// An open tuple pattern matches when extra elements follow its required prefix.
 :expect 1
 private fun consume(x) = if x is
   [_, ..._] then 1
@@ -67,7 +67,7 @@ consume([7, 8])
 //│ deforest > <<< fusing <<<
 //│ = 1
 
-// Different producer layouts may enter the same default branch.
+// Constructors with different numbers of fields can both select the same default arm.
 :deforest mono
 :expect [3, 3]
 data class One(value: Int)
@@ -83,7 +83,7 @@ private fun consume(x) = if x is Other then 1 else 3
 //│ deforest > <<< fusing <<<
 //│ = [3, 3]
 
-// Dead-constructor elimination can discard a pure subclass allocation.
+// An unused subclass allocation can be removed when its superclass constructor has no effects.
 :flowBasedOpt mono debugDce
 :soir
 :expect 42

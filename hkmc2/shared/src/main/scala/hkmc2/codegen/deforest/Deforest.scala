@@ -46,19 +46,20 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Con
         selExpr.getResult.matches:
           case TrackableSelect(from, _, _) => from === dtor.exprId.getResult
   
-  /** Decide only predicates determined by a concrete producer. An incomplete parent chain does
-    * not prove a class test false, and a class instance's type does not determine its tuple length.
+  /** Determines whether a constructor's result satisfies a match case without creating the value.
+    * Returns `N` when its class or tuple length does not determine the answer.
     */
   private def matches(ctor: CtorCls, cse: Case): Opt[Bool] = (ctor, cse) match
     case (cls: TypeSymbol, Case.Cls(expected: TypeSymbol, _)) => ErasedType.isSubtypeOf(cls, expected)
     case (_: Int, Case.Cls(expected: TypeSymbol, _)) => ErasedType.isSubtypeOf(summon[Elaborator.Ctx].builtins.Array, expected)
     case (length: Int, Case.Tup(expected, inf)) => S(if inf then length >= expected else length == expected)
-    // Concrete producers are objects or tuples, never literal values.
+    // Objects and tuples cannot satisfy a primitive literal case.
     case (_, Case.Lit(_)) => S(false)
     case _ => N
 
-  /** Both fusion eligibility and branch extraction use this ordered decision. In particular, a
-    * later matching arm cannot justify fusion when an earlier arm's predicate remains unknown.
+  /** Finds the body selected by match `dtor` for a value constructed by `ctor`.
+    * This lets fusion replace the match with the selected body.
+    * Returns `N` if the choice is unknown, or an empty block if the match falls through.
     */
   def selectedBranch(ctor: CtorCls, dtor: CtorDtorId): Opt[Block] =
     val matched = preAnalyzer.res.matchScrutToMatchBlock(dtor.exprId)
@@ -66,8 +67,8 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Con
       case (cse, body) :: rest => matches(ctor, cse) match
         case S(true) => S(body)
         case S(false) => loop(rest)
+        // An earlier case may still win even when a later case is known to match.
         case N => N
-      // With no default, a failed match falls through to its rest block.
       case Nil => S(matched.dflt.getOrElse(End()))
     loop(matched.arms)
 
@@ -89,8 +90,8 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Con
       def selsSelectingTheSameSymbol(sels: Set[FieldSel]) =
         sels.map(s => s.field).size == 1
       val canSkipConstruction = ctor.exprId.getResult match
-        // Rewriting replays these arguments, but drops the constructor body and qualifier.
-        // A stale source parameter layout must not truncate the replayed argument list.
+        // Fusion omits the constructor body and qualifier, so neither may have effects.
+        // Matching argument counts prevents the rewrite from dropping argument evaluations.
         case CtorProducer(_, args, selectedFrom) => args.length == ctor.args.length &&
           selectedFrom.forall(_.isPure) && ConstructorElision.isHarmless(ctor.ctor)
         case _ => false
