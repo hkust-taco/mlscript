@@ -1,0 +1,155 @@
+#config(language: Language(typeCheck: TypeChecking()))
+//│ Type: undefined
+
+declare fun (+): (Int, Int) -> Int
+//│ Type: undefined
+
+fun ib: Int | Bool
+fun si: Str | Int
+fun sib: Str | Int | Bool
+fun rev: Str -> Str
+fun neg: Bool -> Bool
+//│ Type: undefined
+
+fun f(x) = if x is
+  Int then 0
+  Bool then x
+f
+//│ Type: [outer] -> ['x] ->{out 'eff} out 'res
+
+// FIXME
+// f(ib) as (Int | Bool)
+
+// f(f(ib)) as Int | Bool
+// f(f(ib))
+
+// FIXME
+// :e
+f(si)
+//│ Type: 'app
+//│   >: ⊥
+
+
+// order-dependent (expected)
+
+fun f(x, y) = if
+  x is Int then 1
+  y is Str then ""
+f(1, "")
+//│ Type: 'app
+//│   >: ⊥
+
+f(1, sib)
+//│ Type: 'app
+//│   >: ⊥
+
+fun f(x, y) = if
+  y is Str then ""
+  x is Int then 1
+f(1, "")
+//│ Type: 'app
+//│   >: ⊥
+
+f(1, sib)
+//│ Type: 'app
+//│   >: ⊥
+
+// FIXME
+// fun foorec(x, y, r) = if
+//   x is Int and y is Int then x + y
+//     x is Str then not(y)
+//     y is Str then r(y, x, r)
+
+// fun foo(x, y) = foorec(x, y, foorec)
+
+// foo(true, "")
+// foo(1, 2)
+// foo as (Int, Int) -> Int
+// foo as (Str, Bool) -> Bool
+// (x => foo(x, true)) as Str -> Bool
+// (x => foo(x, "")) as Bool -> Bool
+
+// :e
+// foo(1, "")
+
+fun increv(x) = if x is
+  Int then x + 1
+  else
+    rev(x)
+increv
+//│ Type: [outer] -> ['x] ->{out 'eff} out 'res
+
+fun increv'(x) = if x is
+  Int then x + 1
+  Str then rev(x)
+increv'
+//│ Type: [outer] -> ['x] ->{out 'eff} out 'res
+
+// FIXME
+// :e
+increv(sib)
+//│ Type: 'app
+//│   >: ⊥
+
+// FIXME
+// :e
+// increv'(sib)
+
+increv(si)
+//│ Type: 'app
+//│   >: ⊥
+
+// FIXME
+// increv'(si)
+
+fun f(x, y) = if
+  x is Int and y is Int then 1
+  x is Bool then y
+//│ Type: undefined
+
+// literal matching not yet implemented
+
+// x => if x is
+//  true then 0
+//  false then 0
+
+fun f(x) = if
+  x is Int then x + 2
+  x is Str then rev(x)
+  else
+    neg(x)
+f
+//│ Type: [outer] -> ['x] ->{out 'eff} out 'res
+
+// f(sib)
+
+fun f(x, y) = if
+  x is Int then y
+  y is Str then 1
+  x is Str then y + 1
+  else
+    neg(x)
+f
+//│ Type: [outer] -> ['x, 'y] ->{out 'eff} out 'res
+
+f(ib, sib)
+//│ Type: 'app
+//│   >: ⊥
+
+// :ns
+f(ib, ib)
+//│ Type: 'app
+//│   >: 1
+
+// :todo
+// f(ib, ib)
+
+fun f(x, y) = if
+  x is Int then 1
+  y is Int then neg(x)
+f
+//│ Type: [outer] -> ['x, 'y] ->{out 'eff} out 'res
+
+f(ib, 1)
+//│ Type: 'app
+//│   >: ⊥
