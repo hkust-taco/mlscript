@@ -86,6 +86,7 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Con
       ctor.instId :: dtor.instId :: Nil
 
   locally {
+    // TODO: improve this code – inefficient (useless intermediate sets) and nondeterministic (set `head` access)
     def mergeDests(ctor: Ctor, dests: Set[ConcreteCtorConsumer | MarkerConsStrat]): Opt[FinalDest] =
       def selsSelectingTheSameSymbol(sels: Set[FieldSel]) =
         sels.map(s => s.field).size == 1

@@ -27,7 +27,14 @@ object NoDeadConstructorElim extends DeadConstructorElimResult:
   val deadCtors = Set.empty[ConcreteCtorId]
 
 
-/** Checks whether optimizations can omit object construction or replace field reads with
+/** NOTE: This entire object is dirty slop written by Codex to reverse-engineer constructors.
+  *   It is inefficient, brittle, and probably wrong in several ways.
+  * TODO: Remove it and replace it with our proper design based on flow and effect analysis,
+  *   and on retainijng the appropriate information instead of reverse engineering it from the IR.
+  * 
+  * ---
+  * 
+  * Checks whether optimizations can omit object construction or replace field reads with
   * constructor arguments without changing the program's observable behavior.
   */
 private[codegen] object ConstructorElision:
@@ -119,7 +126,7 @@ class DeadConstructorElimSolver(val constraintSolver: FlowConstraintSolver, trac
   val collector: FlowConstraintsCollector = constraintSolver.collector
   
   val deadCtors =
-      
+    
     def isRemovable(ctorSite: Result): Bool = ctorSite match
       case _: Tuple => true
       case CtorProducer(cls: ClassSymbol, _, _) => ConstructorElision.isHarmless(cls)

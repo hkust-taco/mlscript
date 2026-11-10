@@ -109,6 +109,9 @@ Long positional patterns containing `_, _, _, ...` are a code smell.
 Use named field patterns when matching a few fields of a case class or extractor,
 and preserve named patterns when refactoring the representation they match.
 
+
+## Comments and Documentation
+
 **Document your code**:
 Doc comments (`/** ... */`) explain a definition's purpose and contract to its users.
 Start with a high-level, self-contained account of what the definition does and why it is needed.
@@ -122,13 +125,14 @@ design rationale there, rather than turning a doc comment into a design note.
 
 Use implementation comments to explain the intent behind complex logic,
 especially if it is not immediately clear from the code itself.
-When appropriate, explain the history of what led to the current implementation,
+When appropriate, explain **in a self-contained way** the history
+of what led to the current implementation,
 especially if it involves non-obvious decisions/trade-offs
 or if alternative approaches were considered and rejected.
 
-Comments must be understandable from the current code alone, without the conversation,
-commit history, or an earlier version of the implementation. Explain the concrete
-invariant, behavior, or failure being prevented. Name the relevant data and operations;
+Comments must be understandable from the current code alone. Assume no access to the discussions,
+commit history, or earlier versions of the implementation. Explain the concrete
+invariant, behavior, and failures being prevented. Name the relevant data and operations;
 avoid vague claims about where a "lifecycle" or "responsibility" belongs. If history
 or a rejected alternative matters, include enough context to explain the tradeoff
 after commits are squashed.

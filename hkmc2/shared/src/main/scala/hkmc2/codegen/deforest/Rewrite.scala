@@ -121,8 +121,8 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
         // ctor dest branch function computations
         val whichBranch = ctorInfo.ctor
         val whichBranchPreBody =
-          solver.selectedBranch(ctorInfo.ctor, dest).getOrElse(
-            lastWords("Fusion requires a statically determined match branch"))
+          solver.selectedBranch(ctorInfo.ctor, dest).getOrElse:
+            lastWords("Fusion requires a statically determined match branch")
         val destBranchId: BranchId = dest -> whichBranch
         // identify the dest branchid for a ctor
         ctorWhichBranch(ctor) = destBranchId
