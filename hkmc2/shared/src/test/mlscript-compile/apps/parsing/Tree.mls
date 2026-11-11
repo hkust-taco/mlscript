@@ -9,7 +9,7 @@ import "./Keywords.mls"
 import "./Token.mls"
 
 open Predef.{ fold, mkStr }
-open Stack
+open Stack.{ * }
 open Option.{ Some, None }
 open Token.{ LiteralKind, BracketKind }
 open Keywords.{ opPrec, INT_MAX }
@@ -33,7 +33,7 @@ module Tree with
     
     type DefineKind = Let | Type | Exception | Directive
   
-  open DefineKind
+  open DefineKind.{ * }
   
   data
     class

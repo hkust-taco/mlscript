@@ -16,9 +16,9 @@ import "./Tree.mls"
 import "./Rules.mls"
 import "./ParseRule.mls"
 
-open Predef
-open Option
-open Stack
+open Predef.{ * }
+open Option.{ * }
+open Stack.{ * }
 open ParseRule.{ Choice }
 open Choice.{ Ref }
 open Keywords.{ opPrecOpt }

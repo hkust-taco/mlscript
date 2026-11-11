@@ -184,7 +184,7 @@ private fun opened() =
   }
   (new Opened).read()
 private fun wildcard() =
-  open annotations
+  open annotations.{ * }
   class Wildcard {
     @jsSymbol(Keys.second) fun read() = 51
   }
@@ -343,7 +343,7 @@ set localCell(0).value = 63
 :e
 private fun openedEscaped() =
   val instance = moduleKey(0)
-  open instance
+  open instance.{ * }
   fetch()
 openedEscaped()
 //│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'LocalKeys.key' here: 'LocalKeys' is not in scope.
@@ -359,7 +359,7 @@ private fun openedAvailable() =
   @fresh val key = Symbol("opened")
   class Opened { @jsSymbol(key) fun fetch() = 67 }
   val instance = new Opened
-  open instance
+  open instance.{ * }
   fetch()
 openedAvailable()
 //│ = 67

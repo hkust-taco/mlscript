@@ -1,7 +1,7 @@
 #lang(0.3.x)
 
 import "./NofibPrelude.mls"
-open NofibPrelude
+open NofibPrelude.{ * }
 
 module banner with ...
 

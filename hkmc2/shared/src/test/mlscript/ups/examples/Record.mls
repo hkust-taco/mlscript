@@ -1,7 +1,7 @@
 :.
 :js
 
-open annotations
+open annotations.{ * }
 
 import "../../../mlscript-compile/Option.mls"
 

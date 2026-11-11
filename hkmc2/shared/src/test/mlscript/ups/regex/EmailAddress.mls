@@ -83,7 +83,7 @@ emails
   |. Iter.folded(true) \ _ && _
 //│ = true
 
-open Stack
+open Stack.{ * }
 
 pattern CommaSep(pattern S) =
   | ((S as head) ~ "," ~ (CommaSep(S) as tail)) => head :: tail

@@ -7,7 +7,7 @@ module Mod with
   fun (|>>) pipee(x, f) = f(x)
 
 :ctx
-open Mod
+open Mod.{ * }
 //│ Env:
 
 pipee

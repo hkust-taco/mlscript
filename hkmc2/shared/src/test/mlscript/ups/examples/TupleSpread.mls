@@ -59,7 +59,7 @@ pattern Palindrome =
 
 import "../../../mlscript-compile/Stack.mls"
 
-open Stack
+open Stack.{ * }
 
 pattern StackLike = ([] => Nil) | ([x, ...StackLike as xs] => x :: xs)
 

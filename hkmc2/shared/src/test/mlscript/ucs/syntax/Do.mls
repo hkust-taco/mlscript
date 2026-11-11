@@ -3,7 +3,7 @@
 
 import "../../../mlscript-compile/Option.mls"
 
-open Option
+open Option.{ * }
 
 
 

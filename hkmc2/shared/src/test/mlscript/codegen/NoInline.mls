@@ -2,7 +2,7 @@
 :js
 
 
-open annotations
+open annotations.{ * }
 
 
 fun foo(x) = x + 1

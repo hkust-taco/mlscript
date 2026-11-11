@@ -214,7 +214,7 @@ f()
 
 
 // Inline annotations
-open annotations
+open annotations.{ * }
 
 // f1 does not inline into f, despite being small enough
 // The threshold for inlining this is separate and stricter than the usual limit

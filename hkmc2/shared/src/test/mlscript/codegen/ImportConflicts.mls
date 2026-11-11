@@ -4,7 +4,7 @@
 
 module Option1 with { fun Some1 = 1 }
 
-open Option1
+open Option1.{ * }
 fun Some1 = "111"
 Some1
 //│ = "111"
@@ -14,7 +14,7 @@ module Option2 with { fun Some2 = 2 }
 
 // * Note that wildcard imports do not import names that are already defined in the same scope
 fun Some2 = "222"
-open Option2
+open Option2.{ * }
 Some2
 //│ = "222"
 
@@ -45,7 +45,7 @@ module Option5 with { fun Some5 = 5 }
 
 fun Some5 = "555"
 fun bar =
-  open Option5
+  open Option5.{ * }
   // Note that the wildcard import does not shadow names that are already bound in scope
   Some5
 bar

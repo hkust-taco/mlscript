@@ -3,11 +3,11 @@
 import "fs"
 
 import "../StrOps.mls"
-open StrOps
+open StrOps.{ * }
 open StrOps.{ concat2, ~ }
 
 import "../Predef.mls"
-open Predef
+open Predef.{ * }
 
 
 data class Project(val num: Str)

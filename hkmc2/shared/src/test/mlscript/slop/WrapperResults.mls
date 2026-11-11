@@ -1,6 +1,6 @@
 :.
 #lang(0.3.x, strictResolution: true)
-open annotations
+open annotations.{ * }
 
 // Call sites use Promise, while both return paths coerce the body's annotated payload.
 :noInline

@@ -15,12 +15,12 @@ print of
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 print of 
-  open Predef
+  open Predef.{ * }
   let x = 1
   x + 1
 //│ ╔══[COMPILATION ERROR] Illegal position for 'open' statement.
-//│ ║  l.+2: 	  open Predef
-//│ ╙──      	  ^^^^^^^^^^^
+//│ ║  l.+2: 	  open Predef.{ * }
+//│ ╙──      	  ^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Expected a body for let bindings in expression position
 //│ ║  l.+3: 	  let x = 1
 //│ ╙──      	      ^^^^^

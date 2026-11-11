@@ -6,7 +6,7 @@ import "../../../mlscript-compile/Stack.mls"
 import "../../../mlscript-compile/Iter.mls"
 
 open Option.{ Some, None }
-open Stack
+open Stack.{ * }
 
 fun par(a) = "(" + a + ")"
 

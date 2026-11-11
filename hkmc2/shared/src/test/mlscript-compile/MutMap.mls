@@ -3,7 +3,7 @@
 import "./Option.mls"
 import "./Predef.mls"
 
-open Predef
+open Predef.{ * }
 open Option.{ Some, None }
 
 

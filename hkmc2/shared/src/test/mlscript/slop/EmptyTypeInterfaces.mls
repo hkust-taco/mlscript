@@ -23,8 +23,8 @@ fun distributed(value: (Hidden | {other: Bool}) & {value: Int}) = value.value
 :expect 45
 fun opened(value: HiddenAlias) =
   let known = {answer: 45}
-  open value
-  open known
+  open value.{ * }
+  open known.{ * }
   answer
 opened(answer: 99)
 //│ = 45
@@ -108,8 +108,8 @@ fun arrayResult(values: Array[Str]) = values.at(0).length
 :expect 47
 fun openedUnit(value: ()) =
   let known = {answer: 47}
-  open value
-  open known
+  open value.{ * }
+  open known.{ * }
   answer
 openedUnit(())
 //│ = 47

@@ -4,8 +4,8 @@
 import "../../../mlscript-compile/StrOps.mls"
 import "../../../mlscript-compile/Option.mls"
 
-open Option
-open StrOps
+open Option.{ * }
+open StrOps.{ * }
 open StrOps.{ concat2, ~ }
 
 abstract class EitherOrBoth[out A, out B]: (Left[A, B] | Right[A, B] | Both[A, B])

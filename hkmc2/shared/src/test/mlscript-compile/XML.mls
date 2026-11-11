@@ -3,7 +3,7 @@
 import "./Predef.mls"
 import "./Iter.mls"
 
-open Predef
+open Predef.{ * }
 open Iter.{ mapping, joined }
 
 

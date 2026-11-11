@@ -14,7 +14,7 @@ pattern BooleanLike = true | false | (0 => false) | (1 => true)
 
 import "../../../mlscript-compile/Stack.mls"
 
-open Stack
+open Stack.{ * }
 
 class Pair[A, B](val fst: A, val snd: B)
 

@@ -31,8 +31,8 @@ record.apply(42)
 
 // Both wildcard sources arrive after the annotation; the unused signature must still be checked.
 :ge
-open Left
-open Right
+open Left.{ * }
+open Right.{ * }
 fun unused(value: Types.Number) = value
 module Left with
   module Types with

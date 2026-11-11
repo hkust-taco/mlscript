@@ -8,13 +8,13 @@ import "../../../mlscript-compile/StrOps.mls"
 
 :w
 @debug
-open StrOps
+open StrOps.{ * }
 //│ ╔══[WARNING] This annotation has no effect
 //│ ║  l.+1: 	@debug
 //│ ║        	^^^^^^
 //│ ╟── Annotations are not supported on open terms.
-//│ ║  l.+2: 	open StrOps
-//│ ╙──      	^^^^^^^^^^^
+//│ ║  l.+2: 	open StrOps.{ * }
+//│ ╙──      	^^^^^^^^^^^^^^^
 
 :w
 @debug 0

@@ -22,7 +22,7 @@ untypedTodo()
 
 // Removing a cast of a bottom-typed temporary after inlining must retain the throwing call in JS too.
 :re
-open annotations
+open annotations.{ * }
 private class CastTarget()
 @noInline private fun bottomForCast(): Nothing = throw Error("bottom cast")
 @inline private fun narrowBottom(value: Any): CastTarget = value

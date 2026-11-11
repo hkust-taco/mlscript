@@ -58,7 +58,7 @@ new OverloadedDefault().answer()
 // Imported overloads retain their class interpretation in bare patterns.
 :expect [1, 0, 1, 0]
 fun importedPattern(x) = {
-  open OverloadedClassLibrary
+  open OverloadedClassLibrary.{ * }
   if x is Item then 1 else 0
 }
 fun namedPattern(x) = if x is Item then 1 else 0

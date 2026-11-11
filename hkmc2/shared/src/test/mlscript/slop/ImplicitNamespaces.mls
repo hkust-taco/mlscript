@@ -185,7 +185,7 @@ module AltOption with
 fun alt(x: AltOption[Int]) = if x is AltOption.Some(v) then v else 0
 
 fun viaNamespace() =
-  open AltOption
+  open AltOption.{ * }
   get(Some(10))
 
 :expect 10
@@ -202,7 +202,7 @@ alt(viaBinding())
 
 // Without a required type, the wildcard opens supply the name.
 fun viaOpen() =
-  open AltOption
+  open AltOption.{ * }
   Some(12)
 
 :expect 12
@@ -247,8 +247,8 @@ module Wrappers with
   class Wrap(val inner: Option[Int])
 
 fun wrapped() =
-  open Wrappers
-  open AltOption
+  open Wrappers.{ * }
+  open AltOption.{ * }
   Wrap(Some(15)).inner
 
 :expect 15
@@ -260,8 +260,8 @@ get(wrapped())
 // before the function that requires its namespace.
 :e
 fun piped() =
-  open Wrappers
-  open AltOption
+  open Wrappers.{ * }
+  open AltOption.{ * }
   Some(16) |> Wrap
 //│ ╔══[COMPILATION ERROR] Reference 'Some' was resolved before flow revealed its implicit namespace module 'Option'.
 //│ ║  l.+4: 	  Some(16) |> Wrap
@@ -270,7 +270,7 @@ fun piped() =
 //│ ║  l.XX: 	  class Wrap(val inner: Option[Int])
 //│ ║        	                        ^^^^^^^^^^^
 //│ ╟── It was resolved to the 'Some' of this wildcard open.
-//│ ║  l.+3: 	  open AltOption
+//│ ║  l.+3: 	  open AltOption.{ * }
 //│ ║        	       ^^^^^^^^^
 //│ ╟── Wildcard opens only supply a capitalized name if no implicit namespace is known for it once the rest of its block is resolved.
 //│ ╙── Write 'Option.Some' to select it explicitly.
@@ -279,7 +279,7 @@ fun piped() =
 // A reference is settled with its block. A namespace revealed by a later block
 // cannot change the selected definition.
 fun early() =
-  open AltOption
+  open AltOption.{ * }
   Some(17)
 
 :e
@@ -291,7 +291,7 @@ get(early())
 //│ ║  l.XX: 	fun get(x: Option[Int]) = if x is Option.Some(v) then v else 0
 //│ ║        	           ^^^^^^^^^^^
 //│ ╟── It was resolved to the 'Some' of this wildcard open.
-//│ ║  l.XX: 	  open AltOption
+//│ ║  l.XX: 	  open AltOption.{ * }
 //│ ║        	       ^^^^^^^^^
 //│ ╟── Wildcard opens only supply a capitalized name if no implicit namespace is known for it once the rest of its block is resolved.
 //│ ╙── Write 'Option.Some' to select it explicitly.
@@ -326,7 +326,7 @@ module Marks with
 
 :w
 fun annotated() =
-  open Marks
+  open Marks.{ * }
   @Custom(1)
   fun first() = 1
   @Plain

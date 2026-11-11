@@ -64,7 +64,7 @@ nested({answer: 43})
 class OpenBox(val value)
 let makers = {create: OpenBox}
 private fun opened(value) =
-  open makers
+  open makers.{ * }
   class Wrapper with
     fun make() = create(value)
   new Wrapper().make().value.answer

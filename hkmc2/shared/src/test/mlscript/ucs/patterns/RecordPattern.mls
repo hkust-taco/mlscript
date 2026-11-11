@@ -103,7 +103,7 @@ import "../../../mlscript-compile/Option.mls"
 import "../../../mlscript-compile/Stack.mls"
 
 open Option.{ Some, None }
-open Stack
+open Stack.{ * }
 
 Some(42) is { value: 42 }
 //│ = true

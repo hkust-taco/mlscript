@@ -1,13 +1,13 @@
 :.
 :js
 
-open annotations
+open annotations.{ * }
 
 import "../../../mlscript-compile/Stack.mls"
 import "../../../mlscript-compile/Iter.mls"
 import "../../../mlscript-compile/Option.mls"
 
-open Stack
+open Stack.{ * }
 open Option.{ Some, None }
 
 fun list(...elements) = elements Iter.toStack()

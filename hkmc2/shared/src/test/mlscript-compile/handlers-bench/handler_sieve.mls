@@ -2,8 +2,8 @@
 #config(effectHandlers: Some(EffectHandlers()))
 
 import "./BaseEffects.mls"
-open BaseEffects
-open SieveEffects
+open BaseEffects.{ * }
+open SieveEffects.{ * }
 
 module handler_sieve with ...
 

@@ -2,9 +2,9 @@
 import "./Iter.mls"
 import "./Predef.mls"
 
-open Iter
+open Iter.{ * }
 open Predef.{ id"??" }
-open LazyArray
+open LazyArray.{ * }
 
 // Helper Methods
 fun normIdx(i, len) =

@@ -5,7 +5,7 @@ import "../../mlscript-compile/LazyArray.mls"
 import "../../mlscript-compile/MutMap.mls"
 
 open LazyArray.{ equals }
-open LazyArray
+open LazyArray.{ * }
 
 // Splices
 

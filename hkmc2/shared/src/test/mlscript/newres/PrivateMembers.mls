@@ -225,7 +225,7 @@ module Lib2 with
   private fun helper = 1
   fun api = helper + 1
 
-open Lib2
+open Lib2.{ * }
 
 :e
 helper
@@ -241,7 +241,7 @@ api
 module Lib3 with
   fun helper = "public"
 
-open Lib3
+open Lib3.{ * }
 
 :expect "public"
 helper

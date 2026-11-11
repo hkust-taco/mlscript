@@ -158,7 +158,8 @@ object Keyword:
   val `using` = Keyword("using", N, N)
   val `module` = Keyword("module", N, N)
   val `object` = Keyword("object", N, N)
-  val `open` = Keyword("open", N, curPrec)
+  // Like file imports, open statements include a trailing `as` in their operand.
+  val `open` = Keyword("open", N, `import`.rightPrec)
   val `type` = Keyword("type", N, N)
   val `forall` = Keyword("forall", N, N)
   val `exists` = Keyword("exists", N, N)

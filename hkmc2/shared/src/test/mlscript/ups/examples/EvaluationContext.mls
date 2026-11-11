@@ -8,7 +8,7 @@
 import "../../../mlscript-compile/Option.mls"
 import "../../../mlscript-compile/MutMap.mls"
 
-open annotations
+open annotations.{ * }
 open Option.{ Some, None }
 
 

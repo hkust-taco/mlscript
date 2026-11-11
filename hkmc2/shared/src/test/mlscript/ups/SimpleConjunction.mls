@@ -5,7 +5,7 @@ import "../../mlscript-compile/Option.mls"
 
 open Option.{ Some, None }
 
-open annotations
+open annotations.{ * }
 
 pattern OverlappedIntervals = (0 ..= 2) & (1 ..= 3)
 

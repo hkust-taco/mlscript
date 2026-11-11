@@ -10,9 +10,9 @@ import "./Keywords.mls"
 import "./Tree.mls"
 import "./ParseRule.mls"
 
-open Predef
-open Option
-open Stack
+open Predef.{ * }
+open Option.{ * }
+open Stack.{ * }
 open ParseRule.{ Choice, rule }
 open Token.{ Curly, Square, Round }
 

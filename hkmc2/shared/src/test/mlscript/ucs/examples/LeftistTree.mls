@@ -5,7 +5,7 @@ import "../../../mlscript-compile/Option.mls"
 import "../../../mlscript-compile/Stack.mls"
 
 open Option.{ Some, None }
-open Stack
+open Stack.{ * }
 
 fun (??) getOrElse = Option.getOrElse
 

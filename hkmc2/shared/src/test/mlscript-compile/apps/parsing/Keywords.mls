@@ -5,7 +5,7 @@ import "../../Iter.mls"
 import "../../Predef.mls"
 import "../../MutMap.mls"
 
-open Predef
+open Predef.{ * }
 open Option.{ Some, None }
 
 module Keywords with ...

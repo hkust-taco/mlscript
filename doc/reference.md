@@ -1863,10 +1863,10 @@ import "../../mlscript-compile/Iter.mls"
 Bring module members into scope:
 
 ```mlscript
-open Option
+open Option.{ * }
 open Stack.{ Cons, Nil }           // selective open
-open Iter                          // open all members
-do open M; ...                     // locally open
+open Iter.{ * }                    // open all members
+do open M.{ * }; ...               // locally open
 ```
 
 Selective opens accept dotted paths and nested groups. Each selected leaf becomes
@@ -1889,11 +1889,41 @@ open Foo.
 ```
 
 Operator names work in either form, including `open Stack.{ :: }` or a lone `::`
-on an indented line after `open Stack.`. The old `open Foo { a, b }` form and its
-indentation-only equivalent remain supported. From language version `0.3.2`
-(including `0.3.x`), these forms warn that a dot should follow the imported path.
-A bare `open Foo` opens all members of `Foo`;
-`open Foo.Bar` imports the member `Bar` itself.
+on an indented line after `open Stack.`. In dotted lists, a bare `*` selects all
+members; `(*)` selects the multiplication operator. These forms work in every
+language version:
+
+```mlscript
+open M.{ * }                      // wildcard open
+open M.{ (*) }                    // import only the * operator
+```
+
+Use `as` to rename an imported member or module, and `as _` to hide a member:
+
+```mlscript
+open M.m as n
+open M as N                       // bind the module itself as N
+open M.N.{ m as n, o, p }
+open M.{ *, m as _ }              // all members except m
+```
+
+Each statement processes its entries from left to right. Renaming or hiding
+removes earlier imports of that member from the same statement, including its
+earlier wildcards. A later wildcard or explicit import can expose the name again:
+
+```mlscript
+open M.{ *, m as n }              // n is available; m is excluded
+open M.{ m as n, * }              // both m and n are available
+open M.{ *, m as _, * }           // m is available again
+```
+
+These exclusions apply to the selected receiver and do not remove lexical bindings
+or imports from earlier statements. Hidden names must still exist in the source.
+
+The old `open Foo { a, b }` form, its indentation-only equivalent, and the bare
+wildcard form `open Foo` remain supported. From `0.3.2`, they warn and suggest
+the dotted forms. Earlier versions also retain `open Foo` for wildcards and treat
+`*` as an operator name in undotted selective opens. `open Foo.Bar` imports `Bar` itself.
 
 With `newResolution` enabled, wildcard opens are consulted only when a name has
 no explicit binding in the current scope or any enclosing scope. Explicit
@@ -1909,7 +1939,7 @@ even though `M` also provides a member named `x`:
 val x = 1
 module M { val x = 2; val y = 3 }
 fun example() =
-  open M
+  open M.{ * }
   x + y                            // explicit x; y from M
 ```
 
@@ -2356,7 +2386,7 @@ Math.sin(x); Math.cos(x); Math.tan(x)
 
 ### Predef Functions
 
-Imported automatically when `open Predef` is used (or when `import "./Predef.mls"` is present):
+Imported automatically when `open Predef.{ * }` is used (or when `import "./Predef.mls"` is present):
 
 ```mlscript
 fun id(x) = x
@@ -2392,7 +2422,7 @@ fun enterHandleBlock(handler, body) = ...
 
 ```mlscript
 import "./Stack.mls"
-open Stack
+open Stack.{ * }
 
 type Stack[A] = Cons[A] | Nil
 data class (::) Cons[A](head: A, tail: Stack[A])
@@ -2432,7 +2462,7 @@ Option.unsafe.get(opt)
 
 ```mlscript
 import "./Iter.mls"
-open Iter
+open Iter.{ * }
 
 class Iterable(mk)           // wraps an iterator-factory
 class Iterator(next)         // wraps a next-function
@@ -2452,7 +2482,7 @@ xs toStack()                 // force to Stack
 
 ```mlscript
 import "./StrOps.mls"
-open StrOps
+open StrOps.{ * }
 
 (~) concat2(a, b)            // string concat with ~ operator
 concat(...xs)                // join multiple strings

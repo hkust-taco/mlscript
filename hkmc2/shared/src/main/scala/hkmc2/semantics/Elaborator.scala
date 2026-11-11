@@ -178,7 +178,7 @@ object Elaborator:
     def get(name: Str, captureScopes: Bool)(using config: Config): Opt[Ctx.Elem] =
       getExplicit(name, captureScopes).orElse:
         if config.language.useNewResolution then
-          val sources = visibleWildcardOpens.distinct
+          val sources = visibleWildcardOpens.iterator.filterNot(_.excluded.contains(name)).distinctBy(_.elem.importKey).toList
           if sources.isEmpty then N else S(Ctx.WildcardElem(name, sources, NameLookup.Opens))
         else N
 
@@ -203,7 +203,7 @@ object Elaborator:
 
     private lazy val visibleWildcardOpens: Ls[Ctx.OpenSource] =
       val inherited = parent.toList.flatMap(_.visibleWildcardOpens)
-      wildcardOpens ::: inherited.map(source => Ctx.OpenSource(capture(source.elem))(source.id))
+      wildcardOpens ::: inherited.map(source => Ctx.OpenSource(capture(source.elem), source.excluded)(source.id))
     
     def lookupLabel(name: Str): LabelLookup =
       @tailrec
@@ -462,17 +462,26 @@ object Elaborator:
   type RefSymbol = SimpleRefSymbol | TermSymbol | BlockMemberSymbol | ThisSymbol
   
   object Ctx:
-    /** The opening site is diagnostic metadata, excluded from equality so
-      * reopening the same receiver still contributes only one candidate.
-      * Captures must preserve this site independently of the receiver's definition.
+    /** A receiver whose members can supply otherwise unbound names, except those in `excluded`.
+      * The opening site identifies the import in diagnostics and does not affect equality.
       */
-    final case class OpenSource(elem: Elem)(val id: Ident)
+    final case class OpenSource(elem: Elem, excluded: Set[Str])(val id: Ident)
 
     abstract class Elem:
       def nme: Str
       def ref(id: Opt[Ident])(using Elaborator.State, Ctx, Config, NewResolver, ResolutionContext): Term
       def symbol: Opt[Symbol]
       def isImport: Bool
+      /** Structural receiver identity for import comparisons, ignoring aliases and source locations.
+        * References must use the original element to retain diagnostic locations. */
+      lazy val importKey: Elem = this match
+        case ImportedElem(base, _) => base.importKey
+        case LocatedElem(base) => base.importKey
+        case e: SelElem => e.copy(base = e.base.importKey, isImport = false)
+        case e: CaptElem => e.copy(base = e.base.importKey)
+        case e: WildcardElem => e.copy(sources = e.sources.map: source =>
+          source.copy(elem = source.elem.importKey)(source.id))
+        case _ => this
     final case class RefElem(sym: RefSymbol) extends Elem:
       val nme = sym.nme
       def ref(id: Opt[Ident])(using Elaborator.State, Ctx, Config, NewResolver, ResolutionContext): Term =
@@ -535,6 +544,12 @@ object Elaborator:
       def symbol = base.symbol
       def isImport: Bool = false
       def nme: Str = base.nme
+    /** An explicit import binding, including an alias for a lexical module or value. */
+    final case class ImportedElem(base: Elem, nme: Str) extends Elem:
+      def ref(id: Opt[Ident])(using Elaborator.State, Ctx, Config, NewResolver, ResolutionContext): Term =
+        base.ref(id)
+      def symbol = base.symbol
+      def isImport: Bool = true
     /** Retain an imported path segment's source when a later selection reads it
       * as a prefix without an identifier. Each use still creates a fresh reference,
       * preserving captures and by-name instantiation. Locations do not affect equality. */
@@ -2362,66 +2377,130 @@ extends Importer:
   
   
   
-  /** Resolve paths relative to the enclosing import group. Keep the receiver chain
-    * in context elements so importing a leaf preserves its receiver and lexical captures. */
-  private def openPath(path: Tree, base: Opt[Ctx.Elem]): Ctxl[Opt[(Ctx.Elem, Ident)]] =
-    def select(prefix: Ctx.Elem, id: Ident): Ctx.Elem =
+  private case class OpenPath(elem: Ctx.Elem, id: Ident, prefix: Opt[Ctx.Elem]):
+    def source: Ctx.OpenSource = Ctx.OpenSource(elem, Set.empty)(id)
+  
+  private enum OpenImport:
+    case Named(path: OpenPath, name: Ident)
+    case Wildcard(path: OpenPath)
+    case Hidden(path: OpenPath)
+  
+  /** Resolve an imported path relative to its enclosing group, retaining its receiver
+    * so aliases and wildcard exclusions refer to the same member. */
+  private def openPath(path: Tree, base: Opt[Ctx.Elem]): Ctxl[Opt[OpenPath]] =
+    def select(prefix: Ctx.Elem, id: Ident): OpenPath =
       val sym = if newResolution then N else resolveField(id, prefix.symbol, id)
-      Ctx.LocatedElem(Ctx.SelElem(prefix, id.name, sym, isImport = true))(id)
+      OpenPath(Ctx.LocatedElem(Ctx.SelElem(prefix, id.name, sym, isImport = true))(id), id, S(prefix))
     path match
     case id: Ident =>
-      val elem = base match
+      val resolved = base match
         case S(prefix) => S(select(prefix, id))
-        case N => ctx.get(id.name).map(Ctx.LocatedElem(_)(id))
-      if elem.isEmpty then
+        case N => ctx.get(id.name).map(elem => OpenPath(Ctx.LocatedElem(elem)(id), id, N))
+      if resolved.isEmpty then
         raise(ErrorReport(msg"Name not found: ${id.name}" -> id.toLoc :: Nil))
-      elem.map(_ -> id)
+      resolved
     case Sel(prefix, id) =>
-      openPath(prefix, base).map((elem, _) => select(elem, id) -> id)
+      openPath(prefix, base).map(path => select(path.elem, id))
+    case Bra(Round, id @ Ident("*")) => openPath(id, base)
     case _ =>
       raise(ErrorReport(msg"Illegal 'open' statement base." -> path.toLoc :: Nil))
       N
   
   private def wildcardOpen(path: Tree): Ctxl[Ctx] = openPath(path, N) match
-    case S((elem, id)) if newResolution =>
-      ctx.copy(wildcardOpens = Ctx.OpenSource(elem)(id) :: ctx.wildcardOpens)
-    case S((elem, id)) =>
-      elem.symbol match
-      case S(sym: BlockMemberSymbol) if sym.modOrObjTree.isDefined =>
-        ctx elem_++ sym.modOrObjTree.get.definedSymbols.iterator.map:
-          case (nme, sym) => nme -> Ctx.SelElem(elem, sym.nme, S(sym), isImport = true)
-      case _ =>
-        raise(ErrorReport(msg"Wildcard 'open' not supported for this kind of symbol." -> id.toLoc :: Nil))
-        ctx
+    case S(path) => openWildcardSource(path.source)
     case N => ctx
   
-  private def importedOpenNames(tree: Tree, base: Opt[Ctx.Elem]): Ctxl[Ls[Str -> Ctx.Elem]] =
-    def members(prefix: Tree, names: Ls[Tree], legacySyntax: Bool): Ls[Str -> Ctx.Elem] =
+  private def openWildcardSource(source: Ctx.OpenSource): Ctxl[Ctx] =
+    if newResolution then
+      ctx.copy(wildcardOpens = source :: ctx.wildcardOpens)
+    else source.elem.symbol match
+      case S(sym: BlockMemberSymbol) if sym.modOrObjTree.isDefined =>
+        ctx elem_++ sym.modOrObjTree.get.definedSymbols.iterator.filterNot((nme, _) => source.excluded.contains(nme)).map:
+          case (nme, sym) => nme -> Ctx.SelElem(source.elem, sym.nme, S(sym), isImport = true)
+      case _ =>
+        raise(ErrorReport(msg"Wildcard 'open' not supported for this kind of symbol." -> source.id.toLoc :: Nil))
+        ctx
+  
+  private def openImports(tree: Tree, base: Opt[OpenPath], wildcards: Bool): Ctxl[Ls[OpenImport]] =
+    def members(prefix: Tree, names: Ls[Tree], legacySyntax: Bool): Ls[OpenImport] =
       if legacySyntax && lang.warnLegacyOpenSyntax then
         raise(WarningReport(msg"Selective 'open' without a dot is deprecated; add '.' after this path." -> prefix.toLoc :: Nil))
-      openPath(prefix, base) match
-      case S((elem, id)) =>
+      openPath(prefix, base.map(_.elem)) match
+      case S(path) =>
         // Even an empty selection must validate a written receiver path.
-        if newResolution && names.isEmpty then elem.ref(S(id))
-        names.flatMap(importedOpenNames(_, S(elem)))
+        if newResolution && names.isEmpty then path.elem.ref(S(path.id))
+        // Older undotted lists retain their literal operator names; dotted lists
+        // admit wildcard entries in every version without changing resolver modes.
+        names.flatMap(openImports(_, S(path), wildcards = !legacySyntax || lang.warnLegacyOpenSyntax))
       case N => Nil
+    def selected(tree: Tree, renamed: Bool, alias: Opt[Ident]): Ls[OpenImport] =
+      openPath(tree, base.map(_.elem)) match
+      case S(path) =>
+        // Validate selected and hidden names even when their bindings are unused.
+        if newResolution then path.elem.ref(S(path.id))
+        val binding: Opt[Ident] = if renamed then alias else S(path.id)
+        val entries = binding match
+          case S(name) =>
+            if ctx.env.get(name.name).exists(!_.isImport) then
+              raise(WarningReport(msg"Imported name '${name.name}' is shadowed by a name already defined in the same scope" -> name.toLoc :: Nil))
+            OpenImport.Named(path, name) :: Nil
+          case N => Nil
+        if renamed then OpenImport.Hidden(path) :: entries else entries
+      case N => Nil
+    def wildcard(path: OpenPath): Ls[OpenImport] =
+      if newResolution then path.elem.ref(S(path.id))
+      OpenImport.Wildcard(path) :: Nil
+    def isWildcard(tree: Tree): Bool = wildcards && (tree match
+      case Ident("*") => base.isDefined
+      case Sel(_, Ident("*")) => true
+      case _ => false)
     tree match
     case OpenIn(prefix, Block(names)) => members(prefix, names, legacySyntax = false)
     case Reft(prefix, Block(names)) => members(prefix, names, legacySyntax = true)
     case Jux(prefix, Block(names)) => members(prefix, names, legacySyntax = true)
-    case _: Sel | _: Ident =>
-      openPath(tree, base) match
-      case S((elem, id)) =>
-        if ctx.env.contains(id.name) then
-          raise(WarningReport(msg"Imported name '${id.name}' is shadowed by a name already defined in the same scope" -> id.toLoc :: Nil))
-        // Validate each selected leaf even when its binding is unused.
-        if newResolution then elem.ref(S(id))
-        id.name -> elem :: Nil
+    case Ident("*") if wildcards && base.isDefined => wildcard(base.get)
+    case Sel(prefix, Ident("*")) if wildcards =>
+      openPath(prefix, base.map(_.elem)) match
+      case S(path) => wildcard(path)
       case N => Nil
+    case InfixApp(path, Keywrd(Keyword.`as`), alias) =>
+      if isWildcard(path) then
+        raise(ErrorReport(msg"A wildcard import cannot be renamed or hidden; use '(*)' to select the '*' operator." -> path.toLoc :: Nil))
+        Nil
+      else alias match
+        case id: Ident => selected(path, renamed = true, alias = S(id))
+        case _: Under => selected(path, renamed = true, alias = N)
+        case _: Error => Nil
+        case _ =>
+          raise(ErrorReport(msg"Expected an identifier or '_' after 'as' in 'open'." -> alias.toLoc :: Nil))
+          Nil
+    case _: Sel | _: Ident => selected(tree, renamed = false, alias = N)
+    case Bra(Round, Ident("*")) => selected(tree, renamed = false, alias = N)
     case _ =>
       val msg = if base.isDefined then msg"Illegal 'open' statement element." else msg"Illegal 'open' statement shape."
       raise(ErrorReport(msg -> tree.toLoc :: Nil))
       Nil
+  
+  /** Apply one statement's imports from left to right, then add them to the enclosing context.
+    * Renames and exclusions remove earlier imports of the same member only within this statement. */
+  private def applyOpenImports(imports: Ls[OpenImport]): Ctxl[Ctx] =
+    val (names, sources) = imports.foldLeft((Map.empty[Str, Ctx.Elem], Ls.empty[Ctx.OpenSource])):
+      case ((names, sources), OpenImport.Named(path, name)) =>
+        (names.updated(name.name, path.elem), sources)
+      case ((names, sources), OpenImport.Wildcard(path)) =>
+        (names, path.source :: sources)
+      case ((names, sources), OpenImport.Hidden(path)) =>
+        val remaining =
+          if names.get(path.id.name).exists(_.importKey == path.elem.importKey) then names - path.id.name else names
+        val filtered = sources.map: source =>
+          if path.prefix.exists(_.importKey == source.elem.importKey) then
+            source.copy(excluded = source.excluded + path.id.name)(source.id)
+          else source
+        (remaining, filtered)
+    val openedCtx = sources.reverseIterator.foldLeft(ctx): (opened, source) =>
+      opened.givenIn:
+        openWildcardSource(source)
+    openedCtx elem_++ names.iterator.map((name, elem) => name -> Ctx.ImportedElem(elem, name))
   
   def block(sts: Ls[Tree], hasResult: Bool)(using UnderCtx): Ctxl[(Blk, Ctx)] =
     block(new Block(sts), hasResult, Trm)
@@ -2593,8 +2672,11 @@ extends Importer:
       case Open(bod) :: sts =>
         reportUnusedAnnotations
         val openedCtx = bod match
-          case _: Ident => wildcardOpen(bod)
-          case _ => ctx elem_++ importedOpenNames(bod, N)
+          case id: Ident =>
+            if lang.warnLegacyOpenSyntax then
+              raise(WarningReport(msg"Wildcard 'open' without an explicit '*' is deprecated; use 'open ${id.name}.{ * }'." -> id.toLoc :: Nil))
+            wildcardOpen(bod)
+          case _ => applyOpenImports(openImports(bod, N, wildcards = true))
         openedCtx.givenIn:
           go(sts, Nil, acc)(N)
       case (m @ PrefixApp(Keywrd(Keyword.`import`), arg)) :: sts =>

@@ -1,6 +1,6 @@
 :.
 :js
-open annotations
+open annotations.{ * }
 
 
 // Inlining makes the coercion of `5` to the parameter's Int redundant, so the simplifier drops it.

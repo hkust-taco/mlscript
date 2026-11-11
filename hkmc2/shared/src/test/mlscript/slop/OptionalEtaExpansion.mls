@@ -2,7 +2,7 @@
 :flowBasedOpt
 :lift
 :noInline
-open annotations
+open annotations.{ * }
 
 // Both calls are valid; the returned functions need not agree on optionality.
 // No function type annotations are involved. Affinity enables eta expansion.

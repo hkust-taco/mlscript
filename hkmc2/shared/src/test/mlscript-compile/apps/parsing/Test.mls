@@ -16,7 +16,7 @@ open Token.{ LiteralKind }
 open Parser.{ parse, tracer }
 open Option.{ Some, None }
 open Predef.{ print }
-open Stack
+open Stack.{ * }
 open TreeHelpers.{ showAsTree }
 
 module Test with ...

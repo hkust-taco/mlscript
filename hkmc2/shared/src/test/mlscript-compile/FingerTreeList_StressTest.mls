@@ -11,10 +11,10 @@ import "./Option.mls"
 import "./Iter.mls"
 import "./Predef.mls"
 
-open Option
-open Iter
+open Option.{ * }
+open Iter.{ * }
 open Predef.{ id"??" }
-open FingerTreeList_StressTest
+open FingerTreeList_StressTest.{ * }
 
 fun normIdx(idx, len) =
   if idx < 0 then idx + len

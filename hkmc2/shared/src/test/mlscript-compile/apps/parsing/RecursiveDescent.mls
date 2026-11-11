@@ -8,7 +8,7 @@ import "./Token.mls"
 import "./BasicExpr.mls"
 
 open Predef.{ mkStr }
-open Stack
+open Stack.{ * }
 open Option.{ Some, None }
 open Token.{ Round, LiteralKind }
 open BasicExpr.{ Expr }

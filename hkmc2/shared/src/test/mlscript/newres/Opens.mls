@@ -8,7 +8,7 @@ module Values {
   val extra = 3
 }
 fun outerBinding() = {
-  open Values
+  open Values.{ * }
   explicit + extra
 }
 //│ explicit = 1
@@ -20,13 +20,13 @@ outerBinding()
 
 // Neither order of a wildcard open lets it shadow a member definition.
 fun before() = {
-  open Values
+  open Values.{ * }
   val extra = 4
   extra
 }
 fun after() = {
   val extra = 5
-  open Values
+  open Values.{ * }
   extra
 }
 
@@ -39,7 +39,7 @@ module Selected { val extra = 6 }
 fun named() = {
   open Selected.{ extra }
   fun nested() = {
-    open Values
+    open Values.{ * }
     extra
   }
   nested()
@@ -52,7 +52,7 @@ named()
 
 // Both open forms work before the module definition is elaborated.
 fun forwardWildcard() = {
-  open Later
+  open Later.{ * }
   answer
 }
 fun forwardNamed() = {
@@ -69,8 +69,8 @@ module Later { val answer = 7 }
 // A nonmatching wildcard source does not suppress a matching one.
 module Other { val unrelated = 8 }
 fun several() = {
-  open Other
-  open Later
+  open Other.{ * }
+  open Later.{ * }
   answer
 }
 
@@ -81,8 +81,8 @@ several()
 
 // Reopening the same source does not introduce a second candidate.
 fun repeated() = {
-  open Later
-  open Later
+  open Later.{ * }
+  open Later.{ * }
   answer
 }
 
@@ -94,8 +94,8 @@ repeated()
 // Two distinct sources make a name ambiguous, independently of open order.
 :e
 fun ambiguous() = {
-  open Values
-  open Selected
+  open Values.{ * }
+  open Selected.{ * }
   extra
 }
 ambiguous()
@@ -106,19 +106,19 @@ ambiguous()
 //│ ║  l.XX: 	  val extra = 3
 //│ ║        	  ^^^^^^^^^^^^^
 //│ ╟── Opened here
-//│ ║  l.+2: 	  open Values
+//│ ║  l.+2: 	  open Values.{ * }
 //│ ║        	       ^^^^^^
 //│ ╟── candidate: value 'extra' defined here
 //│ ║  l.XX: 	module Selected { val extra = 6 }
 //│ ║        	                  ^^^^^^^^^^^^^
 //│ ╟── Opened here
-//│ ║  l.+3: 	  open Selected
+//│ ║  l.+3: 	  open Selected.{ * }
 //│ ╙──      	       ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 fun missing() = {
-  open Later
+  open Later.{ * }
   absent
 }
 missing()
@@ -144,7 +144,7 @@ module Overloaded {
   mut val value: Int = 11
 }
 fun overload() = {
-  open Overloaded
+  open Overloaded.{ * }
   // The call and constructor choose different definitions of Item.
   [Item(), new Item().answer()]
 }
@@ -159,7 +159,7 @@ module Left { val left = 12 }
 module Right { val right = 13 }
 fun captured(initial) = {
   module Local { val item = initial }
-  open Local
+  open Local.{ * }
   fun read() = item
   read()
 }
@@ -174,8 +174,8 @@ module Outer {
   module Inner { val innerValue = 14 }
 }
 fun chained() = {
-  open Outer
-  open Inner
+  open Outer.{ * }
+  open Inner.{ * }
   innerValue
 }
 
@@ -187,7 +187,7 @@ chained()
 // Imported aliases expose the imported module's shapes.
 import "../../mlscript-compile/OverloadedClassLibrary.mls" as Library
 fun imported() = {
-  open Library
+  open Library.{ * }
   [Item(), new Item().answer()]
 }
 fun importedNamed() = {
@@ -202,7 +202,7 @@ fun importedNamed() = {
 
 // Indented module bodies use the same completed shapes as braced bodies.
 fun indented() = {
-  open Indented
+  open Indented.{ * }
   value
 }
 module Indented with
@@ -223,8 +223,8 @@ fun instance(n) = {
 let first = instance(16)
 let second = instance(17)
 fun twoInstances() = {
-  open first
-  open second
+  open first.{ * }
+  open second.{ * }
   value
 }
 twoInstances()
@@ -235,13 +235,13 @@ twoInstances()
 //│ ║  l.XX: 	  module M { val value = n }
 //│ ║        	             ^^^^^^^^^^^^^
 //│ ╟── Opened here
-//│ ║  l.+4: 	  open first
+//│ ║  l.+4: 	  open first.{ * }
 //│ ║        	       ^^^^^
 //│ ╟── candidate: value 'value' defined here
 //│ ║  l.XX: 	  module M { val value = n }
 //│ ║        	             ^^^^^^^^^^^^^
 //│ ╟── Opened here
-//│ ║  l.+5: 	  open second
+//│ ║  l.+5: 	  open second.{ * }
 //│ ╙──      	       ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ first = class M { value: 16 }
@@ -250,7 +250,7 @@ twoInstances()
 
 // Parameters are explicit bindings even when an open provides the same name.
 fun parameter(extra) = {
-  open Values
+  open Values.{ * }
   extra
 }
 
@@ -262,7 +262,7 @@ parameter(18)
 // Applied constructor patterns demand the class interpretation, not a term value.
 module Constructors { class Box(val value) }
 fun unbox(box) = {
-  open Constructors
+  open Constructors.{ * }
   if box is Box(value) then value else 0
 }
 
@@ -275,7 +275,7 @@ unbox(Constructors.Box(19))
 :e
 module ClassSource { class Shadowed }
 val Shadowed = 20
-open ClassSource
+open ClassSource.{ * }
 new Shadowed
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.+4: 	new Shadowed
@@ -289,13 +289,13 @@ new Shadowed
 
 // Explicit selective opens win regardless of their order relative to wildcard opens.
 fun namedAfter() = {
-  open Values
+  open Values.{ * }
   open Selected.{ extra }
   extra
 }
 fun namedBefore() = {
   open Selected.{ extra }
-  open Values
+  open Values.{ * }
   extra
 }
 
@@ -305,8 +305,8 @@ fun namedBefore() = {
 
 :e
 fun ambiguousReversed() = {
-  open Selected
-  open Values
+  open Selected.{ * }
+  open Values.{ * }
   extra
 }
 ambiguousReversed()
@@ -317,20 +317,20 @@ ambiguousReversed()
 //│ ║  l.XX: 	module Selected { val extra = 6 }
 //│ ║        	                  ^^^^^^^^^^^^^
 //│ ╟── Opened here
-//│ ║  l.+2: 	  open Selected
+//│ ║  l.+2: 	  open Selected.{ * }
 //│ ║        	       ^^^^^^^^
 //│ ╟── candidate: value 'extra' defined here
 //│ ║  l.XX: 	  val extra = 3
 //│ ║        	  ^^^^^^^^^^^^^
 //│ ╟── Opened here
-//│ ║  l.+3: 	  open Values
+//│ ║  l.+3: 	  open Values.{ * }
 //│ ╙──      	       ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // Both the temporary assignment and restoration use the selected open member.
 fun temporary() = {
-  open Overloaded
+  open Overloaded.{ * }
   let during = set value = 21 in value
   [during, value]
 }
@@ -345,7 +345,7 @@ module Callable {
   fun Make() = new Make
 }
 fun callable() = {
-  open Callable
+  open Callable.{ * }
   [Make().answer(), new Make().answer()]
 }
 
@@ -358,7 +358,7 @@ callable()
 :expect [1, 0, 1, 0]
 module BarePatterns { class Token }
 fun bareWildcard(x) = {
-  open BarePatterns
+  open BarePatterns.{ * }
   if x is Token then 1 else 0
 }
 fun bareNamed(x) = {
@@ -373,8 +373,8 @@ fun bareNamed(x) = {
 // Opening sites survive capture by a nested function, independently of definitions.
 :e
 fun inheritedAmbiguity() = {
-  open Values
-  open Selected
+  open Values.{ * }
+  open Selected.{ * }
   fun nested() = extra
   nested()
 }
@@ -386,12 +386,12 @@ inheritedAmbiguity()
 //│ ║  l.XX: 	  val extra = 3
 //│ ║        	  ^^^^^^^^^^^^^
 //│ ╟── Opened here
-//│ ║  l.+2: 	  open Values
+//│ ║  l.+2: 	  open Values.{ * }
 //│ ║        	       ^^^^^^
 //│ ╟── candidate: value 'extra' defined here
 //│ ║  l.XX: 	module Selected { val extra = 6 }
 //│ ║        	                  ^^^^^^^^^^^^^
 //│ ╟── Opened here
-//│ ║  l.+3: 	  open Selected
+//│ ║  l.+3: 	  open Selected.{ * }
 //│ ╙──      	       ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

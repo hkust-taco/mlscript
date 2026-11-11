@@ -6,7 +6,7 @@ import "./Predef.mls"
 open Predef.{ pass1 }
 
 open Block.{ Literal, ClassSymbol, ConcreteClassSymbol, showSymbol, isPrimitiveType, isPrimitiveTypeOf }
-open Option
+open Option.{ * }
 
 type Shape = Shape.Shape
 

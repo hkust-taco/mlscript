@@ -5,9 +5,9 @@ import "../../../mlscript-compile/Char.mls"
 import "../../../mlscript-compile/Stack.mls"
 
 open Char.{ AnyChar }
-open Stack
+open Stack.{ * }
 
-open annotations
+open annotations.{ * }
 
 pattern Inc = (Int as x) => x + 1
 

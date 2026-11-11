@@ -28,7 +28,7 @@ nested({value: Option.Some(3)})
 // The field type also takes precedence over an unrelated wildcard member.
 :expect 4
 fun fallback(x: {value: Option[Int]}) =
-  open Alternative
+  open Alternative.{ * }
   if x is {value: Some(v)} then v else 0
 fallback({value: Option.Some(4)})
 //│ = 4

@@ -9,7 +9,7 @@ import "./Lexer.mls"
 import "./Token.mls"
 import "./Expr.mls"
 
-open Stack
+open Stack.{ * }
 open Option.{ Some, None }
 open Token.{ Round, LiteralKind }
 

@@ -1,6 +1,6 @@
 :.
 :noInline
-open annotations
+open annotations.{ * }
 //│ Wasm result:
 //│ = {}
 

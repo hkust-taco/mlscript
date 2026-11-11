@@ -242,7 +242,7 @@ numberedIndentation()
 // Dotted syntax and bare wildcard opens need no migration warning.
 :expect 126
 fun currentSyntax() =
-  open Paths
+  open Paths.{ * }
   open Inner.{ answer }
   fun indented() =
     open Paths.Inner.

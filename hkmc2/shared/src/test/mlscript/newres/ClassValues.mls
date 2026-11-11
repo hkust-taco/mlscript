@@ -131,7 +131,7 @@ Namespace.Item.class
 Namespace.Plain.class
 //│ = class Plain
 
-open Namespace
+open Namespace.{ * }
 
 :expect true
 Item.class == Namespace.Item.class

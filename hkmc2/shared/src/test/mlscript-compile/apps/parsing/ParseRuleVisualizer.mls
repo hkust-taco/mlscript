@@ -12,12 +12,12 @@ import "./ParseRule.mls"
 import "./Rules.mls"
 import "./Parser.mls"
 
-open Predef
-open Stack
-open Option
+open Predef.{ * }
+open Stack.{ * }
+open Option.{ * }
 open ParseRule.{ Choice }
 open Rules.{ syntaxKinds }
-open TreeTracer
+open TreeTracer.{ * }
 open XML.{ html, tag, style }
 
 module ParseRuleVisualizer with ...

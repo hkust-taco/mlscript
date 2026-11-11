@@ -72,7 +72,7 @@ class Derived extends Factory.Item
 //│ ╙──      	                ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-open Factory
+open Factory.{ * }
 
 :expect 7
 Item().value
@@ -156,7 +156,7 @@ Modules.Box.class
 //│ ╙──      	                ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-open Modules
+open Modules.{ * }
 
 :expect 9
 Box.make().value
@@ -207,7 +207,7 @@ new Hidden.Alone
 //│ ╙──      	                ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-open Hidden
+open Hidden.{ * }
 
 :e
 Alone
