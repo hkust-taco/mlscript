@@ -67,12 +67,12 @@ fun observed[A](value: A) =
 //│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Int].
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── A value of type parameter 'A' flows into the type of the contextual argument.
+//│ ╟── A value of type parameter 'A' is incompatible with the required subtype relationship.
 //│ ║  l.+2: 	  using fun wrap(using element: Show[A]): Show[List[A]] = Show[List[A]]("derived:" + element.label)
 //│ ║        	                                     ^
 //│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Str].
 //│ ║  l.XX: 	  using Show[Str] = Show[Str]("str")
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── A value of type parameter 'A' flows into the type of the contextual argument.
+//│ ╟── A value of type parameter 'A' is incompatible with the required subtype relationship.
 //│ ║  l.+2: 	  using fun wrap(using element: Show[A]): Show[List[A]] = Show[List[A]]("derived:" + element.label)
 //│ ╙──      	                                     ^

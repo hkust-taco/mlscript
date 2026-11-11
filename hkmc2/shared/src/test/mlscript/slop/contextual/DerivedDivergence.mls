@@ -36,7 +36,7 @@ noAlternative()
 //│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Int].
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── A value of class 'Str' flows into the type of the contextual argument.
+//│ ╟── A value of class 'Str' is incompatible with the required subtype relationship.
 //│ ║  l.+3: 	  display("missing")
 //│ ║        	          ^^^^^^^^^
 //│ ╟── Selecting this instance function again for the type Show[Str] would diverge.
@@ -68,7 +68,7 @@ growth()
 //│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Int].
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── A value of class 'List' flows into the type of the contextual argument.
+//│ ╟── A value of class 'List' is incompatible with the required subtype relationship.
 //│ ║  l.+2: 	  using fun bad[A](using inner: Show[List[A]]): Show[A] = Show[A](inner.label)
 //│ ║        	                                     ^^^^^^^
 //│ ╟── Selecting this instance function again for the type Show[List[List[Int]]] would diverge.
@@ -109,7 +109,7 @@ swap()
 //│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Int].
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── A value of class 'Pair' flows into the type of the contextual argument.
+//│ ╟── A value of class 'Pair' is incompatible with the required subtype relationship.
 //│ ║  l.+2: 	  using fun pair[A, B](using inner: Show[Pair[B, A]]): Show[Pair[A, B]] = Show[Pair[A, B]](inner.label)
 //│ ║        	                                         ^^^^^^^^^^
 //│ ╟── Selecting this instance function again for the type Show[Pair[Int, Str]] would diverge.
@@ -142,7 +142,7 @@ fun rose(value: Rose) =
 //│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Int].
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── A value of class 'Rose' flows into the type of the contextual argument.
+//│ ╟── A value of class 'Rose' is incompatible with the required subtype relationship.
 //│ ║  l.+3: 	  using fun tree(using inner: Show[List[Rose]]): Show[Rose] = Show[Rose](inner.label)
 //│ ║        	                                        ^^^^
 //│ ╟── Selecting this instance function again for the type Show[Rose] would diverge.
@@ -172,7 +172,7 @@ cycleCheck()
 //│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Int].
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── A value of class 'List' flows into the type of the contextual argument.
+//│ ╟── A value of class 'List' is incompatible with the required subtype relationship.
 //│ ║  l.+1: 	fun cyclic() = List(cyclic())
 //│ ║        	               ^^^^^^^^^^^^^^
 //│ ╟── Selecting this instance function again for the type Show[List[List[?]]] would diverge.
@@ -204,7 +204,7 @@ fun unspecified() =
 //│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Int].
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── A value of class 'List' flows into the type of the contextual argument.
+//│ ╟── A value of class 'List' is incompatible with the required subtype relationship.
 //│ ║  l.+2: 	  using fun bad[A](using inner: Show[List[A]]): Show[A] = Show[A](inner.label)
 //│ ║        	                                     ^^^^^^^
 //│ ╟── Selecting this instance function again for the type Show[List[List[?]]] would diverge.

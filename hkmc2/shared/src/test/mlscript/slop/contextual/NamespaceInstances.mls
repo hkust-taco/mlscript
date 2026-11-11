@@ -68,7 +68,7 @@ codec(1)
 //│ ╟── This instance from namespace 'Codec' has an incompatible type, Codec[Str].
 //│ ║  l.XX: 	    using Codec[Str] = new StrCodec
 //│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── A value of class 'Int' flows into the type of the contextual argument.
+//│ ╟── A value of class 'Int' is incompatible with the required subtype relationship.
 //│ ║  l.+1: 	codec(1)
 //│ ╙──      	      ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -80,9 +80,28 @@ module Family with
   using A = new A
 fun choose[T](value: T)(using chosen: T) = 42
 
-:expect 42
+// A superclass instance does not inhabit the observed subclass type.
+:e
 choose(new Family.B)
-//│ = 42
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	choose(new Family.B)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	choose(new Family.B)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	fun choose[T](value: T)(using chosen: T) = 42
+//│ ║        	                        ^^^^^^^^^^^^^^^
+//│ ╟── Here, the module 'Family' declaring class 'B' provides no accessible instance with the required head.
+//│ ║  l.+1: 	choose(new Family.B)
+//│ ║        	       ^^^^^^^^^^^^
+//│ ╟── This instance from namespace 'Family' has an incompatible type, A.
+//│ ║  l.XX: 	  using A = new A
+//│ ║        	  ^^^^^^^^^^^^^^^
+//│ ╟── A value of class 'A' is incompatible with the required subtype relationship.
+//│ ║  l.XX: 	  using A = new A
+//│ ╙──      	        ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Type-argument namespaces contribute instances.
 abstract class Tag[A] with

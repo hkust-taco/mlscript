@@ -357,11 +357,12 @@ avoid collisions with named properties and inherited instances.
 
 Elaboration records contextual sites and unresolved references in one
 `resolutionSites` worklist in post-order. The site's pending entry stores its role,
-source scope, lexical instances, and type binders. Settlement processes each entry
-synchronously before exposure and completion. An application head supplies only
-leading contextual lists; a value site also abstracts ordinary lists that precede
-later contextual lists. Calling-convention checks apply when reference targets
-arrive, independently of whether a site supplies arguments.
+source scope, lexical instances, and type binders. Settlement starts each entry,
+then retries suspended contextual queries until no further selection is possible.
+It diagnoses unresolved queries before exposure and completion. An application
+head supplies only leading contextual lists; a value site also abstracts ordinary
+lists that precede later contextual lists. Calling-convention checks apply when
+reference targets arrive, independently of whether a site supplies arguments.
 
 `listenContextual` materializes definition references at their producing site.
 It uses instance views only to classify the received value, and forwards ordinary
@@ -384,12 +385,32 @@ sites reuse the worklist entry; completion work, output hosts, and observers are
 allocated only on demand. Completed syntax is sealed with its synthesized terms.
 
 A Supply step uses `App(Missing, CtxTup(InstanceArg...))` and ordinary `applyShape`.
-Its argument constraints and call activation exist before queries are decided.
-Each `InstanceArg` records its selected expression and publishes it immediately,
-so the next query can observe its inference consequences. All callees reuse these
-steps, but select under their own bindings and must agree on the runtime arguments.
-Selections never change after their decision. Later incompatible values report
-errors through the same matching relation used for selection.
+Its call activation exists before queries are decided. Each `InstanceArg` records
+its uniquely selected expression and publishes it immediately, so other queries
+can observe its inference consequences. All callees reuse these steps, but select
+under their own bindings and must agree on the runtime arguments. Each callee
+constrains its own derived expression. Feeding the shared argument's union of
+derived results back to every callee would equate independent instantiations.
+Selections never change after their decision. Later incompatible values and newly
+compatible alternatives report errors through the same matching relation used for
+selection. Finalization rechecks uniqueness even for queries selected earlier.
+
+`ContextualSubtype` probes `candidate <: query` without publishing hypothetical
+bounds to inference. It retains both sides of every nominal type argument, reverses
+input comparisons, and follows inheritance and structural interfaces. A probe owns
+its variable bounds and coinductive comparison cache; union alternatives use
+immutable snapshots, preserving correlations between repeated variables without
+rolling back the shared graph. The ordinary constraint graph supplies observed
+lower bounds. `contextualUpperBounds` retains symbolic upper endpoints, transported
+through their parameter's scope and copied through the usual publisher import
+protocol. Failed probes therefore cannot constrain other candidates.
+
+A named query keeps its inferred positions open within those bounds. A bare
+parameter query fixes its required type to the union of its observed values, so an
+unrelated candidate cannot widen the query to make itself applicable. Observation
+hosts retain deferred flow. Suspended queries add no candidate constraints; unique
+selections can unblock them. Selected queries subscribe to the hosts read by their
+probes, including incompatible alternatives and late namespace candidates.
 
 Only a subscription in the empty activation drives a site's completion. It receives
 each raw value in the activation that published it, as the term traversal does for
@@ -400,7 +421,10 @@ call-site instances, which every activation shares, with instantiated types of t
 site's binders: a receiver `Boxed(1)` of a method in `Boxed[A]` would make `Int` reach
 a query that selected a `Show[A]`. The site's decisions, checks, reports, and stage
 subscriptions belong to the consuming unit's base context, which each activation
-inherits, so sibling activations neither decide nor report again.
+inherits, so sibling activations neither decide nor report again. Within a generic
+body, a caller's instantiation of that body's binder still denotes its opaque
+parameter during probing. An instantiation created by a recursive call written
+inside the body retains its separate inference variable.
 
 A flow can conflict with what a site has already seen: a late value or namespace
 reaches a decided argument, or a callee's calling convention, parameter list before
@@ -499,13 +523,13 @@ A selected instance function builds an application chain using fresh `InstanceAr
 terms. Seed the function's type arguments from its result view of the query head,
 including inherited result positions, before applying its contextual arguments.
 Use the ordinary call-site instantiation cache and type constraints, which invoke
-`inferTypeArguments`; parameter queries infer from the whole result. Query positions
-retain alias and explicit-argument scope transfers. `constrainTypes` carries the
-query endpoint back through its callee to the site, then into the derived function.
-Feeding expanded observations directly would mix the two functions' lexical entry
-marks and lose deferred flows. Each synthesized application drives ordinary
-`applyShape` directly, so its nested queries complete synchronously before the
-next enclosing query.
+`inferTypeArguments`; the result is the lower endpoint of the subtype comparison.
+Parameter queries supply the nominal views of their observations. Both endpoints
+retain alias, explicit-argument, and observed-value scope transfers.
+`constrainTypes` carries each endpoint through the site before entering the other
+function's scope. Each synthesized application drives ordinary `applyShape`
+directly. Its nested queries start before the next enclosing query and join the
+same suspended worklist when they need more bounds.
 
 Each callee needs an independent inference chain: sharing the first callee's
 bindings would conceal different nested selections. Retain those chains on the

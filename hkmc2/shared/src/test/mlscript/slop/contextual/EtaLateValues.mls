@@ -1,6 +1,6 @@
 :.
 
-class Evidence[A](val label: Str)
+class Evidence[in A](val label: Str)
 using Evidence[Int] = Evidence[Int]("int")
 fun consume[A](value: A)(using e: Evidence[A]) = e.label
 
@@ -16,7 +16,7 @@ polymorphic("later")
 //│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
 //│ ║  l.+1: 	polymorphic("later")
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── A value of class 'Str' flows into the type of a contextual argument after its instance was selected, making that type incompatible with the instance's type.
+//│ ╟── A value of class 'Str' makes the contextual argument's type incompatible with its selected instance.
 //│ ║  l.+1: 	polymorphic("later")
 //│ ║        	            ^^^^^^^
 //│ ╟── The contextual argument is supplied implicitly here, where its instance was selected.

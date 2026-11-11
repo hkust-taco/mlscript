@@ -125,13 +125,23 @@ final class NewResolverState(val owner: Elaborator.State):
   private[semantics] val instanceDeclarations = mutable.ArrayBuffer.empty[TermDefinition]
   private[semantics] val contextualPositions: Cache[DeclaredType, TermShapeHost] =
     new Cache(_.contextualPositions, identity)
+  private[semantics] val contextualUpperBounds: Cache[VarSymbol, TermShapeHost] =
+    new Cache(_.contextualUpperBounds, identity)
+  // A pending query only observes inference. Selecting a unique candidate can
+  // publish bounds that let another query discard its remaining alternatives.
+  private[semantics] val pendingContextual = mutable.ArrayBuffer.empty[Bool => Bool]
+  private[semantics] val finalContextualChecks = mutable.ArrayBuffer.empty[() => Unit]
   private[semantics] val contextualChecks: Seen[(InstanceArg, TermShapeHost)] = new Seen(_.contextualChecks)
   private[semantics] val contextualClassPositions: Cache[(ShapeIdentity.Key, VarSymbol), TermShapeHost] =
     new Cache(_.contextualClassPositions, identity)
+  private[semantics] val contextualTupleFields: Cache[TupleShape.Fixed, TermShapeHost] =
+    new Cache(_.contextualTupleFields, identity)
   private[semantics] val instanceNamespaces: Cache[(InstanceArg, VarSymbol), InstanceNamespaces] =
     new Cache(_.instanceNamespaces, _.copyForImport())
   private[semantics] val contextualQueries: Seen[(InstanceArg, VarSymbol)] = new Seen(_.contextualQueries)
   private[semantics] val contextualLateNamespaces: Seen[(InstanceArg, BlockMemberSymbol)] = new Seen(_.contextualLateNamespaces)
+  private[semantics] val contextualLateNamespaceChecks: Seen[(InstanceArg, BlockMemberSymbol, TermShapeHost)] =
+    new Seen(_.contextualLateNamespaceChecks)
   private[semantics] val contextualFailures: Seen[(InstanceArg, DeclaredType)] = new Seen(_.contextualFailures)
   private[semantics] val contextualStages: Seen[(Term, Int)] = new Seen(_.contextualStages)
   // What flow has revealed about the implicit namespaces of this unit's references
@@ -975,12 +985,12 @@ private[semantics] final case class ContextualDerivationStep(function: TermDefin
 private[semantics] final case class ContextualDerivation(expression: Term, arguments: Ls[InstanceArg])
 
 private[semantics] enum ContextualQuery:
-  case Named(cls: ClassLikeDef, positions: Ls[DeclaredType])
+  case Named(cls: ClassLikeDef, positions: Ls[TypeArgument])
   case Parameter(tpe: DeclaredType, symbol: VarSymbol)
 
-/** Whether an instance serves a query. A rejection names a value that the instance does not
-  * accept, if any: a parameter query that no value reaches, or an instance whose type has no
-  * view of the queried class, rejects without one. */
+/** Whether the candidate's type can be a subtype of the query with the current bounds.
+  * A rejection can retain a value witnessing an incompatible subtype comparison.
+  */
 private[semantics] enum ContextualMatch:
   case Accepted
   case Rejected(witness: Opt[TermShape])

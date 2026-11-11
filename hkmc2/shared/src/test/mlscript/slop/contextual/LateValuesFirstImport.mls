@@ -8,7 +8,7 @@ LexicalQueries.unannotated("first call")
 //│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
 //│ ║  l.+1: 	LexicalQueries.unannotated("first call")
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── A value of class 'Str' flows into the type of a contextual argument after its instance was selected, making that type incompatible with the instance's type.
+//│ ╟── A value of class 'Str' makes the contextual argument's type incompatible with its selected instance.
 //│ ║  l.+1: 	LexicalQueries.unannotated("first call")
 //│ ║        	                           ^^^^^^^^^^^^
 //│ ╟── The contextual argument is supplied implicitly here, where its instance was selected.

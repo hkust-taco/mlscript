@@ -29,12 +29,11 @@ using Accept[Any] = new TopAccept
 accept(new Child)
 //│ = "top"
 
-// §3.4 currently accepts structural forms at candidate argument positions.
+// Matching follows the parameter and result types of function arguments.
 class FunctionAccept extends Accept[Int -> Int] with
   fun label: Str = "function"
 using Accept[Int -> Int] = new FunctionAccept
 
-// TODO: §3.4 deliberately permits structural candidate arguments for now.
 :expect "function"
 accept((x: Int) => x)
 //│ = "function"
@@ -72,7 +71,7 @@ unannotated("later")
 //│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
 //│ ║  l.+1: 	unannotated("later")
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── A value of class 'Str' flows into the type of a contextual argument after its instance was selected, making that type incompatible with the instance's type.
+//│ ╟── A value of class 'Str' makes the contextual argument's type incompatible with its selected instance.
 //│ ║  l.+1: 	unannotated("later")
 //│ ║        	            ^^^^^^^
 //│ ╟── The contextual argument is supplied implicitly here, where its instance was selected.

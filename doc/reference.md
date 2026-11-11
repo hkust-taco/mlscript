@@ -1568,35 +1568,44 @@ type, possibly with arguments, or a type parameter without an explicit argument.
 Union, intersection, function, record, tuple, and literal query types are errors.
 The type in an instance declaration must be named too.
 
-A named query `N[Q1, ..., Qn]` matches an instance whose declared class is `N` or a
-subclass of `N`. View the instance's arguments through its inheritance chain;
-each must accept every value reaching the corresponding query position, across
-all activations. A superclass instance cannot supply a subclass query. Matching
-never ranks a more specific instance above another match in the same tier.
+Matching asks whether the instance's declared type can be a subtype of the query,
+given the current inference bounds. A named query `N[Q1, ..., Qn]` requires an
+instance of `N` or a subclass, viewing its arguments through its inheritance chain.
+Argument comparisons follow variance: covariant outputs compare from instance to
+query, contravariant inputs compare from query to instance, and invariant arguments
+require both directions. For example, `Source[Cat]` serves `Source[Animal]` when
+`Source` is covariant, and `Eq[Animal]` serves `Eq[Cat]` when `Eq` is contravariant.
+`Eq[Str]` cannot serve `Eq[Int]`. Matching never ranks a more specific instance above
+another match in the same tier.
 
-A parameter query matches an instance whose declared type accepts all values
-reaching that parameter. When no value reaches it, the query is undetermined and
-reports an error. Empty argument positions of a named query do accept vacuously.
+An inferred argument of a named query retains its lower and upper bounds. A
+candidate remains possible if those bounds permit the subtype comparison. For
+example, an invariant `Monoid[Num]` can serve `Monoid[T]` with `Int <: T` by choosing
+`T = Num`; it cannot serve a fixed `Monoid[Int]`. Candidate probes do not add their
+proposed bounds to inference, so a rejected candidate cannot affect another one.
 
-Acceptance compares value classes and, recursively, exposed type arguments.
-`Any` accepts every value. Inside a generic definition, the only value of one of its
-explicit type parameters `A` is `A`'s abstract value, whatever its callers pass. That
-value is accepted by `A` itself, by `Any`, and by the type parameters of an instance
-function, which each use instantiates; it is not accepted by a named candidate
-position. Conversely, an enclosing definition's type parameter accepts no value of a
-known class. Other values of unknown class, such as dynamic, opaque, erroneous, or
-probe flow, are accepted. A named candidate position accepts its class and subclasses; missing
-argument views impose no further restriction. A union accepts if one component
-accepts, and an intersection requires all components. Other candidate position
-forms (functions, records, tuples) currently accept conservatively.
+A query that is itself an inferred type parameter uses the union of the types of
+its observed values. Its instance must fit that observed type: in
+`fun f[T](x: T)(using instance: T)`, observing a `Cat` allows a `Cat` instance but
+does not allow an unrelated `Dog` instance to widen `T`. With no observed values,
+the query remains undetermined until further flow supplies them.
 
-Thus `Monoid[Num]` can match `Monoid[T]` when `T` receives `Int` values; if
-`Monoid[Int]` also matches in the same tier, the result is ambiguous.
+Explicit type parameters inside generic definitions remain opaque, regardless of
+their callers' arguments. An opaque `A` is a subtype of itself and `Any`; no
+particular named type is known to be a subtype of `A`. Instance functions have fresh
+inference variables for their own parameters, and repeated occurrences must admit
+one consistent instantiation. Recursive comparisons also follow unions,
+intersections, record fields, function domains and results, and fixed tuple fields.
+Dynamic values and unavailable interfaces retain uncertainty.
 
-Queries run clause by clause, left to right. A selected argument immediately
-feeds ordinary parameter inference before the next query is decided. With
-`fun f[A](using Foo[A], A)`, selecting `Foo[Baz]` can determine the later `A` query.
-Reversing the parameters does not let the later query determine the earlier one.
+Queries start clause by clause, left to right. A uniquely selected argument
+immediately feeds ordinary parameter inference. A query with several possible
+instances stays suspended while later queries and other elaboration supply bounds;
+incompatible candidates are filtered out. With
+`fun f[A](using Foo[A], A)`, selecting `Foo[Baz]` can determine the `A` query in
+either parameter order. At the end of elaboration, each query must have exactly
+one matching instance. Remaining alternatives produce an ambiguity error; an empty
+search or undetermined parameter also produces an error.
 
 ### Scope, Namespaces, and Shadowing
 
@@ -1608,9 +1617,10 @@ using Int = 2             // later matching declaration shadows small
 Search tries lexical tiers from innermost outward. Each `using` declaration is
 its own tier, visible from the end of its declaration to the end of its enclosing
 block; later declarations come first. The contextual parameters of one clause
-form one tier. Inner scopes precede outer scopes. The first tier with matches
-decides: one match succeeds, several are ambiguous. Nonmatching declarations do
-not hide earlier matching ones.
+form one tier. Inner scopes precede outer scopes. The first tier with possible
+matches decides: one match succeeds, while several suspend the query until more
+bounds arrive. Alternatives remaining at finalization are ambiguous. Nonmatching
+declarations do not hide earlier matching ones.
 
 All namespace instances form one final tier. A `using` declaration directly in
 a module or object is a member: `using T as name = value` gives it an ordinary
@@ -1634,19 +1644,20 @@ query. Reaching the same declaration along multiple paths does not duplicate it.
 
 Generic signatures are opaque to their callers. In
 `fun sum[A](xs: List[A])(using Monoid[A]) = fold(xs)`, the lexical `Monoid[A]`
-parameter accepts `A`'s abstract value, and its tier shadows namespaces. Without that
+parameter has the required type, and its tier shadows namespaces. Without that
 parameter, no instance such as `Monoid[Int]` serves the query, even if every caller
 passes `Int`s; the generic function must take the instance from its callers, as
-`sum` does. An instance for `Any` serves every type parameter. An unannotated
+`sum` does. A contravariant instance such as `Eq[Any]` serves `Eq[A]`. An unannotated
 parameter is not opaque: its callers' values are ordinary flow.
 
 ### Timing, Agreement, and Errors
 
 Sites are recorded in elaboration post-order, after their contained sites; an
 application head immediately precedes its application. They share an ordered
-worklist with names awaiting wildcard fallback. Settlement processes each entry
-synchronously before the next, before interface exposure and block completion.
-Ordinary values flow immediately; contextual callees wait for their site's decision.
+worklist with names awaiting wildcard fallback. Settlement starts each entry before
+the next, then revisits suspended queries until no further selection is possible.
+It checks the remaining queries before interface exposure and block completion.
+Ordinary values flow immediately; contextual arguments wait for a unique selection.
 
 Every callee of a reference must share its contextual calling convention: for
 each parameter list, whether it is contextual, and the arity of each contextual
@@ -1658,7 +1669,8 @@ Every callee's queries use its own call bindings but must select the same runtim
 arguments. Different selections, or contextual callees mixed with dynamic callees,
 are errors. Later callees before block completion must agree with the fixed
 selection; completed blocks cannot acquire new targets. Later activations reuse
-the decisions. A later incompatible value is an error, not a reason to reselect.
+the decisions. A later incompatible value or newly compatible alternative is an
+error, not a reason to reselect.
 A matching namespace discovered after a namespace-tier decision or failed search
 is reported as late; lexical selections suppress these namespace searches.
 
@@ -1696,19 +1708,20 @@ be no parameter lists. Other `using <definition>` forms are errors. Instance
 functions can appear wherever instance declarations can: as module or object
 members, or lexically in blocks and class bodies.
 
-The function is a candidate with type `R`; its own type parameters accept every
-value during matching. Direct and derived instances share the same tiers and
-ambiguity rules. Selecting a function instantiates it at a synthesized call
-inside the enclosing site. Values at each query position flow into the
-corresponding result position through ordinary type-argument inference. In the
-example, the elements of the `List` values bind `A`.
+The function is a candidate with type `R`; matching checks whether a consistent
+instantiation of its own type parameters can make `R` a subtype of the query.
+Direct and derived instances share the same tiers and ambiguity rules. Selecting a
+function instantiates it at a synthesized call inside the enclosing site. Ordinary
+type-argument inference relates its result to the query in the same subtype
+direction, including variance and inherited positions. In the example, the
+elements of the `List` values bind `A`.
 
 The function's contextual lists become nested queries with the enclosing site's
-scope and rules. They run depth-first, before the next enclosing query. The
-result of the synthesized application supplies the enclosing argument. Each
-callee infers its own bindings, and agreement compares the selected function
-and all nested selections recursively. Selecting the same outer function is
-insufficient if its callees require different nested arguments.
+scope and rules. They start depth-first and can suspend until other queries supply
+more bounds. The result of the synthesized application supplies the enclosing
+argument. Each callee infers its own bindings, and agreement compares the selected
+function and all nested selections recursively. Selecting the same outer function
+is insufficient if its callees require different nested arguments.
 
 #### Divergence
 

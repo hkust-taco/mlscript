@@ -23,13 +23,13 @@ opaque(1)
 //│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Int].
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── A value of type parameter 'A' flows into the type of the contextual argument.
+//│ ╟── A value of type parameter 'A' is incompatible with the required subtype relationship.
 //│ ║  l.+1: 	fun opaque[A](value: A) = display(value)
 //│ ║        	                     ^
 //│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Str].
 //│ ║  l.XX: 	  using Show[Str] = Show[Str]("str")
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── A value of type parameter 'A' flows into the type of the contextual argument.
+//│ ╟── A value of type parameter 'A' is incompatible with the required subtype relationship.
 //│ ║  l.+1: 	fun opaque[A](value: A) = display(value)
 //│ ╙──      	                     ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -63,13 +63,13 @@ fun enclosing[A](value: A)(using Show[A]) =
 //│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Int].
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── A value of type parameter 'B' flows into the type of the contextual argument.
+//│ ╟── A value of type parameter 'B' is incompatible with the required subtype relationship.
 //│ ║  l.+2: 	  fun inner[B](other: B) = display(other)
 //│ ║        	                      ^
 //│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Str].
 //│ ║  l.XX: 	  using Show[Str] = Show[Str]("str")
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── A value of type parameter 'B' flows into the type of the contextual argument.
+//│ ╟── A value of type parameter 'B' is incompatible with the required subtype relationship.
 //│ ║  l.+2: 	  fun inner[B](other: B) = display(other)
 //│ ╙──      	                      ^
 
@@ -100,13 +100,13 @@ class Unboxed[A](val value: A) with
 //│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Int].
 //│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── A value of type parameter 'A' flows into the type of the contextual argument.
+//│ ╟── A value of type parameter 'A' is incompatible with the required subtype relationship.
 //│ ║  l.+1: 	class Unboxed[A](val value: A) with
 //│ ║        	                            ^
 //│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Str].
 //│ ║  l.XX: 	  using Show[Str] = Show[Str]("str")
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── A value of type parameter 'A' flows into the type of the contextual argument.
+//│ ╟── A value of type parameter 'A' is incompatible with the required subtype relationship.
 //│ ║  l.+1: 	class Unboxed[A](val value: A) with
 //│ ╙──      	                            ^
 

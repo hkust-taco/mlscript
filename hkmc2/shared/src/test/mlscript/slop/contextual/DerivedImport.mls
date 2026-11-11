@@ -16,7 +16,23 @@ fixed(List("late"))
 //│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
 //│ ║  l.+1: 	fixed(List("late"))
 //│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ╟── A value of class 'Str' flows into the type of a contextual argument after its instance was selected, making that type incompatible with the instance's type.
+//│ ╟── A value of class 'Str' makes the contextual argument's type incompatible with its selected instance.
+//│ ║  l.+1: 	fixed(List("late"))
+//│ ║        	           ^^^^^^
+//│ ╟── The contextual argument is supplied implicitly here, where its instance was selected.
+//│ ║  in mlscript-compile/DerivedLibrary.mls
+//│ ║  l.XX: 	    display(value)
+//│ ║        	    ^^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	  fun display[A](value: A)(using show: Show[A]): Str = show.label
+//│ ║        	                           ^^^^^^^^^^^^^^^^^^^
+//│ ╟── The selected instance is declared here, with type Show[List[A]].
+//│ ║  l.XX: 	    using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+//│ ╙──      	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
+//│ ║  l.+1: 	fixed(List("late"))
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of class 'Str' makes the contextual argument's type incompatible with its selected instance.
 //│ ║  l.+1: 	fixed(List("late"))
 //│ ║        	           ^^^^^^
 //│ ╟── The contextual argument is supplied implicitly here, where its instance was selected.

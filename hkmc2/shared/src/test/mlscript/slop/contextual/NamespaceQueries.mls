@@ -25,7 +25,7 @@ evidence(new ChildData)
 //│ ╟── This instance from namespace 'ChildData' has an incompatible type, Evidence[Str].
 //│ ║  l.XX: 	  using Evidence[Str] = Evidence[Str]("cutoff")
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── A value of class 'ChildData' flows into the type of the contextual argument.
+//│ ╟── A value of class 'ChildData' is incompatible with the required subtype relationship.
 //│ ║  l.+1: 	evidence(new ChildData)
 //│ ╙──      	         ^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -38,6 +38,7 @@ evidence(1)
 //│ = "lexical"
 
 // Parameter queries consult the same module through aliases and both classes.
+:e
 module Family with
   class A
   class B extends A
@@ -46,10 +47,31 @@ module Family with
   using First = new A
 fun choose[A](value: A)(using chosen: A) = 42
 fun throughAlias(value: Family.Second) = choose(value)
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+8: 	fun throughAlias(value: Family.Second) = choose(value)
+//│ ║        	                                         ^^^^^^^^^^^^^
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+8: 	fun throughAlias(value: Family.Second) = choose(value)
+//│ ║        	                                         ^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.+7: 	fun choose[A](value: A)(using chosen: A) = 42
+//│ ║        	                        ^^^^^^^^^^^^^^^
+//│ ╟── Here, the module 'Family' declaring type 'Second' provides no accessible instance with the required head.
+//│ ║  l.+8: 	fun throughAlias(value: Family.Second) = choose(value)
+//│ ║        	                        ^^^^^^^^^^^^^
+//│ ╟── Here, the module 'Family' declaring class 'B' provides no accessible instance with the required head.
+//│ ║  l.+8: 	fun throughAlias(value: Family.Second) = choose(value)
+//│ ║        	                        ^^^^^^^^^^^^^
+//│ ╟── This instance from namespace 'Family' has an incompatible type, A.
+//│ ║  l.+6: 	  using First = new A
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of class 'A' is incompatible with the required subtype relationship.
+//│ ║  l.+6: 	  using First = new A
+//│ ╙──      	        ^^^^^
 
-:expect 42
+:re
 throughAlias(new Family.B)
-//│ = 42
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // The same declaration reached through two argument namespaces is one candidate.
 class Pair[A, B]

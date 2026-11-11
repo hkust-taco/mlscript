@@ -58,19 +58,10 @@ foo
 
 fun foo[A](using A)(using Foo[A]) = 42
 
-// The first query has no flows; later clauses cannot determine it retroactively.
-:e
+// The first query waits for the bounds supplied by the later clause.
+:expect 42
 foo
-//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
-//│ ║  l.+1: 	foo
-//│ ║        	^^^
-//│ ╟── The type of the contextual argument supplied implicitly here cannot be determined, as neither an explicit type argument nor a value determines the type parameter that it refers to.
-//│ ║  l.+1: 	foo
-//│ ║        	^^^
-//│ ╟── The contextual argument is passed to this parameter, whose type is the type parameter 'A'.
-//│ ║  l.XX: 	fun foo[A](using A)(using Foo[A]) = 42
-//│ ╙──      	           ^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ = 42
 
 
 using Foo[Bar[Baz]] = new Foo
@@ -81,60 +72,31 @@ foo
 //│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
 //│ ║  l.+1: 	foo
 //│ ║        	^^^
-//│ ╟── The type of the contextual argument supplied implicitly here cannot be determined, as neither an explicit type argument nor a value determines the type parameter that it refers to.
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
 //│ ║  l.+1: 	foo
 //│ ║        	^^^
-//│ ╟── The contextual argument is passed to this parameter, whose type is the type parameter 'A'.
+//│ ╟── The contextual argument is passed to this parameter.
 //│ ║  l.XX: 	fun foo[A](using A)(using Foo[A]) = 42
 //│ ╙──      	           ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 using Bar[Baz] = new Bar
 
-:e
-:re
+:expect 42
 foo
-//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
-//│ ║  l.+1: 	foo
-//│ ║        	^^^
-//│ ╟── The type of the contextual argument supplied implicitly here cannot be determined, as neither an explicit type argument nor a value determines the type parameter that it refers to.
-//│ ║  l.+1: 	foo
-//│ ║        	^^^
-//│ ╟── The contextual argument is passed to this parameter, whose type is the type parameter 'A'.
-//│ ║  l.XX: 	fun foo[A](using A)(using Foo[A]) = 42
-//│ ╙──      	           ^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ = 42
 
 using Bar[Int] = new Bar
 
-:e
-:re
+:expect 42
 foo
-//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
-//│ ║  l.+1: 	foo
-//│ ║        	^^^
-//│ ╟── The type of the contextual argument supplied implicitly here cannot be determined, as neither an explicit type argument nor a value determines the type parameter that it refers to.
-//│ ║  l.+1: 	foo
-//│ ║        	^^^
-//│ ╟── The contextual argument is passed to this parameter, whose type is the type parameter 'A'.
-//│ ║  l.XX: 	fun foo[A](using A)(using Foo[A]) = 42
-//│ ╙──      	           ^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ = 42
 
 using Bar[Baz] = new Bar
 
-// The first query has no flows; later clauses cannot determine it retroactively.
-:e
+// The first query waits for the bounds supplied by the later clause.
+:expect 42
 foo
-//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
-//│ ║  l.+1: 	foo
-//│ ║        	^^^
-//│ ╟── The type of the contextual argument supplied implicitly here cannot be determined, as neither an explicit type argument nor a value determines the type parameter that it refers to.
-//│ ║  l.+1: 	foo
-//│ ║        	^^^
-//│ ╟── The contextual argument is passed to this parameter, whose type is the type parameter 'A'.
-//│ ║  l.XX: 	fun foo[A](using A)(using Foo[A]) = 42
-//│ ╙──      	           ^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ = 42
 
 
