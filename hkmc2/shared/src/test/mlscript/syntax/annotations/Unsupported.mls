@@ -14,7 +14,7 @@ open StrOps.{ * }
 //│ ║        	^^^^^^
 //│ ╟── Annotations are not supported on open terms.
 //│ ║  l.+2: 	open StrOps.{ * }
-//│ ╙──      	^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^
 
 :w
 @debug 0

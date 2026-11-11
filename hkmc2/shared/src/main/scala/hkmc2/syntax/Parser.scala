@@ -342,6 +342,12 @@ abstract class Parser(
       case _: Indent_Curly => p.block(allowNewlines = true)
       case _ => p.blockMaybeIndented
   
+  /** Construct a block whose span includes its explicit braces, even when it is empty.
+    * Indentation tokens cover only leading whitespace, so indented blocks use their statements' span. */
+  private def locatedBlock(br: BRACKETS, loc: Loc, stmts: Ls[Tree]): Block =
+    val block = Block(stmts)
+    if br.k is Curly then block.withLoc(S(loc)) else block
+  
   
   /* Note on annotation parsing:
       There is currently an inconsistency when parsing annotations that start blocks,
@@ -609,8 +615,8 @@ abstract class Parser(
         case S(exprAlt) =>
           consume
           if verbose then printDbg("$ found blockAlt; proceed with block")
-          val e = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.block(allowNewlines = true))
-            |> Tree.Block.apply
+          val stmts = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.block(allowNewlines = true))
+          val e = locatedBlock(br, loc, stmts)
           blockContinuation(e, prec, exprAlt.infixes, exprAlt.rest).map(exprAlt.k.tupled)
         case N =>
           
@@ -1099,7 +1105,7 @@ abstract class Parser(
         consume
         consume
         val inner = bracketedBlock(br)
-        continueWith(OpenIn(acc, Block(inner)))
+        continueWith(OpenIn(acc, locatedBlock(br, l1, inner)))
         
       case (PERIOD, l0) :: (LITVAL(lit: (Tree & Literal)), l1) :: _ =>
         consume

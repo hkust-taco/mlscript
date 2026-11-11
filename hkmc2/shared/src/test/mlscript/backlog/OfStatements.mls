@@ -20,7 +20,7 @@ print of
   x + 1
 //│ ╔══[COMPILATION ERROR] Illegal position for 'open' statement.
 //│ ║  l.+2: 	  open Predef.{ * }
-//│ ╙──      	  ^^^^^^^^^^^^^^^
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Expected a body for let bindings in expression position
 //│ ║  l.+3: 	  let x = 1
 //│ ╙──      	      ^^^^^

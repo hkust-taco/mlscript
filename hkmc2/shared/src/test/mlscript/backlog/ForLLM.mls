@@ -103,7 +103,7 @@ pattern ShapeArea =
 pattern P = {:radius} => radius
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found type definition
 //│ ║  l.+1: 	pattern P = {:radius} => radius
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: radius
 //│ ║  l.+1: 	pattern P = {:radius} => radius
 //│ ╙──      	                         ^^^^^^

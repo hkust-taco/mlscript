@@ -251,3 +251,23 @@ fun currentSyntax() =
   answer + indented() + Paths.Inner.{ answer }
 currentSyntax()
 //│ = 126
+
+
+// Invalid group aliases include the closing braces in their diagnostic span.
+:e
+open Paths.{} as EmptyGroup
+//│ ╔══[COMPILATION ERROR] Illegal 'open' statement base.
+//│ ║  l.+1: 	open Paths.{} as EmptyGroup
+//│ ╙──      	     ^^^^^^^^
+
+:e
+open Paths.{
+  Inner.{ answer }
+} as NestedGroup
+//│ ╔══[COMPILATION ERROR] Illegal 'open' statement base.
+//│ ║  l.+1: 	open Paths.{
+//│ ║        	     ^^^^^^^
+//│ ║  l.+2: 	  Inner.{ answer }
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.+3: 	} as NestedGroup
+//│ ╙──      	^

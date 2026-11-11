@@ -115,7 +115,7 @@ a + b + c + d
 open Foo.{ a, b, Bar.{ c, d } } as F
 //│ ╔══[COMPILATION ERROR] Illegal 'open' statement base.
 //│ ║  l.+1: 	open Foo.{ a, b, Bar.{ c, d } } as F
-//│ ╙──      	     ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	     ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 open Foo as F
 

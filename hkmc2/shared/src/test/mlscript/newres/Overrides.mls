@@ -254,7 +254,7 @@ AbstractCallable()
 new Abstract with { fun other() = 9 }
 //│ ╔══[COMPILATION ERROR] Class '$anon' has unimplemented members
 //│ ║  l.+1: 	new Abstract with { fun other() = 9 }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Member 'foo' requires an implementation
 //│ ║  l.XX: 	abstract class Abstract { fun foo(): Int }
 //│ ╙──      	                              ^^^
