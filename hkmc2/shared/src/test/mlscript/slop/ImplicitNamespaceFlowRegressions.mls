@@ -137,7 +137,7 @@ spreadWildcard()
 
 :expect 7
 fun spreadSelective() =
-  open Records { Fields }
+  open Records.{ Fields }
   {...Fields}.a
 spreadSelective()
 //│ = 7

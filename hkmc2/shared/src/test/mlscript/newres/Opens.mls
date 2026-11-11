@@ -37,7 +37,7 @@ fun after() = {
 
 module Selected { val extra = 6 }
 fun named() = {
-  open Selected { extra }
+  open Selected.{ extra }
   fun nested() = {
     open Values
     extra
@@ -56,7 +56,7 @@ fun forwardWildcard() = {
   answer
 }
 fun forwardNamed() = {
-  open Later { answer }
+  open Later.{ answer }
   answer
 }
 module Later { val answer = 7 }
@@ -128,9 +128,9 @@ missing()
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
-open Later { absent }
+open Later.{ absent }
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.+1: 	open Later { absent }
+//│ ║  l.+1: 	open Later.{ absent }
 //│ ║        	             ^^^^^^
 //│ ╟── Module 'Later' does not contain member 'absent'
 //│ ║  l.XX: 	module Later { val answer = 7 }
@@ -191,7 +191,7 @@ fun imported() = {
   [Item(), new Item().answer()]
 }
 fun importedNamed() = {
-  open Library { Item }
+  open Library.{ Item }
   [Item(), new Item().answer()]
 }
 
@@ -290,11 +290,11 @@ new Shadowed
 // Explicit selective opens win regardless of their order relative to wildcard opens.
 fun namedAfter() = {
   open Values
-  open Selected { extra }
+  open Selected.{ extra }
   extra
 }
 fun namedBefore() = {
-  open Selected { extra }
+  open Selected.{ extra }
   open Values
   extra
 }
@@ -362,7 +362,7 @@ fun bareWildcard(x) = {
   if x is Token then 1 else 0
 }
 fun bareNamed(x) = {
-  open BarePatterns { Token }
+  open BarePatterns.{ Token }
   if x is Token then 1 else 0
 }
 [bareWildcard(new BarePatterns.Token), bareWildcard(0),

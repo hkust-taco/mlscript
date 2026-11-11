@@ -43,7 +43,7 @@ mightBeInt of "hello"
 
 import "../../../mlscript-compile/Option.mls"
 
-open Option { Some, None }
+open Option.{ Some, None }
 
 pattern Optional(pattern T) = (null => None) | ((T as x) => Some(x))
 

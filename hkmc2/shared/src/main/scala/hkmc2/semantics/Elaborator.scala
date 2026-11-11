@@ -2520,9 +2520,9 @@ extends Importer:
         reportUnusedAnnotations
         bod match
           case Jux(bse, Block(sts)) =>
-            // * Old parse of `Option { Some, None }`; I guess the indented version still parses like this
+            // Indented member lists retain their juxtaposition parse.
             some(bse -> some(sts))
-          case Reft(bse, Block(sts)) =>
+          case OpenIn(bse, Block(sts)) =>
             some(bse -> some(sts))
           // * There could be other shapes of open statements...
           case bse: Ident =>

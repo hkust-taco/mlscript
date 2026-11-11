@@ -3,7 +3,7 @@
 import "./Predef.mls"
 import "./StrOps.mls"
 
-open Predef { fold }
+open Predef.{ fold }
 
 module TreeTracer with ...
 

@@ -5,7 +5,7 @@
 // not be lost — nor duplicated — when a pattern is compiled to a fixed-point
 // machine.
 
-open annotations { compile }
+open annotations.{ compile }
 
 data class Box(val value)
 

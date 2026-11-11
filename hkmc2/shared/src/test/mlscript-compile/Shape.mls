@@ -3,9 +3,9 @@ import "./Block.mls"
 import "./Option.mls"
 import "./Predef.mls"
 
-open Predef { pass1 }
+open Predef.{ pass1 }
 
-open Block { Literal, ClassSymbol, ConcreteClassSymbol, showSymbol, isPrimitiveType, isPrimitiveTypeOf }
+open Block.{ Literal, ClassSymbol, ConcreteClassSymbol, showSymbol, isPrimitiveType, isPrimitiveTypeOf }
 open Option
 
 type Shape = Shape.Shape
@@ -50,7 +50,7 @@ fun static(s: Shape) =
     Class(_, params) then params.every(pass1(static))
     Arr(shapes) then shapes.every(pass1(static))
 
-open Block { Case }
+open Block.{ Case }
 
 fun silh(p: Case): Shape = if p is
   Block.Lit(l) then Lit(l)

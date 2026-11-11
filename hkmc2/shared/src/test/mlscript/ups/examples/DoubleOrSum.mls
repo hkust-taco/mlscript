@@ -8,7 +8,7 @@ import "../../../mlscript-compile/Iter.mls"
 import "../../../mlscript-compile/Option.mls"
 
 open Stack
-open Option { Some, None }
+open Option.{ Some, None }
 
 fun list(...elements) = elements Iter.toStack()
 

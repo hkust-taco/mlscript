@@ -2,7 +2,7 @@
 
 import "../Option.mls"
 
-open Option { Some, None }
+open Option.{ Some, None }
 open annotations
 
 module EvaluationContext with ...

@@ -6,8 +6,8 @@ import "../../../mlscript-compile/apps/parsing/Expr.mls"
 import "../../../mlscript-compile/apps/parsing/TokenHelpers.mls"
 import "../../../mlscript-compile/apps/parsing/Lexer.mls"
 
-open Lexer { lex }
-open PrattParsing { parse }
+open Lexer.{ lex }
+open PrattParsing.{ parse }
 
 fun example(input) =
   let tokens = lex of input, noWhitespace: false

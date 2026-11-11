@@ -5,7 +5,7 @@ import "../../../mlscript-compile/Char.mls"
 import "../../../mlscript-compile/Iter.mls"
 import "../../../mlscript-compile/Stack.mls"
 
-open Iter { joined }
+open Iter.{ joined }
 
 // To match simple email addresses matched by the following regular expressions:
 // ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$

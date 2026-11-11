@@ -10,7 +10,7 @@ import "./Term.mjs"
 // import "./Runtime.mls"
 // import "./Rendering.mls"
 
-open annotations { noInline }
+open annotations.{ noInline }
 
 
 

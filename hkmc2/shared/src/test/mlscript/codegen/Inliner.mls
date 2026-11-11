@@ -3,7 +3,7 @@
 
 #config(deadBranchRemoval: true)
 
-open annotations { noInline }
+open annotations.{ noInline }
 
 
 :soir

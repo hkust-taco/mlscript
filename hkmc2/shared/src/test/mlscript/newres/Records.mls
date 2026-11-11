@@ -55,7 +55,7 @@ read(wrap({different: 10})).different
 // Both selective and wildcard opens can expose record properties.
 :expect 11
 let record = {answer: 11}
-open record {answer}
+open record.{answer}
 answer
 //│ = 11
 //│ record = {answer: 11}

@@ -23,8 +23,8 @@
 
 import "../../../mlscript-compile/Option.mls"
 
-open annotations { compile }
-open Option { Some, None }
+open annotations.{ compile }
+open Option.{ Some, None }
 
 
 let shouldPrint = true

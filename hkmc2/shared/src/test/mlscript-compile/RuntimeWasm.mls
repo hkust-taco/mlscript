@@ -1,7 +1,7 @@
 #lang(0.3.x)
 #config(target: CompilationTarget.JS, noFreeze: true)
 
-open annotations { async }
+open annotations.{ async }
 
 import "binaryen"
 import "node:fs/promises" as fs

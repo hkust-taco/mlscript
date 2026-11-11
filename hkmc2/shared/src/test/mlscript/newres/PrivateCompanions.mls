@@ -1,6 +1,6 @@
 :.
 
-open annotations { inline, noInline }
+open annotations.{ inline, noInline }
 
 // A public factory can hide its implementation class. Only the chosen interpretation is checked.
 module Factory with
@@ -97,7 +97,7 @@ fun typedOpen(x: Item) = x
 //│ ║  l.XX: 	  private class Item with
 //│ ╙──      	                ^^^^
 
-open Factory { Item }
+open Factory.{ Item }
 
 :expect 7
 Item().value

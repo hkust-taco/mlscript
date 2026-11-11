@@ -7,7 +7,7 @@ import "../../../mlscript-compile/Iter.mls"
 import "../../../mlscript-compile/Runtime.mls"
 
 open annotations
-open Option { Some, None }
+open Option.{ Some, None }
 
 data class Type with
   constructor

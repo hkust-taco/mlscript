@@ -4,7 +4,7 @@ import "./Predef.mls"
 import "./FingerTreeList.mls"
 
 open Iter
-open Predef { id"??" }
+open Predef.{ id"??" }
 open LazyFingerTree
 open FingerTreeList
 

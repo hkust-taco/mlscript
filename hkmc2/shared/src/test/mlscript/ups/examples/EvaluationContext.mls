@@ -9,7 +9,7 @@ import "../../../mlscript-compile/Option.mls"
 import "../../../mlscript-compile/MutMap.mls"
 
 open annotations
-open Option { Some, None }
+open Option.{ Some, None }
 
 
 data class Term with

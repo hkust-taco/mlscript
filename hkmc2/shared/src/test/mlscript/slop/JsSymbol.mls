@@ -1,6 +1,6 @@
 :.
 
-open annotations { fresh, jsSymbol, noInline }
+open annotations.{ fresh, jsSymbol, noInline }
 
 // The key's declared type is intentionally Any: the resolver does not type-check it.
 module Keys {
@@ -178,7 +178,7 @@ class MutablePrefix {
 // The annotation is a prelude declaration, usable through ordinary opens.
 :expect [50, 51]
 private fun opened() =
-  open annotations { jsSymbol }
+  open annotations.{ jsSymbol }
   class Opened {
     @jsSymbol(Keys.first) fun read() = 50
   }

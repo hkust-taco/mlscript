@@ -4,7 +4,7 @@
 import "../../../mlscript-compile/Option.mls"
 import "../../../mlscript-compile/Stack.mls"
 
-open Option { Some, None }
+open Option.{ Some, None }
 open Stack
 
 fun (~~>) toBe(x, y) = if x === y then () else throw Error(String(x) + " is not " + String(y))

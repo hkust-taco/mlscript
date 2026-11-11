@@ -25,7 +25,7 @@ fun asynchronous() = 2
 // Explicit and wildcard opens identify the same built-in annotation symbol.
 :soir
 fun explicitAnnotation(x) =
-  open annotations { noInline }
+  open annotations.{ noInline }
   @noInline
   fun inner(y) = y + 1
   inner(x)

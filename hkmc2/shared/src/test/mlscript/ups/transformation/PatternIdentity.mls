@@ -1,6 +1,6 @@
 :js
 
-open annotations { compile }
+open annotations.{ compile }
 
 data class Box(value)
 

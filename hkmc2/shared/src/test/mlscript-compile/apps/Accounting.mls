@@ -4,7 +4,7 @@ import "fs"
 
 import "../StrOps.mls"
 open StrOps
-open StrOps { concat2, ~ }
+open StrOps.{ concat2, ~ }
 
 import "../Predef.mls"
 open Predef

@@ -1,0 +1,54 @@
+:.
+:js
+
+import "../../../mlscript-compile/Stack.mls"
+
+// A lone operator is a member name inside the dotted braces.
+:expect Cons(1, Nil)
+fun singleton() =
+  open Stack.{ :: }
+  1 :: Stack.Nil
+singleton()
+//│ = Cons(1, Nil)
+
+:expect Cons(2, Nil)
+fun mixed() =
+  open Stack.{ Nil, :: }
+  2 :: Nil
+mixed()
+//│ = Cons(2, Nil)
+
+// The operator can also come first, with comments and newline-separated members.
+:expect Cons(3, Nil)
+fun multiline() =
+  open Stack.{
+    :: // constructor
+    Nil
+  }
+  3 :: Nil
+multiline()
+//│ = Cons(3, Nil)
+
+// An empty selection imports nothing; local selections do not escape their scope.
+open Stack.{}
+
+:e
+Nil
+//│ ╔══[COMPILATION ERROR] Name not found: Nil
+//│ ║  l.+1: 	Nil
+//│ ╙──      	^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// The old refinement-shaped syntax is no longer a selective open.
+:e
+open Stack { Nil }
+//│ ╔══[COMPILATION ERROR] Illegal 'open' statement shape.
+//│ ║  l.+1: 	open Stack { Nil }
+//│ ╙──      	     ^^^^^^^^^^^^^
+
+// A selective open contains names, not expressions to evaluate.
+:e
+open Stack.{ 1 + 2 }
+//│ ╔══[COMPILATION ERROR] Illegal 'open' statement element.
+//│ ║  l.+1: 	open Stack.{ 1 + 2 }
+//│ ╙──      	             ^^^^^

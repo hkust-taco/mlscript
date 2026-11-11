@@ -2,7 +2,7 @@
 
 import "./Predef.mls"
 
-open annotations { noInline }
+open annotations.{ noInline }
 
 @noInline fun inaccessibleFunction() = "It works."
 

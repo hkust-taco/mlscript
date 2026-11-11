@@ -209,7 +209,7 @@ private fun get(x) = x.v
 module Lib1 with
   private fun hidden = 1
 
-open Lib1 { hidden }
+open Lib1.{ hidden }
 
 :e
 hidden
@@ -251,7 +251,7 @@ helper
 // * Definitions from other files.
 
 import "../../mlscript-compile/PrivateLibrary.mls"
-open PrivateLibrary { Counter, Registry }
+open PrivateLibrary.{ Counter, Registry }
 
 :expect [2, 3, 3]
 [Counter.make(1).peek, Counter.nextOf(Counter.make(2)), Registry.count]

@@ -4,7 +4,7 @@
 :lift
 :flowBasedOpt debugEta debugDpe
 
-open annotations { noInline }
+open annotations.{ noInline }
 data class (::) Cons(h, t)
 data object Nil
 data object A

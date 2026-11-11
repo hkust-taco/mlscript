@@ -193,7 +193,7 @@ viaNamespace()
 //│ = 10
 
 fun viaBinding() =
-  open AltOption { Some }
+  open AltOption.{ Some }
   Some(11)
 
 :expect 11

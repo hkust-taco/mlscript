@@ -6,7 +6,7 @@ import "./Predef.mls"
 
 open Option
 open Iter
-open Predef { id"??" }
+open Predef.{ id"??" }
 open FingerTreeList
 
 fun normIdx(idx, len) =

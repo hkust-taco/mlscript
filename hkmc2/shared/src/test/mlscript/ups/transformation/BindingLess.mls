@@ -4,7 +4,7 @@
 import "../../../mlscript-compile/Char.mls"
 import "../../../mlscript-compile/Stack.mls"
 
-open Char { AnyChar }
+open Char.{ AnyChar }
 open Stack
 
 open annotations

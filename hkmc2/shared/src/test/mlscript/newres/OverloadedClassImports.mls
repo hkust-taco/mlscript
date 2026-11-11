@@ -32,7 +32,7 @@ OverloadedClassLibrary.Item()
 new OverloadedClassLibrary.Item().answer()
 //│ = 52
 
-open OverloadedClassLibrary { Item }
+open OverloadedClassLibrary.{ Item }
 
 :expect 52
 new Item().answer()

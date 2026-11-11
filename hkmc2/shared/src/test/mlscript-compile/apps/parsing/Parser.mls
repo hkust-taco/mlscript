@@ -19,10 +19,10 @@ import "./ParseRule.mls"
 open Predef
 open Option
 open Stack
-open ParseRule { Choice }
-open Choice { Ref }
-open Keywords { opPrecOpt }
-open Rules { termRule, typeRule, declRule, syntaxKinds }
+open ParseRule.{ Choice }
+open Choice.{ Ref }
+open Keywords.{ opPrecOpt }
+open Rules.{ termRule, typeRule, declRule, syntaxKinds }
 
 module Parser with ...
 

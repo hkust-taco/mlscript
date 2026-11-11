@@ -1374,7 +1374,7 @@ if term is refined(Term) and term is
 The `@compile` annotation forces compile-time expansion of a pattern:
 
 ```mlscript
-open annotations { compile }
+open annotations.{ compile }
 fun foo(x) = if x is @compile Box then "yes" else "no"
 fun foo(x) = if x is @compile 42 then "yes" else "no"
 ```
@@ -1864,15 +1864,18 @@ Bring module members into scope:
 
 ```mlscript
 open Option
-open Stack { Cons, Nil }           // selective open
+open Stack.{ Cons, Nil }           // selective open
 open Iter                          // open all members
 do open M; ...                     // locally open
 ```
 
+Braced selective opens use `.{ ... }` and accept operator names, including a single
+operator: `open Stack.{ :: }`. The names become bindings in the enclosing scope.
+
 With `newResolution` enabled, wildcard opens are consulted only when a name has
 no explicit binding in the current scope or any enclosing scope. Explicit
 bindings include local variables, parameters, member definitions, imports, and
-selective opens such as `open Stack { Cons, Nil }`. An inner wildcard open does
+selective opens such as `open Stack.{ Cons, Nil }`. An inner wildcard open does
 not shadow an explicit binding in an outer scope. Moving a wildcard open before
 or after an explicit binding does not give it priority over that binding.
 
@@ -1955,7 +1958,7 @@ selections can start chains too, as in `paint(.red.lighter)`, and they can head
 constructor patterns, as in `if x is .None then 0 else 1`.
 
 Implicit namespaces take precedence over wildcard opens, but not over explicit
-bindings, including selective opens such as `open AltOption { Some }`. A name
+bindings, including selective opens such as `open AltOption.{ Some }`. A name
 whose value flows into types whose namespaces provide distinct members, such as
 `Option[Int]` and `AltOption[Int]`, is ambiguous.
 
@@ -1998,12 +2001,12 @@ instance Foo::method(args)   // receiver-first syntax
 instance.Foo#method()        // hash syntax (inside open scope)
 ```
 
-### `open annotations { compile }`
+### `open annotations.{ compile }`
 
 Open the `annotations` module to use the `@compile` annotation in patterns:
 
 ```mlscript
-open annotations { compile }
+open annotations.{ compile }
 fun foo(x) = if x is @compile Box then "yes" else "no"
 ```
 
@@ -2390,7 +2393,7 @@ xs :+ y                         // append single element
 
 ```mlscript
 import "./Option.mls"
-open Option { Some, None }
+open Option.{ Some, None }
 
 type Option[A] = Some[A] | None
 data class Some[T](value)

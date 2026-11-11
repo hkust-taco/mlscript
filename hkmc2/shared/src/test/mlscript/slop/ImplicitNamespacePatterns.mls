@@ -59,7 +59,7 @@ fun viaNamespace(x: Option[Int]) =
   if x is Some(v) then v else 0
 
 fun viaBinding(x: Option[Int]) =
-  open AltOption { Some }
+  open AltOption.{ Some }
   if x is Some(v) then v else 0
 
 :expect [5, 0]

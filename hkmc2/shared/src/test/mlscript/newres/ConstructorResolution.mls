@@ -19,7 +19,7 @@ module Constructors {
 
 
 fun named(x) = {
-  open Constructors {Token}
+  open Constructors.{Token}
   if x is Token then 1 else 0
 }
 fun selected(x) = if x is Constructors.Token then 1 else 0
@@ -68,7 +68,7 @@ fun Later() = new Later
 module Other { class Token }
 fun explicit(x) = {
   open Other
-  open Constructors {Token}
+  open Constructors.{Token}
   if x is Token then 1 else 0
 }
 

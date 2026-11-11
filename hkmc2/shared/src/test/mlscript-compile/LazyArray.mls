@@ -3,7 +3,7 @@ import "./Iter.mls"
 import "./Predef.mls"
 
 open Iter
-open Predef { id"??" }
+open Predef.{ id"??" }
 open LazyArray
 
 // Helper Methods
