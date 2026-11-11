@@ -535,6 +535,15 @@ object Elaborator:
       def symbol = base.symbol
       def isImport: Bool = false
       def nme: Str = base.nme
+    /** Retain an imported path segment's source when a later selection reads it
+      * as a prefix without an identifier. Each use still creates a fresh reference,
+      * preserving captures and by-name instantiation. Locations do not affect equality. */
+    final case class LocatedElem(base: Elem)(val id: Ident) extends Elem:
+      def ref(site: Opt[Ident])(using Elaborator.State, Ctx, Config, NewResolver, ResolutionContext): Term =
+        base.ref(site.orElse(S(id)))
+      def symbol = base.symbol
+      def isImport: Bool = base.isImport
+      def nme: Str = base.nme
     given Conversion[RefSymbol, Elem] = RefElem(_)
     val empty: Ctx =
       val outer = OuterCtx.LocalScope("top-level", isTopLevel = true)
@@ -2275,7 +2284,11 @@ extends Importer:
       raise(ErrorReport(msg"Illegal position for 'open' statement." -> tree.toLoc :: Nil))
       error
     case OpenIn(op, body) =>
-      subterm(Block(Open(op) :: body :: Nil), interp)
+      // Local opens expose the path's members. A statement `open A.b` imports
+      // only `b`, so it cannot serve as the expansion of the local open `A.b.{ ... }`.
+      ctx.nestLocal("‹block›", isTopLevel = false).givenIn:
+        wildcardOpen(op).givenIn:
+          subterm(body, interp)
     case DynAccess(obj, rhs, dynamic) =>
       rhs match
       case Bra(bk @ (Round | Square), fld) => Term.DynSel(subterm(obj), subterm(fld), bk is Square, !dynamic)
@@ -2348,6 +2361,64 @@ extends Importer:
   def unit: Term.UnitVal = Term.UnitVal()
   
   
+  
+  /** Resolve paths relative to the enclosing import group. Keep the receiver chain
+    * in context elements so importing a leaf preserves its receiver and lexical captures. */
+  private def openPath(path: Tree, base: Opt[Ctx.Elem]): Ctxl[Opt[(Ctx.Elem, Ident)]] =
+    def select(prefix: Ctx.Elem, id: Ident): Ctx.Elem =
+      val sym = if newResolution then N else resolveField(id, prefix.symbol, id)
+      Ctx.LocatedElem(Ctx.SelElem(prefix, id.name, sym, isImport = true))(id)
+    path match
+    case id: Ident =>
+      val elem = base match
+        case S(prefix) => S(select(prefix, id))
+        case N => ctx.get(id.name).map(Ctx.LocatedElem(_)(id))
+      if elem.isEmpty then
+        raise(ErrorReport(msg"Name not found: ${id.name}" -> id.toLoc :: Nil))
+      elem.map(_ -> id)
+    case Sel(prefix, id) =>
+      openPath(prefix, base).map((elem, _) => select(elem, id) -> id)
+    case _ =>
+      raise(ErrorReport(msg"Illegal 'open' statement base." -> path.toLoc :: Nil))
+      N
+  
+  private def wildcardOpen(path: Tree): Ctxl[Ctx] = openPath(path, N) match
+    case S((elem, id)) if newResolution =>
+      ctx.copy(wildcardOpens = Ctx.OpenSource(elem)(id) :: ctx.wildcardOpens)
+    case S((elem, id)) =>
+      elem.symbol match
+      case S(sym: BlockMemberSymbol) if sym.modOrObjTree.isDefined =>
+        ctx elem_++ sym.modOrObjTree.get.definedSymbols.iterator.map:
+          case (nme, sym) => nme -> Ctx.SelElem(elem, sym.nme, S(sym), isImport = true)
+      case _ =>
+        raise(ErrorReport(msg"Wildcard 'open' not supported for this kind of symbol." -> id.toLoc :: Nil))
+        ctx
+    case N => ctx
+  
+  private def importedOpenNames(tree: Tree, base: Opt[Ctx.Elem]): Ctxl[Ls[Str -> Ctx.Elem]] =
+    def members(prefix: Tree, names: Ls[Tree]): Ls[Str -> Ctx.Elem] =
+      openPath(prefix, base) match
+      case S((elem, id)) =>
+        // Even an empty selection must validate a written receiver path.
+        if newResolution && names.isEmpty then elem.ref(S(id))
+        names.flatMap(importedOpenNames(_, S(elem)))
+      case N => Nil
+    tree match
+    case OpenIn(prefix, Block(names)) => members(prefix, names)
+    case Jux(prefix, Block(names)) => members(prefix, names)
+    case _: Sel | _: Ident =>
+      openPath(tree, base) match
+      case S((elem, id)) =>
+        if ctx.env.contains(id.name) then
+          raise(WarningReport(msg"Imported name '${id.name}' is shadowed by a name already defined in the same scope" -> id.toLoc :: Nil))
+        // Validate each selected leaf even when its binding is unused.
+        if newResolution then elem.ref(S(id))
+        id.name -> elem :: Nil
+      case N => Nil
+    case _ =>
+      val msg = if base.isDefined then msg"Illegal 'open' statement element." else msg"Illegal 'open' statement shape."
+      raise(ErrorReport(msg -> tree.toLoc :: Nil))
+      Nil
   
   def block(sts: Ls[Tree], hasResult: Bool)(using UnderCtx): Ctxl[(Blk, Ctx)] =
     block(new Block(sts), hasResult, Trm)
@@ -2518,57 +2589,11 @@ extends Importer:
           go(sts, Nil, acc)(N)
       case Open(bod) :: sts =>
         reportUnusedAnnotations
-        bod match
-          case Jux(bse, Block(sts)) =>
-            // Indented member lists retain their juxtaposition parse.
-            some(bse -> some(sts))
-          case OpenIn(bse, Block(sts)) =>
-            some(bse -> some(sts))
-          // * There could be other shapes of open statements...
-          case bse: Ident =>
-            some(bse -> N)
-          case _ =>
-            raise(ErrorReport(msg"Illegal 'open' statement shape." -> bod.toLoc :: Nil))
-            N
-        match
-        case N => go(sts, annotations, acc)(N)
-        case S((base, importedTrees)) =>
-          base match
-          case baseId: Ident =>
-            ctx.get(baseId.name) match
-            case S(baseElem) if newResolution && importedTrees.isEmpty =>
-              ctx.copy(wildcardOpens = Ctx.OpenSource(baseElem)(baseId) :: ctx.wildcardOpens).givenIn:
-                go(sts, Nil, acc)(N)
-            case S(baseElem) =>
-              val importedNames = importedTrees match
-                case N => // "wilcard" open
-                  baseElem.symbol match
-                  case S(sym: BlockMemberSymbol) if sym.modOrObjTree.isDefined =>
-                    sym.modOrObjTree.get.definedSymbols.map:
-                      case (nme, sym) => nme -> Ctx.SelElem(baseElem, sym.nme, S(sym), isImport = true)
-                  case _ =>
-                    raise(ErrorReport(msg"Wildcard 'open' not supported for this kind of symbol." -> baseId.toLoc :: Nil))
-                    Nil
-                case S(sts) => sts.flatMap:
-                  case id: Ident =>
-                    if ctx.env.contains(id.name) then
-                      raise(WarningReport(msg"Imported name '${id.name}' is shadowed by a name already defined in the same scope" -> id.toLoc :: Nil))
-                    val sym = if newResolution then N else resolveField(id, baseElem.symbol, id)
-                    val e = Ctx.SelElem(baseElem, id.name, sym, isImport = true)
-                    // Validate the named selection even when its binding is unused.
-                    if newResolution then e.ref(S(id))
-                    id.name -> e :: Nil
-                  case t =>
-                    raise(ErrorReport(msg"Illegal 'open' statement element." -> t.toLoc :: Nil))
-                    Nil
-              (ctx elem_++ importedNames).givenIn:
-                go(sts, Nil, acc)(N)
-            case N =>
-              raise(ErrorReport(msg"Name not found: ${baseId.name}" -> baseId.toLoc :: Nil))
-              go(sts, Nil, acc)(N)
-          case _ =>
-            raise(ErrorReport(msg"Illegal 'open' statement base." -> base.toLoc :: Nil))
-            go(sts, Nil, acc)(N)
+        val openedCtx = bod match
+          case _: Ident => wildcardOpen(bod)
+          case _ => ctx elem_++ importedOpenNames(bod, N)
+        openedCtx.givenIn:
+          go(sts, Nil, acc)(N)
       case (m @ PrefixApp(Keywrd(Keyword.`import`), arg)) :: sts =>
         reportUnusedAnnotations
         val pathAndAlias: Opt[(Tree, Opt[Ident])] = arg match

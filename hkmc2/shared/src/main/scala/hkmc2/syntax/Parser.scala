@@ -334,11 +334,13 @@ abstract class Parser(
   final def blockMaybeIndented: Ls[Tree] =
     maybeIndented((p, i) => p.block(allowNewlines = i))
   
-  /** Braces delimit statements even without indentation; other brackets contain lists whose
+  /** Braces and indentation delimit statements; other brackets contain lists whose
     * newline separators require indentation. Local opens and ordinary brace expressions share this rule. */
   private def bracketedBlock(br: BRACKETS): Ls[Tree] =
     rec(bracketContents(br), S(br.innerLoc), br.describe).concludeWith: p =>
-      if br.k is Curly then p.block(allowNewlines = true) else p.blockMaybeIndented
+      br.k match
+      case _: Indent_Curly => p.block(allowNewlines = true)
+      case _ => p.blockMaybeIndented
   
   
   /* Note on annotation parsing:
@@ -1093,7 +1095,7 @@ abstract class Parser(
         val inner = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.expr(0, allowNewlines = true))
         continueWith(DynAccess(acc, Bra(bk, inner), bk is Round).withLoc(S(l0 ++ l1)))
       
-      case (PERIOD, l0) :: (br @ Bracketed(Curly, _), l1) :: _ =>
+      case (PERIOD, l0) :: (br @ Bracketed(_: Indent_Curly, _), l1) :: _ =>
         consume
         consume
         val inner = bracketedBlock(br)

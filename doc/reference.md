@@ -1869,8 +1869,29 @@ open Iter                          // open all members
 do open M; ...                     // locally open
 ```
 
-Braced selective opens use `.{ ... }` and accept operator names, including a single
-operator: `open Stack.{ :: }`. The names become bindings in the enclosing scope.
+Selective opens accept dotted paths and nested groups. Each selected leaf becomes
+a binding in the enclosing scope; intermediate path segments do not introduce bindings:
+
+```mlscript
+open Foo.Bar.c                    // import c
+open Foo.Bar.{ c, d }             // import c and d
+open Foo.{ a, b, Bar.{ c, d } }    // import a, b, c, and d
+```
+
+Indentation can replace the braces after a dot, including in nested groups:
+
+```mlscript
+open Foo.
+  a
+  b
+  Bar.
+    c, d
+```
+
+Operator names work in either form, including `open Stack.{ :: }` or a lone `::`
+on an indented line after `open Stack.`. The existing indentation-only form
+without a dot remains supported. A bare `open Foo` opens all members of `Foo`;
+`open Foo.Bar` imports the member `Bar` itself.
 
 With `newResolution` enabled, wildcard opens are consulted only when a name has
 no explicit binding in the current scope or any enclosing scope. Explicit

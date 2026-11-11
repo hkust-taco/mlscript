@@ -74,3 +74,40 @@ oops === ()
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
+module Foo with
+  val a = 1
+  val b = 2
+  module Bar with
+    val c = 3
+    val d = 4
+
+open Foo.
+  a
+  b
+
+a + b
+//│ = 3
+
+open Foo.Bar.c
+
+open Foo.Bar.{ c, d }
+
+c + d
+//│ = 7
+
+
+open Foo.{ a, b, Bar.{ c, d } }
+
+a + b + c + d
+//│ = 10
+
+open Foo.
+  a
+  b
+  Bar.
+    c, d
+
+a + b + c + d
+//│ = 10
+
+

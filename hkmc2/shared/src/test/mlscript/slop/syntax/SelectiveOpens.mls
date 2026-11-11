@@ -52,3 +52,127 @@ open Stack.{ 1 + 2 }
 //│ ╔══[COMPILATION ERROR] Illegal 'open' statement element.
 //│ ║  l.+1: 	open Stack.{ 1 + 2 }
 //│ ╙──      	             ^^^^^
+
+
+// Indentation also supports a lone operator after the dot.
+:expect Cons(4, Nil)
+fun indentedOperator() =
+  open Stack.
+    ::
+  4 :: Stack.Nil
+indentedOperator()
+//│ = Cons(4, Nil)
+
+module Paths {
+  module Inner {
+    val answer = 42
+    data class Token(value: Int)
+  }
+  private val hidden = { answer: 99 }
+}
+
+// Qualified leaves include modules and overloaded class/constructor names.
+:expect 42
+fun importedModule() =
+  open Paths.Inner
+  Inner.answer
+importedModule()
+//│ = 42
+
+:expect 5
+fun importedConstructor() =
+  open Paths.{ Inner.Token }
+  if Token(5) is Token(n) then n else 0
+importedConstructor()
+//│ = 5
+
+// A qualified module leaf does not implicitly open that module's members.
+:e
+fun noWildcard() =
+  open Paths.Inner
+  answer
+//│ ╔══[COMPILATION ERROR] Name not found: answer
+//│ ║  l.+3: 	  answer
+//│ ╙──      	  ^^^^^^
+
+// Nested groups import their leaves without introducing their intermediate paths.
+:e
+fun noIntermediateBinding() =
+  open Paths.{ Inner.{ answer } }
+  Inner.answer
+//│ ╔══[COMPILATION ERROR] Name not found: Inner
+//│ ║  l.+3: 	  Inner.answer
+//│ ╙──      	  ^^^^^
+
+// Each closure retains the receiver supplied by its own invocation.
+:expect [11, 22]
+fun captured(value: Int) =
+  let source = { nested: { answer: value } }
+  open source.nested.answer
+  fun read() = answer
+  read
+[captured(11)(), captured(22)()]
+//│ = [11, 22]
+
+// Selecting an import does not evaluate a getter or cache its result across uses.
+let calls = 0
+module Getters {
+  fun nested =
+    set calls += 1
+    { answer: calls }
+}
+//│ calls = 0
+
+:expect [1, 2]
+fun readTwice() =
+  open Getters.nested.answer
+  [answer, answer]
+readTwice()
+//│ = [1, 2]
+
+// A local-open expression opens the entire qualified receiver path.
+:expect 43
+Paths.Inner.{ answer + 1 }
+//│ = 43
+
+:expect 44
+Paths.Inner.
+  answer + 2
+//│ = 44
+
+// Validate unused imports, including intermediate segments and empty groups.
+:e
+open Paths.Absent.answer
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	open Paths.Absent.answer
+//│ ║        	          ^^^^^^^
+//│ ╟── Module 'Paths' does not contain member 'Absent'
+//│ ║  l.XX: 	module Paths {
+//│ ╙──      	^^^^^^^^^^^^
+
+:e
+open Paths.Absent.{}
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	open Paths.Absent.{}
+//│ ║        	          ^^^^^^^
+//│ ╟── Module 'Paths' does not contain member 'Absent'
+//│ ║  l.XX: 	module Paths {
+//│ ╙──      	^^^^^^^^^^^^
+
+:e
+open Paths.{ Inner.{ missing } }
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	open Paths.{ Inner.{ missing } }
+//│ ║        	                     ^^^^^^^
+//│ ╟── Module 'Inner' does not contain member 'missing'
+//│ ║  l.XX: 	  module Inner {
+//│ ╙──      	  ^^^^^^^^^^^^
+
+:e
+open Paths.hidden.answer
+//│ ╔══[COMPILATION ERROR] Cannot access private member 'hidden' outside its declaring owner
+//│ ║  l.+1: 	open Paths.hidden.answer
+//│ ║        	          ^^^^^^^
+//│ ╟── private member declared here
+//│ ║  l.XX: 	  private val hidden = { answer: 99 }
+//│ ╙──      	              ^^^^^^
