@@ -1864,9 +1864,12 @@ Bring module members into scope:
 
 ```mlscript
 open Option.{ * }
-open Stack.{ Cons, Nil }           // selective open
+open Stack.{ Cons, Nil }           // selective `open`
 open Iter.{ * }                    // open all members
-do open M.{ * }; ...               // locally open
+
+Stack.{ print(Nil) }               // local `open`
+type AnyList =
+  Stack.{ Cons | Nil }
 ```
 
 Selective opens accept dotted paths and nested groups. Each selected leaf becomes
