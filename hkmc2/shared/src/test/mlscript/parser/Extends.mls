@@ -5,43 +5,43 @@
 class Base
 class Derived extends Base
 //│ Env:
-//│   Base -> RefElem(member:Base,false)
-//│   Derived -> RefElem(member:Derived,false)
+//│   Base -> RefElem(member:Base)
+//│   Derived -> RefElem(member:Derived)
 
 // Extension with parameters
 abstract class Box
 data class IntBox(val value: Int) extends Box
 data class StrBox(val value: Str) extends Box
 //│ Env:
-//│   Box -> RefElem(member:Box,false)
-//│   IntBox -> RefElem(member:IntBox,false)
-//│   StrBox -> RefElem(member:StrBox,false)
+//│   Box -> RefElem(member:Box)
+//│   IntBox -> RefElem(member:IntBox)
+//│   StrBox -> RefElem(member:StrBox)
 
 // Extension with symbolic name
 abstract class Ring
 module End extends Ring
 data class (++) Link(left: Ring, right: Ring) extends Ring
 //│ Env:
-//│   ++ -> RefElem(member:Link,false)
-//│   End -> RefElem(member:End,false)
-//│   Link -> RefElem(member:Link,false)
-//│   Ring -> RefElem(member:Ring,false)
+//│   ++ -> RefElem(member:Link)
+//│   End -> RefElem(member:End)
+//│   Link -> RefElem(member:Link)
+//│   Ring -> RefElem(member:Ring)
 
 // Extension with type parameters
 abstract class Option[T]: (Some[T] | None)
 data class Some[T](val value: T) extends Option[T]
 module None extends Option[Nothing]
 //│ Env:
-//│   None -> RefElem(member:None,false)
-//│   Option -> RefElem(member:Option,false)
-//│   Some -> RefElem(member:Some,false)
+//│   None -> RefElem(member:None)
+//│   Option -> RefElem(member:Option)
+//│   Some -> RefElem(member:Some)
 
 // Extension with type parameters and symbolic name
 abstract class List[T]: (Cons[T] | Nil)
 data class (::) Cons[T](val head: T, val tail: List[T]) extends List[T]
 module Nil extends List[Nothing]
 //│ Env:
-//│   :: -> RefElem(member:Cons,false)
-//│   Cons -> RefElem(member:Cons,false)
-//│   List -> RefElem(member:List,false)
-//│   Nil -> RefElem(member:Nil,false)
+//│   :: -> RefElem(member:Cons)
+//│   Cons -> RefElem(member:Cons)
+//│   List -> RefElem(member:List)
+//│   Nil -> RefElem(member:Nil)

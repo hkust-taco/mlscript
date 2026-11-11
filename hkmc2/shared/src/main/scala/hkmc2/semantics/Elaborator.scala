@@ -135,21 +135,24 @@ object Elaborator:
       parent.fold(Set.empty[ResolutionBoundary])(_.resolutionBoundaries) ++ outer.resolutionBoundary.map(ResolutionBoundary(_))
     
     def +(local: Str -> RefSymbol): Ctx =
-      copy(env = env + local.mapSecond(Ctx.RefElem(_, isImport = false)(N)))
+      copy(env = env + local.mapSecond(Ctx.RefElem(_)(N)))
     def ++(locals: IterableOnce[Str -> RefSymbol]): Ctx =
-      copy(env = env ++ locals.mapValues(Ctx.RefElem(_, isImport = false)(N)))
-    def elem_++(locals: IterableOnce[Str -> Ctx.Elem]): Ctx =
-      copy(env = env ++ locals.iterator.filter: kv =>
-        // * Imports should not shadow symbols defined in the same scope;
-        // * but they should be allowed to shadow previous imports.
-        env.get(kv._1).forall(_.isImport))
+      copy(env = env ++ locals.mapValues(Ctx.RefElem(_)(N)))
+    /** Add imports, preserving definitions in this scope and replacing earlier imports. */
+    def withImports(imports: IterableOnce[Str -> Ctx.Elem]): Ctx =
+      copy(env = env ++ imports.iterator.collect:
+        case (name, elem) if env.get(name).forall(_.isImport) =>
+          val imported = elem match
+            case e: Ctx.ImportedElem => e
+            case _ => Ctx.ImportedElem(elem)
+          name -> imported)
     
     def withMembers(members: Iterable[Str -> BlockMemberSymbol]): Ctx =
       copy(env = env ++ members.map:
         case (nme, sym) =>
           val elem = outer.inner match
-            case S(outer) => Ctx.SelElem(outer, Ident(sym.nme), S(sym), isImport = false)
-            case N => Ctx.RefElem(sym, isImport = false)(N)
+            case S(outer) => Ctx.SelElem(outer, Ident(sym.nme), S(sym))
+            case N => Ctx.RefElem(sym)(N)
           nme -> elem
       )
     
@@ -161,7 +164,7 @@ object Elaborator:
         nonLocalContinueMethodMarker: TempSymbol,
     ): Ctx =
       copy(
-        env = env + (labelSym.nme -> Ctx.RefElem(labelSym, isImport = false)(N)),
+        env = env + (labelSym.nme -> Ctx.RefElem(labelSym)(N)),
         labels = labels + (labelSym -> LabelBinding(
           labelSym, resultSym, nonLocalHandlerSym, nonLocalBreakMethodMarker, nonLocalContinueMethodMarker))
       )
@@ -179,7 +182,7 @@ object Elaborator:
       getExplicit(name, captureScopes).orElse:
         if config.language.useNewResolution then
           val sources = visibleWildcardOpens.iterator.filterNot(_.excluded.contains(name)).distinctBy(_.elem.importKey).toList
-          if sources.isEmpty then N else S(Ctx.WildcardElem(Ident(name), sources, NameLookup.Opens, isImport = false))
+          if sources.isEmpty then N else S(Ctx.WildcardElem(Ident(name), sources, NameLookup.Opens))
         else N
 
     private def getExplicit(name: Str, captureScopes: Bool)(using config: Config): Opt[Ctx.Elem] =
@@ -189,7 +192,7 @@ object Elaborator:
         else inherited
 
     private def capture(elem: Ctx.Elem): Ctx.Elem =
-      outer.resolutionBoundary.fold(elem)(Ctx.CaptElem(elem, _, isImport = false))
+      outer.resolutionBoundary.fold(elem)(Ctx.CaptElem(elem, _))
 
     /** Control handlers have no source name, but references to them cross the same
       * lexical boundaries as named bindings. In particular, a return inside a
@@ -198,7 +201,7 @@ object Elaborator:
       val owns = outer match
         case OuterCtx.Function(handler, _) => handler is symbol
         case _ => false
-      if owns || labels.valuesIterator.exists(_.nonLocalHandlerSymbol is symbol) then S(Ctx.RefElem(symbol, isImport = false)(N))
+      if owns || labels.valuesIterator.exists(_.nonLocalHandlerSymbol is symbol) then S(Ctx.RefElem(symbol)(N))
       else parent.flatMap(_.controlHandler(symbol)).map(capture)
 
     private lazy val visibleWildcardOpens: Ls[Ctx.OpenSource] =
@@ -243,7 +246,7 @@ object Elaborator:
     // Explicit `this` must carry the same intervening captures as a lexical
     // member reference; inherited member results can retain the receiver's scope.
     def getReceiver: Opt[Ctx.Elem] =
-      outer.inner.map(Ctx.RefElem(_, isImport = false)(N)).orElse(parent.flatMap(_.getReceiver).map(capture))
+      outer.inner.map(Ctx.RefElem(_)(N)).orElse(parent.flatMap(_.getReceiver).map(capture))
 
     def getOuter: Opt[InnerSymbol] = outer.inner.orElse(parent.flatMap(_.getOuter))
     def getNonLocalRetHandler: Opt[TempSymbol] = outer match
@@ -473,7 +476,7 @@ object Elaborator:
       def ref(id: Opt[Ident])(using Elaborator.State, Ctx, Config, NewResolver, ResolutionContext): Term
       def symbol: Opt[Symbol]
       /** Whether this binding was explicitly imported and may be replaced by a later import. */
-      def isImport: Bool
+      final def isImport: Bool = this.isInstanceOf[ImportedElem]
       /** Retain a path occurrence for references reconstructed without a use-site identifier.
         * Copies preserve the selected name, receiver, and intervening captures. */
       def withIdent(id: Ident): Elem = this match
@@ -481,21 +484,17 @@ object Elaborator:
         case e: SelElem => e.copy(nme = nameAt(e.nme, S(id)))
         case e: WildcardElem => e.copy(nme = nameAt(e.nme, S(id)))
         case e: CaptElem => e.copy(base = e.base.withIdent(id))
-      /** Mark this binding as imported without changing the reference it produces. */
-      def asImport: Elem = this match
-        case e: RefElem => e.copy(isImport = true)(e.id)
-        case e: SelElem => e.copy(isImport = true)
-        case e: WildcardElem => e.copy(isImport = true)
-        case e: CaptElem => e.copy(isImport = true)
+        case e: ImportedElem => e.copy(base = e.base.withIdent(id))
       /** Structural receiver identity for import comparisons, ignoring aliases and source locations.
         * References must use the original element to retain diagnostic locations. */
       lazy val importKey: Elem = this match
         // Ident equality compares names, so selection locations do not affect these keys.
-        case e: RefElem => e.copy(isImport = false)(N)
-        case e: SelElem => e.copy(base = e.base.importKey, isImport = false)
-        case e: CaptElem => e.copy(base = e.base.importKey, isImport = false)
+        case e: RefElem => e
+        case e: SelElem => e.copy(base = e.base.importKey)
+        case e: CaptElem => e.copy(base = e.base.importKey)
         case e: WildcardElem => e.copy(sources = e.sources.map: source =>
-          source.copy(elem = source.elem.importKey)(source.id), isImport = false)
+          source.copy(elem = source.elem.importKey)(source.id))
+        case ImportedElem(base) => base.importKey
     /** Locate a selected name at its use while preserving the lookup name under aliases. */
     private def nameAt(nme: Ident, site: Opt[Ident]): Ident = site match
       case S(id) if id.name === nme.name => id
@@ -503,7 +502,7 @@ object Elaborator:
       case N => nme
     /** A lexical symbol reference with an optional saved occurrence for use as a receiver.
       * The occurrence does not affect equality, and an explicit use site takes precedence. */
-    final case class RefElem(sym: RefSymbol, isImport: Bool)(val id: Opt[Ident]) extends Elem:
+    final case class RefElem(sym: RefSymbol)(val id: Opt[Ident]) extends Elem:
       def ref(site: Opt[Ident])(using Elaborator.State, Ctx, Config, NewResolver, ResolutionContext): Term =
         val tree = site.orElse(id)
         // * A source identifier can differ from the symbol name due to symbolic
@@ -524,7 +523,7 @@ object Elaborator:
         else
           sym.ref(tree.getOrElse(Ident(sym.nme)))
       def symbol = S(sym)
-    final case class SelElem(base: Elem, nme: Ident, symOpt: Opt[MemberSymbol], isImport: Bool) extends Elem:
+    final case class SelElem(base: Elem, nme: Ident, symOpt: Opt[MemberSymbol]) extends Elem:
       def ref(id: Opt[Ident])(using Elaborator.State, Ctx, Config, NewResolver, ResolutionContext): Term =
         // * Same remark as in RefElem#ref
         val prefix = base.ref(N)
@@ -541,7 +540,7 @@ object Elaborator:
     /** A name looked up in the wildcard opens `sources` and,
       * depending on `lookup`, in implicit namespaces (see Term.UnresolvedRef).
       * Explicitly importing it fixes the lookup name and policy for subsequent uses of its alias. */
-    final case class WildcardElem(nme: Ident, sources: Ls[OpenSource], lookup: NameLookup, isImport: Bool) extends Elem:
+    final case class WildcardElem(nme: Ident, sources: Ls[OpenSource], lookup: NameLookup) extends Elem:
       def ref(id: Opt[Ident])(using Elaborator.State, Ctx, Config, NewResolver, ResolutionContext): Term =
         // Each ref is fresh. Locate its outer capture at the opening site too;
         // a chained wildcard reference may already have attached this location.
@@ -557,11 +556,17 @@ object Elaborator:
       rctx.recordAccessSite(res, ctx.scope)
       summon[NewResolver].unresolvedRef(res, ctx.scope)
       res
-    final case class CaptElem(base: Elem, thru: DefinitionSymbol[?], isImport: Bool) extends Elem:
+    final case class CaptElem(base: Elem, thru: DefinitionSymbol[?]) extends Elem:
       def ref(id: Opt[Ident])(using Elaborator.State, Ctx, Config, NewResolver, ResolutionContext): Term =
         Term.Capture(base.ref(id), thru)
       def symbol = base.symbol
-    given Conversion[RefSymbol, Elem] = RefElem(_, isImport = false)(N)
+    /** An explicit imported binding for an existing reference path.
+      * Aliases preserve the target's receiver and captures without declaring a new value. */
+    final case class ImportedElem(base: Elem) extends Elem:
+      def ref(id: Opt[Ident])(using Elaborator.State, Ctx, Config, NewResolver, ResolutionContext): Term =
+        base.ref(id)
+      def symbol = base.symbol
+    given Conversion[RefSymbol, Elem] = RefElem(_)(N)
     val empty: Ctx =
       val outer = OuterCtx.LocalScope("top-level", isTopLevel = true)
       Ctx(SrcScope(outer, N), N, Map.empty, Mode.Full, Map.empty, Nil)
@@ -1024,8 +1029,8 @@ extends Importer:
     * so compiler-inserted selections use normal member resolution and lowering. */
   private def runtimeMember(symbol: DefinitionSymbol[?])(using Ctx): Term =
     if newResolution then
-      pipeTerm(Ctx.RefElem(State.runtimeModuleSymbol, isImport = false)(N).ref(N), State.runtimeSymbol)
-      interpretRef(Ctx.SelElem(State.runtimeSymbol, Ident(symbol.nme), symbol.bms, isImport = false).ref(N), Trm)
+      pipeTerm(Ctx.RefElem(State.runtimeModuleSymbol)(N).ref(N), State.runtimeSymbol)
+      interpretRef(Ctx.SelElem(State.runtimeSymbol, Ident(symbol.nme), symbol.bms).ref(N), Trm)
     else State.runtimeSymbol.ref().synthSel(symbol)
   
   /** Build an effect handler around `body` for non-local control flow. */
@@ -1842,7 +1847,7 @@ extends Importer:
           h.toLoc :: Nil))
       error
     case kw @ Keywrd(Keyword.`this`) =>
-      (if newResolution then ctx.getReceiver else ctx.getOuter.map(Ctx.RefElem(_, isImport = false)(N))) match
+      (if newResolution then ctx.getReceiver else ctx.getOuter.map(Ctx.RefElem(_)(N))) match
       case S(elem) => elem.ref(S(new Ident("this").withLocOf(kw)))
       case N =>
         raise:
@@ -1930,7 +1935,7 @@ extends Importer:
     case InfixApp(lhs, Keywrd(Keyword.`:`), rhs) =>
       block(Block(tree :: Nil), hasResult = false, resultInterp = interp)._1
     case PrefixApp(kw @ Keywrd(Keyword.`not`), rhs) =>
-      app(Ctx.RefElem(State.builtinOpsMap("!"), isImport = false)(N).ref(S(new Ident("not").withLocOf(kw))), withTypeBinders(Term.Tup(
+      app(Ctx.RefElem(State.builtinOpsMap("!"))(N).ref(S(new Ident("not").withLocOf(kw))), withTypeBinders(Term.Tup(
         PlainFld(subterm(rhs)) :: Nil)(DummyTup)))(DummyApp, N, FlowSymbol("not-app"))
     case tree @ InfixApp(lhs, Keywrd(Keyword.`is` | Keyword.`and` | Keyword.`or`), rhs) =>
       ifLike(Keyword.`if`, IfLikeForm.ReturningIf, shorthandSplit(tree), tree.toLoc)
@@ -2151,7 +2156,7 @@ extends Importer:
         )(N)
         if mut then Term.Mut(inner) else inner
       case N =>
-        val objectRef = Ctx.RefElem(ctx.builtins.Object.bms.get, isImport = false)(N).ref(N)
+        val objectRef = Ctx.RefElem(ctx.builtins.Object.bms.get)(N).ref(N)
         // An anonymous object invokes Object's constructor, rather than
         // partially applying its declared optional parameter list.
         mkNew(objectRef, Term.Tup(Nil)(Tree.DummyTup) :: Nil, bodo)(N)
@@ -2392,7 +2397,7 @@ extends Importer:
   private def openPath(path: Tree, base: Opt[Ctx.Elem]): Ctxl[Opt[OpenPath]] =
     def select(prefix: Ctx.Elem, id: Ident): OpenPath =
       val sym = if newResolution then N else resolveField(id, prefix.symbol, id)
-      OpenPath(Ctx.SelElem(prefix, id, sym, isImport = true), id, S(prefix))
+      OpenPath(Ctx.SelElem(prefix, id, sym), id, S(prefix))
     path match
     case id: Ident =>
       val resolved = base match
@@ -2417,8 +2422,8 @@ extends Importer:
       ctx.copy(wildcardOpens = source :: ctx.wildcardOpens)
     else source.elem.symbol match
       case S(sym: BlockMemberSymbol) if sym.modOrObjTree.isDefined =>
-        ctx elem_++ sym.modOrObjTree.get.definedSymbols.iterator.filterNot((nme, _) => source.excluded.contains(nme)).map:
-          case (nme, sym) => nme -> Ctx.SelElem(source.elem, Ident(sym.nme), S(sym), isImport = true)
+        ctx.withImports(sym.modOrObjTree.get.definedSymbols.iterator.filterNot((nme, _) => source.excluded.contains(nme)).map:
+          case (nme, sym) => nme -> Ctx.SelElem(source.elem, Ident(sym.nme), S(sym)))
       case _ =>
         raise(ErrorReport(msg"Wildcard 'open' not supported for this kind of symbol." -> source.id.toLoc :: Nil))
         ctx
@@ -2502,7 +2507,7 @@ extends Importer:
     val openedCtx = sources.reverseIterator.foldLeft(ctx): (opened, source) =>
       opened.givenIn:
         openWildcardSource(source)
-    openedCtx elem_++ names.iterator.map((name, elem) => name -> elem.asImport)
+    openedCtx.withImports(names)
   
   def block(sts: Ls[Tree], hasResult: Bool)(using UnderCtx): Ctxl[(Blk, Ctx)] =
     block(new Block(sts), hasResult, Trm)
@@ -2731,7 +2736,7 @@ extends Importer:
           case id: Ident =>
             val sym = new VarSymbol(id, erasedType = N, mut = true)
             newCtx += id.name -> sym
-            recordFieldScope(RcdField(Term.Lit(StrLit(id.name)).withLocOf(id), Ctx.RefElem(sym, isImport = false)(N).ref(S(id))))
+            recordFieldScope(RcdField(Term.Lit(StrLit(id.name)).withLocOf(id), Ctx.RefElem(sym)(N).ref(S(id))))
               :: defineVar(sym, rhs_t)(Loc(rlhs, rhs))
               :: LetDecl(sym, annotations)(id.toLoc)
               :: acc
@@ -3228,7 +3233,7 @@ extends Importer:
               val allCtorPss = pss ::: auxCtorPss
               val tsym = if allCtorPss.nonEmpty then
                 val ctsym = ClassCtorSymbol(Fun, owner, clsSym)
-                val resultType = if newResolution then interpretRef(Ctx.RefElem(sym, isImport = false)(N).ref(N), Tpe) else clsSym.ref()
+                val resultType = if newResolution then interpretRef(Ctx.RefElem(sym)(N).ref(N), Tpe) else clsSym.ref()
                 val ctdef =
                   TermDefinition(
                     Fun,
@@ -3568,13 +3573,13 @@ extends Importer:
   // their lexical type captures even though legacy term lookup ignores scopes.
   def ident(id: Ident, interp: Interpretation)(using Ctx): Ctxl[Opt[Term]] =
     ctx.get(id.name, newResolution || interp == Tpe) match
-      case candidate @ (S(Ctx.WildcardElem(isImport = false)) | N) =>
+      case candidate @ (S(_: Ctx.WildcardElem) | N) =>
         // An explicit alias keeps its stored lookup name and policy. Only an unbound
         // occurrence chooses its namespaces and considers implicit operator bindings here.
         // Primitive operators are implicit bindings outside the Ctx environments;
         // like explicit bindings, they take precedence over wildcard sources.
         state.builtinOpsMap.get(id.name) match
-          case S(bi) => S(Ctx.RefElem(bi, isImport = false)(N).ref(S(id)))
+          case S(bi) => S(Ctx.RefElem(bi)(N).ref(S(id)))
           case N if newResolution =>
             // New resolution looks the name up in the visible wildcard opens, if any, and
             // reports a missing name once its block is resolved, uniformly. A capitalized
@@ -3584,7 +3589,7 @@ extends Importer:
             val sources = candidate.collect { case wildcard: Ctx.WildcardElem => wildcard.sources }.getOrElse(Nil)
             val lookup = if id.name.isCapitalized && interp.implicitNamespacing then NameLookup.NamespacesThenOpens
               else NameLookup.Opens
-            S(Ctx.WildcardElem(id, sources, lookup, isImport = false).ref(S(id)))
+            S(Ctx.WildcardElem(id, sources, lookup).ref(S(id)))
           case N => candidate.map(_.ref(S(id)))
       case S(elem) => S(elem.ref(S(id)))
   
