@@ -41,7 +41,7 @@ fun foo(x) =
 //│     set y = w;
 //│     return runtime⁰.Unit⁰
 //│   };
-//│   set f = Predef⁰.hide⁰(lambda⁰);
+//│   set f = (Predef⁰.hide⁰(lambda⁰) as! Function⁰);
 //│   match x
 //│     true =>
 //│       set y = "ok";

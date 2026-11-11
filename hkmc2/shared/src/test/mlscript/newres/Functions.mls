@@ -192,6 +192,10 @@ callid1(Predef)
 //│ | | = IntroShape(1)
 //│ | ~> member:callid1⁰(member:Predef⁰)
 //│ ~> { fun member:callid1⁰(p⁰) = p⁰.id‹term:Predef¹/id¹›(1); member:callid1⁰(member:Predef⁰) }
+//│ listenTerm: trm = p⁰
+//│ listen: trm = p⁰
+//│ listenTerm: trm = p⁰.id‹term:Predef¹/id¹›(1)
+//│ listen: trm = p⁰.id‹term:Predef¹/id¹›(1)
 //│ listenTerm: trm = member:callid1⁰(member:Predef⁰)
 //│ listen: trm = member:callid1⁰(member:Predef⁰)
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————

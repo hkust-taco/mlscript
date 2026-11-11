@@ -26,7 +26,9 @@ fun f(x) =
     print("!")
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define f⁰ as fun f¹(x) {
-//│   match x
+//│   let x1;
+//│   set x1 = (x as! Int⁰);
+//│   match x1
 //│     0 =>
 //│       do Predef⁰.print⁰("!");
 //│       return runtime⁰.Unit⁰

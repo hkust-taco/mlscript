@@ -331,7 +331,7 @@ print(res)
 //│ match scrut
 //│   true =>
 //│     let y;
-//│     set y = Predef⁰.hide⁰(1);
+//│     set y = (Predef⁰.hide⁰(1) as! Int⁰);
 //│     set res¹ = y;
 //│     return Predef⁰.print⁰(res¹)
 //│   else
@@ -344,7 +344,7 @@ print(res)
 //│ match scrut
 //│   true =>
 //│     let y;
-//│     set y = Predef⁰.hide⁰(1);
+//│     set y = (Predef⁰.hide⁰(1) as! Int⁰);
 //│     set res¹ = y;
 //│     return Predef⁰.print⁰(y)
 //│   else
@@ -369,7 +369,7 @@ hide of print(res)
 //│ match scrut
 //│   true =>
 //│     let y;
-//│     set y = Predef⁰.hide⁰(1);
+//│     set y = (Predef⁰.hide⁰(1) as! Int⁰);
 //│     set res² = y;
 //│     end
 //│   else
@@ -383,7 +383,7 @@ hide of print(res)
 //│ match scrut
 //│   true =>
 //│     let y;
-//│     set y = Predef⁰.hide⁰(1);
+//│     set y = (Predef⁰.hide⁰(1) as! Int⁰);
 //│     set res² = y;
 //│     end
 //│   else
@@ -396,7 +396,7 @@ hide of print(res)
 //│ scrut5 = Predef.maybe;
 //│ if (scrut5 === true) {
 //│   let y3;
-//│   y3 = runtime.checkCall(Predef.hide(1));
+//│   y3 = runtime.checkCall(Predef.hide(1)) /* as! Int */;
 //│   res2 = y3;
 //│ } else {
 //│   Predef.notImplementedError;

@@ -8,7 +8,7 @@ fun foo() =
   let x = hide(42)
   x
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ define foo⁰ as fun foo¹() { return Predef⁰.hide⁰(42) }; end
+//│ define foo⁰ as fun foo¹() { return (Predef⁰.hide⁰(42) as! Int⁰) }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 // * The call should NOT be moved into the conditional, here, as it is impure
@@ -22,7 +22,7 @@ fun foo() =
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define foo² as fun foo³() {
 //│   let x, scrut;
-//│   set x = Predef⁰.hide⁰(42);
+//│   set x = (Predef⁰.hide⁰(42) as! Int⁰);
 //│   set scrut = Predef⁰.maybe⁰;
 //│   match scrut
 //│     true =>
@@ -69,7 +69,7 @@ fun foo() =
   let y = bar(42)
   x
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ define foo⁶ as fun foo⁷() { return Predef⁰.hide⁰(42) }; end
+//│ define foo⁶ as fun foo⁷() { return (Predef⁰.hide⁰(42) as! Int⁰) }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

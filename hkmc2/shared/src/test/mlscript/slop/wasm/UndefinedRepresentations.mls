@@ -92,9 +92,9 @@ if flag() then token() else unsafe.undefined
 :soir
 private fun flag(): Bool = true
 fun test() = if flag() do return wasm.i32.const(42)
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
+//│ ╔══[COMPILATION ERROR] Types 'Runtime.Unit' and 'Int32' have no common representation
 //│ ║  l.+2: 	fun test() = if flag() do return wasm.i32.const(42)
-//│ ╙──      	                                 ^^^^^^^^^^^^^^^^^^
+//│ ╙──      	    ^^^^
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ @private
 //│ define flag⁰ as fun flag¹() {

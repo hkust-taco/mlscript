@@ -131,6 +131,9 @@ read(new Child)
 //│ ╟── The shape of this value is unknown.
 //│ ║  l.+7: 	private fun read(x: Base) = x.item().value
 //│ ╙──      	                            ^^^^^^
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Other' at an unrelated type 'Item'
+//│ ║  l.+6: 	  override fun item() = Other(2)
+//│ ╙──      	                        ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A separate polymorphic signature retains binders for explicit type application.

@@ -1,0 +1,27 @@
+:.
+
+// Erasure observes the final generic result after each nested tuple projection.
+:expect 42
+type Wrap[A] = [A]
+private fun nest[A](value: Wrap[Wrap[A]]): Wrap[Wrap[A]] = value
+fun read[A](value: Wrap[Wrap[A]]): A = nest[A](value).0.0
+read([[42]])
+//│ = 42
+
+
+// Record constraints carry the same path back from the alias's fields.
+:expect 43
+type Wrap[A] = {value: A}
+private fun nest[A](value: Wrap[Wrap[A]]): Wrap[Wrap[A]] = value
+fun read[A](value: Wrap[Wrap[A]]): A = nest[A](value).value.value
+read({value: {value: 43}})
+//│ = 43
+
+
+// Callback results also return through the alias's scope before the caller's scope.
+:expect 44
+type Wrap[A] = () -> A
+private fun nest[A](value: Wrap[Wrap[A]]): Wrap[Wrap[A]] = value
+fun read[A](value: Wrap[Wrap[A]]): A = nest[A](value)()()
+read(() => () => 44)
+//│ = 44

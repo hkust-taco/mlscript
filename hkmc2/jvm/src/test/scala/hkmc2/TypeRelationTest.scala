@@ -354,7 +354,8 @@ class TypeRelationTest extends AnyFunSuite:
       val (element, et) = h.parameter("Element")
       val field = RcdField.signature(Term.Lit(Tree.StrLit("value")), Term.UnitVal())
       val source: Term.Rcd = Term.Rcd(false, List(field))
-      val record = RecordTypeShape(Map("value" -> et), Map.empty)(source, Map("value" -> field))
+      val record = RecordTypeShape(Map("value" -> TypeArgument(h.tpe(TypeShape.Bottom), et)),
+        Set.empty, Map.empty)(source, Map("value" -> field))
       val nullable = h.tpe(TypeShape.Union(at.resolution, h.tpe(TypeShape.Unit).resolution))
       val boundary = ResolutionBoundary(TermSymbol(Fun, N, Tree.Ident("forward")))
       val sites = List.fill(count)(FlowSymbol.app())
@@ -380,7 +381,7 @@ class TypeRelationTest extends AnyFunSuite:
       returned.listen: value =>
         value.getMember("value") match
           case MemberLookup.Typed(_, tpe, marks) =>
-            h.resolver.listenInstanceViews(h.resolver.instanceShape(h.resolver.transportType(tpe, marks)))(fields += _)
+            h.resolver.listenInstanceViews(h.resolver.instanceShape(h.resolver.transportType(tpe.output, marks)))(fields += _)
           case _ => fail("Expected a declared record field")
       assert(fields.isEmpty)
       val late = DynShape()
@@ -870,10 +871,10 @@ class TypeRelationTest extends AnyFunSuite:
       case (value: RecordTypeShape) :: Nil => value
       case _ => fail("Expected one merged record")
     val first = record(intersection)
-    val next = first.fields("next")
+    val next = first.fields("next").output
     val saturated = record(next)
     val counts = (left.inferenceHost.listeners.size, right.inferenceHost.listeners.size)
     (1 to 1000).foreach: _ =>
-      assert(record(saturated.fields("next")) eq saturated)
+      assert(record(saturated.fields("next").output) eq saturated)
     assert((left.inferenceHost.listeners.size, right.inferenceHost.listeners.size) == counts)
     assert(h.state.allocatedTypeInstanceCount == 0)

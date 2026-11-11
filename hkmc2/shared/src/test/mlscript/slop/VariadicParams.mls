@@ -241,7 +241,7 @@ integerTail(0, 1, "wrong")
 //│ ╙──      	                  ^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ @private
-//│ define integerTail⁰ as fun integerTail¹(...args: Array⁰): ? {
+//│ define integerTail⁰ as fun integerTail¹(...args: Array⁰): Int⁰ {
 //│   let rest: Array⁰, value: Int⁰;
 //│   do runtime⁰.checkVariadicArgs⁰("integerTail", 1, 0, args);
 //│   set rest = runtime⁰.Tuple⁰.sliceArray⁰(args, 0, 1);
@@ -277,6 +277,48 @@ mixedTail(1)
 fun forwardedTail(values: Array[Int]) = integerTail(...values)
 forwardedTail([7])
 //│ = 7
+
+
+// Trailing parameters obey the same override representation checks as leading parameters.
+:ge
+private class TailBase() with
+  open fun apply(...rest, value: Int): Int = 0
+private class TailChild() extends TailBase() with
+  override fun apply(...rest, value: Str): Int = 0
+private fun useTailBase(base: TailBase) = base.apply(1)
+useTailBase(TailChild())
+//│ ╔══[COMPILATION ERROR] Parameter 'value' of overriding member 'apply' is represented as 'Str', which cannot hold the values represented as 'Int' that the member it overrides accepts
+//│ ║  l.+4: 	  override fun apply(...rest, value: Str): Int = 0
+//│ ║        	                              ^^^^^^^^^^
+//│ ╟── The overridden member 'apply' is defined here
+//│ ║  l.+2: 	  open fun apply(...rest, value: Int): Int = 0
+//│ ╙──      	           ^^^^^
+//│ = 0
+
+// An unannotated trailing parameter inherits the base member's representation, even across blocks.
+:ge
+private class InheritedTail() extends TailBase() with
+  override fun apply(...rest, value): Int = 0
+InheritedTail().apply("wrong")
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.+3: 	InheritedTail().apply("wrong")
+//│ ╙──      	                      ^^^^^^^
+//│ = 0
+
+// Adding a required trailing slot rejects calls permitted by the base member's signature.
+// Override checking reports that mismatch before the runtime arity check can fail.
+:ge
+:re
+private class ExtraTail() extends TailBase() with
+  override fun apply(...rest, first: Int, value: Int): Int = 0
+useTailBase(ExtraTail())
+//│ ╔══[COMPILATION ERROR] Overriding member 'apply' requires at least 2 arguments, but the overridden member permits 1
+//│ ║  l.+2: 	  override fun apply(...rest, first: Int, value: Int): Int = 0
+//│ ║        	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The overridden member 'apply' is defined here
+//│ ║  l.XX: 	  open fun apply(...rest, value: Int): Int = 0
+//│ ╙──      	           ^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function 'apply' expected at least 2 arguments but got 1
 
 
 // *** Errors ***

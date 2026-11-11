@@ -58,7 +58,7 @@ x
 //│   (type $TypeInfoBase (sub (struct (field $tag@0 i32) (field $parent@1 (ref null $TypeInfoBase)))))
 //│   (type $Object (sub (struct (field $typeinfo@0 (mut (ref $TypeInfoBase))))))
 //│   (type $entry (func (result (ref null i31))))
-//│   (global $x (export "x") (mut (ref null any)) (ref.null any))
+//│   (global $x (export "x") (mut (ref null i31)) (ref.null i31))
 //│   (func $entry (export "entry") (type $entry) (result (ref null i31))
 //│     (global.set $x
 //│       (ref.i31

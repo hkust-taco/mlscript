@@ -44,7 +44,7 @@ c(p(true))
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let p$p$worker;
+//│ let p$p$worker, inlinedVal;
 //│ @private @noInline
 //│ define p$p$worker as fun p$p$worker⁰(b, eta$0$0) {
 //│   match b
@@ -73,7 +73,8 @@ c(p(true))
 //│       return 0
 //│   end
 //│ };
-//│ return p$p$worker⁰(true, 0)
+//│ set inlinedVal = p$p$worker⁰(true, 0);
+//│ return (inlinedVal as! Int⁰)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -91,63 +92,44 @@ fun sumPlus(ls) =
   r + 1
 sumPlus(enum(3))
 //│ deforest > >>> fusing >>>
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls⁰
-//│ deforest > Cons⁰(x¹, tmp⁰) ->
-//│ deforest > 	match: ls⁰
-//│ deforest > 	fields: ls⁰.h⁰
-//│ deforest > 	fields: ls⁰.t⁰
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > enum$enum⁰#0 @ <root>: [1, 7]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let enum$enum$worker;
-//│ @private
-//│ define enum$enum$worker as fun enum$enum$worker⁰(x, eta$0$0, eta$0$1, eta$0$2, eta$0$3, eta$0$4, eta$0$5, eta$0$6) {
-//│   let scrut, tmp;
-//│   set scrut = <⁰(x, 0);
-//│   match scrut
-//│     true =>
-//│       return 1
-//│     else
-//│       let fv_tmp, inlinedVal;
-//│       set tmp = -⁰(x, 1);
-//│       set inlinedVal = enum$enum$worker⁰(tmp, undefined, undefined, undefined, undefined, undefined, undefined, undefined);
-//│       set fv_tmp = +⁰(x, inlinedVal);
-//│       return +⁰(fv_tmp, 1)
-//│   end
-//│ };
+//│ let tmp;
 //│ define enum⁰ as fun enum¹(x) {
-//│   let scrut, tmp, tmp1;
+//│   let scrut, tmp1, tmp2;
 //│   set scrut = <⁰(x, 0);
 //│   match scrut
 //│     true =>
 //│       return Nil⁰
 //│     else
-//│       set tmp = -⁰(x, 1);
-//│       set tmp1 = enum¹(tmp);
-//│       return Cons⁰(x, tmp1)
+//│       set tmp1 = -⁰(x, 1);
+//│       set tmp2 = enum¹(tmp1);
+//│       return Cons⁰(x, tmp2)
 //│   end
 //│ };
 //│ define sumPlus⁰ as fun sumPlus¹(ls) {
-//│   let arg$Cons$0$, arg$Cons$1$, tmp, tmp1;
+//│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp1, tmp2;
 //│   match ls
 //│     Nil⁰ =>
 //│       return 1
 //│     Cons¹ =>
 //│       set arg$Cons$0$ = ls.h⁰;
 //│       set arg$Cons$1$ = ls.t⁰;
-//│       set tmp1 = sumPlus¹(arg$Cons$1$);
-//│       set tmp = +⁰(arg$Cons$0$, tmp1);
-//│       return +⁰(tmp, 1)
+//│       set t = (arg$Cons$1$ as! Object⁰);
+//│       set h = (arg$Cons$0$ as! Int⁰);
+//│       set tmp2 = sumPlus¹(t);
+//│       set tmp1 = +⁰(h, tmp2);
+//│       return +⁰(tmp1, 1)
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
-//│ return enum$enum$worker⁰(3, undefined, undefined, undefined, undefined, undefined, undefined, undefined)
+//│ set tmp = enum¹(3);
+//│ return sumPlus¹(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 11
 
@@ -172,9 +154,9 @@ fun c(x) = if x is
 c(p(true))
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
-//│ deforest > 	match: x²
+//│ deforest > 	match: x¹
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x²
+//│ deforest > 	match: x¹
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > p$p⁰#0 @ <root>: [1, 0]
@@ -182,7 +164,7 @@ c(p(true))
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let p$p$worker;
+//│ let p$p$worker, inlinedVal;
 //│ @private @noInline
 //│ define p$p$worker as fun p$p$worker¹(b) {
 //│   match b
@@ -211,6 +193,7 @@ c(p(true))
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
-//│ return p$p$worker¹(true)
+//│ set inlinedVal = p$p$worker¹(true);
+//│ return (inlinedVal as! Int⁰)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1

@@ -475,7 +475,7 @@ enum TypeArgumentResolution:
     case Type(resolution) => f(resolution)
     case Wildcard(_, input, output) => input.foreach(f); output.foreach(f)
 
-/** An unqualified argument is interpreted separately in the two polarities;
+/** An unqualified argument or mutable field is interpreted separately in the two polarities;
   * these parts coincide only when substitution gives the same type in both.
   * Missing wildcard parts are Nothing on input and Any on output, never holes.
   */

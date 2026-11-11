@@ -363,19 +363,19 @@ fun foo(x, y, z) = if x is
 //│               return "001"
 //│             else
 //│               set value = "hello";
-//│               return expensive_call⁰((value as! Str⁰))
+//│               return expensive_call⁰(value)
 //│           end
 //│         1 =>
 //│           return "01"
 //│         else
 //│           set value = "hello";
-//│           return expensive_call⁰((value as! Str⁰))
+//│           return expensive_call⁰(value)
 //│       end
 //│     1 =>
 //│       return "1"
 //│     else
 //│       set value = "hello";
-//│       return expensive_call⁰((value as! Str⁰))
+//│       return expensive_call⁰(value)
 //│   end
 //│ };
 //│ end
