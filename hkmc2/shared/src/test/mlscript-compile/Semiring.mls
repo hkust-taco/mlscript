@@ -1,0 +1,15 @@
+#lang(0.3.x)
+
+import "./Predef.mls"
+open Predef
+
+
+abstract class Semiring[A] {
+  fun combine(x: A, y: A): A
+}
+
+module Semiring {
+  fun (|+|) combine[A](using Semiring[A])(x: A, y: A) = use[Semiring].combine(x, y)
+}
+
+

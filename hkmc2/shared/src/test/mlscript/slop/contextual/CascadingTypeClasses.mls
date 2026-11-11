@@ -6,7 +6,7 @@ class Bar[B]
 class Baz
 
 
-fun foo[A](using Foo[A], A) = 42
+fun foo[A](using Foo[A], a: A) = a
 
 using Foo[Baz] = new Foo
 
@@ -23,8 +23,8 @@ foo[Baz]
 //│ ║  l.+1: 	foo[Baz]
 //│ ║        	^^^^^^^^
 //│ ╟── The contextual argument is passed to this parameter.
-//│ ║  l.XX: 	fun foo[A](using Foo[A], A) = 42
-//│ ╙──      	                         ^
+//│ ║  l.XX: 	fun foo[A](using Foo[A], a: A) = a
+//│ ╙──      	                         ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
@@ -37,31 +37,31 @@ foo
 //│ ║  l.+1: 	foo
 //│ ║        	^^^
 //│ ╟── The contextual argument is passed to this parameter.
-//│ ║  l.XX: 	fun foo[A](using Foo[A], A) = 42
-//│ ╙──      	                         ^
+//│ ║  l.XX: 	fun foo[A](using Foo[A], a: A) = a
+//│ ╙──      	                         ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 using Baz = new Baz
 
-:expect 42
+:expect Baz
 foo
-//│ = 42
+//│ = Baz
 
 
-fun foo[A](using Foo[A])(using A) = 42
+fun foo[A](using Foo[A])(using A) = use[A]
 
-:expect 42
+:expect Baz
 foo
-//│ = 42
+//│ = Baz
 
 
-fun foo[A](using A)(using Foo[A]) = 42
+fun foo[A](using A)(using Foo[A]) = use[A]
 
 // The first query waits for the bounds supplied by the later clause.
-:expect 42
+:expect Baz
 foo
-//│ = 42
+//│ = Baz
 
 
 using Foo[Bar[Baz]] = new Foo
@@ -76,27 +76,27 @@ foo
 //│ ║  l.+1: 	foo
 //│ ║        	^^^
 //│ ╟── The contextual argument is passed to this parameter.
-//│ ║  l.XX: 	fun foo[A](using A)(using Foo[A]) = 42
+//│ ║  l.XX: 	fun foo[A](using A)(using Foo[A]) = use[A]
 //│ ╙──      	           ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 using Bar[Baz] = new Bar
 
-:expect 42
+:expect Bar
 foo
-//│ = 42
+//│ = Bar
 
 using Bar[Int] = new Bar
 
-:expect 42
+:expect Bar
 foo
-//│ = 42
+//│ = Bar
 
 using Bar[Baz] = new Bar
 
 // The first query waits for the bounds supplied by the later clause.
-:expect 42
+:expect Bar
 foo
-//│ = 42
+//│ = Bar
 
 

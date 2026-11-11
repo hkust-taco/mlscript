@@ -1,0 +1,24 @@
+#lang(0.3.x)
+
+import "./Predef.mls"
+import "./Semiring.mls"
+open Predef
+
+
+abstract class Monoid[A] extends Semiring[A] {
+  fun empty: A
+}
+
+module Monoid {
+  fun empty[A](using Monoid[A]): A = use[Monoid].empty
+  using Monoid[Int] = new Monoid with {
+    fun empty = 0
+    fun combine(x, y) = x + y
+  }
+  using Monoid[String] = new Monoid with {
+    fun empty = ""
+    fun combine(x, y) = x + y
+  }
+}
+
+

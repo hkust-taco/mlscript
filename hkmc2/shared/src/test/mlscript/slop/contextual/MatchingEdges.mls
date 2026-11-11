@@ -38,6 +38,13 @@ using Accept[Int -> Int] = new FunctionAccept
 accept((x: Int) => x)
 //│ = "function"
 
+:expect "function"
+accept(x => x)
+//│ = "function"
+
+accept \ _ + 1
+//│ = "function"
+
 // Several matching instances in one clause are ambiguous, including subclass heads.
 class Specialized extends Accept[Int] with
   fun label: Str = "specialized"
