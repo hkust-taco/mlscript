@@ -39,12 +39,17 @@ Nil
 //│ ╙──      	^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-// The old refinement-shaped syntax is no longer a selective open.
-:e
-open Stack { Nil }
-//│ ╔══[COMPILATION ERROR] Illegal 'open' statement shape.
-//│ ║  l.+1: 	open Stack { Nil }
-//│ ╙──      	     ^^^^^^^^^^^^^
+// The old braced spelling still imports names, with a warning in the latest version.
+:w
+:expect Cons(5, Nil)
+fun oldBraces() =
+  open Stack { Cons, Nil }
+  Cons(5, Nil)
+oldBraces()
+//│ ╔══[WARNING] Selective 'open' without a dot is deprecated; add '.' after this path.
+//│ ║  l.+2: 	  open Stack { Cons, Nil }
+//│ ╙──      	       ^^^^^
+//│ = Cons(5, Nil)
 
 // A selective open contains names, not expressions to evaluate.
 :e
@@ -176,3 +181,73 @@ open Paths.hidden.answer
 //│ ╟── private member declared here
 //│ ║  l.XX: 	  private val hidden = { answer: 99 }
 //│ ╙──      	              ^^^^^^
+
+
+// The warning also applies to old syntax inside a nested import group.
+:w
+:expect 42
+fun nestedOldBraces() =
+  open Paths.{ Inner { answer } }
+  answer
+nestedOldBraces()
+//│ ╔══[WARNING] Selective 'open' without a dot is deprecated; add '.' after this path.
+//│ ║  l.+2: 	  open Paths.{ Inner { answer } }
+//│ ╙──      	               ^^^^^
+//│ = 42
+
+// The previous language version accepts both old forms without warnings.
+#lang(0.3.1)
+
+:expect 42
+fun previousBraces() =
+  open Paths.Inner { answer }
+  answer
+previousBraces()
+//│ = 42
+
+:expect 42
+fun previousIndentation() =
+  open Paths.Inner
+    answer
+  answer
+previousIndentation()
+//│ = 42
+
+// The first numbered version with dotted opens warns on either old spelling.
+#lang(0.3.2)
+
+:w
+:expect 42
+fun numberedBraces() =
+  open Paths.Inner { answer }
+  answer
+numberedBraces()
+//│ ╔══[WARNING] Selective 'open' without a dot is deprecated; add '.' after this path.
+//│ ║  l.+2: 	  open Paths.Inner { answer }
+//│ ╙──      	       ^^^^^^^^^^^
+//│ = 42
+
+:w
+:expect 42
+fun numberedIndentation() =
+  open Paths.Inner
+    answer
+  answer
+numberedIndentation()
+//│ ╔══[WARNING] Selective 'open' without a dot is deprecated; add '.' after this path.
+//│ ║  l.+2: 	  open Paths.Inner
+//│ ╙──      	       ^^^^^^^^^^^
+//│ = 42
+
+// Dotted syntax and bare wildcard opens need no migration warning.
+:expect 126
+fun currentSyntax() =
+  open Paths
+  open Inner.{ answer }
+  fun indented() =
+    open Paths.Inner.
+      answer
+    answer
+  answer + indented() + Paths.Inner.{ answer }
+currentSyntax()
+//│ = 126

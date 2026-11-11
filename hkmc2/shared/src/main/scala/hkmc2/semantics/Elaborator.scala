@@ -2396,7 +2396,9 @@ extends Importer:
     case N => ctx
   
   private def importedOpenNames(tree: Tree, base: Opt[Ctx.Elem]): Ctxl[Ls[Str -> Ctx.Elem]] =
-    def members(prefix: Tree, names: Ls[Tree]): Ls[Str -> Ctx.Elem] =
+    def members(prefix: Tree, names: Ls[Tree], legacySyntax: Bool): Ls[Str -> Ctx.Elem] =
+      if legacySyntax && lang.warnLegacyOpenSyntax then
+        raise(WarningReport(msg"Selective 'open' without a dot is deprecated; add '.' after this path." -> prefix.toLoc :: Nil))
       openPath(prefix, base) match
       case S((elem, id)) =>
         // Even an empty selection must validate a written receiver path.
@@ -2404,8 +2406,9 @@ extends Importer:
         names.flatMap(importedOpenNames(_, S(elem)))
       case N => Nil
     tree match
-    case OpenIn(prefix, Block(names)) => members(prefix, names)
-    case Jux(prefix, Block(names)) => members(prefix, names)
+    case OpenIn(prefix, Block(names)) => members(prefix, names, legacySyntax = false)
+    case Reft(prefix, Block(names)) => members(prefix, names, legacySyntax = true)
+    case Jux(prefix, Block(names)) => members(prefix, names, legacySyntax = true)
     case _: Sel | _: Ident =>
       openPath(tree, base) match
       case S((elem, id)) =>

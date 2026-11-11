@@ -152,6 +152,8 @@ object Config:
   ):
     def newUnderscoreAndApplicationSyntax: Bool =
       version.exists(_ > Language.v0_3_1.version.get)
+    def warnLegacyOpenSyntax: Bool =
+      version.exists(_ >= Language.v0_3_2.version.get)
   end Language
   
   object Language:
@@ -176,7 +178,14 @@ object Config:
       version = S(Version(0, 3, S(1))),
     )
     
-    val v0_3_x = v0_3_1.copy(
+    // Supports new-style underscore lambdas, eg `xs.map(=> _ + 1)`
+    // Moves from `open M { ... }` to `open M.{ ... }`, also supporting paths
+    val v0_3_2 = v0_3_1.copy(
+    )(
+      version = S(Version(0, 3, S(2))),
+    )
+    
+    val v0_3_x = v0_3_2.copy(
     )(
       version = S(Version(0, 3, N)),
     )
@@ -184,6 +193,7 @@ object Config:
     val presets: Map[Version, Language] = Ls(
       v0_2_x,
       v0_3_1,
+      v0_3_2,
       v0_3_x,
     ).map: lang =>
       lang.version.getOrElse(lastWords("language presets must specify a version")) -> lang

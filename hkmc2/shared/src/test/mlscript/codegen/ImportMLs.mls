@@ -14,9 +14,13 @@ Option.Some(1) isDefined()
 //│ = true
 
 
+:w
 open Option
   Some, None
   isDefined
+//│ ╔══[WARNING] Selective 'open' without a dot is deprecated; add '.' after this path.
+//│ ║  l.+1: 	open Option
+//│ ╙──      	     ^^^^^^
 
 :sjs
 None isDefined()

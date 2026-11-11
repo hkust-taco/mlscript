@@ -1889,8 +1889,10 @@ open Foo.
 ```
 
 Operator names work in either form, including `open Stack.{ :: }` or a lone `::`
-on an indented line after `open Stack.`. The existing indentation-only form
-without a dot remains supported. A bare `open Foo` opens all members of `Foo`;
+on an indented line after `open Stack.`. The old `open Foo { a, b }` form and its
+indentation-only equivalent remain supported. From language version `0.3.2`
+(including `0.3.x`), these forms warn that a dot should follow the imported path.
+A bare `open Foo` opens all members of `Foo`;
 `open Foo.Bar` imports the member `Bar` itself.
 
 With `newResolution` enabled, wildcard opens are consulted only when a name has
