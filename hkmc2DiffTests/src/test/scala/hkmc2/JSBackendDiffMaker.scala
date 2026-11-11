@@ -88,7 +88,8 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
     def definedValues(includeNonTerms: Bool): Ls[(Str, ScopedSymbol, N)] =
       import Elaborator.Ctx.*
       curCtx.env.iterator.flatMap:
-        case (nme, e @ (_: RefElem)) =>
+        // Open aliases reuse their target's storage; they do not declare another REPL binding.
+        case (nme, e @ RefElem(isImport = false)) =>
           e.symbol match
           case S(ts: TermSymbol) =>
             softAssert(false, s"Unexpected term symbol in the top-level environment: ${ts.showDbg}")

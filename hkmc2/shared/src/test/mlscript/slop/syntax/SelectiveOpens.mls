@@ -147,6 +147,14 @@ Paths.Inner.
 
 // Validate unused imports, including intermediate segments and empty groups.
 :e
+fun missingWildcardPrefix() =
+  open Paths.{ * }
+  open Absent.answer
+//│ ╔══[COMPILATION ERROR] Name not found: Absent
+//│ ║  l.+3: 	  open Absent.answer
+//│ ╙──      	       ^^^^^^
+
+:e
 open Paths.Absent.answer
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+1: 	open Paths.Absent.answer

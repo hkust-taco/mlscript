@@ -9,10 +9,10 @@ type List = Nil | Cons
 object Nil
 data class (::) Cons(head: Int, tail: List)
 //│ Env:
-//│   :: -> RefElem(member:Cons)
-//│   Cons -> RefElem(member:Cons)
-//│   List -> RefElem(member:List)
-//│   Nil -> RefElem(member:Nil)
+//│   :: -> RefElem(member:Cons,false)
+//│   Cons -> RefElem(member:Cons,false)
+//│   List -> RefElem(member:List,false)
+//│   Nil -> RefElem(member:Nil,false)
 
 Cons(1, Nil)
 //│ = Cons(1, Nil)

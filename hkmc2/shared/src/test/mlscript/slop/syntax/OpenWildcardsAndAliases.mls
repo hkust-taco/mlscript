@@ -53,6 +53,20 @@ fun replacedAlias() =
 replacedAlias()
 //│ = 80
 
+// Direct and captured aliases both remain replaceable by later imports.
+:expect [12, 23]
+fun replacedLocalAndCaptured(value: Int) =
+  let next = value + 1
+  open value as selected
+  open next as selected
+  fun read() =
+    open value as chosen
+    open selected as chosen
+    chosen
+  read
+[replacedLocalAndCaptured(11)(), replacedLocalAndCaptured(22)()]
+//│ = [12, 23]
+
 // Opening a module through its alias does not create a second candidate.
 :expect 10
 fun repeatedAlias() =
@@ -62,6 +76,28 @@ fun repeatedAlias() =
   m
 repeatedAlias()
 //│ = 10
+
+// Selected paths retain their identity through aliases at different source locations.
+:expect 40
+fun selectedAliasIdentity() =
+  open Members.Nested as First
+  open First as Second
+  open Members.Nested.{ * }
+  open First.{ * }
+  open Second.{ * }
+  m
+selectedAliasIdentity()
+//│ = 40
+
+// An alias found through a wildcard keeps its lookup name in direct and captured uses.
+:expect [40, 40]
+fun wildcardAlias() =
+  open Members.{ * }
+  open Nested as Chosen
+  fun read() = Chosen.m
+  [Chosen.m, read()]
+wildcardAlias()
+//│ = [40, 40]
 
 // A lexical definition still wins over an alias with the same name.
 :w
@@ -209,6 +245,19 @@ fun captured(value: Int) =
   fun result() = read
   result
 [captured(11)(), captured(22)()]
+//│ = [11, 22]
+
+// Capturing an imported receiver does not give its wildcard members a second identity.
+:expect [11, 22]
+fun capturedAliasIdentity(value: Int) =
+  let source = { m: value }
+  open source as Same
+  fun read() =
+    open source.{ * }
+    open Same.{ * }
+    m
+  read
+[capturedAliasIdentity(11)(), capturedAliasIdentity(22)()]
 //│ = [11, 22]
 
 :e
