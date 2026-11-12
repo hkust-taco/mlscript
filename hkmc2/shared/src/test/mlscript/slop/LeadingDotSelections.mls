@@ -44,14 +44,14 @@ module Reds with
 
 :expect "red"
 fun viaNamespace() =
-  open Reds
+  open Reds.{ * }
   paint(.red)
 viaNamespace()
 //│ = "red"
 
 :e
 fun withoutNamespace() =
-  open Reds
+  open Reds.{ * }
   .red
 //│ ╔══[COMPILATION ERROR] Cannot resolve leading-dot selection '.red'
 //│ ║  l.+3: 	  .red

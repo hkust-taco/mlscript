@@ -1,7 +1,7 @@
 :.
 :js
 
-open annotations { noInline }
+open annotations.{ noInline }
 
 
 // The worker-wrapper transformation initially turns this into

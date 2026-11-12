@@ -60,8 +60,10 @@ new!()
 new {}
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.+1: 	new {}
-//│ ║        	^^^
-//│ ╙── Invalid class expression: record literal
+//│ ║        	^^^^^^
+//│ ╟── Invalid class expression: record literal
+//│ ║  l.+1: 	new {}
+//│ ╙──      	    ^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :pe
@@ -88,7 +90,7 @@ new { x = 1 }
 //│ ╙──      	      ^
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.+1: 	new { x = 1 }
-//│ ║        	^^^^^^^^^^^
+//│ ║        	^^^^^^^^^^^^^
 //│ ╙── Invalid class expression: block
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

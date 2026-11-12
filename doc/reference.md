@@ -1374,7 +1374,7 @@ if term is refined(Term) and term is
 The `@compile` annotation forces compile-time expansion of a pattern:
 
 ```mlscript
-open annotations { compile }
+open annotations.{ compile }
 fun foo(x) = if x is @compile Box then "yes" else "no"
 fun foo(x) = if x is @compile 42 then "yes" else "no"
 ```
@@ -1863,16 +1863,75 @@ import "../../mlscript-compile/Iter.mls"
 Bring module members into scope:
 
 ```mlscript
-open Option
-open Stack { Cons, Nil }           // selective open
-open Iter                          // open all members
-do open M; ...                     // locally open
+open Option.{ * }
+open Stack.{ Cons, Nil }           // selective `open`
+open Iter.{ * }                    // open all members
+
+Stack.{ print(Nil) }               // local `open`
+type AnyList =
+  Stack.{ Cons | Nil }
 ```
+
+Selective opens accept dotted paths and nested groups. Each selected leaf becomes
+a binding in the enclosing scope; intermediate path segments do not introduce bindings:
+
+```mlscript
+open Foo.Bar.c                    // import c
+open Foo.Bar.{ c, d }             // import c and d
+open Foo.{ a, b, Bar.{ c, d } }    // import a, b, c, and d
+```
+
+Indentation can replace the braces after a dot, including in nested groups:
+
+```mlscript
+open Foo.
+  a
+  b
+  Bar.
+    c, d
+```
+
+Operator names work in either form, including `open Stack.{ :: }` or a lone `::`
+on an indented line after `open Stack.`. In dotted lists, a bare `*` selects all
+members; `(*)` selects the multiplication operator. These forms work in every
+language version:
+
+```mlscript
+open M.{ * }                      // wildcard open
+open M.{ (*) }                    // import only the * operator
+```
+
+Use `as` to rename an imported member or module, and `as _` to hide a member:
+
+```mlscript
+open M.m as n
+open M as N                       // bind the module itself as N
+open M.N.{ m as n, o, p }
+open M.{ *, m as _ }              // all members except m
+```
+
+Each statement processes its entries from left to right. Renaming or hiding
+removes earlier imports of that member from the same statement, including its
+earlier wildcards. A later wildcard or explicit import can expose the name again:
+
+```mlscript
+open M.{ *, m as n }              // n is available; m is excluded
+open M.{ m as n, * }              // both m and n are available
+open M.{ *, m as _, * }           // m is available again
+```
+
+These exclusions apply to the selected receiver and do not remove lexical bindings
+or imports from earlier statements. Hidden names must still exist in the source.
+
+The old `open Foo { a, b }` form, its indentation-only equivalent, and the bare
+wildcard form `open Foo` remain supported. From `0.3.2`, they warn and suggest
+the dotted forms. Earlier versions also retain `open Foo` for wildcards and treat
+`*` as an operator name in undotted selective opens. `open Foo.Bar` imports `Bar` itself.
 
 With `newResolution` enabled, wildcard opens are consulted only when a name has
 no explicit binding in the current scope or any enclosing scope. Explicit
 bindings include local variables, parameters, member definitions, imports, and
-selective opens such as `open Stack { Cons, Nil }`. An inner wildcard open does
+selective opens such as `open Stack.{ Cons, Nil }`. An inner wildcard open does
 not shadow an explicit binding in an outer scope. Moving a wildcard open before
 or after an explicit binding does not give it priority over that binding.
 
@@ -1883,7 +1942,7 @@ even though `M` also provides a member named `x`:
 val x = 1
 module M { val x = 2; val y = 3 }
 fun example() =
-  open M
+  open M.{ * }
   x + y                            // explicit x; y from M
 ```
 
@@ -1955,7 +2014,7 @@ selections can start chains too, as in `paint(.red.lighter)`, and they can head
 constructor patterns, as in `if x is .None then 0 else 1`.
 
 Implicit namespaces take precedence over wildcard opens, but not over explicit
-bindings, including selective opens such as `open AltOption { Some }`. A name
+bindings, including selective opens such as `open AltOption.{ Some }`. A name
 whose value flows into types whose namespaces provide distinct members, such as
 `Option[Int]` and `AltOption[Int]`, is ambiguous.
 
@@ -1998,12 +2057,12 @@ instance Foo::method(args)   // receiver-first syntax
 instance.Foo#method()        // hash syntax (inside open scope)
 ```
 
-### `open annotations { compile }`
+### `open annotations.{ compile }`
 
 Open the `annotations` module to use the `@compile` annotation in patterns:
 
 ```mlscript
-open annotations { compile }
+open annotations.{ compile }
 fun foo(x) = if x is @compile Box then "yes" else "no"
 ```
 
@@ -2330,7 +2389,7 @@ Math.sin(x); Math.cos(x); Math.tan(x)
 
 ### Predef Functions
 
-Imported automatically when `open Predef` is used (or when `import "./Predef.mls"` is present):
+Imported automatically when `open Predef.{ * }` is used (or when `import "./Predef.mls"` is present):
 
 ```mlscript
 fun id(x) = x
@@ -2366,7 +2425,7 @@ fun enterHandleBlock(handler, body) = ...
 
 ```mlscript
 import "./Stack.mls"
-open Stack
+open Stack.{ * }
 
 type Stack[A] = Cons[A] | Nil
 data class (::) Cons[A](head: A, tail: Stack[A])
@@ -2390,7 +2449,7 @@ xs :+ y                         // append single element
 
 ```mlscript
 import "./Option.mls"
-open Option { Some, None }
+open Option.{ Some, None }
 
 type Option[A] = Some[A] | None
 data class Some[T](value)
@@ -2406,7 +2465,7 @@ Option.unsafe.get(opt)
 
 ```mlscript
 import "./Iter.mls"
-open Iter
+open Iter.{ * }
 
 class Iterable(mk)           // wraps an iterator-factory
 class Iterator(next)         // wraps a next-function
@@ -2426,7 +2485,7 @@ xs toStack()                 // force to Stack
 
 ```mlscript
 import "./StrOps.mls"
-open StrOps
+open StrOps.{ * }
 
 (~) concat2(a, b)            // string concat with ~ operator
 concat(...xs)                // join multiple strings

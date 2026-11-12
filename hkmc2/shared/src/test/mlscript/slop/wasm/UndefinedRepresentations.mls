@@ -255,7 +255,7 @@ ignoreI64(bottom()) + bottomCalls
 // must collapse that cast while retaining the effects before the return.
 :soir
 :expect 42
-open annotations
+open annotations.{ * }
 private class CastTarget()
 let castCalls = 0
 @inline private fun narrow(value: Any): CastTarget =

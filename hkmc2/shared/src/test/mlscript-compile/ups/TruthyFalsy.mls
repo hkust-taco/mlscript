@@ -1,6 +1,6 @@
 #lang(0.3.x)
 
-open annotations
+open annotations.{ * }
 
 module TruthyFalsy with ...
 

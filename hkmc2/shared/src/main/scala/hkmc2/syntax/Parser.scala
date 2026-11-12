@@ -334,11 +334,19 @@ abstract class Parser(
   final def blockMaybeIndented: Ls[Tree] =
     maybeIndented((p, i) => p.block(allowNewlines = i))
   
-  /** Braces delimit statements even without indentation; other brackets contain lists whose
+  /** Braces and indentation delimit statements; other brackets contain lists whose
     * newline separators require indentation. Local opens and ordinary brace expressions share this rule. */
   private def bracketedBlock(br: BRACKETS): Ls[Tree] =
     rec(bracketContents(br), S(br.innerLoc), br.describe).concludeWith: p =>
-      if br.k is Curly then p.block(allowNewlines = true) else p.blockMaybeIndented
+      br.k match
+      case _: Indent_Curly => p.block(allowNewlines = true)
+      case _ => p.blockMaybeIndented
+  
+  /** Construct a block whose span includes its explicit braces, even when it is empty.
+    * Indentation tokens cover only leading whitespace, so indented blocks use their statements' span. */
+  private def locatedBlock(br: BRACKETS, loc: Loc, stmts: Ls[Tree]): Block =
+    val block = Block(stmts)
+    if br.k is Curly then block.withLoc(S(loc)) else block
   
   
   /* Note on annotation parsing:
@@ -607,8 +615,8 @@ abstract class Parser(
         case S(exprAlt) =>
           consume
           if verbose then printDbg("$ found blockAlt; proceed with block")
-          val e = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.block(allowNewlines = true))
-            |> Tree.Block.apply
+          val stmts = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.block(allowNewlines = true))
+          val e = locatedBlock(br, loc, stmts)
           blockContinuation(e, prec, exprAlt.infixes, exprAlt.rest).map(exprAlt.k.tupled)
         case N =>
           
@@ -1093,11 +1101,11 @@ abstract class Parser(
         val inner = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.expr(0, allowNewlines = true))
         continueWith(DynAccess(acc, Bra(bk, inner), bk is Round).withLoc(S(l0 ++ l1)))
       
-      case (PERIOD, l0) :: (br @ Bracketed(Curly, _), l1) :: _ =>
+      case (PERIOD, l0) :: (br @ Bracketed(_: Indent_Curly, _), l1) :: _ =>
         consume
         consume
         val inner = bracketedBlock(br)
-        continueWith(OpenIn(acc, Block(inner)))
+        continueWith(OpenIn(acc, locatedBlock(br, l1, inner)))
         
       case (PERIOD, l0) :: (LITVAL(lit: (Tree & Literal)), l1) :: _ =>
         consume

@@ -3,7 +3,7 @@
 
 import "../../../mlscript-compile/Option.mls"
 
-open Option { Some, None }
+open Option.{ Some, None }
 
 class Foo(a: Int, val b: Int)
 

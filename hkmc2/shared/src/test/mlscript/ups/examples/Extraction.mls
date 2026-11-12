@@ -3,8 +3,8 @@
 
 import "../../../mlscript-compile/Option.mls"
 
-open Option { Some, None }
-open annotations
+open Option.{ Some, None }
+open annotations.{ * }
 
 pattern Itch = Some(Some(Some(Some(Some(Some(Some(42)))))))
 

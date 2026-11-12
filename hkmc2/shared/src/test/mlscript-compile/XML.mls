@@ -3,8 +3,8 @@
 import "./Predef.mls"
 import "./Iter.mls"
 
-open Predef
-open Iter { mapping, joined }
+open Predef.{ * }
+open Iter.{ mapping, joined }
 
 
 data class StyleAttributeValue(rules) with

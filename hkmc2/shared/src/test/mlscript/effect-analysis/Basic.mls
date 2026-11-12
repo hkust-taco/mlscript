@@ -5,7 +5,7 @@
 //│ flow-analysis > >>> effect-analysis results >>>
 //│ flow-analysis > <<< effect-analysis results <<<
 
-open annotations { pure }
+open annotations.{ pure }
 declare fun unsafe(): Anything
 //│ flow-analysis > >>> effect-analysis results >>>
 //│ flow-analysis > <<< effect-analysis results <<<

@@ -2,8 +2,8 @@
 #config(effectHandlers: Some(EffectHandlers()))
 
 import "./BaseEffects.mls"
-open BaseEffects
-open ProductEarlyEffects
+open BaseEffects.{ * }
+open ProductEarlyEffects.{ * }
 
 module product_early with ...
 

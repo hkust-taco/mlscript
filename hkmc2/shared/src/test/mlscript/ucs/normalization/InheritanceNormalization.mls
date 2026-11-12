@@ -65,7 +65,7 @@ f(new B)
 
 // Test with imported class hierarchy
 import "../../../mlscript-compile/Example.mls"
-open Example
+open Example.{ * }
 
 let g = case
   Base & Child1 then "Base & Child1"

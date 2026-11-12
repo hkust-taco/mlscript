@@ -7,7 +7,7 @@
 import "../../../mlscript-compile/Option.mls"
 
 open annotations
-open Option { Some, None }
+open Option.{ Some, None }
 
 
 class Ident(val name: Str)

@@ -5,9 +5,9 @@ import "./Option.mls"
 import "./StrOps.mls"
 import "./Runtime.mls"
 
-open Predef
-open StrOps
-open Option
+open Predef.{ * }
+open StrOps.{ * }
+open Option.{ * }
 
 module Block with...
 

@@ -3,8 +3,8 @@
 import "../../Option.mls"
 import "../../Predef.mls"
 
-open Option { Some, None }
-open Predef { mkStr }
+open Option.{ Some, None }
+open Predef.{ mkStr }
 
 module Token with ...
 

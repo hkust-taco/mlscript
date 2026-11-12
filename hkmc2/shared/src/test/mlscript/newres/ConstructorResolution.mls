@@ -3,7 +3,7 @@
 
 // Constructor lookup waits for forward definitions and ignores term overloads.
 fun forward(x) = {
-  open Constructors
+  open Constructors.{ * }
   if x is Token then 1 else 0
 }
 module Constructors {
@@ -19,16 +19,16 @@ module Constructors {
 
 
 fun named(x) = {
-  open Constructors {Token}
+  open Constructors.{Token}
   if x is Token then 1 else 0
 }
 fun selected(x) = if x is Constructors.Token then 1 else 0
 fun boxed(x) = {
-  open Constructors
+  open Constructors.{ * }
   if x is Box(value) then value else 0
 }
 fun singleton(x) = {
-  open Constructors
+  open Constructors.{ * }
   if x is Singleton then 1 else 0
 }
 
@@ -42,12 +42,12 @@ fun singleton(x) = {
 // Uppercase `as` names match constructors, including deferred open candidates.
 :expect [1, 0, 43]
 fun chained(x) = {
-  open Constructors
+  open Constructors.{ * }
   if x is _ as Token then 1 else 0
 }
 module Aliases { val saved = 99 }
 fun alias(x) = {
-  open Aliases
+  open Aliases.{ * }
   if x is Constructors.Box(_) as saved then saved.value else 0
 }
 [chained(new Constructors.Token), chained(0), alias(Constructors.Box(43))]
@@ -67,8 +67,8 @@ fun Later() = new Later
 // An explicit binding wins over every wildcard candidate.
 module Other { class Token }
 fun explicit(x) = {
-  open Other
-  open Constructors {Token}
+  open Other.{ * }
+  open Constructors.{Token}
   if x is Token then 1 else 0
 }
 
@@ -81,8 +81,8 @@ fun explicit(x) = {
 // their argument, which takes precedence over wildcard opens (see slop/ImplicitNamespacePatterns.mls).
 :e
 fun ambiguous(x) = {
-  open Constructors
-  open Other
+  open Constructors.{ * }
+  open Other.{ * }
   if x is Token then 1 else 0
 }
 //│ ╔══[COMPILATION ERROR] Constructor pattern is ambiguous.
@@ -95,8 +95,8 @@ ambiguous(new Constructors.Token)
 
 :e
 fun ambiguousReversed(x) = {
-  open Other
-  open Constructors
+  open Other.{ * }
+  open Constructors.{ * }
   if x is Token then 1 else 0
 }
 //│ ╔══[COMPILATION ERROR] Constructor pattern is ambiguous.
@@ -120,7 +120,7 @@ unknown(0)
 :expect [44, 45]
 module Pairs { class (><) Pair(val first, val second) }
 fun infix(x) = {
-  open Pairs
+  open Pairs.{ * }
   if x is a >< b then a else 0
 }
 fun appliedSelection(x) = if x is Pairs.Pair(a, b) then b else 0
@@ -131,8 +131,8 @@ fun appliedSelection(x) = if x is Pairs.Pair(a, b) then b else 0
 // Repeating one source is unambiguous.
 :expect 1
 fun repeated(x) = {
-  open Constructors
-  open Constructors
+  open Constructors.{ * }
+  open Constructors.{ * }
   if x is Token then 1 else 0
 }
 repeated(new Constructors.Token)
@@ -152,8 +152,8 @@ val second = factory()
 
 :e
 fun sameMember(x) = {
-  open first
-  open second
+  open first.{ * }
+  open second.{ * }
   if x is Token then 1 else 0
 }
 sameMember(new first.Token)
@@ -181,11 +181,11 @@ invalid(0)
 // Pattern definitions use the same deferred references as direct matches.
 :expect [1, 0]
 module PatternNames {
-  open Constructors
+  open Constructors.{ * }
   pattern Named = Token
 }
 fun namedDefinition(x) = {
-  open PatternNames
+  open PatternNames.{ * }
   if x is Named then 1 else 0
 }
 [namedDefinition(new Constructors.Token), namedDefinition(0)]
@@ -203,8 +203,8 @@ fun inherited(x) = if x is Base as instance then instance.field else 0
 
 :e
 fun ambiguousNew() = {
-  open Constructors
-  open Other
+  open Constructors.{ * }
+  open Other.{ * }
   new Token
 }
 ambiguousNew()
@@ -224,7 +224,7 @@ ambiguousNew()
 :expect [1, 0]
 pattern Identity(pattern P) = P
 fun parameterized(x) = {
-  open Constructors
+  open Constructors.{ * }
   if x is Identity(Token) then 1 else 0
 }
 [parameterized(new Constructors.Token), parameterized(0)]

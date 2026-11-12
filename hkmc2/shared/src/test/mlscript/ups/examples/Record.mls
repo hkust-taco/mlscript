@@ -1,11 +1,11 @@
 :.
 :js
 
-open annotations
+open annotations.{ * }
 
 import "../../../mlscript-compile/Option.mls"
 
-open Option { Some, None }
+open Option.{ Some, None }
 
 // Compute Body Mass Index (BMI) from weight (kg) and height (m)
 pattern CalculateBMI = ((:weight, :height)) => weight / (height * height)

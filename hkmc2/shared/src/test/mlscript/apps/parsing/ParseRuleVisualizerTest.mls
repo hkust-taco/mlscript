@@ -10,9 +10,9 @@ import "../../../mlscript-compile/Iter.mls"
 import "../../../mlscript-compile/XML.mls"
 import "path"
 
-open ParseRuleVisualizer { render }
-open Rules { termRule, declRule, typeRule }
-open XML { html, tag, elem, style }
+open ParseRuleVisualizer.{ render }
+open Rules.{ termRule, declRule, typeRule }
+open XML.{ html, tag, elem, style }
 
 // Check if the given path exists.
 fun ensurePath(pathString) =

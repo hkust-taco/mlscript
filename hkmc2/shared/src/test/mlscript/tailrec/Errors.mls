@@ -1,6 +1,6 @@
 :.
 :js
-open annotations
+open annotations.{ * }
 
 
 :e

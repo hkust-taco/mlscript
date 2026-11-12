@@ -1,6 +1,6 @@
 :.
 :js
-open annotations
+open annotations.{ * }
 
 
 // Test: Tail-recursive function with single parameter list works correctly

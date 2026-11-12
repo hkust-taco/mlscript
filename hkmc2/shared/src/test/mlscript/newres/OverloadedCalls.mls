@@ -37,7 +37,7 @@ module Library with
     fun twice(x: Int) = Convert(x + x)
 
 :expect [4, 6]
-open Library
+open Library.{ * }
 [Convert(4), Convert.twice(3)]
 //│ = [4, 6]
 

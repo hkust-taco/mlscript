@@ -1,7 +1,7 @@
 :.
 :js
 
-open annotations { fresh, jsSymbol, inline }
+open annotations.{ fresh, jsSymbol, inline }
 
 // Inlining must preserve both the local key and the resolved method's receiver.
 // Reading the same method through its runtime key remains a dynamic property access.

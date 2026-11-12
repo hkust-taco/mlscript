@@ -56,5 +56,5 @@ n
 if if {true then false, else true} then 1 else 2
 //│ ╔══[COMPILATION ERROR] Unrecognized term split (if expression)
 //│ ║  l.+1: 	if if {true then false, else true} then 1 else 2
-//│ ╙──      	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error

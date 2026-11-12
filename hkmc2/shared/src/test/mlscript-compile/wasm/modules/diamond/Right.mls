@@ -3,7 +3,7 @@
 #config(target: CompilationTarget.Wasm, inlining: None)
 
 import "./Counter.mls"
-open Counter { Cell }
+open Counter.{ Cell }
 module Right with
   val value = Counter.next()
   fun increment(x) =

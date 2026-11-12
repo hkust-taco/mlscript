@@ -22,7 +22,7 @@ Runtime.printRaw(1)
 print(Runtime.Unit)
 //│ > ()
 
-open Runtime
+open Runtime.{ * }
 
 print(Unit)
 //│ > ()

@@ -10,13 +10,13 @@ import "./Keywords.mls"
 import "./Tree.mls"
 import "./ParseRule.mls"
 
-open Predef
-open Option
-open Stack
-open ParseRule { Choice, rule }
-open Token { Curly, Square, Round }
+open Predef.{ * }
+open Option.{ * }
+open Stack.{ * }
+open ParseRule.{ Choice, rule }
+open Token.{ Curly, Square, Round }
 
-open Choice { keyword, reference, term, typeExpr, ident, typeVar, end }
+open Choice.{ keyword, reference, term, typeExpr, ident, typeVar, end }
 
 type Opt[A] = Some[A] | None
 

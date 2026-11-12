@@ -7,7 +7,7 @@ module Mod with
   fun (|>>) pipee(x, f) = f(x)
 
 :ctx
-open Mod
+open Mod.{ * }
 //│ Env:
 
 pipee
@@ -35,28 +35,20 @@ Mod.|>>
 //│ > 1
 
 
-:pe
-:e
-open Mod { |>> }
-//│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
-//│ ║  l.+1: 	open Mod { |>> }
-//│ ╙──      	               ^
-//│ ╔══[COMPILATION ERROR] Illegal 'open' statement shape.
-//│ ║  l.+1: 	open Mod { |>> }
-//│ ╙──      	     ^^^^^^^^^^
+open Mod.{ |>> }
 
 
 :e
-open Mod { (|>>) }
+open Mod.{ (|>>) }
 //│ ╔══[COMPILATION ERROR] Illegal 'open' statement element.
-//│ ║  l.+1: 	open Mod { (|>>) }
+//│ ║  l.+1: 	open Mod.{ (|>>) }
 //│ ╙──      	           ^^^^^
 
 12 |>> print
 //│ > 12
 
 
-open Mod { printt, |>> }
+open Mod.{ printt, |>> }
 
 12 |>> printt
 //│ > 12

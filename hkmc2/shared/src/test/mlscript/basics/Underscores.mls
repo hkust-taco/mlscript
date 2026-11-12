@@ -62,7 +62,7 @@ f(2, 3)
 
 
 import "../../mlscript-compile/Iter.mls"
-open Iter
+open Iter.{ * }
 
 filtering of [], _ =>
   1

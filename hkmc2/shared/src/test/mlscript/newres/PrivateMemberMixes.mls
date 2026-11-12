@@ -11,7 +11,7 @@ class OpenMixed extends OpenBase with
 module OpenMixed with
   fun read(flag) =
     let source = if flag then new OpenMixed else ({secret: "dynamic"} as dyn)
-    open source
+    open source.{ * }
     secret
 [OpenMixed.read(true), OpenMixed.read(false)]
 //│ ╔══[COMPILATION ERROR] This reference may target a private member, which cannot be selected together with other members
@@ -31,7 +31,7 @@ class OpenSingle with
 module OpenSingle with
   fun read() =
     let source = new OpenSingle
-    open source
+    open source.{ * }
     secret
 OpenSingle.read()
 //│ = "private"

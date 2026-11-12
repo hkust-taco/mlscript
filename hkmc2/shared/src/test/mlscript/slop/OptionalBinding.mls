@@ -1,5 +1,5 @@
 :.
-open annotations
+open annotations.{ * }
 
 // Missing optional arguments bind null. Unsafe calls below remain regression probes;
 // their observed outputs do not define semantics for unsafe.undefined.

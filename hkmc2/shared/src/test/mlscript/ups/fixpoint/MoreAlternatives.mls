@@ -11,7 +11,7 @@
 // if it matches, its output replaces the result; otherwise the wildcard keeps
 // the normal form.
 
-open annotations { compile }
+open annotations.{ compile }
 
 data class Box(val value) with
   print("new Box(" + render(value) + ")")

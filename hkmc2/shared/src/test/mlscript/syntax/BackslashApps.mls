@@ -274,7 +274,7 @@ twice(_, 1) <| _ |> _ * 2
 
 
 import "../../mlscript-compile/Stack.mls"
-open Stack
+open Stack.{ * }
 
 :e
 fun findFirst(xs) \ f = ???

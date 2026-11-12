@@ -1,0 +1,281 @@
+:.
+:js
+
+import "../../../mlscript-compile/Stack.mls"
+
+// A lone operator is a member name inside the dotted braces.
+:expect Cons(1, Nil)
+fun singleton() =
+  open Stack.{ :: }
+  1 :: Stack.Nil
+singleton()
+//│ = Cons(1, Nil)
+
+:expect Cons(2, Nil)
+fun mixed() =
+  open Stack.{ Nil, :: }
+  2 :: Nil
+mixed()
+//│ = Cons(2, Nil)
+
+// The operator can also come first, with comments and newline-separated members.
+:expect Cons(3, Nil)
+fun multiline() =
+  open Stack.{
+    :: // constructor
+    Nil
+  }
+  3 :: Nil
+multiline()
+//│ = Cons(3, Nil)
+
+// An empty selection imports nothing; local selections do not escape their scope.
+open Stack.{}
+
+:e
+Nil
+//│ ╔══[COMPILATION ERROR] Name not found: Nil
+//│ ║  l.+1: 	Nil
+//│ ╙──      	^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// The old braced spelling still imports names, with a warning in the latest version.
+:w
+:expect Cons(5, Nil)
+fun oldBraces() =
+  open Stack { Cons, Nil }
+  Cons(5, Nil)
+oldBraces()
+//│ ╔══[WARNING] Selective 'open' without a dot is deprecated; add '.' after this path.
+//│ ║  l.+2: 	  open Stack { Cons, Nil }
+//│ ╙──      	       ^^^^^
+//│ = Cons(5, Nil)
+
+// A selective open contains names, not expressions to evaluate.
+:e
+open Stack.{ 1 + 2 }
+//│ ╔══[COMPILATION ERROR] Illegal 'open' statement element.
+//│ ║  l.+1: 	open Stack.{ 1 + 2 }
+//│ ╙──      	             ^^^^^
+
+
+// Indentation also supports a lone operator after the dot.
+:expect Cons(4, Nil)
+fun indentedOperator() =
+  open Stack.
+    ::
+  4 :: Stack.Nil
+indentedOperator()
+//│ = Cons(4, Nil)
+
+module Paths {
+  module Inner {
+    val answer = 42
+    data class Token(value: Int)
+  }
+  private val hidden = { answer: 99 }
+}
+
+// Qualified leaves include modules and overloaded class/constructor names.
+:expect 42
+fun importedModule() =
+  open Paths.Inner
+  Inner.answer
+importedModule()
+//│ = 42
+
+:expect 5
+fun importedConstructor() =
+  open Paths.{ Inner.Token }
+  if Token(5) is Token(n) then n else 0
+importedConstructor()
+//│ = 5
+
+// A qualified module leaf does not implicitly open that module's members.
+:e
+fun noWildcard() =
+  open Paths.Inner
+  answer
+//│ ╔══[COMPILATION ERROR] Name not found: answer
+//│ ║  l.+3: 	  answer
+//│ ╙──      	  ^^^^^^
+
+// Nested groups import their leaves without introducing their intermediate paths.
+:e
+fun noIntermediateBinding() =
+  open Paths.{ Inner.{ answer } }
+  Inner.answer
+//│ ╔══[COMPILATION ERROR] Name not found: Inner
+//│ ║  l.+3: 	  Inner.answer
+//│ ╙──      	  ^^^^^
+
+// Each closure retains the receiver supplied by its own invocation.
+:expect [11, 22]
+fun captured(value: Int) =
+  let source = { nested: { answer: value } }
+  open source.nested.answer
+  fun read() = answer
+  read
+[captured(11)(), captured(22)()]
+//│ = [11, 22]
+
+// Selecting an import does not evaluate a getter or cache its result across uses.
+let calls = 0
+module Getters {
+  fun nested =
+    set calls += 1
+    { answer: calls }
+}
+//│ calls = 0
+
+:expect [1, 2]
+fun readTwice() =
+  open Getters.nested.answer
+  [answer, answer]
+readTwice()
+//│ = [1, 2]
+
+// A local-open expression opens the entire qualified receiver path.
+:expect 43
+Paths.Inner.{ answer + 1 }
+//│ = 43
+
+:expect 44
+Paths.Inner.
+  answer + 2
+//│ = 44
+
+// Validate unused imports, including intermediate segments and empty groups.
+:e
+fun missingWildcardPrefix() =
+  open Paths.{ * }
+  open Absent.answer
+//│ ╔══[COMPILATION ERROR] Name not found: Absent
+//│ ║  l.+3: 	  open Absent.answer
+//│ ╙──      	       ^^^^^^
+
+:e
+open Paths.Absent.answer
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	open Paths.Absent.answer
+//│ ║        	          ^^^^^^^
+//│ ╟── Module 'Paths' does not contain member 'Absent'
+//│ ║  l.XX: 	module Paths {
+//│ ╙──      	^^^^^^^^^^^^
+
+:e
+open Paths.Absent.{}
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	open Paths.Absent.{}
+//│ ║        	          ^^^^^^^
+//│ ╟── Module 'Paths' does not contain member 'Absent'
+//│ ║  l.XX: 	module Paths {
+//│ ╙──      	^^^^^^^^^^^^
+
+:e
+open Paths.{ Inner.{ missing } }
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	open Paths.{ Inner.{ missing } }
+//│ ║        	                     ^^^^^^^
+//│ ╟── Module 'Inner' does not contain member 'missing'
+//│ ║  l.XX: 	  module Inner {
+//│ ╙──      	  ^^^^^^^^^^^^
+
+:e
+open Paths.hidden.answer
+//│ ╔══[COMPILATION ERROR] Cannot access private member 'hidden' outside its declaring owner
+//│ ║  l.+1: 	open Paths.hidden.answer
+//│ ║        	          ^^^^^^^
+//│ ╟── private member declared here
+//│ ║  l.XX: 	  private val hidden = { answer: 99 }
+//│ ╙──      	              ^^^^^^
+
+
+// The warning also applies to old syntax inside a nested import group.
+:w
+:expect 42
+fun nestedOldBraces() =
+  open Paths.{ Inner { answer } }
+  answer
+nestedOldBraces()
+//│ ╔══[WARNING] Selective 'open' without a dot is deprecated; add '.' after this path.
+//│ ║  l.+2: 	  open Paths.{ Inner { answer } }
+//│ ╙──      	               ^^^^^
+//│ = 42
+
+// The previous language version accepts both old forms without warnings.
+#lang(0.3.1)
+
+:expect 42
+fun previousBraces() =
+  open Paths.Inner { answer }
+  answer
+previousBraces()
+//│ = 42
+
+:expect 42
+fun previousIndentation() =
+  open Paths.Inner
+    answer
+  answer
+previousIndentation()
+//│ = 42
+
+// The first numbered version with dotted opens warns on either old spelling.
+#lang(0.3.2)
+
+:w
+:expect 42
+fun numberedBraces() =
+  open Paths.Inner { answer }
+  answer
+numberedBraces()
+//│ ╔══[WARNING] Selective 'open' without a dot is deprecated; add '.' after this path.
+//│ ║  l.+2: 	  open Paths.Inner { answer }
+//│ ╙──      	       ^^^^^^^^^^^
+//│ = 42
+
+:w
+:expect 42
+fun numberedIndentation() =
+  open Paths.Inner
+    answer
+  answer
+numberedIndentation()
+//│ ╔══[WARNING] Selective 'open' without a dot is deprecated; add '.' after this path.
+//│ ║  l.+2: 	  open Paths.Inner
+//│ ╙──      	       ^^^^^^^^^^^
+//│ = 42
+
+// Dotted syntax and bare wildcard opens need no migration warning.
+:expect 126
+fun currentSyntax() =
+  open Paths.{ * }
+  open Inner.{ answer }
+  fun indented() =
+    open Paths.Inner.
+      answer
+    answer
+  answer + indented() + Paths.Inner.{ answer }
+currentSyntax()
+//│ = 126
+
+
+// Invalid group aliases include the closing braces in their diagnostic span.
+:e
+open Paths.{} as EmptyGroup
+//│ ╔══[COMPILATION ERROR] Illegal 'open' statement base.
+//│ ║  l.+1: 	open Paths.{} as EmptyGroup
+//│ ╙──      	     ^^^^^^^^
+
+:e
+open Paths.{
+  Inner.{ answer }
+} as NestedGroup
+//│ ╔══[COMPILATION ERROR] Illegal 'open' statement base.
+//│ ║  l.+1: 	open Paths.{
+//│ ║        	     ^^^^^^^
+//│ ║  l.+2: 	  Inner.{ answer }
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.+3: 	} as NestedGroup
+//│ ╙──      	^

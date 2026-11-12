@@ -4,8 +4,8 @@ import "./Token.mls"
 import "../../Stack.mls"
 import "../../Predef.mls"
 
-open Stack
-open Predef { mkStr }
+open Stack.{ * }
+open Predef.{ mkStr }
 
 type StackT[A] = Stack.Cons[A] | Stack.Nil
 

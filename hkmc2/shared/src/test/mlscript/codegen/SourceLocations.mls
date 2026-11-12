@@ -1,6 +1,6 @@
 :.
 :js
-open annotations
+open annotations.{ * }
 
 // Marker annotations have separate locations for each occurrence.
 :w
