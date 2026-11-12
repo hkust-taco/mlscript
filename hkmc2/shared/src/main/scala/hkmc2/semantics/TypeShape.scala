@@ -157,10 +157,23 @@ object TypeShape:
       case that: Bottom.type => true
       case _ => false
 
+object TypeResolution:
+  /** Diagnostic routing is data, so imported type nodes cannot retain a compiling
+    * session's reporter. Synthesized templates have no user type use to blame;
+    * an invalid template is a compiler invariant failure.
+    */
+  enum Diagnostic:
+    case Source, Synthesized
+    case Derived(parent: TypeResolution)
+
 /** Candidates are published during elaboration. Erasure reads the resulting graph; it
   * never performs lookup or resolves an alias by inspecting an elaborated definition.
   */
-final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => Unit) extends Host[TypeShape]:
+final class TypeResolution(val source: Term, diagnostic: TypeResolution.Diagnostic) extends Host[TypeShape]:
+  // Synthesized holes and inferred-element hosts have a source template scope.
+  // The outer option distinguishes an ordinary type node from such a host;
+  // the inner option distinguishes a known scope from an unbounded one.
+  private[semantics] var templateBinders: Opt[Opt[Set[VarSymbol]]] = N
   override def toString: Str = s"TypeResolution($source)"
   private var reported = false
   def hasErrors: Bool = reported
@@ -169,14 +182,23 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
     if currentShapes.add(shape) then notifyShapeListeners(shape)
   def listen(listener: ShapeListener[TypeShape])(using ResolutionContext): Unit =
     subscribeToShapes(listener)
-  def fail(messages: Ls[(Message, Opt[Loc])]): Unit = if !reported then
+  // Derived nodes share the source diagnostic without capturing the resolver or
+  // its compilation's reporter. Erasure and imported inference report to their
+  // current caller, while each node still remembers whether it was invalid.
+  def fail(messages: Ls[(Message, Opt[Loc])])(using raise: Raise): Unit = if !reported then
     reported = true
-    report(messages)
+    diagnostic match
+      case TypeResolution.Diagnostic.Derived(parent) => parent.fail(messages)
+      case TypeResolution.Diagnostic.Synthesized => lastWords("A synthesized type cannot be invalid")
+      case TypeResolution.Diagnostic.Source =>
+        import Message.MessageContext
+        raise(ErrorReport(msg"Resolution error in ${source.describe}" -> source.toLoc :: messages,
+          source = Diagnostic.Source.Compilation))
   /** Resolution is complete, so each node needs one check per erasure pass.
     * A path-local cycle guard would revisit shared alias bodies through every
     * field that references them, expanding a small graph into an exponential tree.
     */
-  def validate(visited: scala.collection.mutable.Set[TypeResolution])(using Erasure): Unit = if visited.add(this) then
+  def validate(visited: scala.collection.mutable.Set[TypeResolution])(using Erasure, Raise): Unit = if visited.add(this) then
     import TypeShape.*
     import Message.MessageContext
     val ambiguousReceiver = source.withoutCaptures match
@@ -247,7 +269,7 @@ final class DeclaredType private (private[semantics] val reference: DeclaredType
   protected val valueHash: Int = reference.hashCode
   protected def sameValue(other: ValueKey): Bool = other match
     case that: DeclaredType =>
-      if reference.pool eq that.reference.pool then reference eq that.reference
+      if reference.scope eq that.reference.scope then reference eq that.reference
       else DeclaredType.equivalent(reference, that.reference)
     case _ => false
 
@@ -291,7 +313,7 @@ final class DeclaredType private (private[semantics] val reference: DeclaredType
 
   private def rebuilt(bindings: Map[VarSymbol, TypeArgument], instances: TypeSubstitution, positive: Bool,
       plans: Opt[TypeNamespaces])(using ResolutionContext): DeclaredType =
-    val references = rctx.state.typeReferences
+    val references = rctx.state.workspace.typeReferences
     val aliases = plans.fold(Nil)(_.aliases)
     val updated = if bindings is this.bindings then references.updated(reference, instances, positive, aliases)
       else references(resolution, bindings, instances, positive, aliases)
@@ -317,26 +339,26 @@ final class DeclaredType private (private[semantics] val reference: DeclaredType
 object DeclaredType:
   /** A closed synthesized node retains its shape directly. Cache hits can reuse
     * it without subscribing to, or looking up, its already fixed source host.
-    * The node keeps the location and the error reporter of `source`, which must be
+    * The node keeps the location and diagnostic parent `source`, which must be
     * the type use that the node's cache key identifies. A node shared by uses with
     * different sources has no source instead (see `shared`).
     */
   private[semantics] def synthesized(source: TypeResolution, shape: TypeShape)(using ResolutionContext): DeclaredType =
-    closed(new TypeResolution(source.source, source.fail), shape)
+    closed(new TypeResolution(source.source, TypeResolution.Diagnostic.Derived(source)), shape)
 
   /** A closed synthesized node that every use with the same cache key shares, such as a
     * Boolean combination of the same atoms. No use is its source, so its first use cannot
     * become the location or the error reporter of the others: diagnostics about a use cite
     * that use's own types and witnesses. Such a node is complete by construction, so
-    * validating it can only report an internal error (`invalid`).
+    * validating it can only report an internal error.
     */
-  private[semantics] def shared(shape: TypeShape)(invalid: Ls[(Message, Opt[Loc])] => Unit)
+  private[semantics] def shared(shape: TypeShape)
       (using ResolutionContext): DeclaredType =
-    closed(new TypeResolution(Term.Missing, invalid), shape)
+    closed(new TypeResolution(Term.Missing, TypeResolution.Diagnostic.Synthesized), shape)
 
   private def closed(resolution: TypeResolution, shape: TypeShape)(using ResolutionContext): DeclaredType =
     resolution.publish(shape)
-    new DeclaredType(rctx.state.typeReferences(resolution, Map.empty, TypeSubstitution.empty, true, Nil), Map.empty)(N, N, S(shape))
+    new DeclaredType(rctx.state.workspace.typeReferences(resolution, Map.empty, TypeSubstitution.empty, true, Nil), Map.empty)(N, N, S(shape))
 
   /** Canonical bindings retain only interned references. Per-use diagnostic
     * witnesses stay on DeclaredType and cannot keep extra data in the interner.
@@ -357,7 +379,7 @@ object DeclaredType:
   private val emptyBindings = new Bindings(Map.empty)
 
   private[semantics] final class Reference private[DeclaredType] (val resolution: TypeResolution, val bindings: Bindings,
-      val instances: TypeSubstitution, val positive: Bool, val namespaces: Ls[TypeAliasSymbol], val pool: References) extends ValueKey:
+      val instances: TypeSubstitution, val positive: Bool, val namespaces: Ls[TypeAliasSymbol], val scope: Object) extends ValueKey:
     protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), System.identityHashCode(resolution),
       bindings.hashCode, instances.hashCode, positive.hashCode, namespaces.hashCode)
     protected def sameValue(other: ValueKey): Bool = other match
@@ -369,13 +391,16 @@ object DeclaredType:
     * once on import and is then compared through canonical child references.
     */
   private[semantics] final class References(substitutions: scala.collection.mutable.Map[TypeSubstitution, TypeSubstitution]):
+    // References only need to recognize their canonicalization scope. Retaining the
+    // builder itself would keep every sibling reference and import memo alive.
+    private val scope = new Object
     private val bindings = scala.collection.mutable.HashMap.empty[Bindings, Bindings]
     private val references = scala.collection.mutable.HashMap.empty[Reference, Reference]
     private val imported = new java.util.IdentityHashMap[Reference, Reference]
     private[hkmc2] def size: Int = references.size
     private[hkmc2] def importedCount: Int = imported.size
     def local(reference: Reference): Reference =
-      if reference.pool eq this then reference
+      if reference.scope eq scope then reference
       else
         val known = imported.get(reference)
         if known != null then known
@@ -401,12 +426,12 @@ object DeclaredType:
     private def intern(resolution: TypeResolution, bindings: Bindings, instances: TypeSubstitution,
         positive: Bool, namespaces: Ls[TypeAliasSymbol]): Reference =
       val environment = if instances.isEmpty then TypeSubstitution.empty else substitutions.getOrElseUpdate(instances, instances)
-      val reference = new Reference(resolution, bindings, environment, positive, namespaces, this)
+      val reference = new Reference(resolution, bindings, environment, positive, namespaces, scope)
       references.getOrElseUpdate(reference, reference)
 
   def apply(resolution: TypeResolution, bindings: Map[VarSymbol, TypeArgument],
       instances: TypeSubstitution, positive: Bool)(origin: Opt[TypeInterfaceReason])(using ResolutionContext): DeclaredType =
-    new DeclaredType(rctx.state.typeReferences(resolution, bindings, instances, positive, Nil), bindings)(origin, N, N)
+    new DeclaredType(rctx.state.workspace.typeReferences(resolution, bindings, instances, positive, Nil), bindings)(origin, N, N)
 
   /** Most comparisons stop at reference identity or canonical binding identity.
     * Separate units may retain equivalent DAGs: use a worklist for that boundary,
@@ -416,7 +441,7 @@ object DeclaredType:
   private def equivalent(left: Reference, right: Reference): Bool =
     if left eq right then true
     else if left.hashCode != right.hashCode then false
-    else if left.pool eq right.pool then
+    else if left.scope eq right.scope then
       (left.resolution eq right.resolution) && (left.bindings eq right.bindings) &&
         (left.instances eq right.instances) && left.positive == right.positive && left.namespaces == right.namespaces
     else
