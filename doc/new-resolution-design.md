@@ -333,9 +333,292 @@ until defined, then missing the name, inaccessible, selected through a path from
 or found late.
 
 `settleUnboundReferences` runs before interface exposure and block completion, and takes
-the references of the current block from `accessSites`. It lets capitalized references
-without namespaces fall back to their wildcard opens in source order, then diagnoses
+the references and contextual sites of the current block from `resolutionSites`. It lets
+capitalized references without namespaces fall back to their wildcard opens in source order, then diagnoses
 missing and ambiguous names. Namespaces revealed afterwards are reported against the
 settled candidates and never change them; `AccessPath.reachable` checks their paths
 without building them. `LeadingDotSelections.mls` and the `ImplicitNamespace*.mls` files
 in `slop/` cover these rules.
+
+## Contextual parameters
+
+The [language reference](reference.md#13-context-parameters-type-classes) specifies
+completion, matching, scope, and timing. The implementation shares the ordinary
+flow graph, application inference, and implicit-namespace walk.
+
+`Ctx` carries a persistent list of lexical instance tiers, shared by sites. Each
+contextual parameter clause contributes one tier; each completed `using`
+declaration contributes another. Module and object declarations own their instance
+members and cache an instance-member index. Anonymous instances have declaration
+keys inaccessible to source; named instances use ordinary member names. Both
+lookup paths share visibility and receiver transport. Legacy binding tables remain
+unchanged. Runtime anonymous bindings occupy a separate symbol-keyed table to
+avoid collisions with named properties and inherited instances.
+
+Elaboration records contextual sites and unresolved references in one
+`resolutionSites` worklist in post-order. The site's pending entry stores its role,
+source scope, lexical instances, and type binders. Settlement starts each entry,
+then retries suspended contextual queries until no further selection is possible.
+It diagnoses unresolved queries before exposure and completion. An application
+head supplies only leading contextual lists; a value site also abstracts ordinary
+lists that precede later contextual lists. Calling-convention checks apply when
+reference targets arrive, independently of whether a site supplies arguments.
+
+`listenContextual` materializes definition references at their producing site.
+It uses instance views only to classify the received value, and forwards ordinary
+values unchanged. Forwarding an expanded view would lose deferred substitutions,
+marks, and annotations, breaking generic identity calls across imports. Declared
+`InstanceShape` values pass through without expanding their type references;
+written function types cannot contain contextual lists. Selected declared callable
+interfaces retain their contextual-list metadata and declaration identity.
+
+Every stored value and completed output has no leading contextual list. Check this
+with `softAssert` at variable, field, parameter, and completion publishers.
+Contextual lambdas are completed at their literal sites; generic values cannot
+carry a deferred completion obligation. Generic member lookup remains opaque.
+No deferred completion graph edges or per-term wrapper state are needed.
+
+Only potential site classes mix in `ContextualSiteImpl`: applications, type
+applications, instantiations, definition references and selections, `super`,
+lambdas, and outer captures. `SimpleRef` and compound heads are not sites. Pending
+sites reuse the worklist entry; completion work, output hosts, and observers are
+allocated only on demand. Completed syntax is sealed with its synthesized terms.
+
+A Supply step uses `App(Missing, CtxTup(InstanceArg...))` and ordinary `applyShape`.
+Its call activation exists before queries are decided. Each `InstanceArg` records
+its uniquely selected expression and publishes it immediately, so other queries
+can observe its inference consequences. All callees reuse these steps, but select
+under their own bindings and must agree on the runtime arguments. Each callee
+constrains its own derived expression. Feeding the shared argument's union of
+derived results back to every callee would equate independent instantiations.
+Selections never change after their decision. Later incompatible values and newly
+compatible alternatives report errors through the same matching relation used for
+selection. Finalization rechecks uniqueness even for queries selected earlier.
+
+`ContextualSubtype` probes `candidate <: query` without publishing hypothetical
+bounds to inference. It retains both sides of every nominal type argument, reverses
+input comparisons, and follows inheritance and structural interfaces. A probe owns
+its variable bounds and coinductive comparison cache; union alternatives use
+immutable snapshots, preserving correlations between repeated variables without
+rolling back the shared graph. The ordinary constraint graph supplies observed
+lower bounds. `contextualUpperBounds` retains symbolic upper endpoints, transported
+through their parameter's scope and copied through the usual publisher import
+protocol. Failed probes therefore cannot constrain other candidates.
+
+A named query keeps its inferred positions open within those bounds. A bare
+parameter query fixes its required type to the union of its observed values, so an
+unrelated candidate cannot widen the query to make itself applicable. Observation
+hosts retain deferred flow. Suspended queries add no candidate constraints; unique
+selections can unblock them. Selected queries subscribe to the hosts read by their
+probes, including incompatible alternatives and late namespace candidates.
+
+Only a subscription in the empty activation drives a site's completion. It receives
+each raw value in the activation that published it, as the term traversal does for
+an ordinary application, and every site has one. A consumer in a body activation
+views the base completion through that activation's instances and subscribes to the
+output in its own context. Driving the completion there would constrain the callee's
+call-site instances, which every activation shares, with instantiated types of the
+site's binders: a receiver `Boxed(1)` of a method in `Boxed[A]` would make `Int` reach
+a query that selected a `Show[A]`. The site's decisions, checks, reports, and stage
+subscriptions belong to the consuming unit's base context, which each activation
+inherits, so sibling activations neither decide nor report again. Within a generic
+body, a caller's instantiation of that body's binder still denotes its opaque
+parameter during probing. An instantiation created by a recursive call written
+inside the body retains its separate inference variable.
+
+A flow can conflict with what a site has already seen: a late value or namespace
+reaches a decided argument, or a callee's calling convention, parameter list before
+an eta-expanded contextual list, or selected instances differ from an earlier
+callee's. Such a report starts at the source expression whose flow did it
+(`NewResolverState.trigger`): the elaborator sets it while subscribing a term it has
+just created, and a site's pending inputs carry it to settlement. A late-value report
+then names the value that the matching relation finds incompatible with the selected
+instance's type at its position, followed by the site that selected the instance.
+
+An Abstract step has a synthesized ordinary lambda for flow and an application
+for its continuation. That application owns further completion steps, and the
+lambda observes its completed result. The lambda mirrors the abstracted parameter
+list of the first callee, with fresh unannotated parameters that keep its optional
+markers and variadic structure, so it accepts the arguments that a direct reference to
+the callee accepts. Erasure joins the corresponding parameter representations of all
+completed targets of the synthesized forwarding call, including imported declarations.
+This preserves concrete and rest-parameter representations without copying annotations
+across generic scopes or specializing a generic declaration's runtime convention.
+A variadic wrapper would instead forward every argument that its
+caller passes, such as the index and array that `map` passes to its callback, to a
+callee that does not accept them. MLscript wrappers bind omitted optional parameters
+to null. Foreign wrappers reuse optional-argument forwarding: absent fixed slots stay
+undefined so native defaults run, explicit null stays null, and variadic lists forward
+their raw suffix without binding defaults. A later callee whose list
+has a different shape is a site error, since the site has one expansion. Ordinary
+application inference still checks each callee's arity and constraints.
+Lowering flattens the continuation steps, interleaves contextual and written
+arguments, and emits lambdas around the ordinary call or constructor operation.
+It captures written arguments as IR operands, then walks the lists in call order
+to introduce the lambdas and their forwarding arguments. An MLscript callee's lambda
+binds the mirrored parameters and passes on the abstracted application's own argument
+term; a foreign callee's lambda passes IR forwarding arguments. Call construction accepts
+these prepared IR lists alongside source arguments, sharing coercions and constructor
+defaults without converting IR operands back into semantic terms.
+A contextual argument list has the runtime layout of an ordinary one, so lowering
+passes its elements directly rather than spreading an array. An expansion captures
+its operands once in source order, each argument in its own temporary. Each eager
+spread captures a fresh tuple of its elements before later operands run, so later
+mutation cannot change the saved arguments. Lowering reconstructs method selections
+on the captured receiver, preserving receiver binding.
+
+Query positions are observed in the base activation, through `observeTypeViews`
+with `opaque` set. An explicit type parameter that the position does not instantiate
+then contributes only its abstract value: the `RigidTypeShape` that
+`registerTypeParameters` publishes, viewed as an `AbstractParameterValue`. Ordinary
+views turn that witness into a plain `UnknownValueShape`, and they also include the
+values that constraints add to the parameter's host, for instance through an
+unannotated lambda parameter that code outside the definition calls; neither would
+keep the signature opaque. Matching then ignores the abstract values of type
+parameters that are not in scope at the site, since they are other generic bodies'
+checking witnesses. No caller activation is observed, so a generic body's decisions
+never depend on its callers or importers. Importers must not mutate the exporter's
+decisions or each other's observations.
+
+`NameNamespaces` and `InstanceNamespaces` implement requests over one shared
+`typeNamespaces`/`valueNamespaces` walk. Name requests retain their existing
+consultation keys and behavior. Named instance requests cache provider decisions
+by module; parameter requests use module and triggering class or alias. The module
+instance index is shared by all requests. Provider checks inspect declaration
+heads, including subclasses, without consulting argument compatibility. Instance
+requests traverse type arguments as well, independently of alias-provider cutoff.
+Late namespace discovery uses consumer-local caches and reports against the fixed
+selection only when the namespace tier participated.
+
+The `slop/contextual/` suite covers completion, imports, nested captures, receiver
+binding, effects, namespace cutoffs, and late values and callees. Existing
+`ImplicitNamespace*.mls` and `LeadingDotSelections.mls` outputs remain unchanged.
+Partial parent application in anonymous refinements and generic tuple-alias scope
+transport remain independent `:fixme` regressions; they do not authorize skipping
+invariants or changing contextual rules. Generic override representation, nested
+companion initialization, and handler-parent/interface gaps also retain explicit
+regression markers in the contextual ports.
+
+### Derived instances
+
+`BlockImpl` normalizes the parser's nested `TermDef(Ins, TermDef(Fun, ...))`
+only in its new-resolution statement view and binding table. This keeps legacy
+syntax and symbols unchanged. The ordinary `TermDefinition` retains a dedicated
+instance-function flag; its kind remains `Fun`, so ordinary inference and call
+lowering apply. The flag occupies a separate constructor parameter list to
+preserve the existing two-field `TermDefFlags` extractors in legacy resolution.
+Blocks without these declarations reuse their original statement lists and
+binding tables.
+
+Class-body instances remain lexical source bindings and are excluded from the
+class's selectable member table. Their runtime definitions use private class
+storage, because a method cannot read a JavaScript constructor's local variable.
+Lexical references lower through the owning receiver, retaining per-object
+captures. Bind instance-function names lexically before elaborating their bodies
+so explicit recursion retains the same meaning. Modules and objects continue to
+provide ordinary instance members. These storage and normalization adjustments
+implement the approved scope rules without changing source visibility.
+
+A selected instance function builds an application chain using fresh `InstanceArg`
+terms. Seed the function's type arguments from its result view of the query head,
+including inherited result positions, before applying its contextual arguments.
+Use the ordinary call-site instantiation cache and type constraints, which invoke
+`inferTypeArguments`; the result is the lower endpoint of the subtype comparison.
+Parameter queries supply the nominal views of their observations. Both endpoints
+retain alias, explicit-argument, and observed-value scope transfers.
+`constrainTypes` carries each endpoint through the site before entering the other
+function's scope. Each synthesized application drives ordinary `applyShape`
+directly. Its nested queries start before the next enclosing query and join the
+same suspended worklist when they need more bounds.
+
+Each callee needs an independent inference chain: sharing the first callee's
+bindings would conceal different nested selections. Retain those chains on the
+outer `InstanceArg`, link corresponding nested arguments to the first chain's
+canonical decisions, and compare declaration identities recursively. Only the
+first expression is lowered. All chains participate in semantic traversal and
+sealing, so imported activations preserve inference and late-value checks without
+mutating the exporting graph. Post-resolution cloning needs only the selected
+runtime expression, as for direct instance arguments.
+
+A nested argument holds an immutable derivation path. Each path entry snapshots
+the selected function, flow type, size, and covering set at decision time.
+`ContextualFlowType` contains nominal classes, unordered unions, and `?`; it is
+separate from `DeclaredType` and used only for divergence. Cycle detection during
+observation is local to the current value path. Candidate filtering and late
+namespace checks use the same divergence rule and frozen observations.
+
+Termination needs no depth bound. There are finitely many functions and class
+covering sets. Along a derivation path, queries sharing one function and covering
+set have non-increasing sizes and distinct flow types. For a fixed size and
+covering set, only finitely many flow types exist. Thus every derivation path is
+finite. A rejected candidate leaves alternatives available; a failed nested query
+does not backtrack to a different enclosing selection.
+
+`DerivedInstances`, `DerivedDeclarations`, `DerivedCaptures`, `DerivedAgreement`,
+and `DerivedDivergence` cover selection, validation, captures, inherited and
+aliased result inference, recursive agreement, and every divergence case.
+`DerivedImport` and `DerivedImportIsolation`, with `DerivedLibrary`, cover
+imported derivation, frozen nested selections, and independent importer state.
+`DerivedGenericScopes` covers enclosing generic binders, captured result aliases,
+inherited result positions, parameterless generic instances, and opaque nested
+queries. `GenericOpacity` covers opaque type parameters in functions and classes.
+
+### Contextual resolution performance
+
+Completion metadata lives on potential site classes, not on every `Term`.
+An empty completion allocates no helper object. Potential sites reuse one
+worklist entry; completion records, derived chains, and query observers are
+created on demand. Each module caches one instance-member index, and each request
+bounds provider decisions by its module keys (or module/trigger pairs for parameter
+queries). Investigate regressions above 2% and fix identified causes. The approved
+measurement policy also requires recording unexplained regressions and suspected
+causes while continuing implementation.
+
+Measurements use separate scratch worktrees against `fdddc5842`, JDK 25, and an
+identical temporary `ContextualBenchmark` runner invoked with
+`sbt -batch 'hkmc2DiffTests/Test/runMain hkmc2.ContextualBenchmark'`. It warms shared
+imports, then sequentially runs the same 125 non-WASM `newres` diff files without
+a source `using` clause through `MainDiffMaker`. Allocation uses
+`com.sun.management.ThreadMXBean.getCurrentThreadAllocatedBytes`; CPU uses
+`getCurrentThreadCpuTime`. Wall time includes the harness and JavaScript execution.
+Timed runs have no concurrent builds or tests, and every round has zero failures.
+Each version has one JVM run; the later phases reuse an earlier baseline run.
+These measurements check overhead on this subset, rather than establish a speedup
+for HKMC2. They have no paired repetitions or confidence intervals. CPU time and
+allocation count only the runner thread, excluding other threads such as the JIT
+and garbage collector.
+
+Phase 2 used twelve rounds, reporting medians of the last five:
+
+| Metric (125 files) | Base | Phase 2 | Change |
+| --- | ---: | ---: | ---: |
+| Elapsed time | 7.407372000 s | 7.144443542 s | −3.55% |
+| Current-thread CPU time | 1.409568 s | 1.320953 s | −6.29% |
+| Current-thread allocated bytes | 2,671,442,464 | 2,699,115,096 | +1.04% |
+
+For Phases 3–6, warmup was extended to 24 rounds after CPU time continued declining
+in the initial Phase 3 run. The table reports medians of rounds 20–24 against the
+same 24-round base measurement; parenthesized percentages compare with that base.
+
+| Version | Elapsed seconds | CPU seconds | Allocated bytes |
+| --- | ---: | ---: | ---: |
+| Base | 7.064231750 | 1.241451 | 2,681,793,576 |
+| Phase 3 | 7.237733584 (+2.46%) | 1.345219 (+8.36%) | 2,708,646,216 (+1.00%) |
+| Phase 4 | 7.125541042 (+0.87%) | 1.267291 (+2.08%) | 2,701,078,608 (+0.72%) |
+| Phase 5 | 7.137632667 (+1.04%) | 1.292066 (+4.08%) | 2,693,274,336 (+0.43%) |
+| Phase 6 | 7.016793083 (-0.67%) | 1.228095 (-1.08%) | 2,698,203,216 (+0.61%) |
+
+Phase 3 removed a duplicate local-parameter contextual-observer lookup. Phase 4
+bypasses eta-expansion callbacks when no Abstract step exists. The remaining
+regressions have no isolated cause. Suspicions include contextual classification
+and worklist processing, imported generic observer lookups, and dispatch in the
+shared namespace walk. JVM optimization and warmup also vary: the Phase 5 compiler
+and measured subset were unchanged from Phase 4, yet their measurements differed.
+These are hypotheses, not profiling conclusions, and remain optimization follow-up.
+
+Phase 6 stays below 2% on all three measurements. Derivation state is allocated
+only for contextual queries, with no derivation state on ordinary terms. The earlier
+regressions and run variation remain recorded above; no semantic rule or invariant
+was relaxed to meet the performance target.
+Its elapsed-time difference from the base is about 47 ms across 125 files; the
+available measurements do not distinguish a real speedup from JVM and run variation.

@@ -1,0 +1,30 @@
+:.
+
+// Contextual constructor coverage from basics/MultiParamListClasses.
+using Int = 123
+class Foo(using val z: Int)
+
+:expect 123
+Foo.z
+//│ = 123
+
+:expect 123
+(new Foo).z
+//│ = 123
+
+class Bar(val x: Int, val y: Int)(using val z: Int)
+
+:expect 126
+Bar(1, 2).z + Bar(1, 2).x + Bar(1, 2).y
+//│ = 126
+
+:expect 123
+(new Bar(1, 2)).z
+//│ = 123
+
+let f = Bar
+//│ f = fun f
+
+:expect 123
+f(1, 2).z
+//│ = 123

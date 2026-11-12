@@ -1,0 +1,78 @@
+:.
+
+class List[A](val head: A)
+class Show[A](val label: Str)
+module Show with
+  using Show[Int] = Show[Int]("int")
+  using Show[Str] = Show[Str]("str")
+fun display[A](value: A)(using show: Show[A]) = show.label
+
+// Each nested derived activation retains the captured outer type parameter.
+:expect ["list(list(local))", "list(list(local))"]
+fun captured[A](value: A) =
+  using Show[A] = Show[A]("local")
+  using fun list[B](using element: Show[B]): Show[List[B]] = Show[List[B]]("list(" + element.label + ")")
+  fun nested(value: A) = display(List(List(value)))
+  nested(value)
+[captured(1), captured("text")]
+//│ = ["list(list(local))", "list(list(local))"]
+
+// Result aliases can capture an enclosing binder independently of the function's own binders.
+:expect ["alias:local", "alias:local"]
+fun aliased[A](value: A) =
+  type Wrapped = List[A]
+  using Show[A] = Show[A]("local")
+  using fun wrap(using element: Show[A]): Show[Wrapped] = Show[Wrapped]("alias:" + element.label)
+  display(List(value))
+[aliased(1), aliased("text")]
+//│ = ["alias:local", "alias:local"]
+
+// Inherited result positions cross both class binders before inferring B from the captured A.
+class Middle[A](label: Str) extends Show[List[A]](label)
+class Leaf[A](label: Str) extends Middle[A](label)
+
+:expect ["inherited:int", "inherited:str"]
+fun inherited[A](value: A)(using Show[A]) =
+  using fun derive[B](using element: Show[B]): Leaf[B] = Leaf[B]("inherited:" + element.label)
+  display(List(value))
+[inherited(1), inherited("text")]
+//│ = ["inherited:int", "inherited:str"]
+
+// Parameterless instance functions still instantiate their own generic result at each site.
+:expect ["constant", "constant"]
+fun parameterless[A](value: A) =
+  using fun constant[B]: Show[B] = Show[B]("constant")
+  display(value)
+[parameterless(1), parameterless("text")]
+//│ = ["constant", "constant"]
+
+// Explicit type parameters are opaque: the nested query for `Show[A]` has no instance in
+// this generic body, whatever its callers pass.
+:e
+fun observed[A](value: A) =
+  using fun wrap(using element: Show[A]): Show[List[A]] = Show[List[A]]("derived:" + element.label)
+  display(List(value))
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+3: 	  display(List(value))
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+3: 	  display(List(value))
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.+2: 	  using fun wrap(using element: Show[A]): Show[List[A]] = Show[List[A]]("derived:" + element.label)
+//│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance function was selected for an enclosing contextual argument of type Show[List[?]].
+//│ ║  l.+2: 	  using fun wrap(using element: Show[A]): Show[List[A]] = Show[List[A]]("derived:" + element.label)
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Int].
+//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of type parameter 'A' is incompatible with the required subtype relationship.
+//│ ║  l.+2: 	  using fun wrap(using element: Show[A]): Show[List[A]] = Show[List[A]]("derived:" + element.label)
+//│ ║        	                                     ^
+//│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Str].
+//│ ║  l.XX: 	  using Show[Str] = Show[Str]("str")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of type parameter 'A' is incompatible with the required subtype relationship.
+//│ ║  l.+2: 	  using fun wrap(using element: Show[A]): Show[List[A]] = Show[List[A]]("derived:" + element.label)
+//│ ╙──      	                                     ^

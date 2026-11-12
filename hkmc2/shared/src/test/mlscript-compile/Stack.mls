@@ -1,5 +1,9 @@
 #lang(0.3.x)
 
+import "./Predef.mls"
+import "./Semiring.mls"
+
+open Predef
 
 
 type Stack[out A] = Stack.{ Cons[A] | Nil }
@@ -10,6 +14,12 @@ module Stack with ...
 class Base
 data class (::) Cons[out A](head: A, tail: Stack[A]) extends Base
 object Nil extends Base
+
+
+using fun semiring[A]: Semiring[Stack[A]] = new Semiring with {
+  fun combine(xs, ys) = xs ::: ys
+}
+
 
 fun isEmpty(xs) = xs is Nil
 

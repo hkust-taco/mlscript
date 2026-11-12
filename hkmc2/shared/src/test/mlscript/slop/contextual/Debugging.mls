@@ -1,0 +1,106 @@
+:.
+
+:global
+:effectHandlers debug
+:lift
+
+import "../../../mlscript-compile/Runtime.mls"
+
+abstract class Debugger() with
+  fun break(payload)
+
+module Test with
+  fun test(j)(using dbg: Debugger) =
+    let i = 0
+    let k = 2000
+    if i == 0 do
+      set i = dbg.break("whoops")
+    j / i
+  fun main()(using Debugger) =
+    test(12) + test(34)
+
+:fixme // Handler-parent resolution is independently incomplete.
+// :rt
+// :lot
+let res =
+  handle h = Debugger with
+    fun break(payload)(resume) = resume
+  using Debugger = h
+  Runtime._try(() => Test.main())
+//│ ╔══[COMPILATION ERROR] Member reference 'Debugger' has no resolved target
+//│ ║  l.+2: 	  handle h = Debugger with
+//│ ╙──      	             ^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ res = undefined
+
+:fixme // Handled results have no declared interface for these selections.
+:re
+res.raise()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	res.raise()
+//│ ║        	^^^^^^^^^
+//│ ╟── Cannot resolve member 'raise' of a value with unknown shape.
+//│ ╟── An effect handler can replace the handled body's result.
+//│ ║  l.XX: 	  handle h = Debugger with
+//│ ║        	             ^^^^^^^^^^^^^
+//│ ║  l.XX: 	    fun break(payload)(resume) = resume
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  using Debugger = h
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  Runtime._try(() => Test.main())
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:fixme // Handled results have no declared interface for these selections.
+set res = res.resumeWith(42)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	set res = res.resumeWith(42)
+//│ ║        	          ^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'resumeWith' of a value with unknown shape.
+//│ ╟── An effect handler can replace the handled body's result.
+//│ ║  l.XX: 	  handle h = Debugger with
+//│ ║        	             ^^^^^^^^^^^^^
+//│ ║  l.XX: 	    fun break(payload)(resume) = resume
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  using Debugger = h
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  Runtime._try(() => Test.main())
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:fixme // Handled results have no declared interface for these selections.
+:re
+res.raise()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	res.raise()
+//│ ║        	^^^^^^^^^
+//│ ╟── Cannot resolve member 'raise' of a value with unknown shape.
+//│ ╟── An effect handler can replace the handled body's result.
+//│ ║  l.XX: 	  handle h = Debugger with
+//│ ║        	             ^^^^^^^^^^^^^
+//│ ║  l.XX: 	    fun break(payload)(resume) = resume
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  using Debugger = h
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  Runtime._try(() => Test.main())
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:fixme // Handled results have no declared interface for these selections.
+:expect 0.33676533676533676
+res.resumeWith(666)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	res.resumeWith(666)
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'resumeWith' of a value with unknown shape.
+//│ ╟── An effect handler can replace the handled body's result.
+//│ ║  l.XX: 	  handle h = Debugger with
+//│ ║        	             ^^^^^^^^^^^^^
+//│ ║  l.XX: 	    fun break(payload)(resume) = resume
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  using Debugger = h
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  Runtime._try(() => Test.main())
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '0.33676533676533676', got: 'undefined'

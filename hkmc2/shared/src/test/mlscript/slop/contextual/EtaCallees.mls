@@ -1,0 +1,118 @@
+:.
+
+using Int = 7
+using Str = "seven"
+class First with
+  fun method(x)(using n: Int) = n
+class Second with
+  fun method(x)(using n: Int) = n
+class Different with
+  fun method(x)(using s: Str) = s
+using Second = new Second
+using Different = new Different
+fun revealSecond(using value: Second) = value
+fun revealDifferent(using value: Different) = value
+
+// The second callee arrives during settlement, after the first expansion has selected Int.
+:expect [7, 7]
+fun bind(receiver) = receiver.method
+let first = bind(new First)
+let second = bind(revealSecond)
+[first(1), second(2)]
+//│ = [7, 7]
+//│ first = fun
+//│ second = fun
+
+:e
+fun mismatch(receiver) = receiver.method
+let initial = mismatch(new First)
+let different = mismatch(revealDifferent)
+[initial(1), different(2)]
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by member reference
+//│ ║  l.+3: 	let different = mismatch(revealDifferent)
+//│ ║        	                         ^^^^^^^^^^^^^^^
+//│ ╟── This expression's callees select different instances for the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	fun mismatch(receiver) = receiver.method
+//│ ║        	                         ^^^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	  fun method(x)(using s: Str) = s
+//│ ║        	                ^^^^^^^^^^^^
+//│ ╟── One callee selects this instance.
+//│ ║  l.XX: 	using Int = 7
+//│ ║        	^^^^^^^^^^^^^
+//│ ╟── Another callee selects this instance.
+//│ ║  l.XX: 	using Str = "seven"
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
+//│ = [7, 7]
+//│ different = fun
+//│ initial = fun
+
+// Ordinary parameter arities do not change the contextual calling convention:
+// a call passes its written arguments and the same instances to every callee.
+class Optional with
+  fun method(x?: Int)(using n: Int) = n
+class Empty with
+  fun method()(using n: Int) = n
+
+:expect [7, 7]
+fun callOptional(receiver) = receiver.method()
+[callOptional(new Optional), callOptional(new Empty)]
+//│ = [7, 7]
+
+// An eta-expansion is one lambda that mirrors its callee's parameter list, so its
+// callees must have parameter lists of the same shape before the contextual list.
+:e
+fun bindOptional(receiver) = receiver.method
+let optional = bindOptional(new Optional)
+let empty = bindOptional(new Empty)
+[optional(), empty()]
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
+//│ ║  l.+3: 	let empty = bindOptional(new Empty)
+//│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This selection cannot be eta-expanded, as its callees take parameter lists of different shapes before their contextual parameter lists.
+//│ ║  l.+1: 	fun bindOptional(receiver) = receiver.method
+//│ ║        	                             ^^^^^^^^^^^^^^^
+//│ ╟── The eta-expansion is a single function, whose parameters mirror this parameter list of one callee, which has an optional parameter.
+//│ ║  l.XX: 	  fun method(x?: Int)(using n: Int) = n
+//│ ║        	            ^^^^^^^^^
+//│ ╟── This parameter list of another callee has no parameters.
+//│ ║  l.XX: 	  fun method()(using n: Int) = n
+//│ ╙──      	            ^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ empty = undefined
+//│ optional = undefined
+
+// The report describes each parameter list's shape: its kinds of parameters, in order.
+class Mixed with
+  fun method(a: Int, b: Int, c?: Int)(using n: Int) = n
+class Rest with
+  fun method(a: Int, ...rest)(using n: Int) = n
+
+:e
+fun bindMixed(receiver) = receiver.method
+[bindMixed(new Mixed), bindMixed(new Rest)]
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
+//│ ║  l.+2: 	[bindMixed(new Mixed), bindMixed(new Rest)]
+//│ ║        	                       ^^^^^^^^^^^^^^^^^^^
+//│ ╟── This selection cannot be eta-expanded, as its callees take parameter lists of different shapes before their contextual parameter lists.
+//│ ║  l.+1: 	fun bindMixed(receiver) = receiver.method
+//│ ║        	                          ^^^^^^^^^^^^^^^
+//│ ╟── The eta-expansion is a single function, whose parameters mirror this parameter list of one callee, which has 2 required parameters and an optional parameter.
+//│ ║  l.XX: 	  fun method(a: Int, b: Int, c?: Int)(using n: Int) = n
+//│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This parameter list of another callee has a required parameter and a rest parameter.
+//│ ║  l.XX: 	  fun method(a: Int, ...rest)(using n: Int) = n
+//│ ╙──      	            ^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+class AlsoOptional with
+  fun method(x?: Int)(using n: Int) = n + 1
+
+:expect [7, 8]
+fun bindBoth(receiver) = receiver.method
+let first = bindBoth(new Optional)
+let second = bindBoth(new AlsoOptional)
+[first(), second(1)]
+//│ = [7, 8]
+//│ first = fun
+//│ second = fun

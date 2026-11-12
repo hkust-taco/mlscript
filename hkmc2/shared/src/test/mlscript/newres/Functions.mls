@@ -72,7 +72,11 @@ callid1(Predef)
 //│ | | | ~> [1]
 //│ | | | listenTerm: trm = p⁰.id
 //│ | | | listen: trm = p⁰.id
+//│ | | | listenTerm: trm = p⁰.id
+//│ | | | listen: trm = p⁰.id
 //│ | | ~> p⁰.id(1)
+//│ | | listenTerm: trm = p⁰.id(1)
+//│ | | listen: trm = p⁰.id(1)
 //│ | ~> p⁰.id(1)
 //│ | Elab subterm App(Ident(callid1),Tup(List(Ident(Predef))))
 //│ | | Elab subterm Ident(callid1)
@@ -95,8 +99,22 @@ callid1(Predef)
 //│ | | | | | fromBMS: bms = member:Predef⁰, sh = module:Predef¹, flow = Predef², markss = List()
 //│ | | | | | PUSH module:Predef¹
 //│ | | | | ~> member:Predef⁰
+//│ | | | | listenTerm: trm = member:Predef⁰
+//│ | | | | listen: trm = member:Predef⁰
+//│ | | | | listenBMS: bms = module
+//│ | | | | listenedBMS: bms = module
+//│ | | | | fromBMS: bms = member:Predef⁰, sh = module:Predef¹, flow = Predef², markss = List()
+//│ | | | | PUSH module:Predef¹
 //│ | | | ~> member:Predef⁰
 //│ | | ~> [member:Predef⁰]
+//│ | | listenTerm: trm = member:callid1⁰
+//│ | | listen: trm = member:callid1⁰
+//│ | | listenBMS: bms = function
+//│ | | listenedBMS: bms = function
+//│ | | fromBMS: bms = member:callid1⁰, sh = member:callid1⁰, flow = callid1¹, markss = List()
+//│ | | .exit MarkedShape (member:callid1⁰, term:callid1², callid1¹)
+//│ | | = MarkedShape(member:callid1⁰, ↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
+//│ | | PUSH MarkedShape(member:callid1⁰, ↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
 //│ | | listenTerm: trm = member:callid1⁰
 //│ | | listen: trm = member:callid1⁰
 //│ | | listenBMS: bms = function
@@ -122,6 +140,16 @@ callid1(Predef)
 //│ | | = MarkedShape(module:Predef¹, ↘⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
 //│ | | newSel: sel = p⁰.id, shape = MarkedShape(module:Predef¹, ↘⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
 //│ | | newSel member: bms = member:id⁰, mss = List(↘⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
+//│ | | listenBMS: bms = function
+//│ | | listenedBMS: bms = function
+//│ | | fromBMS: bms = member:id⁰, sh = member:id⁰, flow = ⋅id⁰, markss = List(↘⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
+//│ | | .exit MarkedShape (member:id⁰, term:Predef¹/id¹, ⋅id⁰)
+//│ | | = MarkedShape(member:id⁰, ↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
+//│ | | .exit MarkedShape(member:id⁰, ↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ) (↘⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
+//│ | | | .exit MarkedShape(member:id⁰, ↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ) (ϵ)
+//│ | | | = MarkedShape(member:id⁰, ↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
+//│ | | = MarkedShape(member:id⁰, ↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
+//│ | | PUSH MarkedShape(member:id⁰, ↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
 //│ | | listenBMS: bms = function
 //│ | | listenedBMS: bms = function
 //│ | | fromBMS: bms = member:id⁰, sh = member:id⁰, flow = ⋅id⁰, markss = List(↘⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
@@ -191,6 +219,8 @@ callid1(Predef)
 //│ | | | = IntroShape(1)
 //│ | | = IntroShape(1)
 //│ | ~> member:callid1⁰(member:Predef⁰)
+//│ | listenTerm: trm = member:callid1⁰(member:Predef⁰)
+//│ | listen: trm = member:callid1⁰(member:Predef⁰)
 //│ ~> { fun member:callid1⁰(p⁰) = p⁰.id‹term:Predef¹/id¹›(1); member:callid1⁰(member:Predef⁰) }
 //│ listenTerm: trm = member:callid1⁰(member:Predef⁰)
 //│ listen: trm = member:callid1⁰(member:Predef⁰)

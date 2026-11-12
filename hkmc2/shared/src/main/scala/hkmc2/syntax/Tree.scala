@@ -601,6 +601,10 @@ case object Mod extends TypeDefKind("module", "module") with ClsLikeKind
 trait TermDefImpl extends TypeOrTermDef:
   this: TermDef =>
   
+  def isAnonymousInstance: Bool = (k is Ins) && (head match
+    case InfixApp(_, Keywrd(Keyword.`as`), _: Ident) => false
+    case _ => true)
+  
   def isParameterizedMethod: Bool =
     (k is Fun) && paramLists.length > 0
   
@@ -767,6 +771,13 @@ trait TypeDefImpl(using State) extends TypeOrTermDef:
       blk.definedSymbols.toMap
     case _ =>
       Map.empty
+  
+  private lazy val contextualSymbols: Map[Str, BlockMemberSymbol] = bodies.headOption match
+    case S(blk: Block) => blk.definedSymbolsFor(true).iterator.filter(_._2.nameIsMeaningful).toMap
+    case _ => Map.empty
+  
+  def definedSymbolsFor(newResolution: Bool): Map[Str, BlockMemberSymbol] =
+    if newResolution then contextualSymbols else definedSymbols
   
   lazy val clsParams: Ls[Ls[TermSymbol]] =
     this.paramLists.map: tup =>

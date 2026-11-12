@@ -1,0 +1,135 @@
+:.
+
+
+using Int = 42
+using Str = "42"
+
+:expect 42
+use[Int]
+//│ = 42
+
+:expect "42"
+use[Str]
+//│ = "42"
+
+// §3.4: Int is a subclass of Num.
+:expect 42
+use[Num]
+//│ = 42
+
+:e
+use[Bool]
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	use[Bool]
+//│ ║        	^^^^^^^^^
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	use[Bool]
+//│ ║        	^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  in ../../../mlscript-compile/Predef.mls
+//│ ║  l.XX: 	fun use[T](using instance: T) = instance
+//│ ╙──      	           ^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:expect 42
+let x = use[Int]
+x
+//│ = 42
+//│ x = 42
+
+// §3.2: instance declarations require a named type.
+:e
+using Int -> Int = id
+use[Int -> Int](123)
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+2: 	use[Int -> Int](123)
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ╟── No instance can be selected for the contextual argument supplied implicitly here.
+//│ ║  l.+2: 	use[Int -> Int](123)
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter, whose type is neither a named type nor a type parameter.
+//│ ║  in ../../../mlscript-compile/Predef.mls
+//│ ║  l.XX: 	fun use[T](using instance: T) = instance
+//│ ╙──      	           ^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in function type
+//│ ║  l.+1: 	using Int -> Int = id
+//│ ║        	      ^^^^^^^^^^
+//│ ╟── Instance declaration types must be named types.
+//│ ║  l.+1: 	using Int -> Int = id
+//│ ╙──      	      ^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:expect -42
+fun f(using Int) = use[Int]
+using Int = -42
+f
+//│ = -42
+
+:expect "42"
+fun f(using Int) = use[Str]
+using Str = "-42"
+f
+//│ = "42"
+
+// §3.4: a lexical Int also supplies Num.
+fun f(using Int) = use[Num]
+
+
+data class Some[T](value: T)
+
+:expect 42
+fun f[T](using Some[T]) = use[Some[T]].value
+using Some[Int] = Some(42)
+f
+//│ = 42
+
+:e
+:re
+use{[Some[Int]].value}
+//│ ╔══[COMPILATION ERROR] Unsupported refinement in this position.
+//│ ║  l.+1: 	use{[Some[Int]].value}
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+:re
+use([Some[Int]].value)
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	use([Some[Int]].value)
+//│ ║        	^^^
+//│ ╟── The type of the contextual argument supplied implicitly here cannot be determined, as neither an explicit type argument nor a value determines the type parameter that it refers to.
+//│ ║  l.+1: 	use([Some[Int]].value)
+//│ ║        	^^^
+//│ ╟── The contextual argument is passed to this parameter, whose type is the type parameter 'T'.
+//│ ║  in ../../../mlscript-compile/Predef.mls
+//│ ║  l.XX: 	fun use[T](using instance: T) = instance
+//│ ╙──      	           ^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	use([Some[Int]].value)
+//│ ║        	    ^^^^^^^^^^^^^^^^^
+//│ ╟── Tuple literal does not contain member 'value'
+//│ ║  l.+1: 	use([Some[Int]].value)
+//│ ╙──      	    ^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:expect 42
+fun f[T](using T) = use[T]
+using Int = 42
+f[Int]
+//│ = 42
+
+:e
+:re
+f
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	f
+//│ ║        	^
+//│ ╟── The type of the contextual argument supplied implicitly here cannot be determined, as neither an explicit type argument nor a value determines the type parameter that it refers to.
+//│ ║  l.+1: 	f
+//│ ║        	^
+//│ ╟── The contextual argument is passed to this parameter, whose type is the type parameter 'T'.
+//│ ║  l.XX: 	fun f[T](using T) = use[T]
+//│ ╙──      	         ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+

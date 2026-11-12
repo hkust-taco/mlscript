@@ -1,0 +1,51 @@
+:.
+
+class Evidence[A](val label: Str)
+
+:e
+using fun ordinary(x: Int): Evidence[Int] = Evidence[Int]("bad")
+//│ ╔══[COMPILATION ERROR] Instance functions can only have 'using' parameter lists.
+//│ ║  l.+1: 	using fun ordinary(x: Int): Evidence[Int] = Evidence[Int]("bad")
+//│ ╙──      	                  ^^^^^^^^
+
+:e
+using fun missing(using Int) = Evidence[Int]("missing result")
+//│ ╔══[COMPILATION ERROR] Instance functions require a named result type annotation.
+//│ ║  l.+1: 	using fun missing(using Int) = Evidence[Int]("missing result")
+//│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+using fun functionResult: (Int -> Int) = x => x
+//│ ╔══[COMPILATION ERROR] Resolution error in function type
+//│ ║  l.+1: 	using fun functionResult: (Int -> Int) = x => x
+//│ ║        	                           ^^^^^^^^^^
+//│ ╟── Instance declaration types must be named types.
+//│ ║  l.+1: 	using fun functionResult: (Int -> Int) = x => x
+//│ ╙──      	                           ^^^^^^^^^^
+
+:e
+using fun tupleResult: [Int, Int] = [1, 2]
+//│ ╔══[COMPILATION ERROR] Resolution error in tuple literal
+//│ ║  l.+1: 	using fun tupleResult: [Int, Int] = [1, 2]
+//│ ║        	                       ^^^^^^^^^^
+//│ ╟── Instance declaration types must be named types.
+//│ ║  l.+1: 	using fun tupleResult: [Int, Int] = [1, 2]
+//│ ╙──      	                       ^^^^^^^^^^
+
+:e
+using val unsupported: Int = 1
+//│ ╔══[COMPILATION ERROR] Only 'fun' definitions can have a 'using' modifier.
+//│ ║  l.+1: 	using val unsupported: Int = 1
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+using fun (using Int): Evidence[Int] = Evidence[Int]("missing name")
+//│ ╔══[COMPILATION ERROR] Expected a valid function definition head; found parenthesis section instead
+//│ ║  l.+1: 	using fun (using Int): Evidence[Int] = Evidence[Int]("missing name")
+//│ ╙──      	          ^^^^^^^^^^^
+
+// An instance function without contextual parameters is a derived constant.
+:expect "constant"
+using fun constant: Evidence[Int] = Evidence[Int]("constant")
+use[Evidence[Int]].label
+//│ = "constant"

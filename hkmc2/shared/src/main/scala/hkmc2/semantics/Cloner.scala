@@ -80,10 +80,33 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
 
   private def copyMetadata[A <: Term](source: Term, copy: A): A =
     copy.typeInterpretation = source.typeInterpretation
+    (source, copy) match
+      case (source: ContextualSite, copy: ContextualSite) =>
+        copy.contextualSite = source.contextualSite match
+          case site: ResolutionSite.Contextual => site.role
+          case role => role
+        copy.contextualCompletion = source.contextualCompletion.map(completion =>
+          ContextualCompletion(completionSteps(completion.steps), completion.output))
+      case _ => ()
     // These completed shapes describe source declarations and calling conventions.
     // Executable reference targets are substituted separately below.
     copy.shapes.copyFrom(source.shapes)
     located(source, copy)
+
+  private def completionSteps(steps: Ls[ContextualStep]): Ls[ContextualStep] =
+    def application(source: App): App = term(source) match
+      case copy: App => copy
+      case _ => lastWords("A cloned contextual application must remain an application")
+    steps match
+      case Nil => Nil
+      case ContextualStep.Supply(app) :: tail => ContextualStep.Supply(application(app)) :: completionSteps(tail)
+      case ContextualStep.Abstract(params, app, mirrored) :: tail =>
+        val scope = nested
+        scope.bindParameters(params :: Nil)
+        val copied = scope.term(app) match
+          case copy: App => copy
+          case _ => lastWords("A cloned contextual application must remain an application")
+        ContextualStep.Abstract(scope.parameterList(params), copied, mirrored) :: scope.completionSteps(tail)
 
   extension (source: Term)
     private def cloned: Term = term(source)
@@ -498,6 +521,11 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
       copyMetadata(term, copyNewResolution(term, copy))
     val that = source match
       case Error() => Error()
+      case argument: InstanceArg =>
+        val copy = InstanceArg()
+        copy.isErroneous = argument.isErroneous
+        copy.selected = argument.selected.map(_.cloned)
+        copy
       case UnitVal() => UnitVal()
       case DynTy() => DynTy()
       case Missing => return Missing

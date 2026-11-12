@@ -1,0 +1,51 @@
+:.
+
+import "./mlscript-compile/DerivedLibrary.mls"
+open DerivedLibrary { List, display, fixed }
+
+:expect "list(list(int))"
+display(List(List(1)))
+//│ = "list(list(int))"
+
+:expect "list(int)"
+fixed(List(1))
+//│ = "list(int)"
+
+:e
+fixed(List("late"))
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
+//│ ║  l.+1: 	fixed(List("late"))
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of class 'Str' makes the contextual argument's type incompatible with its selected instance.
+//│ ║  l.+1: 	fixed(List("late"))
+//│ ║        	           ^^^^^^
+//│ ╟── The contextual argument is supplied implicitly here, where its instance was selected.
+//│ ║  in mlscript-compile/DerivedLibrary.mls
+//│ ║  l.XX: 	    display(value)
+//│ ║        	    ^^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	  fun display[A](value: A)(using show: Show[A]): Str = show.label
+//│ ║        	                           ^^^^^^^^^^^^^^^^^^^
+//│ ╟── The selected instance is declared here, with type Show[List[A]].
+//│ ║  l.XX: 	    using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+//│ ╙──      	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
+//│ ║  l.+1: 	fixed(List("late"))
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of class 'Str' makes the contextual argument's type incompatible with its selected instance.
+//│ ║  l.+1: 	fixed(List("late"))
+//│ ║        	           ^^^^^^
+//│ ╟── The contextual argument is supplied implicitly here, where its instance was selected.
+//│ ║  in mlscript-compile/DerivedLibrary.mls
+//│ ║  l.XX: 	    display(value)
+//│ ║        	    ^^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	    using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance function was selected for an enclosing contextual argument of type Show[List[Int]].
+//│ ║  l.XX: 	    using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+//│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The selected instance is declared here, with type Show[Int].
+//│ ║  l.XX: 	    using Show[Int] = Show[Int]("int")
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = "list(int)"

@@ -1489,83 +1489,286 @@ foo()
 
 ## 13. Context Parameters (Type Classes)
 
-MLscript has context parameters (`using`) which enable type-class-style programming.
-
-### Introducing Context Instances (`using ... = ...`)
+In new resolution (`#lang(0.3.x)`), a `using` parameter list asks the compiler to
+supply arguments from the caller's lexical scope or implicit namespaces,
+unless it is supplied explicitly through a `using` argument list.
 
 ```mlscript
 using Int = 42
-using Foo[Int] = new IntFoo()
-using Str = "hello"
+fun answer(using n: Int) = n
+answer                    // 42
+answer(using 7)            // 7: through an explicit `using` argument list
+fun add(using n: Int)(x: Int) = n + x
+add(1)                    // 43: supply the leading contextual list first
 ```
 
-### Functions with Context Parameters
+A clause can contain named or anonymous parameters: `(using n: Int, Str)`.
+Querying a contextual parameter of type `T` can be done with `use[T]`, predefined as
+`fun use[T](using instance: T) = instance`.
+Classes also accept `using` clauses, eg, `class Box(using val n: Int)`.
+
+### Where Contextual Arguments Are Supplied
+
+A reference to a definition, a selection, a leading-dot selection, a `super`
+reference, or a contextual lambda is completed in a value position. Applications,
+type applications, and `new` expressions headed recursively by these expressions
+or by lambda literals are completed too. Only the outermost expression of an
+application chain is a value site: `M.f[Int](1)(2)` is one site, while the receiver
+`M.f` in `M.f.g` is a separate value site. Arguments, results, scrutinees, receivers,
+and spread operands are value positions.
+
+At a value site, after accounting for written argument lists:
+
+- Supply each leading `using` list.
+- If an ordinary list precedes a later `using` list, abstract over that ordinary
+  list and continue resolving the remaining lists. This is eta-expansion.
+- Stop when no remaining list is contextual.
+
+An ordinary application also completes its head's leading contextual lists before
+applying its written arguments. A head supplies these leading lists only; it does
+not abstract over ordinary lists. An explicit `(using ...)` list directly applies
+to its head. Explicitly dynamic accesses (`!`, dynamic indexing, or dynamic
+receivers) do not receive automatic contextual arguments.
 
 ```mlscript
-module M with
-  fun foo(using Int) = use[Int]
-  fun bar(using n: Int): Int = n
-  fun baz(using foo: Int, bar: Str) = ...
+using Int = 7
+fun scale(x: Int)(using factor: Int)(y: Int) = x * factor + y
+let scaled = scale        // equivalent to x => scale(x)(using 7)
+scaled(2)(3)              // 17
 ```
 
-### Named Context Parameters
+Eta-expansion resolves all its contextual arguments where the expansion is
+written. It evaluates the receiver and written arguments once there, in source
+order, and retains method receiver binding. The callee runs when the expansion
+receives its last abstracted ordinary list. Later instance declarations cannot
+change an existing expansion. The expansion takes the callee's parameter list, as the
+lambda `x => scale(x)(using 7)` does, so the callees of one reference must have
+parameter lists of the same shape before the contextual list.
+
+A lambda whose parameter list is contextual is itself completed where written:
+`let get = (using n: Int) => n` binds `get` to `7` in the example above. The compiler
+warns and suggests a `fun` definition for a reusable contextual function. Direct
+lambda calls follow named-call rules: `((using n: Int) => n)(using 9)` gives `9`
+and receives the same warning. A `using` list in a function type is an error;
+contextual function types are not supported.
+
+No variable, field, parameter, aggregate element, or function result holds a
+function with an uncompleted leading contextual list. Explicit type parameters are
+opaque, for member lookup as for contextual queries: `fun f[A](x: A) = x.m` is
+rejected even if all callers supply an object with `m`. A selection on an
+unannotated receiver can resolve several contextual methods, subject to the
+agreement rules below.
+
+### Queries and Matching
+
+Each parameter in a supplied clause is a separate query, using its annotation
+in the callee's call activation. Explicit type arguments count: `use[Int]` queries
+`Int`. After expanding aliases, a query must be a named class, object, or primitive
+type, possibly with arguments, or a type parameter without an explicit argument.
+Union, intersection, function, record, tuple, and literal query types are errors.
+The type in an instance declaration must be named too.
+
+Matching asks whether the instance's declared type can be a subtype of the query,
+given the current inference bounds. A named query `N[Q1, ..., Qn]` requires an
+instance of `N` or a subclass, viewing its arguments through its inheritance chain.
+Argument comparisons follow variance: covariant outputs compare from instance to
+query, contravariant inputs compare from query to instance, and invariant arguments
+require both directions. For example, `Source[Cat]` serves `Source[Animal]` when
+`Source` is covariant, and `Eq[Animal]` serves `Eq[Cat]` when `Eq` is contravariant.
+`Eq[Str]` cannot serve `Eq[Int]`. Matching never ranks a more specific instance above
+another match in the same tier.
+
+An inferred argument of a named query retains its lower and upper bounds. A
+candidate remains possible if those bounds permit the subtype comparison. For
+example, an invariant `Monoid[Num]` can serve `Monoid[T]` with `Int <: T` by choosing
+`T = Num`; it cannot serve a fixed `Monoid[Int]`. Candidate probes do not add their
+proposed bounds to inference, so a rejected candidate cannot affect another one.
+
+A query that is itself an inferred type parameter uses the union of the types of
+its observed values. Its instance must fit that observed type: in
+`fun f[T](x: T)(using instance: T)`, observing a `Cat` allows a `Cat` instance but
+does not allow an unrelated `Dog` instance to widen `T`. With no observed values,
+the query remains undetermined until further flow supplies them.
+
+Explicit type parameters inside generic definitions remain opaque, regardless of
+their callers' arguments. An opaque `A` is a subtype of itself and `Any`; no
+particular named type is known to be a subtype of `A`. Instance functions have fresh
+inference variables for their own parameters, and repeated occurrences must admit
+one consistent instantiation. Recursive comparisons also follow unions,
+intersections, record fields, function domains and results, and fixed tuple fields.
+Dynamic values and unavailable interfaces retain uncertainty.
+
+Queries start clause by clause, left to right. A uniquely selected argument
+immediately feeds ordinary parameter inference. A query with several possible
+instances stays suspended while later queries and other elaboration supply bounds;
+incompatible candidates are filtered out. With
+`fun f[A](using Foo[A], A)`, selecting `Foo[Baz]` can determine the `A` query in
+either parameter order. At the end of elaboration, each query must have exactly
+one matching instance. Remaining alternatives produce an ambiguity error; an empty
+search or undetermined parameter also produces an error.
+
+### Scope, Namespaces, and Shadowing
 
 ```mlscript
-fun f(using someInt: Int) = someInt
-using Int as i = 24
+using Int as small = 1
+using Int = 2             // later matching declaration shadows small
 ```
 
-### Multiple Context Parameter Lists
+Search tries lexical tiers from innermost outward. Each `using` declaration is
+its own tier, visible from the end of its declaration to the end of its enclosing
+block; later declarations come first. The contextual parameters of one clause
+form one tier. Inner scopes precede outer scopes. The first tier with possible
+matches decides: one match succeeds, while several suspend the query until more
+bounds arrive. Alternatives remaining at finalization are ambiguous. Nonmatching
+declarations do not hide earlier matching ones.
+
+All namespace instances form one final tier. A `using` declaration directly in
+a module or object is a member: `using T as name = value` gives it an ordinary
+name; an anonymous declaration has a deterministic name inaccessible to source.
+Privacy applies as in ordinary member lookup. Class-body and local declarations
+are lexical instances only.
+
+Search uses the [implicit namespaces](#implicit-namespaces) of the query, preserving
+aliases as written: companion, declaring module, then parents or alias bodies,
+with the first-provider cutoff. It additionally traverses type arguments
+recursively. A parameter position contributes the namespaces of its observed
+values, as does a query that is itself a type parameter.
+
+For a named query `N[...]`, a namespace provides if it declares an accessible
+instance whose expanded head is `N` or a subclass. This is decided from declarations,
+independently of argument compatibility: an incompatible instance still cuts off
+that namespace path. For a parameter query, the provider's head must equal the
+class or alias that led to that namespace. Consultation is once per namespace for
+a named query, and once per namespace and triggering class or alias for a parameter
+query. Reaching the same declaration along multiple paths does not duplicate it.
+
+Generic signatures are opaque to their callers. In
+`fun sum[A](xs: List[A])(using Monoid[A]) = fold(xs)`, the lexical `Monoid[A]`
+parameter has the required type, and its tier shadows namespaces. Without that
+parameter, no instance such as `Monoid[Int]` serves the query, even if every caller
+passes `Int`s; the generic function must take the instance from its callers, as
+`sum` does. A contravariant instance such as `Eq[Any]` serves `Eq[A]`. An unannotated
+parameter is not opaque: its callers' values are ordinary flow.
+
+### Timing, Agreement, and Errors
+
+Sites are recorded in elaboration post-order, after their contained sites; an
+application head immediately precedes its application. They share an ordered
+worklist with names awaiting wildcard fallback. Settlement starts each entry before
+the next, then revisits suspended queries until no further selection is possible.
+It checks the remaining queries before interface exposure and block completion.
+Ordinary values flow immediately; contextual arguments wait for a unique selection.
+
+Every callee of a reference must share its contextual calling convention: for
+each parameter list, whether it is contextual, and the arity of each contextual
+list. Ordinary arities are not part of this convention. Overrides preserve it;
+unrelated same-named methods must agree too. A mismatch is reported immediately
+at the reference, even if that reference supplies no contextual arguments.
+
+Every callee's queries use its own call bindings but must select the same runtime
+arguments. Different selections, or contextual callees mixed with dynamic callees,
+are errors. Later callees before block completion must agree with the fixed
+selection; completed blocks cannot acquire new targets. Later activations reuse
+the decisions. A later incompatible value or newly compatible alternative is an
+error, not a reason to reselect.
+A matching namespace discovered after a namespace-tier decision or failed search
+is reported as late; lexical selections suppress these namespace searches.
+
+Diagnostics distinguish missing, ambiguous, undetermined, and unsupported queries,
+calling-convention and selection mismatches, and late values or namespaces. They
+identify the contextual parameter, interpreted query type, relevant declarations,
+and locations using source names. A late value, or a callee whose calling convention
+or instances conflict with an earlier callee's, is reported starting at the expression
+whose flow sent it. A late-value report then shows the value that makes the contextual
+argument's type incompatible with the selected instance's type, and the site that
+selected the instance. The `slop/contextual/` diff tests cover these rules; legacy
+resolution retains its prior behavior.
+
+### Derived Instances
+
+A `using` modifier on `fun` declares an instance function:
 
 ```mlscript
-fun f(using Int)(using Str) = ...
-fun g(x: Int)(using Str) = ...
+class List[A](val head: A)
+class Show[A](val label: Str)
+module Show with
+  using Show[Int] = Show[Int]("int")
+  using fun list[A](using element: Show[A]): Show[List[A]] =
+    Show[List[A]]("list(" + element.label + ")")
+fun display[A](value: A)(using show: Show[A]) = show.label
+
+display(List(1))           // "list(int)"
+display(List(List(1)))     // "list(list(int))"
 ```
 
-### Summon / `use[T]`
+The form is `using fun name[A, ...](using ...)...: R = body`. It requires a
+name and a written result annotation `R` that expands to a named type. Type
+parameters are allowed, and every parameter list must be contextual; there may
+be no parameter lists. Other `using <definition>` forms are errors. Instance
+functions can appear wherever instance declarations can: as module or object
+members, or lexically in blocks and class bodies.
 
-Retrieve the current context instance of type `T`:
+The function is a candidate with type `R`; matching checks whether a consistent
+instantiation of its own type parameters can make `R` a subtype of the query.
+Direct and derived instances share the same tiers and ambiguity rules. Selecting a
+function instantiates it at a synthesized call inside the enclosing site. Ordinary
+type-argument inference relates its result to the query in the same subtype
+direction, including variance and inherited positions. In the example, the
+elements of the `List` values bind `A`.
 
-```mlscript
-fun use[T](using instance: T) = instance  // defined in Predef
+The function's contextual lists become nested queries with the enclosing site's
+scope and rules. They start depth-first and can suspend until other queries supply
+more bounds. The result of the synthesized application supplies the enclosing
+argument. Each callee infers its own bindings, and agreement compares the selected
+function and all nested selections recursively. Selecting the same outer function
+is insufficient if its callees require different nested arguments.
 
-using Int = 42
-use[Int]                  // = 42
-use[Str]                  // error if not in scope
-```
+#### Divergence
 
-### Class Context Parameters
+A divergent instance function is excluded before tier selection, allowing other
+candidates to match. There is no depth limit and no backtracking. If a selected
+function's nested query has no remaining match, that is a missing-instance error;
+search does not retry another function for the enclosing query. The diagnostic
+lists excluded functions and the derivation path, outermost first.
 
-Classes can take context parameters:
-```mlscript
-class Foo(using Int) with
-  fun foo = use[Int]
-  fun bar = summon
+The check uses finite observations of flow:
 
-using Int = 99
-Foo                       // creates Foo with context Int = 99
-Foo.foo                   // = 99
-```
+- The observed type of a set of values is the union of their observed types, or
+  `?` if the set is empty or contains a value of unknown class.
+- A value of class `C` contributes `C` applied to the observed types at its exposed
+  argument positions, with `?` at unavailable positions. A value already on the
+  current observation path contributes `?`, so cyclic flows produce finite types.
+- A query's flow type is its query type with each position replaced by these
+  observations. Written positions such as `List[Int]` use their instance views,
+  yielding `List[Int]`. A parameter query uses its observed type directly.
+- Snapshot the flow type when the query is decided; later inference does not
+  enlarge an earlier snapshot. Its size counts class and `?` occurrences, and its
+  covering set contains all classes occurring in it. Equality is structural,
+  treating unions as sets and `?` as equal to `?`.
 
-Public context field:
-```mlscript
-class Foo(using val n: Int)
-Foo.n      // = the context Int value
-```
+The derivation path records the earlier queries and functions selected above a
+nested query. A function `f` diverges for query `q` if an earlier query `q'` on
+that path selected `f`, has the same covering set, and either has smaller size
+than `q` or has an equal flow type. Comparisons against other functions do not
+exclude `f`. This follows Scala 3's candidate-specific divergence check, with
+flow observations taking the place of inferred types.
 
-### Type Class Example (Monoid)
+For example, with the namespace instance for `Show[Int]` above:
 
-```mlscript
-abstract class Monoid[T] with
-  fun combine(a: T, b: T): T
-  fun empty: T
-
-object IntAddMonoid extends Monoid[Int] with
-  fun combine(a: Int, b: Int): Int = a + b
-  fun empty: Int = 0
-
-using Monoid[Int] = IntAddMonoid
-```
+- `list` on `List[List[Int]]` produces successively smaller queries, ending in
+  `Show[Int]`, and succeeds.
+- `using fun loop[A](using Show[A]): Show[A]` on `Int` repeats `Show[Int]`.
+  The nested search excludes `loop` and selects the direct namespace instance.
+  Without that alternative it reports a missing instance with a divergence note.
+- `using fun bad[A](using Show[List[A]]): Show[A]` first changes `Show[Int]` to
+  `Show[List[Int]]`. Their covering sets differ, so it can continue. The next
+  query, `Show[List[List[Int]]]`, has the same covering set as the preceding
+  query and a larger size, so `bad` is excluded there.
+- An instance that swaps `Pair[Int, Str]` to `Pair[Str, Int]` repeats the root
+  flow type after two steps and diverges.
+- An instance for `class Rose(kids: List[Rose])` requiring `Show[List[Rose]]`
+  cycles back to `Show[Rose]` and diverges. Tying recursive instance knots through
+  by-name contextual parameters is not supported.
 
 ---
 
@@ -1897,6 +2100,9 @@ reference is ambiguous; the order of the opens does not choose a winner.
 Capitalized values first consult their [implicit namespaces](#implicit-namespaces).
 
 ### Implicit Namespaces
+
+[Contextual instance search](#scope-namespaces-and-shadowing) uses these namespaces
+and additionally traverses query type arguments.
 
 With `newResolution` enabled, a capitalized name without an explicit binding can
 name a member of an *implicit namespace* of the type that its value is required

@@ -13,14 +13,15 @@ object OptionalParams:
   case class Forwarding(params: LoweredParamList, args: Ls[Arg])
   
   /** Forward optional arguments to the callee without applying MLscript defaults to foreign calls.
-    * Foreign constructors need fixed slots to retain their flattened argument layout; ordinary
-    * forwarding calls can pass the optional suffix as a spread and let the callee bind its slots.
+    * Foreign constructors need fixed slots to retain their flattened argument layout; fixed-arity
+    * contextual expansions use them to discard extra callback arguments. Other forwarding calls
+    * can pass the optional suffix as a spread and let the callee bind its slots.
     * Note: while it doesn't make much sense to declare JS-foreign classes as curried,
     *   we might well want to declare Scala classes as curried,
     *   which on the JVM does flatten the parameter list,
     *   so this might be useful once we have the Java backend. */
   def forwarding(params: LoweredParamList, fixedArity: Bool)(using State): Forwarding =
-    assert(!fixedArity || params.restParam.isEmpty, "Constructor parameters must have a fixed layout")
+    assert(!fixedArity || params.restParam.isEmpty, "Fixed-slot forwarding cannot have a rest parameter")
     if !params.hasOptParams then
       Forwarding(params, params.params.map(_.sym.asSimpleRef.asArg) :::
         params.restParam.toList.map(p => Arg(S(SpreadKind.Eager), p.sym.asSimpleRef)))

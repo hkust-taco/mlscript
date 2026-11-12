@@ -1,0 +1,111 @@
+:.
+
+class List[A](val head: A)
+class Show[A](val label: Str)
+module Show with
+  using Show[Int] = Show[Int]("int")
+  using fun text: Show[Str] = Show[Str]("str")
+  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+fun display[A](value: A)(using show: Show[A]) = show.label
+
+:expect "list(int)"
+display(List(1))
+//│ = "list(int)"
+
+:expect "list(list(int))"
+display(List(List(1)))
+//│ = "list(list(int))"
+
+:expect "str"
+display("hello")
+//│ = "str"
+
+:e
+display(List(true))
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	display(List(true))
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	display(List(true))
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+//│ ║        	                    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance function was selected for an enclosing contextual argument of type Show[List[Bool]].
+//│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Int].
+//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of class 'Bool' is incompatible with the required subtype relationship.
+//│ ║  l.+1: 	display(List(true))
+//│ ║        	             ^^^^
+//│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Str].
+//│ ║  l.XX: 	  using fun text: Show[Str] = Show[Str]("str")
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of class 'Bool' is incompatible with the required subtype relationship.
+//│ ║  l.+1: 	display(List(true))
+//│ ║        	             ^^^^
+//│ ╟── This instance from namespace 'Show' has an incompatible type, Show[List[A]].
+//│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of class 'Bool' is incompatible with the required subtype relationship.
+//│ ║  l.+1: 	display(List(true))
+//│ ╙──      	             ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A lexical derived instance shadows matching namespace instances.
+:expect "local(local(int))"
+fun local() =
+  using fun wrap[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("local(" + element.label + ")")
+  display(List(List(1)))
+local()
+//│ = "local(local(int))"
+
+// Declaration identity, not specificity, decides ambiguity within the namespace tier.
+class Ambiguous[A](val label: Str)
+module Ambiguous with
+  using Ambiguous[List[Int]] = Ambiguous[List[Int]]("direct")
+  using fun list[A]: Ambiguous[List[A]] = Ambiguous[List[A]]("derived")
+fun ambiguous[A](value: A)(using instance: Ambiguous[A]) = instance.label
+
+:e
+ambiguous(List(1))
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	ambiguous(List(1))
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ╟── Multiple instances are compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	ambiguous(List(1))
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	fun ambiguous[A](value: A)(using instance: Ambiguous[A]) = instance.label
+//│ ║        	                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance from namespace 'Ambiguous' has a compatible type, Ambiguous[List[Int]].
+//│ ║  l.XX: 	  using Ambiguous[List[Int]] = Ambiguous[List[Int]]("direct")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance from namespace 'Ambiguous' has a compatible type, Ambiguous[List[A]].
+//│ ║  l.XX: 	  using fun list[A]: Ambiguous[List[A]] = Ambiguous[List[A]]("derived")
+//│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// An explicit query type specializes a generic contextual parameter.
+:expect "list(list(int))"
+fun summon[A](using instance: A) = instance
+summon[Show[List[List[Int]]]].label
+//│ = "list(list(int))"
+
+// A written result alias retains inference into the function's own type parameters.
+type ShownList[A] = Show[List[A]]
+
+:expect "alias:int"
+fun aliasResult() =
+  using fun throughAlias[A](using element: Show[A]): ShownList[A] = Show[List[A]]("alias:" + element.label)
+  display(List(1))
+aliasResult()
+//│ = "alias:int"
+
+// An unbound query parameter discovers the result class through its incoming value.
+:expect "list(int)"
+fun summonLike[A](value: A)(using instance: A) = instance
+summonLike(Show[List[Int]]("input")).label
+//│ = "list(int)"

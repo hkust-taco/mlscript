@@ -1,0 +1,8 @@
+:.
+
+import "./mlscript-compile/EtaFlow.mls"
+
+// The other importer's incompatible argument must not change this cached expansion.
+:expect "int"
+EtaFlow.adapter(2)
+//│ = "int"

@@ -102,7 +102,11 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         case _ => N
       .toList
     
-    val symbolsToPreserve = definedValues(includeNonTerms = true).iterator.map(_._2).toSet
+    // Anonymous instances have no source name, but later worksheet blocks can still select
+    // them through the lexical instance environment. Preserve their runtime bindings too.
+    val contextualSymbols = curCtx.instances.iterator.filter(_.scope eq curCtx.scope).flatMap(_.bindings.iterator).collect:
+      case Elaborator.Ctx.InstanceBinding(symbol: BlockMemberSymbol, _, _: Elaborator.Ctx.RefElem) => symbol
+    val symbolsToPreserve = definedValues(includeNonTerms = true).iterator.map(_._2).toSet ++ contextualSymbols
     
     Config.extractConfigFromStats(blk).givenIn {
     val loweringState = summon[Elaborator.State]

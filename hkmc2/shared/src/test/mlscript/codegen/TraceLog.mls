@@ -141,3 +141,13 @@ variadic(1, 2, 3, 4, 5)
 //│ > CALL variadic(1, 2, ...[ 3, 4 ], 5)
 //│ > => 1
 //│ = 1
+
+// * Each traced call binds its own trailing parameters, which a nested call must not overwrite.
+:expect ["inner", "outer"]
+fun nested(n, ...xs, last) = if n > 0 then [nested(n - 1, "inner"), last] else last
+nested(1, "outer")
+//│ > CALL nested(1, ...[], 'outer')
+//│ > | CALL nested(0, ...[], 'inner')
+//│ > | => 'inner'
+//│ > => [ 'inner', 'outer' ]
+//│ = ["inner", "outer"]

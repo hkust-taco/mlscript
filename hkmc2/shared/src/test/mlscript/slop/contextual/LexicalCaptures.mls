@@ -1,0 +1,9 @@
+:.
+
+data class Box[T](value: T)
+
+:expect 42
+fun inside[T](using b: Box[T]) = use[Box[T]].value
+using Box[Int] = Box(42)
+inside
+//│ = 42

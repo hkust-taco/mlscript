@@ -1,0 +1,27 @@
+:.
+
+// Contextual portions of ctx/SymbolResolution, with observable moduleful results.
+module M with
+  val answer = 42
+module R with
+  fun bar[T](using Int)(using Num)(using Str): module M = M
+fun foo[T](using Int)(using Num)(using Str): module M = M
+using Int = 42
+using Num = 4.2
+using Str = "42"
+
+:expect 42
+R.bar.answer
+//│ = 42
+
+:expect 42
+foo.answer
+//│ = 42
+
+:expect 42
+R.bar[Int].answer
+//│ = 42
+
+:expect 42
+foo[Int].answer
+//│ = 42

@@ -1,0 +1,8 @@
+#lang(0.3.x)
+
+module LexicalQueries with
+  class Accept[A]
+  using Accept[Int] = new Accept[Int]
+  fun consume[A](value: A)(using Accept[A]) = 42
+  // Callers' values reach an unannotated parameter, unlike an explicit type parameter.
+  fun unannotated(value) = consume(value)

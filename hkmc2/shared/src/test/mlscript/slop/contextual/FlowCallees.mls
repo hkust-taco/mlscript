@@ -1,0 +1,90 @@
+:.
+
+using Int = 7
+using Str = "selected"
+
+class Reader with
+  fun read()(using n: Int) = n
+  fun id[A](value: A)(using n: Int): A = value
+
+:expect 7
+fun flow(value) = value.read()
+flow(new Reader)
+//│ = 7
+
+:expect 7
+fun declared(value: Reader) = value.read()
+declared(new Reader)
+//│ = 7
+
+:expect "typed"
+fun typed(value: Reader) = value.id[Str]("typed")
+typed(new Reader)
+//│ = "typed"
+
+class Leading with
+  fun read(using n: Int)(suffix: Str): Str = n.toString() + suffix
+
+:expect "7!"
+(new Leading).read("!")
+//│ = "7!"
+
+class Other with
+  fun read() = 1
+
+:e
+fun disagree(value) = value.read()
+[disagree(new Reader), disagree(new Other)]
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
+//│ ║  l.+2: 	[disagree(new Reader), disagree(new Other)]
+//│ ║        	                       ^^^^^^^^^^^^^^^^^^^
+//│ ╟── This selection resolves to members with different contextual parameter lists.
+//│ ║  l.+1: 	fun disagree(value) = value.read()
+//│ ║        	                      ^^^^^^^^^^
+//│ ╟── This function is a target of the selection; it takes an ordinary parameter list.
+//│ ║  l.XX: 	  fun read() = 1
+//│ ║        	  ^^^^^^^^^^
+//│ ╟── This function is a target of the selection; it takes an ordinary parameter list, then a contextual parameter list of 1 parameter.
+//│ ║  l.XX: 	  fun read()(using n: Int) = n
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+class StringReader with
+  fun read()(using text: Str) = text
+
+:e
+fun select(value) = value.read()
+[select(new Reader), select(new StringReader)]
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
+//│ ║  l.+2: 	[select(new Reader), select(new StringReader)]
+//│ ║        	                     ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This expression's callees select different instances for the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	fun select(value) = value.read()
+//│ ║        	                    ^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	  fun read()(using text: Str) = text
+//│ ║        	             ^^^^^^^^^^^^^^^
+//│ ╟── One callee selects this instance.
+//│ ║  l.XX: 	using Int = 7
+//│ ║        	^^^^^^^^^^^^^
+//│ ╟── Another callee selects this instance.
+//│ ║  l.XX: 	using Str = "selected"
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
+//│ = [7, 7]
+
+:e
+fun explicit(value) = value.read()(using 1)
+[explicit(new Reader), explicit(new Other)]
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
+//│ ║  l.+2: 	[explicit(new Reader), explicit(new Other)]
+//│ ║        	                       ^^^^^^^^^^^^^^^^^^^
+//│ ╟── This selection resolves to members with different contextual parameter lists.
+//│ ║  l.+1: 	fun explicit(value) = value.read()(using 1)
+//│ ║        	                      ^^^^^^^^^^
+//│ ╟── This function is a target of the selection; it takes an ordinary parameter list.
+//│ ║  l.XX: 	  fun read() = 1
+//│ ║        	  ^^^^^^^^^^
+//│ ╟── This function is a target of the selection; it takes an ordinary parameter list, then a contextual parameter list of 1 parameter.
+//│ ║  l.XX: 	  fun read()(using n: Int) = n
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

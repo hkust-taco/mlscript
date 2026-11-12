@@ -1,0 +1,93 @@
+:.
+
+class Parent
+class Child extends Parent
+abstract class Accept[A] with
+  fun label: Str
+class ParentAccept extends Accept[Parent] with
+  fun label: Str = "parent"
+class UnionAccept extends Accept[Int | Str] with
+  fun label: Str = "union"
+class TopAccept extends Accept[Any] with
+  fun label: Str = "top"
+fun accept[A](value: A)(using a: Accept[A]) = a.label
+using Accept[Parent] = new ParentAccept
+
+:expect "parent"
+accept(new Child)
+//│ = "parent"
+
+using Accept[Int | Str] = new UnionAccept
+
+:expect "union"
+[accept(1), accept("text")].(0)
+//│ = "union"
+
+using Accept[Any] = new TopAccept
+
+:expect "top"
+accept(new Child)
+//│ = "top"
+
+// Matching follows the parameter and result types of function arguments.
+class FunctionAccept extends Accept[Int -> Int] with
+  fun label: Str = "function"
+using Accept[Int -> Int] = new FunctionAccept
+
+:expect "function"
+accept((x: Int) => x)
+//│ = "function"
+
+:expect "function"
+accept(x => x)
+//│ = "function"
+
+accept \ _ + 1
+//│ = "function"
+
+// Several matching instances in one clause are ambiguous, including subclass heads.
+class Specialized extends Accept[Int] with
+  fun label: Str = "specialized"
+
+:e
+fun sameTier(using Accept[Int], Specialized) = accept(1)
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	fun sameTier(using Accept[Int], Specialized) = accept(1)
+//│ ║        	                                               ^^^^^^^^^
+//│ ╟── Multiple instances are compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	fun sameTier(using Accept[Int], Specialized) = accept(1)
+//│ ║        	                                               ^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	fun accept[A](value: A)(using a: Accept[A]) = a.label
+//│ ║        	                        ^^^^^^^^^^^^^^^^^^
+//│ ╟── This lexical instance has a compatible type, Accept[Int].
+//│ ╙── This lexical instance has a compatible type, Specialized.
+
+// A later incompatible value cannot change the selected candidate.
+class IntAccept extends Accept[Int] with
+  fun label: Str = "int"
+using Accept[Int] = new IntAccept
+
+:expect "int"
+fun unannotated(value) = accept(value)
+unannotated(1)
+//│ = "int"
+
+:e
+unannotated("later")
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
+//│ ║  l.+1: 	unannotated("later")
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of class 'Str' makes the contextual argument's type incompatible with its selected instance.
+//│ ║  l.+1: 	unannotated("later")
+//│ ║        	            ^^^^^^^
+//│ ╟── The contextual argument is supplied implicitly here, where its instance was selected.
+//│ ║  l.XX: 	fun unannotated(value) = accept(value)
+//│ ║        	                         ^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	fun accept[A](value: A)(using a: Accept[A]) = a.label
+//│ ║        	                        ^^^^^^^^^^^^^^^^^^
+//│ ╟── The selected instance is declared here, with type Accept[Int].
+//│ ║  l.XX: 	using Accept[Int] = new IntAccept
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = "int"

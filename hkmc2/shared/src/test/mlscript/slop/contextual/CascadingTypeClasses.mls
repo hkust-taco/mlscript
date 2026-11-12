@@ -1,0 +1,102 @@
+:.
+
+
+class Foo[A]
+class Bar[B]
+class Baz
+
+
+fun foo[A](using Foo[A], a: A) = a
+
+using Foo[Baz] = new Foo
+
+
+// Query diagnostics name the interpreted contextual type.
+
+:e
+:re
+foo[Baz]
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	foo[Baz]
+//│ ║        	^^^^^^^^
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	foo[Baz]
+//│ ║        	^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	fun foo[A](using Foo[A], a: A) = a
+//│ ╙──      	                         ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+:re
+foo
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	foo
+//│ ║        	^^^
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	foo
+//│ ║        	^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	fun foo[A](using Foo[A], a: A) = a
+//│ ╙──      	                         ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+using Baz = new Baz
+
+:expect Baz
+foo
+//│ = Baz
+
+
+fun foo[A](using Foo[A])(using A) = use[A]
+
+:expect Baz
+foo
+//│ = Baz
+
+
+fun foo[A](using A)(using Foo[A]) = use[A]
+
+// The first query waits for the bounds supplied by the later clause.
+:expect Baz
+foo
+//│ = Baz
+
+
+using Foo[Bar[Baz]] = new Foo
+
+:e
+:re
+foo
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	foo
+//│ ║        	^^^
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	foo
+//│ ║        	^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	fun foo[A](using A)(using Foo[A]) = use[A]
+//│ ╙──      	           ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+using Bar[Baz] = new Bar
+
+:expect Bar
+foo
+//│ = Bar
+
+using Bar[Int] = new Bar
+
+:expect Bar
+foo
+//│ = Bar
+
+using Bar[Baz] = new Bar
+
+// The first query waits for the bounds supplied by the later clause.
+:expect Bar
+foo
+//│ = Bar
+
+

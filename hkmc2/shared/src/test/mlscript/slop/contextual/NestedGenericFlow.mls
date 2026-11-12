@@ -1,0 +1,18 @@
+:.
+
+// Completion does not need to expand a declared value's deferred type references.
+type Wrap[A] = [A]
+private fun nest[A](value: Wrap[Wrap[Wrap[Wrap[A]]]]): Wrap[Wrap[Wrap[Wrap[A]]]] = value
+fun read[A](value: Wrap[Wrap[Wrap[Wrap[A]]]]): A = nest[A](value).0.0.0.0
+
+:expect 1
+read([[[[1]]]])
+//│ = 1
+
+// Existing transport bug (also reproduces on fdddc5842): observing this opaque
+// element should diagnose the missing interface, but repeats a lexical entry.
+:fixme
+:e
+private fun one[A](value: Wrap[A]): Wrap[A] = value
+fun opaque[A](value: Wrap[A]) = one[A](value).0.m
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: Repeated entry into the same lexical resolution scope

@@ -1,0 +1,8 @@
+:.
+
+import "./mlscript-compile/DerivedLibrary.mls"
+open DerivedLibrary { List, fixed }
+
+:expect "list(int)"
+fixed(List(2))
+//│ = "list(int)"

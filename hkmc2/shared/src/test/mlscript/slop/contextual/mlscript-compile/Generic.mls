@@ -1,0 +1,4 @@
+#lang(0.3.x)
+
+module Generic with
+  fun identity[A](value: A) = value

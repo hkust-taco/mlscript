@@ -8,6 +8,16 @@ import Term.*
 
 inline def rctx(using context: ResolutionContext): ResolutionContext = context
 
+enum ContextualRole:
+  case Value, Receiver, ApplicationHead
+
+sealed trait ResolutionSite
+
+object ResolutionSite:
+  final case class Access(term: NewResolvable | New, scope: SrcScope) extends ResolutionSite
+  final case class Contextual(term: ContextualSite, role: ContextualRole, context: Elaborator.Ctx) extends ResolutionSite:
+    var settled: Bool = false
+
 object NewResolverState:
   /** Tables belong to a compilation unit; a context only selects a namespace.
     * An inherited lookup is read-only. Mutable values are copied into the
@@ -73,6 +83,15 @@ final class NewResolverState(val owner: Elaborator.State):
   def isOwnedSym(symbol: Symbol): Bool = symbol.getState is owner
   private[semantics] val contexts = mutable.Map.empty[(ResolutionContext, TypeSubstitution), ResolutionContext]
   private[semantics] var reporter: Raise | Null = null
+  /** The source term whose subscription by the elaborator is propagating flow, so that a
+    * diagnostic about a value reaching a check can blame the expression that sent it there
+    * (see NewResolver.decideContextualArgument, which reports late contextual values).
+    * Only ResolutionContext.withTrigger writes it: the elaborator sets it while it subscribes
+    * a term it has just created, a subscription nested in that propagation keeps the outermost
+    * term, and contextual sites record it with their pending inputs to reinstate it when they
+    * drive those inputs at settlement. Resolution never reads it; contexts cannot carry it,
+    * as they key the resolver's tables. */
+  private[semantics] var trigger: Opt[Term] = N
   private[semantics] val exposureInputs = mutable.LinkedHashMap.empty[(ShapeIdentity.Key, ResolutionContext), InterfaceExposure.Input]
   /** The overridable members of extensible classes and objects that [[InterfaceExposure]] reached,
     * each with the first exposure path that reached it. Erasure, which knows the parameters an
@@ -101,12 +120,35 @@ final class NewResolverState(val owner: Elaborator.State):
   // in elaboration order, with the lexical scope in which each is written (see
   // ResolutionContext.checkAccess). Its references without explicit bindings are also
   // the worklist of NewResolver.settleUnboundReferences, which runs before checkAccess.
-  private[semantics] val accessSites = mutable.ArrayBuffer.empty[(NewResolvable | New, SrcScope)]
+  private[semantics] val resolutionSites = mutable.ArrayBuffer.empty[ResolutionSite]
+  private[semantics] val contextualWork = mutable.Map.empty[Identity[Term], ContextualWork]
+  private[semantics] val instanceDeclarations = mutable.ArrayBuffer.empty[TermDefinition]
+  private[semantics] val contextualPositions: Cache[DeclaredType, TermShapeHost] =
+    new Cache(_.contextualPositions, identity)
+  private[semantics] val contextualUpperBounds: Cache[VarSymbol, TermShapeHost] =
+    new Cache(_.contextualUpperBounds, identity)
+  // A pending query only observes inference. Selecting a unique candidate can
+  // publish bounds that let another query discard its remaining alternatives.
+  private[semantics] val pendingContextual = mutable.ArrayBuffer.empty[Bool => Bool]
+  private[semantics] val finalContextualChecks = mutable.ArrayBuffer.empty[() => Unit]
+  private[semantics] val contextualChecks: Seen[(InstanceArg, TermShapeHost)] = new Seen(_.contextualChecks)
+  private[semantics] val contextualClassPositions: Cache[(ShapeIdentity.Key, VarSymbol), TermShapeHost] =
+    new Cache(_.contextualClassPositions, identity)
+  private[semantics] val contextualTupleFields: Cache[TupleShape.Fixed, TermShapeHost] =
+    new Cache(_.contextualTupleFields, identity)
+  private[semantics] val instanceNamespaces: Cache[(InstanceArg, VarSymbol), InstanceNamespaces] =
+    new Cache(_.instanceNamespaces, _.copyForImport())
+  private[semantics] val contextualQueries: Seen[(InstanceArg, VarSymbol)] = new Seen(_.contextualQueries)
+  private[semantics] val contextualLateNamespaces: Seen[(InstanceArg, BlockMemberSymbol)] = new Seen(_.contextualLateNamespaces)
+  private[semantics] val contextualLateNamespaceChecks: Seen[(InstanceArg, BlockMemberSymbol, TermShapeHost)] =
+    new Seen(_.contextualLateNamespaceChecks)
+  private[semantics] val contextualFailures: Seen[(InstanceArg, DeclaredType)] = new Seen(_.contextualFailures)
+  private[semantics] val contextualStages: Seen[(Term, Int)] = new Seen(_.contextualStages)
   // What flow has revealed about the implicit namespaces of this unit's references
   // (see NewResolver.unresolvedRef). Unlike the block-local tables, this outlives the
   // reference's block: a later worksheet block can still reveal a namespace, which
   // must be diagnosed against the settled reference.
-  private[semantics] val implicitNamespaces = mutable.HashMap.empty[UnresolvedRef, ImplicitNamespaces]
+  private[semantics] val implicitNamespaces = mutable.HashMap.empty[UnresolvedRef, NameNamespaces]
   private[semantics] val errors = mutable.Set.empty[Identity[PossiblyErroneous]]
   private[semantics] val shapeIdentities = mutable.HashMap.empty[ShapeIdentity.View, ShapeIdentity.View]
   private[semantics] val substitutions = mutable.HashMap.empty[TypeSubstitution, TypeSubstitution]
@@ -257,6 +299,10 @@ final class NewResolverState(val owner: Elaborator.State):
   // The flag selects merged member interfaces versus independent constraint inputs.
   val typeViews: Cache[(DeclaredType, Bool), TermShapeHost] =
     new Cache(_.typeViews, identity)
+  // Contextual matching reads explicit type parameters only as their abstract values
+  // (see NewResolver.observeTypeViews), so it cannot share the ordinary views.
+  private[semantics] val opaqueTypeViews: Cache[(DeclaredType, Bool), TermShapeHost] =
+    new Cache(_.opaqueTypeViews, identity)
   val patternTypes: Cache[(Pattern.Constructor, InnerSymbol), DeclaredType] =
     new Cache(_.patternTypes, identity)
   // A pattern's unknown output has one source identity across repeated inputs.
@@ -350,6 +396,12 @@ final class ResolutionContext private[semantics] (
   def withReporter(raise: Raise): this.type =
     state.reporter = raise
     this
+  /** Run `body` with `trigger` as the propagating source term, unless one is already set. */
+  def withTrigger[A](trigger: Opt[Term])(body: => A): A =
+    if state.trigger.nonEmpty || trigger.isEmpty then body
+    else
+      state.trigger = trigger
+      try body finally state.trigger = N
   def report(diagnostic: Diagnostic): Unit =
     assert(state.reporter != null, "Resolution requires a diagnostic collector")
     state.reporter.nn(diagnostic)
@@ -475,7 +527,11 @@ final class ResolutionContext private[semantics] (
       statement match
         // Bind even unused syntax to this unit. Otherwise its first consumer
         // could become the owner of an imported node's original listener buffer.
-        case term: Term => data(term)
+        case term: Term =>
+          data(term)
+          term match
+            case site: ContextualSite => site.contextualCompletion.foreach(completion => data(completion.output))
+            case _ => ()
         case _ => ()
       statement match
         case application: App => data(application.callableTargets)
@@ -511,7 +567,7 @@ final class ResolutionContext private[semantics] (
         markError(term)
         reportResolutionError(term, messages)
     state.resolutionProblems.clear()
-    state.accessSites.foreach: (term, scope) =>
+    state.resolutionSites.iterator.collect { case ResolutionSite.Access(term, scope) => (term, scope) }.foreach: (term, scope) =>
       checkAccess(term, scope)
       // Access checks can insert already-resolved key expressions. Bind their
       // hosts to this unit before sealing, just like the written source terms.
@@ -519,7 +575,12 @@ final class ResolutionContext private[semantics] (
         case ref: NewResolvable => ref.keyAccess.foreach(visit)
         case nw: New if nw.args.isEmpty && nw.rft.isEmpty => checkPartialInstantiation(nw)
         case _ => ()
-    state.accessSites.clear()
+    state.resolutionSites.foreach:
+      case site: ResolutionSite.Contextual => site.term.contextualSite = site.role
+      case _ => ()
+    state.resolutionSites.clear()
+    state.contextualWork.clear()
+    state.instanceDeclarations.clear()
     state.pending.foreach: (key, value) =>
       if state.completedNodes.add(key) then value.completed = true
     state.pending.clear()
@@ -529,12 +590,37 @@ final class ResolutionContext private[semantics] (
     * records the references, selections, and instantiations written in the source.
     */
   def recordAccessSite(term: NewResolvable | New, scope: SrcScope): Unit =
-    state.accessSites += ((term, scope))
+    state.resolutionSites += ResolutionSite.Access(term, scope)
+
+  /** Append post-order, sharing the lexical environment. Transparent parentheses can return
+    * the same term through several elaborator frames; they must contribute only one site.
+    */
+  def recordContextualSite(value: Term, role: ContextualRole, context: Elaborator.Ctx)(using raise: Raise, resolver: NewResolver): Unit = value match
+    // Variables and compound heads only carry values completed at their producing sites.
+    case term: ContextualSite => recordCompletableSite(term, role, context)
+    case _ => ()
+
+  private def recordCompletableSite(term: ContextualSite, role: ContextualRole, context: Elaborator.Ctx)
+      (using raise: Raise, resolver: NewResolver): Unit =
+    val repeated = state.resolutionSites.lastOption.exists:
+      case ResolutionSite.Contextual(previous, previousRole, _) => (previous eq term) && previousRole == role
+      case _ => false
+    if !repeated then
+      val site = ResolutionSite.Contextual(term, role, context)
+      term.contextualSite match
+        case previous: ResolutionSite.Contextual =>
+          softAssert(previous.role == role, "A contextual expression must have one consuming role")
+        case _ => ()
+      term.contextualSite = site
+      state.resolutionSites += site
+      // The site's driver (see NewResolver.listenContextual) must accept every activation.
+      // An eta-expansion records its synthesized site while a drive runs in some activation.
+      withTrigger(S(term))(resolver.listenTerm(term)(_ => ())(using withInstances(TypeSubstitution.empty)))
 
   /** The references without explicit bindings written in the current block, in elaboration
     * order (see NewResolver.settleUnboundReferences). */
-  def unboundReferences: Ls[Term.UnresolvedRef] = state.accessSites.iterator.collect:
-    case (ref: Term.UnresolvedRef, _) => ref
+  def unboundReferences: Ls[Term.UnresolvedRef] = state.resolutionSites.iterator.collect:
+    case ResolutionSite.Access(ref: Term.UnresolvedRef, _) => ref
   .toList
 
   /** Check written instantiations once their aliases and forward references have
@@ -843,33 +929,105 @@ private[semantics] final class IterationFlow(
     val elements: TypeResolution, val iterator: Term.App, val next: Term.App,
     val iteratorMember: FlowSymbol, val nextMember: FlowSymbol, val doneMember: FlowSymbol, val valueMember: FlowSymbol)
 
-/** What resolution knows about the implicit namespaces of a reference written in `scope`
-  * (see NewResolver.unresolvedRef).
+/** One namespace walk serves name lookup and contextual queries. Requests choose their
+  * consultation key; names and named queries use modules, parameter queries also use the
+  * triggering class or alias. Only instance requests traverse type arguments.
   */
-private[semantics] final class ImplicitNamespaces(val scope: SrcScope):
-  /** The namespaces consulted for the reference, in the order in which consultation began.
-    * Whether a namespace provides a candidate of the reference does not depend on why it is
-    * consulted, so each is decided once (see NewResolver.consultNamespace). */
-  val consulted = mutable.LinkedHashMap.empty[ModuleOrObjectSymbol, Namespace]
-  /** Repeated observations must not repeat subscriptions (see NewResolver.typeNamespaces).
-    * Observations include the arguments of deferred applications. Required types constrain
-    * probes, whereas provided types also follow inference inputs, hence the direction flag. */
+private[semantics] sealed abstract class ImplicitNamespaces(val scope: SrcScope):
+  type Key
+  def consultationKey(module: ModuleOrObjectSymbol, definition: => TypeLikeDef): Key
+  val consulted = mutable.LinkedHashMap.empty[Key, Namespace]
   val observedTypes = mutable.HashSet.empty[(DeclaredType, Bool)]
   val observedClasses = mutable.HashSet.empty[ClassLikeDef]
-  /** Whether the reference fell back to its wildcard opens when its block was elaborated
-    * because no namespace was known then. A namespace found later cannot override them. */
-  var fellBack: Bool = false
-  /** Whether the reference's block was elaborated, deciding between namespaces and wildcard opens. */
   var settled: Bool = false
-  /** Whether the reference is the head of a constructor pattern, whose namespaces are those of
-    * its scrutinees rather than of the types required of its value. */
+  def local(using ResolutionContext): ImplicitNamespaces
+
+private[semantics] final class NameNamespaces(val ref: UnresolvedRef, scope: SrcScope)
+    extends ImplicitNamespaces(scope):
+  type Key = ModuleOrObjectSymbol
+  def consultationKey(module: ModuleOrObjectSymbol, definition: => TypeLikeDef): Key = module
+  def local(using ResolutionContext): NameNamespaces = this
+  /** Wildcard fallback freezes the namespace candidates even before block completion. */
+  var fellBack: Bool = false
+  /** Constructor patterns observe scrutinee values rather than required value types. */
   var scrutinized: Bool = false
-  /** Diagnostic provenance indexed by candidate path. Build this only when reporting an error:
-    * resolution already stores each selection in `consulted`, and compiled terms need no index. */
+  /** Build diagnostic provenance only when reporting; paths already live in consulted. */
   def selectedOrigins: Map[Term, (ModuleOrObjectSymbol, Namespace)] =
     consulted.iterator.flatMap: (module, namespace) =>
       namespace.status.selectedPath.map(path => path -> (module, namespace))
     .toMap
+
+/** Finite snapshots for divergence only. Unknown observations absorb unions; class
+  * arguments preserve structure, and union equality ignores publication order.
+  */
+private[semantics] enum ContextualFlowType:
+  case Wildcard
+  case Named(cls: ClassLikeDef, arguments: Ls[ContextualFlowType])
+  case Union(alternatives: Set[ContextualFlowType])
+  def size: Int = this match
+    case Wildcard => 1
+    case Named(_, arguments) => 1 + arguments.iterator.map(_.size).sum
+    case Union(alternatives) => alternatives.iterator.map(_.size).sum
+  def covering: Set[ClassLikeDef] = this match
+    case Wildcard => Set.empty
+    case Named(cls, arguments) => arguments.iterator.flatMap(_.covering).toSet + cls
+    case Union(alternatives) => alternatives.iterator.flatMap(_.covering).toSet
+  def display: Str = this match
+    case Wildcard => "?"
+    case Named(cls, Nil) => cls.sym.nme
+    case Named(cls, arguments) => s"${cls.sym.nme}[${arguments.map(_.display).mkString(", ")}]"
+    case Union(alternatives) => alternatives.iterator.map(_.display).toList.sorted.mkString("(", " | ", ")")
+
+private[semantics] final case class ContextualDerivationStep(function: TermDefinition, flowType: ContextualFlowType):
+  val size = flowType.size
+  val covering = flowType.covering
+
+private[semantics] final case class ContextualDerivation(expression: Term, arguments: Ls[InstanceArg])
+
+private[semantics] enum ContextualQuery:
+  case Named(cls: ClassLikeDef, positions: Ls[TypeArgument])
+  case Parameter(tpe: DeclaredType, symbol: VarSymbol)
+
+/** Whether the candidate's type can be a subtype of the query with the current bounds.
+  * A rejection can retain a value witnessing an incompatible subtype comparison.
+  */
+private[semantics] enum ContextualMatch:
+  case Accepted
+  case Rejected(witness: Opt[TermShape])
+
+private[semantics] final case class NamespaceInstance(
+    definition: TermDefinition, annotation: DeclaredType, module: ModuleOrObjectSymbol,
+    path: Term, witness: NamespaceWitness)
+
+/** Completed queries keep observing namespaces in later callers. Copy mutable discovery
+  * state with the resolver's import cache so one importing unit cannot suppress another's
+  * late-namespace diagnostic. Selected syntax and declarations remain shared and immutable.
+  */
+private[semantics] final class InstanceNamespaces(val argument: InstanceArg, val parameter: Param,
+    val annotation: DeclaredType, val query: ContextualQuery, scope: SrcScope, val binders: Set[VarSymbol],
+    val flowType: ContextualFlowType)
+    extends ImplicitNamespaces(scope):
+  type Key = ModuleOrObjectSymbol | (ModuleOrObjectSymbol, TypeLikeDef)
+  def consultationKey(module: ModuleOrObjectSymbol, definition: => TypeLikeDef): Key = query match
+    case _: ContextualQuery.Named => module
+    case _: ContextualQuery.Parameter => module -> definition
+  val candidates = mutable.LinkedHashMap.empty[BlockMemberSymbol, NamespaceInstance]
+  val observedValues = mutable.HashSet.empty[ShapeIdentity.Key]
+  def local(using context: ResolutionContext): InstanceNamespaces =
+    context.state.instanceNamespaces.getOrElseUpdate((argument, parameter.sym), this)(
+      using context.withInstances(TypeSubstitution.empty))
+  def copyForImport(): InstanceNamespaces =
+    val copy = new InstanceNamespaces(argument, parameter, annotation, query, scope, binders, flowType)
+    copy.settled = settled
+    consulted.foreach: (key, namespace) =>
+      val next = new Namespace(namespace.witness, namespace.definition, namespace.companion)
+      next.status = namespace.status
+      copy.consulted(key) = next
+    copy.observedTypes ++= observedTypes
+    copy.observedClasses ++= observedClasses
+    copy.observedValues ++= observedValues
+    copy.candidates ++= candidates
+    copy
 
 /** A namespace consulted for a reference, first because `witness` names `definition`, of
   * which the namespace is the companion (if `companion` holds) or the declaring module. */
@@ -911,6 +1069,17 @@ private[semantics] final class TermShapeHost extends Host[TermShape]:
     if currentShapes.add(shape) then notifyShapeListeners(shape)
   def listen(listener: ResolutionContext.Listener)(using ResolutionContext): Unit =
     subscribeToShapes(listener)
+
+/** Only sites receiving a contextual callable allocate this work record. Its applications
+  * are the ordinary flow sites that lowering also uses to obtain the supplied argument lists.
+  */
+private[semantics] final class ContextualWork(val site: ResolutionSite.Contextual):
+  val steps = mutable.ArrayBuffer.empty[ContextualStep]
+  /** Inputs received before settlement, with their activations and propagating source terms. */
+  val pending = mutable.ArrayBuffer.empty[(TermShape, ResolutionContext, Opt[Term])]
+  val inputs = mutable.Set.empty[(ShapeIdentity.Key, TypeSubstitution)]
+  val output = new Host[ShapeEvent]:
+    def showDbg(using DebugPrinter): Str = "completed contextual values"
 
 private[semantics] final class TypeDependencyHost extends Host[Set[VarSymbol]]:
   def showDbg(using DebugPrinter): Str = "type dependencies"

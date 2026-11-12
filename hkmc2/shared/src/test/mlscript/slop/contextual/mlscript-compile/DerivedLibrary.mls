@@ -1,0 +1,14 @@
+#lang(0.3.x)
+
+module DerivedLibrary with
+  class List[A](val head: A)
+  class Show[A](val label: Str)
+  module Show with
+    using Show[Int] = Show[Int]("int")
+    using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+  fun display[A](value: A)(using show: Show[A]): Str = show.label
+  // Callers' values reach an unannotated parameter, unlike an explicit type parameter.
+  fun fixed(value): Str =
+    using Show[Int] = Show[Int]("int")
+    display(value)
+  val seed = fixed(List(0))

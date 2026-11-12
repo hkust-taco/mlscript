@@ -1,0 +1,156 @@
+:.
+
+class Animal
+class Cat extends Animal
+class Dog extends Animal
+class Printer[in A](val label: Str)
+fun printer[A](using p: Printer[A]) = p.label
+
+using Printer[Animal] = Printer[Animal]("animal")
+
+// A printer accepting every animal can serve a query for cats.
+:expect "animal"
+printer[Cat]
+//│ = "animal"
+
+using Printer[Dog] = Printer[Dog]("dog")
+
+// The dog printer is incompatible and must not hide the earlier animal printer.
+:expect "animal"
+printer[Cat]
+//│ = "animal"
+
+// Only the animal printer is applicable; the dog printer must not cause ambiguity.
+// Both candidates occupy one tier, so this tests applicability rather than shadowing.
+:expect "animal"
+fun sameTier(using Printer[Animal], Printer[Dog]) = printer[Cat]
+sameTier(using Printer[Animal]("animal"), Printer[Dog]("dog"))
+//│ = "animal"
+
+class Source[out A](val label: Str)
+fun source[A](using s: Source[A]) = s.label
+using Source[Cat] = Source[Cat]("cat")
+
+// A source producing cats can serve a query for a source of animals.
+:expect "cat"
+source[Animal]
+//│ = "cat"
+
+// Distinct contravariant arguments remain distinct during namespace lookup.
+abstract class Eq[in A] {
+  fun eq(x: A, y: A): Bool
+}
+module Eq {
+  using Eq[Int] = null
+  using Eq[Str] = null
+}
+
+:expect null
+use[Eq[Int]]
+//│ = null
+
+:expect null
+use[Eq[Str]]
+//│ = null
+
+// An invariant argument cannot widen when the requested type is explicit.
+class Cell[A](val label: Str)
+using Cell[Cat] = Cell[Cat]("cat")
+
+:e
+use[Cell[Animal]]
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	use[Cell[Animal]]
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	use[Cell[Animal]]
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  in ../../../mlscript-compile/Predef.mls
+//│ ║  l.XX: 	fun use[T](using instance: T) = instance
+//│ ╙──      	           ^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Declaration variance also applies beneath another generic constructor.
+class Envelope[out A](val label: Str)
+using Envelope[Source[Cat]] = Envelope[Source[Cat]]("nested")
+
+:expect "nested"
+use[Envelope[Source[Animal]]].label
+//│ = "nested"
+
+// Subtyping descends through structural arguments, including arrow domains.
+class Structural[out A](val label: Str)
+using Structural[{item: Cat, extra: Int}] = Structural[{item: Cat, extra: Int}]("record")
+
+:expect "record"
+use[Structural[{item: Animal}]].label
+//│ = "record"
+
+:e
+use[Structural[{item: Dog}]]
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	use[Structural[{item: Dog}]]
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	use[Structural[{item: Dog}]]
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  in ../../../mlscript-compile/Predef.mls
+//│ ║  l.XX: 	fun use[T](using instance: T) = instance
+//│ ╙──      	           ^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+using Structural[Animal -> Cat] = Structural[Animal -> Cat]("function")
+
+:expect "function"
+use[Structural[Cat -> Animal]].label
+//│ = "function"
+
+:e
+use[Structural[Dog -> Dog]]
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	use[Structural[Dog -> Dog]]
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	use[Structural[Dog -> Dog]]
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  in ../../../mlscript-compile/Predef.mls
+//│ ║  l.XX: 	fun use[T](using instance: T) = instance
+//│ ╙──      	           ^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+using Structural[[Cat, Str]] = Structural[[Cat, Str]]("tuple")
+
+:expect "tuple"
+use[Structural[[Animal, Str]]].label
+//│ = "tuple"
+
+:e
+use[Structural[[Dog, Str]]]
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	use[Structural[[Dog, Str]]]
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	use[Structural[[Dog, Str]]]
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  in ../../../mlscript-compile/Predef.mls
+//│ ║  l.XX: 	fun use[T](using instance: T) = instance
+//│ ╙──      	           ^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+use[Structural[[Animal]]]
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	use[Structural[[Animal]]]
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	use[Structural[[Animal]]]
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  in ../../../mlscript-compile/Predef.mls
+//│ ║  l.XX: 	fun use[T](using instance: T) = instance
+//│ ╙──      	           ^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

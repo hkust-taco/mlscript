@@ -1,0 +1,41 @@
+:.
+
+import "../../mlscript-compile/Semiring.mls"
+
+
+
+
+
+
+:todo // support?
+fun trial[A](using Semiring[A])(x: A, y: A) = use{as Semiring}.combine(x, y)
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	fun trial[A](using Semiring[A])(x: A, y: A) = use{as Semiring}.combine(x, y)
+//│ ║        	                                              ^^^
+//│ ╟── The type of the contextual argument supplied implicitly here cannot be determined, as neither an explicit type argument nor a value determines the type parameter that it refers to.
+//│ ║  l.+1: 	fun trial[A](using Semiring[A])(x: A, y: A) = use{as Semiring}.combine(x, y)
+//│ ║        	                                              ^^^
+//│ ╟── The contextual argument is passed to this parameter, whose type is the type parameter 'T'.
+//│ ║  in ../../mlscript-compile/Predef.mls
+//│ ║  l.XX: 	fun use[T](using instance: T) = instance
+//│ ╙──      	           ^^^^^^^^^^^^^^^^^
+
+:todo // support?
+fun trial[A](using Semiring[A])(x: A, y: A) = use.combine(x, y)
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	fun trial[A](using Semiring[A])(x: A, y: A) = use.combine(x, y)
+//│ ║        	                                              ^^^
+//│ ╟── The type of the contextual argument supplied implicitly here cannot be determined, as neither an explicit type argument nor a value determines the type parameter that it refers to.
+//│ ║  l.+1: 	fun trial[A](using Semiring[A])(x: A, y: A) = use.combine(x, y)
+//│ ║        	                                              ^^^
+//│ ╟── The contextual argument is passed to this parameter, whose type is the type parameter 'T'.
+//│ ║  in ../../mlscript-compile/Predef.mls
+//│ ║  l.XX: 	fun use[T](using instance: T) = instance
+//│ ╙──      	           ^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] This selection of member 'combine' has no resolved target
+//│ ║  l.+1: 	fun trial[A](using Semiring[A])(x: A, y: A) = use.combine(x, y)
+//│ ╙──      	                                              ^^^^^^^^^^^
+
+
+
+

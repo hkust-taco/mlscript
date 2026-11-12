@@ -138,12 +138,14 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
       case _ => N
 
   locally:
-    val (statements, parameters, parentConstructions) =
+    val (statements, parameters, parentConstructions, restParameters, forwardedParameters) =
       // One ordered identity set both bounds traversal of shared syntax and preserves diagnostic order.
       // Only this collection step can extend the inputs to the subsequent erasure phases.
       val visited = mutable.LinkedHashSet.empty[Identity[Statement]]
       val parameters = List.newBuilder[Param]
       val parentConstructions = mutable.Set.empty[Identity[Statement]]
+      val restParameters = mutable.Set.empty[VarSymbol]
+      val forwardedParameters = List.newBuilder[(Param, Param)]
       def parentHead(term: Term): Unit = if parentConstructions.add(Identity(term)) then term match
         // Legacy resolution can expand a parent reference to an implicit constructor call.
         // Follow only the class head; constructions in argument expressions are real allocations.
@@ -152,7 +154,9 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
         case App(lhs, _) => parentHead(lhs)
         case TyApp(lhs, _) => parentHead(lhs)
         case _ => ()
-      def params(ps: ParamList): Unit = ps.foreach(parameters += _)
+      def params(ps: ParamList): Unit =
+        ps.foreach(parameters += _)
+        ps.variadic.foreach(v => restParameters += v.param.sym)
       // Handler continuations and rejected class rest parameters can survive as references after their
       // parameter list has been removed. The symbol retains the source declaration needed for erasure.
       def referencedParameter(sym: VarSymbol): Unit = sym.decl match
@@ -187,6 +191,21 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
             symbol.defn.fold(visit(body.blk))(visit)
           case Rcd(_, stats) => stats.foreach(visit)
           case _ => ()
+        statement match
+          case site: ContextualSite => site.contextualCompletion.foreach: completion =>
+            completion.steps.foreach:
+              case ContextualStep.Abstract(ps, application, _) =>
+                params(ps)
+                // Generated parameters have no source annotations: copying them would change
+                // generic scopes and inference. Inherit erasures from every accepted callee.
+                application.calledParamLists.foreach: source =>
+                  val actual = ps.allParams
+                  val original = source.allParams
+                  softAssert(actual.length == original.length, "A contextual wrapper must preserve its callees' parameter layout")
+                  if actual.length == original.length then
+                    actual.lazyZip(original).foreach((p, q) => forwardedParameters += p -> q)
+              case _: ContextualStep.Supply => ()
+          case _ => ()
         statement.subStatements.foreach(visit)
         // Legacy resolution may insert executable terms (for example implicit applications).
         // Expanded nodes may share their children with the source tree; visit their identities only once.
@@ -194,14 +213,8 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
           case term: Resolvable => visit(term.expanded)
           case _ => ()
       visit(root)
-      (visited.iterator.map(_.value).toList, parameters.result(), parentConstructions.toSet)
-
-    val restParameters = statements.iterator.flatMap:
-      case td: TermDefinition => td.params.iterator
-      case cls: ClassLikeDef => cls.paramsOpt.iterator ++ cls.auxParams.iterator
-      case Lam(ps, _) => Iterator.single(ps)
-      case _ => Iterator.empty
-    .flatMap(_.variadic.iterator.map(_.param.sym)).toSet
+      (visited.iterator.map(_.value).toList, parameters.result(), parentConstructions.toSet,
+        restParameters.toSet, forwardedParameters.result().groupMap(_._1.sym)(_._2))
 
     def parentClasses(parent: New): Ls[ClassLikeDef] =
       (parent.cls.resolvedSym.flatMap(_.asClsOrMod).flatMap(_.defn).toList :::
@@ -299,10 +312,10 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
     val definitions = statements.collect { case td: TermDefinition => td }.distinctBy(_.tsym)
     val overrideChecks = new OverrideChecks(definitions)
     overrideChecks.checkExposedSignatures()
-    val inheritedParams = overrideChecks.inheritedParameters
+    val inheritedParams = overrideChecks.inheritedParameters ++ forwardedParameters
     val parameterSymbols = parameters.iterator.map(_.sym).toSet
     /** Initializes a parameter's representation from its annotation or the joined representations
-      * of its inherited counterparts. A rest parameter with neither gets `Array`; an ordinary
+      * of its inherited or forwarded counterparts. A rest parameter with neither gets `Array`; an ordinary
       * parameter with neither keeps no known representation. Recursion initializes local inherited
       * parameters first, while `visiting` breaks inheritance cycles; pending inherited parameters
       * contribute `Unknown`. Making a required inherited parameter optional also admits its null default.

@@ -1,0 +1,92 @@
+:.
+
+import "./mlscript-compile/LexicalQueries.mls"
+
+// A completed imported body keeps validating its fixed instance selection.
+:expect 42
+LexicalQueries.unannotated(1)
+//│ = 42
+
+:e
+LexicalQueries.unannotated("later")
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
+//│ ║  l.+1: 	LexicalQueries.unannotated("later")
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of class 'Str' makes the contextual argument's type incompatible with its selected instance.
+//│ ║  l.+1: 	LexicalQueries.unannotated("later")
+//│ ║        	                           ^^^^^^^
+//│ ╟── The contextual argument is supplied implicitly here, where its instance was selected.
+//│ ║  in mlscript-compile/LexicalQueries.mls
+//│ ║  l.XX: 	  fun unannotated(value) = consume(value)
+//│ ║        	                           ^^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	  fun consume[A](value: A)(using Accept[A]) = 42
+//│ ║        	                           ^^^^^^^^^^^^^^^
+//│ ╟── The selected instance is declared here, with type Accept[Int].
+//│ ║  l.XX: 	  using Accept[Int] = new Accept[Int]
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = 42
+
+// Nested nominal argument positions must observe their declared element types.
+class Box[A](val value: A)
+class AcceptBox[A]
+using AcceptBox[Box[Int]] = new AcceptBox[Box[Int]]
+fun consumeBox[A](value: A)(using AcceptBox[A]) = 43
+
+:expect 43
+fun boxed(value) = consumeBox(value)
+boxed(new Box[Int](1))
+//│ = 43
+
+:e
+boxed(new Box[Str]("later"))
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
+//│ ║  l.+1: 	boxed(new Box[Str]("later"))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of class 'Str' makes the contextual argument's type incompatible with its selected instance.
+//│ ║  l.+1: 	boxed(new Box[Str]("later"))
+//│ ║        	              ^^^
+//│ ╟── The contextual argument is supplied implicitly here, where its instance was selected.
+//│ ║  l.XX: 	fun boxed(value) = consumeBox(value)
+//│ ║        	                   ^^^^^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	fun consumeBox[A](value: A)(using AcceptBox[A]) = 43
+//│ ║        	                            ^^^^^^^^^^^^^^^^^^
+//│ ╟── The selected instance is declared here, with type AcceptBox[Box[Int]].
+//│ ║  l.XX: 	using AcceptBox[Box[Int]] = new AcceptBox[Box[Int]]
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = 43
+
+// The report names a value that the selected instance rejects, even when an accepted value
+// precedes it in a class position that the check observes for the first time.
+:expect 43
+fun boxedAgain(value) = consumeBox(value)
+boxedAgain(new Box[Int](1))
+//│ = 43
+
+:e
+fun either(flag) = if flag then 1 else "late"
+boxedAgain(new Box(either(true)))
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
+//│ ║  l.+2: 	boxedAgain(new Box(either(true)))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of class 'Str' makes the contextual argument's type incompatible with its selected instance.
+//│ ║  l.+1: 	fun either(flag) = if flag then 1 else "late"
+//│ ║        	                                       ^^^^^^
+//│ ╟── The contextual argument is supplied implicitly here, where its instance was selected.
+//│ ║  l.XX: 	fun boxedAgain(value) = consumeBox(value)
+//│ ║        	                        ^^^^^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	fun consumeBox[A](value: A)(using AcceptBox[A]) = 43
+//│ ║        	                            ^^^^^^^^^^^^^^^^^^
+//│ ╟── The selected instance is declared here, with type AcceptBox[Box[Int]].
+//│ ║  l.XX: 	using AcceptBox[Box[Int]] = new AcceptBox[Box[Int]]
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = 43
+
+// Independent call-site instances must not be merged into one query position.
+using AcceptBox[Box[Str]] = new AcceptBox[Box[Str]]
+
+:expect [43, 43]
+[consumeBox(new Box[Int](1)), consumeBox(new Box[Str]("text"))]
+//│ = [43, 43]

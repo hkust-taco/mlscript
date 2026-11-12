@@ -1,0 +1,149 @@
+:.
+
+// A declaration in a type's enclosing module provides without a companion.
+module Enclosing with
+  class Evidence
+  using Evidence = new Evidence
+
+:expect 42
+fun enclosing(using Enclosing.Evidence) = 42
+enclosing
+//│ = 42
+
+// Alias expansion must retain subclass heads for first-provider cutoff.
+abstract class Base[A] with
+  fun label: Str
+module Base with
+  class Derived extends Base[Int] with
+    fun label: Str = "derived"
+  type Alias = Derived
+  using Alias = new Derived
+
+:expect "derived"
+fun aliased(using b: Base[Int]) = b.label
+aliased
+//│ = "derived"
+
+// The same provider cuts off traversal even for incompatible argument flows.
+:e
+fun incompatible(using Base[Str]) = 42
+incompatible
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+2: 	incompatible
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+2: 	incompatible
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.+1: 	fun incompatible(using Base[Str]) = 42
+//│ ║        	                 ^^^^^^^^^^^^^^^
+//│ ╟── This instance from namespace 'Base' has an incompatible type, Derived.
+//│ ║  l.XX: 	  using Alias = new Derived
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of class 'Str' is incompatible with the required subtype relationship.
+//│ ║  l.+1: 	fun incompatible(using Base[Str]) = 42
+//│ ╙──      	                            ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Nested written arguments contribute their data-type companions.
+class Wrapped[A]
+abstract class Nested[A] with
+  fun label: Str
+class Data
+module Data with
+  class Evidence extends Nested[Wrapped[Data]] with
+    fun label: Str = "nested"
+  using Nested[Wrapped[Data]] = new Evidence
+
+:expect "nested"
+fun nested(using n: Nested[Wrapped[Data]]) = n.label
+nested
+//│ = "nested"
+
+// Imported modules contribute the same declaration index.
+import "./mlscript-compile/ImportedInstances.mls"
+
+:expect 42
+fun imported(using ImportedInstances.Evidence) = 42
+imported
+//│ = 42
+
+// A later subtype adds an instance compatible with the observed Parent query.
+class Parent with
+  fun label: Str = "parent"
+module Parent with
+  using Parent = new Parent
+class Child extends Parent
+module Child with
+  using Child = new Child
+
+:expect "parent"
+fun instanceFor[T](value: T)(using instance: T): T = instance
+fun later(value) = instanceFor(value).label
+later(new Parent)
+//│ = "parent"
+
+// The new namespace provides a subtype of the already observed Parent query.
+:e
+later(new Child)
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
+//│ ║  l.+1: 	later(new Child)
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╟── The instance of the contextual argument supplied implicitly here was selected before flow revealed the implicit namespace module 'Child' of its type.
+//│ ║  l.XX: 	fun later(value) = instanceFor(value).label
+//│ ║        	                   ^^^^^^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	fun instanceFor[T](value: T)(using instance: T): T = instance
+//│ ║        	                             ^^^^^^^^^^^^^^^^^
+//│ ╟── Here, the companion module 'Child' of class 'Child' provides this instance, which has a compatible type, Child.
+//│ ║  l.XX: 	  using Child = new Child
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This value reveals the namespace.
+//│ ║  l.+1: 	later(new Child)
+//│ ║        	      ^^^^^^^^^
+//│ ╟── This instance, of type Parent, was selected earlier.
+//│ ║  l.XX: 	  using Parent = new Parent
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = "parent"
+
+class Container[A](val label: Str)
+module Container {
+  using Container[Str] = Container[Str]("selected")
+}
+class SubContainer[A](label: Str) extends Container[A](label)
+module SubContainer {
+  using SubContainer[Int] = SubContainer[Int]("alternative")
+}
+
+:expect "selected"
+fun laterBound(value) = instanceFor(value).label
+laterBound(Container[Str]("first"))
+//│ = "selected"
+
+// The new namespace's instance is incompatible when its namespace first arrives.
+:expect "selected"
+laterBound(SubContainer[Str]("second"))
+//│ = "selected"
+
+// Retain that candidate: a later observed type makes it another valid subtype.
+:e
+laterBound(Container[Int]("third"))
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
+//│ ║  l.+1: 	laterBound(Container[Int]("third"))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The instance of the contextual argument supplied implicitly here was selected before flow revealed the implicit namespace module 'SubContainer' of its type.
+//│ ║  l.XX: 	fun laterBound(value) = instanceFor(value).label
+//│ ║        	                        ^^^^^^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	fun instanceFor[T](value: T)(using instance: T): T = instance
+//│ ║        	                             ^^^^^^^^^^^^^^^^^
+//│ ╟── Here, the companion module 'SubContainer' of class 'SubContainer' provides this instance, which has a compatible type, SubContainer[Int].
+//│ ║  l.XX: 	  using SubContainer[Int] = SubContainer[Int]("alternative")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This value reveals the namespace.
+//│ ║  l.XX: 	laterBound(SubContainer[Str]("second"))
+//│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance, of type Container[Str], was selected earlier.
+//│ ║  l.XX: 	  using Container[Str] = Container[Str]("selected")
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = "selected"

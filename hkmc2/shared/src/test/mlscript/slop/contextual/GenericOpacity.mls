@@ -1,0 +1,120 @@
+:.
+
+class Show[A](val label: Str)
+module Show with
+  using Show[Int] = Show[Int]("int")
+  using Show[Str] = Show[Str]("str")
+fun display[A](value: A)(using show: Show[A]) = show.label
+
+// Explicit type parameters are opaque: a generic body cannot select an instance from the
+// types its callers pass, even when every caller passes an `Int`.
+:e
+fun opaque[A](value: A) = display(value)
+opaque(1)
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	fun opaque[A](value: A) = display(value)
+//│ ║        	                          ^^^^^^^^^^^^^^
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	fun opaque[A](value: A) = display(value)
+//│ ║        	                          ^^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	fun display[A](value: A)(using show: Show[A]) = show.label
+//│ ║        	                         ^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Int].
+//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of type parameter 'A' is incompatible with the required subtype relationship.
+//│ ║  l.+1: 	fun opaque[A](value: A) = display(value)
+//│ ║        	                     ^
+//│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Str].
+//│ ║  l.XX: 	  using Show[Str] = Show[Str]("str")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of type parameter 'A' is incompatible with the required subtype relationship.
+//│ ║  l.+1: 	fun opaque[A](value: A) = display(value)
+//│ ╙──      	                     ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// The generic function asks its callers for the instance instead; each caller selects it.
+:expect ["int", "str"]
+fun forwarded[A](value: A)(using Show[A]) = display(value)
+[forwarded(1), forwarded("text")]
+//│ = ["int", "str"]
+
+// A lexical instance for the parameter does not serve a value of a known class in the body.
+:expect "int"
+fun concrete[A](value: A)(using Show[A]) = display(1)
+concrete("text")
+//│ = "int"
+
+// A nested generic function has its own opaque parameter, which the outer `Show[A]` does not serve.
+:e
+fun enclosing[A](value: A)(using Show[A]) =
+  fun inner[B](other: B) = display(other)
+  inner(value)
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+2: 	  fun inner[B](other: B) = display(other)
+//│ ║        	                           ^^^^^^^^^^^^^^
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+2: 	  fun inner[B](other: B) = display(other)
+//│ ║        	                           ^^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	fun display[A](value: A)(using show: Show[A]) = show.label
+//│ ║        	                         ^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Int].
+//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of type parameter 'B' is incompatible with the required subtype relationship.
+//│ ║  l.+2: 	  fun inner[B](other: B) = display(other)
+//│ ║        	                      ^
+//│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Str].
+//│ ║  l.XX: 	  using Show[Str] = Show[Str]("str")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of type parameter 'B' is incompatible with the required subtype relationship.
+//│ ║  l.+2: 	  fun inner[B](other: B) = display(other)
+//│ ╙──      	                      ^
+
+// An instance for every type serves an abstract type parameter.
+class Describe[A](val label: Str)
+module Describe with
+  using Describe[Any] = Describe[Any]("anything")
+fun describe[A](value: A)(using d: Describe[A]) = d.label
+
+:expect ["anything", "anything"]
+fun general[A](value: A) = describe(value)
+[general(1), general("text")]
+//│ = ["anything", "anything"]
+
+// Generic classes are opaque in the same way: a method query sees the abstract `A`.
+:e
+class Unboxed[A](val value: A) with
+  fun shown = display(value)
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+2: 	  fun shown = display(value)
+//│ ║        	              ^^^^^^^^^^^^^^
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+2: 	  fun shown = display(value)
+//│ ║        	              ^^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	fun display[A](value: A)(using show: Show[A]) = show.label
+//│ ║        	                         ^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Int].
+//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of type parameter 'A' is incompatible with the required subtype relationship.
+//│ ║  l.+1: 	class Unboxed[A](val value: A) with
+//│ ║        	                            ^
+//│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Str].
+//│ ║  l.XX: 	  using Show[Str] = Show[Str]("str")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of type parameter 'A' is incompatible with the required subtype relationship.
+//│ ║  l.+1: 	class Unboxed[A](val value: A) with
+//│ ╙──      	                            ^
+
+// A method's site is completed by the values of its own body, where `A` is abstract. Calling
+// the method on a receiver views that completion through the receiver's type argument, so the
+// `Int` of `Boxed(1)` does not reach the query that selected `s`.
+:expect ["int", "str"]
+class Boxed[A](val value: A)(using s: Show[A]) with
+  fun shown = display(value)
+[Boxed(1).shown, Boxed("text").shown]
+//│ = ["int", "str"]

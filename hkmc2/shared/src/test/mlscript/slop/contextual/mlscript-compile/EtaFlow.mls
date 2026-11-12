@@ -1,0 +1,7 @@
+#lang(0.3.x)
+
+module EtaFlow with
+  class Evidence[A](val label: Str)
+  using Evidence[Int] = Evidence[Int]("int")
+  fun consume[A](value: A)(using e: Evidence[A]) = e.label
+  val adapter = consume

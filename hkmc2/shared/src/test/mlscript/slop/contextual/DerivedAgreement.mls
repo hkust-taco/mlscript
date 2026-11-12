@@ -1,0 +1,131 @@
+:.
+
+class List[A](val head: A)
+class Show[A](val label: Str)
+module Show with
+  using Show[Int] = Show[Int]("int")
+  using Show[Str] = Show[Str]("str")
+  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+class First with
+  fun method(using show: Show[List[List[Int]]]) = show.label
+class Same with
+  fun method(using show: Show[List[List[Int]]]) = show.label
+class Different with
+  fun method(using show: Show[List[List[Str]]]) = show.label
+
+:expect ["list(list(int))", "list(list(int))"]
+fun agree(receiver) = receiver.method
+[agree(new First), agree(new Same)]
+//│ = ["list(list(int))", "list(list(int))"]
+
+// The outer and next-level functions agree, but the leaves do not.
+:e
+fun disagree(receiver) = receiver.method
+[disagree(new First), disagree(new Different)]
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
+//│ ║  l.+2: 	[disagree(new First), disagree(new Different)]
+//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This expression's callees select different instances for the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	fun disagree(receiver) = receiver.method
+//│ ║        	                         ^^^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+//│ ║        	                    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance function was selected for an enclosing contextual argument of type Show[List[List[Str]]].
+//│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance function was selected for an enclosing contextual argument of type Show[List[Str]].
+//│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── One callee selects this instance.
+//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Another callee selects this instance.
+//│ ║  l.XX: 	  using Show[Str] = Show[Str]("str")
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = ["list(list(int))", "list(list(int))"]
+
+using Different = new Different
+fun reveal(using value: Different) = value
+
+// The incompatible callee arrives during settlement, after nested selection.
+:e
+fun late(receiver) = receiver.method
+[late(new First), late(reveal)]
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by member reference
+//│ ║  l.+2: 	[late(new First), late(reveal)]
+//│ ║        	                       ^^^^^^
+//│ ╟── This expression's callees select different instances for the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	fun late(receiver) = receiver.method
+//│ ║        	                     ^^^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+//│ ║        	                    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance function was selected for an enclosing contextual argument of type Show[List[List[Str]]].
+//│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance function was selected for an enclosing contextual argument of type Show[List[Str]].
+//│ ║  l.XX: 	  using fun list[A](using element: Show[A]): Show[List[A]] = Show[List[A]]("list(" + element.label + ")")
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── One callee selects this instance.
+//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Another callee selects this instance.
+//│ ║  l.XX: 	  using Show[Str] = Show[Str]("str")
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = ["list(list(int))", "list(list(int))"]
+
+// Distinct query types can agree recursively on one contravariant leaf instance.
+class Numeric[in A](val label: Str)
+module Numeric with
+  using Numeric[Num] = Numeric[Num]("num")
+  using fun list[A](using element: Numeric[A]): Numeric[List[A]] = Numeric[List[A]](element.label)
+class Integers with
+  fun method(using show: Numeric[List[Int]]) = show.label
+class Numbers with
+  fun method(using show: Numeric[List[Num]]) = show.label
+
+:expect ["num", "num"]
+fun sameLeaf(receiver) = receiver.method
+[sameLeaf(new Integers), sameLeaf(new Numbers)]
+//│ = ["num", "num"]
+
+// Agreement checks later clauses even when every earlier nested argument agrees.
+class Pair[A, B](val first: A, val second: B)
+module Pair with
+  using fun show[A, B](using first: Show[A])(using second: Show[B]): Show[Pair[A, B]] =
+    Show[Pair[A, B]](first.label + "/" + second.label)
+class BothInt with
+  fun method(using show: Show[Pair[Int, Int]]) = show.label
+class OtherBothInt with
+  fun method(using show: Show[Pair[Int, Int]]) = show.label
+class IntStr with
+  fun method(using show: Show[Pair[Int, Str]]) = show.label
+
+:expect ["int/int", "int/int"]
+fun sameClauses(receiver) = receiver.method
+[sameClauses(new BothInt), sameClauses(new OtherBothInt)]
+//│ = ["int/int", "int/int"]
+
+:e
+fun differentClauses(receiver) = receiver.method
+[differentClauses(new BothInt), differentClauses(new IntStr)]
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
+//│ ║  l.+2: 	[differentClauses(new BothInt), differentClauses(new IntStr)]
+//│ ║        	                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This expression's callees select different instances for the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	fun differentClauses(receiver) = receiver.method
+//│ ║        	                                 ^^^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	  using fun show[A, B](using first: Show[A])(using second: Show[B]): Show[Pair[A, B]] =
+//│ ║        	                                             ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance function was selected for an enclosing contextual argument of type Show[Pair[Int, Str]].
+//│ ║  l.XX: 	  using fun show[A, B](using first: Show[A])(using second: Show[B]): Show[Pair[A, B]] =
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── One callee selects this instance.
+//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Another callee selects this instance.
+//│ ║  l.XX: 	  using Show[Str] = Show[Str]("str")
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = ["int/int", "int/int"]

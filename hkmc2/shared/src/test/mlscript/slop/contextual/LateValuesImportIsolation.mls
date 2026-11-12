@@ -1,0 +1,8 @@
+:.
+
+import "./mlscript-compile/LexicalQueries.mls"
+
+// The incompatible caller in LateValues.mls must not mutate the shared imported graph.
+:expect 42
+LexicalQueries.unannotated(1)
+//│ = 42

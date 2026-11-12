@@ -194,9 +194,9 @@ separatelyTyped(20).then(value => value)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+1: 	separatelyTyped(20).then(value => value)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Function with a declared signature does not contain member 'then'
-//│ ║  l.XX: 	fun separatelyTyped: Int -> Int -> Int
-//│ ╙──      	                            ^^^^^^^^^^
+//│ ╟── Function 'separatelyTyped' does not contain member 'then'
+//│ ║  l.XX: 	fun separatelyTyped(x)(y) = x + y
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A generic async signature must retain Promise after explicit specialization.

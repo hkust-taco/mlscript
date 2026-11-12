@@ -1,0 +1,107 @@
+:.
+
+fun f(using i: Int): Int = i
+
+:expect 42
+f(using 42)
+//│ = 42
+
+
+fun f(using i: Int, j: Num): Num = i + j
+
+:e
+:re
+f(using 42)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+1: 	f(using 42)
+//│ ║        	^^^^^^^^^^^
+//│ ╟── Function 'f' expected 2 arguments, but got 1
+//│ ║  l.XX: 	fun f(using i: Int, j: Num): Num = i + j
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function 'f' expected at least 2 arguments but got 1
+
+:expect 45.14
+f(using 42, 3.14)
+//│ = 45.14
+
+
+fun f(using i: Int)(using j: Int)(using k: Int): Int = i + j + k
+
+:e
+:re
+f(using 32)
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	f(using 32)
+//│ ║        	^^^^^^^^^^^
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	f(using 32)
+//│ ║        	^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	fun f(using i: Int)(using j: Int)(using k: Int): Int = i + j + k
+//│ ╙──      	                    ^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	f(using 32)
+//│ ║        	^^^^^^^^^^^
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	f(using 32)
+//│ ║        	^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	fun f(using i: Int)(using j: Int)(using k: Int): Int = i + j + k
+//│ ╙──      	                                  ^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+:re
+f(using 32)(using 8)
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	f(using 32)(using 8)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	f(using 32)(using 8)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	fun f(using i: Int)(using j: Int)(using k: Int): Int = i + j + k
+//│ ╙──      	                                  ^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:expect 42
+f(using 32)(using 8)(using 2)
+//│ = 42
+
+
+fun f(using i: Int)(j: Int)(using k: Int)(l: Num): Int = i + j + k + l
+
+:e
+f(using 32)
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	f(using 32)
+//│ ║        	^^^^^^^^^^^
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	f(using 32)
+//│ ║        	^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	fun f(using i: Int)(j: Int)(using k: Int)(l: Num): Int = i + j + k + l
+//│ ╙──      	                            ^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+:re
+f(using 32)(8)
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	f(using 32)(8)
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	f(using 32)(8)
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	fun f(using i: Int)(j: Int)(using k: Int)(l: Num): Int = i + j + k + l
+//│ ╙──      	                            ^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:expect fun
+f(using 32)(8)(using 2)
+//│ = fun
+
+:expect 45.14
+f(using 32)(8)(using 2)(3.14)
+//│ = 45.14

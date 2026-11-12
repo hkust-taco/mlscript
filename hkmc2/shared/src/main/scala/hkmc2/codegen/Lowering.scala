@@ -550,6 +550,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     * Foreign constructors own their argument defaults; MLscript constructors bind absent slots to null. */
   case class ConstructorParams(lists: Ls[ParamList], isMls: Bool)
 
+  /** Captures and forwarding wrappers already have IR operands. Keep them in IR while sharing
+    * call-site coercions and constructor defaults with arguments lowered from source terms. */
+  private case class LoweredArgs(values: Ls[Arg])(val toLoc: Opt[Loc]) extends Located
+  private type CallArgs = Term | LoweredArgs
+
   private def classParamLists(cls: ClassLikeDef): ConstructorParams =
     ConstructorParams(cls.paramsOpt.toList ::: cls.auxParams, cls.hasDeclareModifier.isEmpty)
 
@@ -589,11 +594,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   /** Lower a call with multiple argument lists into `Call` nodes,
     * trying to group as many as possible into a single one
     * when they correspond to parameter lists of the same callee. */
-  def lowerMultiCall(fr: Path, isMlsFun: Bool, annotations: Ls[Annot], args: Ls[Term], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
+  private def lowerMultiCall(fr: Path, isMlsFun: Bool, annotations: Ls[Annot], args: Ls[CallArgs], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
     val isConstructor = fr.targetSymbol.exists:
       case _: ClassCtorSymbol => true
       case _ => false
-    def zipArgs(remainingParamss: Ls[ParamList], remainingArgss: Ls[Term], acc: Ls[Ls[Arg]], mayRaiseEffects: Bool): Block =
+    def zipArgs(remainingParamss: Ls[ParamList], remainingArgss: Ls[CallArgs], acc: Ls[Ls[Arg]], mayRaiseEffects: Bool): Block =
       (remainingParamss, remainingArgss) match
       case (ps :: remainingParams, args :: remainingArgs) =>
         def next(as: Ls[Arg]): Block = zipArgs(remainingParams, remainingArgs, as :: acc, mayRaiseEffects)
@@ -618,7 +623,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case _ => zipArgs(Nil, args, Nil, fs.mayRaiseEffects)
     case _ => zipArgs(Nil, args, Nil, true)
   
-  def lowerRemainingCalls(base: Path, args: Term, remainingArgss: Ls[Term], annotations: Ls[Annot], loc: Opt[Loc])
+  private def lowerRemainingCalls(base: Path, args: CallArgs, remainingArgss: Ls[CallArgs], annotations: Ls[Annot], loc: Opt[Loc])
         (k: Result => Block)(using LoweringCtx): Block =
     lowerArgs(args, Nil): as =>
       val call = Call(base, as ne_:: Nil)(CallMetadata(false, true, annotations), loc)
@@ -634,7 +639,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     * when they correspond to constructor parameter lists of the same class.
     * If fewer argument lists are provided than constructor parameter lists, eta-expands
     * the missing ones with fresh lambdas (avoiding reliance on mutable JS class curry semantics). */
-  def lowerMultiInstantiate(mut: Bool, cls: Path, ctorParamLists: ConstructorParams, args: Ls[Term], annotations: Ls[Annot], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
+  private def lowerMultiInstantiate(mut: Bool, cls: Path, ctorParamLists: ConstructorParams, args: Ls[CallArgs], annotations: Ls[Annot], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
     // Nullary instantiations are represented with one empty argument list, matching existing `Instantiate` usage.
     def buildInstantiate(argss: Ls[Ls[Arg]]): Instantiate =
       Instantiate(mut, cls, if argss.isEmpty then Nil :: Nil else argss)(InstantiateMetadata(annotations), loc)
@@ -642,7 +647,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     // * Consumes one argument list per constructor param list; when all ctor params are
     // * consumed but extra args remain, falls back to `Call` nodes on the result.
     // * When args run out before ctor params are consumed, eta-expands the remaining ones.
-    def zipArgs(remainingCtorParamss: Ls[ParamList], remainingArgss: Ls[Term], acc: Ls[Ls[Arg]]): Block =
+    def zipArgs(remainingCtorParamss: Ls[ParamList], remainingArgss: Ls[CallArgs], acc: Ls[Ls[Arg]]): Block =
       (remainingCtorParamss, remainingArgss) match
       case (ps :: remainingParams, args :: remainingArgs) =>
         lowerConstructorArgs(args, ps, ctorParamLists.isMls)(as => zipArgs(remainingParams, remainingArgs, as :: acc))
@@ -696,7 +701,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     * and keep later lists from shifting into those slots. Foreign constructors retain undefined
     * in their optional slots so their native defaults can run.
     */
-  private def lowerConstructorArgs(arg: Term, ps: ParamList, isMls: Bool)(k: Ls[Arg] => Block)(using LoweringCtx): Block =
+  private def lowerConstructorArgs(arg: CallArgs, ps: ParamList, isMls: Bool)(k: Ls[Arg] => Block)(using LoweringCtx): Block =
     def capture(args: Ls[Arg]): Block =
       def loop(args: Ls[Arg], params: Ls[Param], acc: Ls[Arg]): Block = (args, params) match
         case (arg :: rest, param :: params) if isMls && param.flags.opt =>
@@ -712,27 +717,53 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         capture(padded)
       else
         assert(ps.variadic.isEmpty, "Constructor parameters must have a fixed layout")
-        val tuple = loweringCtx.registerTempSymbol(S(arg), erasedType = S(ErasedType.Array), "constructorArgs")
+        val source = arg match
+          case term: Term => S(term)
+          case _: LoweredArgs => N
+        val tuple = loweringCtx.registerTempSymbol(source, erasedType = S(ErasedType.Array), "constructorArgs")
         def bind(params: Ls[(Param, Int)], acc: Ls[Arg]): Block = params match
           case (param, index) :: rest =>
-            val slot = loweringCtx.registerTempSymbol(S(arg), erasedType = param.sym.erasedType, "constructorArg")
+            val slot = loweringCtx.registerTempSymbol(source, erasedType = param.sym.erasedType, "constructorArg")
             OptionalParams.bindFromTuple(tuple.asSimpleRef, index, slot, Option.when(isMls && param.flags.opt)(index + 1),
               bind(rest, slot.asSimpleRef.asArg :: acc))
           case Nil => k(acc.reverse)
         Assign(tuple, Tuple(false, args)(arg.toLoc), bind(ps.params.zipWithIndex, Nil))
   
-  def lowerArgs(arg: Term, expectedTypes: Ls[Opt[ErasedValueType]])(k: Ls[Arg] => Block)(using LoweringCtx): Block =
+  /** The elements of an argument list written as a tuple. A contextual list, whether written as
+    * `f(using x)` or supplied by contextual resolution, has the same runtime layout as an
+    * ordinary one; lowering it as a spread would allocate an array at every call.
+    */
+  private object ArgumentTuple:
+    def unapply(arg: CallArgs): Opt[Ls[Elem]] = arg match
+      case Tup(fs) => S(fs)
+      case CtxTup(fs) => S(fs)
+      case _ => N
+
+  private def lowerArgs(arg: CallArgs, expectedTypes: Ls[Opt[ErasedValueType]])(k: Ls[Arg] => Block)(using LoweringCtx): Block =
+    def rejectLazySpread(): Unit =
+      raise(ErrorReport(
+        msg"Lazy spreads are not supported in call arguments" -> arg.toLoc :: Nil, S(arg),
+        source = Diagnostic.Source.Compilation))
     arg match
-    case Tup(fs) =>
-      if fs.exists(e => e match
-        case Spd(SpreadKind.Lazy, _, _) => true // is lazy spread
-        case _ => false)
-      then
-        raise(ErrorReport(
-          msg"Lazy spreads are not supported in call arguments" -> arg.toLoc :: Nil, S(arg),
-          source = Diagnostic.Source.Compilation))
+    case LoweredArgs(values) =>
+      if values.exists(_.spread.contains(SpreadKind.Lazy)) then rejectLazySpread()
+      // As for source arguments, a spread ends positional alignment with the parameter types.
+      var expected = expectedTypes
+      k(values.map: arg =>
+        if arg.spread.nonEmpty then
+          expected = Nil
+          arg
+        else
+          val typ = expected.headOption.flatten
+          expected = expected.drop(1)
+          Arg(N, castPathTo(arg.value, typ, arg.value.toLoc)))
+    case ArgumentTuple(fs) =>
+      if fs.exists {
+        case Spd(SpreadKind.Lazy, _, _) => true
+        case _ => false
+      } then rejectLazySpread()
       args(fs, expectedTypes)(as => k(as))
-    case _ =>
+    case arg: Term =>
       // Application arguments that are not tuples represent spreads, as in `f(...arg)`
       subTerm_nonTail(arg): ar =>
         k(Arg(spread = S(SpreadKind.Eager), ar) :: Nil)
@@ -1009,6 +1040,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         // an alias or have no source identifier at all.
         val name = storageIdent(d.sym.nme, ref.sourceId)
         return setupSelection(SelfRef(State.globalThisSymbol)(Tree.Ident("globalThis")), name, disamb, ref.toLoc)(k)
+      case S(td: TermDefinition) if td.isClassLexicalInstance =>
+        val owner = td.owner.getOrElse(lastWords("A class lexical instance needs its storage owner"))
+        return setupSelection(SelfRef(owner)(Tree.Ident("this")), td.tsym.id, S(td.tsym), ref.toLoc)(k)
       case S(td: TermDefinition) if isImplicitNullaryCall(td.tsym) =>
         // * Functions defined in local scopes with no parameter lists are getters
         // * and are lowered to functions with an empty parameter list
@@ -1051,8 +1085,94 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case (sym, disamb) =>
         lastWords(s"Unexpected symbol kind ${sym.getClass.getSimpleName}: $sym")
   
-  @tailrec
+  /** Abstract continuations carry their own completed flow applications. Flatten them for
+    * the single runtime call, retaining ordinary parameter lists for the enclosing lambdas.
+    */
+  private def completionSteps(term: Term): Ls[sem.ContextualStep] = term match
+    case site: sem.ContextualSite => site.contextualCompletion.fold(Nil): completion =>
+      completion.steps.flatMap:
+        case step @ sem.ContextualStep.Supply(_) => step :: Nil
+        case step @ sem.ContextualStep.Abstract(application = application) => step :: completionSteps(application)
+    case _ => Nil
+
+  private def suppliedArguments(term: Term): Ls[Term] = completionSteps(term).map:
+    case sem.ContextualStep.Supply(application) => application.rhs
+    case sem.ContextualStep.Abstract(application = application) => application.rhs
+
+  /** Capture the site's operands before constructing an expansion. A selected method keeps
+    * its selection on the captured receiver, so JavaScript's method receiver stays bound.
+    * Abstract arguments belong to the generated lambdas and are evaluated on invocation.
+    */
+  private def etaCall(callee: Path, arguments: Ls[Term], abstractions: Map[Term, ParamList], isMls: Bool, loc: Opt[Loc])(
+      invoke: (Path, Ls[CallArgs], Result => Block) => LoweringCtx ?=> Block)(k: Result => Block)(using LoweringCtx): Block =
+    softAssert(abstractions.nonEmpty, "An eta expansion must abstract at least one parameter list")
+    def freeze(value: Result)(next: Path => Block): Block =
+      val temp = loweringCtx.registerTempSymbol(N, value.erasedType, "contextualOperand")
+      Assign(temp, value, next(temp.asSimpleRef))
+    def receiver(next: Path => Block): Block = callee match
+      case selection: Select => freeze(selection.qual): prefix =>
+        next(Select(prefix, selection.name)(selection.symbol, selection.toLoc)(selection.sanitize))
+      case selection: DynSelect => freeze(selection.qual): prefix =>
+        freeze(selection.fld): field =>
+          next(DynSelect(prefix, field, selection.kind)(selection.toLoc))
+      case _ => next(callee)
+    // An eager spread is consumed before later operands run: the saved tuple keeps its elements
+    // and length even if the source array changes before the expansion is called.
+    def operand(term: Term, spread: Opt[SpreadKind])(next: Arg => Block): Block = subTerm_nonTail(term): value =>
+      freeze(if spread.contains(SpreadKind.Eager) then Tuple(false, Arg(spread, value) :: Nil)(term.toLoc) else value): saved =>
+        next(Arg(spread, saved))
+    // Capture each argument of a tuple list on its own, so that the expansion still passes an
+    // ordinary argument list: saving the list as one array would allocate it at the site and
+    // spread it at every call. Other lists are saved as one spread: a single spread operand, as
+    // in `f(...xs)`, and a list with named fields, which lowers to a fresh tuple ending with the
+    // record of those fields. Saving that tuple copies it once more, which this rare case accepts.
+    def written(argument: Term)(next: LoweredArgs => Block): Block =
+      def elements(rest: Ls[Elem], reversed: Ls[Arg]): Block = rest match
+        case Fld(FldFlags.benign(), term, N) :: tail => operand(term, N)(arg => elements(tail, arg :: reversed))
+        case Spd(kind, term, _) :: tail => operand(term, S(kind))(arg => elements(tail, arg :: reversed))
+        case _ :: _ => lastWords("Only plain fields and spreads are captured one by one")
+        case Nil => next(LoweredArgs(reversed.reverse)(argument.toLoc))
+      argument match
+        case ArgumentTuple(fields) if fields.forall {
+          case Fld(FldFlags.benign(), _, N) | Spd(_, _, _) => true
+          case _ => false
+        } => elements(fields, Nil)
+        case _ => operand(argument, S(SpreadKind.Eager))(arg => next(LoweredArgs(arg :: Nil)(argument.toLoc)))
+    // The resolver's argument term for an abstracted list refers to the mirrored parameters that
+    // its lambda binds. An MLscript callee binds omitted optional arguments to null, so the lambda
+    // binds the parameters the same way and passes that term on. A foreign callee receives omitted
+    // optional arguments as undefined, so that its own defaults run, through IR forwarding
+    // arguments; a fixed list still discards extra arguments, such as the index and array that
+    // `map` passes to a callback.
+    def abstraction(argument: Term, params: ParamList)(call: CallArgs => LoweringCtx ?=> Block)(using LoweringCtx): Lambda =
+      def lambda(physical: LoweredParamList)(body: LoweringCtx ?=> Block): Lambda =
+        Lambda(physical, LoweringCtx.nestFunc(N).givenIn(inScopedBlock(body)))(Nil, loc)
+      if isMls then
+        val (physical, prologue) = lowerTrailingParams(params, N)
+        lambda(physical)(prologue(call(argument)))
+      else
+        val forwarding = OptionalParams.forwarding(LoweredParamList.callingConvention(params),
+          fixedArity = params.variadic.isEmpty)
+        lambda(forwarding.params)(call(LoweredArgs(forwarding.args)(argument.toLoc)))
+    receiver: function =>
+      // Capture every written operand before building any lambda. Then walk the lists in
+      // call order, introducing a lambda around the rest of the call for each abstracted list.
+      def capture(rest: Ls[Term], reversed: Ls[(Term, ParamList) \/ LoweredArgs]): Block = rest match
+        case argument :: tail => abstractions.get(argument) match
+          case S(params) => capture(tail, L(argument -> params) :: reversed)
+          case N => written(argument)(args => capture(tail, R(args) :: reversed))
+        case Nil => expand(reversed.reverse, Nil)(k)
+      def expand(rest: Ls[(Term, ParamList) \/ LoweredArgs], reversed: Ls[CallArgs])(next: Result => Block)(using LoweringCtx): Block = rest match
+        case R(args) :: tail => expand(tail, args :: reversed)(next)
+        case L((argument, params)) :: tail =>
+          next(abstraction(argument, params)(forwarded => expand(tail, forwarded :: reversed)(Ret)))
+        case Nil => invoke(function, reversed.reverse, next)
+      capture(arguments, Nil)
+
   final def term(t: st, inStmtPos: Bool = false)(k0: Result => Block)(using LoweringCtx): Block =
+    termWithCompletion(t, inStmtPos, true)(k0)
+
+  private def termWithCompletion(t: st, inStmtPos: Bool, complete: Bool)(k0: Result => Block)(using LoweringCtx): Block =
     tl.log(dbg"Lowering.term ${t.showDbg.truncate(100, "[...]")}${
       if inStmtPos then " (in stmt)" else ""}${
       t.resolvedSym.fold("")(sym => " – symbol " + sym.showDbg)}")
@@ -1110,7 +1230,148 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         // TODO: Does `@untyped` on a primitive make sense? How should be handle it?
         Assign(l, r, k0(l.asSimpleRef))
     
+    def appliedCall(call: Term): Block =
+      call match
+        case app: st.App if app.isErroneous => return compError
+        case _ => ()
+      
+      // Collect chains of App nodes: `f(a)(b)(c)` → (f, [a, b, c])
+      // This allows lowering curried calls as a single `Call` with multiple arg lists.
+      var abstractions = Map.empty[Term, ParamList]
+      def supplied(expr: Term, complete: Bool): Ls[Term] =
+        if !complete then Nil else completionSteps(expr).map:
+          case sem.ContextualStep.Supply(application) => application.rhs
+          case sem.ContextualStep.Abstract(params = params, application = application) =>
+            abstractions += application.rhs -> params
+            application.rhs
+      @tailrec
+      def collectAppChain(expr: st, args: Ls[Term], complete: Bool): (st, Ls[Term]) =
+        val suppliedArgs = supplied(expr, complete)
+        val remaining = suppliedArgs ::: args
+        expr.instantiated match
+        // * Applications of builtin operators, such as `- x` in `(- x)(2)`, are lowered as primitive
+        // * operations by the dedicated case above, so they cannot be part of a curried call chain;
+        // * otherwise, the operator would be lowered as a function value and curried-call handling could
+        // * mistake application of the primitive's result for a partial application of the operator.
+        case app @ st.App(BuiltinRef(_), _) => (app, remaining)
+        case st.App(inner, innerArg) => collectAppChain(inner, innerArg :: remaining, true)
+        case st.TyApp(inner, _) => collectAppChain(inner, remaining, true) // type args are erased
+        case expr => (expr, remaining)
+      // termWithCompletion already expanded the outer application. Start with its
+      // head so legacy expansion and definition-local traces still run exactly once.
+      val (baseF, allArgs) = call match
+        case st.App(inner, argument) =>
+          collectAppChain(inner, argument :: supplied(call, complete), true)
+        case _ => collectAppChain(call, Nil, complete)
+      
+      val isMlsFun = baseF.resolvedSym.fold(baseF.isInstanceOf[st.Lam]):
+        case _: sem.BuiltinSymbol => true
+        case sym: sem.BlockMemberSymbol =>
+          sym.trmImplTree.fold(sym.clsTree.isDefined)(_.k is syntax.Fun)
+        case sym: sem.TermSymbol =>
+          // Methods inside a declared class can have no local `declare` modifier.
+          // Only implementations (and generated constructors) promise the MLscript
+          // calling convention; foreign declarations need undefined normalization.
+          (sym.k is syntax.Fun) && sym.defn.exists(d => !d.hasDeclareModifier.isDefined &&
+            (d.body.isDefined || sym.isInstanceOf[ClassCtorSymbol]))
+        // Do not perform safety check on `MatchSuccess` and `MatchFailure`.
+        case sym => (sym is State.matchSuccessClsSymbol) ||
+          (sym is State.matchFailureClsSymbol)
+      
+      def conclude(fr: Path) =
+        if abstractions.isEmpty then lowerMultiCall(fr, isMlsFun, annots, allArgs, t.toLoc)(k)
+        else etaCall(fr, allArgs, abstractions, isMlsFun, t.toLoc)((function, arguments, next) =>
+          lowerMultiCall(function, isMlsFun, annots, arguments, t.toLoc)(next))(k)
+      
+      // * We have to instantiate `f` again because, if `f` is a Sel, the `term`
+      // * function is not called again with f. See below `Sel` and `SelProj` cases.
+      // * Note: now the instantiation is done by `collectAppChain`.
+      // * EDIT: seems it's no longer needed
+      val instantiated = baseF
+      
+      instantiated.resolvedSym match
+      case S(sym) =>
+        sym.asBlkMember match
+        case S(ms) =>
+          specialBuiltinSymbols.get(ms) match
+          case S(SpecialBuiltin.RuntimeIntrinsic(runtimeName)) =>
+            return conclude(State.runtimeSymbol.asSimpleRef.selN(Tree.Ident(runtimeName)))
+          case S(SpecialBuiltin.WasmIntrinsic) =>
+            def wasmIntrinsicSubterm(owner: Opt[InnerSymbol]): Path = owner match
+              case S(mod: ModuleOrObjectSymbol) =>
+                if mod is ctx.builtins.wasm.module then
+                  State.wasmSymbol.asSimpleRef
+                else
+                  wasmIntrinsicSubterm(mod.defn.flatMap(_.owner)).sel(mod)
+              case _ => lastWords(s"Unexpected owner '$owner' while traversing wasm intrinsic path")
+            val tsym = ms.tsym.getOrElse:
+              lastWords(s"wasm intrinsic `${ms.nme}` has a missing `TermSymbol`")
+            return conclude:
+              wasmIntrinsicSubterm(tsym.owner).sel(tsym)
+          case S(SpecialBuiltin.DebugPrintStack) =>
+            if !config.effectHandlers.exists(_.debug) then
+              return fail:
+                ErrorReport(
+                  msg"Debugging functions are not enabled" ->
+                    t.toLoc :: Nil,
+                  source = Diagnostic.Source.Compilation)
+            return conclude(State.runtimeSymbol.asSimpleRef.selSN("raisePrintStackEffect").withLocOf(baseF))
+          case S(SpecialBuiltin.ScopeLocally) => return
+            // scope.locally only applies to the innermost call; extra args are applied on top
+            if allArgs.length > 1 then
+              subTerm(baseF)(conclude)
+            else
+              allArgs.head match
+              case Tup(Fld(FldFlags.benign(), body, N) :: Nil) =>
+                LoweringCtx.nestScoped.givenIn:
+                  val res = block(Nil, R(body))(k)
+                  val scopedSyms = loweringCtx.getCollectedSym
+                  // Put the Scoped in the rest, so that the returned result can be found correctly
+                  Scoped(scopedSyms, res)
+              case _ => fail:
+                ErrorReport(
+                  msg"Unsupported form for scope.locally." ->
+                    t.toLoc :: Nil,
+                  source = Diagnostic.Source.Compilation)
+          case N =>
+        case N =>
+      case N =>
+      
+      instantiated match
+      // * Due to whacky JS semantics, we need to make sure that selections leading to a call
+      // * are preserved in the call and not moved to a temporary variable.
+      case sup: st.Super => superReference(sup)(conclude)
+      case sel: NewSel if sel.isClassValue => classOf(sel.prefix, sel)((p, _) => conclude(p))
+      case sel: NewSel => newSelection(sel): (prefix, name, target) =>
+        subTerm_nonTail(prefix): p =>
+          selectionPath(sel, p, name, target)(conclude)
+      case ref: UnresolvedRef => openSelection(ref): (prefix, member, target) =>
+        subTerm_nonTail(prefix): p =>
+          namedSelection(p, memberIdent(ref.id, member), target, ref.keyAccess, ref.toLoc, false)(conclude)
+      case sel @ Sel(prefix, nme) =>
+        subTerm(prefix): p =>
+          conclude(Select(p, nme)(selSymbol(sel), trm.toLoc)(false).withLocOf(sel))
+      case Resolved(sel @ Sel(prefix, nme), sym) =>
+        subTerm(prefix): p =>
+          conclude(Select(p, definitionIdent(nme, sym))(S(sym), trm.toLoc)(false).withLocOf(sel))
+      case sel @ SelProj(prefix, _, nme) =>
+        subTerm(prefix): p =>
+          conclude(Select(p, nme)(N, sel.toLoc)(false))
+      case Resolved(sel @ SelProj(prefix, _, nme), sym) =>
+        subTerm(prefix): p =>
+          conclude(Select(p, definitionIdent(nme, sym))(S(sym), trm.toLoc)(false).withLocOf(sel))
+      case _ => termWithCompletion(baseF, false, false)(r => subResult(r)(conclude))
     trm match
+      case site: sem.ContextualSite if complete && site.contextualCompletion.exists(_.steps.nonEmpty) && !site.isInstanceOf[st.New] =>
+        return appliedCall(site)
+      case _ => ()
+    
+    trm match
+    case argument: st.InstanceArg => argument.selected match
+      case S(value) => term(value)(k)
+      case N =>
+        softAssert(argument.isErroneous, "A contextual argument must be selected before lowering")
+        compError
     case st.UnitVal() => k(unit)
     case st.Lit(lit) =>
       if lit =/= Tree.UnitLit(false) then warnStmt
@@ -1251,119 +1512,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           msg"Unexpected arguments for builtin symbol '${sym.nme}'" -> arg.toLoc :: Nil, S(arg),
           source = Diagnostic.Source.Compilation)
     case st.TyApp(f, ts) => term(f)(k) // * Type arguments are erased
-    case app @ st.App(f, arg) =>
-      if app.isErroneous then return compError
-      
-      // Collect chains of App nodes: `f(a)(b)(c)` → (f, [a, b, c])
-      // This allows lowering curried calls as a single `Call` with multiple arg lists.
-      @tailrec
-      def collectAppChain(expr: st, args: Ls[Term]): (st, Ls[Term]) =
-        expr.instantiated match
-        // * Applications of builtin operators, such as `- x` in `(- x)(2)`, are lowered as primitive
-        // * operations by the dedicated case above, so they cannot be part of a curried call chain;
-        // * otherwise, the operator would be lowered as a function value and curried-call handling could
-        // * mistake application of the primitive's result for a partial application of the operator.
-        case app @ st.App(BuiltinRef(_), _) => (app, args)
-        case st.App(inner, innerArg) => collectAppChain(inner, innerArg :: args)
-        case st.TyApp(inner, _) => collectAppChain(inner, args) // type args are erased
-        case expr => (expr, args)
-      val (baseF, allArgs) = collectAppChain(f, arg :: Nil)
-      
-      val isMlsFun = baseF.resolvedSym.fold(baseF.isInstanceOf[st.Lam]):
-        case _: sem.BuiltinSymbol => true
-        case sym: sem.BlockMemberSymbol =>
-          sym.trmImplTree.fold(sym.clsTree.isDefined)(_.k is syntax.Fun)
-        case sym: sem.TermSymbol =>
-          // Methods inside a declared class can have no local `declare` modifier.
-          // Only implementations (and generated constructors) promise the MLscript
-          // calling convention; foreign declarations need undefined normalization.
-          (sym.k is syntax.Fun) && sym.defn.exists(d => !d.hasDeclareModifier.isDefined &&
-            (d.body.isDefined || sym.isInstanceOf[ClassCtorSymbol]))
-        // Do not perform safety check on `MatchSuccess` and `MatchFailure`.
-        case sym => (sym is State.matchSuccessClsSymbol) ||
-          (sym is State.matchFailureClsSymbol)
-      
-      def conclude(fr: Path) =
-        lowerMultiCall(fr, isMlsFun, annots, allArgs, t.toLoc)(k)
-      
-      // * We have to instantiate `f` again because, if `f` is a Sel, the `term`
-      // * function is not called again with f. See below `Sel` and `SelProj` cases.
-      // * Note: now the instantiation is done by `collectAppChain`.
-      // * EDIT: seems it's no longer needed
-      val instantiated = baseF
-      
-      instantiated.resolvedSym match
-      case S(sym) =>
-        sym.asBlkMember match
-        case S(ms) =>
-          specialBuiltinSymbols.get(ms) match
-          case S(SpecialBuiltin.RuntimeIntrinsic(runtimeName)) =>
-            return conclude(State.runtimeSymbol.asSimpleRef.selN(Tree.Ident(runtimeName)))
-          case S(SpecialBuiltin.WasmIntrinsic) =>
-            def wasmIntrinsicSubterm(owner: Opt[InnerSymbol]): Path = owner match
-              case S(mod: ModuleOrObjectSymbol) =>
-                if mod is ctx.builtins.wasm.module then
-                  State.wasmSymbol.asSimpleRef
-                else
-                  wasmIntrinsicSubterm(mod.defn.flatMap(_.owner)).sel(mod)
-              case _ => lastWords(s"Unexpected owner '$owner' while traversing wasm intrinsic path")
-            val tsym = ms.tsym.getOrElse:
-              lastWords(s"wasm intrinsic `${ms.nme}` has a missing `TermSymbol`")
-            return conclude:
-              wasmIntrinsicSubterm(tsym.owner).sel(tsym)
-          case S(SpecialBuiltin.DebugPrintStack) =>
-            if !config.effectHandlers.exists(_.debug) then
-              return fail:
-                ErrorReport(
-                  msg"Debugging functions are not enabled" ->
-                    t.toLoc :: Nil,
-                  source = Diagnostic.Source.Compilation)
-            return conclude(State.runtimeSymbol.asSimpleRef.selSN("raisePrintStackEffect").withLocOf(baseF))
-          case S(SpecialBuiltin.ScopeLocally) => return
-            // scope.locally only applies to the innermost call; extra args are applied on top
-            if allArgs.length > 1 then
-              subTerm(baseF)(conclude)
-            else
-              arg match
-              case Tup(Fld(FldFlags.benign(), body, N) :: Nil) =>
-                LoweringCtx.nestScoped.givenIn:
-                  val res = block(Nil, R(body))(k)
-                  val scopedSyms = loweringCtx.getCollectedSym
-                  // Put the Scoped in the rest, so that the returned result can be found correctly
-                  Scoped(scopedSyms, res)
-              case _ => fail:
-                ErrorReport(
-                  msg"Unsupported form for scope.locally." ->
-                    t.toLoc :: Nil,
-                  source = Diagnostic.Source.Compilation)
-          case N =>
-        case N =>
-      case N =>
-      
-      instantiated match
-      // * Due to whacky JS semantics, we need to make sure that selections leading to a call
-      // * are preserved in the call and not moved to a temporary variable.
-      case sup: st.Super => superReference(sup)(conclude)
-      case sel: NewSel if sel.isClassValue => classOf(sel.prefix, sel)((p, _) => conclude(p))
-      case sel: NewSel => newSelection(sel): (prefix, name, target) =>
-        subTerm_nonTail(prefix): p =>
-          selectionPath(sel, p, name, target)(conclude)
-      case ref: UnresolvedRef => openSelection(ref): (prefix, member, target) =>
-        subTerm_nonTail(prefix): p =>
-          namedSelection(p, memberIdent(ref.id, member), target, ref.keyAccess, ref.toLoc, false)(conclude)
-      case sel @ Sel(prefix, nme) =>
-        subTerm(prefix): p =>
-          conclude(Select(p, nme)(selSymbol(sel), trm.toLoc)(false).withLocOf(sel))
-      case Resolved(sel @ Sel(prefix, nme), sym) =>
-        subTerm(prefix): p =>
-          conclude(Select(p, definitionIdent(nme, sym))(S(sym), trm.toLoc)(false).withLocOf(sel))
-      case sel @ SelProj(prefix, _, nme) =>
-        subTerm(prefix): p =>
-          conclude(Select(p, nme)(N, sel.toLoc)(false))
-      case Resolved(sel @ SelProj(prefix, _, nme), sym) =>
-        subTerm(prefix): p =>
-          conclude(Select(p, definitionIdent(nme, sym))(S(sym), trm.toLoc)(false).withLocOf(sel))
-      case _ => subTerm(baseF)(conclude)
+    case call: st.App => appliedCall(call)
     case h @ Handle(lhs, rhs, as, cls, defs, bod) =>
       if config.effectHandlers.isEmpty then
         return fail:
@@ -1567,7 +1716,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         case _ => spuriousWarning
       classOf(cls, nwtrm): (sr, params) =>
         rft match
-        case N => lowerMultiInstantiate(mut, sr, params, as, annots, trm.toLoc)(k)
+        case N =>
+          val abstractions = completionSteps(nwtrm).iterator.collect:
+            case sem.ContextualStep.Abstract(params = params, application = application) => application.rhs -> params
+          .toMap
+          val arguments = as ::: suppliedArguments(nwtrm)
+          if abstractions.isEmpty then lowerMultiInstantiate(mut, sr, params, arguments, annots, trm.toLoc)(k)
+          else etaCall(sr, arguments, abstractions, params.isMls, trm.toLoc)((constructor, arguments, next) =>
+            lowerMultiInstantiate(mut, constructor, params, arguments, annots, trm.toLoc)(next))(k)
         case S((isym, rft)) =>
           val sym = isym.bms.get
           loweringCtx.collectScopedSym(sym)
@@ -1575,7 +1731,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             methodKeys(rft): keys =>
               val clsDef = LoweringCtx.withSuperBase(isym, parent).givenIn:
                 val (mtds, publicFlds, privateFlds, ctor) = gatherMembers(rft)
-                val pctor = parentConstructor(params, as, nw.toLoc)
+                val pctor = parentConstructor(params, as ::: suppliedArguments(nwtrm), nw.toLoc)
                 ClsLikeDefn(N, isym, sym, N, syntax.Cls, N, Nil, S(parent),
                   mtds, privateFlds, publicFlds, pctor, ctor, N, N, N, keys)(N, Nil)
               val inner = new New(resolvedMemberRef(sym, isym), Nil, N)(FlowSymbol.neww(), N)
@@ -1898,7 +2054,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     subTerm(t, inStmtPos = inStmtPos)(k)
   
   inline def subTerm(t: st, inStmtPos: Bool = false)(k: Path => Block)(using LoweringCtx): Block =
-    term(t, inStmtPos = inStmtPos):
+    term(t, inStmtPos = inStmtPos)(r => subResult(r)(k))
+
+  private def subResult(result: Result)(k: Path => Block)(using LoweringCtx): Block =
+    result match
       case v: Value => k(v)
       case p: Path => k(p)
       case lam @ Lambda(params, body) =>
@@ -1933,12 +2092,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     s.collect { case t: TermSymbol => t.sourceErasedType }.flatten
 
   /** Resolve the shared argument binding plan at a statically known argument count. */
-  private def expectedParamTypes(ps: ParamList, args: Term): Ls[Opt[ErasedValueType]] =
+  private def expectedParamTypes(ps: ParamList, args: CallArgs): Ls[Opt[ErasedValueType]] =
     ArgumentLayout.trailing(ps) match
       case N => ps.params.map(_.sym.erasedType)
       case S(layout) =>
         val count = args match
-          case Tup(fields) if fields.forall {
+          case LoweredArgs(values) if values.forall(_.spread.isEmpty) => S(values.length)
+          case ArgumentTuple(fields) if fields.forall {
             case Fld(FldFlags.benign(), _, N) => true
             case _ => false
           } => S(fields.length)
@@ -2004,8 +2164,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     * which JavaScript does not support. The lowered parameter list keeps the required leading parameters (`x`)
     * and gathers all the other arguments into a fresh rest parameter `args`, from which the returned prologue
     * extracts the other parameters using the same [[ArgumentLayout]] as call-site coercions.
-    * Passes running after lowering thus only see `LoweredParamList`, which cannot contain trailing parameters. */
-  protected def lowerTrailingParams(ps: ParamList, name: Opt[Str]): (LoweredParamList, LoweringCtx ?=> Block => Block) =
+    * Passes running after lowering thus only see `LoweredParamList`, which cannot contain trailing parameters.
+    * The prologue registers the extracted parameters as locals of the scope whose context it receives, which
+    * must be the function body's: registered in an enclosing scope, they would be shared by all invocations.
+    * It receives that context after the body because a context function stored in the returned pair would be
+    * applied to the context in scope wherever the pair is destructured. */
+  protected def lowerTrailingParams(ps: ParamList, name: Opt[Str]): (LoweredParamList, Block => LoweringCtx ?=> Block) =
     val loweredParams = LoweredParamList.callingConvention(ps)
     ArgumentLayout.trailing(ps) match
     case S(layout) =>
@@ -2022,7 +2186,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         Call(State.runtimeSymbol.asSimpleRef.sel(State.checkVariadicArgsSymbol),
           (Value.Lit(Tree.StrLit(name.getOrElse("")))(N) :: int(layout.minimumCount) :: int(layout.required.length) :: args :: Nil)
             .map(_.asArg) ne_:: Nil)(CallMetadata.defaultMlsFun, N)
-      val prologue: LoweringCtx ?=> Block => Block = body =>
+      val prologue: Block => LoweringCtx ?=> Block = body =>
         layout.extracted.foreach((param, _) => loweringCtx.collectScopedSym(param.sym))
         val extracted = layout.extracted.foldRight(body):
           case ((param, ArgumentLayout.Source.Element(index, minimumLength)), rest) =>

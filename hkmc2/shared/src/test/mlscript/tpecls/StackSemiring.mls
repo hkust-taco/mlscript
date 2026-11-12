@@ -1,0 +1,83 @@
+:.
+:js
+
+import "../../mlscript-compile/Semiring.mls"
+import "../../mlscript-compile/Stack.mls"
+
+
+
+
+let s = use[Semiring[Stack]]
+//│ s = $anon
+
+:sr
+:sir
+s.combine(Nil, Nil)
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   s⁰.combine⁰(Nil, Nil)‹app⁰›
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ return s⁰.combine⁰(Stack⁰.Nil⁰, Stack⁰.Nil⁰)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = Nil
+
+:sr
+:sir
+:e
+1 :: Nil
+//│ ╔══[COMPILATION ERROR] Name not found: Nil
+//│ ║  l.+1: 	1 :: Nil
+//│ ╙──      	     ^^^
+//│ ╔══[COMPILATION ERROR] Name not found: ::
+//│ ║  l.+1: 	1 :: Nil
+//│ ╙──      	  ^^
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   ::(1, Nil)‹app¹›
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:fixme
+open Stack { :: }
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
+//│ ║  l.+1: 	open Stack { :: }
+//│ ╙──      	                ^
+//│ ╔══[COMPILATION ERROR] Illegal 'open' statement shape.
+//│ ║  l.+1: 	open Stack { :: }
+//│ ╙──      	     ^^^^^^^^^^^
+
+:fixme
+open Stack { (::) }
+//│ ╔══[COMPILATION ERROR] Illegal 'open' statement element.
+//│ ║  l.+1: 	open Stack { (::) }
+//│ ╙──      	             ^^^^
+
+open Stack { Nil, :: }
+
+s.combine(1 :: 2 :: Nil, 3 :: 4 :: Nil)
+//│ = Cons(1, Cons(2, Cons(3, Cons(4, Nil))))
+
+
+
+
+// ---
+
+:e
+use[Semiring]
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	use[Semiring]
+//│ ║        	^^^^^^^^^^^^^
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	use[Semiring]
+//│ ║        	^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  in ../../mlscript-compile/Predef.mls
+//│ ║  l.XX: 	fun use[T](using instance: T) = instance
+//│ ║        	           ^^^^^^^^^^^^^^^^^
+//│ ╟── Here, the companion module 'Semiring' of class 'Semiring' provides no accessible instance with the required head.
+//│ ║  in StackSemiring.mls:+1
+//│ ║  l.+1: 	use[Semiring]
+//│ ╙──      	    ^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+

@@ -1,0 +1,56 @@
+:.
+
+
+fun get(using Int) = use[Int]
+
+
+let x =
+  using Int = 1
+  get
+//│ x = 1
+
+object Ex with
+  using Int = 1
+  get
+
+:rt
+module Ex with
+  using Int = 1
+  get
+//│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
+//│ Blk:
+//│   stats = Ls of
+//│     ModuleOrObjectDef:
+//│       sym = module:Ex⁰
+//│       bsym = member:Ex¹
+//│       kind = Mod
+//│       body = ObjBody of Blk:
+//│         stats = Ls of
+//│           TermDefinition:
+//│             k = Ins
+//│             sym = member:contextual_instance_0⁰
+//│             tsym = term:Ex⁰/contextual_instance_0¹
+//│             sign = S of Capture:
+//│               base = MemberRef of member:Int⁰
+//│               thru = term:Ex⁰/contextual_instance_0¹
+//│             body = S of Lit of IntLit of 1
+//│             flags = (result annotation)
+//│             modulefulness = Modulefulness of N
+//│         res = MemberRef of member:get⁰
+//│   res = Lit of UnitLit of false
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:fixme // handler parent resolution, independent of contextual insertion
+:lift
+:effectHandlers
+fun g =
+  fun f() =
+    handle h = Object with {}
+    using Int = 42
+    get
+  f
+//│ ╔══[COMPILATION ERROR] Member reference 'Object' has no resolved target
+//│ ║  l.+3: 	    handle h = Object with {}
+//│ ╙──      	               ^^^^^^
+
+

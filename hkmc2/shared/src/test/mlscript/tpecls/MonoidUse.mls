@@ -1,0 +1,10 @@
+:.
+:js
+
+import "../../mlscript-compile/Stack.mls"
+
+:fixme
+import "../../mlscript-compile/Monoid.mls"
+//│ ═══[RUNTIME ERROR] TypeError: Class extends value undefined is not a constructor or null
+
+

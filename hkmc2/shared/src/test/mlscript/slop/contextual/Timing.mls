@@ -1,0 +1,88 @@
+:.
+
+// §3.6: forward callees settle after the whole block has been elaborated.
+:expect 7
+using Int = 7
+fun forward = Later.read()
+module Later with
+  fun read()(using n: Int) = n
+forward
+//│ = 7
+
+// Successive clauses publish earlier selections before later queries.
+data class Evidence[A](value: A)
+class Token
+fun cascade[A](using e: Evidence[A], a: A) = 42
+using Evidence[Token] = Evidence(new Token)
+using Token = new Token
+
+:expect 42
+cascade
+//│ = 42
+
+:fixme // generic override representation check, independent of contextual insertion
+// Later incompatible callers cannot change a previously selected instance.
+abstract class Show[A] with
+  fun show(value: A): Str
+class IntShow extends Show[Int] with
+  fun show(value: Int): Str = "int"
+using Show[Int] = new IntShow
+fun show[A](value: A)(using s: Show[A]) = s.show(value)
+fun unannotated(value) = show(value)
+//│ ╔══[COMPILATION ERROR] Parameter 'value' of overriding member 'show' is represented as 'Int', which cannot hold the values represented as 'Unknown' that the member it overrides accepts
+//│ ║  l.+4: 	  fun show(value: Int): Str = "int"
+//│ ║        	           ^^^^^^^^^^
+//│ ╟── The overridden member 'show' is defined here
+//│ ║  l.+2: 	  fun show(value: A): Str
+//│ ╙──      	      ^^^^
+
+:expect "int"
+unannotated(1)
+//│ = "int"
+
+:e
+unannotated("later")
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
+//│ ║  l.+1: 	unannotated("later")
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of class 'Str' makes the contextual argument's type incompatible with its selected instance.
+//│ ║  l.+1: 	unannotated("later")
+//│ ║        	            ^^^^^^^
+//│ ╟── The contextual argument is supplied implicitly here, where its instance was selected.
+//│ ║  l.XX: 	fun unannotated(value) = show(value)
+//│ ║        	                         ^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	fun show[A](value: A)(using s: Show[A]) = s.show(value)
+//│ ║        	                      ^^^^^^^^^^^^^^^^
+//│ ╟── The selected instance is declared here, with type Show[Int].
+//│ ║  l.XX: 	using Show[Int] = new IntShow
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = "int"
+
+// Capitalized references and contextual sites settle in one post-order worklist.
+class Shade(val label: Str)
+module Shade with
+  val Red = Shade("red")
+fun paint(value: Shade)(using n: Int) = value.label + n.toString()
+
+:expect "red7"
+paint(Red)
+//│ = "red7"
+
+:expect "red7"
+fun readPaint(using n: Int): Shade = Red
+paint(readPaint)
+//│ = "red7"
+
+// Publishing the first site's selected argument reveals the next site's namespace.
+module Choices with
+  class Choice(val label: Str)
+  using Choice = Choice("chosen")
+data class Wrapper[A](value: A)
+using Wrapper[Choices.Choice] = Wrapper(Choices.Choice("wrapped"))
+fun first[A](using wrapped: Wrapper[A]): A = wrapped.value
+fun second[A](value: A)(using chosen: A) = chosen
+
+:expect Choice("chosen")
+second(first)
+//│ = Choice("chosen")

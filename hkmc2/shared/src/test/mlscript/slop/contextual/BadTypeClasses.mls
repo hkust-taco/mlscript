@@ -1,0 +1,142 @@
+:.
+
+:e
+module M with
+  fun f(foo: Int, using bar: Int)
+//│ ╔══[COMPILATION ERROR] Keyword `using` must occur before all parameters.
+//│ ║  l.+2: 	  fun f(foo: Int, using bar: Int)
+//│ ╙──      	                  ^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Module 'M' has unimplemented members
+//│ ║  l.+1: 	module M with
+//│ ║        	^^^^^^^^^^^^^
+//│ ║  l.+2: 	  fun f(foo: Int, using bar: Int)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Member 'f' requires an implementation
+//│ ║  l.+2: 	  fun f(foo: Int, using bar: Int)
+//│ ╙──      	      ^
+
+module M with
+  fun f(using Int) = ()
+
+:e
+M.f
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	M.f
+//│ ║        	^^^
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	M.f
+//│ ║        	^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	  fun f(using Int) = ()
+//│ ╙──      	        ^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// §3.2: literal instance types are unsupported.
+:e
+using 42 = 42
+use[42]
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+2: 	use[42]
+//│ ║        	^^^^^^^
+//│ ╟── No instance can be selected for the contextual argument supplied implicitly here.
+//│ ║  l.+2: 	use[42]
+//│ ║        	^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter, whose type is neither a named type nor a type parameter.
+//│ ║  in ../../../mlscript-compile/Predef.mls
+//│ ║  l.XX: 	fun use[T](using instance: T) = instance
+//│ ╙──      	           ^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in integer literal
+//│ ║  l.+1: 	using 42 = 42
+//│ ║        	      ^^
+//│ ╟── Instance declaration types must be named types.
+//│ ║  l.+1: 	using 42 = 42
+//│ ╙──      	      ^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+val someInt = 42
+//│ someInt = 42
+
+:e
+using someInt = 42
+//│ ╔══[COMPILATION ERROR] Resolution error in member reference
+//│ ║  l.+1: 	using someInt = 42
+//│ ║        	      ^^^^^^^
+//│ ╟── Value symbol 'someInt' cannot be used as a type
+//│ ║  l.XX: 	val someInt = 42
+//│ ╙──      	^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in member reference
+//│ ║  l.+1: 	using someInt = 42
+//│ ║        	      ^^^^^^^
+//│ ╟── Instance declaration types must be named types.
+//│ ║  l.+1: 	using someInt = 42
+//│ ╙──      	      ^^^^^^^
+
+:e
+using someInt: Int = 42
+//│ ╔══[COMPILATION ERROR] Resolution error in block
+//│ ║  l.+1: 	using someInt: Int = 42
+//│ ║        	      ^^^^^^^^^^^^
+//│ ╟── Record literal cannot be used as a type
+//│ ║  l.+1: 	using someInt: Int = 42
+//│ ╙──      	      ^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in block
+//│ ║  l.+1: 	using someInt: Int = 42
+//│ ║        	      ^^^^^^^^^^^^
+//│ ╟── Instance declaration types must be named types.
+//│ ║  l.+1: 	using someInt: Int = 42
+//│ ╙──      	      ^^^^^^^^^^^^
+
+module M with
+  fun bar[A, B](a: A, b: B) = a + b
+
+:e
+M.bar[](1, 2)
+//│ ╔══[COMPILATION ERROR] Resolution error in type application
+//│ ║  l.+1: 	M.bar[](1, 2)
+//│ ║        	^^^^^^^
+//│ ╟── Function 'bar' expected 2 type arguments, but got 0
+//│ ║  l.XX: 	  fun bar[A, B](a: A, b: B) = a + b
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = 3
+
+:e
+M.bar[Int](1, 2)
+//│ ╔══[COMPILATION ERROR] Resolution error in type application
+//│ ║  l.+1: 	M.bar[Int](1, 2)
+//│ ║        	^^^^^^^^^^
+//│ ╟── Function 'bar' expected 2 type arguments, but got 1
+//│ ║  l.XX: 	  fun bar[A, B](a: A, b: B) = a + b
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = 3
+
+using Int = 42
+
+module M with
+  fun foo()(using a: Int) = ()
+
+// §3.1: the value site supplies the trailing contextual clause.
+:expect ()
+M.foo()
+
+:e
+fun f[T](using t: T) = t
+f
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+2: 	f
+//│ ║        	^
+//│ ╟── The type of the contextual argument supplied implicitly here cannot be determined, as neither an explicit type argument nor a value determines the type parameter that it refers to.
+//│ ║  l.+2: 	f
+//│ ║        	^
+//│ ╟── The contextual argument is passed to this parameter, whose type is the type parameter 'T'.
+//│ ║  l.+1: 	fun f[T](using t: T) = t
+//│ ╙──      	         ^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+fun f(using t: Int = 42) = t
+//│ ╔══[COMPILATION ERROR] Expected a valid parameter, found term definition
+//│ ║  l.+1: 	fun f(using t: Int = 42) = t
+//│ ╙──      	      ^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Name not found: t
+//│ ║  l.+1: 	fun f(using t: Int = 42) = t
+//│ ╙──      	                           ^

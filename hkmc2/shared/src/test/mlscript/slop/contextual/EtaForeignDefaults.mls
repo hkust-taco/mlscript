@@ -1,0 +1,68 @@
+:.
+
+import "../../../js/ContextualDefaults.mjs" as foreign
+declare class Foreign with
+  fun run(x?: Int)(using n: Int): Int
+  fun rest(x?: Int, ...xs)(using n: Int): Array[Any]
+  fun pair(first: Int, second?: Int)(using n: Int): Array[Any]
+  fun trailing(x?: Int, ...middle, last: Int)(using n: Int): Array[Any]
+  fun curried(x?: Int)(using n: Int)(y?: Int)(using s: Str): Array[Any]
+let typed = foreign as Foreign
+using Int = 7
+using Str = "context"
+//│ typed = {
+//│   run: fun run,
+//│   rest: fun rest,
+//│   pair: fun pair,
+//│   trailing: fun trailing,
+//│   curried: fun curried
+//│ }
+
+// Direct calls leave optional defaults to the foreign callee.
+:expect [42, 5, null]
+[typed.run(), typed.run(5), typed.run(null)]
+//│ = [42, 5, null]
+
+let saved = typed.run
+//│ saved = fun saved
+
+:expect [42, 5, null]
+[saved(), saved(5), saved(null)]
+//│ = [42, 5, null]
+
+// Optional parameters before a rest parameter must retain the same distinction.
+let spread = typed.rest
+//│ spread = fun spread
+
+:expect [[42, []], [5, [6, 7]], [null, [8]]]
+[spread(), spread(5, 6, 7), spread(null, 8)]
+//│ = [[42, []], [5, [6, 7]], [null, [8]]]
+
+// Mirroring a fixed list still discards the extra index and array supplied by map.
+:expect [1, 2]
+[1, 2].map(saved)
+//│ = [1, 2]
+
+// A required prefix remains fixed; the native callee must not see map's array argument.
+let pair = typed.pair
+//│ pair = fun pair
+
+:expect [[1, 42, 2], [1, null, 2], [[1, 0, 2], [2, 1, 2]]]
+[pair(1), pair(1, null), [1, 2].map(pair)]
+//│ = [[1, 42, 2], [1, null, 2], [[1, 0, 2], [2, 1, 2]]]
+
+// Forward a variadic list with trailing parameters without consuming its optional prefix.
+let trailing = typed.trailing
+//│ trailing = fun trailing
+
+:expect [[42, [], 9], [5, [], 9], [5, [6, 7], 9], [null, [], 9]]
+[trailing(9), trailing(5, 9), trailing(5, 6, 7, 9), trailing(null, 9)]
+//│ = [[42, [], 9], [5, [], 9], [5, [6, 7], 9], [null, [], 9]]
+
+// Each abstracted list must forward its own optional arguments.
+let curried = typed.curried
+//│ curried = fun curried
+
+:expect [[42, 43], [5, 43], [42, 6], [null, null]]
+[curried()(), curried(5)(), curried()(6), curried(null)(null)]
+//│ = [[42, 43], [5, 43], [42, 6], [null, null]]

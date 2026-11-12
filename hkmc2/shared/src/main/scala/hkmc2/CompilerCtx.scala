@@ -128,7 +128,7 @@ class CompilerCtx(
         Elaborator(etl, file.up, prelude)
 
       val nme = file.baseName
-      val exportedSymbol = parsed.definedSymbols.find(_._1 === nme).map(_._2)
+      val exportedSymbol = parsed.definedSymbolsFor(phaseConfig.language.useNewResolution).find(_._1 === nme).map(_._2)
       def collectCompilationUnitSymbols(program: codegen.Program): Set[codegen.ScopedSymbol] =
         program.main match
         case codegen.Scoped(syms, _) =>
@@ -284,7 +284,8 @@ class CompilerCtx(
         // The prelude defines the builtins consulted during its own resolution.
         // Seed lookup with the block's original symbols, as block elaboration does,
         // so those lookups share the declarations that are being elaborated.
-        val initCtx = State.init.nestLocal("prelude", isTopLevel = true).withMembers(parse.resultBlk.definedSymbols)
+        val initCtx = State.init.nestLocal("prelude", isTopLevel = true)
+          .withMembers(parse.resultBlk.definedSymbolsFor(elaborationConfig.language.useNewResolution))(using elaborationConfig)
         val elab =
           given Config = elaborationConfig
           Elaborator(etl, file.up, initCtx)

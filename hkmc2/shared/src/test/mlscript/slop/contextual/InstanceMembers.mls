@@ -1,0 +1,86 @@
+:.
+
+// §3.3: named instances in modules and objects are ordinary members.
+module Instances with
+  using Int as number = 7
+  using Int = 8
+  using Int = 9
+object ObjectInstances with
+  using Str as text = "object"
+
+:expect 7
+Instances.number
+//│ = 7
+
+:expect "object"
+ObjectInstances.text
+//│ = "object"
+
+// Escaped source names cannot access the anonymous binding space.
+:e
+Instances.contextual_instance_0
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	Instances.contextual_instance_0
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Module 'Instances' does not contain member 'contextual_instance_0'
+//│ ║  l.XX: 	module Instances with
+//│ ╙──      	^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A source declaration with a generated spelling remains a separate binding.
+module Collision with
+  val contextual_instance_0 = 11
+  using Int = 12
+
+:expect 11
+Collision.contextual_instance_0
+//│ = 11
+
+// Anonymous declarations do not introduce lexical names either.
+:e
+let result =
+  using Int = 13
+  id"contextual_instance_0"
+//│ ╔══[COMPILATION ERROR] Name not found: contextual_instance_0
+//│ ║  l.+3: 	  id"contextual_instance_0"
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ result = undefined
+
+// Class-body instances are lexical only (§3.3).
+class Holder with
+  using Int as local = 14
+
+:e
+(new Holder).local
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	(new Holder).local
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'Holder' does not contain member 'local'
+//│ ║  l.+1: 	(new Holder).local
+//│ ╙──      	 ^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Companion namespaces own their anonymous fields even when the superclass is frozen.
+class Parent
+module Parent with
+  using Int = 1
+class Child extends Parent
+module Child with
+  using Int = 2
+
+:expect 42
+42
+//│ = 42
+
+// Anonymous storage must also preserve inherited properties for dynamic JavaScript access.
+class NamedParent
+module NamedParent with
+  val contextual_instance_0 = 41
+class AnonymousChild extends NamedParent
+module AnonymousChild with
+  using Int = 42
+
+:expect 41
+AnonymousChild!contextual_instance_0
+//│ = 41

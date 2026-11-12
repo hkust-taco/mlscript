@@ -1,0 +1,48 @@
+:.
+
+class Show[A](val label: Str)
+module Show with
+  using Show[Int] = Show[Int]("int")
+  using Show[Str] = Show[Str]("str")
+class C with
+  fun show[T](value: T)(using s: Show[T]) = s.label
+
+// The receiver `y` has values only in the activations of the two calls of `twice`. The
+// application of `y.show` in each activation must reach the contextual site, whose query then
+// sees both `Int` and `Str`; the site decides once for all activations and reports once.
+:e
+fun twice[A](value: A, y) = y.show(value)
+[twice(1, new C), twice("text", new C)]
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	fun twice[A](value: A, y) = y.show(value)
+//│ ║        	                            ^^^^^^^^^^^^^
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	fun twice[A](value: A, y) = y.show(value)
+//│ ║        	                            ^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	  fun show[T](value: T)(using s: Show[T]) = s.label
+//│ ║        	                        ^^^^^^^^^^^^^^^^
+//│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Int].
+//│ ║  l.XX: 	  using Show[Int] = Show[Int]("int")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of class 'Str' is incompatible with the required subtype relationship.
+//│ ║  l.+2: 	[twice(1, new C), twice("text", new C)]
+//│ ║        	                        ^^^^^^
+//│ ╟── This instance from namespace 'Show' has an incompatible type, Show[Str].
+//│ ║  l.XX: 	  using Show[Str] = Show[Str]("str")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of class 'Int' is incompatible with the required subtype relationship.
+//│ ║  l.+2: 	[twice(1, new C), twice("text", new C)]
+//│ ╙──      	       ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// FIXME: explicit type parameters should be opaque, so the query should see the abstract `A`.
+// The receiver's values arrive only in the caller's activation, where `A` is the caller's type
+// argument, so the query sees `Int` and selects `Show[Int]`. Member lookup in such an
+// activation also sees the caller's type.
+:breakme
+:e
+fun leaky[A](value: A, y) = y.show(value)
+leaky(1, new C)
+//│ = "int"
+

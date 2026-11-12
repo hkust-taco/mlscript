@@ -106,15 +106,57 @@ trait BlockImpl(using Elaborator.State):
       case Nil => Nil
     desug(stmts)
   
-  val definedSymbols: Array[Str -> BlockMemberSymbol] =
-    desugStmts
+  /** The parser nests the function under `using`. Normalize only the new-resolution
+    * statement view, keeping the original legacy trees and binding table unchanged.
+    */
+  private lazy val instanceFunctions: Set[Identity[TermDef]] = desugStmts.iterator.collect:
+    case PossiblyAnnotated(_, TermDef(syntax.Ins, function @ TermDef(syntax.Fun, _, _), N)) => new Identity(function)
+  .toSet
+  private lazy val contextualStmts: Ls[Tree] = if instanceFunctions.isEmpty then desugStmts else desugStmts.mapConserve:
+    case PossiblyAnnotated(annotations, TermDef(syntax.Ins, function @ TermDef(syntax.Fun, _, _), N)) =>
+      PossiblyAnnotated(annotations, function)
+    case statement => statement
+  def statementsFor(newResolution: Bool): Ls[Tree] = if newResolution then contextualStmts else desugStmts
+  def isInstanceFunction(definition: TermDef): Bool = instanceFunctions(new Identity(definition))
+
+  val definedSymbols: Array[Str -> BlockMemberSymbol] = makeSymbols(desugStmts, Map.empty)
+  
+  /** Keep anonymous declarations in their own binding space. Escaped identifiers can spell
+    * any string, so a generated spelling alone cannot make a binding inaccessible to source.
+    * Only the internal table includes these symbols; lexical and member name lookup omit them.
+    * Legacy parsing keeps its original symbols, including its historical instance names.
+    */
+  private lazy val contextualNames: Map[Identity[TypeOrTermDef], Ident] =
+    lazy val occupied = definedSymbols.iterator.map(_._1).toSet
+    var next = 0
+    contextualStmts.iterator.collect:
+      case PossiblyAnnotated(_, td: TermDef) if td.isAnonymousInstance =>
+        while occupied.contains(s"contextual_instance_$next") do next += 1
+        val id = new Ident(s"contextual_instance_$next").withLocOf(td.head)
+        next += 1
+        new Identity[TypeOrTermDef](td) -> id
+    .toMap
+  
+  private lazy val contextualSymbols: Array[Str -> BlockMemberSymbol] =
+    if contextualNames.isEmpty && instanceFunctions.isEmpty then definedSymbols else makeSymbols(contextualStmts, contextualNames)
+  
+  def definedSymbolsFor(newResolution: Bool): Array[Str -> BlockMemberSymbol] =
+    if newResolution then contextualSymbols else definedSymbols
+  
+  def definitionName(td: TypeOrTermDef, newResolution: Bool): td.MaybeIdent =
+    if newResolution && contextualNames.nonEmpty then contextualNames.get(new Identity(td)).map(R(_)).getOrElse(td.name)
+    else td.name
+  
+  private def makeSymbols(statements: Ls[Tree], anonymous: Map[Identity[TypeOrTermDef], Ident]): Array[Str -> BlockMemberSymbol] =
+    statements
       .flatMap:
         case PossiblyAnnotated(_, td: syntax.TypeOrTermDef) =>
-          td.name match
+          val synthetic = if anonymous.isEmpty then N else anonymous.get(new Identity(td))
+          synthetic.map(R(_)).getOrElse(td.name) match
             case L(_) => Nil
             case R(id) =>
               id.name -> R(td) :: (
-                td.symbName match
+                (if synthetic.nonEmpty then N else td.symbName) match
                 case S(R(sid)) => id.name -> L(sid.name) :: Nil
                 case _ => Nil
               )
@@ -122,7 +164,7 @@ trait BlockImpl(using Elaborator.State):
       .groupMap(_._1)(_._2).flatMap:
         case (nme, snmes_tds) =>
           val (symNmes, tds) = snmes_tds.partitionMap(identity)
-          val sym = new BlockMemberSymbol(nme, tds)
+          val sym = new BlockMemberSymbol(nme, tds, anonymous.isEmpty || !tds.exists(td => anonymous.contains(new Identity(td))))
           sym.sourceAliases = symNmes
           nme -> sym :: symNmes.map(_ -> sym)
       .toArray.sortBy(_._1)

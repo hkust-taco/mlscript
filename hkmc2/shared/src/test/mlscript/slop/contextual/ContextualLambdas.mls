@@ -1,0 +1,130 @@
+:.
+
+// §3.1, X9: the lambda itself must supply its contextual parameters.
+:w
+:e
+let missing = (using n: Int) => n
+//│ ╔══[WARNING] This lambda's contextual parameters are supplied where it is written, so it never produces a contextual function.
+//│ ║  l.+1: 	let missing = (using n: Int) => n
+//│ ║        	              ^^^^^^^^^^^^^^
+//│ ╙── Use a 'fun' definition to define a contextual function.
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	let missing = (using n: Int) => n
+//│ ║        	              ^^^^^^^^^^^^^^^^^^^
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	let missing = (using n: Int) => n
+//│ ║        	              ^^^^^^^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.+1: 	let missing = (using n: Int) => n
+//│ ╙──      	               ^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ missing = undefined
+
+using Int = 7
+
+:w
+:expect 7
+let get = (using n: Int) => n
+get
+//│ ╔══[WARNING] This lambda's contextual parameters are supplied where it is written, so it never produces a contextual function.
+//│ ║  l.+1: 	let get = (using n: Int) => n
+//│ ║        	          ^^^^^^^^^^^^^^
+//│ ╙── Use a 'fun' definition to define a contextual function.
+//│ = 7
+//│ get = 7
+
+// The binding holds the completed integer, so it cannot be called.
+:e
+get(using 9)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+1: 	get(using 9)
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── Value of type 'Int' cannot be called like a function.
+//│ ║  l.XX: 	let get = (using n: Int) => n
+//│ ╙──      	                    ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+fun identity[A](value: A) = value
+
+:w
+:expect 7
+identity((using n: Int) => n)
+//│ ╔══[WARNING] This lambda's contextual parameters are supplied where it is written, so it never produces a contextual function.
+//│ ║  l.+1: 	identity((using n: Int) => n)
+//│ ║        	         ^^^^^^^^^^^^^^
+//│ ╙── Use a 'fun' definition to define a contextual function.
+//│ = 7
+
+// Direct calls use the same rules as named calls, including explicit using.
+:w
+:expect 9
+((using n: Int) => n)(using 9)
+//│ ╔══[WARNING] This lambda's contextual parameters are supplied where it is written, so it never produces a contextual function.
+//│ ║  l.+1: 	((using n: Int) => n)(using 9)
+//│ ║        	 ^^^^^^^^^^^^^^
+//│ ╙── Use a 'fun' definition to define a contextual function.
+//│ = 9
+
+:w
+:expect 10
+((using n: Int) => (x: Int) => n + x)(3)
+//│ ╔══[WARNING] This lambda's contextual parameters are supplied where it is written, so it never produces a contextual function.
+//│ ║  l.+1: 	((using n: Int) => (x: Int) => n + x)(3)
+//│ ║        	 ^^^^^^^^^^^^^^
+//│ ╙── Use a 'fun' definition to define a contextual function.
+//│ = 10
+
+:w
+:expect 10
+((x: Int) => (using n: Int) => x + n)(3)
+//│ ╔══[WARNING] This lambda's contextual parameters are supplied where it is written, so it never produces a contextual function.
+//│ ║  l.+1: 	((x: Int) => (using n: Int) => x + n)(3)
+//│ ║        	             ^^^^^^^^^^^^^^
+//│ ╙── Use a 'fun' definition to define a contextual function.
+//│ = 10
+
+// The inner site's environment is the one visible when this body is elaborated.
+:w
+let add = (x: Int) => (using n: Int) => x + n
+//│ ╔══[WARNING] This lambda's contextual parameters are supplied where it is written, so it never produces a contextual function.
+//│ ║  l.+1: 	let add = (x: Int) => (using n: Int) => x + n
+//│ ║        	                      ^^^^^^^^^^^^^^
+//│ ╙── Use a 'fun' definition to define a contextual function.
+//│ add = fun add
+
+using Int = 99
+
+:expect 10
+add(3)
+//│ = 10
+
+// Compound heads receive already completed results from their branches or block.
+:w
+:expect 102
+(if true then (using n: Int) => (x: Int) => n + x
+else (using n: Int) => (x: Int) => n - x)(3)
+//│ ╔══[WARNING] This lambda's contextual parameters are supplied where it is written, so it never produces a contextual function.
+//│ ║  l.+1: 	(if true then (using n: Int) => (x: Int) => n + x
+//│ ║        	              ^^^^^^^^^^^^^^
+//│ ╙── Use a 'fun' definition to define a contextual function.
+//│ ╔══[WARNING] This lambda's contextual parameters are supplied where it is written, so it never produces a contextual function.
+//│ ║  l.+2: 	else (using n: Int) => (x: Int) => n - x)(3)
+//│ ║        	     ^^^^^^^^^^^^^^
+//│ ╙── Use a 'fun' definition to define a contextual function.
+//│ = 102
+
+:w
+:expect 102
+{ (using n: Int) => (x: Int) => n + x }(3)
+//│ ╔══[WARNING] This lambda's contextual parameters are supplied where it is written, so it never produces a contextual function.
+//│ ║  l.+1: 	{ (using n: Int) => (x: Int) => n + x }(3)
+//│ ║        	  ^^^^^^^^^^^^^^
+//│ ╙── Use a 'fun' definition to define a contextual function.
+//│ = 102
+
+// Contextual function types are out of scope (§1).
+:e
+fun unsupported(arg: (using Int) -> Int) = arg
+//│ ╔══[COMPILATION ERROR] Illegal definition in term position.
+//│ ║  l.+1: 	fun unsupported(arg: (using Int) -> Int) = arg
+//│ ╙──      	                      ^^^^^^^^^

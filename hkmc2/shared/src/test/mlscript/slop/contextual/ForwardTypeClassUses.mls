@@ -1,0 +1,75 @@
+:.
+
+
+using Str = "ok"
+
+fun bar = M.foo()
+module M with
+  fun foo()(using s: Str) = s
+
+:expect "ok"
+bar
+//│ = "ok"
+
+fun bar = M.getN.foo()
+module M with
+  fun getN: module N = N
+module N with
+  fun foo()(using Str) = 1
+
+:expect 1
+bar
+//│ = 1
+
+:e
+:re
+fun test = M.mtd()
+module M with
+  fun mtd()(using n: Int) = n
+module Example with
+  fun foo(): module M = M
+test
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	fun test = M.mtd()
+//│ ║        	           ^^^^^^^
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	fun test = M.mtd()
+//│ ║        	           ^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.+3: 	  fun mtd()(using n: Int) = n
+//│ ╙──      	            ^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+:re
+fun test = Example.foo().mtd()
+module M with
+  fun mtd()(using n: Int) = n
+module Example with
+  fun foo(): module M = M
+test
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	fun test = Example.foo().mtd()
+//│ ║        	           ^^^^^^^^^^^^^^^^^^^
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	fun test = Example.foo().mtd()
+//│ ║        	           ^^^^^^^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.+3: 	  fun mtd()(using n: Int) = n
+//│ ╙──      	            ^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+using Int = 42
+
+fun test = Example.foo().mtd()
+module M with
+  fun mtd()(using n: Int) = n
+module Example with
+  fun foo(): module M = M
+
+:expect 42
+test
+//│ = 42
+
+

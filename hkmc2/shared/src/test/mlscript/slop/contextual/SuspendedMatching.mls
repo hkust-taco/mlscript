@@ -1,0 +1,114 @@
+:.
+
+class Show[A](val label: Str)
+module Show {
+  using Show[Int] = Show[Int]("int")
+  using Show[Str] = Show[Str]("str")
+}
+class Seed[A]
+using Seed[Int] = new Seed[Int]
+fun delayed[A](using show: Show[A], seed: Seed[A]) = show.label
+
+// The first query stays ambiguous until the second supplies A's bounds.
+:expect "int"
+delayed
+//│ = "int"
+
+// The same suspension applies to candidates from a lexical tier.
+:expect "int"
+fun lexical(using Show[Int], Show[Str], Seed[Int]) = delayed
+lexical(using Show[Int]("int"), Show[Str]("str"), new Seed[Int])
+//│ = "int"
+
+class Animal
+class Cat extends Animal
+class Dog extends Animal
+class Source[out A](val label: Str)
+module Source {
+  using Source[Cat] = Source[Cat]("cat")
+  using Source[Dog] = Source[Dog]("dog")
+}
+class Sink[in A]
+using Sink[Cat] = new Sink[Cat]
+fun fromSource[A](using source: Source[A], sink: Sink[A]) = source.label
+
+// An upper bound arriving through the second query rules out Source[Dog].
+:expect "cat"
+fromSource
+//│ = "cat"
+
+// A fixed query still has two subtypes, so finalization reports ambiguity.
+:e
+use[Source[Animal]]
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	use[Source[Animal]]
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ╟── Multiple instances are compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	use[Source[Animal]]
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  in ../../../mlscript-compile/Predef.mls
+//│ ║  l.XX: 	fun use[T](using instance: T) = instance
+//│ ║        	           ^^^^^^^^^^^^^^^^^
+//│ ╟── This instance from namespace 'Source' has a compatible type, Source[Cat].
+//│ ║  in SuspendedMatching.mls:XX
+//│ ║  l.XX: 	  using Source[Cat] = Source[Cat]("cat")
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This instance from namespace 'Source' has a compatible type, Source[Dog].
+//│ ║  l.XX: 	  using Source[Dog] = Source[Dog]("dog")
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+class Pair[A, B](val label: Str)
+module Pair {
+  using fun same[T]: Pair[T, T] = Pair[T, T]("same")
+  using Pair[Int, Str] = Pair[Int, Str]("different")
+}
+
+// One hypothetical instantiation must satisfy both occurrences of T. Rejecting
+// the generic candidate must leave the concrete candidate's bounds untouched.
+:expect "different"
+use[Pair[Int, Str]].label
+//│ = "different"
+
+// A bare inferred query uses its observed type. The unrelated lexical Dog must
+// not widen a Cat query, but becomes a second match when Dog later joins its flow.
+fun instanceFor[T](value: T)(using instance: T) = instance
+fun lookupWith(using Cat, Dog) =
+  fun lookup(value) = instanceFor(value)
+  lookup(new Cat)
+  lookup
+
+:expect true
+let lookup = lookupWith(using new Cat, new Dog)
+lookup(new Cat) is Cat
+//│ = true
+//│ lookup = fun lookup
+
+:e
+lookup(new Dog)
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
+//│ ║  l.+1: 	lookup(new Dog)
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ╟── Multiple instances are compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.XX: 	  fun lookup(value) = instanceFor(value)
+//│ ║        	                      ^^^^^^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	fun instanceFor[T](value: T)(using instance: T) = instance
+//│ ║        	                             ^^^^^^^^^^^^^^^^^
+//│ ╟── This instance has a compatible type, Cat.
+//│ ╙── This instance has a compatible type, Dog.
+//│ = Cat
+
+class Packed[out A](val label: Str)
+class Token[A](val label: Str)
+using Token[Cat] = Token[Cat]("cat")
+module Packed {
+  using fun pack[A](using token: Token[A]): Packed[A] = Packed[A](token.label)
+}
+
+// The observed Packed[Animal] supplies an upper bound on a derived result's A.
+// Its nested query may choose Cat; it must not receive Animal as a lower bound.
+:expect "cat"
+instanceFor(Packed[Animal]("observed")).label
+//│ = "cat"

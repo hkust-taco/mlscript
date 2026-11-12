@@ -1,0 +1,170 @@
+:.
+
+
+using Int = 42
+
+
+class Foo(using val n: Int)
+
+:expect Foo(42)
+Foo
+//│ = Foo(42)
+
+:expect 42
+Foo.n
+//│ = 42
+
+
+class Foo(using n: Int) with
+  fun foo = n
+
+:expect Foo(_)
+Foo
+//│ = Foo(_)
+
+:expect 42
+Foo.foo
+//│ = 42
+
+
+class Bar(using val s: Str)
+
+:e
+Bar
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	Bar
+//│ ║        	^^^
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	Bar
+//│ ║        	^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	class Bar(using val s: Str)
+//│ ╙──      	          ^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+class Bar(using s: Str)
+
+:e
+Bar
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	Bar
+//│ ║        	^^^
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	Bar
+//│ ║        	^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	class Bar(using s: Str)
+//│ ╙──      	          ^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+
+fun summon(using i: Int) = i
+
+class Foo(using Int) with
+  fun foo = use[Int]
+  fun bar = summon
+
+using Int = 99
+
+:expect Foo(_)
+Foo
+//│ = Foo(_)
+
+:expect 99
+Foo.foo
+//│ = 99
+
+:expect 99
+Foo.bar
+//│ = 99
+
+class Foo(using Int)(using Str) with
+  fun f = use[Int]
+  fun g = use[Str]
+
+:e
+Foo
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	Foo
+//│ ║        	^^^
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	Foo
+//│ ║        	^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	class Foo(using Int)(using Str) with
+//│ ╙──      	                     ^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// FIXME: the compiler thinks T is a member of Foo!
+// FIXME: the compiler fails to compile the field projection
+
+class T
+
+:sjs
+class Foo(using T) with
+  print(T)
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let Foo9;
+//│ Foo9 = function Foo(tmp4) {
+//│   return globalThis.Object.freeze(new Foo.class(tmp4));
+//│ };
+//│ (class Foo8 {
+//│   static {
+//│     Foo9.class = this
+//│   }
+//│   constructor(tmp4) {
+//│     Predef.print(T1);
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo", [null]];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:todo
+:sjs
+x => x.Foo#S
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	x => x.Foo#S
+//│ ║        	     ^^^^^^^
+//│ ╟── Class 'Foo' does not contain member 'S'
+//│ ║  l.XX: 	class Foo(using T) with
+//│ ╙──      	^^^^^^^^^^^^^^^^^^
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let lambda;
+//│ lambda = (undefined, function (x) {
+//│   throw "This code cannot be run as its compilation yielded an error."
+//│ });
+//│ return lambda
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
+
+
+// An explicit contextual list in an `extends` clause reaches the parent constructor.
+class Parent(using val n: Int)
+class ExplicitChild extends Parent(using 7)
+
+:expect 7
+new ExplicitChild().n
+//│ = 7
+
+// TODO: `extends` clauses are class operands, not contextual sites, so they do not yet
+// supply a parent constructor's contextual lists; lowering rejects the partial application.
+:todo
+class ImplicitChild extends Parent
+//│ ╔══[COMPILATION ERROR] Extending a partially applied class is not supported
+//│ ║  l.+1: 	class ImplicitChild extends Parent
+//│ ╙──      	                            ^^^^^^
+
+:todo
+:expect 99
+new ImplicitChild().n
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	new ImplicitChild().n
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'ImplicitChild' does not contain member 'n'
+//│ ║  l.+1: 	new ImplicitChild().n
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '99', got: 'undefined'

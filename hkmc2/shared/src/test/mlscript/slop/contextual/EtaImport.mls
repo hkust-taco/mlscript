@@ -1,0 +1,27 @@
+:.
+
+import "./mlscript-compile/EtaFlow.mls"
+
+:expect "int"
+EtaFlow.adapter(1)
+//│ = "int"
+
+:e
+EtaFlow.adapter("later")
+//│ ╔══[COMPILATION ERROR] Contextual argument resolution error caused by application
+//│ ║  l.+1: 	EtaFlow.adapter("later")
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── A value of class 'Str' makes the contextual argument's type incompatible with its selected instance.
+//│ ║  l.+1: 	EtaFlow.adapter("later")
+//│ ║        	                ^^^^^^^
+//│ ╟── The contextual argument is supplied implicitly here, where its instance was selected.
+//│ ║  in mlscript-compile/EtaFlow.mls
+//│ ║  l.XX: 	  val adapter = consume
+//│ ║        	                ^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	  fun consume[A](value: A)(using e: Evidence[A]) = e.label
+//│ ║        	                           ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The selected instance is declared here, with type Evidence[Int].
+//│ ║  l.XX: 	  using Evidence[Int] = Evidence[Int]("int")
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = "int"

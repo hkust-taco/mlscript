@@ -307,21 +307,23 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
   case UnitVal()
   case DynTy()
   case Missing // Placeholder terms that were not elaborated due to the "lightweight" elaboration mode `Mode.Light`
+  /** A contextual argument is a stable flow site before its instance has been selected. */
+  case InstanceArg() extends Term, InstanceArgImpl, ShapeHost
   case Lit(lit: Literal)
   
   // --- NEW ---
   case SimpleRef(sym: SimpleRefSymbol)(val tree: Opt[Tree.Ident]) extends Term, NewRefImpl
   case SelfRef(sym: ThisSymbol)(val tree: Tree.Ident) extends Term, NewRefImpl
-  case MemberRef(sym: MemberSymbol)(val tree: Opt[Tree.Ident], val resSym: FlowSymbol) extends Term, NewResolvableImpl, NewRefImpl
+  case MemberRef(sym: MemberSymbol)(val tree: Opt[Tree.Ident], val resSym: FlowSymbol) extends Term, NewResolvableImpl, NewRefImpl, ContextualSiteImpl
   /** A direct reference to an inherited implementation, retaining the lexical receiver. */
-  case Super(receiver: Term, owner: InnerSymbol, id: Tree.Ident)(val resSym: FlowSymbol) extends Term, NewResolvableImpl, ShapeHost
+  case Super(receiver: Term, owner: InnerSymbol, id: Tree.Ident)(val resSym: FlowSymbol) extends Term, NewResolvableImpl, ShapeHost, ContextualSiteImpl
   /** An optional class selection fixes the lookup scope for an explicit member projection. */
-  case NewSel(prefix: Term, id: Tree.Ident, cls: Opt[NewSel])(val resSym: FlowSymbol) extends Term, NewSelImpl, ShapeHost
+  case NewSel(prefix: Term, id: Tree.Ident, cls: Opt[NewSel])(val resSym: FlowSymbol) extends Term, NewSelImpl, ShapeHost, ContextualSiteImpl
   /** A name without an explicit binding, looked up in the wildcard opens visible where it is written
     * (`prefixes`, possibly none) or in implicit namespaces, as `lookup` specifies. */
   case UnresolvedRef(prefixes: Ls[Term], id: Tree.Ident)(val resSym: FlowSymbol, val lookup: NameLookup)
-    extends Term, UnresolvedRefImpl, ShapeHost
-  case Capture(base: Term, thru: AnyDefinitionSymbol) extends Term
+    extends Term, UnresolvedRefImpl, ShapeHost, ContextualSiteImpl
+  case Capture(base: Term, thru: AnyDefinitionSymbol) extends Term, ContextualSiteImpl
   // --- LEGACY ---
   /** A term that wraps another term, indicating that the symbol of the inner term is resolved.
     * This is mainly used to disambiguate overloaded definitions. */
@@ -341,9 +343,9 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
   // --- END ---
   
   case App(lhs: Term, rhs: Term)
-    (val tree: Tree.App, val typ: Opt[Type], val resSym: FlowSymbol) extends Term, ResolvableImpl, AppImpl
+    (val tree: Tree.App, val typ: Opt[Type], val resSym: FlowSymbol) extends Term, ResolvableImpl, AppImpl, ContextualSiteImpl
   case TyApp(lhs: Term, targs: Ls[Term])
-    (val typ: Opt[Type]) extends Term, ResolvableImpl
+    (val typ: Opt[Type]) extends Term, ResolvableImpl, ContextualSiteImpl
   /** `checked` asks resolution to validate the receiver and determine the element
     * interface (`obj.[idx]`); it does not require a compile-time index value.
     * `arrayIdx` independently selects array indexing in the generated code. */
@@ -363,7 +365,7 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
    *  branch matches. Used by `ups.FixedPointCompiler` to drive the generated
    *  matcher machine. */
   case SynthWhile(split: Split)
-  case Lam(params: ParamList, body: Term)
+  case Lam(params: ParamList, body: Term) extends Term, ContextualSiteImpl
   case FunTy(lhs: Term, rhs: Term, eff: Opt[Term])
   case Forall(tvs: Ls[QuantVar], outer: Opt[VarSymbol], body: Term)
   case Constrained(constraints: Ls[SubConstraint], body: Term)
@@ -373,7 +375,7 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
   case Quoted(body: Term)
   case Unquoted(body: Term)
   case New(cls: Term, args: Ls[Term], rft: Opt[ClassSymbol -> ObjBody])
-    (val resSym: FlowSymbol, val typ: Opt[Type]) extends Term, ResolvableImpl
+    (val resSym: FlowSymbol, val typ: Opt[Type]) extends Term, ResolvableImpl, ContextualSiteImpl
   case DynNew(cls: Term, args: Ls[Term])
   case Asc(term: Term, ty: Term)
   case CompType(lhs: Term, rhs: Term, pol: Bool)
@@ -704,15 +706,16 @@ object Visibility:
 /** `isMethod` distinguishes methods from functions. `hasResultAnnotation` records whether a
   * signature describes just the result; erasure consumes leading arrows only for full signatures.
   */
-final case class TermDefFlags(isMethod: Bool, hasResultAnnotation: Bool):
+final case class TermDefFlags(isMethod: Bool, hasResultAnnotation: Bool)(val isInstanceFunction: Bool):
   def showDbg: Str = 
     val flags = Buffer.empty[String]
     if isMethod then flags += "method "
     if hasResultAnnotation then flags += "result annotation "
+    if isInstanceFunction then flags += "instance function "
     flags.mkString
   override def toString: String = "‹" + showDbg + "›"
 
-object TermDefFlags { val empty: TermDefFlags = TermDefFlags(false, false) }
+object TermDefFlags { val empty: TermDefFlags = TermDefFlags(false, false)(false) }
 
 /**
  * A case class representing the modulefulness of a declaration.
@@ -768,6 +771,9 @@ final case class TermDefinition(
   require(k is tsym.k)
   def bsym: BlockMemberSymbol = sym
   val owner = tsym.owner
+  /** Private storage for source-lexical class-body instances is not a selectable member. */
+  def isClassLexicalInstance: Bool = owner.exists(_.isInstanceOf[ClassSymbol]) &&
+    ((k is syntax.Ins) || flags.isInstanceFunction)
   /** Only function bodies are wrapped by AsyncLowering; annotations on other
     * definitions are ignored with a warning and must not change their interface.
     */
@@ -822,7 +828,7 @@ object ObjBody:
   
   def extractMembers(blk: Term.Blk): Ls[ErrorReport] \/ Map[Str, BlockMemberSymbol] =
     val (errs, mems) = blk.stats.collect:
-      case td: TermDefinition => td.sym -> td
+      case td: TermDefinition if td.sym.nameIsMeaningful && !td.isClassLexicalInstance => td.sym -> td
       case td: ClassLikeDef => td.bsym -> td
       case td: TypeDef => td.bsym -> td
     .groupBy(_._1.nme)
@@ -976,6 +982,11 @@ case class ModuleOrObjectDef(
   val headerLoc: Opt[Loc],
 ) extends ClassLikeDef, CompanionValue:
   val ctorSym: Option[ClassCtorSymbol] = N
+  /** Namespace requests share this declaration index; filtering by visibility and query head
+    * happens per request, while the body is traversed at most once per module or object.
+    */
+  lazy val instanceMembers: Ls[TermDefinition] = body.blk.stats.collect:
+    case definition: TermDefinition if ((definition.k is syntax.Ins) || definition.flags.isInstanceFunction) && definition.owner.contains(sym) => definition
 
 case class PatternDef(
     owner: Opt[InnerSymbol],

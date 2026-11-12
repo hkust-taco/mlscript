@@ -1,0 +1,89 @@
+:.
+
+// §3.4: nominal inheritance at the query head and at its argument positions.
+abstract class Box[A] with
+  fun label: Str
+class IntBox extends Box[Int] with
+  fun label: Str = "int"
+class NumBox extends Box[Num] with
+  fun label: Str = "num"
+fun box[A](value: A)(using b: Box[A]) = b.label
+using IntBox = new IntBox
+
+:expect "int"
+box(1)
+//│ = "int"
+
+// A superclass candidate does not satisfy a subclass query.
+:e
+class OtherIntBox extends Box[Int] with
+  fun label: Str = "other"
+fun requireIntBox(using OtherIntBox) = 42
+fun onlySuperclass(using Box[Int]) = requireIntBox
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+4: 	fun onlySuperclass(using Box[Int]) = requireIntBox
+//│ ║        	                                     ^^^^^^^^^^^^^
+//│ ╟── No instance is compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+4: 	fun onlySuperclass(using Box[Int]) = requireIntBox
+//│ ║        	                                     ^^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.+3: 	fun requireIntBox(using OtherIntBox) = 42
+//│ ╙──      	                  ^^^^^^^^^^^^^^^^^
+
+// X7: both candidates in the same clause accept Int values.
+:e
+fun ambiguous(using Box[Int], Box[Num]) = box(1)
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+1: 	fun ambiguous(using Box[Int], Box[Num]) = box(1)
+//│ ║        	                                          ^^^^^^
+//│ ╟── Multiple instances are compatible with the type of the contextual argument supplied implicitly here.
+//│ ║  l.+1: 	fun ambiguous(using Box[Int], Box[Num]) = box(1)
+//│ ║        	                                          ^^^^^^
+//│ ╟── The contextual argument is passed to this parameter.
+//│ ║  l.XX: 	fun box[A](value: A)(using b: Box[A]) = b.label
+//│ ║        	                     ^^^^^^^^^^^^^^^
+//│ ╟── This lexical instance has a compatible type, Box[Int].
+//│ ╙── This lexical instance has a compatible type, Box[Num].
+
+// Vacuous named-query argument positions match; declaration tiers decide.
+fun vacuous[A](using b: Box[A]) = b.label
+using Box[Num] = new NumBox
+
+:expect "num"
+vacuous
+//│ = "num"
+
+// A top-level parameter query cannot select from an empty position.
+:e
+fun undetermined[T](using t: T) = t
+undetermined
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+2: 	undetermined
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── The type of the contextual argument supplied implicitly here cannot be determined, as neither an explicit type argument nor a value determines the type parameter that it refers to.
+//│ ║  l.+2: 	undetermined
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter, whose type is the type parameter 'T'.
+//│ ║  l.+1: 	fun undetermined[T](using t: T) = t
+//│ ╙──      	                    ^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Unknown and dynamic values do not reject a candidate's argument type.
+:expect "num"
+box(unsafe.undefined)
+//│ = "num"
+
+// Unsupported query types are errors (§3.2), even if a value could be supplied.
+:e
+fun unsupported(using Int | Str) = 42
+unsupported
+//│ ╔══[COMPILATION ERROR] Resolution error in contextual argument
+//│ ║  l.+2: 	unsupported
+//│ ║        	^^^^^^^^^^^
+//│ ╟── No instance can be selected for the contextual argument supplied implicitly here.
+//│ ║  l.+2: 	unsupported
+//│ ║        	^^^^^^^^^^^
+//│ ╟── The contextual argument is passed to this parameter, whose type is neither a named type nor a type parameter.
+//│ ║  l.+1: 	fun unsupported(using Int | Str) = 42
+//│ ╙──      	                ^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
