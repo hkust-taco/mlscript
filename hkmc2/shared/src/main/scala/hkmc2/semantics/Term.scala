@@ -44,6 +44,7 @@ enum Annot extends Located:
   // * EffectAnalysis Annotations
   // @pure: overriding annotation indicating that the function is pure.
   case Pure()(val toLoc: Opt[Loc])
+  case MatchShapes(patterns: Ls[Pattern])(val toLoc: Opt[Loc])
   // Buffered classes expose generated allocation and access methods on the class value.
   case Bufferable(keepInstances: Bool)(val toLoc: Opt[Loc])
   case Config(modify: hkmc2.Config => hkmc2.Config)(val toLoc: Opt[Loc])
@@ -66,6 +67,7 @@ enum Annot extends Located:
   
   def subTerms: Vector[Term] = this match
     case Trm(trm) => Vector.single(trm)
+    case MatchShapes(patterns) => patterns.iterator.flatMap(_.subTerms).toVector
     case JsSymbol(key) => Vector.single(key.term)
     case Fresh() | _: Modifier | Untyped() | Unsafe() | PlainField() | TailRec() | TailCall() | Inline() | NoInline()
       | Generator() | Async() | RaiseEffects() | Pure() | _: Bufferable | _: Config | _: Debug | _: Affine => Vector.empty
@@ -86,6 +88,7 @@ enum Annot extends Located:
     case Affine(n) => doc"@affine($n)"
     case Modifier(mod) => doc"@${mod.name}"
     case Pure() => doc"@pure"
+    case MatchShapes(_) => doc"@matchShapes"
     case Bufferable(keepInstances) => if keepInstances then doc"@bufferable" else doc"@buffered"
     case Trm(trm) => doc"@${trm.show}"
     case Config(_) => doc"@config(...)"

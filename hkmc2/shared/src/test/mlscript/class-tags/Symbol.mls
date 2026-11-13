@@ -1,0 +1,26 @@
+
+:global
+:classTags debug
+
+:wasm
+class Box(val x)
+private fun tagged() =
+  let value = new Box(0)
+  @matchShapes(Box(_)) shape.match of value, () => 1
+tagged()
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track construction of Box@65 in tagged
+//│ class-tags collection-phase > track consumption at match@69 in tagged
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: Box@65
+//│ class-tags web-computation-phase >   pattern matches: match@69
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for Box(x: 0)
+//│ class-tags transform-phase > duplicated Box as Box__Tagged
+//│ class-tags transform-phase > match shapes Box(x: _)->0
+//│ <<< end class-tags transform-phase
+//│ Wasm result:
+//│ = 1
