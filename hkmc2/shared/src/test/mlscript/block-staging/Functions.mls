@@ -155,10 +155,7 @@ staged module Arguments with
 //│ >   x = x1
 //│ >   x = 1
 //│ >   x
-//│ > fun g(x) =
-//│ >   let {tmp}
-//│ >   tmp = new Function_
-//│ >   tmp
+//│ > fun g(x)(y, z)() = z
 
 // Staging does not support calls with several argument lists yet.
 :fixme
