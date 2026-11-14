@@ -223,14 +223,14 @@ case object BottomEffect
 type EffectVar = StratVar | BottomEffect.type
 
 extension (effect: EffectVar)
-  inline def fold[A](ifBot: => A)(f: StratVar => A): A = effect match
+  inline def fold[A](inline ifBot: => A)(inline f: StratVar => A): A = effect match
     case BottomEffect => ifBot
     case variable: StratVar => f(variable)
 
-  inline def map(f: StratVar => StratVar): EffectVar =
+  inline def map(inline f: StratVar => StratVar): EffectVar =
     effect.fold[EffectVar](BottomEffect)(f)
 
-  inline def foreach(f: StratVar => Unit): Unit =
+  inline def foreach(inline f: StratVar => Unit): Unit =
     effect.fold(())(f)
 
 class StratVar(val name: Str, val sourceSymbol: Opt[Symbol], val generatedForFun: Opt[TermSymbol])(using eState: Elaborator.State)
@@ -1024,7 +1024,7 @@ class FlowConstraintsCollector(
       scheme.strategies.foreach:
         case p: ProdStrat => duplicateProdStrat(p)
         case c: ConsStrat => duplicateConsStrat(c)
-        
+      
       // The bounds of environment, i.e., the boundary between the scheme's
       // internal and external strategy variables, need to be established again.
       for (external, proxy) <- scheme.environment do
