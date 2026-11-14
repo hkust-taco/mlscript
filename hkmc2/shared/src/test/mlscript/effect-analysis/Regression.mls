@@ -38,21 +38,21 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│ flow-analysis > function len$ls_Nil⁰#1 @ <root> -> Pure
 //│ flow-analysis > function len$ls_rest⁰#0 @ <root> -> Pure
 //│ flow-analysis > function len⁰#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call +⁰@result³#0 @ <root> -> Pure
-//│ flow-analysis > call +⁰@result⁸#0 @ <root> -> Pure
-//│ flow-analysis > call append⁰@result⁵#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call append⁰@result⁷#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call +⁰@result¹²#0 @ <root> -> Pure
+//│ flow-analysis > call +⁰@result⁷#0 @ <root> -> Pure
+//│ flow-analysis > call append⁰@result¹⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call append⁰@result⁸#0 @ <root> -> UnsafeEta
 //│ flow-analysis > call flatten$flatten⁰@result¹#0 @ <root> -> UnsafeEta
 //│ flow-analysis > call flatten$flatten⁰@result¹⁴#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call flatten_append$append⁰@result¹³#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call flatten_append$append⁰@result¹¹#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call flatten⁰@result⁶#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call id@result²#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call len$len⁰@result⁰#0 @ <root> -> Pure
-//│ flow-analysis > call len$len⁰@result⁹#0 @ <root> -> Pure
-//│ flow-analysis > call len$ls_Cons⁰@result¹⁰#0 @ <root> -> Pure
-//│ flow-analysis > call len$ls_Nil⁰@result¹⁵#0 @ <root> -> Pure
-//│ flow-analysis > call len⁰@result⁴#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call ls⁰@result¹²#0 @ <root> -> Pure
+//│ flow-analysis > call flatten_append$append⁰@result²#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call flatten_append$append⁰@result⁴#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call flatten⁰@result⁹#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call id@result¹³#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call len$len⁰@result¹⁵#0 @ <root> -> Pure
+//│ flow-analysis > call len$len⁰@result⁶#0 @ <root> -> Pure
+//│ flow-analysis > call len$ls_Cons⁰@result⁵#0 @ <root> -> Pure
+//│ flow-analysis > call len$ls_Nil⁰@result⁰#0 @ <root> -> Pure
+//│ flow-analysis > call len⁰@result¹¹#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call ls⁰@result³#0 @ <root> -> Pure
 //│ flow-analysis > <<< effect-analysis results <<<
 //│ = 3

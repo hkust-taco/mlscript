@@ -33,12 +33,12 @@ data class Optional(value?)
 private fun consume(x) = x.Optional#value is null
 [consume(Optional()), consume(Optional(()))]
 //│ deforest > >>> fusing >>>
+//│ deforest > Optional⁰(null) ->
+//│ deforest > 	select: value
 //│ deforest > Optional⁰(optionalArg⁰) ->
 //│ deforest > 	select: value
 //│ deforest > runtime⁰.Unit⁰ ->
 //│ deforest > 	match: scrut⁰
-//│ deforest > Optional⁰(null) ->
-//│ deforest > 	select: value
 //│ deforest > <<< fusing <<<
 //│ = [true, false]
 
@@ -76,9 +76,9 @@ data class Other
 private fun consume(x) = if x is Other then 1 else 3
 [consume(One(7)), consume(Two(8, 9))]
 //│ deforest > >>> fusing >>>
-//│ deforest > Two⁰(8, 9) ->
-//│ deforest > 	match: x¹
 //│ deforest > One⁰(7) ->
+//│ deforest > 	match: x¹
+//│ deforest > Two⁰(8, 9) ->
 //│ deforest > 	match: x¹
 //│ deforest > <<< fusing <<<
 //│ = [3, 3]

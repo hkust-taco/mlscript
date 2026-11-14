@@ -471,11 +471,11 @@ data class Data(value?)
 private fun read(item) = item.value
 [read(Data(unsafe.undefined)), read(Data()), read(Data(11))]
 //│ deforest > >>> fusing >>>
-//│ deforest > Data⁰(11) ->
+//│ deforest > Data⁰(undefined) ->
 //│ deforest > 	select: value
 //│ deforest > Data⁰(null) ->
 //│ deforest > 	select: value
-//│ deforest > Data⁰(undefined) ->
+//│ deforest > Data⁰(11) ->
 //│ deforest > 	select: value
 //│ deforest > <<< fusing <<<
 //│ = [undefined, null, 11]
