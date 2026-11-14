@@ -1,7 +1,7 @@
 :.
 
 import "../../mlscript-compile/Option.mls"
-open Option
+open Option.{ * }
 
 // Some extraction retains the option's declared element interface.
 :expect 42

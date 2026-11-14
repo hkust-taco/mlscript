@@ -3,7 +3,7 @@
 import "../../MutMap.mls"
 import "../../Predef.mls"
 
-open Predef
+open Predef.{ * }
 module Examples with...
 
 type Example = {name: Str, source: Str}

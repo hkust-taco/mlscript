@@ -3,7 +3,7 @@
 
 import "../../../mlscript-compile/apps/parsing/Test.mls"
 
-open Test { example }
+open Test.{ example }
 
 example of "(x) => x"
 //│ > «x => x»

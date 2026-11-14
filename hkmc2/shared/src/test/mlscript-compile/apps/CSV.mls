@@ -4,7 +4,7 @@
 // (JS code commented at bottom)
 
 import "../Predef.mls"
-open Predef
+open Predef.{ * }
 
 
 // The default delimiter is the comma, but this can be overriden here.

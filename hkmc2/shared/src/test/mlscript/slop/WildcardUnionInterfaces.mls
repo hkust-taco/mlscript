@@ -7,7 +7,7 @@ type MaybeAnswer = Hidden | {answer: Int}
 // Eager wildcard lookup checks missing alternatives of a matching source.
 :ge
 private fun missingFirst(value: MaybeAnswer) =
-  open value
+  open value.{ * }
   answer
 //│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
 //│ ║  l.+3: 	  answer
@@ -21,7 +21,7 @@ private fun missingFirst(value: MaybeAnswer) =
 
 :ge
 private fun missingLast(value: {answer: Int} | Hidden) =
-  open value
+  open value.{ * }
   answer
 //│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
 //│ ║  l.+3: 	  answer
@@ -36,7 +36,7 @@ private fun missingLast(value: {answer: Int} | Hidden) =
 // The same rule applies to concrete records and Unit, not only opaque types.
 :ge
 private fun concrete(value: {other: Int} | {answer: Int}) =
-  open value
+  open value.{ * }
   answer
 //│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
 //│ ║  l.+3: 	  answer
@@ -47,7 +47,7 @@ private fun concrete(value: {other: Int} | {answer: Int}) =
 
 :ge
 private fun nullable(value: () | {answer: Int}) =
-  open value
+  open value.{ * }
   answer
 //│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
 //│ ║  l.+3: 	  answer
@@ -59,7 +59,7 @@ private fun nullable(value: () | {answer: Int}) =
 // A dynamic alternative counts as a matching source too.
 :ge
 private fun dynamic(value: Hidden | dyn) =
-  open value
+  open value.{ * }
   answer
 //│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
 //│ ║  l.+3: 	  answer
@@ -74,7 +74,7 @@ private fun dynamic(value: Hidden | dyn) =
 // Inferred alternatives can arrive in either order, after the open is visited.
 :e
 private fun laterMatch(value) =
-  open value
+  open value.{ * }
   answer
 [laterMatch(other: 0), laterMatch(answer: 1)]
 //│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
@@ -87,7 +87,7 @@ private fun laterMatch(value) =
 
 :e
 private fun laterMiss(value) =
-  open value
+  open value.{ * }
   answer
 [laterMiss(answer: 2), laterMiss(other: 0)]
 //│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
@@ -102,13 +102,13 @@ private fun laterMiss(value) =
 :expect [3, 4]
 private fun ignoredFirst(value: Hidden | {other: Int}) =
   let known = {answer: 3}
-  open value
-  open known
+  open value.{ * }
+  open known.{ * }
   answer
 private fun ignoredLast(value: Hidden | {other: Int}) =
   let known = {answer: 4}
-  open known
-  open value
+  open known.{ * }
+  open value.{ * }
   answer
 [ignoredFirst({}), ignoredLast(other: 0)]
 //│ = [3, 4]
@@ -116,7 +116,7 @@ private fun ignoredLast(value: Hidden | {other: Int}) =
 // A missing intersection component does not make the whole receiver a miss.
 :expect 5
 private fun intersection(value: Hidden & {answer: Int}) =
-  open value
+  open value.{ * }
   answer
 intersection(answer: 5)
 //│ = 5
@@ -124,7 +124,7 @@ intersection(answer: 5)
 // With no matching source, lowering retains its ordinary missing-name error.
 :ge
 private fun absent(value: Hidden | {other: Int}) =
-  open value
+  open value.{ * }
   answer
 //│ ╔══[COMPILATION ERROR] Name not found: answer
 //│ ║  l.+3: 	  answer
@@ -135,7 +135,7 @@ private fun absent(value: Hidden | {other: Int}) =
 #lang(strictResolution: false, eagerResolution: false)
 private fun looseSelect(value: MaybeAnswer) = value.answer
 private fun looseOpen(value: MaybeAnswer) =
-  open value
+  open value.{ * }
   answer
 [looseSelect(answer: 6), looseSelect({}), looseOpen(answer: 7), looseOpen({})]
 //│ = [6, undefined, 7, undefined]
@@ -144,7 +144,7 @@ private fun looseOpen(value: MaybeAnswer) =
 :expect 8
 #lang(strictResolution: true, eagerResolution: false)
 private fun unique(value: MaybeAnswer) =
-  open value
+  open value.{ * }
   answer
 unique(answer: 8)
 //│ = 8
@@ -158,7 +158,7 @@ unique(answer: 9)
 :ge
 #lang(strictResolution: false, eagerResolution: true)
 private fun eager(value: MaybeAnswer) =
-  open value
+  open value.{ * }
   answer
 //│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
 //│ ║  l.+4: 	  answer

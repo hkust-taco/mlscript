@@ -1,7 +1,7 @@
 :.
 :js
 
-open annotations { noInline }
+open annotations.{ noInline }
 
 // A computed parent does not have a fixed nominal symbol in the lowered IR.
 // Its subclass and companion must still share their private-name container.

@@ -55,11 +55,11 @@ module Reds with
   val Red = Color("crimson")
 
 fun viaNamespace() =
-  open Reds
+  open Reds.{ * }
   paint(Red.lighter)
 
 fun viaOpen() =
-  open Reds
+  open Reds.{ * }
   Red.name
 
 :expect ["light red", "crimson"]

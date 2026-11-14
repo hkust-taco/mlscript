@@ -272,6 +272,19 @@ class HandlerLowering(paths: HandlerPaths, opt: Opt[EffectHandlers])(using TL, R
           def compute = allocId()
         labelIds(label) = (startId, restId)
         val newBody = go(body)(using S(restId))
+        // A nested loop can move a prefix containing a break or continue into
+        // another state before that prefix encounters an effectful call. Once
+        // any part of this body leaves the label's lexical scope, all exits (and
+        // loop backedges) must use states, including those visited before the split.
+        var bodyIsSplit = false
+        new BlockTraverserShallow:
+          override def applyBlock(b: Block): Unit = b match
+            case StateTransition(_) => bodyIsSplit = true
+            case _ => super.applyBlock(b)
+          applyBlock(newBody)
+        if bodyIsSplit then
+          restId.force_!
+          if loop then startId.force_!
         if startId.isUsed then
           // We break down the label, and force the usage of rest so that all Break will be rewritten later
           result(startId.force_!) = BlockPartition(Begin(newBody, StateTransition(restId.force_!)), false)

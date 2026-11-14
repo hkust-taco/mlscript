@@ -1,7 +1,7 @@
 :.
 :js
 
-open annotations { compile }
+open annotations.{ compile }
 
 data class Pair[A, B](a: A, b: B)
 

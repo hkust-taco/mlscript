@@ -5,7 +5,7 @@
 module M with
   fun (~~) concat(a, b) = a + b
 
-open M
+open M.{ * }
 
 :sjs
 fun foo() =

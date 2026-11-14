@@ -5,7 +5,7 @@
 // The semantics is alternation: the steps fire in cycle order
 // (`UnBox`, `UnTag`, `UnBox`, ...) and stops when the input is neither.
 
-open annotations { compile }
+open annotations.{ compile }
 
 data class Box(val value)
 data class Tag(val value)

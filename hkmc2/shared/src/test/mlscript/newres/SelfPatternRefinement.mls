@@ -79,7 +79,7 @@ Child("abc").read
 // needed casts, including nested aliases in the pretty-printer.
 :expect [true, true, "x y", "(λx. x) y", true, false]
 import "../../mlscript-compile/ups/EvaluationContext.mls"
-open EvaluationContext
+open EvaluationContext.{ * }
 let term = App(Var("x"), Var("y"))
 [term.freeVars.has("x"), term.freeVars.has("y"), term.show,
  App(Abs(Var("x"), Var("x")), Var("y")).show,

@@ -127,7 +127,7 @@ spreadLengths(["abc"])
 //│ = [3]
 
 // Undefined must not grant dynamic access: a resolved member can use a symbol key.
-open annotations { fresh, jsSymbol }
+open annotations.{ fresh, jsSymbol }
 module Keys {
   @fresh val read = Symbol("read")
 }

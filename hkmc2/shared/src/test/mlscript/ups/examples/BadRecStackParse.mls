@@ -3,7 +3,7 @@
 
 
 import "../../../mlscript-compile/Stack.mls"
-open Stack
+open Stack.{ * }
 
 
 // * Just a note that it does *not* work to try and do everything recursively;

@@ -1,7 +1,7 @@
 :.
 :js
 
-open annotations
+open annotations.{ * }
 
 module QualifiedOuter with
   module Inner with

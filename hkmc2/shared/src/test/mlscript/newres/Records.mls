@@ -55,14 +55,14 @@ read(wrap({different: 10})).different
 // Both selective and wildcard opens can expose record properties.
 :expect 11
 let record = {answer: 11}
-open record {answer}
+open record.{answer}
 answer
 //│ = 11
 //│ record = {answer: 11}
 
 :expect 12
 let record2 = {answer2: 12}
-open record2
+open record2.{ * }
 answer2
 //│ = 12
 //│ record2 = {answer2: 12}
@@ -201,9 +201,9 @@ nestedWrap({second: 23}).value.second
 :fixme
 let unknownKeys = {(key): 0}
 fun unknownOpen() =
-  open unknownKeys
+  open unknownKeys.{ * }
   let knownKeys = {a: 24}
-  open knownKeys
+  open knownKeys.{ * }
   a
 unknownOpen()
 //│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
@@ -267,8 +267,8 @@ fun unknownValueOpen() =
   let unknownValue = mut {value: {answer3: 0}}
   let fallbackValue = {answer3: 1}
   let openedValue = unknownValue.value
-  open openedValue
-  open fallbackValue
+  open openedValue.{ * }
+  open fallbackValue.{ * }
   answer3
 unknownValueOpen()
 //│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
@@ -286,8 +286,8 @@ unknownValueOpen()
 fun knownMissingOpen() =
   let unrelated = {...{other: 0}}
   let fallback = {wanted: 28}
-  open unrelated
-  open fallback
+  open unrelated.{ * }
+  open fallback.{ * }
   wanted
 knownMissingOpen()
 //│ = 28
@@ -296,7 +296,7 @@ knownMissingOpen()
 :e
 fun allMissingOpen() =
   let unrelated = {other: 0}
-  open unrelated
+  open unrelated.{ * }
   nonexistent
 allMissingOpen()
 //│ ╔══[COMPILATION ERROR] Name not found: nonexistent
@@ -362,8 +362,8 @@ set mutableNested.value = {after: 34}
 fun ambiguousRecordOpen() =
   let firstRecord = {shared: 1}
   let secondRecord = {shared: 2}
-  open firstRecord
-  open secondRecord
+  open firstRecord.{ * }
+  open secondRecord.{ * }
   shared
 ambiguousRecordOpen()
 //│ ╔══[COMPILATION ERROR] Wildcard-open reference 'shared' is ambiguous
@@ -373,12 +373,12 @@ ambiguousRecordOpen()
 //│ ║  l.+2: 	  let firstRecord = {shared: 1}
 //│ ║        	                     ^^^^^^
 //│ ╟── Opened here
-//│ ║  l.+4: 	  open firstRecord
+//│ ║  l.+4: 	  open firstRecord.{ * }
 //│ ║        	       ^^^^^^^^^^^
 //│ ╟── candidate: record field 'shared' defined here
 //│ ║  l.+3: 	  let secondRecord = {shared: 2}
 //│ ║        	                      ^^^^^^
 //│ ╟── Opened here
-//│ ║  l.+5: 	  open secondRecord
+//│ ║  l.+5: 	  open secondRecord.{ * }
 //│ ╙──      	       ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

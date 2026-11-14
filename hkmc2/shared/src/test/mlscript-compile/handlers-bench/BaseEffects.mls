@@ -1,7 +1,7 @@
 #lang(0.3.x)
 
 import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Predef.mls"
-open Predef
+open Predef.{ * }
 
 module BaseEffects with ...
 

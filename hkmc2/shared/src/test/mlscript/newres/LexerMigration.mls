@@ -4,7 +4,7 @@
 :expect "ab"
 module Strings with
   fun (~) concat(left: Str, right: Str): Str = left + right
-open Strings { concat, ~ }
+open Strings.{ concat, ~ }
 "a" ~ "b"
 //│ = "ab"
 

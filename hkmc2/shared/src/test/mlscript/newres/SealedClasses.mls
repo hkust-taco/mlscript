@@ -81,7 +81,7 @@ object InvalidObject extends SealedClasses.Closed
 new SealedClasses.Closed with { fun extra() = 4 }
 //│ ╔══[COMPILATION ERROR] Cannot extend sealed class 'Closed' outside its compilation unit
 //│ ║  l.+1: 	new SealedClasses.Closed with { fun extra() = 4 }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Class 'Closed' is defined here; declare it 'open' or 'abstract' to allow external subclasses
 //│ ║  in ../../mlscript-compile/SealedClasses.mls
 //│ ║  l.XX: 	  class Closed { fun value() = 1 }

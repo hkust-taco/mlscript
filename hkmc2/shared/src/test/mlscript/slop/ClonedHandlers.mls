@@ -4,7 +4,7 @@
 :effectHandlers
 :lift
 
-open annotations
+open annotations.{ * }
 
 // Non-local returns synthesize handlers; their methods and resume symbols are
 // bindings too, even though the transformation's source only contains a closure.

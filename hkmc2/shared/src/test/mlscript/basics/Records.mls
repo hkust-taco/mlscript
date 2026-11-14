@@ -106,6 +106,8 @@ let rcd = new {
 //│ ║        	^^^^^^^^^
 //│ ║  l.+4: 	      "..."
 //│ ║        	^^^^^^^^^^^
+//│ ║  l.+5: 	... (more lines omitted) ...
+//│ ║        	^^^
 //│ ╙── Invalid class expression: block
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ rcd = undefined

@@ -1,5 +1,5 @@
 :.
-open annotations
+open annotations.{ * }
 
 
 // Renaming parameters preserves a complete optional/rest/trailing binding layout.

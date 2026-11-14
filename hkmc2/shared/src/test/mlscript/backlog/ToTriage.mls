@@ -191,19 +191,16 @@ set (x += 1; ())
 
 import "../../mlscript-compile/Stack.mls"
 
-// The parser rejects this, but it should be allowed.
-open Stack { ::, Nil }
-//│ ╔══[COMPILATION ERROR] Illegal 'open' statement shape.
-//│ ║  l.+1: 	open Stack { ::, Nil }
-//│ ╙──      	     ^^^^^^^^^^^^^^^
+// A selective open can start with an operator name.
+open Stack.{ ::, Nil }
 
-// Instead, if we parenthesize the operator, it is rejected by the elaborator.
-open Stack { (::), Nil }
+// Selective opens require bare member names.
+open Stack.{ (::), Nil }
 //│ ╔══[COMPILATION ERROR] Illegal 'open' statement element.
-//│ ║  l.+1: 	open Stack { (::), Nil }
+//│ ║  l.+1: 	open Stack.{ (::), Nil }
 //│ ╙──      	             ^^^^
 
-open Stack { Nil, :: }
+open Stack.{ Nil, :: }
 
 :sjs
 1 :: Nil

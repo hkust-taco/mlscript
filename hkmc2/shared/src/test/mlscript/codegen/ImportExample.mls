@@ -46,8 +46,8 @@ n / 2
 
 // * Builtin operators can be shadowed/rebound
 
-open Example
-open Example { funnySlash, / }
+open Example.{ * }
+open Example.{ funnySlash, / }
 
 :sjs
 inc / 2

@@ -17,7 +17,7 @@ Receiver.values()
 
 // A later lookup must also obtain the already completed receiver's shape.
 fun later() = {
-  open Receiver {values}
+  open Receiver.{values}
   values()
 }
 

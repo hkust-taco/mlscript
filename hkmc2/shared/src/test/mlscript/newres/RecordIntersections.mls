@@ -71,7 +71,7 @@ hidden(a: 1, b: 2, extra: 3)
 // A wildcard open reads a single runtime field even when two records declare it.
 :expect 7
 fun opened(value: {shared: Int} & {shared: Int, extra: Bool}) =
-  open value
+  open value.{ * }
   shared
 opened(shared: 7, extra: true)
 //│ = 7

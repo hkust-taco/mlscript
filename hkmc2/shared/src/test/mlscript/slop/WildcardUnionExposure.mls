@@ -10,7 +10,7 @@ module WildcardUnionExposure with
   fun selected(x) = nullable(x).answer
   fun opened(x) =
     let value = nullable(x)
-    open value
+    open value.{ * }
     answer
   val localSelected = selected(answer: 10)
   val localOpened = opened(answer: 11)

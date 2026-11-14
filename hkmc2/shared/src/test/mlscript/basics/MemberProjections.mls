@@ -66,12 +66,12 @@ M.{foo.Foo#m()}
 //│ = 124
 
 do
-  open M
+  open M.{ * }
   print of foo M.Foo::m()
 //│ > 124
 
 do
-  open M
+  open M.{ * }
   print of foo.Foo#m()
 //│ > 124
 
