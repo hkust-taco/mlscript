@@ -1,6 +1,6 @@
 :.
 
-open annotations
+open annotations.{ * }
 
 // Compiled patterns clone both direct and qualified constructor references.
 data class Direct(val value)
@@ -15,7 +15,7 @@ fun qualified(x) = if x is @compile Nested.Wrapped(3) then true else false
 //│ = [true, false, true, false]
 
 // Wildcard candidates must keep the receiver selected by resolution.
-open Nested
+open Nested.{ * }
 fun opened(x) = if x is @compile Wrapped(3) then true else false
 
 :expect [true, false]
@@ -44,7 +44,7 @@ fun throughRecord(x) = if x is @compile constructors.make(3) then true else fals
 
 // The opened name `make` must compile to a read of constructors.make.
 fun openedRecord(x) =
-  open constructors
+  open constructors.{ * }
   if x is @compile make(3) then true else false
 
 :expect [true, false]

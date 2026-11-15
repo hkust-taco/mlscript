@@ -8,8 +8,8 @@ import "../../../mlscript-compile/Iter.mls"
 
 fun lines(...strs: Array[Str]) = strs.join("\n")
 
-open Lexer { lex }
-open Stack
+open Lexer.{ lex }
+open Stack.{ * }
 
 fun printLexed(text) = print of
   lex(text, noWhitespace: false)

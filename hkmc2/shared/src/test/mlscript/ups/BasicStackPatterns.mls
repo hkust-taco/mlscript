@@ -3,7 +3,7 @@
 
 
 import "../../mlscript-compile/Stack.mls"
-open Stack
+open Stack.{ * }
 
 
 // * Wrong parse – could we make it parse the expected result instead?

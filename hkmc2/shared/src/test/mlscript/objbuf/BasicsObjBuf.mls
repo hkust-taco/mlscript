@@ -2,8 +2,8 @@
 :js
 
 import "../../mlscript-compile/ObjectBuffer.mls"
-open ObjectBuffer
-open annotations
+open ObjectBuffer.{ * }
+open annotations.{ * }
 
 
 :sjs

@@ -39,7 +39,7 @@ projected(Cell(Child(0)))
 // A wildcard-open assignment still constrains its value through the selected field.
 :expect 2
 fun opened(cell: RecordCell[in Input out Output]) =
-  open cell
+  open cell.{ * }
   set item = Pick
   cell.item.n
 opened(mut {item: Child(0)})

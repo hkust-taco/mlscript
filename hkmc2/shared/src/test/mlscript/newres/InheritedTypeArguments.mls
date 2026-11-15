@@ -144,7 +144,7 @@ read(make(Types.First(8))).second
 // again while a nested pattern is already observing it inside Cons.
 :expect 2
 import "../../mlscript-compile/Stack.mls"
-open Stack
+open Stack.{ * }
 private fun second(xs: Stack[Int]) = if xs is
   Cons(_, Cons(value, _)) then value
   else 0

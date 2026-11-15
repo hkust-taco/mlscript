@@ -4,7 +4,7 @@
 :lift
 
 import "../../mlscript-compile/Stack.mls"
-open Stack
+open Stack.{ * }
 
 abstract class Generator with
   fun produce(result: Stack[Int]): ()

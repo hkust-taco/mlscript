@@ -2,7 +2,7 @@
 
 import "./NofibPrelude.mls"
 import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Predef.mls"
-open NofibPrelude
+open NofibPrelude.{ * }
 
 
 module circsim with ...

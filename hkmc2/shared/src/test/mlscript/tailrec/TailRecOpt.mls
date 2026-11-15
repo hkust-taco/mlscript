@@ -1,6 +1,6 @@
 :.
 :js
-open annotations
+open annotations.{ * }
 
 
 :expect 200010000

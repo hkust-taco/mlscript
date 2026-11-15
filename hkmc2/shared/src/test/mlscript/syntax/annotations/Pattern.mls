@@ -1,7 +1,7 @@
 :.
 :js
 
-open annotations { compile }
+open annotations.{ compile }
 
 class Box()
 

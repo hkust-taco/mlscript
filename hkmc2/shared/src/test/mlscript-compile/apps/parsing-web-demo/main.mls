@@ -29,10 +29,10 @@ import "../parsing/Rules.mls"
 import "../parsing/vendors/railroad/railroad.mjs"
 import "./Examples.mls"
 
-open XML { elem }
-open Predef
-open Option { Some, None }
-open Examples
+open XML.{ elem }
+open Predef.{ * }
+open Option.{ Some, None }
+open Examples.{ * }
 
 module Main with ...
 
@@ -193,8 +193,8 @@ fun makeFigures(entries) = entries
   Iter.joined("")
 
 fun displayRules() =
-  open ParseRuleVisualizer {render, reset}
-  open Rules
+  open ParseRuleVisualizer.{render, reset}
+  open Rules.{ * }
   reset()
   set query("#syntax-diagrams>main").innerHTML = StrOps.concat of
     elem("h3") of "Term"

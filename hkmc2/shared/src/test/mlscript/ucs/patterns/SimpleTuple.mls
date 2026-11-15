@@ -116,7 +116,7 @@ match_against_different_length([13, 13, 13])
 
 import "../../../mlscript-compile/Option.mls"
 
-open Option
+open Option.{ * }
 
 fun with_the_common_prefix(xs) =
   if xs is

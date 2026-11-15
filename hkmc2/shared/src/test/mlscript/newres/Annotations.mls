@@ -25,7 +25,7 @@ fun asynchronous() = 2
 // Explicit and wildcard opens identify the same built-in annotation symbol.
 :soir
 fun explicitAnnotation(x) =
-  open annotations { noInline }
+  open annotations.{ noInline }
   @noInline
   fun inner(y) = y + 1
   inner(x)
@@ -41,7 +41,7 @@ fun explicitAnnotation(x) =
 
 :soir
 fun wildcardAnnotation(x) =
-  open annotations
+  open annotations.{ * }
   @noInline
   fun inner(y) = y + 1
   inner(x)
@@ -91,7 +91,7 @@ module Later { object noInline }
 // Nor can an annotation wait for a forward wildcard source or an alias's value.
 :e
 fun forwardWildcard() =
-  open Future
+  open Future.{ * }
   @noInline
   fun inner(x) = x
   inner(6)
@@ -118,8 +118,8 @@ val alias = Later
 module First { object marker }
 module Second { object marker }
 fun ambiguousAnnotation() =
-  open First
-  open Second
+  open First.{ * }
+  open Second.{ * }
   @marker
   fun inner(x) = x
   inner(8)
@@ -131,8 +131,8 @@ fun ambiguousAnnotation() =
 // A late candidate must not silently invalidate an already recognized annotation.
 :e
 fun lateAmbiguity() =
-  open annotations
-  open Last
+  open annotations.{ * }
+  open Last.{ * }
   @noInline
   fun inner(x) = x
   inner(9)

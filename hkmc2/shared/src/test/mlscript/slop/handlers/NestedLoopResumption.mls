@@ -1,0 +1,44 @@
+:.
+:effectHandlers
+:lift
+
+
+abstract class Tick with
+  fun tick(): Int
+
+// The early break moves with the inner loop into a resumption state.
+// Return on fallthrough keeps this label's only break before the effect.
+fun nestedBreak(h: Tick) =
+  let i = 0
+  do again:
+    while true do
+      while true do
+        if i === 2 do again.break(i)
+        set i += 1
+        h.tick()
+    return -1
+
+// Adding after k prevents tail-resumptive optimization and counts completed resumptions.
+:expect 202
+handle h = Tick with
+  fun tick()(k) = k(0) + 100
+nestedBreak(h)
+//│ = 202
+
+// The early continue must restart the enclosing loop after resuming the inner one.
+fun nestedContinue(h: Tick) =
+  let i = 0
+  let n = 0
+  do again:
+    if i === 3 do again.break(n)
+    set i += 1
+    while true do
+      if n === i do again.continue
+      set n += 1
+      h.tick()
+
+:expect 303
+handle h = Tick with
+  fun tick()(k) = k(0) + 100
+nestedContinue(h)
+//│ = 303

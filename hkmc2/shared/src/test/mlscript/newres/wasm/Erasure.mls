@@ -1,6 +1,6 @@
 :.
-open wasm { i32 }
-open i32 { const }
+open wasm.{ i32 }
+open i32.{ const }
 //│ Wasm result:
 //│ = {}
 

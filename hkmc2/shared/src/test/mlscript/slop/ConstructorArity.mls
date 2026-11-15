@@ -163,7 +163,7 @@ fun extraAuxiliaryList() = new Auxiliary(5)(6)()
 fun invalidRefinement() = (new Empty(1) with {})
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.+1: 	fun invalidRefinement() = (new Empty(1) with {})
-//│ ║        	                           ^^^^^^^^^^^^^^^^^
+//│ ║        	                           ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Class value expected 0 arguments, but got 1
 //│ ║  l.XX: 	class Empty {
 //│ ╙──      	^^^^^^^^^^^

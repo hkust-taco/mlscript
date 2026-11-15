@@ -2,7 +2,7 @@
 
 import "../../mlscript-compile/Runtime.mls"
 
-open Runtime { MatchSuccess, MatchFailure }
+open Runtime.{ MatchSuccess, MatchFailure }
 
 
 MatchSuccess(0, new Object())
@@ -22,7 +22,7 @@ data class MatchSuccess(x)
 MatchSuccess(0)
 //│ = MatchSuccess(0)
 
-open annotations { compile }
+open annotations.{ compile }
 
 pattern Cross = "X"
 

@@ -3,10 +3,10 @@
 :js
 
 
-open annotations { inline }
+open annotations.{ inline }
 
 import "../../mlscript-compile/Option.mls"
-open Option
+open Option.{ * }
 
 
 :global

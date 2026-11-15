@@ -25,10 +25,10 @@ module OtherArrays with
 // which takes precedence over a different wildcard member.
 :expect [3, 3]
 fun staticIndex() =
-  open OtherArrays
+  open OtherArrays.{ * }
   color(Palette.0)
 fun checkedIndex(i: Int) =
-  open OtherArrays
+  open OtherArrays.{ * }
   color(Palette.[i])
 [staticIndex(), checkedIndex(0)]
 //│ = [3, 3]

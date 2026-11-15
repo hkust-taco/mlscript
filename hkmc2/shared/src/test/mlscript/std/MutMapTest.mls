@@ -4,7 +4,7 @@
 import "../../mlscript-compile/MutMap.mls"
 import "../../mlscript-compile/Option.mls"
 
-open Option { Some, None }
+open Option.{ Some, None }
 
 // updateWith receives None for a missing key and inserts a returned Some.
 :expect Some(20)

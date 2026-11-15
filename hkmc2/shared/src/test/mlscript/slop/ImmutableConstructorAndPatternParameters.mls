@@ -2,7 +2,7 @@
 :js
 :checkIR
 
-open annotations
+open annotations.{ * }
 
 
 // Constructor inputs stay immutable in the body and in captured methods.

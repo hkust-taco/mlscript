@@ -3,7 +3,7 @@
 
 import "../../../mlscript-compile/Option.mls"
 
-open Option
+open Option.{ * }
 
 // Normalization should unify fixed-length tuple patterns.
 fun sum_options(x, y) =

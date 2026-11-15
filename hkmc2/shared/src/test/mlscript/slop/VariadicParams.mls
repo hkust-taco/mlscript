@@ -1,5 +1,5 @@
 :.
-open annotations
+open annotations.{ * }
 
 
 // *** Variadic parameters followed by trailing parameters ***

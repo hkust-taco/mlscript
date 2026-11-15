@@ -2,8 +2,8 @@
 #config(effectHandlers: Some(EffectHandlers()))
 
 import "./BaseEffects.mls"
-open BaseEffects
-open NontailEffects
+open BaseEffects.{ * }
+open NontailEffects.{ * }
 
 module resume_nontail with ...
 

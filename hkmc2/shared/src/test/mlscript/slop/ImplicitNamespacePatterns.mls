@@ -55,11 +55,11 @@ module AltOption with
   object None
 
 fun viaNamespace(x: Option[Int]) =
-  open AltOption
+  open AltOption.{ * }
   if x is Some(v) then v else 0
 
 fun viaBinding(x: Option[Int]) =
-  open AltOption { Some }
+  open AltOption.{ Some }
   if x is Some(v) then v else 0
 
 :expect [5, 0]
@@ -68,7 +68,7 @@ fun viaBinding(x: Option[Int]) =
 
 // Without a known scrutinee value, the wildcard opens supply pattern heads.
 fun viaOpen(x) =
-  open AltOption
+  open AltOption.{ * }
   if x is Some(v) then v else 0
 
 :expect 6
@@ -137,7 +137,7 @@ fun either(x: Option[Int] | AltOption[Int]) = if x is Some(v) then v else 0
 // A pattern head is settled with its block: a declared scrutinee type that flow
 // reveals later cannot change the selected definition.
 fun later(x) =
-  open AltOption
+  open AltOption.{ * }
   if x is Some(v) then v else 0
 
 :e
@@ -149,7 +149,7 @@ fun typedLater(y: Option[Int]) = later(y)
 //│ ║  l.+1: 	fun typedLater(y: Option[Int]) = later(y)
 //│ ║        	                  ^^^^^^^^^^^
 //│ ╟── It was resolved to the 'Some' of this wildcard open.
-//│ ║  l.XX: 	  open AltOption
+//│ ║  l.XX: 	  open AltOption.{ * }
 //│ ║        	       ^^^^^^^^^
 //│ ╟── Wildcard opens only supply a capitalized name if no implicit namespace is known for it once the rest of its block is resolved.
 //│ ╙── Write 'Option.Some' to select it explicitly.

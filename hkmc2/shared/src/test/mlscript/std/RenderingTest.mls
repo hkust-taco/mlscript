@@ -335,7 +335,7 @@ renderAsStr of Bar(123, 789)
 
 import "../../mlscript-compile/Stack.mls"
 
-open Stack
+open Stack.{ * }
 
 :ge
 renderAsStr of 1 :: 2 :: 3 :: 4

@@ -4,7 +4,7 @@
 import "../../mlscript-compile/FingerTreeList.mls"
 import "../../mlscript-compile/LazyFingerTree.mls"
 
-open FingerTreeList
+open FingerTreeList.{ * }
 
 let xs = FingerTreeList.mk(1,2,3)
 //│ xs = [1, 2, 3]

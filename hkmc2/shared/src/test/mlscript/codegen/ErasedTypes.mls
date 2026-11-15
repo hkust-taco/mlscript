@@ -6,7 +6,7 @@
 
 
 // Note: Needed for `@tailrec`
-open annotations
+open annotations.{ * }
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
 

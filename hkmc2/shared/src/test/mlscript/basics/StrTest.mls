@@ -3,8 +3,8 @@
 
 import "../../mlscript-compile/StrOps.mls"
 
-open StrOps
-open StrOps { concat2, ~ }
+open StrOps.{ * }
+open StrOps.{ concat2, ~ }
 
 
 :sjs

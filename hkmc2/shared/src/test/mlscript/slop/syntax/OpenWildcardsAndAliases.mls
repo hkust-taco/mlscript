@@ -1,0 +1,346 @@
+:.
+:js
+
+module Members {
+  val m = 10
+  val o = 20
+  val p = 30
+  module Nested {
+    val m = 40
+    val o = 50
+  }
+  class Item { fun value() = 60 }
+  fun Item() = 70
+}
+
+module Operators {
+  fun (*) multiply(x, y) = x + y
+  val marker = 80
+}
+
+// Wildcards can share a list with named imports and can use indentation.
+:expect 140
+fun wildcardGroups() =
+  open Members.{ *, Nested.{ o as inner } }
+  open Operators.
+    *
+  m + marker + inner
+wildcardGroups()
+//│ = 140
+
+:expect 60
+fun aliases() =
+  open Members.m as first
+  open Members.{ o as second, p }
+  first + second + p
+aliases()
+//│ = 60
+
+:expect 50
+fun moduleAliases() =
+  open Members as Renamed
+  open Renamed.Nested as Inner
+  Renamed.m + Inner.m
+moduleAliases()
+//│ = 50
+
+// Explicit aliases can replace earlier imports in the same scope.
+:expect 80
+fun replacedAlias() =
+  open Members as Selected
+  open Operators as Selected
+  Selected.marker
+replacedAlias()
+//│ = 80
+
+// Direct and captured aliases both remain replaceable by later imports.
+:expect [12, 23]
+fun replacedLocalAndCaptured(value: Int) =
+  let next = value + 1
+  open value as selected
+  open next as selected
+  fun read() =
+    open value as chosen
+    open selected as chosen
+    chosen
+  read
+[replacedLocalAndCaptured(11)(), replacedLocalAndCaptured(22)()]
+//│ = [12, 23]
+
+// Opening a module through its alias does not create a second candidate.
+:expect 10
+fun repeatedAlias() =
+  open Members as Same
+  open Members.{ * }
+  open Same.{ * }
+  m
+repeatedAlias()
+//│ = 10
+
+// Selected paths retain their identity through aliases at different source locations.
+:expect 40
+fun selectedAliasIdentity() =
+  open Members.Nested as First
+  open First as Second
+  open Members.Nested.{ * }
+  open First.{ * }
+  open Second.{ * }
+  m
+selectedAliasIdentity()
+//│ = 40
+
+// An alias found through a wildcard keeps its lookup name in direct and captured uses.
+:expect [40, 40]
+fun wildcardAlias() =
+  open Members.{ * }
+  open Nested as Chosen
+  fun read() = Chosen.m
+  [Chosen.m, read()]
+wildcardAlias()
+//│ = [40, 40]
+
+// A lexical definition still wins over an alias with the same name.
+:w
+:expect 100
+fun shadowedAlias() =
+  val renamed = 100
+  open Members.m as renamed
+  renamed
+shadowedAlias()
+//│ ╔══[WARNING] Imported name 'renamed' is shadowed by a name already defined in the same scope
+//│ ║  l.+3: 	  open Members.m as renamed
+//│ ╙──      	                    ^^^^^^^
+//│ = 100
+
+// Aliases retain class and function overloads until each use selects a target.
+:expect [70, 60]
+fun overloadAlias() =
+  open Members.{ Item as Renamed }
+  [Renamed(), new Renamed().value()]
+overloadAlias()
+//│ = [70, 60]
+
+// Parentheses select the operator itself, including when it is renamed.
+:expect 7
+fun starOperator() =
+  open Operators.{ (*) }
+  (*)(3, 4)
+starOperator()
+//│ = 7
+
+:expect 11
+fun starAlias() =
+  open Operators.{ (*) as combine }
+  combine(5, 6)
+starAlias()
+//│ = 11
+
+:e
+fun onlyStar() =
+  open Operators.{ (*) }
+  marker
+//│ ╔══[COMPILATION ERROR] Name not found: marker
+//│ ║  l.+3: 	  marker
+//│ ╙──      	  ^^^^^^
+
+// A later wildcard exposes the original name again, while retaining the alias.
+:expect 20
+fun wildcardAfterAlias() =
+  open Members.{ m as renamed, * }
+  m + renamed
+wildcardAfterAlias()
+//│ = 20
+
+:expect 30
+fun aliasAfterWildcard() =
+  open Members.{ *, m as renamed }
+  renamed + o
+aliasAfterWildcard()
+//│ = 30
+
+:e
+fun aliasHidesOriginal() =
+  open Members.{ *, m as renamed }
+  m
+//│ ╔══[COMPILATION ERROR] Name not found: m
+//│ ║  l.+3: 	  m
+//│ ╙──      	  ^
+
+:e
+fun hideAfterWildcard() =
+  open Members.{ *, m as _ }
+  m
+//│ ╔══[COMPILATION ERROR] Name not found: m
+//│ ║  l.+3: 	  m
+//│ ╙──      	  ^
+
+:expect 10
+fun wildcardRestoresHidden() =
+  open Members.{ *, m as _, * }
+  m
+wildcardRestoresHidden()
+//│ = 10
+
+:e
+fun hideExplicit() =
+  open Members.{ m, m as _ }
+  m
+//│ ╔══[COMPILATION ERROR] Name not found: m
+//│ ║  l.+3: 	  m
+//│ ╙──      	  ^
+
+:expect 10
+fun restoreExplicit() =
+  open Members.{ m as _, m }
+  m
+restoreExplicit()
+//│ = 10
+
+// Hiding affects the selected receiver, including across nested groups.
+:expect 10
+fun nestedExclusion() =
+  open Members.{ *, Nested.{ * }, Nested.m as _ }
+  m
+nestedExclusion()
+//│ = 10
+
+:e
+fun nestedNameIsHidden() =
+  open Members.{ Nested.{ * }, Nested.m as _ }
+  m
+//│ ╔══[COMPILATION ERROR] Name not found: m
+//│ ║  l.+3: 	  m
+//│ ╙──      	  ^
+
+// A new statement cannot remove names supplied by an earlier open or a local.
+:expect 10
+fun earlierWildcard() =
+  open Members.{ * }
+  open Members.{ m as _ }
+  m
+earlierWildcard()
+//│ = 10
+
+:expect 100
+fun lexicalBinding() =
+  val m = 100
+  open Members.{ *, m as _ }
+  m
+lexicalBinding()
+//│ = 100
+
+:expect 10
+fun earlierNamed() =
+  open Members.m
+  open Members.{ m as _ }
+  m
+earlierNamed()
+//│ = 10
+
+// Aliases and exclusions preserve their receiver when captured by a closure.
+:expect [11, 22]
+fun captured(value: Int) =
+  let source = { nested: { m: value, extra: 1 } }
+  open source.nested.{ *, m as read }
+  fun result() = read
+  result
+[captured(11)(), captured(22)()]
+//│ = [11, 22]
+
+// Capturing an imported receiver does not give its wildcard members a second identity.
+:expect [11, 22]
+fun capturedAliasIdentity(value: Int) =
+  let source = { m: value }
+  open source as Same
+  fun read() =
+    open source.{ * }
+    open Same.{ * }
+    m
+  read
+[capturedAliasIdentity(11)(), capturedAliasIdentity(22)()]
+//│ = [11, 22]
+
+:e
+fun capturedExclusion() =
+  open Members.{ *, m as _ }
+  fun read() = m
+  read()
+//│ ╔══[COMPILATION ERROR] Name not found: m
+//│ ║  l.+3: 	  fun read() = m
+//│ ╙──      	               ^
+
+// Hidden names still undergo resolution, and malformed aliases are rejected.
+:e
+open Members.{ absent as _ }
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	open Members.{ absent as _ }
+//│ ║        	               ^^^^^^
+//│ ╟── Module 'Members' does not contain member 'absent'
+//│ ║  l.XX: 	module Members {
+//│ ╙──      	^^^^^^^^^^^^^^
+
+:e
+open Members.{ m as 42 }
+//│ ╔══[COMPILATION ERROR] Expected an identifier or '_' after 'as' in 'open'.
+//│ ║  l.+1: 	open Members.{ m as 42 }
+//│ ╙──      	                    ^^
+
+:e
+open Members.{ * as renamed }
+//│ ╔══[COMPILATION ERROR] A wildcard import cannot be renamed or hidden; use '(*)' to select the '*' operator.
+//│ ║  l.+1: 	open Members.{ * as renamed }
+//│ ╙──      	               ^
+
+// The old wildcard spelling warns from 0.3.2 onward.
+#lang(0.3.2)
+
+:w
+:expect 10
+fun oldWildcard() =
+  open Members
+  m
+oldWildcard()
+//│ ╔══[WARNING] Wildcard 'open' without an explicit '*' is deprecated; use 'open Members.{ * }'.
+//│ ║  l.+2: 	  open Members
+//│ ╙──      	       ^^^^^^^
+//│ = 10
+
+// Earlier versions accept dotted wildcard lists without changing resolver settings.
+#lang(0.3.1)
+
+:expect 10
+fun previousWildcard() =
+  open Members
+  m
+previousWildcard()
+//│ = 10
+
+:expect 80
+fun previousDottedWildcard() =
+  open Operators.{ * }
+  marker
+previousDottedWildcard()
+//│ = 80
+
+:expect 7
+fun previousEscapedStar() =
+  open Operators.{ (*) }
+  (*)(3, 4)
+previousEscapedStar()
+//│ = 7
+
+// Existing undotted lists still treat the bare star as an operator in old versions.
+:expect 7
+fun previousStar() =
+  open Operators { multiply, * }
+  (*)(3, 4)
+previousStar()
+//│ = 7
+
+:e
+fun previousStarIsSelective() =
+  open Operators { multiply, * }
+  marker
+//│ ╔══[COMPILATION ERROR] Name not found: marker
+//│ ║  l.+3: 	  marker
+//│ ╙──      	  ^^^^^^

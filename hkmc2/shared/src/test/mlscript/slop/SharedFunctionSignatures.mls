@@ -1,6 +1,6 @@
 :.
 #lang(0.3.x)
-open annotations
+open annotations.{ * }
 
 // Dead-parameter elimination and eta expansion prepare one signature for both
 // the original and each specialized copy, including the appended parameter bindings.

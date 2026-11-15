@@ -1,6 +1,6 @@
 :.
 :js
-open annotations
+open annotations.{ * }
 
 
 // A dynamically typed iterable still needs to be spread into the recursive call's rest array.

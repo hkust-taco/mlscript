@@ -1,6 +1,6 @@
 :.
 #lang(0.3.x)
-open annotations
+open annotations.{ * }
 
 // A generated lambda has a function representation, even when its result is unspecified.
 :noInline

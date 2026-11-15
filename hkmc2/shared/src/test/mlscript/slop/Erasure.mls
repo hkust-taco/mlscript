@@ -1,6 +1,6 @@
 :.
 #lang(0.3.x)
-open annotations
+open annotations.{ * }
 
 // A generator override's callable returns Iterator, but its body's payload can have any representation.
 :noInline

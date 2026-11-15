@@ -150,7 +150,7 @@ fun nestedReceiver(a: Public) =
 // Wildcard opens must obey the same rule as explicit selections.
 :ge
 fun opened(a: Public) =
-  open a
+  open a.{ * }
   set value = 1
 //│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'value'
 //│ ║  l.+3: 	  set value = 1
@@ -161,7 +161,7 @@ fun opened(a: Public) =
 
 :expect 9
 fun openedUnsafe(a: Public) =
-  open a
+  open a.{ * }
   @unsafe set value = 9
 let openedCell = new mut Public(0)
 openedUnsafe(openedCell)

@@ -2,7 +2,7 @@
 :js
 :checkIR
 
-open annotations
+open annotations.{ * }
 
 // Both ordinary pattern methods and each compiled use copy this transformation.
 // Nested closures, let bindings and pattern aliases must refer to their own copy.

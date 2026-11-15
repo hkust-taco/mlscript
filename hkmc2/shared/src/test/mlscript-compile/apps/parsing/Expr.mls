@@ -4,8 +4,8 @@ import "../../StrOps.mls"
 import "../../Option.mls"
 import "../../Predef.mls"
 
-open StrOps { parenthesizedIf }
-open Option { Some, None }
+open StrOps.{ parenthesizedIf }
+open Option.{ Some, None }
 
 type OptionT[A] = Some[A] | None
 
