@@ -1,0 +1,78 @@
+:.
+
+// A worksheet block with compilation errors still completes erasure: its declarations have representations,
+// which later blocks rely on when they use those declarations.
+
+
+// Variables declared next to an erroneous definition.
+:e
+let intact = 1
+let broken = missingName
+//│ ╔══[COMPILATION ERROR] Name not found: missingName
+//│ ║  l.+2: 	let broken = missingName
+//│ ╙──      	             ^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ broken = undefined
+//│ intact = 1
+
+:expect 2
+intact + 1
+//│ = 2
+
+// The representation of `intact` was inferred from the erroneous block.
+:ge
+set intact = "s"
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.+1: 	set intact = "s"
+//│ ╙──      	    ^^^^^^^^^^^^
+
+
+// A class declared in an erroneous block, and its field.
+:e
+class Later(mut val v: Int)
+let later = Later(missingArgument)
+//│ ╔══[COMPILATION ERROR] Name not found: missingArgument
+//│ ║  l.+2: 	let later = Later(missingArgument)
+//│ ╙──      	                  ^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ later = undefined
+
+:expect 1
+Later(1).v
+//│ = 1
+
+:expect 2
+private fun readLater(x) = x.v
+readLater(Later(2))
+//│ = 2
+
+
+// Lambda parameters declared in an erroneous block.
+:e
+let failing = x => x + missingOperand
+let passing = y => y
+//│ ╔══[COMPILATION ERROR] Name not found: missingOperand
+//│ ║  l.+1: 	let failing = x => x + missingOperand
+//│ ╙──      	                       ^^^^^^^^^^^^^^
+//│ failing = fun
+//│ passing = fun passing
+
+:expect [1, "s"]
+[passing(1), passing("s")]
+//│ = [1, "s"]
+
+
+// Pattern variables bound in an erroneous block.
+:e
+let scrutinee = [1, "s"]
+let matched = if scrutinee is [a, b] then missingResult else 0
+//│ ╔══[COMPILATION ERROR] Name not found: missingResult
+//│ ║  l.+2: 	let matched = if scrutinee is [a, b] then missingResult else 0
+//│ ╙──      	                                          ^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ matched = undefined
+//│ scrutinee = [1, "s"]
+
+:expect 1
+if scrutinee is [a, b] then a else 0
+//│ = 1
