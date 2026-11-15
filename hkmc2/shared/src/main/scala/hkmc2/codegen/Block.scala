@@ -61,7 +61,7 @@ This might not yet be fully enforced, but it is a goal of the IR to make this in
 
 Some (but not yet all) of the invariants of the IR are checked by the `BlockChecker`, which is OFF by default.
 It is healthy to run all the tests with the `BlockChecker` ON from time to time.
-`whenValidatingIR` is another palce that checks the IR on construction,
+`whenValidatingIR` is another place that checks the IR on construction,
 also disabled by default for performance reasons.
 
 */
