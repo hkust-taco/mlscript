@@ -178,3 +178,41 @@ declare class DroppedRestInputContract extends DroppableRestInputContract {
 //│ ╙──      	              ^^^^
 //│ Wasm result:
 //│ = {}
+
+
+// An unannotated override inherits the representations that erasure infers for the member it overrides.
+// That inference observes only the overridden member's own body and the calls resolved to it, so the values
+// that the override itself produces or receives can lie outside the inherited representations.
+// FIXME: The two programs below are valid and ran before representations were inferred. Their mismatches now
+// compile to checked downcasts, which trap at run time without any compilation error. Either infer the shared
+// representations from every member of the override family, or report these mismatches during compilation.
+
+// `Pound.adopt` returns an instance of a superclass of the result inferred for `Shelter.adopt`.
+:fixme
+:noInline
+:expect 0
+private class Animal()
+private class Dog() extends Animal()
+private class Shelter() with
+  open fun adopt() = Dog()
+private class Pound() extends Shelter() with
+  override fun adopt() = Animal()
+private fun visit(shelter) = shelter.adopt()
+if visit(Pound()) is Dog then 1 else 0
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+
+// A direct call passes `Farm.treat` an instance of a superclass of the arguments observed for `Vet.treat`.
+:fixme
+:noInline
+:expect 0
+private class Patient()
+private class Pet() extends Patient()
+private class Vet() with
+  open fun treat(patient) = if patient is Pet then 1 else 0
+private class Farm() extends Vet() with
+  override fun treat(patient) = if patient is Pet then 1 else 0
+Vet().treat(Pet())
+Farm().treat(Patient())
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
