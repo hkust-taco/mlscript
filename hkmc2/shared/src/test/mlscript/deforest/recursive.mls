@@ -743,12 +743,11 @@ f(3)
 //│   end
 //│ };
 //│ define g⁰ as fun g¹(a) {
-//│   let y, arg$A$0$, tmp;
+//│   let arg$A$0$, tmp;
 //│   match a
 //│     A¹ =>
 //│       set arg$A$0$ = a.x⁴;
-//│       set y = (arg$A$0$ as! Int⁰);
-//│       set tmp = -⁰(y, 1);
+//│       set tmp = -⁰(arg$A$0$, 1);
 //│       return f⁰(tmp)
 //│     else
 //│       return 1

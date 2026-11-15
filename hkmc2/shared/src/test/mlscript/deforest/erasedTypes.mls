@@ -57,9 +57,9 @@ fun selected(n: Int, k: Str) =
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let selected$b_Box, selected$b_rest;
 //│ @affine(1) @private
-//│ define selected$b_Box as fun selected$b_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: ?, fv_x: Int⁰, fv_k: Str⁰): ? {
+//│ define selected$b_Box as fun selected$b_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: Int⁰, fv_x: Int⁰, fv_k: Str⁰): ? {
 //│   set fv_arg$Box$0$ = Box_v;
-//│   set fv_x = (fv_arg$Box$0$ as! Int⁰);
+//│   set fv_x = fv_arg$Box$0$;
 //│   return [fv_x, fv_k]
 //│ };
 //│ @private
@@ -67,7 +67,7 @@ fun selected(n: Int, k: Str) =
 //│   return null
 //│ };
 //│ define selected⁰ as fun selected¹(n: Int⁰, k: Str⁰): Array⁰ {
-//│   let b: Box², x: Int⁰, arg$Box$0$: ?, Box_v: Int⁰;
+//│   let b: Box², x: Int⁰, arg$Box$0$: Int⁰, Box_v: Int⁰;
 //│   set Box_v = n;
 //│   set b = selected$b_Box⁰(Box_v);
 //│   return (b(arg$Box$0$, x, k) as! Array⁰)
@@ -92,9 +92,9 @@ fun withRest(n: Int, k: Str) =
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let withRest$b_Box, withRest$b_rest;
 //│ @affine(1) @private
-//│ define withRest$b_Box as fun withRest$b_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: ?, fv_x: Int⁰, fv_tmp: Int⁰, fv_r: Int⁰, fv_k: Str⁰): ? {
+//│ define withRest$b_Box as fun withRest$b_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: Int⁰, fv_x: Int⁰, fv_tmp: Int⁰, fv_r: Int⁰, fv_k: Str⁰): ? {
 //│   set fv_arg$Box$0$ = Box_v;
-//│   set fv_x = (fv_arg$Box$0$ as! Int⁰);
+//│   set fv_x = fv_arg$Box$0$;
 //│   set fv_tmp = fv_x;
 //│   return withRest$b_rest⁰(fv_r, fv_tmp, fv_k)
 //│ };
@@ -104,7 +104,7 @@ fun withRest(n: Int, k: Str) =
 //│   return [fv_r, fv_k]
 //│ };
 //│ define withRest⁰ as fun withRest¹(n: Int⁰, k: Str⁰): Array⁰ {
-//│   let b: Box², r: Int⁰, x: Int⁰, arg$Box$0$: ?, tmp: Int⁰, Box_v: Int⁰;
+//│   let b: Box², r: Int⁰, x: Int⁰, arg$Box$0$: Int⁰, tmp: Int⁰, Box_v: Int⁰;
 //│   set Box_v = n;
 //│   set b = withRest$b_Box⁰(Box_v);
 //│   return (b(arg$Box$0$, x, tmp, r, k) as! Array⁰)

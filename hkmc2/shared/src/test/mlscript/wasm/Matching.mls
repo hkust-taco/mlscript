@@ -99,8 +99,7 @@ if Bar(true) is
 //│       (local.get $this)))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $scrut (ref null any))
-//│     (local $a (ref null i31))
-//│     (local $arg$Bar$0$ (ref null any))
+//│     (local $arg$Bar$0$ (ref null i31))
 //│     (local $currentTypeInfo (ref null any))
 //│     (local $targetTypeInfo (ref null any))
 //│     (local $typeInfoMatch (ref null i31))
@@ -161,15 +160,12 @@ if Bar(true) is
 //│                     (struct.get $Bar $y@1
 //│                       (ref.cast (ref null $Bar)
 //│                         (local.get $scrut))))
-//│                   (local.set $a
-//│                     (ref.cast (ref null i31)
-//│                       (local.get $arg$Bar$0$)))
 //│                   (block $match1
 //│                     (if
 //│                       (i32.eq
 //│                         (i31.get_s
 //│                           (ref.cast (ref null i31)
-//│                             (local.get $a)))
+//│                             (local.get $arg$Bar$0$)))
 //│                         (i32.const 1))
 //│                       (then
 //│                         (block $arm1

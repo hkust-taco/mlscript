@@ -26,10 +26,23 @@ object SplitCompiler:
     
     def apply()(using State): SimpleRef
 
+    /** The temporary holding the `i`-th value that a pattern of `cs` extracts from this scrutinee.
+      * For a class, that value is read from the `i`-th destructured field (see `Normalization.lowerSplit`),
+      * so the temporary takes that field's representation. An untyped temporary would have the unknown
+      * representation: it could not store an unboxed field, and binding its value to a pattern variable
+      * would need a cast back to the field's representation.
+      */
     def getSubScrutinee(cs: ClassSymbol | PatternSymbol)(i: Int)(using State): SymbolScrut =
       val scrutinees = subScrutinees.getOrElseUpdate(cs, Buffer.empty)
       while scrutinees.size <= i do
-        scrutinees += TempSymbol(N, initErasedType = N, s"arg$$${cs.nme}$$${scrutinees.size}$$").toScrut
+        val index = scrutinees.size
+        val representation = cs match
+          // The legacy resolver defines no field for a parameter that is not a `val`, whose symbol
+          // then has no erasure; patterns cannot destructure such parameters.
+          case cls: ClassSymbol => cls.destructuredFields.lift(index).filter(_.isErased).flatMap(_.erasedType)
+          // The values that a pattern definition extracts come from its untyped `unapply` result.
+          case _: PatternSymbol => N
+        scrutinees += TempSymbol(N, initErasedType = representation, s"arg$$${cs.nme}$$$index$$").toScrut
       scrutinees(i)
     def getTupleLeadSubScrutinee(index: Int)(using State): SymbolScrut =
       tupleLead.getOrElseUpdate(index, TempSymbol(N, initErasedType = N, s"element$index$$").toScrut)
