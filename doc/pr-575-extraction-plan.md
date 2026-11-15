@@ -4,11 +4,11 @@ NOTE: This is a temporary tracking document for the decomposition of the origina
 
 # Extraction plan for PR #575
 
-Status updated 2026-11-09: E01–E03, B01–B05, E08, E14, E17–E18, structural
-Iterator, E27, E31, E35 and E36 are merged upstream; upstream's cast refactor
-covers E19. The branch incorporates `hkmc2` through `fdddc58421`. The approved
-split retains E12 and E32 with shape-based erasure and moves E29–E30 and E33–E34
-to separate follow-ups after #575. E20–E24 remain independent fixes. The
+Status updated 2026-11-15: E01–E03, B01–B05, E08, E14, E17–E18, structural
+Iterator, E21–E24, E27, E31, E35 and E36 are merged upstream; upstream's cast
+refactor covers E19. The branch incorporates `hkmc2` through `26c31e8a9`. The
+approved split retains E12 and E32 with shape-based erasure and moves E29–E30 and
+E33–E34 to separate follow-ups after #575. E20 remains an independent fix. The
 historical batch dependencies below describe the original extraction order,
 subject to this revised scope.
 
@@ -96,31 +96,37 @@ separate follow-ups:
 
 | Work | Branch | Merge order |
 | --- | --- | --- |
-| E29–E30: deforestation retyping and cast proofs | `codex/pr575-deforestation-retyping` | After #575 |
-| E33–E34: mutable-record declarations | `codex/pr575-mutable-record-syntax` | After #575 |
-| E20: partial-call arguments | `codex/pr575-partial-call-arguments` | Independent, targeting `hkmc2` |
-| E21–E23: constructor and match safety | `codex/pr575-constructor-safety` | Independent, targeting `hkmc2` |
-| E24: fusion across container storage | `codex/pr575-fusion-storage` | Independent, targeting `hkmc2` |
+| E29–E30: deforestation retyping and cast proofs | `codex/pr575-deforestation-retyping` | After #575 (#624, closed until then) |
+| E33–E34: mutable-record declarations | `codex/pr575-mutable-record-syntax` | After #575 (#625, closed until then) |
+| E20: partial-call arguments | `codex/pr575-partial-call-arguments` | Independent, targeting `hkmc2` (#626, open) |
+| E21–E23: constructor and match safety | `codex/pr575-constructor-safety` | Merged as #627 |
+| E24: fusion across container storage | `codex/pr575-fusion-storage` | Merged as #628 |
 
 The two new follow-ups share the reduced #575 as their review base. Their PRs
 must be retargeted to `hkmc2` after #575 merges. They do not depend on each other.
 Keep all E29–E30 slot and caller adaptations together when integrating the
 deforestation follow-up.
 
-Against `4967bcd7d`, the core contains **832 changed compiler Scala lines across
-14 files** (668 additions, 164 deletions), plus **42 changed Scala test lines
+Against `26c31e8a9`, the core contains **879 changed compiler Scala lines across
+17 files** (706 additions, 173 deletions), plus **42 changed Scala test lines
 across two files**. E31 removes the three overwritten-record exposure fixmes.
 Without E30's cast proofs, five constructor regressions pass conservatively
-again. The remaining constructor/match failures retain their assertions and
-targeted E21–E23 fixmes, including the optional-field fusion case newly exposed
-by the upstream optional-binding consolidation and its dependent worksheet
-check. Reconcile those markers when the constructor-safety PR lands. A fourth
-targeted fixme in `T/deforest/simple.mls` records the recursive result-slot
-failure that E29 resolves. E24's nominal-storage regression moves with the
-deforestation follow-up.
+again. Upstream's #627 fixed the constructor/match failures, including the
+optional-field fusion case and its dependent worksheet check, so their targeted
+E21–E23 fixmes are gone. E24's nominal-storage regression moves with the
+deforestation follow-up. Six `:fixme` blocks remain:
 
-The reduced core passed Metals compilation and `hkmc2AllTests/test`; all
-regenerated golden output accompanies the split.
+- `T/deforest/simple.mls`: the recursive result-slot failure that E29 resolves.
+- `T/slop/ClonedBindings.mls`: a cloned function whose inferred result names a
+  class declared in the function's own body.
+- `T/slop/wasm/MutableFields.mls` (two blocks): a private class used from a
+  later Wasm worksheet block.
+- `T/slop/wasm/OverrideRepresentations.mls` (two blocks): unannotated overrides
+  whose values lie outside the representations inferred for the members they
+  override, which trap on Wasm.
+
+The branch passes `hkmc2AllTests/test` with these markers; all regenerated
+golden output is committed.
 
 ### Previous Iterator and E27 integration
 
