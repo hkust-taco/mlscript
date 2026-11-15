@@ -107,23 +107,20 @@ must be retargeted to `hkmc2` after #575 merges. They do not depend on each othe
 Keep all E29–E30 slot and caller adaptations together when integrating the
 deforestation follow-up.
 
-Against `26c31e8a9`, the core contains **879 changed compiler Scala lines across
-17 files** (706 additions, 173 deletions), plus **42 changed Scala test lines
+Against `26c31e8a9`, the core contains **1,028 changed compiler Scala lines across
+18 files** (827 additions, 201 deletions), plus **42 changed Scala test lines
 across two files**. E31 removes the three overwritten-record exposure fixmes.
 Without E30's cast proofs, five constructor regressions pass conservatively
 again. Upstream's #627 fixed the constructor/match failures, including the
 optional-field fusion case and its dependent worksheet check, so their targeted
 E21–E23 fixmes are gone. E24's nominal-storage regression moves with the
-deforestation follow-up. Six `:fixme` blocks remain:
+deforestation follow-up. Four `:fixme` blocks remain:
 
 - `T/deforest/simple.mls`: the recursive result-slot failure that E29 resolves.
 - `T/slop/ClonedBindings.mls`: a cloned function whose inferred result names a
   class declared in the function's own body.
 - `T/slop/wasm/MutableFields.mls` (two blocks): a private class used from a
   later Wasm worksheet block.
-- `T/slop/wasm/OverrideRepresentations.mls` (two blocks): unannotated overrides
-  whose values lie outside the representations inferred for the members they
-  override, which trap on Wasm.
 
 The branch passes `hkmc2AllTests/test` with these markers; all regenerated
 golden output is committed.

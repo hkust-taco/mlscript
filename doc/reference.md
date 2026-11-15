@@ -769,6 +769,8 @@ value, so only a member without parameter lists can override it, while `fun f(x:
 An override must accept the runtime representations of the inherited parameters, and its results
 must fit the inherited result representation. Unannotated parameters inherit their representations;
 an ordinary member without a result annotation uses the inherited result representation too.
+An inherited representation that is itself inferred accounts for the overriding members
+(see Inferred Runtime Representations).
 An annotated parameter may accept a wider representation on JavaScript. Wasm compiles overrides
 with the introducing method's physical signature, so their parameter representations must match.
 For the same reason, Wasm also requires an override to keep the introducing method's number of
@@ -1762,6 +1764,23 @@ when exposed, they take the unknown representation. Through a record type declar
 field, the values it describes can be assigned values of that field's input type, which their own
 fields therefore admit. Exposing a record also exposes values stored by assignments, including
 through fields copied by a mutable spread: those values can be read by clients just like initializers.
+
+Overrides inherit the representations of the members they override (see Virtual Methods), so an
+unannotated member with none to inherit takes the representations of its whole override family.
+Its result takes the representation of what the members overriding it return, as calls resolved to
+it can dispatch to them: an annotated override contributes its declared result, and an unannotated
+one the values that it returns. Each of its parameters takes the representation of the arguments
+passed to the unannotated parameters overriding it, which inherit that representation. An annotated
+overriding parameter keeps its own representation, which must still accept the inherited one.
+
+```mlscript
+private class Visitor() with
+  open fun visit(node) = ()       // the result holds `()` and integers: unknown representation
+private class Counter() extends Visitor() with
+  override fun visit(node) = 1
+```
+
+Annotating the overridden member fixes its representations, which its overrides must then fit.
 
 ### Generic Type Parameters
 

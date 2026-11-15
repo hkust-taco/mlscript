@@ -449,30 +449,24 @@ readChild(new Child())
 //│ = {}
 
 
-// An override must produce only representations of the inherited result. `Producer.get`'s result is inferred
-// from its body, so an override returning a string is rejected, rather than trapping when its result is cast
-// to the result type of the shared slot.
-:ge
+// An unannotated result takes the representation of every member of its override family. `Producer.get`
+// returns an instance of its class and its override returns a string, so the slot that they share holds
+// values of the unknown representation, and no cast to the result type of that slot can trap.
+:expect "str"
 class Producer() with
   open fun get() = new Producer()
 class StrProducer() extends Producer() with
   override fun get() = "str"
 fun produce(p) = p.get()
 produce(StrProducer())
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Producer' at an unrelated type 'Str'
-//│ ║  l.+5: 	fun produce(p) = p.get()
-//│ ╙──      	                 ^^^^^^^
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Producer'
-//│ ║  l.+4: 	  override fun get() = "str"
-//│ ╙──      	                       ^^^^^
 //│ Wasm result:
-//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+//│ = "str"
 
 
-// An unannotated parameter of an override takes the inherited representation, inferred here from calls through
-// `Consumer`. A direct call passing a string is rejected, rather than trapping on the cast to the shared slot's
-// parameter type.
-:ge
+// An unannotated parameter of an override takes the inherited representation, which is inferred from the
+// arguments of every unannotated member of the override family: here, the integers passed through `Consumer`
+// and the string that a direct call passes to its override.
+:expect "s"
 class Consumer() with
   open fun take(x) = x
 class EchoConsumer() extends Consumer() with
@@ -481,8 +475,5 @@ fun consume(c) = c.take(1)
 consume(Consumer())
 consume(EchoConsumer())
 EchoConsumer().take("s")
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
-//│ ║  l.+8: 	EchoConsumer().take("s")
-//│ ╙──      	                    ^^^
 //│ Wasm result:
-//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+//│ = "s"

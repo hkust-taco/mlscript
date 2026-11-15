@@ -75,11 +75,14 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
 
   private def inferredType(symbol: Symbol): Opt[ErasedValueType] =
     if !config.language.useNewResolution then N
-    else summon[State].newResolverState.erasureInputs.shapes(symbol).flatMap(valueType) match
-      case Nil => N
-      // Unknown is a real candidate, not the identity of this join: in particular,
-      // combining it with an unboxed primitive must preserve incompatibility.
-      case types => S(ErasedType.Union.mk(types))
+    else joined(summon[State].newResolverState.erasureInputs.shapes(symbol).flatMap(valueType))
+
+  /** The representation of a slot that holds values of each of `types`, or `N` when there are none. */
+  private def joined(types: Ls[ErasedValueType]): Opt[ErasedValueType] = types match
+    case Nil => N
+    // Unknown is a real candidate, not the identity of this join: in particular,
+    // combining it with an unboxed primitive must preserve incompatibility.
+    case _ => S(ErasedType.Union.mk(types))
 
   /** Read a delayed type in the context that completed erasure. Cloning can then
     * rename its symbol without retaining the entire cloning substitution in a thunk.
@@ -142,16 +145,10 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
       case S(msym) => S(ErasedType.ValueLike(rsc = S(false), msym))
       case N => sign.flatMap(eraseSignature)
 
-  /** Computes the representation to publish on a member symbol: a value type, a getter result,
-    * or a function's parameter lists and result. Parameter symbols must already have their erased
-    * types. A function's physical parameter lists are its written ones: arrows in the type of a
-    * function without parameter lists, as in `declare fun f: (Int) -> Str`, describe the function
-    * value it returns. Unannotated overrides can obtain their result from an inherited member
-    * that passed source layout validation in `overrides` and has completed erasure.
+  /** The result representation that `td` declares, with a result annotation or with a separate full
+    * signature such as `fun f: (Int) -> Int`, whose arrows describe the written parameter lists.
     */
-  private def erasedDefinitionSignature(td: TermDefinition,
-      overrides: OverrideChecks): Opt[ErasedValueType | ErasedCallableSignature] =
-    val declared = Annot.declareModifierOf(td.annotations).isDefined
+  private def declaredResultType(td: TermDefinition): Opt[ErasedValueType] =
     def fullResult(res: TypeResolution, count: Int, seen: Set[TypeResolution]): ErasedValueType =
       if seen(res) then ErasedType.Unknown
       else if count == 0 then erase(res, Set.empty)
@@ -162,29 +159,71 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
         case TypeShape.Polymorphic(_, _, body) :: Nil => fullResult(body, count, seen + res)
         case TypeShape.Function(_, ret) :: Nil => fullResult(ret, count - 1, seen + res)
         case _ => ErasedType.Unknown
-    val candidateResultType =
-      if config.language.useNewResolution && td.sign.nonEmpty && (td.k is syntax.Fun)
-          && !td.flags.hasResultAnnotation && td.params.nonEmpty && !td.modulefulness.isModuleful
-      then S(fullResult(td.sign.get.typeInterpretation.get, td.params.length, Set.empty))
-      else declaredType(td.resultSignature, td.modulefulness).orElse:
-        // Async/generator bodies produce a payload; inherited callable results describe the wrapper.
-        // An ordinary override keeps the first specified inherited result unchanged. Infer a result
-        // only when no validated base supplies one, as for a definition with no overrides.
-        val inherited =
-          if config.language.useNewResolution && td.resultWrapperAnnotation.nonEmpty then N
-          else overrides.validatedBases.getOrElse(td.tsym, Nil).iterator.filter(_.isErased)
-            .flatMap(_.sourceDeclaredResultType).nextOption()
-        inherited.orElse(inferredType(td.tsym))
+    if config.language.useNewResolution && td.sign.nonEmpty && (td.k is syntax.Fun)
+        && !td.flags.hasResultAnnotation && td.params.nonEmpty && !td.modulefulness.isModuleful
+    then S(fullResult(td.sign.get.typeInterpretation.get, td.params.length, Set.empty))
+    else declaredType(td.resultSignature, td.modulefulness)
+
+  /** The result of `td`, whose body produces values represented as `bodyType`. The body of an async or
+    * generator function produces a payload, while its callers receive the wrapper object.
+    * Resolution gives calls of such functions the same wrapper shapes.
+    */
+  private def wrappedResult(td: TermDefinition, bodyType: Opt[ErasedValueType]): ErasedResult[ErasedValueType] =
+    if !config.language.useNewResolution then ErasedResult.Direct(bodyType)
+    else td.resultWrapperAnnotation match
+      case S(_: Annot.Async) => ErasedResult.Async(bodyType)
+      case S(_: Annot.Generator) => ErasedResult.Generator(bodyType)
+      case N => ErasedResult.Direct(bodyType)
+
+  /** The representations of the values that calls of `td` return, for a member `td` that neither declares
+    * nor inherits a result: those of the values that resolution observed its body to produce, and those that
+    * the members overriding it contribute. A call resolved to `td` can dispatch to any of these members,
+    * and the unannotated ones inherit the result representation of `td`.
+    *
+    * An overriding member contributes what its own callers receive: its declared result or its wrapper
+    * object, and otherwise its own observed values with the contributions of the members overriding it.
+    * `visiting` stops at inheritance cycles. The members of `handlerMembers` contribute nothing: the body of
+    * a handler member produces the result of the handled expression, whereas a call of the effect member
+    * it implements returns the value that the handler resumes with.
+    */
+  private def observedResultTypes(td: TermDefinition, overrides: OverrideChecks,
+      handlerMembers: Set[TermSymbol], visiting: Set[TermSymbol]): Ls[ErasedValueType] =
+    inferredType(td.tsym).toList ::: overrides.validatedOverriders.getOrElse(td.tsym, Nil).flatMap: overriding =>
+      if visiting(overriding.tsym) || handlerMembers(overriding.tsym) then Nil
+      // Erasure assigns inherited signatures before their overrides. A signature assigned earlier belongs
+      // to a declaration that erasure does not infer, whose published result is all that is known.
+      else if overriding.tsym.isErased then overriding.tsym.sourceDeclaredResultType.getOrElse(ErasedType.Unknown) :: Nil
+      else if overriding.resultWrapperAnnotation.nonEmpty then wrappedResult(overriding, N).callType.toList
+      else declaredResultType(overriding) match
+        case S(declared) => declared :: Nil
+        case N => observedResultTypes(overriding, overrides, handlerMembers, visiting + overriding.tsym)
+
+  /** Computes the representation to publish on a member symbol: a value type, a getter result,
+    * or a function's parameter lists and result. Parameter symbols must already have their erased
+    * types. A function's physical parameter lists are its written ones: arrows in the type of a
+    * function without parameter lists, as in `declare fun f: (Int) -> Str`, describe the function
+    * value it returns. Unannotated overrides can obtain their result from an inherited member
+    * that passed source layout validation in `overrides` and has completed erasure. Other unannotated
+    * members take the result representation of their whole override family (see `observedResultTypes`).
+    */
+  private def erasedDefinitionSignature(td: TermDefinition, overrides: OverrideChecks,
+      handlerMembers: Set[TermSymbol]): Opt[ErasedValueType | ErasedCallableSignature] =
+    val declared = Annot.declareModifierOf(td.annotations).isDefined
+    val candidateResultType = declaredResultType(td).orElse:
+      // Async/generator bodies produce a payload; inherited callable results describe the wrapper,
+      // and the members overriding such a function produce payloads or results of their own.
+      if config.language.useNewResolution && td.resultWrapperAnnotation.nonEmpty then inferredType(td.tsym)
+      // An ordinary override keeps the first specified inherited result unchanged. Infer a result
+      // only when no validated base supplies one, as for a definition with no overrides.
+      else overrides.validatedBases.getOrElse(td.tsym, Nil).iterator.filter(_.isErased)
+        .flatMap(_.sourceDeclaredResultType).nextOption().orElse:
+          // The legacy resolver observes no values, and its unannotated results stay unknown.
+          if config.language.useNewResolution
+          then joined(observedResultTypes(td, overrides, handlerMembers, Set.single(td.tsym)))
+          else N
     val resultType = candidateResultType.map:
       representable(_, td.resultSignature.orElse(td.sign).flatMap(_.toLoc).orElse(td.tsym.toLoc))
-    // The body produces the payload; callers receive the wrapper object instead.
-    // Resolution gives calls of such functions the same wrapper shapes.
-    val result =
-      if !config.language.useNewResolution then ErasedResult.Direct(resultType)
-      else td.resultWrapperAnnotation match
-        case S(_: Annot.Async) => ErasedResult.Async(resultType)
-        case S(_: Annot.Generator) => ErasedResult.Generator(resultType)
-        case N => ErasedResult.Direct(resultType)
+    val result = wrappedResult(td, resultType)
     td.k match
       case syntax.Fun =>
         val paramLists = td.params.map(LoweredParamList.fixedPrefix(_).map(_.sym.erasedType))
@@ -327,9 +366,33 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
     overrideChecks.checkExposedSignatures()
     val inheritedParams = overrideChecks.inheritedParameters
     val parameterSymbols = parameters.iterator.map(_.sym).toSet
+    /** The representations of the values that the parameter `p` receives, for a parameter that neither
+      * declares nor inherits a representation: those of the values that resolution observed for it, and
+      * those observed for the unannotated parameters overriding it, at any depth. Such parameters inherit
+      * the representation of `p`, which must therefore admit the arguments of their members' direct calls.
+      *
+      * Three kinds of overriding parameters keep representations of their own and contribute nothing:
+      * - An annotated parameter declares its representation. Arguments flow from the callers of the
+      *   overridden member to the overriding one, so the arguments of its member's direct calls never reach `p`.
+      * - A rest parameter holds an array of its arguments, whatever their representations (see `eraseParameter`).
+      * - A parameter whose representation is already assigned belongs to a declaration that erasure does not
+      *   infer: erasure assigns inherited parameters before the parameters overriding them.
+      *
+      * `visiting` stops at inheritance cycles.
+      */
+    def observedParameterTypes(p: Param, visiting: Set[VarSymbol]): Ls[ErasedValueType] =
+      inferredType(p.sym).toList ::: overrideChecks.overridingParameters.getOrElse(p.sym, Nil).flatMap: overriding =>
+        if visiting(overriding.sym) || restParameters(overriding.sym) || overriding.sym.isErased
+            || declaredType(overriding.sign, overriding.modulefulness).isDefined
+        then Nil
+        else
+          // Making a required slot optional additionally admits null on direct calls of the overriding member.
+          val default = if overriding.flags.opt && !p.flags.opt then ErasedType.Unknown :: Nil else Nil
+          default ::: observedParameterTypes(overriding, visiting + overriding.sym)
     /** Initializes a parameter's representation from its annotation or the joined representations
       * of its inherited counterparts. A rest parameter with neither gets `Array`; an ordinary
-      * parameter with neither uses its observed values. Recursion initializes local inherited
+      * parameter with neither takes the representation of its whole override family (see
+      * `observedParameterTypes`). Recursion initializes local inherited
       * parameters first, while `visiting` breaks inheritance cycles; pending inherited parameters
       * contribute `Unknown`. Making a required inherited parameter optional also admits its null default.
       */
@@ -350,7 +413,9 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
               S(ErasedType.Union.mk(types ::: defaults))
             // Rest binding constructs an Array, including when lowering slices off trailing
             // arguments. Use that representation unless a declared or inherited type supplies one.
-            case N => Option.when(restParameters(p.sym))(ErasedType.Array).orElse(inferredType(p.sym))
+            case N => Option.when(restParameters(p.sym))(ErasedType.Array).orElse:
+              // The legacy resolver observes no values, and its unannotated parameters stay unknown.
+              if config.language.useNewResolution then joined(observedParameterTypes(p, Set.single(p.sym))) else N
         // Inherited parameter types can also join into a type without a representation.
         p.sym.erasedType = erased.map(representable(_, p.sign.flatMap(_.toLoc).orElse(p.toLoc)))
     parameters.foreach: p =>
@@ -377,6 +442,7 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
       case _ => ()
     // Erase inherited results before their overrides, guarding against erroneous inheritance cycles.
     val definitionsBySymbol = definitions.map(td => td.tsym -> td).toMap
+    val handlerMembers = declarations.handlerMembers.toSet
     /** Publishes a declaration's erased signature after initializing its local inherited members,
       * so an unannotated override can inherit their result representation. Imported members already
       * have erased signatures. `visiting` breaks erroneous inheritance cycles; signature computation
@@ -385,7 +451,7 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
     def eraseDefinition(td: TermDefinition, visiting: Set[TermSymbol]): Unit =
       if !td.tsym.isErased && !visiting(td.tsym) then
         td.tsym.overriddenMembers.flatMap(definitionsBySymbol.get).foreach(eraseDefinition(_, visiting + td.tsym))
-        td.tsym.initializeErasure(erasedDefinitionSignature(td, overrideChecks))
+        td.tsym.initializeErasure(erasedDefinitionSignature(td, overrideChecks, handlerMembers))
     definitions.foreach(eraseDefinition(_, Set.empty))
     declarations.variables.foreach:
       case sym: VarSymbol if !sym.isErased => sym.erasedType = inferredType(sym)
