@@ -833,10 +833,11 @@ class FlowConstraintsCollector(
     
     /** Whether `v` already has a representative in this scope. Global variables
      *  exist before collection, even when their bounds have not been solved yet.
+     * ! This logic is related to the one in [[variable]] and should be kept in sync with it.
      */
     def hasVariable(v: StratVar): Bool =
       forScc.isEmpty || variables.contains(v) || environment.contains(v)
-
+    
     /** Query the strategy variable for this scope. 
      * 
      *  - If in mono mode or the global scope in poly mode, use `v`.
@@ -1043,25 +1044,25 @@ class FlowConstraintsCollector(
           original.upperBounds.foreach(c => copy.upperBounds += copiedConsStrat(c))
       
       for (original, copy) <- copiesOfProdFun; dest <- original.dests do
-        copy.dests += (dest match
+        copy.dests += dest.match
           case c: ConsFun => copiesOfConsFun(c)
-          case c: MarkerConsStrat => c)
+          case c: MarkerConsStrat => c
       for (original, copy) <- copiesOfConsFun; src <- original.srcs do
-        copy.srcs += (src match
+        copy.srcs += src.match
           case p: ProdFun => copiesOfProdFun(p)
-          case p: MarkerProdStrat => p)
+          case p: MarkerProdStrat => p
       for (original, copy) <- copiesOfCtor; dest <- original.dests do
-        copy.dests += (dest match
+        copy.dests += dest.match
           case d: Dtor => copiesOfDtor(d)
           case s: FieldSel => copiesOfFieldSel(s)
-          case c: MarkerConsStrat => c)
+          case c: MarkerConsStrat => c
       for
-        (original, copy) <- copiesOfDtor.iterator ++ copiesOfFieldSel.iterator
+        (original, copy) <- copiesOfDtor.iterator ++ copiesOfFieldSel
         src <- original.srcs
       do
-        copy.srcs += (src match
+        copy.srcs += src.match
           case c: Ctor => copiesOfCtor(c)
-          case p: MarkerProdStrat => p)
+          case p: MarkerProdStrat => p
       
       s
   
@@ -1535,7 +1536,8 @@ class FlowConstraintSolver(
   given Raise = preAnalyzer.raise
   given SymbolPrinter = preAnalyzer.traceSymbolPrinter
   
-  
+  // * These buffers are for deforatation
+  // ! TODO: don't populate them when the analysis is not used for deforestation
   val ctorsWithDests = mutable.Buffer.empty[Ctor]
   val consumersWithSrcs = mutable.Buffer.empty[ConcreteCtorConsumer]
   val prodFunsWithDests = mutable.Buffer.empty[ProdFun]
@@ -1544,6 +1546,7 @@ class FlowConstraintSolver(
   val functionEffectVars = LinkedHashMap.empty[ConcreteId[FunId], EffectVar]
   val callEffectVars = LinkedHashMap.empty[ConcreteId[CallId], EffectVar]
   
+  // * Used for logging and for avoiding double registration into the buffers above.
   private val registered: mutable.Set[Strat] = MutSet.empty
   
   private def register(strat: Strat): Unit = strat match
