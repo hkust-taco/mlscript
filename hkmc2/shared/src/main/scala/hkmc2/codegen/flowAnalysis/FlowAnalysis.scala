@@ -831,6 +831,12 @@ class FlowConstraintsCollector(
       constrain(UnknownProd, v)
       constrain(v, UnknownCons)
     
+    /** Whether `v` already has a representative in this scope. Global variables
+     *  exist before collection, even when their bounds have not been solved yet.
+     */
+    def hasVariable(v: StratVar): Bool =
+      forScc.isEmpty || variables.contains(v) || environment.contains(v)
+
     /** Query the strategy variable for this scope. 
      * 
      *  - If in mono mode or the global scope in poly mode, use `v`.
@@ -919,23 +925,18 @@ class FlowConstraintsCollector(
     private val copiesOfDtor = MutMap.empty[Dtor, Dtor]
     private val copiesOfFieldSel = MutMap.empty[FieldSel, FieldSel]
     
-    // A strategy graph may contain cycles so instantiation can't be done in one
-    // pass. The following stack of callbacks stores the work to do in the
-    // second pass, completing the bounds of copied strategies after the first.
-    private type Callback = () => Unit
-    private val callbacks = mutable.Stack.empty[Callback]
+    private val existingVars = MutSet.empty[StratVar]
 
     private def newInstantiation(instId: Opt[InstantiationId]): InstantiationId =
       referSite :: instId.getOrElse(Nil)
     
-    private def duplicateProdStrat[T <: ProdStrat](s: T): T = (s match
+    private def duplicateProdStrat(s: ProdStrat): ProdStrat = s match
       case v: StratVar => duplicateStratVar(v)
       case p: ProdFun => duplicateProdFun(p)
       case c: Ctor => duplicateCtor(c)
       case s: MarkerProdStrat => s
-    ).asInstanceOf[T]
 
-    private def duplicateConsStrat[T <: ConsStrat](c: T): T = (c match
+    private def duplicateConsStrat(c: ConsStrat): ConsStrat = c match
       case v: StratVar => duplicateStratVar(v)
       case c: ConsFun => duplicateConsFun(c)
       case d: Dtor => duplicateDtor(d)
@@ -943,16 +944,12 @@ class FlowConstraintsCollector(
       case c: MarkerConsStrat => c
       case pAcc: PossibleAccumulator => duplicateStratVar(pAcc.s).asPossibleAccumulator
       case iPrm: IntoParam => duplicateStratVar(iPrm.s).asIntoParam
-    ).asInstanceOf[T]
 
     private def duplicateStratVar(s: StratVar): StratVar =
       assert(s.generatedForFun.flatMap(funToSccRep).contains(groupRep))
       copiesOfStratVar.getOrElseUpdate(s, locally:
         val copy = freshVar(s.name, s.sourceSymbol, cc.forFun)
         cc.strategies += copy
-        callbacks.push: () =>
-          for lower <- s.lowerBounds do copy.lowerBounds += duplicateProdStrat(lower)
-          for upper <- s.upperBounds do copy.upperBounds += duplicateConsStrat(upper)
         copy
       )
     
@@ -966,8 +963,6 @@ class FlowConstraintsCollector(
         p.effect.map(duplicateStratVar)
       )
       cc.strategies += copy
-      callbacks.push: () =>
-        for dest <- p.dests do copy.dests += duplicateConsStrat(dest)
       copy
     )
 
@@ -978,8 +973,6 @@ class FlowConstraintsCollector(
         c.effect.map(duplicateStratVar)
       )
       cc.strategies += copy
-      callbacks.push: () =>
-        for src <- c.srcs do copy.srcs += duplicateProdStrat(src)
       copy
     )
 
@@ -989,16 +982,12 @@ class FlowConstraintsCollector(
         c.args.map((a, b) => a -> duplicateProdStrat(b))
       ))
       cc.strategies += copy
-      callbacks.push: () =>
-        for dest <- c.dests do copy.dests += duplicateConsStrat(dest)
       copy
     )
 
     private def duplicateDtor(c: Dtor): Dtor = copiesOfDtor.getOrElseUpdate(c, locally:
       val copy = new Dtor(c.exprId, S(newInstantiation(c.instantiationId)))
       cc.strategies += copy
-      callbacks.push: () =>
-        for src <- c.srcs do copy.srcs += duplicateProdStrat(src)
       copy
     )
 
@@ -1009,32 +998,70 @@ class FlowConstraintsCollector(
         duplicateStratVar(c.consVar)
       )
       cc.strategies += copy
-      callbacks.push: () =>
-        for src <- c.srcs do copy.srcs += duplicateProdStrat(src)
       copy
     )
+
+    private def copiedProdStrat(s: ProdStrat): ProdStrat = s match
+      case v: StratVar => copiesOfStratVar(v)
+      case p: ProdFun => copiesOfProdFun(p)
+      case c: Ctor => copiesOfCtor(c)
+      case s: MarkerProdStrat => s
+
+    private def copiedConsStrat(c: ConsStrat): ConsStrat = c match
+      case v: StratVar => copiesOfStratVar(v)
+      case c: ConsFun => copiesOfConsFun(c)
+      case d: Dtor => copiesOfDtor(d)
+      case s: FieldSel => copiesOfFieldSel(s)
+      case c: MarkerConsStrat => c
+      case pAcc: PossibleAccumulator => copiesOfStratVar(pAcc.s).asPossibleAccumulator
+      case iPrm: IntoParam => copiesOfStratVar(iPrm.s).asIntoParam
 
     def instantiate(scheme: StratScheme): StratVar =
       // Establish mapping from the scheme's proxy strategy variables to the
       // environment strategy variables. See `StratScheme.environment`.
       for (external, proxy) <- scheme.environment do
+        if cc.hasVariable(external) then existingVars += proxy
         copiesOfStratVar(proxy) = cc.variable(external)
       
+      // Traverses the strategy to duplicate the SCC. It copies structural fields and
+      // leave solved edges empty until every strategy has a copy, because e.g.,
+      // a strategy can be an upper bound of its own result.
       val s = duplicateStratVar(scheme.s)
       scheme.strategies.foreach:
         case p: ProdStrat => duplicateProdStrat(p)
         case c: ConsStrat => duplicateConsStrat(c)
       
-      // The bounds of environment, i.e., the boundary between the scheme's
-      // internal and external strategy variables, need to be established again.
-      for (external, proxy) <- scheme.environment do
-        val internal = copiesOfStratVar(proxy)
-        proxy.lowerBounds.foreach(p => cc.constrain(duplicateProdStrat(p), internal))
-        proxy.upperBounds.foreach(c => cc.constrain(internal, duplicateConsStrat(c)))
+      // Internal variables inherit solved bounds without repeating their internal
+      // interactions. Existing environment variables can have bounds from other
+      // instances, including pending constraints, so tey must be solved again.
+      for (original, copy) <- copiesOfStratVar do
+        if existingVars(original) then
+          original.lowerBounds.foreach(p => cc.constrain(copiedProdStrat(p), copy))
+          original.upperBounds.foreach(c => cc.constrain(copy, copiedConsStrat(c)))
+        else
+          original.lowerBounds.foreach(p => copy.lowerBounds += copiedProdStrat(p))
+          original.upperBounds.foreach(c => copy.upperBounds += copiedConsStrat(c))
       
-      while callbacks.nonEmpty do
-        val callback = callbacks.pop()
-        callback()
+      for (original, copy) <- copiesOfProdFun; dest <- original.dests do
+        copy.dests += (dest match
+          case c: ConsFun => copiesOfConsFun(c)
+          case c: MarkerConsStrat => c)
+      for (original, copy) <- copiesOfConsFun; src <- original.srcs do
+        copy.srcs += (src match
+          case p: ProdFun => copiesOfProdFun(p)
+          case p: MarkerProdStrat => p)
+      for (original, copy) <- copiesOfCtor; dest <- original.dests do
+        copy.dests += (dest match
+          case d: Dtor => copiesOfDtor(d)
+          case s: FieldSel => copiesOfFieldSel(s)
+          case c: MarkerConsStrat => c)
+      for
+        (original, copy) <- copiesOfDtor.iterator ++ copiesOfFieldSel.iterator
+        src <- original.srcs
+      do
+        copy.srcs += (src match
+          case c: Ctor => copiesOfCtor(c)
+          case p: MarkerProdStrat => p)
       
       s
   
