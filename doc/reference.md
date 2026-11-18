@@ -1736,13 +1736,15 @@ let value = wasm.i32.const(1)
 set value = wasm.i64.const(2)       // error: `Int32` and `Int64` have no common representation
 ```
 
-Slots that can receive values from outside the compilation unit admit them: the unannotated
-parameters of exposed definitions (see Resolution Interfaces) are inferred with unknown inputs.
+Compilation files check their exported interfaces for calls from other compilation units (see
+[Resolution](#resolution)). Worksheet blocks perform this exposure check for their public
+definitions only with `#lang(strictResolution: true)`. Unannotated parameters exposed by these
+checks admit unknown inputs. Without that setting, `fun foo(x) = x` followed by `foo(1)` in the
+same worksheet block infers `Int` for both the parameter and the result.
+
 Worksheet blocks are compiled one after the other, and the representations inferred for a block
-are final once it is compiled. Later blocks must therefore use an earlier block's private
-definitions and `let` variables with the representations inferred from that block's own uses.
-Without `#lang(strictResolution: true)`, a block does not expose its public definitions either,
-so the same restriction applies to them.
+are final once it is compiled. Later blocks must use earlier definitions and `let` variables
+with their established representations; new uses cannot widen them.
 
 A mutable field holds its initializer and then the values assigned to it, through any receiver that
 can be an instance of its class, so an unannotated mutable field takes the representation of all of
