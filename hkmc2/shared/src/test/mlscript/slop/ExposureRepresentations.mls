@@ -1,0 +1,105 @@
+:.
+:!js
+
+// Compiled exports admit external inputs even when strict resolution is off.
+// The diagnostic must trace Unknown to the parameter and the exported module.
+:ge
+#lang(strictResolution: false, eagerResolution: false)
+import "./ExposedUnboxedInput.mls"
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.XX: 	  fun identity(value) = value
+//│ ║        	               ^^^^^
+//│ ╟── The exposed interface admits values of unknown representation.
+//│ ╟── Parameter 'value' admits values of unknown shape.
+//│ ║  l.XX: 	  fun identity(value) = value
+//│ ║        	               ^^^^^
+//│ ╟── Member 'identity' is accessible here.
+//│ ║  l.XX: 	  fun identity(value) = value
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^
+//│ ╟── 'ExposedUnboxedInput' is exposed by this compilation unit.
+//│ ║  l.XX: 	module ExposedUnboxedInput with
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.XX: 	  fun identity(value) = value
+//│ ║        	      ^^^^^^^^
+//│ ╟── The exposed interface admits values of unknown representation.
+//│ ╟── Parameter 'value' admits values of unknown shape.
+//│ ║  l.XX: 	  fun identity(value) = value
+//│ ║        	               ^^^^^
+//│ ╟── Member 'identity' is accessible here.
+//│ ║  l.XX: 	  fun identity(value) = value
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^
+//│ ╟── 'ExposedUnboxedInput' is exposed by this compilation unit.
+//│ ║  l.XX: 	module ExposedUnboxedInput with
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+#lang(strictResolution: true, eagerResolution: true)
+val input: Int32 = unsafe.undefined
+
+// A private callback stored in an exposed tuple receives unknown inputs too.
+// Its parameter and result errors must explain how it escapes.
+:ge
+private fun callback(value) = value
+callback(input)
+val callbacks = [callback]
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+1: 	private fun callback(value) = value
+//│ ║        	                     ^^^^^
+//│ ╟── The exposed interface admits values of unknown representation.
+//│ ╟── Parameter 'value' admits values of unknown shape.
+//│ ║  l.+1: 	private fun callback(value) = value
+//│ ║        	                     ^^^^^
+//│ ╟── This value is stored in this tuple.
+//│ ║  l.+3: 	val callbacks = [callback]
+//│ ║        	                ^^^^^^^^^^
+//│ ╟── 'callbacks' is exposed by this compilation unit.
+//│ ║  l.+3: 	val callbacks = [callback]
+//│ ╙──      	^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+1: 	private fun callback(value) = value
+//│ ║        	            ^^^^^^^^
+//│ ╟── The exposed interface admits values of unknown representation.
+//│ ╟── Parameter 'value' admits values of unknown shape.
+//│ ║  l.+1: 	private fun callback(value) = value
+//│ ║        	                     ^^^^^
+//│ ╟── This value is stored in this tuple.
+//│ ║  l.+3: 	val callbacks = [callback]
+//│ ║        	                ^^^^^^^^^^
+//│ ╟── 'callbacks' is exposed by this compilation unit.
+//│ ║  l.+3: 	val callbacks = [callback]
+//│ ╙──      	^^^^^^^^^^^^^
+
+// The unknown input can flow from an exposed function into a private helper.
+// Explain the original public parameter, rather than claiming the helper is exported.
+:ge
+private fun helper(value) = value
+fun forward(value) = helper(value)
+helper(input)
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+1: 	private fun helper(value) = value
+//│ ║        	                   ^^^^^
+//│ ╟── The exposed interface admits values of unknown representation.
+//│ ╟── Parameter 'value' admits values of unknown shape.
+//│ ║  l.+2: 	fun forward(value) = helper(value)
+//│ ║        	            ^^^^^
+//│ ╟── 'forward' is exposed by this compilation unit.
+//│ ║  l.+2: 	fun forward(value) = helper(value)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+1: 	private fun helper(value) = value
+//│ ║        	            ^^^^^^
+//│ ╟── The exposed interface admits values of unknown representation.
+//│ ╟── Parameter 'value' admits values of unknown shape.
+//│ ║  l.+2: 	fun forward(value) = helper(value)
+//│ ║        	            ^^^^^
+//│ ╟── 'forward' is exposed by this compilation unit.
+//│ ║  l.+2: 	fun forward(value) = helper(value)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^
+
+// An incompatible declared result is independent of inferred external inputs.
+// Its error must not blame the exposed parameter.
+:ge
+fun declared(value): Int32 | Any = value
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+1: 	fun declared(value): Int32 | Any = value
+//│ ╙──      	                     ^^^^^^^^^^^

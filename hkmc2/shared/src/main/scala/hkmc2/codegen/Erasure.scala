@@ -120,22 +120,38 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
       S(erase(sign.typeInterpretation.get, Set.empty))
     else ErasedType.eraseSign(sign)
 
-  /** Rejects a declared type without a runtime representation, such as `Int32 | Str`:
+  /** An external input that contributed to this slot's inferred representation, if any.
+    * Its provenance identifies the exposed interface even when the value flowed into a private helper.
+    */
+  private def externalInputOrigin(symbol: ErasureInputs.InputSymbol): Opt[UnknownValueShape] =
+    val inputs = summon[State].newResolverState.erasureInputs
+    if !config.language.useNewResolution || !inputs.isPrepared(symbol) then N
+    else inputs.shapes(symbol).iterator.map(_.applicationHead._1).collectFirst:
+      case unknown: UnknownValueShape if unknown.fromPublicInterface => unknown
+
+  /** Rejects a slot type without a runtime representation, such as `Int32 | Str`:
     * an unboxed primitive shares no representation with any other type, so no value of such
     * a slot can be stored or passed. Reporting it once at the declaration replaces the errors
     * that each coercion into or out of the slot would report. Class headers are published
     * before declarations are erased, so canonicalizing here sees complete parent chains.
+    * `inferredSource` identifies observations used to infer the type; declared types have no such source.
     *
     * The Prelude and Runtime are erased before the runtime's symbols exist, and
     * canonicalizing a type such as `Unit` requires them. Those library declarations are not
     * checked; every other compilation unit is erased after the runtime is loaded.
     */
-  private def representable(tpe: ErasedValueType, loc: Opt[Loc]): ErasedValueType =
+  private def representable(tpe: ErasedValueType, loc: Opt[Loc],
+      inferredSource: Opt[ErasureInputs.InputSymbol]): ErasedValueType =
     if !summon[State].runtimeSymbolsInitialized then tpe
     else tpe.canonicalize match
       case incompatible @ ErasedType.Incompatible(lhs, rhs) if !incompatible.reported =>
+        val origin =
+          if lhs == ErasedType.Unknown || rhs == ErasedType.Unknown then inferredSource.flatMap(externalInputOrigin)
+          else N
+        val notes = origin.toList.flatMap(_.diagnostic(
+          msg"The exposed interface admits values of unknown representation."))
         raise(ErrorReport(
-          msg"Types '${lhs.describe}' and '${rhs.describe}' have no common representation" -> loc :: Nil,
+          msg"Types '${lhs.describe}' and '${rhs.describe}' have no common representation" -> loc :: notes,
           source = Diagnostic.Source.Compilation))
         ErasedType.Incompatible(lhs, rhs)(reported = true)
       case _ => tpe
@@ -226,7 +242,8 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
   private def erasedDefinitionSignature(td: TermDefinition, overrides: OverrideChecks,
       handlerMembers: Set[TermSymbol]): Opt[ErasedValueType | ErasedCallableSignature] =
     val declared = Annot.declareModifierOf(td.annotations).isDefined
-    val candidateResultType = declaredResultType(td).orElse:
+    val declaredResult = declaredResultType(td)
+    val candidateResultType = declaredResult.orElse:
       // Async/generator bodies produce a payload; inherited callable results describe the wrapper,
       // and the members overriding such a function produce payloads or results of their own.
       if config.language.useNewResolution && td.resultWrapperAnnotation.nonEmpty then inferredType(td.tsym)
@@ -239,7 +256,8 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
           then joined(observedResultTypes(td, overrides, handlerMembers, Set.single(td.tsym)))
           else N
     val resultType = candidateResultType.map:
-      representable(_, td.resultSignature.orElse(td.sign).flatMap(_.toLoc).orElse(td.tsym.toLoc))
+      representable(_, td.resultSignature.orElse(td.sign).flatMap(_.toLoc).orElse(td.tsym.toLoc),
+        if declaredResult.isEmpty then S(td.tsym) else N)
     val result = wrappedResult(td, resultType)
     td.k match
       case syntax.Fun =>
@@ -415,7 +433,8 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
       */
     def eraseParameter(p: Param, visiting: Set[VarSymbol]): Unit =
       if !p.sym.isErased && !visiting(p.sym) then
-        val erased = declaredParameterType(p).orElse:
+        val declared = declaredParameterType(p)
+        val erased = declared.orElse:
           inheritedParams.get(p.sym) match
             case S(inherited) =>
               // Imported parameters are already erased; erroneous inheritance cycles can leave a
@@ -434,7 +453,8 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
               // The legacy resolver observes no values, and its unannotated parameters stay unknown.
               if config.language.useNewResolution then joined(observedParameterTypes(p, Set.single(p.sym))) else N
         // Inherited parameter types can also join into a type without a representation.
-        p.sym.erasedType = erased.map(representable(_, p.sign.flatMap(_.toLoc).orElse(p.toLoc)))
+        p.sym.erasedType = erased.map(representable(_, p.sign.flatMap(_.toLoc).orElse(p.toLoc),
+          if declared.isEmpty && !inheritedParams.contains(p.sym) then S(p.sym) else N))
     parameters.foreach: p =>
       eraseParameter(p, Set.empty)
       // Public fields have a BlockMemberSymbol; private/auxiliary constructor fields have a TermSymbol.
