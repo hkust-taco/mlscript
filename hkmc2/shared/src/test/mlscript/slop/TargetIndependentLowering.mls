@@ -50,7 +50,7 @@ trailing(1, 2, 3)
 //│   let xs, y;
 //│   do runtime⁰.checkVariadicArgs⁰("trailing", 2, 1, args);
 //│   set xs = runtime⁰.Tuple⁰.sliceArray⁰(args, 0, 1);
-//│   set y = args.-1;
+//│   set y = (args.-1 as! Int⁰);
 //│   return y
 //│ };
 //│ return trailing¹(1, 2, 3)
@@ -60,7 +60,7 @@ trailing(1, 2, 3)
 //│   let xs, y;
 //│   runtime.checkVariadicArgs("trailing", 2, 1, args);
 //│   xs = runtime.Tuple.sliceArray(args, 0, 1);
-//│   y = args.at(-1);
+//│   y = args.at(-1) /* as! Int */;
 //│   return y
 //│ };
 //│ return trailing(1, 2, 3)
@@ -78,7 +78,7 @@ trailing(1, 2, 3)
 //│   let xs, y;
 //│   do runtime⁰.checkVariadicArgs⁰("trailing", 2, 1, args);
 //│   set xs = runtime⁰.Tuple⁰.sliceArray⁰(args, 0, 1);
-//│   set y = args.-1;
+//│   set y = (args.-1 as! Int⁰);
 //│   return y
 //│ };
 //│ return trailing³(1, 2, 3)

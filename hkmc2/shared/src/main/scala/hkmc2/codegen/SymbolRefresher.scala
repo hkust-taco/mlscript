@@ -52,9 +52,11 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
     assertUpdate(s, new PatternSymbol(s.id, s.params, s.body))
 
   private def refreshClassCtorSymbol(s: ClassCtorSymbol) =
-    assertUpdate(s, new ClassCtorSymbol(s.k,
+    val ns = new ClassCtorSymbol(s.k,
       s.owner.map(o => mapping.getOrElse(o, o).asInstanceOf[InnerSymbol]),
-      mapping.getOrElse(s.associatedCls, s.associatedCls).asInstanceOf[ClassSymbol]))
+      mapping.getOrElse(s.associatedCls, s.associatedCls).asInstanceOf[ClassSymbol])
+    ns.initializeErasure(s.irErasure)
+    assertUpdate(s, ns)
 
   def refreshParamList(pl: LoweredParamList) =
     for

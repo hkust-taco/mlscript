@@ -43,14 +43,14 @@ pattern Steps = @compile (Step as Steps | _)
 //│                   set tmp2 = { ...bindings, ...bindings1 };
 //│                   set a = tmp2.a﹖;
 //│                   set b = tmp2.b﹖;
-//│                   set c = +⁰(a, b);
+//│                   set c = (+⁰(a, b) as! Int⁰);
 //│                   set tmp3 = +⁰("reduce ", a);
 //│                   set tmp4 = +⁰(tmp3, " + ");
 //│                   set tmp5 = +⁰(tmp4, b);
 //│                   set tmp6 = +⁰(tmp5, " = ");
 //│                   set tmp7 = +⁰(tmp6, c);
 //│                   do Predef⁰.print⁰(tmp7);
-//│                   set inlinedVal1 = Lit⁰((c as! Int⁰));
+//│                   set inlinedVal1 = Lit⁰(c);
 //│                   return new runtime⁰.MatchSuccess⁰(inlinedVal1, null)
 //│                 else
 //│                   return new runtime⁰.MatchFailure⁰("topmost")

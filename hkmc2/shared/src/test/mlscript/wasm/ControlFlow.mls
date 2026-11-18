@@ -138,9 +138,9 @@ tailMatchAllValue(1)
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $tag@0 i32) (field $parent@1 (ref null $TypeInfoBase)))))
 //│   (type $Object (sub (struct (field $typeinfo@0 (mut (ref $TypeInfoBase))))))
-//│   (type $tailMatchAllValue (func (param $x (ref null any)) (result (ref null any))))
+//│   (type $tailMatchAllValue (func (param $x (ref null i31)) (result (ref null i31))))
 //│   (type $entry (func (result (ref null i31))))
-//│   (func $tailMatchAllValue (export "tailMatchAllValue") (type $tailMatchAllValue) (param $x (ref null any)) (result (ref null any))
+//│   (func $tailMatchAllValue (export "tailMatchAllValue") (type $tailMatchAllValue) (param $x (ref null i31)) (result (ref null i31))
 //│     (block $match
 //│       (if
 //│         (i32.eq

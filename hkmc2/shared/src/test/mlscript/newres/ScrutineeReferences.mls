@@ -48,15 +48,15 @@ private fun reader[A](value: Box[A] | null) =
 //│         throw "empty"
 //│       else
 //│         set output = value;
-//│         set box = output;
+//│         set box = (output as! Box⁰);
 //│         return box.value²
 //│     end
 //│   };
 //│   return read²
 //│ };
-//│ define Box⁰ as class Box² {
+//│ define Box¹ as class Box⁰ {
 //│   val value³;
-//│   constructor Box¹(value) { define value³ as val value² = value; end }
+//│   constructor Box²(value) { define value³ as val value² = value; end }
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

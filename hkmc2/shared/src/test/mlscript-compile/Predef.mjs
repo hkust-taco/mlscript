@@ -182,17 +182,19 @@ lambda = (undefined, function (Predef2, a, b, field) {
     }
   }
   static equals(a, b) {
-    let scrut, scrut1, scrut2, ac, scrut3, md, scrut4, scrut5, scrut6, scrut7, scrut8, scrut9, lambda$here, lambda$here1;
+    let scrut, a1, b1, scrut1, scrut2, ac, scrut3, md, scrut4, scrut5, scrut6, scrut7, scrut8, scrut9, lambda$here, lambda$here1;
     scrut = a === b;
     if (scrut === true) {
       return true
     }
     if (a instanceof globalThis.Array) {
+      a1 = a;
       if (b instanceof globalThis.Array) {
-        scrut1 = a.length === b.length;
+        b1 = b;
+        scrut1 = a1.length === b1.length;
         if (scrut1 === true) {
-          lambda$here = lambda$1(Predef, b);
-          return runtime.safeCall(a.every(lambda$here))
+          lambda$here = lambda$1(Predef, b1);
+          return runtime.safeCall(a1.every(lambda$here))
         }
       }
     }

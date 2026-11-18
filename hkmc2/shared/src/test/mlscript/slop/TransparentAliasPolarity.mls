@@ -31,7 +31,7 @@ fun inputOnly(source: Source[in Item]) = source.item.value
 //│ ║  l.+1: 	fun inputOnly(source: Source[in Item]) = source.item.value
 //│ ║        	                                         ^^^^^^^^^^^^^^^^^
 //│ ╟── Value with an empty interface does not contain member 'value'
-//│ ╟── This type argument specifies only an input bound.
+//│ ╟── Only an input bound appears here.
 //│ ║  l.+1: 	fun inputOnly(source: Source[in Item]) = source.item.value
 //│ ║        	                             ^^^^^^^
 //│ ╙── Values read through it have no output bound more specific than 'Any'.

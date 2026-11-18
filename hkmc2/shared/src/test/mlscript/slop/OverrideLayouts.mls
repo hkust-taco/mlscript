@@ -58,6 +58,7 @@ private class RequiredOverride() extends OptionalBase() with
 //│ ╟── The overridden member 'pick' is defined here
 //│ ║  l.+2: 	  open fun pick(value?: Any): Any = value
 //│ ╙──      	           ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Equal minimum arities do not preserve which actual argument fills a trailing slot.
 :ge
@@ -71,6 +72,7 @@ private class ReboundTail() extends LeadingBase() with
 //│ ╟── The overridden member 'pick' is defined here
 //│ ║  l.+2: 	  open fun pick(first: Any, second?: Any): Any = second
 //│ ╙──      	           ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Extra optional slots must not consume the inherited rest tuple's elements.
 :ge
@@ -84,6 +86,7 @@ private class StolenRest() extends RestBase() with
 //│ ╟── The overridden member 'collect' is defined here
 //│ ║  l.+2: 	  open fun collect(...values: Array[Any]): Any = values
 //│ ╙──      	           ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Keeping the trailing slot does not permit stealing an element from the middle slice.
 :ge
@@ -95,6 +98,7 @@ private class StolenMiddle() extends LayoutBase() with
 //│ ╟── The overridden member 'collect' is defined here
 //│ ║  l.XX: 	  open fun collect(first: Any, optional?: Any, ...middle: Array[Any], last: Any): Any = [first, optional, middle, last]
 //│ ╙──      	           ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Implementations may ignore inherited drop slots without shifting the retained inputs.
 :noInline
@@ -119,6 +123,7 @@ private class ShiftedAfterDrop() extends DropMiddle() with
 //│ ╟── The overridden member 'pick' is defined here
 //│ ║  l.+2: 	  open fun pick(first: Any, drop ignored: Any, last: Any): Any = last
 //│ ╙──      	           ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A rest channel may be ignored only when no retained suffix changes its binding.
 :noInline
@@ -142,6 +147,7 @@ private class ShiftedAfterRest() extends DropMiddleRest() with
 //│ ╟── The overridden member 'pick' is defined here
 //│ ║  l.+2: 	  open fun pick(first: Any, drop ...ignored: Array[Any], last: Any): Any = last
 //│ ╙──      	           ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A retained non-droppable argument cannot disappear, even though JS ignores extras.
 :ge
@@ -153,6 +159,7 @@ private class LostInput() extends FixedPair() with
 //│ ╟── The overridden member 'pair' is defined here
 //│ ║  l.XX: 	  open fun pair(first: Any, second: Any): Any = [first, second]
 //│ ╙──      	           ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Application stages cannot be combined or split by an override.
 :ge
@@ -166,6 +173,7 @@ private class FlattenedOverride() extends CurriedBase() with
 //│ ╟── The overridden member 'pick' is defined here
 //│ ║  l.+2: 	  open fun pick(first: Any)(second: Any): Any = second
 //│ ╙──      	           ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Abstract declarations must be checked before executable code is selected.
 :ge
@@ -179,6 +187,7 @@ private abstract class AbstractNarrowing() extends AbstractLayout() with
 //│ ╟── The overridden member 'pick' is defined here
 //│ ║  l.+2: 	  fun pick(value?: Any): Any
 //│ ╙──      	      ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Declarations without bodies carry the same optional/rest binding contract
 // as executable methods.
@@ -195,6 +204,7 @@ declare class DeclaredRebinding extends DeclaredBase {
 //│ ╟── The overridden member 'pick' is defined here
 //│ ║  l.+2: 	  declare fun pick(first: Any, second?: Any): Any
 //│ ╙──      	              ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // The same declaration-only path checks scalar representations after correspondence.
 :ge
@@ -210,6 +220,7 @@ declare class DeclaredNarrowing extends DeclaredTypedBase {
 //│ ╟── The overridden member 'pick' is defined here
 //│ ║  l.+2: 	  declare fun pick(value: Int): Int
 //│ ╙──      	              ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A written method can override a declared method that has the same parameter lists.
 // A call through the declared base passes its argument list to the overriding method.
@@ -235,7 +246,10 @@ private class ParameterlessOverDeclared() extends DeclaredTypedBase with
 //│ ╟── The overridden member 'pick' is defined here
 //│ ║  l.XX: 	  declare fun pick(value: Int): Int
 //│ ╙──      	              ^^^^
-//│ ═══[RUNTIME ERROR] TypeError: Class extends value undefined is not a constructor or null
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+private abstract class AbstractFunctionValue() with
+  fun pick: (Int) -> Int
 
 // The arrows in the type of a declared or abstract member without parameter lists describe
 // the function value it holds; they are not parameter lists, so a method cannot override it.
@@ -246,8 +260,6 @@ declare class DeclaredFunctionValue {
 declare class MethodOverDeclaredValue extends DeclaredFunctionValue {
   declare override fun pick(value: Int): Int
 }
-private abstract class AbstractFunctionValue() with
-  fun pick: (Int) -> Int
 private class MethodOverAbstractValue() extends AbstractFunctionValue() with
   override fun pick(value: Int): Int = value
 //│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the number of parameter lists
@@ -257,11 +269,12 @@ private class MethodOverAbstractValue() extends AbstractFunctionValue() with
 //│ ║  l.+2: 	  declare fun pick: (Int) -> Int
 //│ ╙──      	              ^^^^
 //│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the number of parameter lists
-//│ ║  l.+10: 	  override fun pick(value: Int): Int = value
-//│ ║         	                   ^^^^^^^^^^^^
+//│ ║  l.+8: 	  override fun pick(value: Int): Int = value
+//│ ║        	                   ^^^^^^^^^^^^
 //│ ╟── The overridden member 'pick' is defined here
-//│ ║  l.+8: 	  fun pick: (Int) -> Int
+//│ ║  l.XX: 	  fun pick: (Int) -> Int
 //│ ╙──      	      ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A member holding a function value implements such a member, and calls apply that value.
 :noInline
@@ -295,3 +308,4 @@ private class FilledAbsentOptional() extends DropBeforeOptional() with
 //│ ╟── The overridden member 'pick' is defined here
 //│ ║  l.+2: 	  open fun pick(first: Any, drop ignored: Any, last?: Any): Any = last
 //│ ╙──      	           ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

@@ -85,15 +85,21 @@ object Lowering:
 import Lowering.*
 
 class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasure):
+
+  private val representationErrors = new Diagnostic.Reporter(summon[Raise])
   
   val newResolution: Bool = config.language.useNewResolution
   val strictResolution: Bool = config.language.strictResolution
   
   /** Whether a reference cannot be compiled: either an error was reported for it, or it targets a definition
     * marked as erroneous, such as one of the definitions of a name rejected by Elaborator.
+    * Erased result errors also reject references to definitions from earlier failed worksheet blocks.
     * Erroneous definitions are not lowered (see `blockImpl` and `gatherMembers`). */
   private def erroneousRef(ref: NewResolvable): Bool =
-    ref.isErroneous || ref.resolvedTargets.exists(_.defn.exists(_.isErroneous))
+    ref.isErroneous || ref.resolvedTargets.exists: target =>
+      target.defn.exists(_.isErroneous) || (target match
+        case symbol: TermSymbol => summon[Erasure].representationError(symbol.sourceErasedResult.bodyType).isDefined
+        case _ => false)
   
   /** Selections on a name already reported as missing (see NewResolver.settleUnboundReferences)
     * have no target either, which needs no other error. */
@@ -1923,10 +1929,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     */
   def castTo(r: Result, expected: Opt[ErasedValueType], loc: Opt[Loc]): Result =
     r.coerceTo(expected.getOrElse(ErasedType.Unknown), loc.orElse(r.toLoc))
+      (using summon[Ctx], summon[State], representationErrors, summon[Config])
   
   /** Like [[castTo]], for a path that flows into a path position: a cast of a path is itself a path. */
   def castPathTo(p: Path, expected: Opt[ErasedValueType], loc: Opt[Loc]): Path =
     p.coerceTo(expected.getOrElse(ErasedType.Unknown), loc.orElse(p.toLoc))
+      (using summon[Ctx], summon[State], representationErrors, summon[Config])
 
   /** The declared erased type of the field a selection resolves to, if it is an annotated `TermSymbol`. */
   private def fieldErasedType(s: Opt[Symbol]): Opt[ErasedValueType] =
@@ -1950,6 +1958,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     summon[Erasure].requireCompleted(main)
     
     val (imps, funs, rest) = splitBlock(main.stats, Nil, Nil, Nil)
+    if summon[Erasure].hasErrors then return Program(imps.map(imp => imp.sym -> imp.str), compError)
     
     // * File-level values participate in the compilation unit's default export and private ABI.
     // * Only values inside local blocks can be replaced by fresh variables without breaking that linkage.
@@ -1960,9 +1969,21 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       inScopedBlockExcept(symbolsToPreserve)(using LoweringCtx.empty(symbolsToPreserve ++ topLevelVals)):
         block(funs ::: rest, R(main.res))(ImplctRet)
     
+    // Recovery after an invalid coercion can leave ill-typed IR. Neither optimization nor a backend
+    // may consume it, including through symbols whose definitions an importer could otherwise inline.
+    if representationErrors.hasErrors then
+      val unlink = new BlockTraverser:
+        override def applyDefn(defn: Defn): Unit =
+          defn.defnSym.foreach(_.irDefn = N)
+          super.applyDefn(defn)
+        override def applyFunDefn(fun: FunDefn): Unit =
+          fun.dSym.irDefn = N
+          super.applyFunDefn(fun)
+      unlink.applyBlock(blk)
+
     Program(
       imps.map(imp => imp.sym -> imp.str),
-      blk
+      if representationErrors.hasErrors then compError else blk
     )
   
   

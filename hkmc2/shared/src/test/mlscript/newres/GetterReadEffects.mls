@@ -95,7 +95,7 @@ test()
 //│ ╟── Inherited member 'value' is defined here
 //│ ║  l.+4: 	    val value: Int
 //│ ╙──      	        ^^^^^
-//│ = 0
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // An abstract getter interface preserves effects when dispatching to its child.
 :expect 1

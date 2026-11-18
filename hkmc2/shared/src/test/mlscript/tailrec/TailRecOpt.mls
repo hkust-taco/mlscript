@@ -50,7 +50,7 @@ f(10000, 20000, 0)
 //│                 set id = 0;
 //│                 continue loopLabel
 //│               else
-//│                 return param2
+//│                 return (param2 as! Int⁰)
 //│             end
 //│         end
 //│       else
@@ -170,7 +170,7 @@ fun g(n) =
 //│             set id = 1;
 //│             continue loopLabel
 //│           else
-//│             return param5
+//│             return (param5 as! Array⁰)
 //│         end
 //│       1 =>
 //│         let tmp, tmp1, tmp2, argList, inlinedVal, tmp3;
@@ -181,10 +181,10 @@ fun g(n) =
 //│         set tmp3 = -¹(argList.length⁰, 0);
 //│         set inlinedVal = argList.slice⁰(5, tmp3);
 //│         set param0 = argList.0;
-//│         do argList.1;
-//│         do argList.2;
-//│         do argList.3;
-//│         do argList.4;
+//│         do (argList.1 as! Int⁰);
+//│         do (argList.2 as! Int⁰);
+//│         do (argList.3 as! Int⁰);
+//│         do (argList.4 as! Int⁰);
 //│         set param5 = inlinedVal;
 //│         set id = 0;
 //│         continue loopLabel
@@ -462,7 +462,7 @@ fun typedSpread(a: Int, b?: Int, ...z) = if z is
   [x, ...xs] then typedSpread(...[a + 1, b, ...xs])
 typedSpread(0, 1, 2, 3, 4)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ define typedSpread⁰ as fun typedSpread¹(a: Int⁰, b?: Unknown, ...z: Array⁰): ? {
+//│ define typedSpread⁰ as fun typedSpread¹(a: Int⁰, b?: Unknown, ...z: Array⁰): Int⁰ {
 //│   loop loopLabel:
 //│     let middleElements: Array⁰, tmp: Int⁰, tmp1: Array⁰;
 //│     match z

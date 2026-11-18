@@ -246,10 +246,10 @@ fun g(n)(m) =
 //│         set argList = [...tmp1, 3, ...tmp2, ...tmp3, 7, param0_tmp];
 //│         set tmp4 = -¹(argList.length⁰, 0);
 //│         set inlinedVal = argList.slice⁰(4, tmp4);
-//│         set param1 = argList.0;
-//│         do argList.1;
-//│         do argList.2;
-//│         do argList.3;
+//│         set param1 = (argList.0 as! Int⁰);
+//│         do (argList.1 as! Int⁰);
+//│         do (argList.2 as! Int⁰);
+//│         do (argList.3 as! Int⁰);
 //│         set param5 = inlinedVal;
 //│         set param6 = param1_tmp;
 //│         set id = 0;

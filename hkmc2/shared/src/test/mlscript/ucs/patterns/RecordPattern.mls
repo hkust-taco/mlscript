@@ -153,7 +153,7 @@ foo(1 :: "this is invalid")
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Stack.Base'
 //│ ║  l.+1: 	foo(1 :: "this is invalid")
 //│ ╙──      	         ^^^^^^^^^^^^^^^^^
-//│ = "yeah we're done"
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 foo(1 :: 2 :: Nil)
 //│ = "there are two of them"

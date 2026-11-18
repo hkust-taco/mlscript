@@ -84,6 +84,10 @@ fun foo(x) = x is
 
 :e
 fun foo(x) = x is Pair(a, b) | Int
+//│ ╔══[COMPILATION ERROR] Resolution error in alternation
+//│ ║  l.+1: 	fun foo(x) = x is Pair(a, b) | Int
+//│ ║        	             ^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── A type cannot be used as a runtime value.
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (alternation)
 //│ ║  l.+1: 	fun foo(x) = x is Pair(a, b) | Int
 //│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^

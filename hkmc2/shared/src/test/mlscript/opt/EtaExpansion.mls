@@ -77,7 +77,7 @@ g(f, 1)(2) + g(h, 3)(4)
 //│   return *⁰(a, b)
 //│ };
 //│ define g⁴ as fun g⁵(k, x) {
-//│   return k(x)
+//│   return (k(x) as! Function⁰)
 //│ };
 //│ set baseCall = g⁵(f⁵, 1);
 //│ set tmp = baseCall(2);
@@ -98,14 +98,9 @@ fun h(a)(b) = a * b
 fun g(k, x) = k(x)
 g(f, 1)(2) + g(h, 3)(4)
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > g⁶#0 @ g⁷: [2, 1]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp, baseCall, tmp1, g$g;
-//│ @private
-//│ define g$g as fun g$g⁰(k, x)(eta$0$0) {
-//│   return k(x)(eta$0$0)
-//│ };
+//│ let baseCall, tmp, baseCall1, tmp1;
 //│ @affine(1)
 //│ define f⁶ as fun f⁷(a)(b) {
 //│   return +⁰(a, b)
@@ -114,11 +109,12 @@ g(f, 1)(2) + g(h, 3)(4)
 //│   return *⁰(a, b)
 //│ };
 //│ define g⁶ as fun g⁷(k, x) {
-//│   return k(x)
+//│   return (k(x) as! Function⁰)
 //│ };
-//│ set tmp = g$g⁰(f⁷, 1)(2);
-//│ set baseCall = g⁷(h⁵, 3);
-//│ set tmp1 = baseCall(4);
+//│ set baseCall = g⁷(f⁷, 1);
+//│ set tmp = baseCall(2);
+//│ set baseCall1 = g⁷(h⁵, 3);
+//│ set tmp1 = baseCall1(4);
 //│ return +⁰(tmp, tmp1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 15
@@ -275,7 +271,9 @@ app(returnRest2(0))
 //│   return rest2¹()(...eta$0$rest)
 //│ };
 //│ @private
-//│ define app⁰ as fun app¹(f) { return f(2, 3) };
+//│ define app⁰ as fun app¹(f) {
+//│   return (f(2, 3) as! Array⁰)
+//│ };
 //│ set tmp = returnRest2¹();
 //│ return app¹(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -328,9 +326,9 @@ f(k1, 1) + f(k2, 5)
 //│   match scrut
 //│     true =>
 //│       do Predef⁰.print⁰("g");
-//│       return k(y)
+//│       return (k(y) as! Function⁰)
 //│     else
-//│       return k(y)
+//│       return (k(y) as! Function⁰)
 //│   end
 //│ };
 //│ @affine(1)
@@ -344,7 +342,7 @@ f(k1, 1) + f(k2, 5)
 //│   let h;
 //│   set h = g⁸(k, x);
 //│   do Predef⁰.print⁰("between");
-//│   return h(2)
+//│   return (h(2) as! Int⁰)
 //│ };
 //│ set tmp = f⁹(k1¹, 1);
 //│ set tmp1 = f⁹(k2¹, 5);
@@ -370,24 +368,12 @@ fun f(k, x) =
   h(2)
 f(k1, 1) + f(k2, 5)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let a, b, tmp, tmp1, f_a_b$b, f_a$a, f$f;
-//│ @private
-//│ define f_a_b$b as fun f_a_b$b⁰(k, y)(eta$0$0) {
-//│   return k(y)(eta$0$0)
-//│ };
-//│ @private
-//│ define f_a$a as fun f_a$a⁰(k, y)(eta$0$0) {
-//│   return f_a_b$b⁰(k, y)(eta$0$0)
-//│ };
-//│ @private
-//│ define f$f as fun f$f⁰(k, x) {
-//│   return f_a$a⁰(k, x)(2)
-//│ };
+//│ let a, b, tmp, tmp1;
 //│ define a as fun a⁰(k, y) {
 //│   return b⁰(k, y)
 //│ };
 //│ define b as fun b⁰(k, y) {
-//│   return k(y)
+//│   return (k(y) as! Function⁰)
 //│ };
 //│ @affine(1)
 //│ define k1² as fun k1³(a1)(b1) {
@@ -399,9 +385,9 @@ f(k1, 1) + f(k2, 5)
 //│ define f¹⁰ as fun f¹¹(k, x) {
 //│   let h;
 //│   set h = a⁰(k, x);
-//│   return h(2)
+//│   return (h(2) as! Int⁰)
 //│ };
-//│ set tmp = f$f⁰(k1³, 1);
+//│ set tmp = f¹¹(k1³, 1);
 //│ set tmp1 = f¹¹(k2³, 5);
 //│ return +⁰(tmp, tmp1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -425,35 +411,17 @@ fun f(k, x) =
 f(k1, 1) + f(k2, 5)
 //│ ═══[WARNING] Cannot yet lift class/module `C` as it is used in an instance check.
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let g, get, tmp, tmp1, f_g$g, f$f;
-//│ @private
-//│ define f_g$g as fun f_g$g⁰(k, y)(eta$0$0) {
-//│   return k(y)(eta$0$0)
-//│ };
-//│ @private
-//│ define f$f as fun f$f¹(k, x) {
-//│   let C, tmp2, tmp3;
-//│   define C as class C¹ {
-//│     val x⁰;
-//│     constructor C⁰(x1) {
-//│       define x⁰ as val x¹ = x1;
-//│       end
-//│     }
-//│   };
-//│   set tmp2 = new C¹(x);
-//│   set tmp3 = get⁰(C¹, tmp2);
-//│   return f_g$g⁰(k, tmp3)(2)
-//│ };
+//│ let g, get, tmp, tmp1;
 //│ define get as fun get⁰(C$, o) {
 //│   match o
-//│     C² =>
-//│       return o.x²
+//│     C⁰ =>
+//│       return o.x⁰
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
 //│ define g as fun g⁹(k, y) {
-//│   return k(y)
+//│   return (k(y) as! Function⁰)
 //│ };
 //│ @affine(1)
 //│ define k1⁴ as fun k1⁵(a)(b) {
@@ -464,22 +432,45 @@ f(k1, 1) + f(k2, 5)
 //│ };
 //│ define f¹² as fun f¹³(k, x) {
 //│   let C, h, tmp2, tmp3;
-//│   define C as class C² {
-//│     val x³;
-//│     constructor C³(x1) {
-//│       define x³ as val x² = x1;
+//│   define C as class C⁰ {
+//│     val x¹;
+//│     constructor C¹(x1) {
+//│       define x¹ as val x⁰ = x1;
 //│       end
 //│     }
 //│   };
-//│   set tmp2 = new C²(x);
-//│   set tmp3 = get⁰(C², tmp2);
+//│   set tmp2 = new C⁰(x);
+//│   set tmp3 = get⁰(C⁰, tmp2);
 //│   set h = g⁹(k, tmp3);
 //│   return h(2)
 //│ };
-//│ set tmp = f$f¹(k1⁵, 1);
+//│ set tmp = f¹³(k1⁵, 1);
 //│ set tmp1 = f¹³(k2⁵, 5);
 //│ return +⁰(tmp, tmp1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 13
 
 
+// the params eta expansion appends take the types of the params they stand for, and the result is what the targets
+// return: `g(x: Int)(eta$0$0: Int): Int` passes `eta$0$0` to `b: Int` without a cast
+:soir
+:siret
+:noInline
+:expect 3
+@affine(1) fun f(a: Int)(b: Int) = a + b
+fun g(x) = f(x)
+g(1)(2)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let g$g;
+//│ @private
+//│ define g$g as fun g$g⁰(x: Int⁰)(eta$0$0: Int⁰): Int⁰ {
+//│   return f¹⁴(x)(eta$0$0)
+//│ };
+//│ @affine(1)
+//│ define f¹⁵ as fun f¹⁴(a: Int⁰)(b: Int⁰): Int⁰ {
+//│   return +⁰(a, b)
+//│ };
+//│ define g¹⁰ as fun g¹¹(x: Int⁰)(eta$0$0: Int⁰): Int⁰ { return f¹⁴(x)(eta$0$0) };
+//│ return g$g⁰(1)(2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 3

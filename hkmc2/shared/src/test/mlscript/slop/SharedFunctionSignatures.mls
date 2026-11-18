@@ -263,7 +263,7 @@ let lifted = capturedVariadic(30)
 //│   set tmp6 = +⁰(tmp5, last);
 //│   return (+⁰(tmp6, extra) as! Int⁰)
 //│ };
-//│ define capturedVariadic⁰ as fun capturedVariadic¹(base: Int⁰): ? {
+//│ define capturedVariadic⁰ as fun capturedVariadic¹(base: Int⁰): Function⁰ {
 //│   return sum$⁰(base)
 //│ };
 //│ set lifted⁰ = capturedVariadic¹(30);

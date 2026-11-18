@@ -51,20 +51,20 @@ object TypeShape:
     protected def sameValue(other: ValueKey): Bool = other match
       case that: Tuple => fields == that.fields
       case _ => false
-  final case class Record(source: Term.Rcd, fields: Ls[(RcdField, TypeResolution)]) extends TypeShape:
+  final case class Record(source: Term.Rcd, fields: Ls[(RcdField, TypeArgumentResolution)]) extends TypeShape:
     protected val valueHash: Int =
       var hash = ValueKey.hash(ValueKey.tag(this), System.identityHashCode(source))
       var rest = fields
       while rest.nonEmpty do
         val field = rest.head
-        hash = ValueKey.hash(hash, System.identityHashCode(field._1), System.identityHashCode(field._2))
+        hash = ValueKey.hash(hash, System.identityHashCode(field._1), field._2.hashCode)
         rest = rest.tail
       hash
     protected def sameValue(other: ValueKey): Bool = other match
       case that: Record if source eq that.source =>
         var left = fields
         var right = that.fields
-        while left.nonEmpty && right.nonEmpty && (left.head._1 eq right.head._1) && (left.head._2 eq right.head._2) do
+        while left.nonEmpty && right.nonEmpty && (left.head._1 eq right.head._1) && left.head._2 == right.head._2 do
           left = left.tail
           right = right.tail
         left.isEmpty && right.isEmpty
@@ -225,7 +225,7 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
           param.upper.foreach(_.validate(visited))
         body.validate(visited)
       case Tuple(fields) => fields.foreach(_.tpe.validate(visited))
-      case Record(_, fields) => fields.foreach(_._2.validate(visited))
+      case Record(_, fields) => fields.foreach((_, field) => field.foreachType(_.validate(visited)))
       case Union(left, right) => left.validate(visited); right.validate(visited)
       case Intersection(left, right) => left.validate(visited); right.validate(visited)
       case Negation(base) => base.validate(visited)
@@ -460,8 +460,8 @@ final class ContextualType(val tpe: DeclaredType, val marks: Ls[Marks]) extends 
     case that: ContextualType => tpe == that.tpe && marks == that.marks
     case _ => false
 
-/** Source arguments have their own category: a wildcard is valid only in an argument slot.
-  * Its bounds are proper types and may still await forward resolution.
+/** A type argument or mutable record field can specify a proper type or separate input and
+  * output bounds. Each written type retains its own resolution, including forward references.
   */
 enum TypeArgumentResolution:
   case Type(resolution: TypeResolution)
@@ -471,11 +471,16 @@ enum TypeArgumentResolution:
     case Type(resolution) => resolution.source
     case Wildcard(tree, _, _) => tree
 
+  /** The written type observed on reads. An input-only bound supplies no output type to traverse. */
+  def readType: Opt[TypeResolution] = this match
+    case Type(resolution) => S(resolution)
+    case Wildcard(_, _, output) => output
+
   def foreachType(f: TypeResolution => Unit): Unit = this match
     case Type(resolution) => f(resolution)
     case Wildcard(_, input, output) => input.foreach(f); output.foreach(f)
 
-/** An unqualified argument is interpreted separately in the two polarities;
+/** An unqualified argument or mutable field is interpreted separately in the two polarities;
   * these parts coincide only when substitution gives the same type in both.
   * Missing wildcard parts are Nothing on input and Any on output, never holes.
   */

@@ -106,18 +106,14 @@ callF(B())
 //│                 (ref.cast (ref $Object)
 //│                   (local.get $receiver)))))))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
-//│     (local $tmp (ref null any))
-//│     (local $a (ref null $A))
+//│     (local $tmp (ref null $B))
 //│     (local $receiver (ref null any))
 //│     (local.set $tmp
 //│       (call $B_ctor))
-//│     (local.set $a
-//│       (ref.cast (ref $A)
-//│         (local.get $tmp)))
 //│     (return
 //│       (block (result (ref null any))
 //│         (local.set $receiver
-//│           (local.get $a))
+//│           (local.get $tmp))
 //│         (call_ref $virtual2
 //│           (ref.cast (ref $A)
 //│             (local.get $receiver))
@@ -252,8 +248,7 @@ callPrim(W())
 //│                   (local.get $receiver)))))))))
 //│   (func $entry (export "entry") (type $entry) (result i32)
 //│     (local $tmp i32)
-//│     (local $tmp1 (ref null any))
-//│     (local $a (ref null $V))
+//│     (local $tmp1 (ref null $W))
 //│     (local $receiver (ref null any))
 //│     (local.set $tmp
 //│       (i32.const 7))
@@ -261,13 +256,10 @@ callPrim(W())
 //│       (local.get $tmp))
 //│     (local.set $tmp1
 //│       (call $W_ctor))
-//│     (local.set $a
-//│       (ref.cast (ref $V)
-//│         (local.get $tmp1)))
 //│     (return
 //│       (block (result i32)
 //│         (local.set $receiver
-//│           (local.get $a))
+//│           (local.get $tmp1))
 //│         (call_ref $virtual2
 //│           (ref.cast (ref $V)
 //│             (local.get $receiver))
@@ -302,12 +294,8 @@ M2().f(1)
 //│ ╟── The overridden member 'f' is defined here
 //│ ║  l.+2: 	  open fun f(m: Int32): Int32 = m
 //│ ╙──      	           ^
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Int32'
-//│ ║  l.+5: 	M2().f(1)
-//│ ╙──      	       ^
-//│ ╔══[COMPILATION ERROR] Overriding method `f` declares result as `(ref null i31)`, but the method it overrides declares `i32`
-//│ ║  l.+4: 	  override fun f(m: Int32): Int = 0
-//│ ╙──      	           ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // An annotated override parameter must use the inherited unboxed representation.
@@ -323,12 +311,19 @@ N2().g(n32)
 //│ ╟── The overridden member 'g' is defined here
 //│ ║  l.+2: 	  open fun g(m: Int32): Int32 = m
 //│ ╙──      	           ^
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Int'
-//│ ║  l.+5: 	N2().g(n32)
-//│ ╙──      	       ^^^
-//│ ╔══[COMPILATION ERROR] Overriding method `g` declares parameter 1 as `(ref null i31)`, but the method it overrides declares `i32`
-//│ ║  l.+4: 	  override fun g(m: Int): Int32 = n32
-//│ ╙──      	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// An unannotated parameter of an override takes the inherited `i32` representation.
+:expect 7
+class O1() with
+  open fun g(m: Int32): Int32 = m
+class O2() extends O1() with
+  override fun g(m) = m
+O2().g(n32)
+//│ Wasm result:
+//│ = 7
 
 
 // Boxed types are bridged by casts, so they need not match
@@ -444,3 +439,33 @@ readChild(new Child())
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = {}
+
+
+// An unannotated result takes the representation of every member of its override family. `Producer.get`
+// returns an instance of its class and its override returns a string, so the slot that they share holds
+// values of the unknown representation, and no cast to the result type of that slot can trap.
+:expect "str"
+class Producer() with
+  open fun get() = new Producer()
+class StrProducer() extends Producer() with
+  override fun get() = "str"
+fun produce(p) = p.get()
+produce(StrProducer())
+//│ Wasm result:
+//│ = "str"
+
+
+// An unannotated parameter of an override takes the inherited representation, which is inferred from the
+// arguments of every unannotated member of the override family: here, the integers passed through `Consumer`
+// and the string that a direct call passes to its override.
+:expect "s"
+class Consumer() with
+  open fun take(x) = x
+class EchoConsumer() extends Consumer() with
+  override fun take(x) = x
+fun consume(c) = c.take(1)
+consume(Consumer())
+consume(EchoConsumer())
+EchoConsumer().take("s")
+//│ Wasm result:
+//│ = "s"

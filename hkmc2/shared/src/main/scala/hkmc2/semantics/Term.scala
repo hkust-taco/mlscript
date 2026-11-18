@@ -650,25 +650,33 @@ final case class RcdField(field: Term, rhs: Term, sym: BlockMemberSymbol)(val ke
     case _ => ()
 
 object RcdField:
-  def apply(field: Term, rhs: Term)(using State): RcdField = make(field, rhs, false, N)
-  def signature(field: Term, sign: Term)(using State): RcdField = make(field, sign, true, N)
-  def signature(field: Term, sign: Term, symbol: SymbolKey)(using State): RcdField =
-    make(field, sign, true, S(symbol))
-  private def make(field: Term, rhs: Term, signature: Bool, symbol: Opt[SymbolKey])(using State): RcdField =
+  // Lowering and pattern compilation synthesize fields after source erasure.
+  def apply(field: Term, rhs: Term)(using State): RcdField = make(field, rhs, N, false, N)
+  def source(field: Term, rhs: Term)(using State): RcdField = make(field, rhs, N, true, N)
+  /** Declare a structural field with the given type or bounds. Its term symbol carries the
+    * read type for erasure. The field retains the written bounds for reads and assignments. */
+  def signature(field: Term, bounds: Term, symbol: Opt[SymbolKey])(using State, Ctx): RcdField =
+    val readType = bounds match
+      case Term.WildcardTy(_, output) =>
+        output.getOrElse(ctx.builtins.Any.ref(new Tree.Ident("Any").withLocOf(bounds)))
+      case tpe => tpe
+    make(field, bounds, S(readType), true, symbol)
+  private def make(field: Term, rhs: Term, signature: Opt[Term], source: Bool, symbol: Opt[SymbolKey])(using State): RcdField =
     val name = field match
       case Term.Lit(Tree.StrLit(name)) => name
       case _ => "computed field"
     val id = new Tree.Ident(name)
     id.withLocOf(field)
     val sym = new BlockMemberSymbol(name, Nil)
-    val tsym = TermSymbol(RecordField, N, id, erasure = N)
+    val tsym = TermSymbol(RecordField, N, id)
+    if !source then tsym.initializeErasure(N)
     sym.tsym = S(tsym)
     // Value-field lookup removes the synthetic definition's capture mark, leaving
     // enclosing call-site marks intact. A structural type field instead refers
     // directly to its written type: projection does not invoke a value definition.
-    tsym.defn = S(TermDefinition(RecordField, sym, tsym, Nil, N,
-      if signature then S(rhs) else N,
-      if signature then N else S(Term.Capture(rhs, tsym)), TermDefFlags.empty, Modulefulness.none, symbol.toList.map(Annot.JsSymbol(_)(field.toLoc)), N)(field.toLoc, field.toLoc, N))
+    val body = Option.when(signature.isEmpty)(Term.Capture(rhs, tsym))
+    tsym.defn = S(TermDefinition(RecordField, sym, tsym, Nil, N, signature, body, TermDefFlags.empty,
+      Modulefulness.none, symbol.toList.map(Annot.JsSymbol(_)(field.toLoc)), N)(field.toLoc, field.toLoc, N))
     sym.complete()
     RcdField(field, rhs, sym)(symbol.orElse(field match
       case Term.Lit(Tree.StrLit(name)) => S(name)

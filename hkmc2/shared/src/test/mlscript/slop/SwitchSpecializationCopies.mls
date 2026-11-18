@@ -19,7 +19,7 @@ fun copySwitch(initial, choose, effect) =
 //│ let copySwitch;
 //│ copySwitch = function copySwitch(initial, choose, effect) {
 //│   let state;
-//│   state = initial;
+//│   state = initial /* as! Int */;
 //│   switch (state) {
 //│     case 0:
 //│       runtime.safeCall(effect());
@@ -81,12 +81,12 @@ fun divergingCopy(initial, choose, next) =
 //│ let divergingCopy;
 //│ divergingCopy = function divergingCopy(initial, choose, next) {
 //│   let state;
-//│   state = initial;
-//│   if (initial === 0) {
+//│   state = initial /* as! Int */;
+//│   if (state === 0) {
 //│     if (choose === true) {
 //│       state = 1;
 //│     } else {
-//│       state = next;
+//│       state = next /* as! Int */;
 //│     }
 //│   }
 //│   if (state === 1) { return "one" }

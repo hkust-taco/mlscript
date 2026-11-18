@@ -82,6 +82,7 @@ enum Tree extends AutoLocated:
   /** `dynamic` is false only for `obj.[idx]`, an array index checked during resolution. */
   case DynAccess(obj: Tree, fld: Tree, dynamic: Bool)
   case Modified(modifier: Keywrd[Keyword.Modifier], body: Tree)
+  case InOut(input: Tree, output: Tree)
   case Quoted(body: Tree)
   case Unquoted(body: Tree)
   case Tup(fields: Ls[Tree])
@@ -148,6 +149,7 @@ enum Tree extends AutoLocated:
       case None => lhs +: rhs +: defs +: Vector.empty
     case TypeDef(k, head, rhs) => head +: rhs.toVector
     case Modified(_, body) => Vector.single(body)
+    case InOut(input, output) => Vector.double(input, output)
     case Quoted(body) => Vector.single(body)
     case Unquoted(body) => Vector.single(body)
     case Tup(fields) => fields.toVector
@@ -205,6 +207,7 @@ enum Tree extends AutoLocated:
     case TermDef(k, alphaName, rhs) => "term definition"
     case TypeDef(k, head, rhs) => "type definition"
     case Modified(kw, body) => s"'${kw.name}'-modified ${body.describe}"
+    case _: InOut => "input and output bounds"
     case Quoted(body) => "quoted"
     case Unquoted(body) => "unquoted"
     case Tup(fields) => "tuple"

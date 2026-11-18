@@ -868,12 +868,13 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
     return header;
   }
   static showFunctionContChain(cont, hl, vis, reps) {
-    let reps1, scrut, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, scope32$cap, lambda$here;
+    let reps1, frame, scrut, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, scope32$cap, lambda$here;
     scope32$cap = new Capture$scope321(undefined);
     reps1 = reps;
     if (cont instanceof Runtime.FunctionContFrame.class) {
-      tmp = cont["constructor"]["name"] + "(pc=";
-      scope32$cap.result$0 = tmp + cont.saved.at(1);
+      frame = cont;
+      tmp = frame["constructor"]["name"] + "(pc=";
+      scope32$cap.result$0 = tmp + frame.saved.at(1);
       lambda$here = lambda$2(scope32$cap, cont);
       runtime.safeCall(hl.forEach(lambda$here));
       scrut = runtime.safeCall(vis.has(cont));
@@ -890,7 +891,7 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
         runtime.safeCall(vis.add(cont));
       }
       tmp3 = scope32$cap.result$0 + ") -> ";
-      tmp4 = Runtime.showFunctionContChain(cont.next, hl, vis, reps1);
+      tmp4 = Runtime.showFunctionContChain(frame.next, hl, vis, reps1);
       return tmp3 + tmp4
     }
     scrut2 = cont === null;
@@ -900,11 +901,12 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
     return "(NOT CONT)";
   }
   static showHandlerContChain(cont, hl, vis, reps) {
-    let reps1, scrut, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, scope34$cap, lambda$here;
+    let reps1, frame, scrut, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, scope34$cap, lambda$here;
     scope34$cap = new Capture$scope341(undefined);
     reps1 = reps;
     if (cont instanceof Runtime.HandlerContFrame.class) {
-      scope34$cap.result$0 = cont.handler["constructor"]["name"];
+      frame = cont;
+      scope34$cap.result$0 = frame.handler["constructor"]["name"];
       lambda$here = lambda$3(scope34$cap, cont);
       runtime.safeCall(hl.forEach(lambda$here));
       scrut = runtime.safeCall(vis.has(cont));
@@ -921,7 +923,7 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
         runtime.safeCall(vis.add(cont));
       }
       tmp2 = scope34$cap.result$0 + " -> ";
-      tmp3 = Runtime.showFunctionContChain(cont.next, hl, vis, reps1);
+      tmp3 = Runtime.showFunctionContChain(frame.next, hl, vis, reps1);
       return tmp2 + tmp3
     }
     scrut2 = cont === null;
@@ -945,32 +947,33 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
     return runtime.safeCall(globalThis.console.log(tmp2))
   }
   static debugContTrace(contTrace) {
-    let scrut, scrut1, vis, hl, cur, tmp, tmp1, tmp2, tmp3, tmp4;
+    let contTrace1, scrut, scrut1, vis, hl, cur, tmp, tmp1, tmp2, tmp3, tmp4;
     if (contTrace instanceof Runtime.ContTrace.class) {
-      runtime.safeCall(globalThis.console.log("resumed: ", contTrace.resumed));
-      scrut = contTrace.last === contTrace;
+      contTrace1 = contTrace;
+      runtime.safeCall(globalThis.console.log("resumed: ", contTrace1.resumed));
+      scrut = contTrace1.last === contTrace1;
       if (scrut === true) {
         runtime.safeCall(globalThis.console.log("<last is self>"));
       }
-      scrut1 = contTrace.lastHandler === contTrace;
+      scrut1 = contTrace1.lastHandler === contTrace1;
       if (scrut1 === true) {
         runtime.safeCall(globalThis.console.log("<lastHandler is self>"));
       }
       vis = globalThis.Object.freeze(new globalThis.Set(undefined));
       hl = globalThis.Object.freeze(new globalThis.Map(undefined));
       tmp = globalThis.Object.freeze([
-        contTrace.last
+        contTrace1.last
       ]);
       tmp1 = globalThis.Object.freeze(new globalThis.Set(tmp));
       runtime.safeCall(hl.set("last", tmp1));
       tmp2 = globalThis.Object.freeze([
-        contTrace.lastHandler
+        contTrace1.lastHandler
       ]);
       tmp3 = globalThis.Object.freeze(new globalThis.Set(tmp2));
       runtime.safeCall(hl.set("last-handler", tmp3));
-      tmp4 = Runtime.showFunctionContChain(contTrace.next, hl, vis, 0);
+      tmp4 = Runtime.showFunctionContChain(contTrace1.next, hl, vis, 0);
       runtime.safeCall(globalThis.console.log(tmp4));
-      cur = contTrace.nextHandler;
+      cur = contTrace1.nextHandler;
       lbl: while (true) {
         let scrut2, tmp5;
         scrut2 = cur !== null;
@@ -988,11 +991,13 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
     return runtime.safeCall(globalThis.console.log(contTrace));
   }
   static debugEff(eff) {
+    let eff1;
     if (eff instanceof Runtime.EffectSig.class) {
+      eff1 = eff;
       runtime.safeCall(globalThis.console.log("Debug EffectSig:"));
-      runtime.safeCall(globalThis.console.log("handler: ", eff.handler["constructor"]["name"]));
-      runtime.safeCall(globalThis.console.log("handlerFun: ", eff.handlerFun));
-      return Runtime.debugContTrace(eff.contTrace)
+      runtime.safeCall(globalThis.console.log("handler: ", eff1.handler["constructor"]["name"]));
+      runtime.safeCall(globalThis.console.log("handlerFun: ", eff1.handlerFun));
+      return Runtime.debugContTrace(eff1.contTrace)
     }
     runtime.safeCall(globalThis.console.log("Not an effect:"));
     return runtime.safeCall(globalThis.console.log(eff));
@@ -1034,9 +1039,10 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
     let cur1;
     cur1 = cur;
     lbl: while (true) {
-      let nxt, scrut;
+      let effect, nxt, scrut;
       if (cur1 instanceof Runtime.EffectSig.class) {
-        nxt = Runtime.handleEffect(cur1);
+        effect = cur1;
+        nxt = Runtime.handleEffect(effect);
         scrut = cur1 === nxt;
         if (scrut === true) {
           Runtime.curEffect = cur1;
@@ -1132,7 +1138,7 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
     cont = contTrace.next;
     handlerCont = contTrace.nextHandler;
     lbl: while (true) {
-      let old, scrut, scrut1, scrut2, tmp, tmp1, tmp2;
+      let old, scrut, effect, scrut1, scrut2, tmp, tmp1, tmp2;
       if (cont instanceof Runtime.FunctionContFrame.class) {
         Runtime.curEffect = null;
         old = Runtime.stackDepth;
@@ -1150,15 +1156,16 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
           value1 = Runtime.curEffect;
         }
         if (value1 instanceof Runtime.EffectSig.class) {
-          value1.contTrace.last.next = cont.next;
-          value1.contTrace.lastHandler.nextHandler = handlerCont;
+          effect = value1;
+          effect.contTrace.last.next = cont.next;
+          effect.contTrace.lastHandler.nextHandler = handlerCont;
           scrut1 = contTrace.last !== cont;
           if (scrut1 === true) {
-            value1.contTrace.last = contTrace.last;
+            effect.contTrace.last = contTrace.last;
           }
           scrut2 = handlerCont !== null;
           if (scrut2 === true) {
-            value1.contTrace.lastHandler = contTrace.lastHandler;
+            effect.contTrace.lastHandler = contTrace.lastHandler;
             return value1
           }
           return value1;

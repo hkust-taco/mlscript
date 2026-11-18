@@ -16,20 +16,20 @@ fun negative(x) = -x
 fun add(x, y) = x + y
 [equal(1, 1), negate(false), kind(1), negative(42), add(1, 2), add("a", "b")]
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp: Bool⁰, tmp1: Bool⁰, tmp2: Str⁰, tmp3: ?, tmp4: ?, tmp5: ?;
-//│ define equal⁰ as fun equal¹(x: ?, y: ?): Bool⁰ {
+//│ let tmp: Bool⁰, tmp1: Bool⁰, tmp2: Str⁰, tmp3: Int⁰, tmp4: Unknown, tmp5: Unknown;
+//│ define equal⁰ as fun equal¹(x: Int⁰, y: Int⁰): Bool⁰ {
 //│   return ===⁰(x, y)
 //│ };
-//│ define negate⁰ as fun negate¹(x: ?): Bool⁰ {
+//│ define negate⁰ as fun negate¹(x: Bool⁰): Bool⁰ {
 //│   return !⁰(x)
 //│ };
-//│ define kind⁰ as fun kind¹(x: ?): Str⁰ {
+//│ define kind⁰ as fun kind¹(x: Int⁰): Str⁰ {
 //│   return typeof⁰(x)
 //│ };
-//│ define negative⁰ as fun negative¹(x: ?): ? {
+//│ define negative⁰ as fun negative¹(x: Int⁰): Int⁰ {
 //│   return -⁰(x)
 //│ };
-//│ define add⁰ as fun add¹(x: ?, y: ?): ? {
+//│ define add⁰ as fun add¹(x: Unknown, y: Unknown): Unknown {
 //│   return +⁰(x, y)
 //│ };
 //│ set tmp = equal¹(1, 1);

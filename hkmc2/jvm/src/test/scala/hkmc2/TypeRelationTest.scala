@@ -17,7 +17,8 @@ class TypeRelationTest extends AnyFunSuite:
     given trace: TraceLogger = TraceLogger.silent
     given Config = Config.default(TestFolders.mainTestDir(os.pwd))
     given CompilerCtx = CompilerCtx.fresh(io.FileSystem.default, TestFolders.compilerPaths(os.pwd), summon[Config])
-    val resolver = Elaborator(trace, TestFolders.mainTestDir(os.pwd), Elaborator.Ctx.empty)
+    given prelude: Elaborator.Ctx = Elaborator.Ctx.empty
+    val resolver = Elaborator(trace, TestFolders.mainTestDir(os.pwd), prelude)
     def tpe(shape: TypeShape): DeclaredType =
       val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
       resolution.publish(shape)
@@ -352,9 +353,10 @@ class TypeRelationTest extends AnyFunSuite:
       import h.given
       val (argument, at) = h.parameter("Argument")
       val (element, et) = h.parameter("Element")
-      val field = RcdField.signature(Term.Lit(Tree.StrLit("value")), Term.UnitVal())
+      val field = RcdField.signature(Term.Lit(Tree.StrLit("value")), Term.UnitVal(), N)
       val source: Term.Rcd = Term.Rcd(false, List(field))
-      val record = RecordTypeShape(Map("value" -> et), Map.empty)(source, Map("value" -> field))
+      val record = RecordTypeShape(Map("value" -> TypeArgument(h.tpe(TypeShape.Bottom), et)),
+        Set.empty, Map.empty)(source, Map("value" -> field))
       val nullable = h.tpe(TypeShape.Union(at.resolution, h.tpe(TypeShape.Unit).resolution))
       val boundary = ResolutionBoundary(TermSymbol(Fun, N, Tree.Ident("forward")))
       val sites = List.fill(count)(FlowSymbol.app())
@@ -380,7 +382,7 @@ class TypeRelationTest extends AnyFunSuite:
       returned.listen: value =>
         value.getMember("value") match
           case MemberLookup.Typed(_, tpe, marks) =>
-            h.resolver.listenInstanceViews(h.resolver.instanceShape(h.resolver.transportType(tpe, marks)))(fields += _)
+            h.resolver.listenInstanceViews(h.resolver.instanceShape(h.resolver.transportType(tpe.output, marks)))(fields += _)
           case _ => fail("Expected a declared record field")
       assert(fields.isEmpty)
       val late = DynShape()
@@ -428,10 +430,11 @@ class TypeRelationTest extends AnyFunSuite:
       value.typeInterpretation = S(element.resolution)
       val next = Term.UnitVal()
       next.typeInterpretation = S(resolution)
-      val valueField = RcdField.signature(Term.Lit(Tree.StrLit("value")), value)
-      val nextField = RcdField.signature(Term.Lit(Tree.StrLit("next")), next)
+      val valueField = RcdField.signature(Term.Lit(Tree.StrLit("value")), value, N)
+      val nextField = RcdField.signature(Term.Lit(Tree.StrLit("next")), next, N)
       val source: Term.Rcd = Term.Rcd(false, List(valueField, nextField))
-      resolution.publish(TypeShape.Record(source, List(valueField -> element.resolution, nextField -> resolution)))
+      resolution.publish(TypeShape.Record(source, List(valueField -> TypeArgumentResolution.Type(element.resolution),
+        nextField -> TypeArgumentResolution.Type(resolution))))
       DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)(N)
     val left = ContextualType(recursiveRecord(at), Nil)
     val right = ContextualType(recursiveRecord(bt), Nil)
@@ -860,9 +863,9 @@ class TypeRelationTest extends AnyFunSuite:
     val left = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
     val right = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
     def recursive(resolution: TypeResolution): Unit =
-      val next = RcdField.signature(Term.Lit(Tree.StrLit("next")), Term.UnitVal())
+      val next = RcdField.signature(Term.Lit(Tree.StrLit("next")), Term.UnitVal(), N)
       val source: Term.Rcd = Term.Rcd(false, List(next))
-      resolution.publish(TypeShape.Record(source, List(next -> resolution)))
+      resolution.publish(TypeShape.Record(source, List(next -> TypeArgumentResolution.Type(resolution))))
     recursive(left)
     recursive(right)
     val intersection = h.tpe(TypeShape.Intersection(left, right))
@@ -870,10 +873,10 @@ class TypeRelationTest extends AnyFunSuite:
       case (value: RecordTypeShape) :: Nil => value
       case _ => fail("Expected one merged record")
     val first = record(intersection)
-    val next = first.fields("next")
+    val next = first.fields("next").output
     val saturated = record(next)
     val counts = (left.inferenceHost.listeners.size, right.inferenceHost.listeners.size)
     (1 to 1000).foreach: _ =>
-      assert(record(saturated.fields("next")) eq saturated)
+      assert(record(saturated.fields("next").output) eq saturated)
     assert((left.inferenceHost.listeners.size, right.inferenceHost.listeners.size) == counts)
     assert(h.state.allocatedTypeInstanceCount == 0)

@@ -52,12 +52,12 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ @private
 //│ define test$test as fun test$test⁰(x) {
 //│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14;
-//│   return x(tmp11, t, tmp12, tmp13, tmp14)
+//│   return (x(tmp11, t, tmp12, tmp13, tmp14) as! Int⁰)
 //│ };
 //│ @private
 //│ define test$test1 as fun test$test¹(x) {
 //│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14;
-//│   return x(arg$AA$0$, arg$AA$0$1, arg$AA$0$2, a, tmp11, t, tmp12, tmp13, tmp14)
+//│   return (x(arg$AA$0$, arg$AA$0$1, arg$AA$0$2, a, tmp11, t, tmp12, tmp13, tmp14) as! Int⁰)
 //│ };
 //│ @affine(1) @private
 //│ define test$x_B as fun test$x_B⁰()(fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3) {
@@ -77,7 +77,7 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ @affine(1) @private
 //│ define test$arg$AA$0$_AA1 as fun test$arg$AA$0$_AA¹(AA_x3)(fv_arg$AA$0$, fv_a, fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3) {
 //│   set fv_arg$AA$0$ = AA_x3;
-//│   set fv_a = fv_arg$AA$0$;
+//│   set fv_a = (fv_arg$AA$0$ as! Int⁰);
 //│   set fv_tmp = fv_a;
 //│   return test$arg$AA$0$_rest⁰(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3)
 //│ };
@@ -116,7 +116,7 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│           match arg$AA$0$1
 //│             AA¹ =>
 //│               set arg$AA$0$2 = arg$AA$0$1.x¹;
-//│               set a = arg$AA$0$2;
+//│               set a = (arg$AA$0$2 as! Int⁰);
 //│               set tmp11 = a;
 //│               end
 //│             else

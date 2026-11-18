@@ -1,0 +1,269 @@
+:.
+
+
+// An unannotated member that inherits no representation takes those of its whole override family
+// (see also ../wasm/OverrideRepresentations.mls). The result of `Visitor.visit` joins the unit value
+// with the integer that `Counter.visit` returns, and its parameter joins the arguments of both members.
+:noInline
+:sir
+:siret
+:expect [(), 1]
+private class Visitor() with
+  open fun visit(node) = ()
+private class Counter() extends Visitor() with
+  override fun visit(node) = 1
+[Visitor().visit(0), Counter().visit("leaf")]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Visitor⁰, tmp1: Unknown, tmp2: Counter⁰, tmp3: Unknown;
+//│ @private
+//│ define Visitor¹ as class Visitor⁰ {
+//│   constructor Visitor²
+//│   method visit⁰ = fun visit¹(node: Unknown): Unknown {
+//│     return runtime⁰.Unit⁰
+//│   }
+//│ };
+//│ @private
+//│ define Counter¹ as class Counter⁰ extends Visitor⁰ {
+//│   constructor Counter²
+//│   method visit² = fun visit³(node: Unknown): Unknown {
+//│     return 1
+//│   }
+//│ };
+//│ set tmp = Visitor²();
+//│ set tmp1 = tmp.visit¹(0);
+//│ set tmp2 = Counter²();
+//│ set tmp3 = tmp2.visit³("leaf");
+//│ return [tmp1, tmp3]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [(), 1]
+
+
+// An annotated base keeps its declared representations, which its unannotated override inherits.
+:noInline
+:sir
+:siret
+:expect [1, 2]
+private class Declared() with
+  open fun size(x: Int): Int = x
+private class Inheriting() extends Declared() with
+  override fun size(x) = x + 1
+[Declared().size(1), Inheriting().size(1)]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Declared⁰, tmp1: Int⁰, tmp2: Inheriting⁰, tmp3: Int⁰;
+//│ @private
+//│ define Declared¹ as class Declared⁰ {
+//│   constructor Declared²
+//│   method size⁰ = fun size¹(x: Int⁰): Int⁰ {
+//│     return x
+//│   }
+//│ };
+//│ @private
+//│ define Inheriting¹ as class Inheriting⁰ extends Declared⁰ {
+//│   constructor Inheriting²
+//│   method size² = fun size³(x: Int⁰): Int⁰ {
+//│     return +⁰(x, 1)
+//│   }
+//│ };
+//│ set tmp = Declared²();
+//│ set tmp1 = tmp.size¹(1);
+//│ set tmp2 = Inheriting²();
+//│ set tmp3 = tmp2.size³(1);
+//│ return [tmp1, tmp3]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [1, 2]
+
+
+// A separate full signature fixes the parameter representations inherited by unannotated overrides.
+:ge
+:noInline
+private class SeparateBase() with
+  fun take: (Int) -> Int
+  open fun take(x) = x
+private class SeparateChild() extends SeparateBase() with
+  override fun take(x) = x
+SeparateChild().take("s")
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.+6: 	SeparateChild().take("s")
+//│ ╙──      	                     ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Aliases and later curried parameter lists retain the same declared boundary.
+:ge
+:noInline
+type CurriedContract = (Int) -> (Str) -> Int
+private class CurriedBase() with
+  fun take: CurriedContract
+  open fun take(x)(label) = x
+private class CurriedChild() extends CurriedBase() with
+  override fun take(x)(label) = x
+CurriedChild().take(1)(2)
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Str'
+//│ ║  l.+7: 	CurriedChild().take(1)(2)
+//│ ╙──      	                       ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// A separate signature on an override keeps its own parameter type, which must accept the base's inputs.
+:ge
+private class InferredBase() with
+  open fun take(x) = 0
+private class SeparateNarrow() extends InferredBase() with
+  fun take: (Str) -> Int
+  override fun take(x) = 0
+InferredBase().take(1)
+//│ ╔══[COMPILATION ERROR] Parameter 'x' of overriding member 'take' is represented as 'Str', which cannot hold the values represented as 'Int' that the member it overrides accepts
+//│ ║  l.+5: 	  override fun take(x) = 0
+//│ ║        	                    ^
+//│ ╟── The overridden member 'take' is defined here
+//│ ║  l.+2: 	  open fun take(x) = 0
+//│ ╙──      	           ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// An annotated override contributes its declared result instead of its observed values. Its parameter
+// keeps its declared representation without widening the parameter it overrides.
+:noInline
+:sir
+:siret
+:expect [1, "s"]
+private class Narrow() with
+  open fun echo(x) = x
+private class Wide() extends Narrow() with
+  override fun echo(x: Any): Any = x
+[Narrow().echo(1), Wide().echo("s")]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Narrow⁰, tmp1: Unknown, tmp2: Wide⁰, tmp3: Unknown;
+//│ @private
+//│ define Narrow¹ as class Narrow⁰ {
+//│   constructor Narrow²
+//│   method echo⁰ = fun echo¹(x: Int⁰): Unknown {
+//│     return x
+//│   }
+//│ };
+//│ @private
+//│ define Wide¹ as class Wide⁰ extends Narrow⁰ {
+//│   constructor Wide²
+//│   method echo² = fun echo³(x: Unknown): Unknown {
+//│     return x
+//│   }
+//│ };
+//│ set tmp = Narrow²();
+//│ set tmp1 = tmp.echo¹(1);
+//│ set tmp2 = Wide²();
+//│ set tmp3 = tmp2.echo³("s");
+//│ return [tmp1, tmp3]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [1, "s"]
+
+
+// An unannotated override that makes a required parameter optional adds its null default.
+:noInline
+:sir
+:siret
+:expect [1, null]
+private class Required() with
+  open fun pass(x) = x
+private class Optional() extends Required() with
+  override fun pass(x?) = x
+[Required().pass(1), Optional().pass()]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Required⁰, tmp1: Unknown, tmp2: Optional⁰, tmp3: Unknown;
+//│ @private
+//│ define Required¹ as class Required⁰ {
+//│   constructor Required²
+//│   method pass⁰ = fun pass¹(x: Unknown): Unknown {
+//│     return x
+//│   }
+//│ };
+//│ @private
+//│ define Optional¹ as class Optional⁰ extends Required⁰ {
+//│   constructor Optional²
+//│   method pass² = fun pass³(x?: Unknown): Unknown {
+//│     return x
+//│   }
+//│ };
+//│ set tmp = Required²();
+//│ set tmp1 = tmp.pass¹(1);
+//│ set tmp2 = Optional²();
+//│ set tmp3 = tmp2.pass³();
+//│ return [tmp1, tmp3]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [1, null]
+
+
+// Callers of an async override receive a promise, whatever its body returns.
+:noInline
+:sir
+:siret
+:expect 1
+private class Loader() with
+  open fun load() = 1
+private class Remote() extends Loader() with
+  @annotations.async
+  override fun load() = 2
+private fun fetch(loader) = loader.load()
+fetch(Loader())
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Loader⁰;
+//│ @private
+//│ define fetch⁰ as fun fetch¹(loader: Loader⁰): Int⁰ {
+//│   return (loader.load⁰() as! Int⁰)
+//│ };
+//│ @private
+//│ define Loader¹ as class Loader⁰ {
+//│   constructor Loader²
+//│   method load¹ = fun load⁰(): Unknown {
+//│     return 1
+//│   }
+//│ };
+//│ @private
+//│ define Remote⁰ as class Remote² extends Loader⁰ {
+//│   constructor Remote¹
+//│   method load² = fun load⁴(): Promise⁰ {
+//│     let load$async;
+//│     @override
+//│     define load$async as fun load³(): Int⁰ {
+//│       return 2
+//│     };
+//│     return (runtime⁰.toJsAsync﹖(load³) as! Promise⁰)
+//│   }
+//│ };
+//│ set tmp = Loader²();
+//│ return fetch¹(tmp)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1
+
+
+// A rejected override still does not widen what the member it overrides accepts: the base parameter
+// receives integers, which an override declaring `Str` cannot hold.
+:ge
+private class Base() with
+  open fun take(x) = x
+private class Rejected() extends Base() with
+  override fun take(x: Str) = x
+Base().take(1)
+//│ ╔══[COMPILATION ERROR] Parameter 'x' of overriding member 'take' is represented as 'Str', which cannot hold the values represented as 'Int' that the member it overrides accepts
+//│ ║  l.+4: 	  override fun take(x: Str) = x
+//│ ║        	                    ^^^^^^
+//│ ╟── The overridden member 'take' is defined here
+//│ ║  l.+2: 	  open fun take(x) = x
+//│ ╙──      	           ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// The body of a handler member produces the result of the handled expression, whereas a call of the
+// effect member returns the value that the handler resumes with. Erasure therefore leaves the handler
+// member's results out of the result of the unannotated effect member. Handler lowering passes resumed
+// values through untyped runtime state, so this program would also run with them included: the block
+// checks that an unannotated effect member compiles and resumes alongside its handler.
+:effectHandlers
+:lift
+:expect ["resumed"]
+private abstract class Ask with
+  fun ask(question)
+private fun perform(effect: Ask): Str = effect.ask(1)
+handle effect = Ask with
+  fun ask(question)(resume) = [resume("resumed")]
+perform(effect)
+//│ = ["resumed"]

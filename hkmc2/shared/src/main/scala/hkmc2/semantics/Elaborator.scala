@@ -1265,7 +1265,7 @@ extends Importer:
   private def branch(using Ctx): Cfg[PartialFunction[Tree, (Ctx, SimpleSplit)]] =
     // Interleaved-`let` bindings like `{ x is A then 0; let x = 1; ... }`.
     case LetLike(Keywrd(`let`), ident: Ident, S(rhsTree), N) =>
-      val symbol = VarSymbol(ident, erasedType = N, mut = true)
+      val symbol = VarSymbol(ident, mut = true)
       val head = mkSplitLet(symbol, term(rhsTree, Trm))
       ((ctx + (ident.name -> symbol)), head ~: End)
     // Interleaved-`do` statements like `{ x is A then 0; do log(1); ... }`.
@@ -1471,8 +1471,23 @@ extends Importer:
     */
   private def recordFieldScope(field: RcdField)(using Ctx): RcdField =
     rctx.state.lexicalTypeBinders(field.tsym) = ctx.typeBinders
+    if newResolution then
+      field.tsym.defn.foreach(_.sign.foreach(registerSignature))
+      field.rhs match
+        case Term.WildcardTy(input, _) => input.foreach(registerSignature)
+        case _ => ()
     val key = field.key.orElse(symbolKey(field.field, required = false))
     field.copy()(key)
+
+  /** Elaborate explicit input and output bounds on a type argument or mutable record field. */
+  private def wildcardType(tree: Tree)(using Ctx, UnderCtx): Opt[Term.WildcardTy] = tree.deparenthesized match
+    case Modified(kw @ Keywrd(Keyword.`in`), input) =>
+      S(new Term.WildcardTy(S(subterm(input, Tpe)), N).mkLocWith(kw))
+    case Modified(kw @ Keywrd(Keyword.`out`), output) =>
+      S(new Term.WildcardTy(N, S(subterm(output, Tpe))).mkLocWith(kw))
+    case bounds @ InOut(input, output) =>
+      S(new Term.WildcardTy(S(subterm(input, Tpe)), S(subterm(output, Tpe))).withLocOf(bounds))
+    case _ => N
   
   /** An async expression wraps the values of `target` in a promise, whose payload
     * reads the binders in scope where the expression is written (see
@@ -1567,7 +1582,7 @@ extends Importer:
       case _ => N
     withAppendedArg(lhs).getOrElse(App(lhs, Tup(arg :: Nil)))
   
-  private def assignment(lhs: Term, rhs: Term): Term.Assgn =
+  private def assignment(lhs: Term, rhs: Term)(using Ctx): Term.Assgn =
     // Resolve the term interpretation of the l-value before lowering. The
     // selected definition is recorded even when its value publishes no shape.
     // Use this for synthesized assignments as well as source-level `set`.
@@ -1575,6 +1590,7 @@ extends Importer:
       listenTerm(lhs)(_ => ())
       assignArrayElement(lhs, rhs)
       assignVariable(lhs, rhs)
+      assignField(lhs, rhs, ctx.scope)
     Term.Assgn(lhs, rhs)
 
   def ifLike(kw: Keyword.SplitLike, form: IfLikeForm, split: SimpleSplit, loc: Opt[Loc]): Term.IfLike =
@@ -1865,13 +1881,8 @@ extends Importer:
       val baseInterp = interp match
         case Trm | Rcvr(_) => Trm
         case _ => interp
-      val result = withTypeBinders(Term.TyApp(subterm(lhs, baseInterp), targs.map {
-        case Modified(kw @ Keywrd(Keyword.`in`), arg) => Term.WildcardTy(S(subterm(arg, Tpe)), N).mkLocWith(kw)
-        case Modified(kw @ Keywrd(Keyword.`out`), arg) => Term.WildcardTy(N, S(subterm(arg, Tpe))).mkLocWith(kw)
-        case Tup(Modified(in @ Keywrd(Keyword.`in`), arg1) :: Modified(out @ Keywrd(Keyword.`out`), arg2) :: Nil) =>
-          Term.WildcardTy(S(subterm(arg1, Tpe)), S(subterm(arg2, Tpe))).mkLocWith(in, out)
-        case arg => subterm(arg, Tpe)
-      })(N).withLocOf(tree))
+      val result = withTypeBinders(Term.TyApp(subterm(lhs, baseInterp),
+        targs.map(arg => wildcardType(arg).getOrElse(subterm(arg, Tpe))))(N).withLocOf(tree))
       // A term specialization must validate its arguments even when unused.
       // Type and constructor interpretations have their own argument checks.
       if newResolution && interp == Trm then listenTerm(result)(_ => ())
@@ -2182,7 +2193,7 @@ extends Importer:
     case Quoted(body) => Term.Quoted(subterm(body))
     case Unquoted(body) => Term.Unquoted(subterm(body))
     case tree @ Case(kw, _) =>
-      val scrut = VarSymbol(Ident("caseScrut"), erasedType = N, mut = false)
+      val scrut = VarSymbol(Ident("caseScrut"), mut = false)
       val body = caseSplit(scrut, tree)
       val params = Param.simple(scrut) :: Nil
       withTypeBinders(Term.Lam(PlainParamList(params)(N), body)).mkLocWith(kw)
@@ -2259,13 +2270,16 @@ extends Importer:
       error
     case Modified(Keywrd(Keyword.`mut`), body: Block) =>
       ctx.nestLocal("‹block›", isTopLevel = false).givenIn:
-        blockOrRcd(body, hasResult = true, resultInterp = interp) match
+        blockOrRcd(body, hasResult = true, resultInterp = interp, mutableRecord = true) match
         case (Blk(Nil, Term.UnitVal()), ctx) =>
           withTypeBinders(Rcd(mut = true, Nil)).withLocOf(body)
         case (blk: Blk, ctx) =>
           raise(ErrorReport(msg"Expected a record after 'mut' keyword; found a block" -> blk.toLoc :: Nil))
           blk
-        case (rcd: Rcd, ctx) => withTypeBinders(rcd.copy(mut = true)).withLocOf(rcd)
+        case (rcd: Rcd, _) => rcd
+    case _: InOut =>
+      raise(ErrorReport(msg"Input and output bounds require a type argument or a mutable record field type." -> tree.toLoc :: Nil))
+      error
     case Modified(kw, body) =>
       raise(ErrorReport(msg"Illegal position for '${kw.name}' modifier." -> kw.toLoc :: Nil))
       subterm(body)
@@ -2342,7 +2356,7 @@ extends Importer:
         // * so the parameter and the reference are both located at the `_`,
         // * which lets diagnostics about either point to it.
         val id = new Ident("_" + unds.size).withLocOf(und)
-        val sym = VarSymbol(id, erasedType = N, mut = false)
+        val sym = VarSymbol(id, mut = false)
         unds += sym
         syntheticLocalRef(sym).withLocOf(und)
     case Annotated(lhs, rhs) =>
@@ -2513,7 +2527,7 @@ extends Importer:
     block(new Block(sts), hasResult, Trm)
   
   def block(blk: Block, hasResult: Bool, resultInterp: Interpretation)(using UnderCtx): Ctxl[(Blk, Ctx)] =
-    blockOrRcd(blk, hasResult, resultInterp) match
+    blockOrRcd(blk, hasResult, resultInterp, mutableRecord = false) match
     case (blk: Blk, ctx) => (blk, ctx)
     case (rcd: Rcd, ctx) => (Blk(Nil, rcd), ctx)
   
@@ -2535,7 +2549,7 @@ extends Importer:
   // * for these, elaborate with `hasResult = false`, which uses `undefined` as the result
   // * when there is no other result available. This is fine since the value is never used.
   // * These useless trailing `undefined`s are then removed by `Lowering`.
-  def blockOrRcd(blk: Block, hasResult: Bool, resultInterp: Interpretation)(using UnderCtx)
+  def blockOrRcd(blk: Block, hasResult: Bool, resultInterp: Interpretation, mutableRecord: Bool)(using UnderCtx)
     : Ctxl[(Blk | Rcd, Ctx)]
     = trace[(Blk | Rcd, Ctx)](
         pre = dbg"Elab block ${blk.desugStmts.showAsPlain.truncate(100, "[...]")} ${ctx.outer}", r => s"~> ${r._1.showDbg}"
@@ -2653,7 +2667,7 @@ extends Importer:
       sts match
       case Nil =>
         reportUnusedAnnotations
-        (mkBlk(acc, N, hasResult), ctx)
+        (mkBlk(acc, N, hasResult, mutableRecord), ctx)
       // * Constructor blocks support no annotations: they are desugared into sibling classes
       // * (in `BlockImpl.desugStmts`), which ignores their annotations.
       case Constructor(Block(ctors)) :: sts =>
@@ -2724,19 +2738,19 @@ extends Importer:
             case Apps(base, tups) =>
               val rrhs = tups.foldRight(rhs):
                 InfixApp(_, Keywrd(Keyword.`=>`), _)
-              (base, term(rrhs, fieldInterpretation))
+              val bounds = if mutableRecord && fieldInterpretation == Tpe then wildcardType(rrhs) else N
+              (base, bounds.getOrElse(term(rrhs, fieldInterpretation)))
         val newAcc = rlhs match
           case id: Ident if fieldInterpretation == Tpe =>
             // Record type fields declare interfaces, not local value bindings.
             // Keep their types directly so lookup never follows initializer flow.
             reportUnused(annotations.filterNot(_.isInstanceOf[Annot.JsSymbol]))
             val field = Term.Lit(StrLit(id.name)).withLocOf(id)
-            recordFieldScope(MemberKey.symbol(annotations).fold(RcdField.signature(field, rhs_t))(
-              key => RcdField.signature(field, rhs_t, key))) :: acc
+            recordFieldScope(RcdField.signature(field, rhs_t, MemberKey.symbol(annotations))) :: acc
           case id: Ident =>
-            val sym = new VarSymbol(id, erasedType = N, mut = true)
+            val sym = new VarSymbol(id, mut = true)
             newCtx += id.name -> sym
-            recordFieldScope(RcdField(Term.Lit(StrLit(id.name)).withLocOf(id), Ctx.RefElem(sym)(N).ref(S(id))))
+            recordFieldScope(RcdField.source(Term.Lit(StrLit(id.name)).withLocOf(id), Ctx.RefElem(sym)(N).ref(S(id))))
               :: defineVar(sym, rhs_t)(Loc(rlhs, rhs))
               :: LetDecl(sym, annotations)(id.toLoc)
               :: acc
@@ -2744,17 +2758,17 @@ extends Importer:
             reportUnusedAnnotations
             val field = Term.Lit(lit).withLocOf(lit)
             recordFieldScope(if fieldInterpretation == Tpe
-              then RcdField.signature(field, rhs_t)
-              else RcdField(field, rhs_t)
+              then RcdField.signature(field, rhs_t, N)
+              else RcdField.source(field, rhs_t)
             ) :: acc
           case Bra(Round, inner) =>
             reportUnusedAnnotations
             val key = term(inner, Trm)
-            recordFieldScope(if fieldInterpretation == Tpe then RcdField.signature(key, rhs_t)
-              else RcdField(key, rhs_t)) :: acc
+            recordFieldScope(if fieldInterpretation == Tpe then RcdField.signature(key, rhs_t, N)
+              else RcdField.source(key, rhs_t)) :: acc
           case _ =>
             raise(ErrorReport(msg"Unexpected record key shape." -> rlhs.toLoc :: Nil))
-            recordFieldScope(RcdField(Term.Error().withLocOf(rlhs), rhs_t)) :: acc
+            recordFieldScope(RcdField.source(Term.Error().withLocOf(rlhs), rhs_t)) :: acc
         newCtx.givenIn:
           go(sts, Nil, newAcc)(N)
       case (hd @ LetLike(kw @ Keywrd(`let`), Apps(id: Ident, tups), rhso, N)) :: sts
@@ -3308,7 +3322,7 @@ extends Importer:
         val res = annotations.foldLeft(st_t):
           case (acc, ann) => annotated(ann, acc)
         sts match
-        case Nil => (mkBlk(acc, S(res), hasResult), ctx)
+        case Nil => (mkBlk(acc, S(res), hasResult, mutableRecord), ctx)
         case _ => go(sts, Nil, res :: acc)(N)
     end go
     
@@ -3362,12 +3376,12 @@ extends Importer:
     res
   
   
-  def mkBlk(acc: Ls[Statement], res: Opt[Term], hasResult: Bool)(using Ctx): Blk | Rcd =
+  def mkBlk(acc: Ls[Statement], res: Opt[Term], hasResult: Bool, mutableRecord: Bool)(using Ctx): Blk | Rcd =
     // TODO forbid certain kinds of terms in records
     val isRcd = acc.exists:
       case _: (RcdField | RcdSpread) => true
       case _ => false
-    if isRcd then withTypeBinders(new Term.Rcd(mut = false, (res.toList ::: acc).reverse))
+    if isRcd then withTypeBinders(new Term.Rcd(mutableRecord, (res.toList ::: acc).reverse))
     else Blk(acc.reverse, res.getOrElse:
       if hasResult
         then unit
@@ -3391,8 +3405,8 @@ extends Importer:
     case N => N
   
   def fieldOrVarSym(k: TermDefKind, id: Ident)(using Ctx): TermSymbol | VarSymbol =
-    if ctx.outer.inner.isDefined then TermSymbol(k, ctx.outer.inner, id, erasure = N)
-    else VarSymbol(id, erasedType = N, mut = true)
+    if ctx.outer.inner.isDefined then TermSymbol(k, ctx.outer.inner, id)
+    else VarSymbol(id, mut = true)
   
   def param(t: Tree, inUsing: Bool, inDataClass: Bool, inConstructor: Bool): Ctxl[Diagnostic \/ (Param, Opt[SpreadKind], Ls[Str])] =
     t.desugared.asParam(inUsing).map:
@@ -3475,7 +3489,7 @@ extends Importer:
     * Call after registering separate signatures so those interfaces remain authoritative.
     */
   private def seedRestParameter(ps: ParamList)(using Ctx): Unit = if newResolution then
-    ps.variadic.map(_.param).filter(parameterSignature(_, positive = true).isEmpty).foreach: p =>
+    ps.variadic.map(_.param).filter(parameterSignature(_).isEmpty).foreach: p =>
       def builtin(name: Str): Term =
         prelude.getBuiltin(name).get.ref(N)
       val initial = Term.TyApp(builtin("Array"), builtin("Nothing") :: Nil)(N).withLoc(p.toLoc)
@@ -3833,6 +3847,7 @@ extends Importer:
     val (res, newCtx) = block(sts, hasResult = false, resultInterp = Trm)
     // TODO handle name clashes
     if newResolution then
+      prepareErasure(res)
       settleUnboundReferences()
       InterfaceExposure(this).check(exports, Nil)
     rctx.completeBlock(res)
@@ -3842,6 +3857,7 @@ extends Importer:
     given UnderCtx = UnderCtx.none
     val (res, ctx) = block(sts, hasResult = false, resultInterp = Trm)
     if newResolution then
+      prepareErasure(res)
       settleUnboundReferences()
       if config.language.strictResolution then
         val exports = res.stats.collect:

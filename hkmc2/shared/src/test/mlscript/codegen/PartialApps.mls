@@ -161,7 +161,10 @@ i((...args) => [...args], _)(2)
 //│ ║  in ../../mlscript-compile/Predef.mls
 //│ ║  l.XX: 	fun (|>) pipeInto[A, B](x: A, f: A -> B): B = f(x)
 //│ ╙──      	                                 ^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function expected at least 2 arguments but got 1
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Function'
+//│ ║  l.+1: 	123 |> (_ + 1 >> _ * 2)
+//│ ╙──      	        ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 (_ + 1 + _ * 2) of 123, 456
 //│ = 1036
@@ -201,8 +204,13 @@ let j = _.x.y(1, _) in j((x: y: tuple), 0)
 
 data class C(a, b, c)
 
+// Without parentheses the placeholder abstracts over the whole pipeline, which calls a C instance.
+:ge
 2 |> C(1, _, 3) |> print
-//│ = fun
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'C' at an unrelated type 'Function'
+//│ ║  l.+1: 	2 |> C(1, _, 3) |> print
+//│ ╙──      	     ^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 2 |> (C(1, _, 3)) |> print
 //│ > C(1, 2, 3)
@@ -285,21 +293,21 @@ _ - _ of 1, 2
 :sjs
 1 |. (_ - 2)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda8;
-//│ lambda8 = (undefined, function (_0) { return _0 - 2 });
-//│ return Predef.passTo(1, lambda8)
+//│ let lambda6;
+//│ lambda6 = (undefined, function (_0) { return _0 - 2 });
+//│ return Predef.passTo(1, lambda6)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
 :sjs
 1 |. (_ - 2)()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda9, args;
-//│ lambda9 = (undefined, function (_0) {
+//│ let lambda7, args;
+//│ lambda7 = (undefined, function (_0) {
 //│   return _0 - 2
 //│ });
 //│ args = [];
-//│ return runtime.safeCall(lambda9(1, ...args))
+//│ return runtime.safeCall(lambda7(1, ...args))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = -1
 

@@ -38,11 +38,11 @@ fun f() =
 //│     let saveOffset;
 //│     pc = runtime.resumePc /* as! Int */;
 //│     saveOffset = runtime.resumeIdx /* as! Int */;
-//│     i = runtime.resumeArr.at(saveOffset);
+//│     i = runtime.resumeArr.at(saveOffset) /* as! Int */;
 //│     saveOffset = saveOffset + 1;
-//│     j = runtime.resumeArr.at(saveOffset);
+//│     j = runtime.resumeArr.at(saveOffset) /* as! Int */;
 //│     saveOffset = saveOffset + 1;
-//│     k = runtime.resumeArr.at(saveOffset);
+//│     k = runtime.resumeArr.at(saveOffset) /* as! Int */;
 //│     saveOffset = saveOffset + 1;
 //│     scrut = runtime.resumeArr.at(saveOffset);
 //│     saveOffset = saveOffset + 1;

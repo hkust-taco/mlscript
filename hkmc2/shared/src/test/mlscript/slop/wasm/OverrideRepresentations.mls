@@ -29,7 +29,7 @@ BroadConsumer().take("str")
 //│ ║  l.+2: 	  open fun take(value: Int): Int = value
 //│ ╙──      	           ^^^^
 //│ Wasm result:
-//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // An override inherits the concrete base result while calling its implementation through super.
@@ -86,7 +86,7 @@ OptionalInput().pick()
 //│ ║  l.+2: 	  open fun pick(value: Int): Int = value
 //│ ╙──      	           ^^^^
 //│ Wasm result:
-//│ = 0
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // An earlier worksheet block publishes a declared contract without an IR body.
 // A later override must retain that contract even though neither declaration is used.
@@ -107,7 +107,7 @@ declare class WiderDeclaredInputContract extends DeclaredInputContract {
 //│ ║  l.XX: 	  declare fun pick(value: Int): Int
 //│ ╙──      	              ^^^^
 //│ Wasm result:
-//│ = {}
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // Wasm requires the inherited parameter count even when an extra optional input preserves bindings.
@@ -123,7 +123,7 @@ declare class ExtraOptionalInputContract extends DeclaredInputContract {
 //│ ║  l.XX: 	  declare fun pick(value: Int): Int
 //│ ╙──      	              ^^^^
 //│ Wasm result:
-//│ = {}
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // Dropping a permitted source input still changes the number of Wasm parameter slots.
@@ -141,7 +141,7 @@ declare class DroppedInputContract extends DroppableInputContract {
 //│ ║  l.+2: 	  declare fun pick(value: Int, drop ignored: Any): Int
 //│ ╙──      	              ^^^^
 //│ Wasm result:
-//│ = {}
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // A binding-compatible rest signature needs an explicit target error, even without an IR body.
@@ -159,7 +159,7 @@ declare class RestInputOverride extends RestInputContract {
 //│ ║  l.+2: 	  declare fun pick(...values: Array[Any]): Int
 //│ ╙──      	              ^^^^
 //│ Wasm result:
-//│ = {}
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // Ignoring an inherited rest input leaves the base's unsupported calling convention in place.
@@ -177,4 +177,136 @@ declare class DroppedRestInputContract extends DroppableRestInputContract {
 //│ ║  l.+2: 	  declare fun pick(value: Int, drop ...ignored: Array[Any]): Int
 //│ ╙──      	              ^^^^
 //│ Wasm result:
-//│ = {}
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// An unannotated member that inherits no representation takes those of its whole override family:
+// calls resolved to it can dispatch to the members overriding it, and the unannotated ones inherit
+// its representations.
+
+// `Pound.adopt` returns an instance of a superclass of what `Shelter.adopt` returns.
+:noInline
+:expect 0
+private class Animal()
+private class Dog() extends Animal()
+private class Shelter() with
+  open fun adopt() = Dog()
+private class Pound() extends Shelter() with
+  override fun adopt() = Animal()
+private fun visit(shelter) = shelter.adopt()
+if visit(Pound()) is Dog then 1 else 0
+//│ Wasm result:
+//│ = 0
+
+// A direct call passes `Farm.treat` an instance of a superclass of the arguments that `Vet.treat` receives.
+:noInline
+:expect 0
+private class Patient()
+private class Pet() extends Patient()
+private class Vet() with
+  open fun treat(patient) = if patient is Pet then 1 else 0
+private class Farm() extends Vet() with
+  override fun treat(patient) = if patient is Pet then 1 else 0
+Vet().treat(Pet())
+Farm().treat(Patient())
+//│ Wasm result:
+//│ = 0
+
+// Results of sibling classes join into their common parent.
+:noInline
+:expect 1
+private class Feline()
+private class Lion() extends Feline()
+private class Tiger() extends Feline()
+private class Zoo() with
+  open fun star() = Lion()
+private class Circus() extends Zoo() with
+  override fun star() = Tiger()
+private fun show(venue) = venue.star()
+if show(Circus()) is Tiger then 1 else 0
+//│ Wasm result:
+//│ = 1
+
+// A default implementation returning the unit value can be overridden by one returning an integer.
+:noInline
+:expect 1
+private class Visitor() with
+  open fun visit(node) = ()
+private class Counter() extends Visitor() with
+  override fun visit(node) = 1
+private fun run(visitor) = visitor.visit(0)
+run(Counter())
+//│ Wasm result:
+//│ = 1
+
+// The values of every level of an override chain reach the member that introduces the slot.
+:noInline
+:expect 0
+private class Shape()
+private class Square() extends Shape()
+private class First() with
+  open fun make() = Square()
+private class Second() extends First() with
+  open override fun make() = Square()
+private class Third() extends Second() with
+  override fun make() = Shape()
+private fun build(maker) = maker.make()
+if build(Third()) is Square then 1 else 0
+//│ Wasm result:
+//│ = 0
+
+// An annotated override contributes its declared result to the member it overrides...
+:noInline
+:expect 0
+private class Fruit()
+private class Apple() extends Fruit()
+private class Orchard() with
+  open fun pick() = Apple()
+private class Market() extends Orchard() with
+  override fun pick(): Fruit = Fruit()
+private fun buy(seller) = seller.pick()
+if buy(Market()) is Apple then 1 else 0
+//│ Wasm result:
+//│ = 0
+
+// ...but keeps its declared parameter representation to itself: the arguments of its direct calls never
+// reach the member it overrides. Wasm still requires both parameters to have the same representation.
+:ge
+private class Sink() with
+  open fun accept(x) = 0
+private class Drain() extends Sink() with
+  override fun accept(x: Any) = 1
+Sink().accept(1)
+Drain().accept("s")
+//│ ╔══[COMPILATION ERROR] Parameter 'x' of overriding member 'accept' receives values represented as 'Unknown', but Wasm calls it through the signature of the member it overrides, whose parameter is represented as 'Int'
+//│ ║  l.+4: 	  override fun accept(x: Any) = 1
+//│ ║        	                      ^^^^^^
+//│ ╟── The overridden member 'accept' is defined here
+//│ ║  l.+2: 	  open fun accept(x) = 0
+//│ ╙──      	           ^^^^^^
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// An abstract member without annotations takes the representations of its implementations.
+:noInline
+:expect 42
+private abstract class Source() with
+  fun next()
+private class Constant() extends Source() with
+  override fun next() = wasm.i32.const(42)
+Constant().next()
+//│ Wasm result:
+//│ = 42
+
+// A family whose members return unboxed and boxed values has no common result representation.
+:ge
+private class Meter() with
+  open fun read() = wasm.i32.const(1)
+private class Label() extends Meter() with
+  override fun read() = "one"
+Label().read()
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
+//│ ║  l.+2: 	  open fun read() = wasm.i32.const(1)
+//│ ╙──      	           ^^^^
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

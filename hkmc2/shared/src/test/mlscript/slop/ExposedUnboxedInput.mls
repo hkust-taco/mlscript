@@ -1,0 +1,9 @@
+// Worksheet checking accepts the local Int32 input with both resolution flags off.
+// Importing this file must also account for callers of its exported module.
+#lang(0.3.x)
+#lang(strictResolution: false, eagerResolution: false)
+
+module ExposedUnboxedInput with
+  val input: Int32 = unsafe.undefined
+  fun identity(value) = value
+  identity(input)

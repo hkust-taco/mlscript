@@ -34,6 +34,7 @@ class Invalid extends Closed { override fun foo() = 2 }
 //│ ╟── Inherited member 'foo' is defined here
 //│ ║  l.+1: 	class Closed { fun foo() = 1 }
 //│ ╙──      	                   ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 class MissingOverride extends Base { fun foo() = 2 }
@@ -43,12 +44,14 @@ class MissingOverride extends Base { fun foo() = 2 }
 //│ ╟── Inherited member 'foo' is defined here
 //│ ║  l.XX: 	class Base { open fun foo() = 1 }
 //│ ╙──      	                      ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 class SpuriousOverride { override fun missing() = 2 }
 //│ ╔══[COMPILATION ERROR] Member 'missing' is marked 'override' but overrides no inherited member
 //│ ║  l.+1: 	class SpuriousOverride { override fun missing() = 2 }
 //│ ╙──      	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 abstract class Abstract { fun foo(): Int }
 class Implemented extends Abstract { fun foo() = 4 }
@@ -65,6 +68,7 @@ class Incomplete extends Abstract
 //│ ╟── Member 'foo' requires an implementation
 //│ ║  l.XX: 	abstract class Abstract { fun foo(): Int }
 //│ ╙──      	                              ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 new Abstract
@@ -102,7 +106,7 @@ new SuperChild().foo(3)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 10
 
-// An unannotated base publishes no signature to inherit.
+// An unannotated base and override also support calls through `super`.
 :expect 10
 class UnannotatedSuperBase { open fun foo(x) = x + 1 }
 class UnannotatedSuperChild extends UnannotatedSuperBase { override fun foo(x) = super.foo(x + 1) * 2 }
@@ -201,6 +205,7 @@ class ConcreteMissing { fun foo() }
 //│ ╟── Member 'foo' requires an implementation
 //│ ║  l.+1: 	class ConcreteMissing { fun foo() }
 //│ ╙──      	                            ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 object MissingObject extends Abstract
@@ -210,6 +215,7 @@ object MissingObject extends Abstract
 //│ ╟── Member 'foo' requires an implementation
 //│ ║  l.XX: 	abstract class Abstract { fun foo(): Int }
 //│ ╙──      	                              ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 class BadKind extends Base { override fun foo = 1 }
@@ -219,6 +225,7 @@ class BadKind extends Base { override fun foo = 1 }
 //│ ╟── The overridden member 'foo' is defined here
 //│ ║  l.XX: 	class Base { open fun foo() = 1 }
 //│ ╙──      	                      ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 class AbstractCall() { fun f() }
@@ -228,6 +235,7 @@ class AbstractCall() { fun f() }
 //│ ╟── Member 'f' requires an implementation
 //│ ║  l.+1: 	class AbstractCall() { fun f() }
 //│ ╙──      	                           ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 abstract class AbstractCallable() { fun f(): Int }
@@ -258,7 +266,7 @@ new Abstract with { fun other() = 9 }
 //│ ╟── Member 'foo' requires an implementation
 //│ ║  l.XX: 	abstract class Abstract { fun foo(): Int }
 //│ ╙──      	                              ^^^
-//│ = $anon
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 class PrivateAbstract { private fun hidden() }
@@ -268,6 +276,7 @@ class PrivateAbstract { private fun hidden() }
 //│ ╟── Member 'hidden' requires an implementation
 //│ ║  l.+1: 	class PrivateAbstract { private fun hidden() }
 //│ ╙──      	                                    ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // The nearest common ancestor is used even when a deeper ancestor is also common.
 :expect [5, 6]
@@ -313,6 +322,7 @@ class ClosedAgain extends Left { override fun foo() = 4 }
 //│ ╟── Inherited member 'foo' is defined here
 //│ ║  l.XX: 	class Left extends Base { override fun foo() = 2 }
 //│ ╙──      	                                       ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 abstract class MissingInherited extends Abstract
@@ -323,6 +333,7 @@ class StillMissing extends MissingInherited
 //│ ╟── Member 'foo' requires an implementation
 //│ ║  l.XX: 	abstract class Abstract { fun foo(): Int }
 //│ ╙──      	                              ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :expect 4
 class InheritsImplementation extends Implemented
@@ -356,7 +367,7 @@ new abstractValue
 //│ ║  l.XX: 	abstract class Abstract { fun foo(): Int }
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ abstractValue = class Abstract
+//│ abstractValue = undefined
 
 :e
 let abstractCtor = AbstractCallable
@@ -368,7 +379,7 @@ abstractCtor()
 //│ ║  l.XX: 	abstract class AbstractCallable() { fun f(): Int }
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ abstractCtor = fun AbstractCallable { class: class AbstractCallable }
+//│ abstractCtor = undefined
 
 :e
 let abstractParent = Abstract
@@ -379,7 +390,8 @@ class StoredIncomplete extends abstractParent
 //│ ╟── Member 'foo' requires an implementation
 //│ ║  l.XX: 	abstract class Abstract { fun foo(): Int }
 //│ ╙──      	                              ^^^
-//│ abstractParent = class Abstract
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ abstractParent = undefined
 
 :expect 5
 let abstractParent = Abstract
@@ -422,6 +434,7 @@ class InheritedPrivateRequirement extends PrivateRequirement { fun hidden() = 1 
 //│ ╟── Member 'hidden' requires an implementation
 //│ ║  l.XX: 	abstract class PrivateRequirement { private fun hidden() }
 //│ ╙──      	                                                ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Different receiver classes can inherit the same declaration without overriding it.
 :expect [1, 1]
@@ -442,7 +455,7 @@ let changingParent = makeParent(4)
 class SavedParent extends changingParent { override fun f() = super.f() }
 set changingParent = makeParent(9)
 new SavedParent().f()
-//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'NewResolver.scala:4267'
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'NewResolver.scala:4351'
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ = 4
@@ -457,7 +470,7 @@ let changingHolder = Holder(5)
 class SavedNestedParent extends changingHolder.Parent { override fun f() = super.f() }
 set changingHolder = Holder(11)
 new SavedNestedParent().f()
-//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'NewResolver.scala:4267'
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'NewResolver.scala:4351'
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ = 5

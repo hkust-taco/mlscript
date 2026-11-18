@@ -80,7 +80,7 @@ fun foo(x) =
   let =x
   set x = 1
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let foo7; foo7 = function foo(x) { return runtime.Unit };
+//│ let foo7; foo7 = function foo(x) { x /* as! Int */; return runtime.Unit };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 print of Box(foo(1)).value

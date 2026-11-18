@@ -64,7 +64,7 @@ fun nestedLoopBackPost(flag) =
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define nestedLoopBackPost⁰ as fun nestedLoopBackPost¹(flag) {
 //│   let flag1, x;
-//│   set flag1 = flag;
+//│   set flag1 = (flag as! Bool⁰);
 //│   set x = 1;
 //│   loop lbl:
 //│     let inner;
@@ -112,7 +112,7 @@ fun innerReturnDoesNotPolluteOuterExit(flag) =
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define innerReturnDoesNotPolluteOuterExit⁰ as fun innerReturnDoesNotPolluteOuterExit¹(flag) {
 //│   let flag1;
-//│   set flag1 = flag;
+//│   set flag1 = (flag as! Bool⁰);
 //│   loop lbl:
 //│     match flag1
 //│       true =>
@@ -152,8 +152,8 @@ fun nestedInnerMaySkip(flag, innerFlag) =
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define nestedInnerMaySkip⁰ as fun nestedInnerMaySkip¹(flag, innerFlag) {
 //│   let flag1, innerFlag1, x;
-//│   set flag1 = flag;
-//│   set innerFlag1 = innerFlag;
+//│   set flag1 = (flag as! Bool⁰);
+//│   set innerFlag1 = (innerFlag as! Bool⁰);
 //│   set x = 1;
 //│   loop lbl:
 //│     match flag1

@@ -64,7 +64,7 @@ trait BlockImpl(using Elaborator.State):
             case ps =>
               App(headId, TyTup(ps.map {
                 case m @ Modified(Keywrd(syntax.Keyword.`in`) | Keywrd(syntax.Keyword.`out`), _) => m
-                case t => Tup(Tree.Modified(Keywrd(syntax.Keyword.`in`), t) :: Tree.Modified(Keywrd(syntax.Keyword.`out`), t) :: Nil)
+                case t => InOut(t, t)
               }))
         // Insert type parameters for constructors.
         // e.g. `class Foo[T] with constructor Bar(x: T)` will be desugared to

@@ -14,23 +14,24 @@ StrProducer().get()
 //│ ╟── The overridden member 'get' is defined here
 //│ ║  l.+2: 	  open fun get(): Producer = Producer()
 //│ ╙──      	           ^^^
-//│ = "str"
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
+
+class Consumer() with
+  open fun take(value: Int): Int = value
 
 // Parameters cannot narrow the inherited representation.
 :ge
-class Consumer() with
-  open fun take(value: Int): Int = value
 class StrConsumer() extends Consumer() with
   override fun take(value: Str): Int = 0
 StrConsumer().take("str")
 //│ ╔══[COMPILATION ERROR] Parameter 'value' of overriding member 'take' is represented as 'Str', which cannot hold the values represented as 'Int' that the member it overrides accepts
-//│ ║  l.+4: 	  override fun take(value: Str): Int = 0
+//│ ║  l.+2: 	  override fun take(value: Str): Int = 0
 //│ ║        	                    ^^^^^^^^^^
 //│ ╟── The overridden member 'take' is defined here
-//│ ║  l.+2: 	  open fun take(value: Int): Int = value
+//│ ║  l.XX: 	  open fun take(value: Int): Int = value
 //│ ╙──      	           ^^^^
-//│ = 0
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // An unannotated parameter inherits the base type across worksheet blocks.
@@ -41,7 +42,7 @@ EchoConsumer().take("str")
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
 //│ ║  l.+3: 	EchoConsumer().take("str")
 //│ ╙──      	                    ^^^^^
-//│ = "str"
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // JavaScript accepts a parameter representation that includes every inherited input.
@@ -68,7 +69,7 @@ useTailBase(TailChild())
 //│ ╟── The overridden member 'apply' is defined here
 //│ ║  l.+2: 	  open fun apply(...rest, value: Int): Int = 0
 //│ ╙──      	           ^^^^^
-//│ = 0
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // An unannotated rest parameter already binds an Array, with or without trailing parameters.
@@ -97,7 +98,7 @@ InheritedTail().apply(1)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Str'
 //│ ║  l.+3: 	  override fun apply(...rest, value): Int = text(value)
 //│ ╙──      	                                                 ^^^^^
-//│ = 0
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // Optional leading slots leave the fixed physical prefix when trailing parameters follow.
@@ -113,6 +114,7 @@ class CurriedChild() extends CurriedBase() with
 //│ ╟── The overridden member 'apply' is defined here
 //│ ║  l.+2: 	  open fun apply(value?: Int, ...rest, last: Int)(extra: Int): Int = last
 //│ ╙──      	           ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // An extra required trailing slot is rejected before a valid base call can reach it.
@@ -127,4 +129,4 @@ useTailBase(ExtraTail())
 //│ ╟── The overridden member 'apply' is defined here
 //│ ║  l.XX: 	  open fun apply(...rest, value: Int): Int = 0
 //│ ╙──      	           ^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function 'apply' expected at least 2 arguments but got 1
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

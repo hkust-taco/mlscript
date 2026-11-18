@@ -79,7 +79,7 @@ f(1, 2)
 //│   set g$here = g$⁰(used1, used2);
 //│   set foo = g$here;
 //│   set tmp = foo(used2);
-//│   return +⁰(tmp, unused2)
+//│   return (+⁰(tmp, unused2) as! Int⁰)
 //│ };
 //│ return f¹(1, 2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

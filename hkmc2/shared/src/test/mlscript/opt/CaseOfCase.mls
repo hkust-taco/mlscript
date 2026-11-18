@@ -196,7 +196,7 @@ fun prefixDependency(x) =
 //│     else
 //│       set tmp = PrefixBox⁰(false);
 //│       end
-//│   set copy = tmp.value¹;
+//│   set copy = (tmp.value¹ as! Bool⁰);
 //│   match tmp
 //│     PrefixBox¹ =>
 //│       return copy

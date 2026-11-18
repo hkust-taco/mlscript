@@ -52,7 +52,7 @@ private class GeneratorChild() extends GeneratorBase() with
   override fun generate(value: Any) = value
 GeneratorChild().generate("payload").next()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp: ?, tmp1: Unknown;
+//│ let tmp: GeneratorChild⁰, tmp1: Unknown;
 //│ @private
 //│ define GeneratorBase⁰ as class GeneratorBase² {
 //│   constructor GeneratorBase¹
@@ -61,13 +61,13 @@ GeneratorChild().generate("payload").next()
 //│   }
 //│ };
 //│ @private
-//│ define GeneratorChild⁰ as class GeneratorChild² extends GeneratorBase² {
-//│   constructor GeneratorChild¹
-//│   method generate² = fun generate³(value: Unknown): generator ? {
+//│ define GeneratorChild¹ as class GeneratorChild⁰ extends GeneratorBase² {
+//│   constructor GeneratorChild²
+//│   method generate² = fun generate³(value: Unknown): generator Unknown {
 //│     return value
 //│   }
 //│ };
-//│ set tmp = GeneratorChild¹();
+//│ set tmp = GeneratorChild²();
 //│ set tmp1 = tmp.generate³("payload");
 //│ return tmp1.next⁰()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -84,13 +84,13 @@ fun curried: Int -> Int -> Int
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let curried$worker;
 //│ @inline
-//│ define curried⁰ as fun curried¹(x: ?)(y: ?): Unknown {
+//│ define curried⁰ as fun curried¹(x: Int⁰)(y: Int⁰): Unknown {
 //│   return curried$worker⁰(x, y)
 //│ };
 //│ @generator
-//│ define curried$worker as fun curried$worker⁰(x: ?, y: ?): generator Int⁰ {
+//│ define curried$worker as fun curried$worker⁰(x: Int⁰, y: Int⁰): generator Int⁰ {
 //│   do yield⁰(x);
-//│   return (y as! Int⁰)
+//│   return y
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

@@ -22,7 +22,7 @@ Cons(1, Nil)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Object'
 //│ ║  l.+1: 	1 :: 2
 //│ ╙──      	     ^
-//│ = Cons(1, 2)
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 fun map(f, xs) = if xs is
   Nil then Nil
@@ -66,6 +66,6 @@ new ::(1, 2)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Object'
 //│ ║  l.+1: 	new ::(1, 2)
 //│ ╙──      	          ^
-//│ = Cons(1, 2)
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

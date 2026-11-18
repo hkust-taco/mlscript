@@ -86,7 +86,7 @@ indirect(11)
 
 // Forwarding preserves supplied Unit values and the distinct null value.
 :expect 0
-fun forward(x) = absent(x)
+fun forward(x: Any) = absent(x)
 forward(0)
 //│ Wasm result:
 //│ = 0
@@ -257,4 +257,4 @@ fun test(x?: Int32) = x
 //│ ║  l.+1: 	fun test(x?: Int32) = x
 //│ ╙──      	         ^^^^^^^^^
 //│ Wasm result:
-//│ = {}
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

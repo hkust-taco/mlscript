@@ -128,9 +128,9 @@ let missing = new Box(...makeArgs(false))
 let supplied = new Box(...makeArgs(true))
 [missing.value is null, supplied.value is null, count]
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let scrut: ?, scrut1: ?, tmp: ?, constructorArgs: Array⁰, constructorArg: Int⁰, constructorArg1: ?, tmp1: ?, constructorArgs1: Array⁰, constructorArg2: Int⁰, constructorArg3: ?, tmp2: Bool⁰, tmp3: Bool⁰;
-//│ define makeArgs⁰ as fun makeArgs¹(present: ?): ? {
-//│   let tmp4: Unknown;
+//│ let scrut: ?, scrut1: ?, tmp: Array⁰, constructorArgs: Array⁰, constructorArg: Int⁰, constructorArg1: Unknown, tmp1: Array⁰, constructorArgs1: Array⁰, constructorArg2: Int⁰, constructorArg3: Unknown, tmp2: Bool⁰, tmp3: Bool⁰;
+//│ define makeArgs⁰ as fun makeArgs¹(present: Unknown): Array⁰ {
+//│   let tmp4: Int⁰;
 //│   set tmp4 = +⁰(count⁰, 1);
 //│   set count⁰ = tmp4;
 //│   match present
@@ -142,10 +142,10 @@ let supplied = new Box(...makeArgs(true))
 //│ };
 //│ define Box⁰ as class Box² {
 //│   val required⁰: Int⁰;
-//│   val value⁰: ?;
-//│   constructor Box¹(required: Int⁰, value?: ?) {
+//│   val value⁰: Unknown;
+//│   constructor Box¹(required: Int⁰, value?: Unknown) {
 //│     define required⁰ as val required¹: Int⁰ = required;
-//│     define value⁰ as val value¹: ? = value;
+//│     define value⁰ as val value¹: Unknown = value;
 //│     end
 //│   }
 //│ };
@@ -218,7 +218,7 @@ fun argument(): Int =
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let tmp: Int⁰, optionalArg: Int⁰, tmp1: Box²;
 //│ define argument⁰ as fun argument¹(): Int⁰ {
-//│   let tmp2: Unknown;
+//│   let tmp2: Int⁰;
 //│   set tmp2 = +⁰(evaluated⁰, 1);
 //│   set evaluated⁰ = tmp2;
 //│   return 23
@@ -233,6 +233,7 @@ fun argument(): Int =
 //│ evaluated = 1
 
 // Eliminating constructors must still bind missing fields to null.
+// Constructor fusion must preserve optional-field layouts.
 :lift
 :deforest
 :expect [true, false]
@@ -240,6 +241,12 @@ data class Data(value?)
 private fun read(d: Data) = d.value is null
 [read(Data()), read(Data(()))]
 //│ deforest > >>> fusing >>>
+//│ deforest > Data⁰(optionalArg⁰) ->
+//│ deforest > 	select: value
+//│ deforest > runtime⁰.Unit⁰ ->
+//│ deforest > 	match: scrut⁰
+//│ deforest > Data⁰(null) ->
+//│ deforest > 	select: value
 //│ deforest > <<< fusing <<<
 //│ = [true, false]
 
@@ -471,11 +478,11 @@ data class Data(value?)
 private fun read(item) = item.value
 [read(Data(unsafe.undefined)), read(Data()), read(Data(11))]
 //│ deforest > >>> fusing >>>
-//│ deforest > Data⁰(11) ->
+//│ deforest > Data¹(11) ->
 //│ deforest > 	select: value
-//│ deforest > Data⁰(null) ->
+//│ deforest > Data¹(null) ->
 //│ deforest > 	select: value
-//│ deforest > Data⁰(undefined) ->
+//│ deforest > Data¹(undefined) ->
 //│ deforest > 	select: value
 //│ deforest > <<< fusing <<<
 //│ = [undefined, null, 11]

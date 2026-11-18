@@ -7,3 +7,4 @@ class IncompatibleField(val value: Int32 | Int64)
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int64' have no common representation
 //│ ║  l.+1: 	class IncompatibleField(val value: Int32 | Int64)
 //│ ╙──      	                                   ^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

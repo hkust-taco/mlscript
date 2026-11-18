@@ -92,26 +92,13 @@ if flag() then token() else unsafe.undefined
 :soir
 private fun flag(): Bool = true
 fun test() = if flag() do return wasm.i32.const(42)
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
+//│ ╔══[COMPILATION ERROR] Types 'Runtime.Unit' and 'Int32' have no common representation
 //│ ║  l.+2: 	fun test() = if flag() do return wasm.i32.const(42)
-//│ ╙──      	                                 ^^^^^^^^^^^^^^^^^^
+//│ ╙──      	    ^^^^
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ @private
-//│ define flag⁰ as fun flag¹() {
-//│   return true
-//│ };
-//│ define test⁰ as fun test¹() {
-//│   match true
-//│     true =>
-//│       return wasm⁰.i32⁰.const⁰(42)
-//│     else
-//│       return runtime⁰.Unit⁰
-//│   end
-//│ };
-//│ end
-//│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
-//│ ║  l.+2: 	fun test() = if flag() do return wasm.i32.const(42)
-//│ ╙──      	                                 ^^^^^^^^^^^^^^^^^^
+//│ throw "This code cannot be run as its compilation yielded an error."
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // Dead-parameter elimination introduces undefined after lowering. The functions'
@@ -135,7 +122,7 @@ discard()
 //│ @private
 //│ define discard⁰ as fun discard¹() {
 //│   let f32, f64, i64, i32;
-//│   define i32 as fun i32¹() {
+//│   define i32 as fun i32⁰() {
 //│     return undefined
 //│   };
 //│   define i64 as fun i64⁰() {
@@ -147,8 +134,8 @@ discard()
 //│   define f64 as fun f64⁰() {
 //│     return undefined
 //│   };
-//│   do wasm⁰.i32⁰.const⁰(1);
-//│   do i32¹();
+//│   do wasm⁰.i32¹.const⁰(1);
+//│   do i32⁰();
 //│   do wasm⁰.i64¹.const¹(2);
 //│   do i64⁰();
 //│   do wasm⁰.f32¹.const²(3.0);
@@ -196,9 +183,8 @@ private fun badNull(): Int32 = null
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
 //│ ║  l.+1: 	private fun badNull(): Int32 = null
 //│ ╙──      	                               ^^^^
-//│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `(ref null any)` to `i32` in a different type hierarchy
-//│ ║  l.+1: 	private fun badNull(): Int32 = null
-//│ ╙──      	                               ^^^^
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // Undefined cannot make an intrinsically incompatible declaration representable.
@@ -209,7 +195,7 @@ private fun incompatible(): Int32 | Int64 = unsafe.undefined
 //│ ║  l.+1: 	private fun incompatible(): Int32 | Int64 = unsafe.undefined
 //│ ╙──      	                            ^^^^^^^^^^^^^
 //│ Wasm result:
-//│ = 42
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // Nullable storage for undefined must preserve checked nominal casts for ordinary null.
@@ -364,13 +350,13 @@ narrowScalarBottom(scalarBottom())
 //│ };
 //│ @inline @private
 //│ define scalarBottom⁰ as fun scalarBottom¹() {
-//│   return (wasm⁰.i32⁰.const⁰(7) as! Nothing)
+//│   return (wasm⁰.i32¹.const⁰(7) as! Nothing)
 //│ };
 //│ @private
 //│ define ScalarCastTarget¹ as class ScalarCastTarget⁰ {
 //│   constructor ScalarCastTarget²
 //│ };
-//│ do (wasm⁰.i32⁰.const⁰(7) as! Nothing);
+//│ do (wasm⁰.i32¹.const⁰(7) as! Nothing);
 //│ return 42
 //│ Wasm result:
 //│ = 42
@@ -384,8 +370,8 @@ entryBottom()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ @inline @private
 //│ define entryBottom⁰ as fun entryBottom¹() {
-//│   return (wasm⁰.i32⁰.const⁰(7) as! Nothing)
+//│   return (wasm⁰.i32¹.const⁰(7) as! Nothing)
 //│ };
-//│ return (wasm⁰.i32⁰.const⁰(7) as! Nothing)
+//│ return (wasm⁰.i32¹.const⁰(7) as! Nothing)
 //│ Wasm result:
 //│ = null
