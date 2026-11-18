@@ -1736,11 +1736,13 @@ let value = wasm.i32.const(1)
 set value = wasm.i64.const(2)       // error: `Int32` and `Int64` have no common representation
 ```
 
-Compilation files check their exported interfaces for calls from other compilation units (see
-[Resolution](#resolution)). Worksheet blocks perform this exposure check for their public
-definitions only with `#lang(strictResolution: true)`. Unannotated parameters exposed by these
-checks admit unknown inputs. Without that setting, `fun foo(x) = x` followed by `foo(1)` in the
-same worksheet block infers `Int` for both the parameter and the result.
+Compilation files check their exported interfaces to allow for arbitrary calls from
+unknown compilation units (see [Resolution](#resolution)).
+(Worksheet blocks perform this exposure check for their public definitions only with
+`#lang(strictResolution: true)`.)
+Unannotated parameters exposed by these checks are made to admit unknown (boxed) inputs.
+So, a file exporting `fun foo(x) = x` and also containing the code `(n: Int32) => foo(n)`
+fails to compile, as `x` is inferred to have an unknown representation.
 
 Worksheet blocks are compiled one after the other, and the representations inferred for a block
 are final once it is compiled. Later blocks must use earlier definitions and `let` variables
