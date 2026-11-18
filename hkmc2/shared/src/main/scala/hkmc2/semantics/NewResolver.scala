@@ -66,7 +66,7 @@ class NewResolver:
       case td: TermDefinition => observeErasureDefinition(td)
       case _ => ()
 
-  private def observeErasure(symbol: Symbol)(connect: Listener => Unit)(using ResolutionContext): Unit =
+  private def observeErasure(symbol: ErasureInputs.InputSymbol)(connect: Listener => Unit)(using ResolutionContext): Unit =
     if symbol.getState is rctx.owner then rctx.state.erasureInputs.register(symbol): publish =>
       connect(shape => listenInstanceViews(shape)(publish))
 

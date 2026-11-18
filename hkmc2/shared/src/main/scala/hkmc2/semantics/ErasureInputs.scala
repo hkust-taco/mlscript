@@ -4,6 +4,7 @@ package semantics
 import scala.collection.mutable
 import hkmc2.utils.*, shorthands.*
 import Term.*
+import ErasureInputs.InputSymbol
 
 /** Source declarations needed both when observing inference and when assigning representations.
   * Several declarations are outside subStatements: split bindings, handler parameters,
@@ -18,7 +19,7 @@ import Term.*
 private[hkmc2] final class ErasureDeclarations(root: Statement):
   val statements = mutable.ArrayBuffer.empty[Statement]
   val parameters = mutable.LinkedHashMap.empty[VarSymbol, Param]
-  val variables = mutable.LinkedHashSet.empty[VarSymbol | TermSymbol | TempSymbol]
+  val variables = mutable.LinkedHashSet.empty[InputSymbol]
   /** The members that `handle` blocks define to implement the members of their effect classes. */
   val handlerMembers = mutable.Set.empty[TermSymbol]
   private val visited = mutable.Set.empty[Identity[Statement]]
@@ -27,7 +28,7 @@ private[hkmc2] final class ErasureDeclarations(root: Statement):
     parameters(p.sym) = p
     p.subTerms.foreach(visit)
 
-  private def variable(sym: VarSymbol | TermSymbol | TempSymbol): Unit =
+  private def variable(sym: InputSymbol): Unit =
     variables += sym
     val declaration = sym match
       case sym: (VarSymbol | TempSymbol) => sym.decl
@@ -100,7 +101,7 @@ private[hkmc2] final class ErasureDeclarations(root: Statement):
         handlerMembers += d.td.tsym
         variable(d.resumeSym)
         visit(d.td)
-      case LetDecl(sym: (VarSymbol | TermSymbol | TempSymbol), _) => variable(sym)
+      case LetDecl(sym: InputSymbol, _) => variable(sym)
       case Ref(sym: VarSymbol) => variable(sym)
       case SimpleRef(sym: VarSymbol) => variable(sym)
       case IfLike(_, _, branches) => split(branches)
@@ -123,13 +124,13 @@ private[hkmc2] final class ErasureDeclarations(root: Statement):
   * No erased types or mutable bookkeeping are stored on source symbols during resolution.
   */
 private[hkmc2] final class ErasureInputs:
-  private val values = mutable.Map.empty[Symbol, TermShapeHost]
+  private val values = mutable.Map.empty[InputSymbol, TermShapeHost]
 
   // Includes property declarations synthesized by named-tuple resolution, which
   // have source expressions but are not separate nodes in the source syntax.
-  def symbols: Ls[Symbol] = values.keysIterator.toList
+  def symbols: Ls[InputSymbol] = values.keysIterator.toList
 
-  private[semantics] def register(symbol: Symbol)(connect: ResolutionContext.Listener => Unit)
+  private[semantics] def register(symbol: InputSymbol)(connect: ResolutionContext.Listener => Unit)
       (using ResolutionContext): Unit = if !values.contains(symbol) then
     val host = new TermShapeHost
     values(symbol) = host
@@ -138,10 +139,16 @@ private[hkmc2] final class ErasureInputs:
     connect(host.publish)
 
   /** Whether `symbol` is a source slot of this compilation unit that was prepared for erasure. */
-  def isPrepared(symbol: Symbol): Bool = values.contains(symbol)
+  def isPrepared(symbol: InputSymbol): Bool = values.contains(symbol)
 
-  def shapes(symbol: Symbol): Ls[TermShape] =
+  def shapes(symbol: InputSymbol): Ls[TermShape] =
     val host = values.getOrElse(symbol, lastWords("Source slot was not prepared for erasure"))
     assert(host.originalData.completed, "Erasure requires completed value observations")
     host.shapes.toList
+
+private[hkmc2] object ErasureInputs:
+  /** Symbols whose variable values or definition results supply runtime representations.
+    * Elaboration temporaries include the saved value restored by a backtracking assignment.
+    */
+  type InputSymbol = VarSymbol | TermSymbol | TempSymbol
 

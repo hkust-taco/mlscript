@@ -73,7 +73,7 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
     case symbol: (ClassSymbol | ModuleOrObjectSymbol) => ErasedType.ValueLike(S(false), symbol)
     case _ => ErasedType.Unknown
 
-  private def inferredType(symbol: Symbol): Opt[ErasedValueType] =
+  private def inferredType(symbol: ErasureInputs.InputSymbol): Opt[ErasedValueType] =
     if !config.language.useNewResolution then N
     else joined(summon[State].newResolverState.erasureInputs.shapes(symbol).flatMap(valueType))
 
@@ -155,10 +155,11 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
         val resolver = parameter.sym.getState.newResolverState
         if resolver.signatureParameters.get(parameter.sym)(using resolver.context).isEmpty then N
         else
-          // Separate signatures register their parameter interfaces before the function body is elaborated.
-          // Resolution publishes the interpreted declared types to these parameters and keeps call arguments
-          // out of their observations. Preserve that boundary when assigning and inheriting representations.
-          // An empty declared observation fixes the usual unknown representation, without admitting override inputs.
+          // In `fun f: (Int) -> Int; fun f(x) = ...`, x has no inline annotation.
+          // The resolver records the signature's Int in x's observed shapes and excludes argument types
+          // supplied by callers. Thus inferredType reads the separately declared representation here.
+          // Treat it as declared so inherited types and calls to overrides cannot change it.
+          // If the signature supplies no value shapes, S(Unknown) still prevents fallback to family inference.
           S(inferredType(parameter.sym).getOrElse(ErasedType.Unknown))
 
   /** The result representation that `td` declares, with a result annotation or with a separate full
