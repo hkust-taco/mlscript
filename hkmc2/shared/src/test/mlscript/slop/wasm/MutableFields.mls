@@ -34,15 +34,11 @@ increment()
 //│ ║  l.+2: 	private fun increment() =
 //│ ╙──      	            ^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
-//│ ║  l.+4: 	  set counter.count += 1
-//│ ╙──      	      ^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
 //│ ║  l.+1: 	private class Counter(mut val count)
 //│ ╙──      	                              ^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 //│ ║  l.+1: 	private class Counter(mut val count)
 //│ ╙──      	                              ^^^^^
-//│ ═══[COMPILATION ERROR] Wasm entry function has incompatible result types `Int32` and `Unknown`
 
 // Assigning a value of an unrelated representation is rejected where the field is assigned and read.
 :ge
@@ -56,15 +52,11 @@ mix()
 //│ ║  l.+2: 	private fun mix() =
 //│ ╙──      	            ^^^
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
-//│ ║  l.+4: 	  set mixed.value = "hello"
-//│ ╙──      	      ^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
 //│ ║  l.+1: 	private class Mixed(mut val value)
 //│ ╙──      	                            ^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 //│ ║  l.+1: 	private class Mixed(mut val value)
 //│ ╙──      	                            ^^^^^
-//│ ═══[COMPILATION ERROR] Wasm entry function has incompatible result types `Int32` and `Str`
 
 // Assignments in methods, through `this` or through the field's name, reach the field too.
 :noInline
@@ -128,7 +120,6 @@ typed()
 //│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 //│ ║  l.+1: 	private class Typed(mut val value)
 //│ ╙──      	                            ^^^^^
-//│ ═══[COMPILATION ERROR] Wasm entry function has incompatible result types `Int32` and `Str`
 
 // ...and here, the class's own scope, from a nested definition.
 :ge
@@ -143,10 +134,8 @@ named()
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
 //│ ║  l.+4: 	private fun named() = (new Named).value
 //│ ╙──      	            ^^^^^
-//│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
-//│ ║  l.+2: 	  mut val value = const(1)
-//│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^
-//│ ═══[COMPILATION ERROR] Wasm entry function has incompatible result types `Int32` and `Str`
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // ...and here, a wildcard open.
 :ge

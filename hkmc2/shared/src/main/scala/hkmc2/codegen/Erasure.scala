@@ -157,6 +157,11 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
         ErasedType.Incompatible(lhs, rhs)(reported = true)
       case incompatible: ErasedType.Incompatible => incompatible
       case _ => tpe
+
+  /** Whether a slot carries an already-diagnosed representation error. */
+  private def hasRepresentationError(tpe: Opt[ErasedValueType]): Bool = tpe.exists:
+    case incompatible: ErasedType.Incompatible => incompatible.reported
+    case _ => false
   
   private def declaredType(sign: Opt[Term], modulefulness: Modulefulness): Opt[ErasedValueType] =
     modulefulness.msym match
@@ -240,6 +245,8 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
     * value it returns. Unannotated overrides can obtain their result from an inherited member
     * that passed source layout validation in `overrides` and has completed erasure. Other unannotated
     * members take the result representation of their whole override family (see `observedResultTypes`).
+    * An unrepresentable result marks `td` erroneous and stays in the signature so unannotated overrides
+    * inherit its reported error.
     */
   private def erasedDefinitionSignature(td: TermDefinition, overrides: OverrideChecks,
       handlerMembers: Set[TermSymbol]): Opt[ErasedValueType | ErasedCallableSignature] =
@@ -260,6 +267,7 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
     val resultType = candidateResultType.map:
       representable(_, td.resultSignature.orElse(td.sign).flatMap(_.toLoc).orElse(td.tsym.toLoc),
         if declaredResult.isEmpty then S(td.tsym) else N)
+    if hasRepresentationError(resultType) then td.isErroneous = true
     val result = wrappedResult(td, resultType)
     td.k match
       case syntax.Fun =>
@@ -472,10 +480,7 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
     // A function with an unrepresentable parameter cannot be compiled. Mark every such definition
     // before inferring any results, so override families also exclude its invalid implementation.
     definitions.foreach: td =>
-      if td.params.exists(_.allParams.exists(_.sym.erasedType.exists:
-        case incompatible: ErasedType.Incompatible => incompatible.reported
-        case _ => false
-      )) then td.isErroneous = true
+      if td.params.exists(_.allParams.exists(p => hasRepresentationError(p.sym.erasedType))) then td.isErroneous = true
     // Constructor companions have no source body. Their physical argument lists
     // are the class's lists, and a saturated call always produces its instance.
     statements.foreach:

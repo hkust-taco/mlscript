@@ -63,10 +63,15 @@ helper(input)
 // An incompatible declared result is independent of inferred external inputs.
 // Its error must not blame the exposed parameter.
 :ge
+:sir
+:siret
 fun declared(value): Int32 | Any = value
+declared(0)
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
 //│ ║  l.+1: 	fun declared(value): Int32 | Any = value
 //│ ╙──      	                     ^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
 
 // Reject the whole function after diagnosing its parameters, regardless of its body.
 // Keep both parameter errors, but skip the incompatible result annotation and body.
@@ -164,3 +169,71 @@ ValidOverride().take(1)
 //│ };
 //│ set tmp = ValidOverride²();
 //│ return tmp.take³(1)
+
+// An inferred result can be unrepresentable even when every parameter is valid.
+// Reject the function and its call before lowering its branches.
+:ge
+:sir
+:siret
+fun inferred(flag: Bool) = if flag then input else 0
+inferred(true)
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int' have no common representation
+//│ ║  l.+1: 	fun inferred(flag: Bool) = if flag then input else 0
+//│ ╙──      	    ^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+
+// An unannotated getter inherits its base's rejected result without another diagnostic.
+// An override with a valid declared result can still be lowered independently.
+:ge
+:sir
+:siret
+private class RejectedResultBase() with
+  open fun value: Int32 | Any = input
+private class RejectedResultChild() extends RejectedResultBase() with
+  override fun value = input
+private class ValidResultChild() extends RejectedResultBase() with
+  override fun value: Int = 1
+ValidResultChild().value
+RejectedResultChild().value
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+2: 	  open fun value: Int32 | Any = input
+//│ ╙──      	                  ^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: ValidResultChild⁰;
+//│ @private
+//│ define RejectedResultBase⁰ as class RejectedResultBase² {
+//│   constructor RejectedResultBase¹
+//│ };
+//│ @private
+//│ define RejectedResultChild⁰ as class RejectedResultChild² extends RejectedResultBase² {
+//│   constructor RejectedResultChild¹
+//│ };
+//│ @private
+//│ define ValidResultChild¹ as class ValidResultChild⁰ extends RejectedResultBase² {
+//│   constructor ValidResultChild²
+//│   method value⁰ = fun value¹: Int⁰ {
+//│     return 1
+//│   }
+//│ };
+//│ set tmp = ValidResultChild²();
+//│ do tmp.value¹;
+//│ throw "This code cannot be run as its compilation yielded an error."
+
+// Promise and Iterator wrappers do not make an unrepresentable body result valid.
+:ge
+:sir
+:siret
+@annotations.async
+fun rejectedAsync(): Int32 | Any = input
+@annotations.generator
+fun rejectedGenerator(): Int32 | Any = input
+[rejectedAsync, rejectedGenerator]
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+2: 	fun rejectedAsync(): Int32 | Any = input
+//│ ╙──      	                     ^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+4: 	fun rejectedGenerator(): Int32 | Any = input
+//│ ╙──      	                         ^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
