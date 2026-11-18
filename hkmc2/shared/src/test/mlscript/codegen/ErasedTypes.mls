@@ -578,13 +578,6 @@ fun mixedThree(x: Int32 | Str | Bool) = 0
 //│ ║  l.+3: 	fun mixedThree(x: Int32 | Str | Bool) = 0
 //│ ╙──      	                  ^^^^^^^^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define mixed⁰ as fun mixed¹(x: ‹incompatible(Int32, Str⁰)›): Int⁰ {
-//│   return 0
-//│ };
-//│ define twoPrims⁰ as fun twoPrims¹(x: ‹incompatible(Int32, Int64)›): Int⁰ {
-//│   return 0
-//│ };
-//│ define mixedThree⁰ as fun mixedThree¹(x: ‹incompatible(Int32, Str⁰)›): Int⁰ { return 0 };
 //│ end
 
 
@@ -592,7 +585,10 @@ fun mixedThree(x: Int32 | Str | Bool) = 0
 // the error again.
 fun intoMixed(n: Int32) = mixed(n)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define intoMixed⁰ as fun intoMixed¹(n: Int32): Int⁰ { return mixed¹(n) }; end
+//│ define intoMixed⁰ as fun intoMixed¹(n: Int32): Int⁰ {
+//│   throw "This code cannot be run as its compilation yielded an error."
+//│ };
+//│ end
 
 
 // Widening an unrepresentable value into a `Str` or `Object` result does not report the declaration again.
@@ -606,12 +602,6 @@ fun mixedIntoObject(x: Int32 | Str): Object = x
 //│ ║  l.+2: 	fun mixedIntoObject(x: Int32 | Str): Object = x
 //│ ╙──      	                       ^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define outOfMixed⁰ as fun outOfMixed¹(x: ‹incompatible(Int32, Str⁰)›): Str⁰ {
-//│   return x
-//│ };
-//│ define mixedIntoObject⁰ as fun mixedIntoObject¹(x: ‹incompatible(Int32, Str⁰)›): Object⁰ {
-//│   return x
-//│ };
 //│ end
 
 

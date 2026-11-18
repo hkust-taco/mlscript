@@ -134,6 +134,7 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
     * a slot can be stored or passed. Reporting it once at the declaration replaces the errors
     * that each coercion into or out of the slot would report. Class headers are published
     * before declarations are erased, so canonicalizing here sees complete parent chains.
+    * Rejected types return a canonical `Incompatible` marker, including inherited, already-reported conflicts.
     * `inferredSource` identifies observations used to infer the type; declared types have no such source.
     *
     * The Prelude and Runtime are erased before the runtime's symbols exist, and
@@ -154,6 +155,7 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
           msg"Types '${lhs.describe}' and '${rhs.describe}' have no common representation" -> loc :: notes,
           source = Diagnostic.Source.Compilation))
         ErasedType.Incompatible(lhs, rhs)(reported = true)
+      case incompatible: ErasedType.Incompatible => incompatible
       case _ => tpe
   
   private def declaredType(sign: Opt[Term], modulefulness: Modulefulness): Opt[ErasedValueType] =
@@ -222,7 +224,7 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
   private def observedResultTypes(td: TermDefinition, overrides: OverrideChecks,
       handlerMembers: Set[TermSymbol], visiting: Set[TermSymbol]): Ls[ErasedValueType] =
     inferredType(td.tsym).toList ::: overrides.validatedOverriders.getOrElse(td.tsym, Nil).flatMap: overriding =>
-      if visiting(overriding.tsym) || handlerMembers(overriding.tsym) then Nil
+      if overriding.isErroneous || visiting(overriding.tsym) || handlerMembers(overriding.tsym) then Nil
       // Erasure assigns inherited signatures before their overrides. A signature assigned earlier belongs
       // to a declaration that erasure does not infer, whose published result is all that is known.
       else if overriding.tsym.isErased then overriding.tsym.sourceDeclaredResultType.getOrElse(ErasedType.Unknown) :: Nil
@@ -467,6 +469,13 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
         if !sym.isErased then sym.initializeErasure:
           if p.flags.mut then declaredType(p.sign, p.modulefulness).orElse(inferredType(sym))
           else p.sym.erasedType
+    // A function with an unrepresentable parameter cannot be compiled. Mark every such definition
+    // before inferring any results, so override families also exclude its invalid implementation.
+    definitions.foreach: td =>
+      if td.params.exists(_.allParams.exists(_.sym.erasedType.exists:
+        case incompatible: ErasedType.Incompatible => incompatible.reported
+        case _ => false
+      )) then td.isErroneous = true
     // Constructor companions have no source body. Their physical argument lists
     // are the class's lists, and a saturated call always produces its instance.
     statements.foreach:
@@ -488,7 +497,10 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
     def eraseDefinition(td: TermDefinition, visiting: Set[TermSymbol]): Unit =
       if !td.tsym.isErased && !visiting(td.tsym) then
         td.tsym.overriddenMembers.flatMap(definitionsBySymbol.get).foreach(eraseDefinition(_, visiting + td.tsym))
-        td.tsym.initializeErasure(erasedDefinitionSignature(td, overrideChecks, handlerMembers))
+        // Erroneous definitions still need initialized erasure for recovery. Lowering skips them
+        // and their references; checking their results would add errors from an unusable signature.
+        td.tsym.initializeErasure:
+          if td.isErroneous then N else erasedDefinitionSignature(td, overrideChecks, handlerMembers)
     definitions.foreach(eraseDefinition(_, Set.empty))
     declarations.variables.foreach:
       case sym: VarSymbol if !sym.isErased => sym.erasedType = inferredType(sym)

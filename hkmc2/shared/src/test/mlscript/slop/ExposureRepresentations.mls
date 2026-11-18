@@ -19,25 +19,12 @@ import "./ExposedUnboxedInput.mls"
 //│ ╟── 'ExposedUnboxedInput' is exposed by this compilation unit.
 //│ ║  l.XX: 	module ExposedUnboxedInput with
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
-//│ ║  l.XX: 	  fun identity(value) = value
-//│ ║        	      ^^^^^^^^
-//│ ╟── The exposed interface admits values of unknown representation.
-//│ ╟── Parameter 'value' admits values of unknown shape.
-//│ ║  l.XX: 	  fun identity(value) = value
-//│ ║        	               ^^^^^
-//│ ╟── Member 'identity' is accessible here.
-//│ ║  l.XX: 	  fun identity(value) = value
-//│ ║        	  ^^^^^^^^^^^^^^^^^^^
-//│ ╟── 'ExposedUnboxedInput' is exposed by this compilation unit.
-//│ ║  l.XX: 	module ExposedUnboxedInput with
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #lang(strictResolution: true, eagerResolution: true)
 val input: Int32 = unsafe.undefined
 
 // A private callback stored in an exposed tuple receives unknown inputs too.
-// Its parameter and result errors must explain how it escapes.
+// Diagnose its parameter once and explain how it escapes.
 :ge
 private fun callback(value) = value
 callback(input)
@@ -45,19 +32,6 @@ val callbacks = [callback]
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
 //│ ║  l.+1: 	private fun callback(value) = value
 //│ ║        	                     ^^^^^
-//│ ╟── The exposed interface admits values of unknown representation.
-//│ ╟── Parameter 'value' admits values of unknown shape.
-//│ ║  l.+1: 	private fun callback(value) = value
-//│ ║        	                     ^^^^^
-//│ ╟── This value is stored in this tuple.
-//│ ║  l.+3: 	val callbacks = [callback]
-//│ ║        	                ^^^^^^^^^^
-//│ ╟── 'callbacks' is exposed by this compilation unit.
-//│ ║  l.+3: 	val callbacks = [callback]
-//│ ╙──      	^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
-//│ ║  l.+1: 	private fun callback(value) = value
-//│ ║        	            ^^^^^^^^
 //│ ╟── The exposed interface admits values of unknown representation.
 //│ ╟── Parameter 'value' admits values of unknown shape.
 //│ ║  l.+1: 	private fun callback(value) = value
@@ -85,16 +59,6 @@ helper(input)
 //│ ╟── 'forward' is exposed by this compilation unit.
 //│ ║  l.+2: 	fun forward(value) = helper(value)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
-//│ ║  l.+1: 	private fun helper(value) = value
-//│ ║        	            ^^^^^^
-//│ ╟── The exposed interface admits values of unknown representation.
-//│ ╟── Parameter 'value' admits values of unknown shape.
-//│ ║  l.+2: 	fun forward(value) = helper(value)
-//│ ║        	            ^^^^^
-//│ ╟── 'forward' is exposed by this compilation unit.
-//│ ║  l.+2: 	fun forward(value) = helper(value)
-//│ ╙──      	^^^^^^^^^^^^^^^^^^
 
 // An incompatible declared result is independent of inferred external inputs.
 // Its error must not blame the exposed parameter.
@@ -103,3 +67,100 @@ fun declared(value): Int32 | Any = value
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
 //│ ║  l.+1: 	fun declared(value): Int32 | Any = value
 //│ ╙──      	                     ^^^^^^^^^^^
+
+// Reject the whole function after diagnosing its parameters, regardless of its body.
+// Keep both parameter errors, but skip the incompatible result annotation and body.
+:ge
+:sir
+:siret
+fun rejected(left, right): Int32 | Any =
+  if true then left else right
+rejected(input, input)
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+1: 	fun rejected(left, right): Int32 | Any =
+//│ ║        	             ^^^^
+//│ ╟── The exposed interface admits values of unknown representation.
+//│ ╟── Parameter 'left' admits values of unknown shape.
+//│ ║  l.+1: 	fun rejected(left, right): Int32 | Any =
+//│ ║        	             ^^^^
+//│ ╟── 'rejected' is exposed by this compilation unit.
+//│ ║  l.+1: 	fun rejected(left, right): Int32 | Any =
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+1: 	fun rejected(left, right): Int32 | Any =
+//│ ║        	                   ^^^^^
+//│ ╟── The exposed interface admits values of unknown representation.
+//│ ╟── Parameter 'right' admits values of unknown shape.
+//│ ║  l.+1: 	fun rejected(left, right): Int32 | Any =
+//│ ║        	                   ^^^^^
+//│ ╟── 'rejected' is exposed by this compilation unit.
+//│ ║  l.+1: 	fun rejected(left, right): Int32 | Any =
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+
+// An erroneous override contributes no result representation to its valid base.
+// Neither the erroneous method nor calls to it should reach lowering.
+:ge
+:sir
+:siret
+private class ValidBase() with
+  open fun take(value: Any) = 1
+private class RejectedOverride() extends ValidBase() with
+  override fun take(value: Int32 | Any) = input
+ValidBase().take(1)
+RejectedOverride().take(input)
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+4: 	  override fun take(value: Int32 | Any) = input
+//│ ╙──      	                           ^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: ValidBase⁰;
+//│ @private
+//│ define ValidBase¹ as class ValidBase⁰ {
+//│   constructor ValidBase²
+//│   method take⁰ = fun take¹(value: Unknown): Int⁰ {
+//│     return 1
+//│   }
+//│ };
+//│ @private
+//│ define RejectedOverride⁰ as class RejectedOverride² extends ValidBase⁰ {
+//│   constructor RejectedOverride¹
+//│ };
+//│ set tmp = ValidBase²();
+//│ do tmp.take¹(1);
+//│ throw "This code cannot be run as its compilation yielded an error."
+
+// A valid override must not be compared against an erroneous base's recovery signature.
+// Inheriting the rejected parameter also rejects an unannotated override without another error.
+:ge
+:sir
+:siret
+private class RejectedBase() with
+  open fun take(value: Int32 | Any): Int32 = input
+private class ValidOverride() extends RejectedBase() with
+  override fun take(value: Any): Int = 1
+private class RejectedChild() extends RejectedBase() with
+  override fun take(value) = value
+ValidOverride().take(1)
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+2: 	  open fun take(value: Int32 | Any): Int32 = input
+//│ ╙──      	                       ^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: ValidOverride⁰;
+//│ @private
+//│ define RejectedBase⁰ as class RejectedBase² {
+//│   constructor RejectedBase¹
+//│ };
+//│ @private
+//│ define ValidOverride¹ as class ValidOverride⁰ extends RejectedBase² {
+//│   constructor ValidOverride²
+//│   method take² = fun take³(value: Unknown): Int⁰ {
+//│     return 1
+//│   }
+//│ };
+//│ @private
+//│ define RejectedChild⁰ as class RejectedChild² extends RejectedBase² {
+//│   constructor RejectedChild¹
+//│ };
+//│ set tmp = ValidOverride²();
+//│ return tmp.take³(1)

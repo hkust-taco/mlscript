@@ -191,18 +191,8 @@ exported(const(42))
 //│ ╟── 'exported' is exposed by this compilation unit.
 //│ ║  l.+1: 	fun exported(value) = value
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
-//│ ║  l.+1: 	fun exported(value) = value
-//│ ║        	    ^^^^^^^^
-//│ ╟── The exposed interface admits values of unknown representation.
-//│ ╟── Parameter 'value' admits values of unknown shape.
-//│ ║  l.+1: 	fun exported(value) = value
-//│ ║        	             ^^^^^
-//│ ╟── 'exported' is exposed by this compilation unit.
-//│ ║  l.+1: 	fun exported(value) = value
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^
 //│ Wasm result:
-//│ = 42
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // Explicit Any keeps its declared representation and rejects an unboxed initializer.
