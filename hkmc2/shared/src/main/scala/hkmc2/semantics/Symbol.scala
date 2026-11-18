@@ -755,12 +755,13 @@ class ClassSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)(using State)
   override def prefix: Str = "class:"
   /** Compute the arity. */
   def arity: Int = tree.paramLists.headOption.fold(0)(_.fields.length)
+  
   /** The fields that the positional sub-patterns of a class pattern such as `C(p, q)` read, in order:
     * those that the first parameter list of the class defines.
     */
   def destructuredFields: Ls[TermSymbol] =
     tree.clsParams.headOption.getOrElse(Nil) // FIXME? case when there are only aux parameter lists
-
+  
   override def subst(using sub: SymbolSubst): ClassSymbol = sub.mapClsSym(this)
 
 class ModuleOrObjectSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)(using State)

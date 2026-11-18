@@ -49,26 +49,26 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
     * so the lookup must not scan all edges of the program.
     */
   val validatedBases: Map[TermSymbol, Ls[TermSymbol]] = edges.groupMap(_.overriding.tsym)(_.inherited.tsym)
-
+  
   /** The members whose source layouts preserve the argument bindings of each member they override:
     * the pairs of [[validatedBases]] in the other direction. A call resolved to an inherited member
     * can dispatch to them, so erasure joins their results into an inherited result that it infers.
     */
   val validatedOverriders: Map[TermSymbol, Ls[TermDefinition]] = edges.groupMap(_.inherited.tsym)(_.overriding)
-
+  
   /** Maps each overriding parameter to the inherited parameters that deliver the same argument,
     * omitted-argument default, or rest slice. Erasure joins all their representations when the
     * overriding parameter has no annotation of its own. Parameters with no inherited counterpart
     * have no entry.
     */
   val inheritedParameters: Map[VarSymbol, Ls[Param]] = edges.flatMap(_.parameters).groupMap(_._1.sym)(_._2)
-
+  
   /** Maps each inherited parameter to the overriding parameters that receive the same argument,
     * omitted-argument default, or rest slice: the pairs of [[inheritedParameters]] in the other direction.
     * Erasure joins their representations into an inherited parameter representation that it infers.
     */
   val overridingParameters: Map[VarSymbol, Ls[Param]] = edges.flatMap(_.parameters).groupMap(_._2.sym)(_._1)
-
+  
   /** Reports overridable members that [[InterfaceExposure]] found reachable from this compilation unit's
     * exports, in classes and objects that other units may extend, when their signatures leave a parameter
     * or the result unspecified. Overrides in other units inherit these members' representations, which

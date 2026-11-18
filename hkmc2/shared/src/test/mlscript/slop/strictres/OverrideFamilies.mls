@@ -73,6 +73,20 @@ private class Inheriting() extends Declared() with
 //│ = [1, 2]
 
 
+// A separate full signature fixes the parameter representations inherited by unannotated overrides.
+// FIXME: Family inference widens these declared parameters with the arguments of subclass calls.
+:breakme
+:ge
+:noInline
+private class SeparateBase() with
+  fun take: (Int) -> Int
+  open fun take(x) = x
+private class SeparateChild() extends SeparateBase() with
+  override fun take(x) = x
+SeparateChild().take("s")
+//│ = "s"
+
+
 // An annotated override contributes its declared result instead of its observed values. Its parameter
 // keeps its declared representation without widening the parameter it overrides.
 :noInline
