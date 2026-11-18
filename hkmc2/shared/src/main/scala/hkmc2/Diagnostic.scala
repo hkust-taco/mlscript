@@ -25,8 +25,10 @@ object Diagnostic:
   final class Reporter(report: Raise) extends (Diagnostic => Unit):
     private var failed = false
     def hasErrors: Bool = failed
+    /** Records failure from an error diagnosed earlier, without reporting that error again. */
+    def markFailed(): Unit = failed = true
     def apply(diagnostic: Diagnostic): Unit =
-      if !(diagnostic.kind is Kind.Warning) then failed = true
+      if !(diagnostic.kind is Kind.Warning) then markFailed()
       report(diagnostic)
   
   enum Kind:

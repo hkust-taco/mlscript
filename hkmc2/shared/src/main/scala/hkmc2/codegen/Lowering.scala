@@ -93,9 +93,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   
   /** Whether a reference cannot be compiled: either an error was reported for it, or it targets a definition
     * marked as erroneous, such as one of the definitions of a name rejected by Elaborator.
+    * Erased result errors also reject references to definitions from earlier failed worksheet blocks.
     * Erroneous definitions are not lowered (see `blockImpl` and `gatherMembers`). */
   private def erroneousRef(ref: NewResolvable): Bool =
-    ref.isErroneous || ref.resolvedTargets.exists(_.defn.exists(_.isErroneous))
+    ref.isErroneous || ref.resolvedTargets.exists: target =>
+      target.defn.exists(_.isErroneous) || (target match
+        case symbol: TermSymbol => summon[Erasure].representationError(symbol.sourceErasedResult.bodyType).isDefined
+        case _ => false)
   
   /** Selections on a name already reported as missing (see NewResolver.settleUnboundReferences)
     * have no target either, which needs no other error. */

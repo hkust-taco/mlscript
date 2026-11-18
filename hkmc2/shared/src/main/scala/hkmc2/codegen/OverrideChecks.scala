@@ -146,7 +146,8 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
     * An overriding parameter must hold every value its inherited counterpart accepts; an overriding
     * result must fit the inherited result representation. Both comparisons canonicalize the types
     * and require the value to fit without a cast, treating an absent representation as `Unknown`.
-    * They skip types without a representation, which erasure reports where it assigns them.
+    * They skip types without a representation, including wrapped result payloads, which erasure
+    * reports where it assigns them.
     *
     * For example, overriding `fun f(x: Int): Any` with `fun f(x: Any): Int` accepts every inherited
     * input and returns a permitted result on JavaScript. Wasm uses the inherited method's fixed parameter slots
@@ -161,11 +162,13 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
       val td = edge.overriding
       val base = edge.inherited.tsym
       if !td.isErroneous && !edge.inherited.isErroneous && td.tsym.isErased && base.isErased then
-        val actualResult = td.tsym.sourceDeclaredResultType
-        val baseResult = base.sourceDeclaredResultType
-        if representable(actualResult, baseResult) && !within(actualResult, baseResult) then report(base,
-          msg"Overriding member '${td.tsym.nme}' produces values represented as '${describe(actualResult)
-            }', which the member it overrides cannot produce: its results are represented as '${describe(baseResult)}'",
+        val actualResult = td.tsym.sourceErasedResult
+        val baseResult = base.sourceErasedResult
+        val actualType = actualResult.callType
+        val baseType = baseResult.callType
+        if representable(actualResult.bodyType, baseResult.bodyType) && !within(actualType, baseType) then report(base,
+          msg"Overriding member '${td.tsym.nme}' produces values represented as '${describe(actualType)
+            }', which the member it overrides cannot produce: its results are represented as '${describe(baseType)}'",
           td.tsym.toLoc)
         val isWasm = config.target is CompilationTarget.Wasm
         val targetFailure = if isWasm then wasmLayoutFailure(edge) else N

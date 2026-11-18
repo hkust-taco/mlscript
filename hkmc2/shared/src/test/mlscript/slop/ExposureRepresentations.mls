@@ -188,3 +188,80 @@ fun rejectedGenerator(): Int32 | Any = input
 //│ ╙──      	                         ^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ throw "This code cannot be run as its compilation yielded an error."
+
+// A bad parameter suppresses only its own definition's result check.
+// The independent bad result still receives its diagnostic.
+:ge
+:sir
+:siret
+private fun badParameter(value: Int32 | Any): Int32 | Any = value
+private fun independentBadResult(): Int32 | Any = input
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+1: 	private fun badParameter(value: Int32 | Any): Int32 | Any = value
+//│ ╙──      	                                ^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+2: 	private fun independentBadResult(): Int32 | Any = input
+//│ ╙──      	                                    ^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+
+// Already-diagnosed parameter errors inherited in a later worksheet block still stop lowering.
+// Their result signatures carry the same error without diagnosing the inferred result again.
+:sir
+:siret
+private class LaterRejectedParameters() extends RejectedBase() with
+  override fun take(value) = value
+LaterRejectedParameters().take(input)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+
+// A previously diagnosed result error also rejects a later unannotated override without a new error.
+:sir
+:siret
+private class LaterRejectedResult() extends RejectedResultBase() with
+  override fun value = input
+LaterRejectedResult().value
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+
+// Promise/Iterator wrappers must not hide an erroneous payload from override checking.
+// These rejected members need no additional result-compatibility diagnostic against Int.
+:ge
+:sir
+:siret
+private class WrappedErrorBase() with
+  open fun take(value: Any): Int = 0
+private class WrappedParameterError() extends WrappedErrorBase() with
+  @annotations.async
+  override fun take(value: Int32 | Any) = value
+private class WrappedResultError() extends WrappedErrorBase() with
+  @annotations.generator
+  override fun take(value: Any): Int32 | Any = input
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+5: 	  override fun take(value: Int32 | Any) = value
+//│ ╙──      	                           ^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+8: 	  override fun take(value: Any): Int32 | Any = input
+//│ ╙──      	                                 ^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+
+// References to earlier failed definitions use their erased errors without repeating diagnostics.
+:sir
+:siret
+badParameter(input)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+
+:sir
+:siret
+independentBadResult()
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+
+// A wrapped result is still rejected when the erroneous function is used as a value.
+:sir
+:siret
+[rejectedAsync, rejectedGenerator]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
