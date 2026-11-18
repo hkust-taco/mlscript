@@ -272,17 +272,13 @@ class ParseRules(using State):
       ParseRule("modifier keyword `in`"):
         Expr(
           ParseRule("`in` expression")(
-            Kw(`out`)(ParseRule(s"modifier keyword `out`")(standaloneExpr)):
-              case (kw, s) => S(Tree.Modified(kw, s)),
+            keepKw(`out`)(ParseRule("modifier keyword `out`")(standaloneExpr)).map(S(_)),
             end(N),
           )
-        ) {
-          case (lhs, S(rhs)) => Tup(lhs :: rhs :: Nil)
-          case (lhs, N) => lhs
-        }
+        )((input, output) => (input, output))
     ) {
-      case (kw, Tup(lhs :: rhs :: Nil)) => Tup(Modified(kw, lhs) :: rhs :: Nil)
-      case (kw, lhs) => Modified(kw, lhs)
+      case (in, (input, S((out, output)))) => InOut(input, output).mkLocWith(in, out)
+      case (in, (input, N)) => Modified(in, input)
     },
     ifLike(`if`),
     ifLike(`while`),

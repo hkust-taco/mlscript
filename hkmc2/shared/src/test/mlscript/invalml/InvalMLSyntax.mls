@@ -35,7 +35,7 @@ Baz[out Int]
 
 Baz[in Int out Int]
 //│ Parsed:
-//│ 	App(Ident(Baz),TyTup(List(Tup(List(Modified(Keywrd(keyword 'in'),Ident(Int)), Modified(Keywrd(keyword 'out'),Ident(Int)))))))
+//│ 	App(Ident(Baz),TyTup(List(InOut(Ident(Int),Ident(Int)))))
 
 t.Bar#x
 //│ Parsed:

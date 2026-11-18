@@ -873,7 +873,7 @@ enum TypeInterfaceReason:
   def provenance: ShapeProvenance =
     val result = ShapeProvenance(this match
       case MissingOutput(source) =>
-        (msg"This type argument specifies only an input bound." -> source.toLoc) ::
+        (msg"Only an input bound appears here." -> source.toLoc) ::
           (msg"Values read through it have no output bound more specific than 'Any'." -> N) :: Nil
       case ContravariantParameter(parameter, source) =>
         (msg"This type argument supplies only an input bound for '${parameter.sym.nme}'." -> source.toLoc) ::

@@ -1,6 +1,56 @@
 :.
 
 
+type CursorView = mut { position: in Int out (Int | Str) }
+
+:expect ["start", 42]
+private fun reset(cursor: CursorView) =
+  let before = cursor.position
+  set cursor.position = 42
+  [before, cursor.position]
+reset(mut {position: "start"})
+//│ = ["start", 42]
+
+
+// A field selection uses the representation of its output, including an unboxed output.
+fun readWord(record: mut {word: out Int32}): Int32 = record.word
+
+
+// The tuple is the entire input bound. The second field supplies only an output.
+:expect 3
+private fun writePair(record: mut {pair: in [Int, Int], count: out Int}) =
+  set record.pair = [1, 2]
+  record.count
+writePair(mut {pair: [0, 0], count: 3})
+//│ = 3
+
+:ge
+private fun readPair(record: mut {pair: in [Int, Int]}) = record.pair.0
+readPair(mut {pair: [1, 2]})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun readPair(record: mut {pair: in [Int, Int]}) = record.pair.0
+//│ ║        	                                                          ^^^^^^^^^^^^^
+//│ ╟── Value with an empty interface does not contain member '0'
+//│ ╟── Only an input bound appears here.
+//│ ║  l.+1: 	private fun readPair(record: mut {pair: in [Int, Int]}) = record.pair.0
+//│ ║        	                                        ^^^^^^^^^^^^^
+//│ ╙── Values read through it have no output bound more specific than 'Any'.
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:ge
+type Immutable = {position: in Int out (Int | Str)}
+//│ ╔══[COMPILATION ERROR] Input and output bounds require a type argument or a mutable record field type.
+//│ ║  l.+1: 	type Immutable = {position: in Int out (Int | Str)}
+//│ ╙──      	                            ^^^^^^^^^^^^^^^^^^^^^^
+
+:ge
+mut {position: in Int out (Int | Str)}
+//│ ╔══[COMPILATION ERROR] Input and output bounds require a type argument or a mutable record field type.
+//│ ║  l.+1: 	mut {position: in Int out (Int | Str)}
+//│ ╙──      	               ^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
 // The write bound is Child; the read bound Base must not be fed back into the local field.
 :expect 1
 type IntervalCell[T] = mut {item: T}
@@ -126,7 +176,7 @@ read(mut {item: Child(8)})
 //│ ║  l.+2: 	private fun read(record: IntervalCell[in Child]) = record.item.value
 //│ ║        	                                                   ^^^^^^^^^^^^^^^^^
 //│ ╟── Value with an empty interface does not contain member 'value'
-//│ ╟── This type argument specifies only an input bound.
+//│ ╟── Only an input bound appears here.
 //│ ║  l.+2: 	private fun read(record: IntervalCell[in Child]) = record.item.value
 //│ ║        	                                      ^^^^^^^^
 //│ ╙── Values read through it have no output bound more specific than 'Any'.
@@ -135,11 +185,10 @@ read(mut {item: Child(8)})
 
 // Writes through a split interface check callbacks against the input bound, not its read bound.
 :ge
-type IntervalCallback[T] = mut {callback: T}
 class Base
 class Child(val value: Int) extends Base
 private fun assigned(value) = value.value
-private fun store(record: IntervalCallback[in (Base -> Int) out (Child -> Int)]) =
+private fun store(record: mut {callback: in (Base -> Int) out (Child -> Int)}) =
   set record.callback = assigned
 private fun test() =
   let record = mut {callback: assigned}
@@ -147,11 +196,11 @@ private fun test() =
   assigned(Child(9))
 test()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.+4: 	private fun assigned(value) = value.value
+//│ ║  l.+3: 	private fun assigned(value) = value.value
 //│ ║        	                              ^^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'value'
-//│ ║  l.+5: 	private fun store(record: IntervalCallback[in (Base -> Int) out (Child -> Int)]) =
-//│ ╙──      	                                               ^^^^
+//│ ║  l.+4: 	private fun store(record: mut {callback: in (Base -> Int) out (Child -> Int)}) =
+//│ ╙──      	                                             ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -208,18 +257,29 @@ test()
 //│ = 12
 
 
-// Whole-record mutability and parenthesized bounds use the same field interval.
+// Parenthesized bounds keep their respective type parameters through alias substitution.
 :expect 13
-type IntervalCell[T] = mut {item: T}
+type View[W, R] = mut {item: (in W out R)}
 class Base
 class Child(val value: Int) extends Base
-private fun accept(record: IntervalCell[in Child out Base]) = ()
+private fun accept(record: View[Child, Base]) = ()
 private fun test() =
   let record = mut {item: Child(13)}
   accept(record)
   record.item.value
 test()
 //│ = 13
+
+:ge
+private fun readView(record: View[Child, Base]) = record.item.value
+readView(mut {item: Child(13)})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun readView(record: View[Child, Base]) = record.item.value
+//│ ║        	                                                  ^^^^^^^^^^^^^^^^^
+//│ ╟── Value of type 'Base' does not contain member 'value'
+//│ ║  l.+1: 	private fun readView(record: View[Child, Base]) = record.item.value
+//│ ╙──      	                                         ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // Recursive fields retain finite, substituted input and output references.
@@ -233,6 +293,19 @@ private fun test() =
   read(chain, 2)
 test()
 //│ = 14
+
+// Regularity checking also follows recursion that occurs only in a field's input.
+:ge
+type Growing[A] = mut {next: in Growing[Array[A]], value: A}
+//│ ╔══[COMPILATION ERROR] Resolution error in type application
+//│ ║  l.+1: 	type Growing[A] = mut {next: in Growing[Array[A]], value: A}
+//│ ║        	                                ^^^^^^^^^^^^^^^^^
+//│ ╟── Recursive type 'Growing' is not supported by the current regularity check.
+//│ ║  l.+1: 	type Growing[A] = mut {next: in Growing[Array[A]], value: A}
+//│ ║        	                                ^^^^^^^^^^^^^^^^^
+//│ ╟── Type parameter 'A' occurs under a type constructor on a recursive dependency cycle.
+//│ ║  l.+1: 	type Growing[A] = mut {next: in Growing[Array[A]], value: A}
+//│ ╙──      	             ^
 
 
 // Forwarding a mutable structural interface must preserve its write constraints.

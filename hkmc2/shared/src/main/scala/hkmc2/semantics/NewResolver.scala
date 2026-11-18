@@ -182,7 +182,7 @@ class NewResolver:
           case DynTy() => result.publish(TypeShape.Dynamic)
           case FunTy(params, ret, _) => result.publish(TypeShape.Function(params, typeResolution(ret)))
           case UnitVal() => result.publish(TypeShape.Unit)
-          case _: WildcardTy => lastWords("A wildcard must be resolved as a type argument")
+          case _: WildcardTy => lastWords("Input and output bounds must be resolved separately")
           case SimpleRef(sym: VarSymbol) if sym.decl.exists(_.isInstanceOf[TyParam]) =>
             result.publish(rctx.typeParameter(sym))
           case Ref(sym: VarSymbol) if sym.decl.exists(_.isInstanceOf[TyParam]) =>
@@ -199,7 +199,7 @@ class NewResolver:
               result.fail(msg"A record type requires statically named fields." -> record.toLoc :: Nil)
               result.publish(TypeShape.Abstract)
             else result.publish(TypeShape.Record(record,
-              fields.reverse.distinctBy(_.key).reverse.map(field => field -> typeResolution(field.rhs))))
+              fields.reverse.distinctBy(_.key).reverse.map(field => field -> typeArgumentResolution(field.rhs))))
           // Signed numeric literals use operator applications in the syntax tree.
           // Their primitive interface is not recovered from these applications yet.
           case App(op: AnyRef_, Tup(Fld(_, Lit(_: Tree.IntLit | _: Tree.DecLit), _) :: Nil))
@@ -420,7 +420,7 @@ class NewResolver:
                   case _ => args.foreach(_.foreachType(child))
               case TypeShape.Tuple(fields) => fields.foreach: field =>
                 if field.spread then child(field.tpe) else guardedChild(field.tpe)
-              case TypeShape.Record(_, fields) => fields.foreach((_, field) => guardedChild(field))
+              case TypeShape.Record(_, fields) => fields.foreach((_, field) => field.foreachType(guardedChild))
               case TypeShape.Function(params, result) => guardedChild(typeResolution(params)); guardedChild(result)
               case TypeShape.Polymorphic(params, _, body) =>
                 val bound = params.map(_.parameter.symbol).toSet
@@ -488,7 +488,7 @@ class NewResolver:
             visit(base)
             args.foreach(_.foreachType(visit))
           case TypeShape.Tuple(fields) => fields.foreach(field => visit(field.tpe))
-          case TypeShape.Record(_, fields) => fields.foreach((_, field) => visit(field))
+          case TypeShape.Record(_, fields) => fields.foreach((_, field) => field.foreachType(visit))
           case TypeShape.Function(params, result) => visit(typeResolution(params)); visit(result)
           case TypeShape.Polymorphic(params, _, body) =>
             params.foreach: param =>
@@ -719,11 +719,10 @@ class NewResolver:
     * cannot recover its write type: mut {f: A} under A = in S out T has input S and output T.
     * The enclosing polarity also applies inside explicit bounds and function types.
     */
-  private def declaredField(resolution: TypeResolution, context: DeclaredType, mutable: Bool)
+  private def declaredField(resolution: TypeArgumentResolution, context: DeclaredType, mutable: Bool)
       (using ResolutionContext): TypeArgument =
-    val argument = declaredArgument(TypeArgumentResolution.Type(resolution), context, context.positive)
-    val output = argument.output
-    TypeArgument(if mutable then argument.input else extremeType(false), output)
+    val argument = declaredArgument(resolution, context, context.positive)
+    if mutable then argument else TypeArgument(extremeType(false), argument.output)
 
   /** Normalize Boolean combinations without observing an atom's candidates.
     * Transport distributes over components using the ordinary transportType
@@ -985,7 +984,8 @@ class NewResolver:
           variantArguments(current, args, cls.tparams, current.positive).foreach: argument =>
             exposeTypeHoles(transportType(argument.output, captures), unknown, marks)
         case TypeShape.Tuple(fields) => fields.foreach(field => descend(declaredType(field.tpe, current)))
-        case TypeShape.Record(_, fields) => fields.foreach((_, field) => descend(declaredType(field, current)))
+        case TypeShape.Record(_, fields) =>
+          fields.foreach((_, field) => field.readType.foreach(read => descend(declaredType(read, current))))
         case TypeShape.Function(_, result) => descend(declaredType(result, current))
         case TypeShape.Polymorphic(parameters, _, body) =>
           val symbols = parameters.map(_.parameter.symbol)

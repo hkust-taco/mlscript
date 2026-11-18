@@ -1852,16 +1852,18 @@ lookup still combines the fields of record intersections.
 
 ```mlscript
 type Point = { x: Num, y: Num }
-type Cursor[T] = mut { position: T }
-type CursorView = Cursor[in Int out (Int | Str)]
+type CursorView = mut { position: in Int out (Int | Str) }
 ```
 
-The values that a mutable record type describes can receive writes through its fields.
+`CursorView` accepts an `Int` on writes to `position` and exposes `Int | Str` on reads.
+A mutable record field can use the same forms as a type argument. A plain `T` supplies both bounds,
+`in S` has the output bound `Any`, and `out T` has the input bound `Nothing`.
+For `type Cell[A] = mut { f: A }`, `Cell[in S out T]` is equivalent to `mut { f: in S out T }`.
+An immutable `{ f: U }` has only a read interface.
+
 Field outputs are covariant and field inputs are contravariant. Thus `mut { f: S } <: mut { f: T }`
-contributes both `S <: T` for reads and `T <: S` for writes. An immutable `{ f: U }` has only a
-read interface. For `type Cell[A] = mut { f: A }`, `Cell[in S out T]` accepts `S` on writes and
-exposes `T` on reads. The two positions are interpreted separately before substituting type
-arguments; enclosing negative positions reverse these choices, as for function inputs.
+contributes both `S <: T` for reads and `T <: S` for writes. Substitution interprets the two
+positions separately. Enclosing negative positions reverse polarity, as for function inputs.
 Intersecting record interfaces intersects their shared fields' output types and unions their
 input types. Assigning a callback constrains it against the input type independently of reads.
 
