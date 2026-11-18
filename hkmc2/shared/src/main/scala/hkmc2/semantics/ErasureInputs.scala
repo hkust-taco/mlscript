@@ -150,5 +150,5 @@ private[hkmc2] object ErasureInputs:
   /** Symbols whose variable values or definition results supply runtime representations.
     * Elaboration temporaries include the saved value restored by a backtracking assignment.
     */
-  type InputSymbol = VarSymbol | TermSymbol | TempSymbol
+  type InputSymbol = LocalVarSymbol | TermSymbol
 

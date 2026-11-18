@@ -36,7 +36,7 @@ which is an evolving language that has not stabilized just yet.
 The repository contains two kinds of MLscript files:
 
 * **Compilation files**, in `hkmc2/shared/src/test/mlscript-compile/`, which are compiled to JavaScript `.mls` modules.
-* **Diff-test files**, in `hkmc2/shared/src/test/mlscript/`, which contain both source code and *golden test output*.
+* **Diff-test (aka "worksheet") files**, in `hkmc2/shared/src/test/mlscript/`, which contain both source code and *golden test output*.
   Lines beginning with `//│` are compiler output that is updated automatically — not source code.
   Regular `//` comment lines are source code.
   Diff-test blocks are separated by empty lines and tested one after the other.
