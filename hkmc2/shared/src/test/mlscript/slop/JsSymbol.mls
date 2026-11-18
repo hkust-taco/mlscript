@@ -85,6 +85,7 @@ class Renamed extends Base {
 //│ ╔══[COMPILATION ERROR] Member 'other' is marked 'override' but overrides no inherited member
 //│ ║  l.+2: 	  @jsSymbol(Keys.first) override fun other() = 0
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 class DifferentKey extends Base {

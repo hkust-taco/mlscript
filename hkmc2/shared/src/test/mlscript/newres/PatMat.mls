@@ -119,6 +119,7 @@ set x = bz
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Baz' at an unrelated type 'Foo'
 //│ ║  l.+1: 	set x = bz
 //│ ╙──      	    ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :breakme // Note: if compiled together with it, this would make the previous code ambiguous
 :ge
@@ -126,6 +127,7 @@ x = bz
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Baz' at an unrelated type 'Foo'
 //│ ║  l.XX: 	let x = Foo(Bar)
 //│ ╙──      	    ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 let x = if maybe then Bar else bz

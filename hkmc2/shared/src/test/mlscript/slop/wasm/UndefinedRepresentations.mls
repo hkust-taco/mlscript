@@ -96,9 +96,9 @@ fun test() = if flag() do return wasm.i32.const(42)
 //│ ║  l.+2: 	fun test() = if flag() do return wasm.i32.const(42)
 //│ ╙──      	    ^^^^
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ @private define flag⁰ as fun flag¹() { return true }; end
+//│ throw "This code cannot be run as its compilation yielded an error."
 //│ Wasm result:
-//│ = {}
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // Dead-parameter elimination introduces undefined after lowering. The functions'
@@ -183,9 +183,8 @@ private fun badNull(): Int32 = null
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
 //│ ║  l.+1: 	private fun badNull(): Int32 = null
 //│ ╙──      	                               ^^^^
-//│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `(ref null any)` to `i32` in a different type hierarchy
-//│ ║  l.+1: 	private fun badNull(): Int32 = null
-//│ ╙──      	                               ^^^^
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // Undefined cannot make an intrinsically incompatible declaration representable.
@@ -196,7 +195,7 @@ private fun incompatible(): Int32 | Int64 = unsafe.undefined
 //│ ║  l.+1: 	private fun incompatible(): Int32 | Int64 = unsafe.undefined
 //│ ╙──      	                            ^^^^^^^^^^^^^
 //│ Wasm result:
-//│ = 42
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // Nullable storage for undefined must preserve checked nominal casts for ordinary null.

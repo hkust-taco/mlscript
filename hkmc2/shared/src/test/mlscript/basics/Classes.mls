@@ -61,6 +61,7 @@ class Foo() extends Bar { x = 1 }
 //│ ╟── Member 'x' requires an implementation
 //│ ║  l.XX: 	abstract class Bar { val x: Int }
 //│ ╙──      	                         ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 :e
@@ -87,4 +88,5 @@ class Foo() extends Bar { x = 1 } with
 //│ ╟── Member 'x' requires an implementation
 //│ ║  l.XX: 	abstract class Bar { val x: Int }
 //│ ╙──      	                         ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

@@ -17,9 +17,15 @@ import hkmc2.Message.MessageContext
   * Inferred representations bind their slots as declared ones do: lowering rejects unrelated
   * values and slots whose observed values have no common representation.
   */
-final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
+final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
   private given Erasure = this
+  private given reporter: Diagnostic.Reporter = new Diagnostic.Reporter(report)
   private val valueTypes = mutable.Map.empty[TermShape, Opt[ErasedValueType]]
+
+  /** Whether erasure reported errors. Signatures are initialized even on failure for later
+    * diagnostics, but the program must not be lowered with those recovery representations.
+    */
+  def hasErrors: Bool = reporter.hasErrors
 
   /** Checks that lowering uses the same source root whose signatures this instance initialized. */
   def requireCompleted(statement: Statement): Unit =
@@ -475,7 +481,10 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
         case _ => N
       field.foreach: sym =>
         if !sym.isErased then sym.initializeErasure:
-          if p.flags.mut then declaredType(p.sign, p.modulefulness).orElse(inferredType(sym))
+          // Only an unannotated mutable field needs a separate type for the values assigned to it.
+          // A declared type, including its reported error, is shared with the constructor parameter.
+          if p.flags.mut && p.sign.isEmpty && !p.modulefulness.isModuleful && !hasRepresentationError(p.sym.erasedType)
+          then inferredType(sym).map(representable(_, p.toLoc, S(sym)))
           else p.sym.erasedType
     // A function with an unrepresentable parameter cannot be compiled. Mark every such definition
     // before inferring any results, so override families also exclude its invalid implementation.
@@ -507,12 +516,14 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
         td.tsym.initializeErasure:
           if td.isErroneous then N else erasedDefinitionSignature(td, overrideChecks, handlerMembers)
     definitions.foreach(eraseDefinition(_, Set.empty))
+    def variableType(sym: ErasureInputs.InputSymbol): Opt[ErasedValueType] =
+      inferredType(sym).map(representable(_, sym.toLoc, S(sym)))
     declarations.variables.foreach:
-      case sym: VarSymbol if !sym.isErased => sym.erasedType = inferredType(sym)
-      case sym: TermSymbol if !sym.isErased => sym.initializeErasure(inferredType(sym))
+      case sym: VarSymbol if !sym.isErased => sym.erasedType = variableType(sym)
+      case sym: TermSymbol if !sym.isErased => sym.initializeErasure(variableType(sym))
       // A temporary's erased type is populated at most once (see TempSymbol); without inferred inputs, it stays
       // unknown, as it was before erasure.
-      case sym: TempSymbol if sym.erasedType.isEmpty => inferredType(sym).foreach(tpe => sym.erasedType = S(tpe))
+      case sym: TempSymbol if sym.erasedType.isEmpty => variableType(sym).foreach(tpe => sym.erasedType = S(tpe))
       case _ => ()
     // Compare signatures only after every definition has completed erasure.
     overrideChecks.checkSignatures()

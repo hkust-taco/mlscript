@@ -85,7 +85,7 @@ SeparateChild().take("s")
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
 //│ ║  l.+6: 	SeparateChild().take("s")
 //│ ╙──      	                     ^^^
-//│ = "s"
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // Aliases and later curried parameter lists retain the same declared boundary.
@@ -101,7 +101,7 @@ CurriedChild().take(1)(2)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Str'
 //│ ║  l.+7: 	CurriedChild().take(1)(2)
 //│ ╙──      	                       ^
-//│ = 1
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // A separate signature on an override keeps its own parameter type, which must accept the base's inputs.
@@ -118,7 +118,7 @@ InferredBase().take(1)
 //│ ╟── The overridden member 'take' is defined here
 //│ ║  l.+2: 	  open fun take(x) = 0
 //│ ╙──      	           ^^^^
-//│ = 0
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // An annotated override contributes its declared result instead of its observed values. Its parameter
@@ -249,7 +249,7 @@ Base().take(1)
 //│ ╟── The overridden member 'take' is defined here
 //│ ║  l.+2: 	  open fun take(x) = x
 //│ ╙──      	           ^^^^
-//│ = 1
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // The body of a handler member produces the result of the handled expression, whereas a call of the

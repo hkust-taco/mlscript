@@ -234,3 +234,4 @@ pattern InnerClass = x =>
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Box' at an unrelated type 'Box'
 //│ ║  l.+4: 	    Box(x)
 //│ ╙──      	    ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

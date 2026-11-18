@@ -46,12 +46,8 @@ wasm.i32.add(1, 2)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Int32'
 //│ ║  l.+1: 	wasm.i32.add(1, 2)
 //│ ╙──      	                ^
-//│ ╔══[COMPILATION ERROR] Operand #1 of wasm intrinsic 'i32.add' must be of type 'Int32'
-//│ ║  l.+1: 	wasm.i32.add(1, 2)
-//│ ╙──      	             ^
-//│ ╔══[COMPILATION ERROR] Operand #2 of wasm intrinsic 'i32.add' must be of type 'Int32'
-//│ ║  l.+1: 	wasm.i32.add(1, 2)
-//│ ╙──      	                ^
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // Mismatching arity is reported by both the elaborator and the backend.

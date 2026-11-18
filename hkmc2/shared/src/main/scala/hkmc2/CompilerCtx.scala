@@ -219,7 +219,7 @@ class CompilerCtx(
       val ir =
         artifactConfig.givenIn:
           given Elaborator.State = state
-          given codegen.Erasure = codegen.Erasure(blk)(using artifactConfig, prelude, state)
+          given codegen.Erasure = codegen.Erasure(blk, summon[Raise])(using artifactConfig, prelude, state)
           val low = ltl.givenIn:
             new codegen.Lowering()(using artifactConfig, ltl, summon[Raise], state, prelude, summon[SymbolPrinter])
           optimize(low.program(blk, Set.empty))
@@ -292,7 +292,7 @@ class CompilerCtx(
         // Prelude declarations have no executable program, but their signatures and nominal hierarchy
         // must be erased before any compilation unit can use them.
         given Ctx = ctx
-        elaborationConfig.givenIn(codegen.Erasure(blk))
+        elaborationConfig.givenIn(codegen.Erasure(blk, summon[Raise]))
         PreludeArtifact(parse.resultBlk, blk, ctx, state, rootConfig, lastMod),
     )
   

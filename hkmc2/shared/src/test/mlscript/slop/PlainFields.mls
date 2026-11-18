@@ -170,6 +170,7 @@ class PlainChild extends AccessorBase with
 //│ ╟── Inherited member 'value' is defined here
 //│ ║  l.XX: 	  open mut val value = 1
 //│ ╙──      	               ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 class PlainBase with
   @plainField open mut val value = 1
@@ -183,6 +184,7 @@ class AccessorChild extends PlainBase with
 //│ ╟── Inherited member 'value' is defined here
 //│ ║  l.XX: 	  @plainField open mut val value = 1
 //│ ╙──      	                           ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :expect [true, false, 3]
 class PlainOverride extends PlainBase with

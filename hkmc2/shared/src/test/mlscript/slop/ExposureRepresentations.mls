@@ -119,20 +119,6 @@ RejectedOverride().take(input)
 //│ ║  l.+4: 	  override fun take(value: Int32 | Any) = input
 //│ ╙──      	                           ^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp: ValidBase⁰;
-//│ @private
-//│ define ValidBase¹ as class ValidBase⁰ {
-//│   constructor ValidBase²
-//│   method take⁰ = fun take¹(value: Unknown): Int⁰ {
-//│     return 1
-//│   }
-//│ };
-//│ @private
-//│ define RejectedOverride⁰ as class RejectedOverride² extends ValidBase⁰ {
-//│   constructor RejectedOverride¹
-//│ };
-//│ set tmp = ValidBase²();
-//│ do tmp.take¹(1);
 //│ throw "This code cannot be run as its compilation yielded an error."
 
 // A valid override must not be compared against an erroneous base's recovery signature.
@@ -151,24 +137,7 @@ ValidOverride().take(1)
 //│ ║  l.+2: 	  open fun take(value: Int32 | Any): Int32 = input
 //│ ╙──      	                       ^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp: ValidOverride⁰;
-//│ @private
-//│ define RejectedBase⁰ as class RejectedBase² {
-//│   constructor RejectedBase¹
-//│ };
-//│ @private
-//│ define ValidOverride¹ as class ValidOverride⁰ extends RejectedBase² {
-//│   constructor ValidOverride²
-//│   method take² = fun take³(value: Unknown): Int⁰ {
-//│     return 1
-//│   }
-//│ };
-//│ @private
-//│ define RejectedChild⁰ as class RejectedChild² extends RejectedBase² {
-//│   constructor RejectedChild¹
-//│ };
-//│ set tmp = ValidOverride²();
-//│ return tmp.take³(1)
+//│ throw "This code cannot be run as its compilation yielded an error."
 
 // An inferred result can be unrepresentable even when every parameter is valid.
 // Reject the function and its call before lowering its branches.
@@ -184,7 +153,7 @@ inferred(true)
 //│ throw "This code cannot be run as its compilation yielded an error."
 
 // An unannotated getter inherits its base's rejected result without another diagnostic.
-// An override with a valid declared result can still be lowered independently.
+// An override with a valid declared result keeps that independent representation.
 :ge
 :sir
 :siret
@@ -200,24 +169,6 @@ RejectedResultChild().value
 //│ ║  l.+2: 	  open fun value: Int32 | Any = input
 //│ ╙──      	                  ^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp: ValidResultChild⁰;
-//│ @private
-//│ define RejectedResultBase⁰ as class RejectedResultBase² {
-//│   constructor RejectedResultBase¹
-//│ };
-//│ @private
-//│ define RejectedResultChild⁰ as class RejectedResultChild² extends RejectedResultBase² {
-//│   constructor RejectedResultChild¹
-//│ };
-//│ @private
-//│ define ValidResultChild¹ as class ValidResultChild⁰ extends RejectedResultBase² {
-//│   constructor ValidResultChild²
-//│   method value⁰ = fun value¹: Int⁰ {
-//│     return 1
-//│   }
-//│ };
-//│ set tmp = ValidResultChild²();
-//│ do tmp.value¹;
 //│ throw "This code cannot be run as its compilation yielded an error."
 
 // Promise and Iterator wrappers do not make an unrepresentable body result valid.

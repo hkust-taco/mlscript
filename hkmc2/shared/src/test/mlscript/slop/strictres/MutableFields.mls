@@ -22,6 +22,7 @@ class Exposed(mut val param) with
 //│ ╟── 'Exposed' is exposed by this compilation unit.
 //│ ║  l.+1: 	class Exposed(mut val param) with
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 class Declared(mut val param: Int) with
   mut val member: Int = 0
@@ -36,6 +37,7 @@ module Settings with
 //│ ╟── 'Settings' is exposed by this compilation unit.
 //│ ║  l.+1: 	module Settings with
 //│ ╙──      	^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Other compilation units cannot assign to a private field.
 :expect 1
@@ -61,6 +63,7 @@ fun makeHidden() = Hidden(0)
 //│ ╟── 'makeHidden' is exposed by this compilation unit.
 //│ ║  l.+2: 	fun makeHidden() = Hidden(0)
 //│ ╙──      	^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :ge
 private class Parent(mut val value)
@@ -74,6 +77,7 @@ class Child extends Parent(0)
 //│ ╟── 'Child' is exposed by this compilation unit.
 //│ ║  l.+2: 	class Child extends Parent(0)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A field whose values only come from this compilation unit is not exposed.
 :expect 2
@@ -164,6 +168,7 @@ fun exportInitialCell() = mut {item: InitialCell(1)}
 //│ ╟── 'exportInitialCell' is exposed by this compilation unit.
 //│ ║  l.+2: 	fun exportInitialCell() = mut {item: InitialCell(1)}
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // Assignment exposes the nested mutable field just like an initializer does.
@@ -189,6 +194,7 @@ fun exportAssignedCell() =
 //│ ╟── 'exportAssignedCell' is exposed by this compilation unit.
 //│ ║  l.+2: 	fun exportAssignedCell() =
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // A mutable spread copy also exposes values assigned through its copied fields.
@@ -217,6 +223,7 @@ fun exportCopiedCell() =
 //│ ╟── 'exportCopiedCell' is exposed by this compilation unit.
 //│ ║  l.+2: 	fun exportCopiedCell() =
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // An escaping callback's unannotated input must admit external callers, even if its local calls
@@ -300,6 +307,7 @@ fun exportNestedCopy() =
 //│ ╟── 'exportNestedCopy' is exposed by this compilation unit.
 //│ ║  l.+4: 	fun exportNestedCopy() =
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // An assigned closure retains its generic factory's substitution and scope exits.
@@ -355,6 +363,7 @@ fun exportWriter() =
 //│ ╟── 'exportWriter' is exposed by this compilation unit.
 //│ ║  l.+2: 	fun exportWriter() =
 //│ ╙──      	^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // Exposing an immutable source does not expose values assigned only to its mutable copy.
@@ -435,6 +444,7 @@ fun exportPossibleReplacement(key: Str) = {item: PossiblyRetainedCell(0), (key):
 //│ ╟── 'exportPossibleReplacement' is exposed by this compilation unit.
 //│ ║  l.+2: 	fun exportPossibleReplacement(key: Str) = {item: PossiblyRetainedCell(0), (key): 0}
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // A frozen spread copy does not let clients write to the private mutable record that it copied.
@@ -470,6 +480,7 @@ fun exportFrozenCopy() =
 //│ ╟── 'exportFrozenCopy' is exposed by this compilation unit.
 //│ ║  l.+2: 	fun exportFrozenCopy() =
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // An explicitly mutable copy still admits unknown writes through its copied fields.

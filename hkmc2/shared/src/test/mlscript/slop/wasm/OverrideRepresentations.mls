@@ -29,7 +29,7 @@ BroadConsumer().take("str")
 //│ ║  l.+2: 	  open fun take(value: Int): Int = value
 //│ ╙──      	           ^^^^
 //│ Wasm result:
-//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // An override inherits the concrete base result while calling its implementation through super.
@@ -86,7 +86,7 @@ OptionalInput().pick()
 //│ ║  l.+2: 	  open fun pick(value: Int): Int = value
 //│ ╙──      	           ^^^^
 //│ Wasm result:
-//│ = 0
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // An earlier worksheet block publishes a declared contract without an IR body.
 // A later override must retain that contract even though neither declaration is used.
@@ -107,7 +107,7 @@ declare class WiderDeclaredInputContract extends DeclaredInputContract {
 //│ ║  l.XX: 	  declare fun pick(value: Int): Int
 //│ ╙──      	              ^^^^
 //│ Wasm result:
-//│ = {}
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // Wasm requires the inherited parameter count even when an extra optional input preserves bindings.
@@ -123,7 +123,7 @@ declare class ExtraOptionalInputContract extends DeclaredInputContract {
 //│ ║  l.XX: 	  declare fun pick(value: Int): Int
 //│ ╙──      	              ^^^^
 //│ Wasm result:
-//│ = {}
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // Dropping a permitted source input still changes the number of Wasm parameter slots.
@@ -141,7 +141,7 @@ declare class DroppedInputContract extends DroppableInputContract {
 //│ ║  l.+2: 	  declare fun pick(value: Int, drop ignored: Any): Int
 //│ ╙──      	              ^^^^
 //│ Wasm result:
-//│ = {}
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // A binding-compatible rest signature needs an explicit target error, even without an IR body.
@@ -159,7 +159,7 @@ declare class RestInputOverride extends RestInputContract {
 //│ ║  l.+2: 	  declare fun pick(...values: Array[Any]): Int
 //│ ╙──      	              ^^^^
 //│ Wasm result:
-//│ = {}
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // Ignoring an inherited rest input leaves the base's unsupported calling convention in place.
@@ -177,7 +177,7 @@ declare class DroppedRestInputContract extends DroppableRestInputContract {
 //│ ║  l.+2: 	  declare fun pick(value: Int, drop ...ignored: Array[Any]): Int
 //│ ╙──      	              ^^^^
 //│ Wasm result:
-//│ = {}
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // An unannotated member that inherits no representation takes those of its whole override family:
@@ -285,7 +285,7 @@ Drain().accept("s")
 //│ ║  l.+2: 	  open fun accept(x) = 0
 //│ ╙──      	           ^^^^^^
 //│ Wasm result:
-//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // An abstract member without annotations takes the representations of its implementations.
 :noInline

@@ -18,6 +18,16 @@ sealed abstract class Diagnostic
   val mkExtraInfo: () => Opt[Any]
   def srcLoc: Str = s"${srcName.value} (${srcFile.value}:${srcLine.value})"
 object Diagnostic:
+  /** Forwards diagnostics and records whether a compilation phase failed. Warnings do not
+    * prevent subsequent phases from running. Use one reporter per phase invocation so an
+    * earlier worksheet block's errors do not prevent later blocks from being checked.
+    */
+  final class Reporter(report: Raise) extends (Diagnostic => Unit):
+    private var failed = false
+    def hasErrors: Bool = failed
+    def apply(diagnostic: Diagnostic): Unit =
+      if !(diagnostic.kind is Kind.Warning) then failed = true
+      report(diagnostic)
   
   enum Kind:
     case Error

@@ -257,4 +257,4 @@ fun test(x?: Int32) = x
 //│ ║  l.+1: 	fun test(x?: Int32) = x
 //│ ╙──      	         ^^^^^^^^^
 //│ Wasm result:
-//│ = {}
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

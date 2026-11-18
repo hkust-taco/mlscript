@@ -152,10 +152,8 @@ wasm.ref.i31(id(wasm.i32.const(7)))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
 //│ ║  l.+1: 	wasm.ref.i31(id(wasm.i32.const(7)))
 //│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
-//│ ║  l.+1: 	wasm.ref.i31(id(wasm.i32.const(7)))
-//│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[COMPILATION ERROR] Operand #1 of wasm intrinsic 'ref.i31' must be of type 'Int32'
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // A narrowing *to* `Object`, which `anyBox` above does not exercise: widening into an `Object` slot is
@@ -196,7 +194,7 @@ fun test: Function = new C
 //│ ║  l.+1: 	fun test: Function = new C
 //│ ╙──      	                     ^^^^^
 //│ Wasm result:
-//│ = {}
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 fun test: Function = (new C) as Object
@@ -204,7 +202,7 @@ fun test: Function = (new C) as Object
 //│ ║  l.+1: 	fun test: Function = (new C) as Object
 //│ ╙──      	                      ^^^^^
 //│ Wasm result:
-//│ = {}
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 fun castToObj(x): Object = x
 //│ Wasm result:
@@ -228,7 +226,7 @@ castToA(wasm.i32.const(123))
 //│ ║  l.+1: 	castToA(wasm.i32.const(123))
 //│ ╙──      	        ^^^^^^^^^^^^^^^^^^^
 //│ Wasm result:
-//│ = 123
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // A cast targeting `()` must find the Wasm Unit singleton's struct type. That struct is registered under a

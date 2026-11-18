@@ -102,8 +102,8 @@ wasm.i64.add(wasm.i32.const(1), wasm.i32.const(2))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Int64'
 //│ ║  l.+1: 	wasm.i64.add(wasm.i32.const(1), wasm.i32.const(2))
 //│ ╙──      	                                ^^^^^^^^^^^^^^^^^
-//│ ═══[COMPILATION ERROR] Operand #1 of wasm intrinsic 'i64.add' must be of type 'Int64'
-//│ ═══[COMPILATION ERROR] Operand #2 of wasm intrinsic 'i64.add' must be of type 'Int64'
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // `Float64` lowers to `f64`, whose immediate is written as a decimal literal.
@@ -238,8 +238,8 @@ wasm.f64.add(wasm.f32.const(1.5), wasm.f32.const(2.25))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Float32' at an unrelated type 'Float64'
 //│ ║  l.+1: 	wasm.f64.add(wasm.f32.const(1.5), wasm.f32.const(2.25))
 //│ ╙──      	                                  ^^^^^^^^^^^^^^^^^^^^
-//│ ═══[COMPILATION ERROR] Operand #1 of wasm intrinsic 'f64.add' must be of type 'Float64'
-//│ ═══[COMPILATION ERROR] Operand #2 of wasm intrinsic 'f64.add' must be of type 'Float64'
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // A class field of unboxed type is stored unboxed too, and its `struct.new_default` slot is zeroed with a

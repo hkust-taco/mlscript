@@ -294,12 +294,8 @@ M2().f(1)
 //│ ╟── The overridden member 'f' is defined here
 //│ ║  l.+2: 	  open fun f(m: Int32): Int32 = m
 //│ ╙──      	           ^
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Int32'
-//│ ║  l.+5: 	M2().f(1)
-//│ ╙──      	       ^
-//│ ╔══[COMPILATION ERROR] Overriding method `f` declares result as `(ref null i31)`, but the method it overrides declares `i32`
-//│ ║  l.+4: 	  override fun f(m: Int32): Int = 0
-//│ ╙──      	           ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // An annotated override parameter must use the inherited unboxed representation.
@@ -315,12 +311,8 @@ N2().g(n32)
 //│ ╟── The overridden member 'g' is defined here
 //│ ║  l.+2: 	  open fun g(m: Int32): Int32 = m
 //│ ╙──      	           ^
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Int'
-//│ ║  l.+5: 	N2().g(n32)
-//│ ╙──      	       ^^^
-//│ ╔══[COMPILATION ERROR] Overriding method `g` declares parameter 1 as `(ref null i31)`, but the method it overrides declares `i32`
-//│ ║  l.+4: 	  override fun g(m: Int): Int32 = n32
-//│ ╙──      	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // An unannotated parameter of an override takes the inherited `i32` representation.

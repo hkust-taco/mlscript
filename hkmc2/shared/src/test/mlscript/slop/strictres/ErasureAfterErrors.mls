@@ -25,6 +25,7 @@ set intact = "s"
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
 //│ ║  l.+1: 	set intact = "s"
 //│ ╙──      	    ^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // A class declared in an erroneous block, and its field.

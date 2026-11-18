@@ -248,4 +248,4 @@ produceDeclared(DeclaredDerived())
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'DeclaredBase'
 //│ ║  l.+4: 	  override fun get() = "str"
 //│ ╙──      	                       ^^^^^
-//│ = "str"
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

@@ -31,14 +31,13 @@ private fun increment() =
   counter.count
 increment()
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+1: 	private class Counter(mut val count)
+//│ ╙──      	                          ^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
 //│ ║  l.+2: 	private fun increment() =
 //│ ╙──      	            ^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
-//│ ║  l.+1: 	private class Counter(mut val count)
-//│ ╙──      	                              ^^^^^
-//│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
-//│ ║  l.+1: 	private class Counter(mut val count)
-//│ ╙──      	                              ^^^^^
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Assigning a value of an unrelated representation is rejected where the field is assigned and read.
 :ge
@@ -49,14 +48,13 @@ private fun mix() =
   mixed.value
 mix()
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
+//│ ║  l.+1: 	private class Mixed(mut val value)
+//│ ╙──      	                        ^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
 //│ ║  l.+2: 	private fun mix() =
 //│ ╙──      	            ^^^
-//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
-//│ ║  l.+1: 	private class Mixed(mut val value)
-//│ ╙──      	                            ^^^^^
-//│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
-//│ ║  l.+1: 	private class Mixed(mut val value)
-//│ ╙──      	                            ^^^^^
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Assignments in methods, through `this` or through the field's name, reach the field too.
 :noInline
@@ -109,17 +107,13 @@ private fun setTyped(cell: Typed) = set cell.value = "hello"
 private fun typed() = Typed(const(1)).value
 typed()
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
+//│ ║  l.+1: 	private class Typed(mut val value)
+//│ ╙──      	                        ^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
 //│ ║  l.+3: 	private fun typed() = Typed(const(1)).value
 //│ ╙──      	            ^^^^^
-//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
-//│ ║  l.+2: 	private fun setTyped(cell: Typed) = set cell.value = "hello"
-//│ ╙──      	                                        ^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
-//│ ║  l.+1: 	private class Typed(mut val value)
-//│ ╙──      	                            ^^^^^
-//│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
-//│ ║  l.+1: 	private class Typed(mut val value)
-//│ ╙──      	                            ^^^^^
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // ...and here, the class's own scope, from a nested definition.
 :ge
@@ -146,14 +140,10 @@ private fun openAndSet() =
   set value = "opened"
 openAndSet()
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
-//│ ║  l.+5: 	  set value = "opened"
-//│ ╙──      	      ^^^^^
-//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
 //│ ║  l.+1: 	private class Opened(mut val value)
-//│ ╙──      	                             ^^^^^
-//│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
-//│ ║  l.+1: 	private class Opened(mut val value)
-//│ ╙──      	                             ^^^^^
+//│ ╙──      	                         ^^^^^^^^^
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // Reading a mutable field returns its initializer and the values assigned to it. Here, `get` could
@@ -256,9 +246,8 @@ private fun assignLaterString() =
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int32'
 //│ ║  l.+3: 	  set later.value = "hello"
 //│ ╙──      	      ^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `(ref null any)` to `i32` in a different type hierarchy
-//│ ║  l.+3: 	  set later.value = "hello"
-//│ ╙──      	                    ^^^^^^^
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :noInline
 private class ReadLater(val value)
@@ -283,10 +272,9 @@ private fun mutableView() = describe(Described(const(1)))
 mutableView()
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
 //│ ║  l.+1: 	private class Described(mut val value)
-//│ ╙──      	                                ^^^^^
-//│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
-//│ ║  l.+1: 	private class Described(mut val value)
-//│ ╙──      	                                ^^^^^
+//│ ╙──      	                            ^^^^^^^^^
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Fields that a record type does not declare `mut` are assumed not to be assigned through it:
 // type checking will reject such assignments.

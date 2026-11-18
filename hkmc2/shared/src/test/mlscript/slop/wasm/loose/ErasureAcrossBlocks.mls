@@ -15,7 +15,7 @@ ident("a")
 //│ ║  l.+1: 	ident("a")
 //│ ╙──      	      ^^^
 //│ Wasm result:
-//│ = "a"
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 class Foo

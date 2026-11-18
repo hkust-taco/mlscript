@@ -15,6 +15,7 @@ open class Base() with
 //│ ╟── Parameter 'x' has no type annotation
 //│ ║  l.+2: 	  open fun scale(x, y: Int) = x * y
 //│ ╙──      	                 ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Abstract members and open fields are overridable too.
 :e
@@ -33,6 +34,7 @@ abstract class Shape() with
 //│ ╟── 'Shape' is exposed by this compilation unit.
 //│ ║  l.+1: 	abstract class Shape() with
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A separate full signature types the written parameters.
 open class Signed() with
@@ -60,6 +62,7 @@ open class Extended() extends Typed() with
 //│ ╟── Parameter 'factor' has no type annotation
 //│ ║  l.+2: 	  open override fun scale(x, y, factor?) = x * y
 //│ ╙──      	                                ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Only `open` and `abstract` classes can be extended by other compilation units.
 class Sealed() with
@@ -94,6 +97,7 @@ open object OpenConstant with
 //│ ╟── 'OpenConstant' is exposed by this compilation unit.
 //│ ║  l.+1: 	open object OpenConstant with
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 object Constant with
   open fun get() = 1

@@ -186,7 +186,7 @@ fun test(x: Int): Int = "oops"
 //│ ║  l.+1: 	fun test(x: Int): Int = "oops"
 //│ ╙──      	                        ^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define test⁰ as fun test¹(x: Int⁰): Int⁰ { return "oops" }; end
+//│ throw "This code cannot be run as its compilation yielded an error."
 
 
 // The return coercion is what an annotated result buys. The sum of two `Num`s is a `Num`, so
@@ -350,22 +350,7 @@ fun f(o: Object, i: Int, x: Int32) =
 //│ ║  l.+8: 	  useInt32(o)
 //│ ╙──      	           ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define useObj⁰ as fun useObj¹(o: Object⁰): Object⁰ {
-//│   return o
-//│ };
-//│ define useInt⁰ as fun useInt¹(n: Int⁰): Int⁰ {
-//│   return n
-//│ };
-//│ define useInt32⁰ as fun useInt32¹(n: Int32): Int32 {
-//│   return n
-//│ };
-//│ define f² as fun f³(o: Object⁰, i: Int⁰, x: Int32): Int32 {
-//│   do useObj¹(i);
-//│   do useInt¹(o);
-//│   do useObj¹(x);
-//│   return useInt32¹(o)
-//│ };
-//│ end
+//│ throw "This code cannot be run as its compilation yielded an error."
 
 
 // Similar to the above test case, but passing `Int32` into `Anything` instead of `Object`.
@@ -376,11 +361,7 @@ fun f(x: Int32) = id(x)
 //│ ║  l.+2: 	fun f(x: Int32) = id(x)
 //│ ╙──      	                     ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define id⁰ as fun id¹(x: Unknown): Unit⁰ {
-//│   return runtime⁰.Unit⁰
-//│ };
-//│ define f⁴ as fun f⁵(x: Int32): Unit⁰ { return id¹(x) };
-//│ end
+//│ throw "This code cannot be run as its compilation yielded an error."
 
 
 // Passing `Int31` or `Int` to `id(Anything)` is legal, since `Anything` erases to `Unknown` (which is the top type
@@ -391,10 +372,10 @@ fun f2(x: Int) = id(x)
 fun f3(x: Anything): Anything = x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define f1⁰ as fun f1¹(x: Int31⁰): Unit⁰ {
-//│   return id¹(x)
+//│   return id⁰(x)
 //│ };
 //│ define f2⁰ as fun f2¹(x: Int⁰): Unit⁰ {
-//│   return id¹(x)
+//│   return id⁰(x)
 //│ };
 //│ define f3⁰ as fun f3¹(x: Unknown): Unknown { return x };
 //│ end
@@ -413,19 +394,7 @@ module Encl with
 //│ ║  l.+5: 	  fun bad(x: Shape) = useShape(x)
 //│ ╙──      	                               ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define useShape⁰ as fun useShape¹(x: Shape⁰): Shape⁰ {
-//│   return x
-//│ };
-//│ define Shape¹ as class Shape⁰;
-//│ define Encl⁰ as class Encl¹
-//│ module Encl² {
-//│   constructor {
-//│     define Shape² as class Shape³;
-//│     end
-//│   }
-//│   method bad⁰ = fun bad¹(x: Shape³): Shape⁰ { return useShape¹(x) }
-//│ };
-//│ end
+//│ throw "This code cannot be run as its compilation yielded an error."
 
 
 // `Int31 <: Int`, so widening is free while narrowing back to `Int31` takes a checked cast.
@@ -438,7 +407,7 @@ fun g(i: Int, i31: Int31) =
 //│   return n
 //│ };
 //│ define g⁰ as fun g¹(i: Int⁰, i31: Int31⁰): Int31⁰ {
-//│   do useInt¹(i31);
+//│   do useInt⁰(i31);
 //│   return useInt31¹((i as! Int31⁰))
 //│ };
 //│ end
@@ -578,7 +547,7 @@ fun mixedThree(x: Int32 | Str | Bool) = 0
 //│ ║  l.+3: 	fun mixedThree(x: Int32 | Str | Bool) = 0
 //│ ╙──      	                  ^^^^^^^^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ end
+//│ throw "This code cannot be run as its compilation yielded an error."
 
 
 // The declaration was rejected where its type is written, so passing a value into the slot does not report
@@ -602,7 +571,7 @@ fun mixedIntoObject(x: Int32 | Str): Object = x
 //│ ║  l.+2: 	fun mixedIntoObject(x: Int32 | Str): Object = x
 //│ ╙──      	                       ^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ end
+//│ throw "This code cannot be run as its compilation yielded an error."
 
 
 // Folding `sccF`'s tail call into the merged dispatcher loses its `as Int` coercion, and the loop can exit
@@ -830,7 +799,7 @@ val bad: Str = thunk
 //│ ║  l.+1: 	val bad: Str = thunk
 //│ ╙──      	               ^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp: Function⁰; set tmp = thunk¹(); define bad² as val bad³: Str⁰ = tmp; end
+//│ throw "This code cannot be run as its compilation yielded an error."
 
 
 // *No* parameter list must stay distinct from *one empty* one: only the former is auto-invoked, so a bare
@@ -842,11 +811,7 @@ val notCalled: Str = called
 //│ ║  l.+2: 	val notCalled: Str = called
 //│ ╙──      	                     ^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define called⁰ as fun called¹(): Int⁰ {
-//│   return 3
-//│ };
-//│ define notCalled⁰ as val notCalled¹: Str⁰ = called¹;
-//│ end
+//│ throw "This code cannot be run as its compilation yielded an error."
 
 
 // The two forms nonetheless agree on what they are *compiled to*: a source `fun` with no parameter list is
@@ -886,23 +851,18 @@ fun badInst() = useInt(new Bar("x"))
 //│ ║  l.+1: 	fun badInst() = useInt(new Bar("x"))
 //│ ╙──      	                       ^^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define badInst⁰ as fun badInst¹(): Int⁰ {
-//│   let tmp: Bar⁰;
-//│   set tmp = new Bar⁰("x");
-//│   return useInt¹(tmp)
-//│ };
-//│ end
+//│ throw "This code cannot be run as its compilation yielded an error."
 
 
 // A reference to a `fun` is already a function value, so returning one at `Function` takes no coercion. An
 // instantiation is typed as its class instead, so the same annotation makes the coercion real.
 fun test: Function = id
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define test² as fun test³(): Function⁰ { return id¹ }; end
+//│ define test⁰ as fun test¹(): Function⁰ { return id⁰ }; end
 
 fun test: Function = new Object()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define test⁴ as fun test⁵(): Function⁰ {
+//│ define test² as fun test³(): Function⁰ {
 //│   return (new globalThis⁰.Object⁰(undefined) as! Function⁰)
 //│ };
 //│ end
@@ -946,7 +906,7 @@ fun badFn() = applyF(42)
 //│ ║  l.+1: 	fun badFn() = applyF(42)
 //│ ╙──      	                     ^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define badFn⁰ as fun badFn¹(): Int⁰ { return applyF¹(42) }; end
+//│ throw "This code cannot be run as its compilation yielded an error."
 
 
 // A `Str`-typed helper for the `declare fun` blocks below.
@@ -964,7 +924,7 @@ fun useAdd() = useInt(addInts(1, 2))
 //│ define useAdd⁰ as fun useAdd¹(): Int⁰ {
 //│   let tmp: ?;
 //│   set tmp = globalThis⁰.addInts⁰(1, 2);
-//│   return useInt¹((tmp as! Int⁰))
+//│   return useInt⁰((tmp as! Int⁰))
 //│ };
 //│ end
 
@@ -978,7 +938,7 @@ fun useCurried() = useInt(curried(1)(2))
 //│ define useCurried⁰ as fun useCurried¹(): Int⁰ {
 //│   let tmp: Int⁰;
 //│   set tmp = globalThis⁰.curried²(1)(2);
-//│   return useInt¹(tmp)
+//│   return useInt⁰(tmp)
 //│ };
 //│ end
 
@@ -999,7 +959,7 @@ fun useParse() = useInt(parseIt("1", 10))
 //│ define useParse⁰ as fun useParse¹(): Int⁰ {
 //│   let tmp: Int⁰;
 //│   set tmp = globalThis⁰.parseIt⁰("1", 10);
-//│   return useInt¹(tmp)
+//│   return useInt⁰(tmp)
 //│ };
 //│ end
 
@@ -1011,12 +971,7 @@ fun badParse() = useStr(parseIt("1", 10))
 //│ ║  l.+1: 	fun badParse() = useStr(parseIt("1", 10))
 //│ ╙──      	                        ^^^^^^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define badParse⁰ as fun badParse¹(): Str⁰ {
-//│   let tmp: Int⁰;
-//│   set tmp = globalThis⁰.parseIt⁰("1", 10);
-//│   return useStr¹(tmp)
-//│ };
-//│ end
+//│ throw "This code cannot be run as its compilation yielded an error."
 
 
 // A *non*-`declare`d `fun` writing no parameter lists is a getter: referencing it calls it, so its arrows
@@ -1051,10 +1006,7 @@ fun viaTyped(s, radix): Str = parseIt(s, radix)
 //│ ║  l.+1: 	fun viaTyped(s, radix): Str = parseIt(s, radix)
 //│ ╙──      	                              ^^^^^^^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define viaTyped⁰ as fun viaTyped¹(s: ?, radix: ?): Str⁰ {
-//│   return globalThis⁰.parseIt⁰((s as! Str⁰), (radix as! Int⁰))
-//│ };
-//│ end
+//│ throw "This code cannot be run as its compilation yielded an error."
 
 
 // A member is reached by *selection*, which - unlike a bare reference - is never auto-invoked, so its
@@ -1064,7 +1016,7 @@ module Plain with
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define Plain⁰ as class Plain¹
 //│ module Plain² {
-//│   method f⁶ = fun f⁷: Function⁰ {
+//│   method f² = fun f³: Function⁰ {
 //│     let lambda;
 //│     @private
 //│     define lambda as fun lambda⁴(x: Int⁰): ? { return x };
@@ -1086,7 +1038,7 @@ fun useExt() = useFn(Ext.member)
 
 fun usePlain() = useFn(Plain.f)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define usePlain⁰ as fun usePlain¹(): Unknown { return useFn¹(Plain².f⁷) }; end
+//│ define usePlain⁰ as fun usePlain¹(): Unknown { return useFn¹(Plain².f³) }; end
 
 
 // *Applying* the selected member is a call on that function value, and since `Function` does not store its
@@ -1096,7 +1048,7 @@ fun applyExt() = useInt(Ext.member(1))
 //│ define applyExt⁰ as fun applyExt¹(): Int⁰ {
 //│   let tmp: ?;
 //│   set tmp = globalThis⁰.Ext⁰.member⁰(1);
-//│   return useInt¹((tmp as! Int⁰))
+//│   return useInt⁰((tmp as! Int⁰))
 //│ };
 //│ end
 
@@ -1104,8 +1056,8 @@ fun applyPlain() = useInt(Plain.f(1))
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define applyPlain⁰ as fun applyPlain¹(): Int⁰ {
 //│   let tmp: ?;
-//│   set tmp = Plain².f⁷(1);
-//│   return useInt¹((tmp as! Int⁰))
+//│   set tmp = Plain².f³(1);
+//│   return useInt⁰((tmp as! Int⁰))
 //│ };
 //│ end
 
@@ -1118,7 +1070,7 @@ fun applyGetFn() = useInt(getFn(1))
 //│   let tmp: Function⁰, tmp1: ?;
 //│   set tmp = getFn⁰();
 //│   set tmp1 = tmp(1);
-//│   return useInt¹((tmp1 as! Int⁰))
+//│   return useInt⁰((tmp1 as! Int⁰))
 //│ };
 //│ end
 
@@ -1140,7 +1092,7 @@ fun refTyped(x: Int): Str = x
 //│ ║  l.+1: 	fun refTyped(x: Int): Str = x
 //│ ╙──      	                            ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define refTyped⁰ as fun refTyped¹(x: Int⁰): Str⁰ { return x }; end
+//│ throw "This code cannot be run as its compilation yielded an error."
 
 
 // A resolved selection is typed off its declaration too, and is likewise disclaimed - the annotation no longer
@@ -1149,7 +1101,7 @@ fun selUntyped(): Int = @untyped Plain.f
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define selUntyped⁰ as fun selUntyped¹(): Int⁰ {
 //│   let tmp: Unknown;
-//│   set tmp = Plain².f⁷;
+//│   set tmp = Plain².f³;
 //│   return (tmp as! Int⁰)
 //│ };
 //│ end
@@ -1160,7 +1112,7 @@ fun selTyped(): Int = Plain.f
 //│ ║  l.+1: 	fun selTyped(): Int = Plain.f
 //│ ╙──      	                      ^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define selTyped⁰ as fun selTyped¹(): Int⁰ { return Plain².f⁷ }; end
+//│ throw "This code cannot be run as its compilation yielded an error."
 
 
 // A lambda is disclaimed too: it reaches `LambdaRewriter` as the binding's RHS and is floated into a

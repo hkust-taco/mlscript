@@ -17,7 +17,7 @@ ident("a")
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
 //│ ║  l.+1: 	ident("a")
 //│ ╙──      	      ^^^
-//│ = "a"
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // Later blocks cannot widen the representation of a top-level `let`, which is not exposed to their writes
@@ -31,7 +31,7 @@ counter
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
 //│ ║  l.+1: 	set counter = "hello"
 //│ ╙──      	    ^^^^^^^^^^^^^^^^^
-//│ = "hello"
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // The representation of a mutable field is inferred from its initializer and from the values that its own block
@@ -46,6 +46,7 @@ set cell.value = "hello"
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
 //│ ║  l.+1: 	set cell.value = "hello"
 //│ ╙──      	    ^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 class Mixed(mut val value)
 let mixed = Mixed(1)
@@ -63,6 +64,7 @@ set record.count = "many"
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
 //│ ║  l.+1: 	set record.count = "many"
 //│ ╙──      	    ^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 let fields = mut {count: 0, label: "count"}
 //│ fields = {count: 0, label: "count"}
@@ -72,6 +74,7 @@ set fields.count = "many"
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
 //│ ║  l.+1: 	set fields.count = "many"
 //│ ╙──      	    ^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // The values that a record type describes can be assigned values of the types of its mutable fields.
 class Holder(mut val item)

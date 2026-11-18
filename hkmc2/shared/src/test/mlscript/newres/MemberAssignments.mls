@@ -20,3 +20,4 @@ module Fixed with
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Function'
 //│ ║  l.+3: 	  fun change() = set value = 1
 //│ ╙──      	                     ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

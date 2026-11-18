@@ -166,15 +166,8 @@ value
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int64' have no common representation
 //│ ║  l.+1: 	let value = const(1)
 //│ ╙──      	    ^^^^^
-//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int64' have no common representation
-//│ ║  l.+2: 	set value = wasm.i64.const(2)
-//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
-//│ ║  l.+1: 	let value = const(1)
-//│ ╙──      	            ^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `i64` to `(ref null any)` in a different type hierarchy
-//│ ║  l.+1: 	let value = const(1)
-//│ ╙──      	    ^^^^^
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // External callers already contribute Unknown; it conflicts with an unboxed input.
@@ -202,9 +195,8 @@ annotated
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
 //│ ║  l.+1: 	val annotated: Any = const(42)
 //│ ╙──      	                     ^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
-//│ ║  l.+1: 	val annotated: Any = const(42)
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // Undefined contributes no representation constraint to the result slot.
