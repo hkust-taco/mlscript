@@ -86,7 +86,7 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
     val ref = SimpleRef(param.sym)(N)
     val unknown = UnknownValueShape(ref, fromPublicInterface = true)(path.via(
       msg"Parameter '${param.sym.nme}' admits values of unknown shape." -> param.toLoc))
-    resolver.parameterSignature(param, positive = true) match
+    resolver.parameterSignature(param) match
       case N => resolver.constrainParameter(param, unknown.enter(marks), marks)
       case S(tpe) => unknown.enter(marks) match
         case value: TermShape => resolver.exposeTypeHoles(tpe.instantiate(rctx.instances), value, marks)

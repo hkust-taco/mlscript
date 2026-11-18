@@ -293,7 +293,7 @@ final class NewResolverState(val owner: Elaborator.State):
     new Cache(_.omittedTypes, identity)
   val exposedTypeHoles: Seen[(DeclaredType, ShapeIdentity.Key, Ls[Marks])] =
     new Seen(_.exposedTypeHoles)
-  val signatureParameters: Cache[VarSymbol, TypeArgument] =
+  val signatureParameters: Cache[VarSymbol, DeclaredType] =
     new Cache(_.signatureParameters, identity)
   // Keep explicit bindings in their own hosts: two arguments can have the same
   // readable output, which the parameter's value host merges, and different input

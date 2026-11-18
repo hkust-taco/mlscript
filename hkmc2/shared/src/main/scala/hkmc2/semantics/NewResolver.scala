@@ -1659,19 +1659,16 @@ class NewResolver:
   private def signatureParameters(using rs: ResolutionContext) = rs.state.signatureParameters
   def registerParameterSignature(paramLists: Ls[ParamList], sign: Term)(using ResolutionContext): Unit =
     paramLists.flatMap(_.allParams).filter(_.sign.isEmpty).foreach: param =>
-      // Components can arrive later through aliases. Separate input and output
-      // unions retain both bounds when a variadic array supplies an element argument.
-      // Their templates may mention binders inside any quantified component.
-      def endpoint(): DeclaredType =
-        val resolution = new TypeResolution(sign, messages => resolError(sign, messages))
-        rctx.recordTemplateBinders(resolution, N)
-        // Bottom keeps the accumulating union distinct from an immutable reference
-        // that normalization could substitute away before later components arrive.
-        resolution.publish(TypeShape.Bottom)
-        declaredType(resolution, Map.empty)
-      val interface = TypeArgument(endpoint(), endpoint())
-      signatureParameters(param.sym) = interface
-      listenTypeInstances(interface.output): shape =>
+      // Aliases can supply additional callable components after this parameter is observed.
+      // Keep one accumulating union whose template can mention any component's quantified binders.
+      val resolution = new TypeResolution(sign, messages => resolError(sign, messages))
+      rctx.recordTemplateBinders(resolution, N)
+      // Bottom keeps the accumulating union distinct from an immutable reference
+      // that normalization could substitute away before later components arrive.
+      resolution.publish(TypeShape.Bottom)
+      val tpe = declaredType(resolution, Map.empty)
+      signatureParameters(param.sym) = tpe
+      listenTypeInstances(tpe): shape =>
         if param.sym.currentShapes.add(shape) then param.sym.notifyShapeListeners(shape)
     // Check only signatures that explicitly specify one calling convention,
     // following aliases and quantifiers. Compound signatures still contribute
@@ -1702,17 +1699,15 @@ class NewResolver:
                 msg"Implementation parameter list does not match its separate signature." -> ps.toLoc ::
                 msg"The signature has different required, optional, variadic, or trailing parameter positions." -> sign.toLoc :: Nil))
           val params = ps.allParams
-          zipDeclaredParameters(Arity(ps), declared): (index, bounds) =>
+          zipDeclaredParameters(Arity(ps), declared): (index, tpe) =>
             val param = params(index)
-            val component = bounds.map(transportType(_, marks :: Nil))
+            val component = transportType(tpe, marks :: Nil)
             if param.sign.isEmpty then
-              val target = signatureParameters.get(param.sym).get
-              target.input.resolution.publish(TypeShape.Combined(TypeFormula.atom(component.input)))
-              target.output.resolution.publish(TypeShape.Combined(TypeFormula.atom(component.output)))
+              signatureParameters.get(param.sym).get.resolution.publish(TypeShape.Combined(TypeFormula.atom(component)))
             else
               // An inline annotation keeps its interface, but its inferred type
               // arguments still receive constraints from the separate signature.
-              constrainParameter(param, instanceShape(component.output), Nil)
+              constrainParameter(param, instanceShape(component), Nil)
           callable.result.foreach(tpe => bind(tail, transportType(tpe, marks :: Nil), check))
         case _ => ()
     bind(paramLists, declaredType(typeResolution(sign), Map.empty), true)
@@ -2422,13 +2417,13 @@ class NewResolver:
     * annotations. Otherwise align a guaranteed prefix and suffix, and join all
     * remaining flows at every possible middle position. In particular, an unknown
     * position must not erase a known element type or a symbolic inference endpoint.
-    * Publish both bounds of each position: an array element can have different bounds
-    * even though a scalar annotation supplies one type.
+    * Each position receives one value type. Extracted array elements use their output
+    * bound; a rest parameter retains both element bounds inside its Array type.
     */
   private def zipDeclaredParameters(arity: Arity, declared: DeclaredParams)(
-      publish: (Int, TypeArgument) => ResolutionContext ?=> Unit)(using ResolutionContext): Unit =
-    def assign(index: Int, param: DeclaredParam): Unit = param.tpe.foreach(tpe => publish(index, TypeArgument.invariant(tpe)))
-    def rest(tpe: DeclaredType)(using ResolutionContext): Unit = publish(arity.leading, TypeArgument.invariant(tpe))
+      publish: (Int, DeclaredType) => ResolutionContext ?=> Unit)(using ResolutionContext): Unit =
+    def assign(index: Int, param: DeclaredParam): Unit = param.tpe.foreach(tpe => publish(index, tpe))
+    def rest(tpe: DeclaredType)(using ResolutionContext): Unit = publish(arity.leading, tpe)
     if arity == Arity(declared) then
       declared.allParams.zipWithIndex.foreach((sign, index) => assign(index, sign))
     else
@@ -2445,7 +2440,7 @@ class NewResolver:
       middle.foreach(sign => positions.foreach(assign(_, sign)))
       def restElement(element: TypeArgument, marks: Marks)(using ResolutionContext): Unit =
         val argument = element.map(transportType(_, marks :: Nil))
-        positions.foreach(index => publish(index, argument))
+        positions.foreach(index => publish(index, argument.output))
         if arity.hasRest then rest(arrayType(argument))
       declared.rest.foreach: rest =>
         listenTypeViews(rest, mergeIntersections = false):
@@ -2524,8 +2519,8 @@ class NewResolver:
     if !declared.hasRest && declared.leadingRequired == declared.params.length && arity.required <= declared.params.length then
       zipTupleShapes(mss, arity, TupleShape(source, fields(declared.params))(this), marks)(publish)
     else
-      zipDeclaredParameters(arity, declared): (index, bounds) =>
-        listenTypeInstances(bounds.output)(shape => publish(index, shape.exit(marks).enter(mss)))
+      zipDeclaredParameters(arity, declared): (index, tpe) =>
+        listenTypeInstances(tpe)(shape => publish(index, shape.exit(marks).enter(mss)))
   
   private def listenSignatureResult(tpe: DeclaredType, count: Int)(listener: Listener)(using ResolutionContext): Unit =
     if count == 0 then listenTypeInstances(tpe)(listener)
@@ -2892,18 +2887,17 @@ class NewResolver:
       instances: TypeSubstitution, site: Opt[Term])(using ResolutionContext): Unit = shape match
     case NoShape => ()
     case sh: TermShape =>
-      parameterSignature(p, positive = false) match
+      parameterSignature(p) match
         case S(tpe) => inferTypeArguments(tpe.instantiate(instances), sh, marks, site)
         case N => publishParameter(p.sym, sh)(using rctx.withInstances(instances))
 
-  /** Inline annotations already denote proper types. A separate signature may
-    * derive a parameter from an array element, whose bounds need a direction.
+  /** The type declared for a parameter by its inline annotation or the enclosing function's
+    * separate signature, or `N` if neither supplies one.
     */
-  private[semantics] def parameterSignature(p: Param, positive: Bool)(using ResolutionContext): Opt[DeclaredType] =
+  private[semantics] def parameterSignature(p: Param)(using ResolutionContext): Opt[DeclaredType] =
     p.sign.map(sign => declaredType(typeResolution(sign), Map.empty)).orElse:
       signatureParameters.get(p.sym)
         .orElse(p.sym.getState.newResolverState.signatureParameters.get(p.sym)(using p.sym.getState.newResolverState.context))
-        .map(_.at(positive))
 
   /** The number of arguments a parameter list accepts, with `leading` parameters, of which
     * `leadingRequired` are required, and, if `hasRest`, a variadic parameter followed by `trailing` ones. */
