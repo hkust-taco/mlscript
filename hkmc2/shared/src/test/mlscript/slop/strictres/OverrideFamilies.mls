@@ -74,8 +74,6 @@ private class Inheriting() extends Declared() with
 
 
 // A separate full signature fixes the parameter representations inherited by unannotated overrides.
-// FIXME: Family inference widens these declared parameters with the arguments of subclass calls.
-:breakme
 :ge
 :noInline
 private class SeparateBase() with
@@ -84,7 +82,43 @@ private class SeparateBase() with
 private class SeparateChild() extends SeparateBase() with
   override fun take(x) = x
 SeparateChild().take("s")
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.+6: 	SeparateChild().take("s")
+//│ ╙──      	                     ^^^
 //│ = "s"
+
+
+// Aliases and later curried parameter lists retain the same declared boundary.
+:ge
+:noInline
+type CurriedContract = (Int) -> (Str) -> Int
+private class CurriedBase() with
+  fun take: CurriedContract
+  open fun take(x)(label) = x
+private class CurriedChild() extends CurriedBase() with
+  override fun take(x)(label) = x
+CurriedChild().take(1)(2)
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Str'
+//│ ║  l.+7: 	CurriedChild().take(1)(2)
+//│ ╙──      	                       ^
+//│ = 1
+
+
+// A separate signature on an override keeps its own parameter type, which must accept the base's inputs.
+:ge
+private class InferredBase() with
+  open fun take(x) = 0
+private class SeparateNarrow() extends InferredBase() with
+  fun take: (Str) -> Int
+  override fun take(x) = 0
+InferredBase().take(1)
+//│ ╔══[COMPILATION ERROR] Parameter 'x' of overriding member 'take' is represented as 'Str', which cannot hold the values represented as 'Int' that the member it overrides accepts
+//│ ║  l.+5: 	  override fun take(x) = 0
+//│ ║        	                    ^
+//│ ╟── The overridden member 'take' is defined here
+//│ ║  l.+2: 	  open fun take(x) = 0
+//│ ╙──      	           ^^^^
+//│ = 0
 
 
 // An annotated override contributes its declared result instead of its observed values. Its parameter

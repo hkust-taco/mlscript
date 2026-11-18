@@ -145,6 +145,22 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
       case S(msym) => S(ErasedType.ValueLike(rsc = S(false), msym))
       case N => sign.flatMap(eraseSignature)
 
+  /** The representation a parameter declares through an inline annotation, a module requirement,
+    * or a separate function signature. Parameters without a declared interface return `N`.
+    */
+  private def declaredParameterType(parameter: Param): Opt[ErasedValueType] =
+    declaredType(parameter.sign, parameter.modulefulness).orElse:
+      if !config.language.useNewResolution then N
+      else
+        val resolver = parameter.sym.getState.newResolverState
+        if resolver.signatureParameters.get(parameter.sym)(using resolver.context).isEmpty then N
+        else
+          // Separate signatures register their parameter interfaces before the function body is elaborated.
+          // Resolution publishes the interpreted declared types to these parameters and keeps call arguments
+          // out of their observations. Preserve that boundary when assigning and inheriting representations.
+          // An empty declared observation fixes the usual unknown representation, without admitting override inputs.
+          S(inferredType(parameter.sym).getOrElse(ErasedType.Unknown))
+
   /** The result representation that `td` declares, with a result annotation or with a separate full
     * signature such as `fun f: (Int) -> Int`, whose arrows describe the written parameter lists.
     */
@@ -383,7 +399,7 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
     def observedParameterTypes(p: Param, visiting: Set[VarSymbol]): Ls[ErasedValueType] =
       inferredType(p.sym).toList ::: overrideChecks.overridingParameters.getOrElse(p.sym, Nil).flatMap: overriding =>
         if visiting(overriding.sym) || restParameters(overriding.sym) || overriding.sym.isErased
-            || declaredType(overriding.sign, overriding.modulefulness).isDefined
+            || declaredParameterType(overriding).isDefined
         then Nil
         else
           // Making a required slot optional additionally admits null on direct calls of the overriding member.
@@ -398,7 +414,7 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
       */
     def eraseParameter(p: Param, visiting: Set[VarSymbol]): Unit =
       if !p.sym.isErased && !visiting(p.sym) then
-        val erased = declaredType(p.sign, p.modulefulness).orElse:
+        val erased = declaredParameterType(p).orElse:
           inheritedParams.get(p.sym) match
             case S(inherited) =>
               // Imported parameters are already erased; erroneous inheritance cycles can leave a
