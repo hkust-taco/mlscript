@@ -260,8 +260,8 @@ app(returnRest2(0))
 //│ eta-expansion > returnRest2⁰#0 @ <root>: [1, 1+rest]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > returnRest2⁰#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > rest2⁰#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > returnRest2⁰#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > rest2⁰#1 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
@@ -370,11 +370,7 @@ fun f(k, x) =
   h(2)
 f(k1, 1) + f(k2, 5)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let a, b, tmp, tmp1, f_a_b$b, f_a$a, f$f;
-//│ @private
-//│ define f_a_b$b as fun f_a_b$b⁰(k, y)(eta$0$0) {
-//│   return k(y)(eta$0$0)
-//│ };
+//│ let a, b, tmp, tmp1, f_a$a, f$f, f_a_b$b;
 //│ @private
 //│ define f_a$a as fun f_a$a⁰(k, y)(eta$0$0) {
 //│   return f_a_b$b⁰(k, y)(eta$0$0)
@@ -382,6 +378,10 @@ f(k1, 1) + f(k2, 5)
 //│ @private
 //│ define f$f as fun f$f⁰(k, x) {
 //│   return f_a$a⁰(k, x)(2)
+//│ };
+//│ @private
+//│ define f_a_b$b as fun f_a_b$b⁰(k, y)(eta$0$0) {
+//│   return k(y)(eta$0$0)
 //│ };
 //│ define a as fun a⁰(k, y) {
 //│   return b⁰(k, y)
