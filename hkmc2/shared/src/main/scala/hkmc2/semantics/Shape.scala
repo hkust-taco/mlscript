@@ -87,9 +87,7 @@ sealed trait Shape extends ShapeEvent:
 object ShapeIdentity:
   type Key = ShapeEvent | View
 
-  private[hkmc2] def key(shape: ShapeEvent)(using ResolutionContext): Key = shape.comparison match
-    case view: View => rctx.state.shapeIdentities.getOrElseUpdate(view, view)
-    case node => node
+  private[hkmc2] def key(shape: ShapeEvent): Key = shape.comparison
 
   private[semantics] def comparison(shape: ShapeEvent): Key = shape match
     case instance: InstanceShape => instance.candidateIdentity
@@ -350,7 +348,7 @@ end MarkedShape
 sealed trait TermShape extends Shape, ShapeLike:
   // Cache all lookup outcomes per shape, without materializing all inherited members.
   final def getMember(name: MemberKey)(using state: ResolutionContext): MemberLookup =
-    state.state.membersCache.getOrElseUpdate((this, name), getMemberImpl(name))
+    state.state.workspace.membersCache.getOrElseUpdate((this, name), getMemberImpl(name))
   protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup
   /** Lookup on this shape as reached through the receiver path `receiver`.
     * Shapes whose members are declared by a nominal class override this to
@@ -941,15 +939,13 @@ class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends CoreHeadS
     * not consume their arguments or expose instance fields as static members.
     * These fields are never lowered: their symbols identify the generated names.
     */
-  private lazy val bufferedMembers: Map[Str, RecordMember] = defn match
-    case cls: ClassDef if cls.annotations.exists(_.isInstanceOf[Annot.Bufferable]) =>
-      given Elaborator.State = cls.sym.getState
-      given state: ResolutionContext = cls.sym.getState.newResolverState.context
-      val binders = state.state.lexicalTypeBinders.get(cls.sym).getOrElse(
+  private def bufferedMembers(cls: ClassDef)(using state: ResolutionContext): Map[Str, RecordMember] =
+    state.bufferedMembers(cls):
+      given Elaborator.State = state.owner
+      val binders = state.definitionBindersOf(cls.sym).getOrElse(
         lastWords(s"Buffered class ${cls.sym.nme} must record its enclosing type binders")) ++ cls.tparams.map(_.sym)
-      // These synthetic functions read the class's parameter annotations and
-      // methods. Record their definition scope in the class's owning graph,
-      // just as elaboration records ordinary lambdas and getter references.
+      // These synthetic functions read the source class's parameter annotations
+      // and methods, but belong to the consumer that first observes them.
       def scoped[T <: Term](term: T): T =
         state.recordLexicalBinders(term, binders)
         term
@@ -967,7 +963,6 @@ class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends CoreHeadS
         field(method.bsym.nme, withBuffer(ref))
       (field("size", Term.Lit(syntax.Tree.IntLit(0))) ::
         field("ctor", withBuffer(ctor)) :: methods).toMap
-    case _ => Map.empty
 
   protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup =
     defn match
@@ -975,7 +970,7 @@ class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends CoreHeadS
       MemberLookup.inClass(defn, ext, name)
     case cls: ClassDef if cls.annotations.exists(_.isInstanceOf[Annot.Bufferable]) =>
       name match
-        case name: Str => bufferedMembers.get(name).fold[MemberLookup](MemberLookup.Missing)(MemberLookup.Found(_, Nil))
+        case name: Str => bufferedMembers(cls).get(name).fold[MemberLookup](MemberLookup.Missing)(MemberLookup.Found(_, Nil))
         case _: SymbolKey => MemberLookup.Missing
     case _: TermDefinition => MemberLookup.Missing
     case _ => MemberLookup.Missing

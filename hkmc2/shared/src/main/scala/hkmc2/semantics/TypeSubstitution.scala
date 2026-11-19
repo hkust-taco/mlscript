@@ -36,6 +36,6 @@ object TypeSubstitution:
   private def fromMap(bindings: Map[VarSymbol, TypeParameterInstance]): TypeSubstitution =
     if bindings.isEmpty then empty else new TypeSubstitution(bindings)
   private[semantics] def canonical(value: TypeSubstitution)(using ResolutionContext): TypeSubstitution =
-    if value.isEmpty then empty else rctx.state.substitutions.getOrElseUpdate(value, value)
+    if value.isEmpty then empty else rctx.state.workspace.substitutions.getOrElseUpdate(value, value)
   def apply(instances: IterableOnce[TypeParameterInstance])(using ResolutionContext): TypeSubstitution =
     canonical(fromMap(instances.iterator.map(instance => instance.origin -> instance).toMap))

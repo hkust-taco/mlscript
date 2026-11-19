@@ -21,7 +21,7 @@ class CanonicalTypeTest extends AnyFunSuite:
     val allocation = allocationCounter
     given owner: Elaborator.State = new Elaborator.State
     given context: ResolutionContext = owner.newResolverState.context
-    val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val resolution = new TypeResolution(Term.UnitVal(), TypeResolution.Diagnostic.Source)
     val alias = TypeAliasSymbol(syntax.Tree.Ident("Alias"))
     val witness = NamespaceWitness.Written(Term.UnitVal())
     val plans = Vector(N, S(TypeNamespaces.single(alias, witness)))
@@ -56,7 +56,7 @@ class CanonicalTypeTest extends AnyFunSuite:
     given owner: Elaborator.State = new Elaborator.State
     val source = owner.newResolverState.context
     val consumer = new Elaborator.State().newResolverState.context
-    val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val resolution = new TypeResolution(Term.UnitVal(), TypeResolution.Diagnostic.Source)
     val alias = TypeAliasSymbol(syntax.Tree.Ident("Alias"))
     val annotation = TypeNamespaces.single(alias, NamespaceWitness.Written(Term.UnitVal()))
     val leaf = DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)(N)(using source)
@@ -69,7 +69,7 @@ class CanonicalTypeTest extends AnyFunSuite:
         tpe.withPolarity(false).withNamespaces(annotation).withoutNamespaces.withPolarity(true)
       for context <- source :: consumer :: Nil do
         assert(update()(using context) == tpe)
-        val sourceSize = source.state.typeReferences.size
+        val sourceSize = source.state.workspace.typeReferences.size
         val repetitions = 100
         val before = allocation.getCurrentThreadAllocatedBytes
         var result = tpe
@@ -80,13 +80,13 @@ class CanonicalTypeTest extends AnyFunSuite:
         val bytes = allocation.getCurrentThreadAllocatedBytes - before
         assert(result == tpe)
         assert(bytes <= repetitions * 1024L, s"Updating $size bindings allocated $bytes bytes")
-        assert(source.state.typeReferences.size == sourceSize)
+        assert(source.state.workspace.typeReferences.size == sourceSize)
 
   test("canonical DAG comparisons allocate independently of graph depth"):
     val allocation = allocationCounter
     given owner: Elaborator.State = new Elaborator.State
     given context: ResolutionContext = owner.newResolverState.context
-    val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val resolution = new TypeResolution(Term.UnitVal(), TypeResolution.Diagnostic.Source)
     val a = new VarSymbol(syntax.Tree.Ident("A"), mut = false)
     val b = new VarSymbol(syntax.Tree.Ident("B"), mut = false)
     def tree(depth: Int): DeclaredType =
@@ -115,7 +115,7 @@ class CanonicalTypeTest extends AnyFunSuite:
     val allocation = allocationCounter
     given owner: Elaborator.State = new Elaborator.State
     given context: ResolutionContext = owner.newResolverState.context
-    val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val resolution = new TypeResolution(Term.UnitVal(), TypeResolution.Diagnostic.Source)
     val tpe = DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)(N)
     for arity <- 1 :: 64 :: Nil do
       val parameters = List.fill(arity)(DeclaredParam(S(tpe), FldFlags.empty))
@@ -141,7 +141,7 @@ class CanonicalTypeTest extends AnyFunSuite:
   test("independent constructions share a bounded canonical type DAG"):
     given owner: Elaborator.State = new Elaborator.State
     given context: ResolutionContext = owner.newResolverState.context
-    val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val resolution = new TypeResolution(Term.UnitVal(), TypeResolution.Diagnostic.Source)
     val a = new VarSymbol(syntax.Tree.Ident("A"), mut = false)
     val b = new VarSymbol(syntax.Tree.Ident("B"), mut = false)
     def tree(): DeclaredType =
@@ -152,7 +152,7 @@ class CanonicalTypeTest extends AnyFunSuite:
     (1 to 20).foreach: _ =>
       val repeated = tree()
       assert(first == repeated && first.hashCode == repeated.hashCode)
-    assert(context.state.typeReferences.size == 65)
+    assert(context.state.workspace.typeReferences.size == 65)
 
   // Canonical keys alone do not bound retained memory: a cache hit can still
   // rebuild a per-use tree around the shared references. Count distinct retained
@@ -160,7 +160,7 @@ class CanonicalTypeTest extends AnyFunSuite:
   test("synthesized observations share a bounded graph of per-use views"):
     given owner: Elaborator.State = new Elaborator.State
     given context: ResolutionContext = owner.newResolverState.context
-    val source = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val source = new TypeResolution(Term.UnitVal(), TypeResolution.Diagnostic.Source)
     val leaf = DeclaredType(source, Map.empty, TypeSubstitution.empty, true)(N)
     val depth = 32
     def shape(child: DeclaredType): TypeShape =
@@ -180,7 +180,7 @@ class CanonicalTypeTest extends AnyFunSuite:
     val source = owner.newResolverState.context
     val consumer = new Elaborator.State().newResolverState.context
     val other = new Elaborator.State().newResolverState.context
-    val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val resolution = new TypeResolution(Term.UnitVal(), TypeResolution.Diagnostic.Source)
     val a = new VarSymbol(syntax.Tree.Ident("A"), mut = false)
     val b = new VarSymbol(syntax.Tree.Ident("B"), mut = false)
     def tree()(using ResolutionContext): DeclaredType =
@@ -195,18 +195,18 @@ class CanonicalTypeTest extends AnyFunSuite:
       val imported = DeclaredType(resolution, Map(a -> TypeArgument.invariant(original), b -> TypeArgument.invariant(independent)), TypeSubstitution.empty, true)(N)(using consumer)
       val repeated = DeclaredType(resolution, Map(b -> TypeArgument.invariant(original), a -> TypeArgument.invariant(independent)), TypeSubstitution.empty, true)(N)(using consumer)
       assert(imported == repeated)
-    assert(consumer.state.typeReferences.size == 66)
-    assert(consumer.state.typeReferences.importedCount == 130)
-    assert(source.state.typeReferences.size == 65)
-    assert(source.state.typeReferences.importedCount == 0)
-    assert(other.state.typeReferences.size == 65)
-    assert(other.state.typeReferences.importedCount == 0)
+    assert(consumer.state.workspace.typeReferences.size == 66)
+    assert(consumer.state.workspace.typeReferences.importedCount == 130)
+    assert(source.state.workspace.typeReferences.size == 65)
+    assert(source.state.workspace.typeReferences.importedCount == 0)
+    assert(other.state.workspace.typeReferences.size == 65)
+    assert(other.state.workspace.typeReferences.importedCount == 0)
 
   test("annotated arguments stay local and importing their shared DAG is bounded"):
     given owner: Elaborator.State = new Elaborator.State
     val source = owner.newResolverState.context
     val consumer = new Elaborator.State().newResolverState.context
-    val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val resolution = new TypeResolution(Term.UnitVal(), TypeResolution.Diagnostic.Source)
     val alias = TypeAliasSymbol(syntax.Tree.Ident("Alias"))
     val other = TypeAliasSymbol(syntax.Tree.Ident("Other"))
     val argument = VarSymbol(syntax.Tree.Ident("A"), mut = false)
@@ -228,15 +228,15 @@ class CanonicalTypeTest extends AnyFunSuite:
       assert(original != different)
       val imported = DeclaredType(resolution, Map(argument -> TypeArgument.invariant(original)), TypeSubstitution.empty, true)(N)(using consumer)
       assert(imported.bindings(argument) == TypeArgument.invariant(independent))
-    assert(source.state.typeReferences.size == 66)
-    assert(source.state.typeReferences.importedCount == 0)
-    assert(consumer.state.typeReferences.size == 132)
-    assert(consumer.state.typeReferences.importedCount == 65)
+    assert(source.state.workspace.typeReferences.size == 66)
+    assert(source.state.workspace.typeReferences.importedCount == 0)
+    assert(consumer.state.workspace.typeReferences.size == 132)
+    assert(consumer.state.workspace.typeReferences.importedCount == 65)
 
   test("repeated alias annotations and diagnostic views reuse canonical references"):
     given owner: Elaborator.State = new Elaborator.State
     given context: ResolutionContext = owner.newResolverState.context
-    val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val resolution = new TypeResolution(Term.UnitVal(), TypeResolution.Diagnostic.Source)
     val alias = TypeAliasSymbol(syntax.Tree.Ident("Alias"))
     val witness = NamespaceWitness.Written(Term.UnitVal())
     val plain = DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)(N)
@@ -247,4 +247,4 @@ class CanonicalTypeTest extends AnyFunSuite:
         .withOrigin(S(TypeInterfaceReason.Unrestricted(Term.UnitVal())))
       assert(current.reference eq annotated.reference)
       assert(current.withoutNamespaces.reference eq plain.reference)
-    assert(context.state.typeReferences.size == 2)
+    assert(context.state.workspace.typeReferences.size == 2)

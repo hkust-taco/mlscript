@@ -111,8 +111,8 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
   private def recordOpenMember(cls: ClassLikeDef, td: TermDefinition, path: Path)(using ResolutionContext): Unit =
     // An imported class's members belong to the interface its own compilation unit exposes.
     if Inheritance.isExtensible(cls) && rctx.state.isOwnedSym(td.tsym) && Inheritance.isOpen(td)
-        && !rctx.state.exposedOpenMembers.contains(td.tsym) then
-      rctx.state.exposedOpenMembers(td.tsym) = path
+        && !rctx.state.workspace.exposedOpenMembers.contains(td.tsym) then
+      rctx.state.workspace.exposedOpenMembers(td.tsym) = path
   
   private def members(cls: ClassLikeDef, marks: Ls[Marks], path: Path)(using ResolutionContext): Unit =
     cls.body.blk.stats.foreach:

@@ -183,8 +183,8 @@ class SubstitutionGrowthTest extends AnyFunSuite:
     given trace: TraceLogger = TraceLogger.silent
     given Config = Config.default(TestFolders.mainTestDir(os.pwd))
     given CompilerCtx = CompilerCtx.fresh(io.FileSystem.default, TestFolders.compilerPaths(os.pwd), summon[Config])
-    val resolver = Elaborator(trace, TestFolders.mainTestDir(os.pwd), Elaborator.Ctx.empty)
-    val scheme = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val resolver = Elaborator(trace, TestFolders.mainTestDir(os.pwd), Elaborator.Ctx.empty).resolver
+    val scheme = new TypeResolution(Term.UnitVal(), TypeResolution.Diagnostic.Source)
     def binder(name: Str): VarSymbol =
       val symbol = VarSymbol(Tree.Ident(name), mut = false)
       symbol.decl = S(TyParam(FldFlags.empty, N, symbol)(N))
@@ -195,7 +195,7 @@ class SubstitutionGrowthTest extends AnyFunSuite:
       state.instantiateTypeParameters(scheme, FlowSymbol.app(), List(binder), S(site))(binder)
     /** The type denoted by a binder or instance reference. */
     def typeOf(symbol: VarSymbol): DeclaredType =
-      val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+      val resolution = new TypeResolution(Term.UnitVal(), TypeResolution.Diagnostic.Source)
       resolution.publish(rctx.typeParameter(symbol))
       DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)(N)
     def instanceOf(tpe: DeclaredType): InstanceShape = resolver.instanceShape(tpe)
@@ -291,7 +291,7 @@ class SubstitutionGrowthTest extends AnyFunSuite:
       val b1 = h.instance(b)
       val extra = h.instance(unused)
       val leaf = h.typeOf(a).instantiate(TypeSubstitution(a1 :: Nil))
-      val tuple = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+      val tuple = new TypeResolution(Term.UnitVal(), TypeResolution.Diagnostic.Source)
       tuple.publish(TypeShape.Tuple(TypeShape.TupleField(h.typeOf(a).resolution, spread = false) :: Nil))
       val root = (1 to depth).foldLeft(leaf): (child, _) =>
         val output = if distinct then child.withPolarity(false) else child
@@ -318,7 +318,7 @@ class SubstitutionGrowthTest extends AnyFunSuite:
     val source = h.typeOf(a)
     val input = source.instantiate(TypeSubstitution(first :: Nil))
     val output = source.instantiate(TypeSubstitution(second :: Nil))
-    val pending = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val pending = new TypeResolution(Term.UnitVal(), TypeResolution.Diagnostic.Source)
     val late = DeclaredType(pending, Map(a -> TypeArgument(input, output)), TypeSubstitution.empty, true)(N)
     val instances = TypeSubstitution(b1 :: c1 :: extra :: Nil)
     val original = late.instantiate(instances)
@@ -351,7 +351,7 @@ class SubstitutionGrowthTest extends AnyFunSuite:
   test("diagnostic witnesses do not multiply inferred values"):
     val h = new Harness
     import h.given
-    val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val resolution = new TypeResolution(Term.UnitVal(), TypeResolution.Diagnostic.Source)
     resolution.publish(TypeShape.Bottom)
     val tpe = DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)(N)
     val host = new TermShapeHost
@@ -545,7 +545,7 @@ class SubstitutionGrowthTest extends AnyFunSuite:
 
     // A forward source has no fixed support yet. Its two environments must
     // remain distinct and both must receive the target when it becomes known.
-    val forward = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val forward = new TypeResolution(Term.UnitVal(), TypeResolution.Diagnostic.Source)
     val pending = DeclaredType(forward, Map.empty, TypeSubstitution.empty, true)(N)
     val instances = List(h.instance(a), h.instance(a))
     val observations = instances.map: instance =>
@@ -565,9 +565,9 @@ class SubstitutionGrowthTest extends AnyFunSuite:
     val h = new Harness
     import h.given
     val a = h.binder("A")
-    val unit = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val unit = new TypeResolution(Term.UnitVal(), TypeResolution.Diagnostic.Source)
     unit.publish(TypeShape.Unit)
-    val union = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val union = new TypeResolution(Term.UnitVal(), TypeResolution.Diagnostic.Source)
     union.publish(TypeShape.Union(h.typeOf(a).resolution, unit))
     val tpe = h.resolver.declaredType(union, Map.empty)
     def observe(): Unit =
@@ -596,9 +596,9 @@ class SubstitutionGrowthTest extends AnyFunSuite:
       val use = Term.UnitVal()
       h.state.recordLexicalBinders(use, Set(b))
       if suppliedAtSource then h.state.recordAppliedTypeArguments(use, 1)
-      val reference = new TypeResolution(use, _ => fail("Unexpected type error"))
+      val reference = new TypeResolution(use, TypeResolution.Diagnostic.Source)
       reference.publish(TypeShape.Alias(symbol, S(body.resolution)))
-      val application = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+      val application = new TypeResolution(Term.UnitVal(), TypeResolution.Diagnostic.Source)
       application.publish(TypeShape.Applied(reference, List(TypeArgumentResolution.Type(h.typeOf(h.binder("C")).resolution))))
       (DeclaredType(reference, Map.empty, TypeSubstitution.empty, true)(N), DeclaredType(application, Map.empty, TypeSubstitution.empty, true)(N), b)
     def observe(h: Harness, tpe: DeclaredType, b: VarSymbol): Map[VarSymbol, TypeParameterInstance] =
