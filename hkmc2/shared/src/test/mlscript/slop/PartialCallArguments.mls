@@ -1,0 +1,104 @@
+:.
+
+
+// A later getter can mutate an earlier argument's local. Capture that local before
+// reading the getter, and share the captured arguments across both applications.
+:soir
+:inlineThreshold 0
+:expect [15, 16, 20, 1]
+private fun sameList(x: Any, y: Int)(z: Int): Int = x + y + z
+private fun captureSameList(n: Int) =
+  let =n
+  let reads = 0
+  module Next with
+    fun value: Int =
+      set n = 20
+      set reads += 1
+      2
+  let f = sameList(n, Next.value)
+  [f(3), f(4), n, reads]
+captureSameList(10)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @inline @private
+//│ define sameList⁰ as fun sameList¹(x, y)(z) {
+//│   let tmp;
+//│   set tmp = +⁰(x, y);
+//│   return (+⁰(tmp, z) as! Int⁰)
+//│ };
+//│ @private
+//│ define captureSameList⁰ as fun captureSameList¹(n) {
+//│   let Next, n1, reads, arg, arg1, inlinedVal, inlinedVal1, tmp, tmp1;
+//│   set n1 = n;
+//│   set reads = 0;
+//│   define Next as class Next⁰
+//│   module Next¹ {
+//│     method value⁰ = fun value¹ {
+//│       let tmp2;
+//│       set n1 = 20;
+//│       set tmp2 = +⁰(reads, 1);
+//│       set reads = tmp2;
+//│       return 2
+//│     }
+//│   };
+//│   set arg = n1;
+//│   set arg1 = Next¹.value¹;
+//│   set tmp1 = +⁰(arg, arg1);
+//│   set inlinedVal = (+⁰(tmp1, 3) as! Int⁰);
+//│   set tmp = +⁰(arg, arg1);
+//│   set inlinedVal1 = (+⁰(tmp, 4) as! Int⁰);
+//│   return [inlinedVal, inlinedVal1, n1, reads]
+//│ };
+//│ return captureSameList¹(10)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [15, 16, 20, 1]
+
+
+// The same ordering applies across multiple supplied lists of a curried call.
+:soir
+:inlineThreshold 0
+:expect [15, 16, 20, 1]
+private fun separateLists(x: Any)(y: Int)(z: Int): Int = x + y + z
+private fun captureSeparateLists(n: Int) =
+  let =n
+  let reads = 0
+  module Next with
+    fun value: Int =
+      set n = 20
+      set reads += 1
+      2
+  let f = separateLists(n)(Next.value)
+  [f(3), f(4), n, reads]
+captureSeparateLists(10)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @inline @private
+//│ define separateLists⁰ as fun separateLists¹(x)(y)(z) {
+//│   let tmp;
+//│   set tmp = +⁰(x, y);
+//│   return (+⁰(tmp, z) as! Int⁰)
+//│ };
+//│ @private
+//│ define captureSeparateLists⁰ as fun captureSeparateLists¹(n) {
+//│   let Next, n1, reads, arg, arg1, inlinedVal, inlinedVal1, tmp, tmp1;
+//│   set n1 = n;
+//│   set reads = 0;
+//│   define Next as class Next²
+//│   module Next³ {
+//│     method value² = fun value³ {
+//│       let tmp2;
+//│       set n1 = 20;
+//│       set tmp2 = +⁰(reads, 1);
+//│       set reads = tmp2;
+//│       return 2
+//│     }
+//│   };
+//│   set arg = n1;
+//│   set arg1 = Next³.value³;
+//│   set tmp1 = +⁰(arg, arg1);
+//│   set inlinedVal = (+⁰(tmp1, 3) as! Int⁰);
+//│   set tmp = +⁰(arg, arg1);
+//│   set inlinedVal1 = (+⁰(tmp, 4) as! Int⁰);
+//│   return [inlinedVal, inlinedVal1, n1, reads]
+//│ };
+//│ return captureSeparateLists¹(10)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [15, 16, 20, 1]
