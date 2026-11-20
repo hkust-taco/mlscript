@@ -1,0 +1,110 @@
+:.
+:js
+:ftc
+
+
+// A foreign function value retains the receiver of a bare JS call, including in strict mode.
+:expect 42
+val native: Int -> Int = globalThis.eval("(function (x) { 'use strict'; if (this !== undefined) throw new Error('unexpected receiver'); return x + 1; })")
+native(41)
+//│ = 42
+//│ native = fun
+
+:expect 42
+fun invoke(f: Int -> Int, value: Int): Int = f(value)
+invoke(native, 41)
+//│ = 42
+
+// The same call sites accept generated closures and values fetched from tuples or records.
+:expect [42, 42, 42]
+fun increment(x: Int): Int = x + 1
+let plainNative = globalThis.eval("(x => x + 1)")
+let functions = [increment, plainNative]
+let i = 0
+[invoke(increment, 41), functions.(i)(41), functions.(i + 1)(41)]
+//│ = [42, 42, 42]
+//│ functions = [class anonymous, fun]
+//│ i = 0
+//│ plainNative = fun
+
+:expect [42, 42]
+let arrow = globalThis.eval("(x => x + 1)")
+let callbacks = {local: increment, native: arrow}
+[callbacks.local(41), callbacks.native(41)]
+//│ = [42, 42]
+//│ arrow = fun
+//│ callbacks = {local: class anonymous, native: fun}
+
+// Dynamic native methods receive the object they were selected from.
+:expect 42
+let foreign = globalThis.eval("({base: 40, add(x) { return this.base + x; }})")
+foreign.("add")(2)
+//│ = 42
+//│ foreign = {base: 40, add: fun add}
+
+// Selecting the receiver through a foreign getter evaluates that getter once.
+:expect [42, 1]
+let accessed = globalThis.eval("({reads: 0, get target() { this.reads++; return {base: 40, add(x) { return this.base + x; }}; }})")
+[accessed.("target").("add")(2), accessed.("reads")]
+//│ = [42, 1]
+//│ accessed = {reads: 1, target: [Getter]}
+
+// A method value captures its receiver when read, before the receiver variable changes.
+:expect [42, 52]
+class Counter(val base: Int) with
+  fun add(value: Int): Int = base + value
+let counter = new Counter(40)
+let bound = counter.add
+set counter = new Counter(50)
+[bound(2), counter.add(2)]
+//│ = [42, 52]
+//│ bound = class anonymous
+//│ counter = Counter(50)
+
+// A getter returning a native function is evaluated as a value, not eta-expanded as a method.
+:expect 42
+class Callback with
+  fun get: Int -> Int = arrow
+let callback = new Callback
+callback.get(41)
+//│ = 42
+//│ callback = Callback
+
+// Forward omitted optional slots and spread arguments without shifting them past thisArg.
+:checkIR
+:expect [[1, null, [], 2], [1, 2, [3, 4], 5]]
+fun collect(x, y?, ...xs, last) = [x, y, xs, last]
+let collectValue = collect
+[collectValue(1, 2), collectValue(1, 2, 3, 4, 5)]
+//│ = [[1, null, [], 2], [1, 2, [3, 4], 5]]
+//│ collectValue = class anonymous
+
+:expect ["undefined", "undefined", "null", "abc"]
+declare fun encodeURI(value?)
+let encode = encodeURI
+[encode(), encode(unsafe.undefined), encode(null), encode("abc")]
+//│ = ["undefined", "undefined", "null", "abc"]
+//│ encode = class anonymous
+
+// New resolution distinguishes a function from the class with the same binding name.
+:checkIR
+:expect [42, 17]
+class Both with
+  val value = 17
+fun Both(first: Int, second: Int): Int = first + second
+let both = Both
+[both(40, 2), (new Both).value]
+//│ = [42, 17]
+//│ both = class anonymous
+
+// Methods declared by an external class use foreign result normalization even without a local declare modifier.
+:noOpt
+:expect [(), ()]
+declare class ForeignMethods with
+  fun missing(): Any
+val foreignMethods: ForeignMethods = globalThis.eval("({missing() {}})")
+let missing = foreignMethods.missing
+[foreignMethods.missing(), missing()]
+//│ = [(), ()]
+//│ foreignMethods = {missing: fun missing}
+//│ missing = class anonymous
