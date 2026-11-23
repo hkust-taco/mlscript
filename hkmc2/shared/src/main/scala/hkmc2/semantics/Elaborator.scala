@@ -2605,8 +2605,8 @@ extends Importer:
       if member.trees.forall:
           case td: Tree.TypeDef => td.symbol.defn.nonEmpty
           case _: Tree.TermDef => member.asTrm.flatMap(_.defn).exists: defn =>
-            // A separate signature is elaborated before the implementation;
-            // listeners must observe the final symbol and body together.
+            // Listeners must observe the final symbol and body together. Until the definition is elaborated, the
+            // symbol can hold the bodiless `TermDefinition` of a duplicate declaration, which is elaborated on its own.
             member.trmImplTree.isEmpty || defn.body.nonEmpty
       then member.complete()
     val fieldInterpretation = resultInterp.elements
@@ -2680,7 +2680,21 @@ extends Importer:
             msg"The signature of '$name' must be written before its definition" -> sig.toLoc
             :: msg"defined here" -> impl.toLoc
             :: Nil
+        case (S(sig), S(impl)) if impl.annotatedResultType.isDefined => raise:
+          ErrorReport:
+            msg"The definition of '$name' cannot annotate its result type, as it has a separate signature"
+              -> impl.annotatedResultType.flatMap(_.toLoc)
+            :: msg"signature here" -> sig.toLoc
+            :: Nil
         case _ => ()
+    
+    /** Whether `td` is a separate signature that its definition elaborates, or that the pre-pass rejects for
+      * following the definition.
+      */
+    def elaboratedByDefn(td: TermDef): Bool = td.name match
+      case R(id) => members.get(id.name).exists: sym =>
+        sym.trmImplTree.isDefined && sym.trmSigTree.exists(_ eq td)
+      case L(_) => false
     
     // TODO extract this into a separate method
     // * @param funs:
@@ -2708,6 +2722,11 @@ extends Importer:
       case Nil =>
         reportUnusedAnnotations
         (mkBlk(acc, N, hasResult, mutableRecord), ctx)
+      // * Skipped with its annotations (see `elaboratedByDefn`): elaborating it here would give the member a
+      // * second `TermDefinition`.
+      case PossiblyAnnotated(_, td: TermDef) :: sts if elaboratedByDefn(td) =>
+        reportUnusedAnnotations
+        go(sts, Nil, acc)(N)
       // * Constructor blocks support no annotations: they are desugared into sibling classes
       // * (in `BlockImpl.desugStmts`), which ignores their annotations.
       case Constructor(Block(ctors)) :: sts =>
@@ -2880,10 +2899,45 @@ extends Importer:
         td.name match
           case R(id) =>
             val sym = members.getOrElse(id.name, die)
-            // * The pre-pass rejects a signature written after its definition. Elaborating it would set the member's
-            // * `tsym` to the signature's term symbol, which has no body.
-            if sym.trmSigFollowsImpl && sym.trmSigTree.exists(_ eq td) then
-              return go(sts, Nil, acc)(N)
+            // * The separate signature this definition elaborates, with its statement's location and annotations, read
+            // * from the block because `definedSymbols` drops annotations.
+            val externalSig = sym.trmSigTree match
+              case S(sig) if !sym.trmSigFollowsImpl && sym.trmImplTree.exists(_ eq td) =>
+                val (sigLoc, sigAnnotationTrees) = blk.desugStmts.iterator.collectFirst:
+                  case stmt @ PossiblyAnnotated(anns, t) if t eq sig => (stmt.toLoc, anns)
+                .getOrElse(die)
+                S((sig, sigLoc, sigAnnotationTrees))
+              case _ => N
+            // * Annotations written on either side apply to the definition, except that one only meaningful on an
+            // * implementation must be written on the definition, a `declare`d signature cannot have a definition,
+            // * and both sides must have the same visibility.
+            val defnAnnotations = externalSig match
+              case N => annotations
+              case S((_, sigLoc, sigAnnotationTrees)) =>
+                val sigAnnotations = sigAnnotationTrees.flatMap(annot)
+                sigAnnotations.foreach:
+                  case a @ Annot.ImplementationOnly(_) => raise:
+                    ErrorReport:
+                      msg"This annotation must be written on the definition of '${id.name}', not on its signature"
+                        -> a.toLoc
+                      :: msg"definition here" -> statementLoc
+                      :: Nil
+                  case a @ Annot.Modifier(Keyword.`declare`) => raise:
+                    ErrorReport:
+                      msg"A 'declare'd signature cannot have a definition" -> a.toLoc
+                      :: msg"definition here" -> statementLoc
+                      :: Nil
+                  case _ => ()
+                if Visibility.of(sigAnnotations) isnt Visibility.of(annotations) then raise:
+                  ErrorReport:
+                    msg"The signature and the definition of '${id.name}' must have the same visibility" -> N
+                    :: msg"signature here" -> sigLoc
+                    :: msg"definition here" -> statementLoc
+                    :: Nil
+                annotations ++ sigAnnotations.filter:
+                  case Annot.ImplementationOnly(_)
+                    | Annot.Modifier(Keyword.`declare` | Keyword.`private` | Keyword.`public`) => false
+                  case a => !annotations.contains(a)
             val owner =
               // * Instance declarations are not meant to be exported as externally-available members,
               // * even when declared within some class or module.
@@ -2932,15 +2986,17 @@ extends Importer:
                 newCtx = newCtx2
                 res
               
-              // * Elaborate signature
-              val externalSig = if sym.trmSigFollowsImpl then N else sym.trmSigTree
-              val st = td.annotatedResultType.orElse(externalSig.flatMap(_.annotatedResultType)) // FIXME: may elaborate external sig twice!!
+              // * Elaborate signature. A separate signature cannot see the definition's value parameters: in
+              // * `fun f: C -> C` with `fun f(C) = ...`, `C` is the type.
+              val (st, sigCtx) = td.annotatedResultType match
+                case S(st) => (S(st), newCtx)
+                case N => (externalSig.flatMap((sig, _, _) => sig.annotatedResultType), newCtx1)
               val s = st.map:
                 // unwrap possible module modifier
                 // e.g, `fun f: module M`
                 //              ^^^^^^
-                case TypeDef(Mod, st, N) => term(st, Tpe)(using newCtx)
-                case st => term(st, Tpe)(using newCtx)
+                case TypeDef(Mod, st, N) => term(st, Tpe)(using sigCtx)
+                case st => term(st, Tpe)(using sigCtx)
               
               if td.annotatedResultType.isEmpty then
                 s.foreach: sign =>
@@ -2953,8 +3009,8 @@ extends Importer:
                 case _ if ctx.mode is Mode.Light => S(Term.Missing)
                 case S(rhs) => S:
                   val nonLocalRetHandler = TempSymbol(N, initErasedType = N, s"nonLocalRetHandler$$${id.name}")
-                  val hasGeneratorAnnotation = annotations.exists(_.isInstanceOf[Annot.Generator])
-                  val hasAsyncAnnotation = annotations.exists(_.isInstanceOf[Annot.Async])
+                  val hasGeneratorAnnotation = defnAnnotations.exists(_.isInstanceOf[Annot.Generator])
+                  val hasAsyncAnnotation = defnAnnotations.exists(_.isInstanceOf[Annot.Async])
                   if pss.isEmpty && hasGeneratorAnnotation then
                     raise(ErrorReport(msg"Generators are not supported on functions without a parameter list" -> statementLoc :: Nil))
                   newCtx.nest(OuterCtx.Function(nonLocalRetHandler, S(tsym))(pss.nonEmpty && hasGeneratorAnnotation, hasAsyncAnnotation)).givenIn: newCtx ?=>
@@ -2980,7 +3036,7 @@ extends Importer:
               // Retain the source signature's meaning; Erasure decides which arrows are physical parameters.
               if newResolution then s.foreach(registerSignature)
               val tdf = TermDefinition(k, sym, tsym, pss, tps, s, body, 
-                TermDefFlags.empty.copy(isMethod = isMethod, hasResultAnnotation = td.annotatedResultType.isDefined), mfn, annotations, N)(
+                TermDefFlags.empty.copy(isMethod = isMethod, hasResultAnnotation = td.annotatedResultType.isDefined), mfn, defnAnnotations, N)(
                 statementLoc, definitionHeaderLoc(td, annotations, statementLoc), S(bindingScope))
               sym.tsym = S(tsym)
               tsym.defn = S(tdf)
@@ -2988,7 +3044,7 @@ extends Importer:
               
               tdf
             
-            val tdf = debugElaboration(annotations):
+            val tdf = debugElaboration(defnAnnotations):
               ctx.nest(OuterCtx.NonReturnContext(S(tsym))).givenIn(elaborateDefinition)
             
             completeIfReady(sym)

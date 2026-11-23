@@ -78,3 +78,112 @@ class K with
 //│ = 1
 
 
+// The definition elaborates its separate signature once, without the definition's value parameters in scope.
+:e
+fun notFound: Foo -> Int
+fun notFound(x) = x
+//│ ╔══[COMPILATION ERROR] Name not found: Foo
+//│ ║  l.+1: 	fun notFound: Foo -> Int
+//│ ╙──      	              ^^^
+
+class D()
+fun paramNamedLikeClass: D -> D
+fun paramNamedLikeClass(D) = D
+paramNamedLikeClass(D())
+//│ = D()
+
+// A use between the signature and the definition calls the definition.
+fun usedBetween: Int -> Int
+val usedBetweenResult = usedBetween(1)
+fun usedBetween(x) = x + 1
+usedBetweenResult
+//│ = 2
+//│ usedBetweenResult = 2
+
+private fun bothPrivate: Int -> Int
+private fun bothPrivate(x) = x
+bothPrivate(1)
+//│ = 1
+
+:e
+private fun privateSignature: Int -> Int
+fun privateSignature(x) = x
+//│ ╔══[COMPILATION ERROR] The signature and the definition of 'privateSignature' must have the same visibility
+//│ ╟── signature here
+//│ ║  l.+1: 	private fun privateSignature: Int -> Int
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── definition here
+//│ ║  l.+2: 	fun privateSignature(x) = x
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+fun privateDefinition: Int -> Int
+private fun privateDefinition(x) = x
+//│ ╔══[COMPILATION ERROR] The signature and the definition of 'privateDefinition' must have the same visibility
+//│ ╟── signature here
+//│ ║  l.+1: 	fun privateDefinition: Int -> Int
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── definition here
+//│ ║  l.+2: 	private fun privateDefinition(x) = x
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+declare fun declared: Int -> Int
+fun declared(x) = x
+//│ ╔══[COMPILATION ERROR] A 'declare'd signature cannot have a definition
+//│ ║  l.+1: 	declare fun declared: Int -> Int
+//│ ║        	^^^^^^^
+//│ ╟── definition here
+//│ ║  l.+2: 	fun declared(x) = x
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
+
+:e
+fun annotatedResult: Int -> Int
+fun annotatedResult(x): Int = x
+//│ ╔══[COMPILATION ERROR] The definition of 'annotatedResult' cannot annotate its result type, as it has a separate signature
+//│ ║  l.+2: 	fun annotatedResult(x): Int = x
+//│ ║        	                        ^^^
+//│ ╟── signature here
+//│ ║  l.+1: 	fun annotatedResult: Int -> Int
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+open annotations.{ * }
+
+// An annotation that only applies to an implementation belongs on the definition.
+:e
+@tailrec fun tailrecSignature: Int -> Int
+fun tailrecSignature(x) = x
+//│ ╔══[COMPILATION ERROR] This annotation must be written on the definition of 'tailrecSignature', not on its signature
+//│ ║  l.+1: 	@tailrec fun tailrecSignature: Int -> Int
+//│ ║        	^^^^^^^^
+//│ ╟── definition here
+//│ ║  l.+2: 	fun tailrecSignature(x) = x
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+fun tailrecDefinition: Int -> Int
+@tailrec fun tailrecDefinition(x) = tailrecDefinition(x) + 1
+//│ ╔══[COMPILATION ERROR] This function is marked @tailrec but is not tail recursive.
+//│ ║  l.+2: 	@tailrec fun tailrecDefinition(x) = tailrecDefinition(x) + 1
+//│ ║        	             ^^^^^^^^^^^^^^^^^
+//│ ╟── It could self-recurse through this call, which is not a tail call.
+//│ ║  l.+2: 	@tailrec fun tailrecDefinition(x) = tailrecDefinition(x) + 1
+//│ ╙──      	                                    ^^^^^^^^^^^^^^^^^^^^
+
+
+// A second declaration is reported, and the member still gets its definition.
+:e
+fun twice: Int -> Int
+fun twice: Int -> Int
+fun twice(x) = x
+twice(1)
+//│ ╔══[COMPILATION ERROR] Multiple declarations of symbol 'twice'
+//│ ╟── declared here
+//│ ║  l.+1: 	fun twice: Int -> Int
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── declared here
+//│ ║  l.+2: 	fun twice: Int -> Int
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
+//│ = 1
+
+

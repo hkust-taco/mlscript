@@ -322,10 +322,13 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
     case _ =>
       (error(msg"Cannot quote ${code.toString}" -> code.toLoc :: Nil), Bot, Bot)
 
-  private def typeFunDef(sym: Symbol, lam: Term, sig: Opt[Term])(using ctx: InvalCtx, cctx: CCtx, scope: Scope) = lam match
-    case Term.Lam(params, body) => sig match
-      case S(sig) =>
-        val sigTy = typeType(sig)(using ctx)
+  /** Types the definition of `sym`, checking `lam` against `sigTy` if given and inferring its type otherwise.
+    * `sigTy` is by-name, so that an unsupported shape of `lam` reports only the shape error; a separate signature is
+    * already typed at the start of its block.
+    */
+  private def typeFunDef(sym: Symbol, lam: Term, sigTy: => Opt[GeneralType])(using ctx: InvalCtx, cctx: CCtx, scope: Scope) = lam match
+    case Term.Lam(params, body) => sigTy match
+      case S(sigTy) =>
         ctx += sym -> sigTy
         ascribe(lam, sigTy)
         ()
@@ -663,6 +666,16 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
               case N => (error(msg"Variable not found: ${sym.nme}" -> t.toLoc :: Nil), Bot)
       case Blk(stats, res) =>
         val effBuff = ListBuffer.empty[Type]
+        // Separate signatures are typed before the block's statements, so that a definition can call a function defined
+        // later (e.g. in mutual recursion). A definition's `sign` is its separate signature unless
+        // `hasResultAnnotation`.
+        def separateSignature(td: TermDefinition): Opt[Term] = td match
+          case TermDefinition(k = Fun, sign = S(sig), body = S(_)) if !td.flags.hasResultAnnotation => S(sig)
+          case _ => N
+        /** The type that `typeFunDef` checks `td`'s body against. */
+        def signatureType(td: TermDefinition): Opt[GeneralType] = separateSignature(td) match
+          case S(_) => ctx.get(td.sym)
+          case N => td.sign.map(typeType)
         def goStats(stats: Ls[Statement]): Unit = stats match
           case Nil => ()
           case (term: Term) :: stats =>
@@ -674,14 +687,12 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
             effBuff += eff
             ctx += sym -> rhsTy
             goStats(stats)
-          case (td @ TermDefinition(k = Fun, params = ps :: Nil, sign = sig, body = S(body))) :: stats =>
-            typeFunDef(td.sym, Term.Lam(ps, body), sig)
+          case (td @ TermDefinition(k = Fun, params = ps :: Nil, body = S(body))) :: stats =>
+            typeFunDef(td.sym, Term.Lam(ps, body), signatureType(td))
             goStats(stats)
-          case (td @ TermDefinition(k = Fun, params = Nil, sign = sig, body = S(body))) :: stats =>
-            typeFunDef(td.sym, body, sig)  // * may be a case expressions
+          case (td @ TermDefinition(k = Fun, params = Nil, body = S(body))) :: stats =>
+            typeFunDef(td.sym, body, signatureType(td))  // * may be a case expressions
             goStats(stats)
-          case (td1 @ TermDefinition(k = Fun, sign = S(sig), body = None)) :: (td2 @ TermDefinition(k = Fun, body = S(body))) :: stats
-            if td1.sym === td2.sym => goStats(td2 :: stats) // * avoid type check signatures twice
           case (td @ TermDefinition(k = Fun, sign = S(sig), body = None)) :: stats =>
             ctx += td.sym -> typeType(sig)
             goStats(stats)
@@ -698,6 +709,9 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
             goStats(stats) // TODO:
           case stat :: _ =>
             TODO(stat)
+        stats.foreach:
+          case td: TermDefinition => separateSignature(td).foreach(sig => ctx += td.sym -> typeType(sig))
+          case _ => ()
         goStats(stats)
         val (ty, eff) = typeCheck(res)
         (ty, effBuff.foldLeft(eff)((res, e) => res | e))

@@ -101,6 +101,17 @@ object Annot:
   def declareModifierOf(annotations: Ls[Annot]): Opt[Annot.Modifier] = annotations.collectFirst:
     case mod @ Annot.Modifier(Keyword.`declare`) => mod
   
+  /** Annotations that only apply to a function with a body, with their source spelling. */
+  object ImplementationOnly:
+    def unapply(annot: Annot): Opt[Str] = annot match
+      case TailRec() => S("@tailrec")
+      case Inline() => S("@inline")
+      case NoInline() => S("@noInline")
+      case Generator() => S("@generator")
+      case Async() => S("@async")
+      case RaiseEffects() => S("@raiseEffects")
+      case _ => N
+  
 end Annot
 
 type AnySelTerm = AnySel & Resolvable
