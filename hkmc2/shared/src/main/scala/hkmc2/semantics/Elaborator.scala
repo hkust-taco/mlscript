@@ -2690,9 +2690,9 @@ extends Importer:
                   :: msg"Only a signature without parameter lists (`fun f: T`) can be written apart from a definition"
                     -> N
                   :: Nil
-        (sym.trmSigTree, sym.trmImplTree) match
-        // * A late signature is ignored, so it gets only the error above.
-        case (S(sig), S(impl)) if !sym.trmDeclsAfterImpl.exists(_ is sig) =>
+        sym.trmSeparateSigAndImpl match
+        // * A late signature has no pair, so it gets only the error above.
+        case S((sig = sig, impl = impl)) =>
           if impl.annotatedResultType.isDefined then raise:
             ErrorReport:
               msg"The definition of '$name' cannot annotate its result type, as it has a separate signature"
@@ -2726,7 +2726,7 @@ extends Importer:
       */
     def elaboratedByDefn(td: TermDef): Bool = td.name match
       case R(id) => members.get(id.name).exists: sym =>
-        sym.trmDeclsAfterImpl.exists(_ is td) || sym.trmImplTree.isDefined && sym.trmSigTree.exists(_ is td)
+        sym.trmDeclsAfterImpl.exists(_ is td) || sym.trmSeparateSigAndImpl.exists(_.sig is td)
       case L(_) => false
     
     // TODO extract this into a separate method
@@ -2938,8 +2938,8 @@ extends Importer:
             val sym = members.getOrElse(id.name, die)
             // * The separate signature this definition elaborates, with its statement's location and annotations, read
             // * from the block because `definedSymbols` drops annotations.
-            val externalSig = sym.trmSigTree match
-              case S(sig) if !sym.trmDeclsAfterImpl.exists(_ is sig) && sym.trmImplTree.exists(_ is td) =>
+            val externalSig = sym.trmSeparateSigAndImpl match
+              case S((sig = sig, impl = impl)) if impl is td =>
                 val (sigLoc, sigAnnotationTrees) = blk.desugStmts.iterator.collectFirst:
                   case stmt @ PossiblyAnnotated(anns, t) if t eq sig => (stmt.toLoc, anns)
                 .getOrElse(die)

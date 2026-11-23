@@ -428,6 +428,11 @@ class BlockMemberSymbol(val nme: Str, val trees: Ls[TypeOrTermDef], val nameIsMe
         case t: Tree.TermDef if t.rhs.isEmpty => t
       .toList
     case N => Nil
+  /** `trmSigTree` and `trmImplTree`, when both exist and the signature is written first: the pair whose definition
+    * elaborates the signature. */
+  def trmSeparateSigAndImpl: Opt[(sig: Tree.TermDef, impl: Tree.TermDef)] = (trmSigTree, trmImplTree) match
+    case (S(sig), S(impl)) if !trmDeclsAfterImpl.exists(_ is sig) => S((sig = sig, impl = impl))
+    case _ => N
   
   def isParameterizedMethod: Bool = trmTree.exists(_.isParameterizedMethod)
   
