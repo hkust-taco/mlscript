@@ -645,7 +645,8 @@ object Normalization:
     case (_: ClassLike, Lit(_)) => !compareCasePattern(rhs, lhs)
     case (Lit(_), Tuple(_, _)) | (Tuple(_, _), Lit(_)) => true
     case (Record(_), Lit(_)) | (Lit(_), Record(_)) => true
-    case (Record(_), Tuple(_, _)) | (Tuple(_, _), Record(_)) => true
+    // A collection can satisfy a tuple's length test and expose the fields of a record pattern.
+    case (Record(_), Tuple(_, _)) | (Tuple(_, _), Record(_)) => false
     // Under the single-inheritance restriction, two classes where neither is a
     // subclass of the other are provably disjoint. When we add matchable
     // class-like things with multiple inheritance (e.g., interfaces), this check
