@@ -783,8 +783,8 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
         val spreadSubScrutinee = TempSymbol(N, initErasedType = N, "middleElements")
         val makeConsequent1: MakeConsequent = (outerOutput, outerBindings) =>
           makeMatchSplit(spreadSubScrutinee.toScrut, spread, false)(
-            (spreadOutput, spreadBindings) => makeConsequent0(
-              spreadOutput, // TODO: Combine `outerOutput` and `spreadOutput`
+            (_spreadOutput, spreadBindings) => makeConsequent0(
+              outerOutput,
               outerBindings ++ spreadBindings),
             Split.End)
         val (leadingSubScrutinees, makeConsequent2) = leading.folded(makeConsequent1):

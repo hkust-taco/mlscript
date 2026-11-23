@@ -98,3 +98,9 @@ fun hack(tupleSlice) = if tupleSlice is
 :expect 4
 hack([1, 2, 3, 4])
 //│ = 4
+
+// The outer alias binds the collection being matched, even when slicing it makes a fresh value.
+:expect [true, [2, 3]]
+private fun parts(xs) = if xs is [_, ..middle, _] as whole then [whole === xs, middle]
+parts([1, 2, 3, 4])
+//│ = [true, [2, 3]]
