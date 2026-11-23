@@ -187,3 +187,78 @@ twice(1)
 //│ = 1
 
 
+// The signature and the definition must be of the same kind.
+:e
+val valSignature: Int
+fun valSignature = 1
+//│ ╔══[COMPILATION ERROR] The signature and the definition of 'valSignature' must be of the same kind
+//│ ╟── Value signature here
+//│ ║  l.+1: 	val valSignature: Int
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Function definition here
+//│ ║  l.+2: 	fun valSignature = 1
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^
+
+:e
+fun funSignature: Int
+val funSignature = 1
+//│ ╔══[COMPILATION ERROR] The signature and the definition of 'funSignature' must be of the same kind
+//│ ╟── Function signature here
+//│ ║  l.+1: 	fun funSignature: Int
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Value definition here
+//│ ║  l.+2: 	val funSignature = 1
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^
+//│ funSignature = 1
+
+val bothVal: Int
+val bothVal = 1
+bothVal
+//│ = 1
+//│ bothVal = 1
+
+// Type parameters written only on the signature are the definition's.
+fun adopted[A]: A -> A
+fun adopted(x) = x
+adopted(1)
+//│ = 1
+
+fun sameTypeParams[A]: A -> A
+fun sameTypeParams[A](x) = x
+sameTypeParams(1)
+//│ = 1
+
+// After a type parameter mismatch, the signature is ignored, so its names cause no further errors.
+:e
+fun differentTypeParams[A]: A -> A
+fun differentTypeParams[B](x) = x
+//│ ╔══[COMPILATION ERROR] The signature and the definition of 'differentTypeParams' must have the same type parameters
+//│ ╟── signature's type parameters
+//│ ║  l.+1: 	fun differentTypeParams[A]: A -> A
+//│ ║        	                        ^
+//│ ╟── definition's type parameters
+//│ ║  l.+2: 	fun differentTypeParams[B](x) = x
+//│ ╙──      	                        ^
+
+:e
+fun moreTypeParams[A]: A -> A
+fun moreTypeParams[A, B](x) = x
+//│ ╔══[COMPILATION ERROR] The signature and the definition of 'moreTypeParams' must have the same type parameters
+//│ ╟── signature's type parameters
+//│ ║  l.+1: 	fun moreTypeParams[A]: A -> A
+//│ ║        	                   ^
+//│ ╟── definition's type parameters
+//│ ║  l.+2: 	fun moreTypeParams[A, B](x) = x
+//│ ╙──      	                   ^^^^
+
+:e
+fun definitionTypeParams: A -> A
+fun definitionTypeParams[A](x) = x
+//│ ╔══[COMPILATION ERROR] The type parameters of 'definitionTypeParams' must be written on its signature
+//│ ║  l.+2: 	fun definitionTypeParams[A](x) = x
+//│ ║        	                         ^
+//│ ╟── signature here
+//│ ║  l.+1: 	fun definitionTypeParams: A -> A
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
