@@ -2093,7 +2093,9 @@ class NewResolver:
           listenResult(body)(value => inferTypeArguments(result.instantiate(rctx.instances), value, Nil, S(body)))
 
   def checkAscription(body: Term, sign: Term)(using ResolutionContext): Unit =
-    val expected = declaredType(typeResolution(sign), Map.empty)
+    val resolution = typeResolution(sign)
+    sign.typeInterpretation = S(resolution)
+    val expected = declaredType(resolution, Map.empty)
     listenTerm(body): shape =>
       inferTypeArguments(expected.instantiate(rctx.instances), shape, Nil, S(body))
 

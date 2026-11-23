@@ -51,7 +51,7 @@ updateInitialized(40)
 //│   return (box(arg$MutableInputBox$0$, value, tmp, current) as! Int⁰)
 //│ };
 //│ @affine(1) @private
-//│ define updateInitialized$box_MutableInputBox as fun updateInitialized$box_MutableInputBox¹(MutableInputBox_value)(fv_arg$MutableInputBox$0$, fv_value, fv_tmp, fv_current) {
+//│ define updateInitialized$box_MutableInputBox as fun updateInitialized$box_MutableInputBox⁰(MutableInputBox_value)(fv_arg$MutableInputBox$0$, fv_value, fv_tmp, fv_current) {
 //│   set fv_arg$MutableInputBox$0$ = MutableInputBox_value;
 //│   set fv_value = fv_arg$MutableInputBox$0$;
 //│   set fv_tmp = +⁰(fv_current, fv_value);
@@ -59,7 +59,7 @@ updateInitialized(40)
 //│   return fv_current
 //│ };
 //│ @affine(1) @private
-//│ define updateInitialized$box_MutableInputBox1 as fun updateInitialized$box_MutableInputBox⁰(MutableInputBox_value)(fv_arg$MutableInputBox$0$, fv_value, fv_tmp, fv_current) {
+//│ define updateInitialized$box_MutableInputBox1 as fun updateInitialized$box_MutableInputBox¹(MutableInputBox_value)(fv_arg$MutableInputBox$0$, fv_value, fv_tmp, fv_current) {
 //│   set fv_arg$MutableInputBox$0$ = MutableInputBox_value;
 //│   set fv_value = fv_arg$MutableInputBox$0$;
 //│   set fv_tmp = +⁰(fv_current, fv_value);

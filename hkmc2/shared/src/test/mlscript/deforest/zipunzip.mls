@@ -19,30 +19,30 @@ fun enumFromTo(a, b) = if a < b then a :: enumFromTo(a + 1, b) else Nil
 fun testUnzipZip(n) = unzip(zip(id(enumFromTo(1, n)), id(enumFromTo(2, n + 3))))
 testUnzipZip(3)
 //│ deforest > >>> fusing >>>
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls_unzip⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls_unzip⁰
-//│ deforest > Cons⁰(tmp⁰, tmp¹) ->
-//│ deforest > 	match: ls_unzip⁰
-//│ deforest > 	fields: ls_unzip⁰.h⁰
-//│ deforest > 	fields: ls_unzip⁰.t⁰
 //│ deforest > Pair⁰(x⁰, y⁰) ->
 //│ deforest > 	match: arg$Cons$0$⁰
 //│ deforest > 	fields: arg$Cons$0$⁰.a⁰
 //│ deforest > 	fields: arg$Cons$0$⁰.b⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls_unzip⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls_unzip⁰
 //│ deforest > Cons⁰(tmp⁰, tmp¹) ->
 //│ deforest > 	match: ls_unzip⁰
 //│ deforest > 	fields: ls_unzip⁰.h⁰
 //│ deforest > 	fields: ls_unzip⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls_unzip⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls_unzip⁰
 //│ deforest > Pair⁰(x⁰, y⁰) ->
 //│ deforest > 	match: arg$Cons$0$⁰
 //│ deforest > 	fields: arg$Cons$0$⁰.a⁰
 //│ deforest > 	fields: arg$Cons$0$⁰.b⁰
+//│ deforest > Cons⁰(tmp⁰, tmp¹) ->
+//│ deforest > 	match: ls_unzip⁰
+//│ deforest > 	fields: ls_unzip⁰.h⁰
+//│ deforest > 	fields: ls_unzip⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls_unzip⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls_unzip⁰
 //│ deforest > <<< fusing <<<
 //│ = Pair(Cons(1, Cons(2, Nil)), Cons(2, Cons(3, Nil)))
 
@@ -82,30 +82,30 @@ fun testZipMapBothUnzip(n) = if unzip(id(makeZippedList(n))) is
   )
 testZipMapBothUnzip(4)
 //│ deforest > >>> fusing >>>
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: xs_zip⁰
 //│ deforest > Cons⁰(tmp², tmp³) ->
 //│ deforest > 	match: xs_zip⁰
 //│ deforest > 	fields: xs_zip⁰.h⁰
 //│ deforest > 	fields: xs_zip⁰.t⁰
 //│ deforest > Nil⁰ ->
-//│ deforest > 	match: ys_zip⁰
+//│ deforest > 	match: xs_zip⁰
 //│ deforest > Cons⁰(tmp², tmp³) ->
 //│ deforest > 	match: ys_zip⁰
 //│ deforest > 	fields: ys_zip⁰.h⁰
 //│ deforest > 	fields: ys_zip⁰.t⁰
 //│ deforest > Nil⁰ ->
-//│ deforest > 	match: xs_zip⁰
+//│ deforest > 	match: ys_zip⁰
 //│ deforest > Cons⁰(tmp², tmp³) ->
 //│ deforest > 	match: xs_zip⁰
 //│ deforest > 	fields: xs_zip⁰.h⁰
 //│ deforest > 	fields: xs_zip⁰.t⁰
 //│ deforest > Nil⁰ ->
-//│ deforest > 	match: ys_zip⁰
+//│ deforest > 	match: xs_zip⁰
 //│ deforest > Cons⁰(tmp², tmp³) ->
 //│ deforest > 	match: ys_zip⁰
 //│ deforest > 	fields: ys_zip⁰.h⁰
 //│ deforest > 	fields: ys_zip⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ys_zip⁰
 //│ deforest > <<< fusing <<<
 //│ = Cons(
 //│   Pair(5, 25),

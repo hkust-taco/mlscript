@@ -453,6 +453,9 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
     // Constructor companions have no source body. Their physical argument lists
     // are the class's lists, and a saturated call always produces its instance.
     statements.foreach:
+      // Code generation and the InvalML typer can each erase the same elaborated tree.
+      case asc: Asc if !asc.isErased =>
+        asc.erasedType = eraseSignature(asc.ty).map(representable(_, asc.ty.toLoc, N))
       case cls: ClassLikeDef => cls.ctorSym.foreach: symbol =>
         if !symbol.isErased then symbol.initializeErasure:
           if config.language.useNewResolution then S(ErasedFuncSignature.Signature(

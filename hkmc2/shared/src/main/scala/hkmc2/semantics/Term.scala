@@ -14,7 +14,7 @@ import Elaborator.State
 import hkmc2.typing.Type
 import hkmc2.semantics.Elaborator.{Ctx, ctx}
 import hkmc2.Message.MessageContext
-import hkmc2.codegen.Erasure
+import hkmc2.codegen.{ErasedValueType, Erasure, HasDelayedErasedType}
 
 
 final case class QuantVar(sym: VarSymbol, ub: Opt[Term], lb: Opt[Term])
@@ -388,7 +388,8 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
   case New(cls: Term, args: Ls[Term], rft: Opt[ClassSymbol -> ObjBody])
     (val resSym: FlowSymbol, val typ: Opt[Type]) extends Term, ResolvableImpl
   case DynNew(cls: Term, args: Ls[Term])
-  case Asc(term: Term, ty: Term)
+  /** A source type ascription. Its erased target identifies the runtime representation of the result. */
+  case Asc(term: Term, ty: Term) extends Term, HasDelayedErasedType[ErasedValueType]
   case CompType(lhs: Term, rhs: Term, pol: Bool)
   case Neg(rhs: Term)
   case Region(name: VarSymbol, body: Term)

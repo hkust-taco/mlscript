@@ -26,42 +26,54 @@ fun lscomp1(ls) = if ls is
   else Nil
 lscomp1(zip(enumFromTo(1, 3), enumFromTo(2, 4)))
 //│ deforest > >>> fusing >>>
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: xs_zip⁰
 //│ deforest > Cons⁰(a⁰, tmp⁰) ->
 //│ deforest > 	match: xs_zip⁰
 //│ deforest > 	fields: xs_zip⁰.h⁰
 //│ deforest > 	fields: xs_zip⁰.t⁰
 //│ deforest > Nil⁰ ->
-//│ deforest > 	match: ys_zip⁰
+//│ deforest > 	match: xs_zip⁰
 //│ deforest > Cons⁰(a⁰, tmp⁰) ->
 //│ deforest > 	match: ys_zip⁰
 //│ deforest > 	fields: ys_zip⁰.h⁰
 //│ deforest > 	fields: ys_zip⁰.t⁰
 //│ deforest > Nil⁰ ->
-//│ deforest > 	match: xs_zip⁰
+//│ deforest > 	match: ys_zip⁰
 //│ deforest > Cons⁰(a⁰, tmp⁰) ->
 //│ deforest > 	match: xs_zip⁰
 //│ deforest > 	fields: xs_zip⁰.h⁰
 //│ deforest > 	fields: xs_zip⁰.t⁰
 //│ deforest > Nil⁰ ->
-//│ deforest > 	match: ys_zip⁰
+//│ deforest > 	match: xs_zip⁰
 //│ deforest > Cons⁰(a⁰, tmp⁰) ->
 //│ deforest > 	match: ys_zip⁰
 //│ deforest > 	fields: ys_zip⁰.h⁰
 //│ deforest > 	fields: ys_zip⁰.t⁰
 //│ deforest > Nil⁰ ->
-//│ deforest > 	match: xs_zip⁰
+//│ deforest > 	match: ys_zip⁰
 //│ deforest > Cons⁰(a⁰, tmp⁰) ->
 //│ deforest > 	match: xs_zip⁰
 //│ deforest > 	fields: xs_zip⁰.h⁰
 //│ deforest > 	fields: xs_zip⁰.t⁰
 //│ deforest > Nil⁰ ->
-//│ deforest > 	match: ys_zip⁰
+//│ deforest > 	match: xs_zip⁰
 //│ deforest > Cons⁰(a⁰, tmp⁰) ->
 //│ deforest > 	match: ys_zip⁰
 //│ deforest > 	fields: ys_zip⁰.h⁰
 //│ deforest > 	fields: ys_zip⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ys_zip⁰
+//│ deforest > Cons⁰(a⁰, tmp⁰) ->
+//│ deforest > 	match: xs_zip⁰
+//│ deforest > 	fields: xs_zip⁰.h⁰
+//│ deforest > 	fields: xs_zip⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: xs_zip⁰
+//│ deforest > Cons⁰(a⁰, tmp⁰) ->
+//│ deforest > 	match: ys_zip⁰
+//│ deforest > 	fields: ys_zip⁰.h⁰
+//│ deforest > 	fields: ys_zip⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ys_zip⁰
 //│ deforest > Cons⁰(tmp¹, tmp²) ->
 //│ deforest > 	match: ls⁰
 //│ deforest > 	fields: ls⁰.h⁰
@@ -74,18 +86,6 @@ lscomp1(zip(enumFromTo(1, 3), enumFromTo(2, 4)))
 //│ deforest > 	match: ls⁰
 //│ deforest > Nil⁰ ->
 //│ deforest > 	match: ls⁰
-//│ deforest > Cons⁰(a⁰, tmp⁰) ->
-//│ deforest > 	match: ys_zip⁰
-//│ deforest > 	fields: ys_zip⁰.h⁰
-//│ deforest > 	fields: ys_zip⁰.t⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ys_zip⁰
-//│ deforest > Cons⁰(a⁰, tmp⁰) ->
-//│ deforest > 	match: xs_zip⁰
-//│ deforest > 	fields: xs_zip⁰.h⁰
-//│ deforest > 	fields: xs_zip⁰.t⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: xs_zip⁰
 //│ deforest > <<< fusing <<<
 //│ = Cons(Pair(1, 3), Cons(Pair(2, 4), Cons(Pair(3, 5), Nil)))
 
@@ -104,12 +104,6 @@ fun f1(a1) = if a1 is
   else Nil
 concatMap(f1, Pair(5, 10) :: Nil)
 //│ deforest > >>> fusing >>>
-//│ deforest > Cons⁰(tmp³, Nil⁰) ->
-//│ deforest > 	match: xs⁰
-//│ deforest > 	fields: xs⁰.h⁰
-//│ deforest > 	fields: xs⁰.t⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: xs⁰
 //│ deforest > Nil⁰ ->
 //│ deforest > 	match: xs⁰
 //│ deforest > Cons⁰(tmp³, Nil⁰) ->
@@ -118,6 +112,12 @@ concatMap(f1, Pair(5, 10) :: Nil)
 //│ deforest > 	fields: xs⁰.t⁰
 //│ deforest > Nil⁰ ->
 //│ deforest > 	match: xs⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: xs⁰
+//│ deforest > Cons⁰(tmp³, Nil⁰) ->
+//│ deforest > 	match: xs⁰
+//│ deforest > 	fields: xs⁰.h⁰
+//│ deforest > 	fields: xs⁰.t⁰
 //│ deforest > Nil⁰ ->
 //│ deforest > 	match: xs⁰
 //│ deforest > <<< fusing <<<
@@ -156,6 +156,8 @@ if A is
   A then lscomp(1 :: 2 :: 3 :: Nil)
   B then Nil
 //│ deforest > >>> fusing >>>
+//│ deforest > A⁰ ->
+//│ deforest > 	match: scrut⁰
 //│ deforest > Cons⁰(1, tmp⁵) ->
 //│ deforest > 	match: ls¹
 //│ deforest > 	fields: ls¹.h⁰
@@ -170,8 +172,6 @@ if A is
 //│ deforest > 	fields: ls¹.t⁰
 //│ deforest > Nil⁰ ->
 //│ deforest > 	match: ls¹
-//│ deforest > A⁰ ->
-//│ deforest > 	match: scrut⁰
 //│ deforest > <<< fusing <<<
 //│ = Cons(2, Cons(3, Cons(4, Nil)))
 

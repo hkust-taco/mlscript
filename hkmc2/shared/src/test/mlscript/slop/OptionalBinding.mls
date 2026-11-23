@@ -166,14 +166,14 @@ data class Data(value?)
 private fun read(d: Data) = d.value is null
 [read(Data()), read(Data(unsafe.undefined)), read(Data(()))]
 //│ deforest > >>> fusing >>>
+//│ deforest > Data⁰(null) ->
+//│ deforest > 	select: value
+//│ deforest > Data⁰(undefined) ->
+//│ deforest > 	select: value
 //│ deforest > Data⁰(optionalArg⁰) ->
 //│ deforest > 	select: value
 //│ deforest > runtime⁰.Unit⁰ ->
 //│ deforest > 	match: scrut⁰
-//│ deforest > Data⁰(undefined) ->
-//│ deforest > 	select: value
-//│ deforest > Data⁰(null) ->
-//│ deforest > 	select: value
 //│ deforest > <<< fusing <<<
 //│ = [true, false, false]
 

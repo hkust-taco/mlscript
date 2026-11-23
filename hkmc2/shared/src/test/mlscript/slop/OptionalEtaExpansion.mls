@@ -30,7 +30,7 @@ private fun nested(b) = if b then firstRequired else firstOptional
 [nested(true)(10)(2), nested(false)(10)(2)]
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > nested⁰#0 @ <root>: [1, 1]
-//│ eta-expansion > firstOptional⁰#0 @ <root>: [1, 1(1 optional)]
 //│ eta-expansion > firstRequired⁰#0 @ <root>: [1, 1]
+//│ eta-expansion > firstOptional⁰#0 @ <root>: [1, 1(1 optional)]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ = [12, 12]

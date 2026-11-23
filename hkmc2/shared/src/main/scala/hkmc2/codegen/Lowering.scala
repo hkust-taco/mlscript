@@ -1163,8 +1163,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         case N => Assign(result, unit, Break(label))
     case st.Continue(label) =>
       Continue(label)
-    case st.Asc(lhs, rhs) =>
-      term(lhs, inStmtPos = inStmtPos)(k)
+    case asc: st.Asc =>
+      term(asc.term, inStmtPos = inStmtPos): r =>
+        r.ascribeTo(asc.erasedType.getOrElse(ErasedType.Unknown), asc.toLoc).fold(compError)(k)
     case st.Tup(fs) =>
       args(fs, Nil)(args => k(Tuple(mut = false, args)(trm.toLoc)))
     case Mut(st.Tup(fs)) =>

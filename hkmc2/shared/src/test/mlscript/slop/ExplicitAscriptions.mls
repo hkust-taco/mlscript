@@ -1,0 +1,68 @@
+:.
+
+:sir
+let fromObject = new Object() as Str
+val fromString: Int = "123" as Int
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ set fromObject⁰ = (new globalThis⁰.Object⁰(undefined) as! Str⁰);
+//│ define fromString⁰ as val fromString¹ = ("123" as! Int⁰);
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ fromObject = {}
+//│ fromString = "123"
+
+:sir
+fun narrow(x) = x as Str
+let fitted = "ok" as Str
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define narrow⁰ as fun narrow¹(x) { return (x as! Str⁰) }; set fitted⁰ = "ok"; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ fitted = "ok"
+
+:sir
+type Text = Str
+fun viaAlias(x) = x as Text
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define viaAlias⁰ as fun viaAlias¹(x) { return (x as! Str⁰) }; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// The inner check can fail even though the original operand fits the outer target.
+:sir
+:soir
+fun roundTrip(s: Str) = (s as Int) as Str
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define roundTrip⁰ as fun roundTrip¹(s) { return ((s as! Int⁰) as! Str⁰) }; end
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define roundTrip⁰ as fun roundTrip¹(s) { return ((s as! Int⁰) as! Str⁰) }; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// A successful Child check on the call result also establishes Base.
+:sir
+class Base
+class Child extends Base
+fun narrowCall(f: () -> Any): Child = f() as Base
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define narrowCall⁰ as fun narrowCall¹(f) {
+//│   return (f() as! Child⁰)
+//│ };
+//│ define Base⁰ as class Base¹;
+//│ define Child¹ as class Child⁰ extends Base¹ {};
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// An ascription cannot convert between unboxed numeric representations.
+:ge
+fun invalid(x: Int32) = x as Float64
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Float64'
+//│ ║  l.+1: 	fun invalid(x: Int32) = x as Float64
+//│ ╙──      	                        ^^^^^^^^^^^^
+
+// The call returns a struct. The inner check for Int must trap before the cast back to Box.
+:!js
+:wasm
+:re
+class Box()
+fun box(): Box = new Box()
+(box() as Int) as Box
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast

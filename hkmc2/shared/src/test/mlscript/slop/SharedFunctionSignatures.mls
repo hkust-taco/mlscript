@@ -32,8 +32,8 @@ private fun partial(unused: Str, value: Int): Int -> Int = add(value)
 //│ define partial⁰ as fun partial¹(unused: Str⁰, value: Int⁰)(eta$0$0: Int⁰): Int⁰ {
 //│   return add⁰(value)(eta$0$0)
 //│ };
-//│ set tmp = partial$partial¹(40)(2);
-//│ set tmp1 = partial$partial⁰(41)(2);
+//│ set tmp = partial$partial⁰(40)(2);
+//│ set tmp1 = partial$partial¹(41)(2);
 //│ return [tmp, tmp1]
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [42, 43]
@@ -127,8 +127,8 @@ private fun nested(unused: Str, value: Int): Int =
 //│   };
 //│   return inner²(value)
 //│ };
-//│ set tmp = nested$nested¹(41);
-//│ set tmp1 = nested$nested⁰(42);
+//│ set tmp = nested$nested⁰(41);
+//│ set tmp1 = nested$nested¹(42);
 //│ return [tmp, tmp1]
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [42, 43]
@@ -146,13 +146,41 @@ private fun backward(unused: Str, count: Int, value: Int): Int =
   if count == 0 then value else forward(unused, count - 1, value)
 [forward("first", 2, 42), backward("second", 3, 43)]
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp: Int⁰, tmp1: Int⁰, backward$forward, forward$backward, backward$forward1, backward$backward, forward$forward, forward$backward1;
+//│ let tmp: Int⁰, tmp1: Int⁰, forward$forward, forward$backward, backward$forward, backward$backward, forward$backward1, backward$forward1;
 //│ @private @private
-//│ define backward$forward as fun backward$forward⁰(count: Int⁰, value: Int⁰): Int⁰ {
-//│   return backward⁰(undefined, count, value)
+//│ define forward$forward as fun forward$forward⁰(count: Int⁰, value: Int⁰): Int⁰ {
+//│   return forward$backward⁰(count, value)
 //│ };
 //│ @private @private
 //│ define forward$backward as fun forward$backward⁰(count: Int⁰, value: Int⁰): Int⁰ {
+//│   let scrut: ?, tmp2: Int⁰;
+//│   set scrut = Predef⁰.equals⁰(count, 0);
+//│   match scrut
+//│     true =>
+//│       return value
+//│     else
+//│       set tmp2 = -⁰(count, 1);
+//│       return forward$forward⁰(tmp2, value)
+//│   end
+//│ };
+//│ @private @private
+//│ define backward$forward as fun backward$forward⁰(count: Int⁰, value: Int⁰): Int⁰ {
+//│   return backward$backward⁰(count, value)
+//│ };
+//│ @private @private
+//│ define backward$backward as fun backward$backward⁰(count: Int⁰, value: Int⁰): Int⁰ {
+//│   let scrut: ?, tmp2: Int⁰;
+//│   set scrut = Predef⁰.equals⁰(count, 0);
+//│   match scrut
+//│     true =>
+//│       return value
+//│     else
+//│       set tmp2 = -⁰(count, 1);
+//│       return backward$forward⁰(tmp2, value)
+//│   end
+//│ };
+//│ @private @private
+//│ define forward$backward1 as fun forward$backward¹(count: Int⁰, value: Int⁰): Int⁰ {
 //│   let scrut: ?, tmp2: Int⁰;
 //│   set scrut = Predef⁰.equals⁰(count, 0);
 //│   match scrut
@@ -165,39 +193,11 @@ private fun backward(unused: Str, count: Int, value: Int): Int =
 //│ };
 //│ @private @private
 //│ define backward$forward1 as fun backward$forward¹(count: Int⁰, value: Int⁰): Int⁰ {
-//│   return backward$backward⁰(count, value)
-//│ };
-//│ @private @private
-//│ define backward$backward as fun backward$backward⁰(count: Int⁰, value: Int⁰): Int⁰ {
-//│   let scrut: ?, tmp2: Int⁰;
-//│   set scrut = Predef⁰.equals⁰(count, 0);
-//│   match scrut
-//│     true =>
-//│       return value
-//│     else
-//│       set tmp2 = -⁰(count, 1);
-//│       return backward$forward¹(tmp2, value)
-//│   end
-//│ };
-//│ @private @private
-//│ define forward$forward as fun forward$forward⁰(count: Int⁰, value: Int⁰): Int⁰ {
-//│   return forward$backward¹(count, value)
-//│ };
-//│ @private @private
-//│ define forward$backward1 as fun forward$backward¹(count: Int⁰, value: Int⁰): Int⁰ {
-//│   let scrut: ?, tmp2: Int⁰;
-//│   set scrut = Predef⁰.equals⁰(count, 0);
-//│   match scrut
-//│     true =>
-//│       return value
-//│     else
-//│       set tmp2 = -⁰(count, 1);
-//│       return forward$forward⁰(tmp2, value)
-//│   end
+//│   return backward⁰(undefined, count, value)
 //│ };
 //│ @private
 //│ define forward¹ as fun forward⁰(unused: Str⁰, count: Int⁰, value: Int⁰): Int⁰ {
-//│   return forward$backward⁰(count, value)
+//│   return forward$backward¹(count, value)
 //│ };
 //│ @private
 //│ define backward¹ as fun backward⁰(unused: Str⁰, count: Int⁰, value: Int⁰): Int⁰ {
@@ -208,7 +208,7 @@ private fun backward(unused: Str, count: Int, value: Int): Int =
 //│       return value
 //│     else
 //│       set tmp2 = -⁰(count, 1);
-//│       return backward$forward⁰(tmp2, value)
+//│       return backward$forward¹(tmp2, value)
 //│   end
 //│ };
 //│ set tmp = forward$forward⁰(2, 42);

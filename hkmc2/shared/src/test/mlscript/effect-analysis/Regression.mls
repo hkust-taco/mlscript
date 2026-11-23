@@ -30,13 +30,13 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│ flow-analysis > function append⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > function flatten⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > function len⁰#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call +⁰@result³#0 @ <root> -> Pure
-//│ flow-analysis > call append⁰@result⁵#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call append⁰@result⁷#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call +⁰@result⁴#0 @ <root> -> Pure
+//│ flow-analysis > call append⁰@result²#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call append⁰@result⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > call flatten⁰@result¹#0 @ <root> -> UnsafeEta
 //│ flow-analysis > call flatten⁰@result⁶#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call id@result²#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call len⁰@result⁰#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call len⁰@result⁴#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call id@result⁵#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call len⁰@result³#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call len⁰@result⁷#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 //│ = 3

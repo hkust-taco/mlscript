@@ -96,18 +96,6 @@ fun cons1(a1) = if a1 is
 cons(f(0)) + cons1(f(1))
 //│ deforest > >>> fusing >>>
 //│ deforest > Nil⁰ ->
-//│ deforest > 	match: a1⁰
-//│ deforest > Cons⁰(x⁰, tmp¹) ->
-//│ deforest > 	match: a1⁰
-//│ deforest > 	fields: a1⁰.h⁰
-//│ deforest > 	fields: a1⁰.t⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: a1⁰
-//│ deforest > Cons⁰(y⁰, tmp²) ->
-//│ deforest > 	match: a1⁰
-//│ deforest > 	fields: a1⁰.h⁰
-//│ deforest > 	fields: a1⁰.t⁰
-//│ deforest > Nil⁰ ->
 //│ deforest > 	match: a⁰
 //│ deforest > Cons⁰(x⁰, tmp¹) ->
 //│ deforest > 	match: a⁰
@@ -119,6 +107,18 @@ cons(f(0)) + cons1(f(1))
 //│ deforest > 	match: a⁰
 //│ deforest > 	fields: a⁰.h⁰
 //│ deforest > 	fields: a⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: a1⁰
+//│ deforest > Cons⁰(x⁰, tmp¹) ->
+//│ deforest > 	match: a1⁰
+//│ deforest > 	fields: a1⁰.h⁰
+//│ deforest > 	fields: a1⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: a1⁰
+//│ deforest > Cons⁰(y⁰, tmp²) ->
+//│ deforest > 	match: a1⁰
+//│ deforest > 	fields: a1⁰.h⁰
+//│ deforest > 	fields: a1⁰.t⁰
 //│ deforest > <<< fusing <<<
 //│ = 2
 
@@ -167,18 +167,18 @@ fun f2(ls) = if ls is
 fun wrap(n) = to(n)
 f1(wrap(4)) + f2(wrap(5))
 //│ deforest > >>> fusing >>>
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls¹
 //│ deforest > Cons⁰(n², tmp⁴) ->
 //│ deforest > 	match: ls¹
 //│ deforest > 	fields: ls¹.h⁰
 //│ deforest > 	fields: ls¹.t⁰
 //│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls²
+//│ deforest > 	match: ls¹
 //│ deforest > Cons⁰(n², tmp⁴) ->
 //│ deforest > 	match: ls²
 //│ deforest > 	fields: ls².h⁰
 //│ deforest > 	fields: ls².t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls²
 //│ deforest > <<< fusing <<<
 //│ = 10
 
@@ -192,24 +192,24 @@ fun f2(ls, acc) = if ls is
   h :: t then f2(t, acc + h + 1)
 f1(to(4, Nil), 0) + f2(to(5, Nil), 0) + f1(to(6, Nil), 0)
 //│ deforest > >>> fusing >>>
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls³
 //│ deforest > Cons⁰(n³, acc⁰) ->
 //│ deforest > 	match: ls³
 //│ deforest > 	fields: ls³.h⁰
 //│ deforest > 	fields: ls³.t⁰
 //│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls⁴
+//│ deforest > 	match: ls³
 //│ deforest > Cons⁰(n³, acc⁰) ->
 //│ deforest > 	match: ls⁴
 //│ deforest > 	fields: ls⁴.h⁰
 //│ deforest > 	fields: ls⁴.t⁰
 //│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls³
+//│ deforest > 	match: ls⁴
 //│ deforest > Cons⁰(n³, acc⁰) ->
 //│ deforest > 	match: ls³
 //│ deforest > 	fields: ls³.h⁰
 //│ deforest > 	fields: ls³.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls³
 //│ deforest > <<< fusing <<<
 //│ = 51
 
@@ -331,12 +331,12 @@ fun rev(xs_rev, acc) = if xs_rev is
   Nil then acc
 map(incr, rev(id(mk(5)), Nil))
 //│ deforest > >>> fusing >>>
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: xs_map⁰
 //│ deforest > Cons⁰(x¹, acc¹) ->
 //│ deforest > 	match: xs_map⁰
 //│ deforest > 	fields: xs_map⁰.h⁰
 //│ deforest > 	fields: xs_map⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: xs_map⁰
 //│ deforest > <<< fusing <<<
 //│ = Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Cons(6, Nil))))))
 
@@ -420,12 +420,6 @@ fun rev(a, ys) = if ys is
   Nil then a
 count(0, rev(Nil, 1 :: 2 :: Nil))
 //│ deforest > >>> fusing >>>
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: xs⁰
-//│ deforest > Cons⁰(h¹, a⁴) ->
-//│ deforest > 	match: xs⁰
-//│ deforest > 	fields: xs⁰.h⁰
-//│ deforest > 	fields: xs⁰.t⁰
 //│ deforest > Cons⁰(1, tmp¹⁰) ->
 //│ deforest > 	match: ys⁰
 //│ deforest > 	fields: ys⁰.h⁰
@@ -436,6 +430,12 @@ count(0, rev(Nil, 1 :: 2 :: Nil))
 //│ deforest > 	fields: ys⁰.t⁰
 //│ deforest > Nil⁰ ->
 //│ deforest > 	match: ys⁰
+//│ deforest > Cons⁰(h¹, a⁴) ->
+//│ deforest > 	match: xs⁰
+//│ deforest > 	fields: xs⁰.h⁰
+//│ deforest > 	fields: xs⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: xs⁰
 //│ deforest > <<< fusing <<<
 //│ = 2
 
@@ -483,23 +483,23 @@ c(T(A, T(B, L, L), T(A, L, L)))
 //│ deforest > 	fields: x².r⁰
 //│ deforest > A⁰ ->
 //│ deforest > 	match: n⁵
-//│ deforest > T⁰(A⁰, L⁰, L⁰) ->
-//│ deforest > 	match: x²
-//│ deforest > 	fields: x².n⁴
-//│ deforest > 	fields: x².l⁰
-//│ deforest > 	fields: x².r⁰
-//│ deforest > A⁰ ->
-//│ deforest > 	match: n⁵
-//│ deforest > L⁰ ->
-//│ deforest > 	match: x²
-//│ deforest > L⁰ ->
-//│ deforest > 	match: x²
 //│ deforest > T⁰(B⁰, L⁰, L⁰) ->
 //│ deforest > 	match: x²
 //│ deforest > 	fields: x².n⁴
 //│ deforest > 	fields: x².l⁰
 //│ deforest > 	fields: x².r⁰
 //│ deforest > B⁰ ->
+//│ deforest > 	match: n⁵
+//│ deforest > L⁰ ->
+//│ deforest > 	match: x²
+//│ deforest > L⁰ ->
+//│ deforest > 	match: x²
+//│ deforest > T⁰(A⁰, L⁰, L⁰) ->
+//│ deforest > 	match: x²
+//│ deforest > 	fields: x².n⁴
+//│ deforest > 	fields: x².l⁰
+//│ deforest > 	fields: x².r⁰
+//│ deforest > A⁰ ->
 //│ deforest > 	match: n⁵
 //│ deforest > L⁰ ->
 //│ deforest > 	match: x²
@@ -863,11 +863,7 @@ f(3)
 //│ deforest > 	fields: a⁵.x⁷
 //│ deforest > <<< fusing <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f$a_A, f$a_A1, f$g, f$f, f$g1;
-//│ @private
-//│ define f$g as fun f$g⁰(a) {
-//│   return (a(undefined, undefined, undefined) as! Int⁰)
-//│ };
+//│ let f$a_A, f$a_A1, f$f, f$g, f$g1;
 //│ @private
 //│ define f$f as fun f$f⁰(x) {
 //│   let scrut, tmp;
@@ -877,22 +873,26 @@ f(3)
 //│       return 0
 //│     else
 //│       set tmp = f$a_A⁰(x);
-//│       return f$g¹(tmp)
+//│       return f$g⁰(tmp)
 //│   end
+//│ };
+//│ @private
+//│ define f$g as fun f$g⁰(a) {
+//│   return (a(undefined, undefined, undefined) as! Int⁰)
 //│ };
 //│ @private
 //│ define f$g1 as fun f$g¹(a) {
 //│   return (a(undefined, undefined, undefined) as! Int⁰)
 //│ };
 //│ @affine(1) @private
-//│ define f$a_A as fun f$a_A¹(A_x)(fv_arg$A$0$, fv_y, fv_tmp) {
-//│   set fv_tmp = -⁰(A_x, 1);
-//│   return f⁰(fv_tmp)
-//│ };
-//│ @affine(1) @private
-//│ define f$a_A1 as fun f$a_A⁰(A_x)(fv_arg$A$0$, fv_y, fv_tmp) {
+//│ define f$a_A as fun f$a_A⁰(A_x)(fv_arg$A$0$, fv_y, fv_tmp) {
 //│   set fv_tmp = -⁰(A_x, 1);
 //│   return f$f⁰(fv_tmp)
+//│ };
+//│ @affine(1) @private
+//│ define f$a_A1 as fun f$a_A¹(A_x)(fv_arg$A$0$, fv_y, fv_tmp) {
+//│   set fv_tmp = -⁰(A_x, 1);
+//│   return f⁰(fv_tmp)
 //│ };
 //│ define f¹ as fun f⁰(x) {
 //│   let scrut, tmp;
@@ -902,7 +902,7 @@ f(3)
 //│       return 0
 //│     else
 //│       set tmp = f$a_A¹(x);
-//│       return f$g⁰(tmp)
+//│       return f$g¹(tmp)
 //│   end
 //│ };
 //│ define g⁰ as fun g¹(a) {

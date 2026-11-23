@@ -18,11 +18,11 @@ fun f(x) = if x is
   else 0
 f(Nil)
 //│ deforest > >>> fusing >>>
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: x⁰
 //│ deforest > A⁰(2) ->
 //│ deforest > 	match: x⁰
 //│ deforest > 	fields: x⁰.x¹
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: x⁰
 //│ deforest > <<< fusing <<<
 //│ = 0
 
