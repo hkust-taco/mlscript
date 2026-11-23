@@ -57,8 +57,8 @@ declare module BigInt
 // TODO: support bounds on inline type parameters like `extends Array`
 declare open class Function[A /* extends Array */, B]: ((...A) -> B) {
   val name: Str
-  fun bind(thisArg: Any, ...args: Array[Any]): Function
-  fun apply(thisArg: Any, args: A): B
+  fun bind(thisArg: Object | null | (), ...args: Array[Any]): Function
+  fun apply(thisArg: Object | null | (), args: A): B
 }
 declare module Function
 
