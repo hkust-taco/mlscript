@@ -1,0 +1,80 @@
+:.
+
+// A signature written apart from its definition must precede it.
+// A late signature is reported and ignored.
+
+
+fun ok: Int -> Int
+fun ok(x) = x
+ok(1)
+//│ = 1
+
+// Elaborating the late declaration would make it the member's definition, so `late(1)` would call a function without
+// parameters.
+:e
+fun late(x) = x
+fun late: Int -> Int
+late(1)
+//│ ╔══[COMPILATION ERROR] The signature of 'late' must be written before its definition
+//│ ║  l.+2: 	fun late: Int -> Int
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── defined here
+//│ ║  l.+1: 	fun late(x) = x
+//│ ╙──      	^^^^^^^^^^^^^^^
+//│ = 1
+
+// The rule also applies when the definition has no parameters.
+:e
+fun lateGetter = 1
+fun lateGetter: Int
+lateGetter
+//│ ╔══[COMPILATION ERROR] The signature of 'lateGetter' must be written before its definition
+//│ ║  l.+2: 	fun lateGetter: Int
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ╟── defined here
+//│ ║  l.+1: 	fun lateGetter = 1
+//│ ╙──      	^^^^^^^^^^^^^^^^^^
+//│ = 1
+
+// A late signature that names a class shadowed by the definition's parameter `C`.
+:e
+class C()
+fun lateShadowing(C) = C
+fun lateShadowing: C -> C
+lateShadowing(C())
+//│ ╔══[COMPILATION ERROR] The signature of 'lateShadowing' must be written before its definition
+//│ ║  l.+3: 	fun lateShadowing: C -> C
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── defined here
+//│ ║  l.+2: 	fun lateShadowing(C) = C
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = C()
+
+// The rule also applies to `val` pairs.
+:e
+val lateVal = 1
+val lateVal: Str
+lateVal
+//│ ╔══[COMPILATION ERROR] The signature of 'lateVal' must be written before its definition
+//│ ║  l.+2: 	val lateVal: Str
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╟── defined here
+//│ ║  l.+1: 	val lateVal = 1
+//│ ╙──      	^^^^^^^^^^^^^^^
+//│ = 1
+//│ lateVal = 1
+
+:e
+class K with
+  fun k(x) = x
+  fun k: Int -> Int
+(new K).k(1)
+//│ ╔══[COMPILATION ERROR] The signature of 'k' must be written before its definition
+//│ ║  l.+3: 	  fun k: Int -> Int
+//│ ║        	  ^^^^^^^^^^^^^^^^^
+//│ ╟── defined here
+//│ ║  l.+2: 	  fun k(x) = x
+//│ ╙──      	  ^^^^^^^^^^^^
+//│ = 1
+
+

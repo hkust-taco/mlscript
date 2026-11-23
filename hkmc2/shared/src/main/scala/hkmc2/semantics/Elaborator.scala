@@ -2674,6 +2674,13 @@ extends Importer:
         if decls.length > 1 then
           raise(ErrorReport(msg"Multiple declarations of symbol '$name'" -> N ::
             decls.map(msg"declared here" -> _.toLoc)))
+        (sym.trmSigTree, sym.trmImplTree) match
+        case (S(sig), S(impl)) if sym.trmSigFollowsImpl => raise:
+          ErrorReport:
+            msg"The signature of '$name' must be written before its definition" -> sig.toLoc
+            :: msg"defined here" -> impl.toLoc
+            :: Nil
+        case _ => ()
     
     // TODO extract this into a separate method
     // * @param funs:
@@ -2873,6 +2880,10 @@ extends Importer:
         td.name match
           case R(id) =>
             val sym = members.getOrElse(id.name, die)
+            // * The pre-pass rejects a signature written after its definition. Elaborating it would set the member's
+            // * `tsym` to the signature's term symbol, which has no body.
+            if sym.trmSigFollowsImpl && sym.trmSigTree.exists(_ eq td) then
+              return go(sts, Nil, acc)(N)
             val owner =
               // * Instance declarations are not meant to be exported as externally-available members,
               // * even when declared within some class or module.
@@ -2922,7 +2933,8 @@ extends Importer:
                 res
               
               // * Elaborate signature
-              val st = td.annotatedResultType.orElse(sym.trmSigTree.flatMap(_.annotatedResultType)) // FIXME: may elaborate external sig twice!!
+              val externalSig = if sym.trmSigFollowsImpl then N else sym.trmSigTree
+              val st = td.annotatedResultType.orElse(externalSig.flatMap(_.annotatedResultType)) // FIXME: may elaborate external sig twice!!
               val s = st.map:
                 // unwrap possible module modifier
                 // e.g, `fun f: module M`
