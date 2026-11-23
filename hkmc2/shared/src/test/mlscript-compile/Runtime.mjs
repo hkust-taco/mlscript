@@ -324,8 +324,8 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
       static get indentLvl() { return TraceLogger.#indentLvl; }
       static set indentLvl(value) { TraceLogger.#indentLvl = value; }
       static {
-        TraceLogger.enabled = false;
-        TraceLogger.indentLvl = 0;
+        TraceLogger.#enabled = false;
+        TraceLogger.#indentLvl = 0;
       }
       static indent() {
         let scrut, prev, tmp;
@@ -363,11 +363,11 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["class", "TraceLogger"];
     });
-    Runtime.curEffect = null;
-    Runtime.resumeValue = null;
-    Runtime.resumeArr = null;
-    Runtime.resumeIdx = null;
-    Runtime.resumePc = -1;
+    Runtime.#curEffect = null;
+    Runtime.#resumeValue = null;
+    Runtime.#resumeArr = null;
+    Runtime.#resumeIdx = null;
+    Runtime.#resumePc = -1;
     (class FatalEffect {
       static {
         new this
@@ -614,10 +614,10 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["object", "AsyncEffectMarker"];
     });
-    Runtime.stackLimit = 0;
-    Runtime.stackDepth = 0;
-    Runtime.stackHandler = null;
-    Runtime.stackResume = null;
+    Runtime.#stackLimit = 0;
+    Runtime.#stackDepth = 0;
+    Runtime.#stackHandler = null;
+    Runtime.#stackResume = null;
     (class StackDelayHandler {
       static {
         new this

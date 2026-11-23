@@ -28,7 +28,6 @@ fun f: ClsMod = 42
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'ClsMod'
 //│ ║  l.+1: 	fun f: ClsMod = 42
 //│ ╙──      	                ^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // The rejected definition remains available for resolution diagnostics.
 :!js
@@ -86,7 +85,6 @@ fun f: TrmMod = 42
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'module TrmMod'
 //│ ║  l.+1: 	fun f: TrmMod = 42
 //│ ╙──      	                ^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :sjs
 fun f = TrmMod

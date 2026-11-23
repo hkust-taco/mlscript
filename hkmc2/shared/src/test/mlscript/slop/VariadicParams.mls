@@ -287,18 +287,19 @@ forwardedTail([7])
 
 
 // Trailing parameters obey the same override representation checks as leading parameters.
-:ge
 private class TailBase() with
   open fun apply(...rest, value: Int): Int = 0
+private fun useTailBase(base: TailBase) = base.apply(1)
+
+:ge
 private class TailChild() extends TailBase() with
   override fun apply(...rest, value: Str): Int = 0
-private fun useTailBase(base: TailBase) = base.apply(1)
 useTailBase(TailChild())
 //│ ╔══[COMPILATION ERROR] Parameter 'value' of overriding member 'apply' is represented as 'Str', which cannot hold the values represented as 'Int' that the member it overrides accepts
-//│ ║  l.+4: 	  override fun apply(...rest, value: Str): Int = 0
+//│ ║  l.+2: 	  override fun apply(...rest, value: Str): Int = 0
 //│ ║        	                              ^^^^^^^^^^
 //│ ╟── The overridden member 'apply' is defined here
-//│ ║  l.+2: 	  open fun apply(...rest, value: Int): Int = 0
+//│ ║  l.XX: 	  open fun apply(...rest, value: Int): Int = 0
 //│ ╙──      	           ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

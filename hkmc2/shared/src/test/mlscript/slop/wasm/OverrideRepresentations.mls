@@ -15,6 +15,26 @@ wasm.i32.add(dispatch(Child(), wasm.i32.const(40)), Child().take(wasm.i32.const(
 //│ = 42
 
 
+// A write through the base type can put any boxed value in an exposed unannotated field.
+:ge
+class Cell with
+  open mut val item = "initial"
+class StringCell extends Cell with
+  override mut val item: Str = "child"
+fun writeInt(cell: Cell) = set cell.item = 42
+let cell = new mut StringCell
+writeInt(cell)
+cell.item
+//│ ╔══[COMPILATION ERROR] Overriding mutable field 'item' with representation 'Str' must accept writes through the inherited field with representation 'Unknown'
+//│ ║  l.+4: 	  override mut val item: Str = "child"
+//│ ║        	                   ^^^^
+//│ ╟── The overridden member 'item' is defined here
+//│ ║  l.+2: 	  open mut val item = "initial"
+//│ ╙──      	               ^^^^
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
 // Wasm's shared slot cannot accept a broader input through a direct call on the override.
 :ge
 class Consumer() with
@@ -255,22 +275,22 @@ if build(Third()) is Square then 1 else 0
 //│ Wasm result:
 //│ = 0
 
-// An annotated override contributes its declared result to the member it overrides...
+// An override contributes its declared result even when its body always returns a narrower value.
 :noInline
-:expect 0
+:expect 1
 private class Fruit()
 private class Apple() extends Fruit()
 private class Orchard() with
   open fun pick() = Apple()
 private class Market() extends Orchard() with
-  override fun pick(): Fruit = Fruit()
+  override fun pick(): Fruit = Apple()
 private fun buy(seller) = seller.pick()
 if buy(Market()) is Apple then 1 else 0
 //│ Wasm result:
-//│ = 0
+//│ = 1
 
-// ...but keeps its declared parameter representation to itself: the arguments of its direct calls never
-// reach the member it overrides. Wasm still requires both parameters to have the same representation.
+// An override with a declared parameter keeps the arguments of its direct calls.
+// Wasm requires both parameters to have the same representation.
 :ge
 private class Sink() with
   open fun accept(x) = 0
@@ -308,5 +328,43 @@ Label().read()
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
 //│ ║  l.+2: 	  open fun read() = wasm.i32.const(1)
 //│ ╙──      	           ^^^^
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A later write through the child also contributes to the representation of the base field.
+:ge
+private class Numbers() with
+  open mut val item = wasm.i32.const(1)
+private class Writable() extends Numbers() with
+  override mut val item = wasm.i32.const(2)
+private val cell = new mut Writable()
+set cell.item = "later"
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
+//│ ║  l.+2: 	  open mut val item = wasm.i32.const(1)
+//│ ╙──      	               ^^^^
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A constructor field has a storage representation even if nothing constructs its class.
+:noInline
+:expect 42
+private abstract class FieldSource with
+  val item
+private class Unused(val item) extends FieldSource
+private class Answer extends FieldSource with
+  override val item = 42
+new Answer().item
+//│ Wasm result:
+//│ = 42
+
+// Erasure rejects this parameter before choosing a result for the base.
+:ge
+private class Counter with
+  open fun count(x) = wasm.i32.const(1)
+private class Rejected extends Counter with
+  override fun count(x: Int32 | Str) = "unused"
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
+//│ ║  l.+4: 	  override fun count(x: Int32 | Str) = "unused"
+//│ ╙──      	                        ^^^^^^^^^^^
 //│ Wasm result:
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

@@ -9,7 +9,7 @@ import "./ExposedUnboxedInput.mls"
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
 //│ ║  l.XX: 	  fun identity(value) = value
 //│ ║        	               ^^^^^
-//│ ╟── The exposed interface admits values of unknown representation.
+//│ ╟── The exposed interface admits values of unknown representation unless a type annotation restricts them.
 //│ ╟── Parameter 'value' admits values of unknown shape.
 //│ ║  l.XX: 	  fun identity(value) = value
 //│ ║        	               ^^^^^
@@ -32,7 +32,7 @@ val callbacks = [callback]
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
 //│ ║  l.+1: 	private fun callback(value) = value
 //│ ║        	                     ^^^^^
-//│ ╟── The exposed interface admits values of unknown representation.
+//│ ╟── The exposed interface admits values of unknown representation unless a type annotation restricts them.
 //│ ╟── Parameter 'value' admits values of unknown shape.
 //│ ║  l.+1: 	private fun callback(value) = value
 //│ ║        	                     ^^^^^
@@ -52,7 +52,7 @@ helper(input)
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
 //│ ║  l.+1: 	private fun helper(value) = value
 //│ ║        	                   ^^^^^
-//│ ╟── The exposed interface admits values of unknown representation.
+//│ ╟── The exposed interface admits values of unknown representation unless a type annotation restricts them.
 //│ ╟── Parameter 'value' admits values of unknown shape.
 //│ ║  l.+2: 	fun forward(value) = helper(value)
 //│ ║        	            ^^^^^
@@ -84,7 +84,7 @@ rejected(input, input)
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
 //│ ║  l.+1: 	fun rejected(left, right): Int32 | Any =
 //│ ║        	             ^^^^
-//│ ╟── The exposed interface admits values of unknown representation.
+//│ ╟── The exposed interface admits values of unknown representation unless a type annotation restricts them.
 //│ ╟── Parameter 'left' admits values of unknown shape.
 //│ ║  l.+1: 	fun rejected(left, right): Int32 | Any =
 //│ ║        	             ^^^^
@@ -94,7 +94,7 @@ rejected(input, input)
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
 //│ ║  l.+1: 	fun rejected(left, right): Int32 | Any =
 //│ ║        	                   ^^^^^
-//│ ╟── The exposed interface admits values of unknown representation.
+//│ ╟── The exposed interface admits values of unknown representation unless a type annotation restricts them.
 //│ ╟── Parameter 'right' admits values of unknown shape.
 //│ ║  l.+1: 	fun rejected(left, right): Int32 | Any =
 //│ ║        	                   ^^^^^
@@ -246,7 +246,7 @@ private class WrappedResultError() extends WrappedErrorBase() with
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ throw "This code cannot be run as its compilation yielded an error."
 
-// References to earlier failed definitions use their erased errors without repeating diagnostics.
+// References to earlier failed definitions do not repeat the diagnostics of their signatures.
 :sir
 :siret
 badParameter(input)
@@ -257,11 +257,10 @@ badParameter(input)
 :siret
 independentBadResult()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ throw "This code cannot be run as its compilation yielded an error."
+//│ return independentBadResult⁰()
 
-// A wrapped result is still rejected when the erroneous function is used as a value.
 :sir
 :siret
 [rejectedAsync, rejectedGenerator]
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ throw "This code cannot be run as its compilation yielded an error."
+//│ return [rejectedAsync⁰, rejectedGenerator⁰]

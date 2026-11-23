@@ -25,7 +25,7 @@ fun chooseFloat(b: Bool): Float64 = if b then 1.5 else wasm.f64.const(2.5)
 //│ ║  l.+1: 	fun chooseFloat(b: Bool): Float64 = if b then 1.5 else wasm.f64.const(2.5)
 //│ ╙──      	                                              ^^^
 //│ Wasm result:
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ = {}
 
 // A declared function result keeps the type available when its call is not inlined.
 :noInline

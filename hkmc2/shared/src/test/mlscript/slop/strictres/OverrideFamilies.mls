@@ -235,6 +235,20 @@ fetch(Loader())
 //│ = 1
 
 
+// Both generators return iterators to Source's callers. Each generator keeps its own final value.
+:expect "done"
+private val bits: Int32 = unsafe.undefined
+private abstract class Source with
+  fun items()
+private class BitsSource extends Source with
+  @annotations.generator open override fun items() = bits
+private class TextSource extends BitsSource with
+  @annotations.generator override fun items() = "done"
+new TextSource().items().next().value
+//│ = "done"
+//│ bits = undefined
+
+
 // A rejected override still does not widen what the member it overrides accepts: the base parameter
 // receives integers, which an override declaring `Str` cannot hold.
 :ge
@@ -267,3 +281,14 @@ handle effect = Ask with
   fun ask(question)(resume) = [resume("resumed")]
 perform(effect)
 //│ = ["resumed"]
+
+
+// The shared parameter slot holds both arguments. Only the base implementation reads a tag.
+:expect [42, 0]
+private class Tagged(val tag: Int)
+private class Reader with
+  open fun read(x) = x.tag
+private class Ignoring extends Reader with
+  override fun read(x) = 0
+[new Reader().read(Tagged(42)), new Ignoring().read("child")]
+//│ = [42, 0]

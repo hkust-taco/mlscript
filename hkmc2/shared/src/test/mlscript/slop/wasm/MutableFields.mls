@@ -247,7 +247,7 @@ private fun assignLaterString() =
 //│ ║  l.+3: 	  set later.value = "hello"
 //│ ╙──      	      ^^^^^^^^^^^
 //│ Wasm result:
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ = {}
 
 :noInline
 private class ReadLater(val value)

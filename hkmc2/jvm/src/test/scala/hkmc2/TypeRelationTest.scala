@@ -85,11 +85,11 @@ class TypeRelationTest extends AnyFunSuite:
     val parameters = (1 to 64).map(index => h.parameter(s"T$index"))
     parameters.sliding(2).foreach: pair =>
       h.resolver.constrainTypes(ContextualType(pair(0)._2, Nil), ContextualType(pair(1)._2, Nil), N)
-    assert(parameters.forall((_, tpe) => h.state.state.typeViews.get((tpe, false)).isEmpty))
+    assert(parameters.forall((_, tpe) => TypeView.values.forall(view => h.state.state.typeViews.get((tpe, view)).isEmpty)))
     val (symbol, input) = parameters.head
     val tuple = h.tpe(TypeShape.Tuple(Nil))
     h.resolver.constrainTypes(ContextualType(input, Nil), ContextualType(tuple, Nil), N)
-    val view = h.state.state.typeViews.get((input, false)).get
+    val view = h.state.state.typeViews.get((input, TypeView.Provided)).get
     assert(view.inferenceHost.listeners.size == 1)
     val ref = Term.UnresolvedRef(Nil, Tree.Ident("Missing"))(FlowSymbol.pat(), NameLookup.LeadingDot)
     h.resolver.publishParameter(symbol, ref.namespaceProbe)
@@ -121,7 +121,7 @@ class TypeRelationTest extends AnyFunSuite:
       // Value-only observation must not filter the shared hosts: a namespace
       // constraint can subscribe to those same views after this observation.
       val hosts = (at :: bt :: Nil).iterator.flatMap: tpe =>
-        (false :: true :: Nil).iterator.flatMap(merge => h.state.state.typeViews.get((tpe, merge)))
+        TypeView.values.iterator.flatMap(view => h.state.state.typeViews.get((tpe, view)))
       .toList
       assert(hosts.nonEmpty && hosts.forall(_.currentShapes.exists(_ is probe)))
       def counts = (a.inferenceHost.listeners.size, b.inferenceHost.listeners.size,

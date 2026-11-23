@@ -1316,13 +1316,22 @@ sealed abstract class Result extends Located:
   /** Coerces this result to `expected`, yielding it unchanged when no coercion is required.
     *
     * Narrowing to an unrelated type is reported as an error, and this result is yielded unchanged.
+    * The slot that receives it then holds a value of another representation, so a caller that can
+    * replace the code using the value should call [[tryCoerceTo]].
     *
-    * This is the only place where [[Config.checkCasts]] is consulted: it fixes each cast's `check` flag at the
-    * point the coercion is introduced, so that the transformers rebuilding casts downstream need not carry a
+    * [[tryCoerceTo]] is the only place where [[Config.checkCasts]] is consulted: it fixes each cast's `check` flag
+    * at the point the coercion is introduced, so that the transformers rebuilding casts downstream need not carry a
     * [[Config]] of their own. [[coerceToKnown]] builds the unchecked casts of generated code instead.
     */
   def coerceTo(expected: ErasedValueType, loc: Opt[Loc])(using Ctx, State, Raise, Config): Result =
-    if needsCastTo(expected, reportUnrelated(loc)) then Cast(this, expected, config.checkCasts)(loc) else this
+    tryCoerceTo(expected, loc).getOrElse(this)
+  
+  /** This result coerced to `expected`: the result itself when no coercion is required, and a cast of it
+    * otherwise. No coercion exists to an unrelated type: this method then reports an error and yields `N`.
+    */
+  def tryCoerceTo(expected: ErasedValueType, loc: Opt[Loc])(using Ctx, State, Raise, Config): Opt[Result] =
+    castRequirementTo(expected, reportUnrelated(loc)).map: needed =>
+      if needed then Cast(this, expected, config.checkCasts)(loc) else this
   
   /** Coerces a value that the compiler knows to have `expected`'s representation, such as a
     * temporary that generated code binds to the result of an untyped runtime helper.
@@ -1338,13 +1347,17 @@ sealed abstract class Result extends Located:
     * the canonical types of an unrelated pair, and this result is used unchanged. */
   protected def needsCastTo(expected: ErasedValueType,
       onUnrelated: (CanonicalErasedValueType, CanonicalErasedValueType) => Unit)(using Ctx, State): Bool =
+    castRequirementTo(expected, onUnrelated).getOrElse(false)
+  
+  /** Whether coercing this result to `expected` needs a cast, or `N` when the two types are unrelated.
+    * `onUnrelated` then reports the canonical types of the unrelated pair. */
+  protected def castRequirementTo(expected: ErasedValueType,
+      onUnrelated: (CanonicalErasedValueType, CanonicalErasedValueType) => Unit)(using Ctx, State): Opt[Bool] =
     val actual = erasedType_!.canonicalize
     val declared = expected.canonicalize
-    ErasedType.needsCast(actual, declared) match
-      case S(needed) => needed
-      case N =>
-        onUnrelated(actual, declared)
-        false
+    val need = ErasedType.needsCast(actual, declared)
+    if need.isEmpty then onUnrelated(actual, declared)
+    need
   
   protected def reportUnrelated(loc: Opt[Loc])(using Ctx, State, Raise)
       (actual: CanonicalErasedValueType, declared: CanonicalErasedValueType): Unit =
@@ -1612,7 +1625,11 @@ sealed abstract class Path extends TrivialResult:
     case _ => false
   /** Coerces this path like [[Result.coerceTo]]; a cast of a path is itself a path. */
   override def coerceTo(expected: ErasedValueType, loc: Opt[Loc])(using Ctx, State, Raise, Config): Path =
-    if needsCastTo(expected, reportUnrelated(loc)) then Cast.path(this, expected, config.checkCasts)(loc) else this
+    tryCoerceTo(expected, loc).getOrElse(this)
+  /** Coerces this path like [[Result.tryCoerceTo]]; a cast of a path is itself a path. */
+  override def tryCoerceTo(expected: ErasedValueType, loc: Opt[Loc])(using Ctx, State, Raise, Config): Opt[Path] =
+    castRequirementTo(expected, reportUnrelated(loc)).map: needed =>
+      if needed then Cast.path(this, expected, config.checkCasts)(loc) else this
   /** Coerces this path like [[Result.coerceToKnown]]; a cast of a path is itself a path. */
   override def coerceToKnown(expected: ErasedValueType, loc: Opt[Loc])(using Ctx, State, Raise): Path =
     if needsCastTo(expected, reportUnknown(loc)) then Cast.path(this, expected, check = false)(loc) else this

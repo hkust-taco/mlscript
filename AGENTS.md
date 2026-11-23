@@ -39,6 +39,10 @@ that coverage or merely pin internal representation or assertion details. Reserv
 unit tests for properties diff tests cannot reliably observe, such as concurrency,
 cache isolation, bounded graph growth, or algebraic laws; state the extra coverage.
 
+Worksheets are diff-test infrastructure. Keep compiler behavior and complexity driven by ordinary
+compilation units. When a limitation only affects a later worksheet block, adjust the test or
+document the limitation in the fixture. Avoid adding compiler state or recovery logic solely for diff-tests.
+
 Before adding new diff tests, make sure they are not already covered by existing tests.
 All new diff-test files you create should go into `hkmc2/shared/src/test/mlscript/slop/`
 unless there is a good reason to put them elsewhere.

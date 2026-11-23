@@ -1,0 +1,79 @@
+:.
+
+open annotations.{ * }
+
+// The new resolver does not track the values that cross the boundary of a generator. Its iterator hands
+// out values with an empty interface, and the values that `yield*` returns have an unknown shape.
+// FIXME: Infer these shapes, so that the blocks marked below resolve.
+
+class Box(val item: Int)
+
+@generator fun boxes() =
+  yield Box(1)
+  Box(2)
+
+let first = boxes().next()
+//│ first = {value: Box(1), done: false}
+
+
+// A value that the iterator hands out supports no selection.
+:fixme
+first.value.item
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	first.value.item
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╟── Value with an empty interface does not contain member 'item'
+//│ ╙── This type permits values of any type, so no member interface is guaranteed.
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A match recovers its class.
+:expect 1
+if first.value is Box(n) then n else 0
+//│ = 1
+
+// A written parameter type states the element type, and the resolver trusts it.
+:expect 1
+fun firstItem(iterator: Iterator[Box]) = iterator.next().value.item
+firstItem(boxes())
+//│ = 1
+
+// The elements of a spread iterator have an unknown shape.
+:fixme
+let all = [...boxes()]
+all.0.item
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	all.0.item
+//│ ║        	^^^^^^^^^^
+//│ ╟── Cannot resolve member 'item' of a value with unknown shape.
+//│ ╟── This spread has no known element shape.
+//│ ║  l.+1: 	let all = [...boxes()]
+//│ ╙──      	              ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ all = [Box(1)]
+
+// The value that a delegating yield returns has an unknown shape.
+:fixme
+@generator fun relay() =
+  let last = yield* boxes()
+  last.item
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+3: 	  last.item
+//│ ║        	  ^^^^^^^^^
+//│ ╟── Cannot resolve member 'item' of a value with unknown shape.
+//│ ╟── The shape of this value is unknown.
+//│ ║  l.+2: 	  let last = yield* boxes()
+//│ ╙──      	             ^^^^^^^^^^^^^^
+
+// A result written on the generator describes the value that its body returns.
+// The iterator does not show that type either.
+:fixme
+@generator fun typed(): Box =
+  yield Box(3)
+  Box(4)
+typed().next().value.item
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+4: 	typed().next().value.item
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Value with an empty interface does not contain member 'item'
+//│ ╙── This type permits values of any type, so no member interface is guaranteed.
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

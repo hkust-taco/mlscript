@@ -86,10 +86,7 @@ class CompilerCtx(
     val report = dependencyRecorder.fold(summon[Raise])(_.report)
     
     def mk =
-      var hasErrors = false
-      given Raise = diagnostic =>
-        if !(diagnostic.kind is Diagnostic.Kind.Warning) then hasErrors = true
-        report(diagnostic)
+      given reporter: Diagnostic.Reporter = new Diagnostic.Reporter(report)
       val dependencies = new CompilerCtx.DependencyRecorder(report)
       val modulePath = (file.up / io.RelPath(file.baseName + ".mjs")).toString
       val debug = new DebugContext
@@ -228,7 +225,7 @@ class CompilerCtx(
         CompilationUnitAbi:
           CompilerCtx.allocateModulePrivateExportNames(ir)(using state, summon[Raise])
       Artifact(parsed, blk0, ir, artifactConfig, prelude, state, compilationUnit, rootConfig,
-        dependencies.result, dependencies.sourceImports.toList, hasErrors, lastMod)
+        dependencies.result, dependencies.sourceImports.toList, reporter.hasErrors, lastMod)
     
     val artifact = cache.upsert(file)(
       isCurrent = (cachedFile, art) =>

@@ -43,9 +43,6 @@ wasm.i32.add(1, 2)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Int32'
 //│ ║  l.+1: 	wasm.i32.add(1, 2)
 //│ ╙──      	             ^
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Int32'
-//│ ║  l.+1: 	wasm.i32.add(1, 2)
-//│ ╙──      	                ^
 //│ Wasm result:
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

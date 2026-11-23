@@ -2936,7 +2936,7 @@ extends Importer:
                 statementLoc, definitionHeaderLoc(td, annotations, statementLoc), S(bindingScope))
               sym.tsym = S(tsym)
               tsym.defn = S(tdf)
-              if newResolution then checkDeclaredResult(tdf)
+              if newResolution then registerResultSignature(tdf)
               
               tdf
             
@@ -3059,6 +3059,9 @@ extends Importer:
             tsym.defn = S(fdef)
             // A generated field is written inside its class, like a member.
             rctx.state.lexicalTypeBinders(tsym) = ctx.typeBinders
+            // The parameter's annotation lives in the constructor scope, one scope outside the field.
+            if newResolution && (tsym.k is MutVal) then
+              p.sign.foreach(sign => listenTypeInstances(sign)(writeField(tsym, _, Nil)))
             fsym.complete()
             fdef :: Nil
           

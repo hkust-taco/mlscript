@@ -652,6 +652,10 @@ sealed trait DefinitionSymbol[Defn <: Definition] extends MemberSymbol:
   
   private var _defn: Opt[Defn] = N
   def defn: Opt[Defn] = _defn
+  /** Deliver the definition once its body has been elaborated, including to an observer of a forward reference. */
+  private[semantics] def whenDefined(f: Defn => Unit): Unit = _defn match
+    case S(defn) => f(defn)
+    case N => defnListeners += f
   def defn_=(d: S[Defn]): Unit =
     require(_defn.isEmpty, s"Cannot reassign defn of ${this} from ${_defn} to ${d}")
     _defn = d
@@ -673,8 +677,7 @@ sealed trait DefinitionSymbol[Defn <: Definition] extends MemberSymbol:
   
   def visibility: Opt[Visibility] = irDefn.fold(defn.map(_.visibility))(_.visibility |> some)
   
-  // TODO: rm
-  private[semantics] var defnListeners: Buffer[Defn => Unit] = Buffer.empty
+  private var defnListeners: Buffer[Defn => Unit] = Buffer.empty
   
   // * Although the IR is immutable,
   // * we consider that a given symbol is *owned* by the IR Defn node that defines it.

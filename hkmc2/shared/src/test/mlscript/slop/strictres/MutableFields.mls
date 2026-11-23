@@ -2,26 +2,48 @@
 
 // A mutable field without a declared type takes the representation of its initializer and of the values
 // assigned to it (see also ../wasm/MutableFields.mls). Other compilation units can assign values to the mutable
-// fields that this compilation unit exposes, so those must declare their types: their representations must not
-// depend on the values that this compilation unit happens to assign to them.
+// fields that this compilation unit exposes. Such a field admits values of unknown representation, like the
+// unannotated parameter of an exposed function, unless it declares its type.
+
+// Several blocks below store this unboxed integer in a field. It has no common representation with unknown
+// values, so the resulting errors show which fields are exposed, and how.
+val input: Int32 = unsafe.undefined
+//│ input = undefined
 
 
 // A public class exposes the mutable fields of its instances, whether they are parameters or members.
-:ge
+// Without annotations, they take the unknown representation.
+:sir
+:siret
 class Exposed(mut val param) with
   mut val member = 0
-//│ ╔══[COMPILATION ERROR] Mutable field 'param' is exposed to other compilation units, which can assign to it; annotate its type
-//│ ║  l.+1: 	class Exposed(mut val param) with
-//│ ║        	                      ^^^^^
-//│ ╟── 'Exposed' is exposed by this compilation unit.
-//│ ║  l.+1: 	class Exposed(mut val param) with
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Mutable field 'member' is exposed to other compilation units, which can assign to it; annotate its type
-//│ ║  l.+2: 	  mut val member = 0
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define Exposed⁰ as class Exposed² {
+//│   val param⁰: Unknown;
+//│   val member⁰: Unknown;
+//│   constructor Exposed¹(param: Unknown) {
+//│     define param⁰ as val param¹: Unknown = param;
+//│     define member⁰ as val member¹: Unknown = 0;
+//│     end
+//│   }
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// An exposed field cannot also hold unboxed integers.
+:ge
+class ExposedUnboxed with
+  mut val member = input
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+2: 	  mut val member = input
 //│ ║        	          ^^^^^^
-//│ ╟── 'Exposed' is exposed by this compilation unit.
-//│ ║  l.+1: 	class Exposed(mut val param) with
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The exposed interface admits values of unknown representation unless a type annotation restricts them.
+//│ ╟── Field 'member' admits assigned values of unknown shape.
+//│ ║  l.+2: 	  mut val member = input
+//│ ║        	          ^^^^^^
+//│ ╟── 'ExposedUnboxed' is exposed by this compilation unit.
+//│ ║  l.+1: 	class ExposedUnboxed with
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 class Declared(mut val param: Int) with
@@ -30,14 +52,89 @@ class Declared(mut val param: Int) with
 // The mutable fields of a public module are exposed too.
 :ge
 module Settings with
-  mut val verbose = false
-//│ ╔══[COMPILATION ERROR] Mutable field 'verbose' is exposed to other compilation units, which can assign to it; annotate its type
-//│ ║  l.+2: 	  mut val verbose = false
-//│ ║        	          ^^^^^^^
+  mut val level = input
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+2: 	  mut val level = input
+//│ ║        	          ^^^^^
+//│ ╟── The exposed interface admits values of unknown representation unless a type annotation restricts them.
+//│ ╟── Field 'level' admits assigned values of unknown shape.
+//│ ║  l.+2: 	  mut val level = input
+//│ ║        	          ^^^^^
 //│ ╟── 'Settings' is exposed by this compilation unit.
 //│ ║  l.+1: 	module Settings with
 //│ ╙──      	^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A private field assigned by an exposed function and an exposed field take the same representation:
+// other compilation units can store values of unknown shape in both.
+:sir
+:siret
+module ViaSetter with
+  private mut val state = 0
+  fun update(value) = set state = value
+module Direct with
+  mut val state = 0
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define ViaSetter⁰ as class ViaSetter¹
+//│ module ViaSetter² {
+//│   private val state⁰: Unknown;
+//│   constructor {
+//│     @private
+//│     define state¹ as val state⁰: Unknown = 0;
+//│     end
+//│   }
+//│   method update⁰ = fun update¹(value: Unknown): Unit⁰ {
+//│     set ViaSetter².this.state⁰ = value;
+//│     return runtime⁰.Unit⁰
+//│   }
+//│ };
+//│ define Direct⁰ as class Direct¹
+//│ module Direct² {
+//│   val state²: Unknown;
+//│   constructor { define state² as val state³: Unknown = 0; end }
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// The base initializes its own field before the subclass has installed its backing field.
+// Once construction completes, reads and writes through the base dispatch to the override.
+:expect ["child", 42, 42]
+class BaseState with
+  open mut val state = "base"
+  fun read() = state
+class ChildState extends BaseState with
+  override mut val state = "child"
+fun writeBase(base: BaseState) = set base.state = 42
+let childState = new mut ChildState
+let initial = childState.read()
+writeBase(childState)
+[initial, childState.read(), childState.state]
+//│ = ["child", 42, 42]
+//│ childState = ChildState
+//│ initial = "child"
+
+// The base constructor calls a method that reads the overriding field through its accessor,
+// before JavaScript has installed the private field that stores it in the subclass.
+// TODO: This read should not fail. The same read of an immutable field returns the base's value.
+:fixme
+class EarlyReader with
+  open mut val state = "base"
+  fun read() = state
+  val early = read()
+class LateState extends EarlyReader with
+  override mut val state = "child"
+new mut LateState().early
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read private member #state from an object whose class did not declare it
+
+:expect "base"
+class EarlyValueReader with
+  open val state = "base"
+  fun read() = state
+  val early = read()
+class LateValue extends EarlyValueReader with
+  override val state = "child"
+new LateValue().early
+//│ = "base"
 
 // Other compilation units cannot assign to a private field.
 :expect 1
@@ -53,44 +150,52 @@ new Counter().increment()
 // including through the classes that inherit them.
 :ge
 private class Hidden(mut val value)
-fun makeHidden() = Hidden(0)
-//│ ╔══[COMPILATION ERROR] Mutable field 'value' is exposed to other compilation units, which can assign to it; annotate its type
+fun makeHidden() = Hidden(input)
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+1: 	private class Hidden(mut val value)
+//│ ║        	                         ^^^^^^^^^
+//│ ╟── The exposed interface admits values of unknown representation unless a type annotation restricts them.
+//│ ╟── Field 'value' admits assigned values of unknown shape.
 //│ ║  l.+1: 	private class Hidden(mut val value)
 //│ ║        	                             ^^^^^
 //│ ╟── This value is returned here.
-//│ ║  l.+2: 	fun makeHidden() = Hidden(0)
-//│ ║        	                   ^^^^^^^^^
+//│ ║  l.+2: 	fun makeHidden() = Hidden(input)
+//│ ║        	                   ^^^^^^^^^^^^^
 //│ ╟── 'makeHidden' is exposed by this compilation unit.
-//│ ║  l.+2: 	fun makeHidden() = Hidden(0)
+//│ ║  l.+2: 	fun makeHidden() = Hidden(input)
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :ge
 private class Parent(mut val value)
-class Child extends Parent(0)
-//│ ╔══[COMPILATION ERROR] Mutable field 'value' is exposed to other compilation units, which can assign to it; annotate its type
+class Child extends Parent(input)
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+1: 	private class Parent(mut val value)
+//│ ║        	                         ^^^^^^^^^
+//│ ╟── The exposed interface admits values of unknown representation unless a type annotation restricts them.
+//│ ╟── Field 'value' admits assigned values of unknown shape.
 //│ ║  l.+1: 	private class Parent(mut val value)
 //│ ║        	                             ^^^^^
 //│ ╟── This parent contributes inherited members.
-//│ ║  l.+2: 	class Child extends Parent(0)
-//│ ║        	                    ^^^^^^^^^
+//│ ║  l.+2: 	class Child extends Parent(input)
+//│ ║        	                    ^^^^^^^^^^^^^
 //│ ╟── 'Child' is exposed by this compilation unit.
-//│ ║  l.+2: 	class Child extends Parent(0)
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	class Child extends Parent(input)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-// A field whose values only come from this compilation unit is not exposed.
-:expect 2
+// A field whose values only come from this compilation unit is not exposed, and keeps their representation.
+:expect 0
 private class Local(mut val value)
 private fun local() =
-  let cell = Local(1)
-  set cell.value = 2
-  cell.value
+  let cell = Local(input)
+  set cell.value = input
+  0
 local()
-//│ = 2
+//│ = 0
 
 // Values of unknown shape that this compilation unit receives from other compilation units
-// can be assigned to a field that is not exposed, without declaring its type.
+// can be assigned to a field that is not exposed, which then takes the unknown representation too.
 private class Store(mut val value)
 private val store = Store(0)
 fun put(value) = set store.value = value
@@ -152,21 +257,25 @@ structural()
 // construction. Clients can access its public fields and call its functions through that record.
 
 
-// Initializers already expose their nested mutable fields, which must declare their types.
+// Initializers already expose their nested mutable fields.
 :ge
 private class InitialCell(mut val value)
-fun exportInitialCell() = mut {item: InitialCell(1)}
-//│ ╔══[COMPILATION ERROR] Mutable field 'value' is exposed to other compilation units, which can assign to it; annotate its type
+fun exportInitialCell() = mut {item: InitialCell(input)}
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+1: 	private class InitialCell(mut val value)
+//│ ║        	                              ^^^^^^^^^
+//│ ╟── The exposed interface admits values of unknown representation unless a type annotation restricts them.
+//│ ╟── Field 'value' admits assigned values of unknown shape.
 //│ ║  l.+1: 	private class InitialCell(mut val value)
 //│ ║        	                                  ^^^^^
 //│ ╟── This value is stored in this record field.
-//│ ║  l.+2: 	fun exportInitialCell() = mut {item: InitialCell(1)}
+//│ ║  l.+2: 	fun exportInitialCell() = mut {item: InitialCell(input)}
 //│ ║        	                               ^^^^
 //│ ╟── This value is returned here.
-//│ ║  l.+2: 	fun exportInitialCell() = mut {item: InitialCell(1)}
-//│ ║        	                               ^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	fun exportInitialCell() = mut {item: InitialCell(input)}
+//│ ║        	                               ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── 'exportInitialCell' is exposed by this compilation unit.
-//│ ║  l.+2: 	fun exportInitialCell() = mut {item: InitialCell(1)}
+//│ ║  l.+2: 	fun exportInitialCell() = mut {item: InitialCell(input)}
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -176,9 +285,13 @@ fun exportInitialCell() = mut {item: InitialCell(1)}
 private class AssignedCell(mut val value)
 fun exportAssignedCell() =
   let record = mut {item: 0}
-  set record.item = AssignedCell(1)
+  set record.item = AssignedCell(input)
   record
-//│ ╔══[COMPILATION ERROR] Mutable field 'value' is exposed to other compilation units, which can assign to it; annotate its type
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+1: 	private class AssignedCell(mut val value)
+//│ ║        	                               ^^^^^^^^^
+//│ ╟── The exposed interface admits values of unknown representation unless a type annotation restricts them.
+//│ ╟── Field 'value' admits assigned values of unknown shape.
 //│ ║  l.+1: 	private class AssignedCell(mut val value)
 //│ ║        	                                   ^^^^^
 //│ ╟── This value is stored in this record field.
@@ -187,8 +300,8 @@ fun exportAssignedCell() =
 //│ ╟── This value is returned here.
 //│ ║  l.+3: 	  let record = mut {item: 0}
 //│ ║        	                    ^^^^^^^^
-//│ ║  l.+4: 	  set record.item = AssignedCell(1)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+4: 	  set record.item = AssignedCell(input)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.+5: 	  record
 //│ ║        	^^^^^^^^
 //│ ╟── 'exportAssignedCell' is exposed by this compilation unit.
@@ -203,9 +316,13 @@ private class CopiedCell(mut val value)
 fun exportCopiedCell() =
   let source = {item: 0}
   let copy = mut {...source}
-  set copy.item = CopiedCell(1)
+  set copy.item = CopiedCell(input)
   copy
-//│ ╔══[COMPILATION ERROR] Mutable field 'value' is exposed to other compilation units, which can assign to it; annotate its type
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+1: 	private class CopiedCell(mut val value)
+//│ ║        	                             ^^^^^^^^^
+//│ ╟── The exposed interface admits values of unknown representation unless a type annotation restricts them.
+//│ ╟── Field 'value' admits assigned values of unknown shape.
 //│ ║  l.+1: 	private class CopiedCell(mut val value)
 //│ ║        	                                 ^^^^^
 //│ ╟── This value is stored in this record field.
@@ -216,8 +333,8 @@ fun exportCopiedCell() =
 //│ ║        	                ^^^^^^^^
 //│ ║  l.+4: 	  let copy = mut {...source}
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.+5: 	  set copy.item = CopiedCell(1)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+5: 	  set copy.item = CopiedCell(input)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.+6: 	  copy
 //│ ║        	^^^^^^
 //│ ╟── 'exportCopiedCell' is exposed by this compilation unit.
@@ -289,9 +406,13 @@ private fun original() = {item: 0}
 private fun intermediate() = {...original()}
 fun exportNestedCopy() =
   let copy = mut {...intermediate()}
-  set copy.item = NestedCell(1)
+  set copy.item = NestedCell(input)
   copy
-//│ ╔══[COMPILATION ERROR] Mutable field 'value' is exposed to other compilation units, which can assign to it; annotate its type
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+1: 	private class NestedCell(mut val value)
+//│ ║        	                             ^^^^^^^^^
+//│ ╟── The exposed interface admits values of unknown representation unless a type annotation restricts them.
+//│ ╟── Field 'value' admits assigned values of unknown shape.
 //│ ║  l.+1: 	private class NestedCell(mut val value)
 //│ ║        	                                 ^^^^^
 //│ ╟── This value is stored in this record field.
@@ -300,8 +421,8 @@ fun exportNestedCopy() =
 //│ ╟── This value is returned here.
 //│ ║  l.+5: 	  let copy = mut {...intermediate()}
 //│ ║        	                     ^^^^^^^^^^^^^^^
-//│ ║  l.+6: 	  set copy.item = NestedCell(1)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+6: 	  set copy.item = NestedCell(input)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.+7: 	  copy
 //│ ║        	^^^^^^
 //│ ╟── 'exportNestedCopy' is exposed by this compilation unit.
@@ -342,9 +463,13 @@ fun exportGenericCallback() = make(42)
 private class LateCell(mut val value)
 fun exportWriter() =
   let record = mut {item: 0}
-  fun write() = set record.item = LateCell(1)
+  fun write() = set record.item = LateCell(input)
   [record, write]
-//│ ╔══[COMPILATION ERROR] Mutable field 'value' is exposed to other compilation units, which can assign to it; annotate its type
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+1: 	private class LateCell(mut val value)
+//│ ║        	                           ^^^^^^^^^
+//│ ╟── The exposed interface admits values of unknown representation unless a type annotation restricts them.
+//│ ╟── Field 'value' admits assigned values of unknown shape.
 //│ ║  l.+1: 	private class LateCell(mut val value)
 //│ ║        	                               ^^^^^
 //│ ╟── This value is stored in this record field.
@@ -356,8 +481,8 @@ fun exportWriter() =
 //│ ╟── This value is returned here.
 //│ ║  l.+3: 	  let record = mut {item: 0}
 //│ ║        	                    ^^^^^^^^
-//│ ║  l.+4: 	  fun write() = set record.item = LateCell(1)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+4: 	  fun write() = set record.item = LateCell(input)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.+5: 	  [record, write]
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ╟── 'exportWriter' is exposed by this compilation unit.
@@ -372,7 +497,7 @@ private class HiddenCell(mut val value)
 fun exportSource() =
   let source = {item: 0}
   let copy = mut {...source}
-  set copy.item = HiddenCell(1)
+  set copy.item = HiddenCell(input)
   source
 exportSource().item
 //│ = 0
@@ -394,23 +519,23 @@ fun exportIntCallback() = {...make[Int](increment)}
 //│ = [4, 6]
 
 
-// A later field replaces a spread field completely. Exposure must not follow the discarded value and require
-// annotations on mutable class fields that remain private.
+// A later field replaces a spread field completely. Exposure must not follow the discarded value and widen
+// the mutable class fields that remain private.
 :expect 0
 private class OverwrittenCell(mut val value)
-private val overwrittenSource = {hidden: OverwrittenCell(0)}
+private val overwrittenSource = {hidden: OverwrittenCell(input)}
 val overwrittenView = {...overwrittenSource, hidden: 0}
 overwrittenView.hidden
 //│ = 0
-//│ overwrittenSource = {hidden: OverwrittenCell(0)}
+//│ overwrittenSource = {hidden: OverwrittenCell(undefined)}
 //│ overwrittenView = {hidden: 0}
 
 
 // The same last-write-wins rule applies to repeated direct fields and fields replaced by a later spread.
 :expect [0, 1]
 private class ReplacedCell(mut val value)
-fun exportDirectReplacement() = {item: ReplacedCell(0), item: 0}
-fun exportSpreadReplacement() = {item: ReplacedCell(0), ...{item: 1}}
+fun exportDirectReplacement() = {item: ReplacedCell(input), item: 0}
+fun exportSpreadReplacement() = {item: ReplacedCell(input), ...{item: 1}}
 [exportDirectReplacement().item, exportSpreadReplacement().item]
 //│ = [0, 1]
 
@@ -419,8 +544,8 @@ fun exportSpreadReplacement() = {item: ReplacedCell(0), ...{item: 1}}
 :expect 0
 private class ReplacedAssignedCell(mut val value)
 private fun originalWithAssignment() =
-  let record = mut {item: ReplacedAssignedCell(0)}
-  set record.item = ReplacedAssignedCell(1)
+  let record = mut {item: ReplacedAssignedCell(input)}
+  set record.item = ReplacedAssignedCell(input)
   record
 private fun intermediateWithAssignment() = {...originalWithAssignment()}
 fun exportAssignedReplacement() = mut {...intermediateWithAssignment(), item: 0}
@@ -431,18 +556,22 @@ exportAssignedReplacement().item
 // A computed key might leave earlier fields intact, so their values must still be exposed.
 :ge
 private class PossiblyRetainedCell(mut val value)
-fun exportPossibleReplacement(key: Str) = {item: PossiblyRetainedCell(0), (key): 0}
-//│ ╔══[COMPILATION ERROR] Mutable field 'value' is exposed to other compilation units, which can assign to it; annotate its type
+fun exportPossibleReplacement(key: Str) = {item: PossiblyRetainedCell(input), (key): 0}
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+1: 	private class PossiblyRetainedCell(mut val value)
+//│ ║        	                                       ^^^^^^^^^
+//│ ╟── The exposed interface admits values of unknown representation unless a type annotation restricts them.
+//│ ╟── Field 'value' admits assigned values of unknown shape.
 //│ ║  l.+1: 	private class PossiblyRetainedCell(mut val value)
 //│ ║        	                                           ^^^^^
 //│ ╟── This value is stored in this record field.
-//│ ║  l.+2: 	fun exportPossibleReplacement(key: Str) = {item: PossiblyRetainedCell(0), (key): 0}
+//│ ║  l.+2: 	fun exportPossibleReplacement(key: Str) = {item: PossiblyRetainedCell(input), (key): 0}
 //│ ║        	                                           ^^^^
 //│ ╟── This value is returned here.
-//│ ║  l.+2: 	fun exportPossibleReplacement(key: Str) = {item: PossiblyRetainedCell(0), (key): 0}
-//│ ║        	                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	fun exportPossibleReplacement(key: Str) = {item: PossiblyRetainedCell(input), (key): 0}
+//│ ║        	                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── 'exportPossibleReplacement' is exposed by this compilation unit.
-//│ ║  l.+2: 	fun exportPossibleReplacement(key: Str) = {item: PossiblyRetainedCell(0), (key): 0}
+//│ ║  l.+2: 	fun exportPossibleReplacement(key: Str) = {item: PossiblyRetainedCell(input), (key): 0}
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -462,9 +591,13 @@ privateMutableSource.item.length
 private class FrozenCopiedCell(mut val value)
 fun exportFrozenCopy() =
   let record = mut {item: 0}
-  set record.item = FrozenCopiedCell(1)
+  set record.item = FrozenCopiedCell(input)
   {...record}
-//│ ╔══[COMPILATION ERROR] Mutable field 'value' is exposed to other compilation units, which can assign to it; annotate its type
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+1: 	private class FrozenCopiedCell(mut val value)
+//│ ║        	                                   ^^^^^^^^^
+//│ ╟── The exposed interface admits values of unknown representation unless a type annotation restricts them.
+//│ ╟── Field 'value' admits assigned values of unknown shape.
 //│ ║  l.+1: 	private class FrozenCopiedCell(mut val value)
 //│ ║        	                                       ^^^^^
 //│ ╟── This value is stored in this record field.
@@ -473,8 +606,8 @@ fun exportFrozenCopy() =
 //│ ╟── This value is returned here.
 //│ ║  l.+3: 	  let record = mut {item: 0}
 //│ ║        	                    ^^^^^^^^
-//│ ║  l.+4: 	  set record.item = FrozenCopiedCell(1)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+4: 	  set record.item = FrozenCopiedCell(input)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.+5: 	  {...record}
 //│ ║        	^^^^^^^^^^^^
 //│ ╟── 'exportFrozenCopy' is exposed by this compilation unit.
@@ -492,9 +625,71 @@ exportedMutableCopy.item.length
 //│ ║  l.+3: 	exportedMutableCopy.item.length
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'length' of a value with unknown shape.
+//│ ╟── Field 'item' admits assigned values of unknown shape.
+//│ ║  l.+1: 	private val privateImmutableSource = {item: "abc"}
+//│ ║        	                                      ^^^^
 //│ ╟── 'exportedMutableCopy' is exposed by this compilation unit.
 //│ ║  l.+2: 	val exportedMutableCopy = mut {...privateImmutableSource}
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ exportedMutableCopy = {item: "abc"}
 //│ privateImmutableSource = {item: "abc"}
+
+
+// Two references to a stored record read and write the same field.
+:e
+private val storedRecord = mut {item: {only: 7}}
+set storedRecord.item = null
+storedRecord.item.only
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+3: 	storedRecord.item.only
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Null literal does not contain member 'only'
+//│ ║  l.+2: 	set storedRecord.item = null
+//│ ╙──      	                        ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ storedRecord = {item: null}
+
+
+// Clients can replace the field of the record they receive. A separate call keeps its own field.
+:expect 7
+private fun makeRecord(value) = mut {item: value}
+fun publicRecord() = makeRecord({other: 2})
+private val keptRecord = makeRecord({only: 7})
+keptRecord.item.only
+//│ = 7
+//│ keptRecord = {item: {only: 7}}
+
+
+// Calling a factory stored in a tuple allocates a record for each call.
+:expect [null, 7]
+private val factories = [x => mut {item: x}]
+private val first = factories.0({only: 1})
+private val second = factories.0({only: 7})
+set first.item = null
+[first.item, second.item.only]
+//│ = [null, 7]
+//│ factories = [fun]
+//│ first = {item: null}
+//│ second = {item: {only: 7}}
+
+
+// A stored function can also return the same record to both callers.
+:e
+private val shared = mut {item: {only: 7}}
+private val readers = [() => shared]
+private val writer = readers.0()
+private val reader = readers.0()
+set writer.item = null
+reader.item.only
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+6: 	reader.item.only
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╟── Null literal does not contain member 'only'
+//│ ║  l.+5: 	set writer.item = null
+//│ ╙──      	                  ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ reader = {item: null}
+//│ readers = [fun]
+//│ shared = {item: null}
+//│ writer = {item: null}

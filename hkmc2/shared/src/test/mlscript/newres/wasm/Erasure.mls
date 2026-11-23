@@ -177,7 +177,7 @@ exported(const(42))
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
 //│ ║  l.+1: 	fun exported(value) = value
 //│ ║        	             ^^^^^
-//│ ╟── The exposed interface admits values of unknown representation.
+//│ ╟── The exposed interface admits values of unknown representation unless a type annotation restricts them.
 //│ ╟── Parameter 'value' admits values of unknown shape.
 //│ ║  l.+1: 	fun exported(value) = value
 //│ ║        	             ^^^^^

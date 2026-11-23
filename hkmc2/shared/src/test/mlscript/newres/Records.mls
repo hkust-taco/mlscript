@@ -159,6 +159,9 @@ changing.value.after
 //│ ║  l.+1: 	let changing = mut {value: {before: 0}}
 //│ ║        	                            ^^^^^^^^^
 //│ ╟── Cannot resolve member 'after' of a value with unknown shape.
+//│ ╟── Field 'value' admits assigned values of unknown shape.
+//│ ║  l.+1: 	let changing = mut {value: {before: 0}}
+//│ ║        	                    ^^^^^
 //│ ╟── This value is exposed by this compilation unit.
 //│ ║  l.+1: 	let changing = mut {value: {before: 0}}
 //│ ╙──      	                    ^^^^^^^^^^^^^^^^^
@@ -361,6 +364,9 @@ set mutableNested.value = {after: 34}
 //│ ║  l.+1: 	let stableNested = {value: {before: 33}}
 //│ ║        	                            ^^^^^^^^^^
 //│ ╟── Cannot resolve member 'after' of a value with unknown shape.
+//│ ╟── Field 'value' admits assigned values of unknown shape.
+//│ ║  l.+1: 	let stableNested = {value: {before: 33}}
+//│ ║        	                    ^^^^^
 //│ ╟── This value is exposed by this compilation unit.
 //│ ║  l.+2: 	let mutableNested = mut {...stableNested}
 //│ ╙──      	                            ^^^^^^^^^^^^

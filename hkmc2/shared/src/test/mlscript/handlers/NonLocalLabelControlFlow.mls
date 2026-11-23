@@ -144,6 +144,7 @@ continueFromNestedFunctionWithEffects()
 //│ };
 //│ define Capture$scope0 as class Capture$scope0¹ {
 //│   constructor Capture$scope0⁰(i$0) {
+//│     @js.plainField
 //│     define i$0¹ as val i$0⁰ = i$0;
 //│     end
 //│   }

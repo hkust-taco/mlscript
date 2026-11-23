@@ -66,9 +66,9 @@ read(Box(Item(8)))
 //│ ║  l.+3: 	fun read(box: Box) = box.item.value
 //│ ║        	                     ^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
-//│ ╟── Parameter 'box' admits values of unknown shape.
+//│ ╟── Type argument 'T' is omitted here and admits values of unknown shape.
 //│ ║  l.+3: 	fun read(box: Box) = box.item.value
-//│ ║        	         ^^^^^^^^
+//│ ║        	              ^^^
 //│ ╟── 'read' is exposed by this compilation unit.
 //│ ║  l.+3: 	fun read(box: Box) = box.item.value
 //│ ╙──      	^^^^^^^^^^^^^^^^^^
@@ -83,13 +83,15 @@ make().item.value
 //│ = 9
 
 // An ascription preserves its written structure and infers its missing argument.
+// The ascribed value stays in the function: an escaping one would admit unknown contents.
 :expect 10
 class Item(val value: Int)
 class Box[T](val item: T)
-let box = Box(Item(10)) as Box
-box.item.value
+private fun unbox() =
+  let box = Box(Item(10)) as Box
+  box.item.value
+unbox()
 //│ = 10
-//│ box = Box(Item(10))
 
 // TODO: omissions in an alias body need the alias use's contextual graph view.
 :fixme
@@ -97,7 +99,7 @@ box.item.value
 class First(val first: Int)
 class Second(val second: Int)
 class Box[T](val item: T)
-type SomeBox = Box
+private type SomeBox = Box
 private fun both(left: SomeBox, right: SomeBox) = [left.item.first, right.item.second]
 both(Box(First(11)), Box(Second(12)))
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
@@ -154,6 +156,9 @@ read(Box(Item(13)))
 //│ ║  l.+3: 	fun read(box: Box): Int = box.item.value
 //│ ║        	                          ^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── Type argument 'T' is omitted here and admits values of unknown shape.
+//│ ║  l.+3: 	fun read(box: Box): Int = box.item.value
+//│ ║        	              ^^^
 //│ ╟── 'read' is exposed by this compilation unit.
 //│ ║  l.+3: 	fun read(box: Box): Int = box.item.value
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
@@ -169,9 +174,9 @@ read(() => Box(Item(14)))
 //│ ║  l.+3: 	fun read(callback: () -> Box) = callback().item.value
 //│ ║        	                                ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
-//│ ╟── Parameter 'callback' admits values of unknown shape.
+//│ ╟── Type argument 'T' is omitted here and admits values of unknown shape.
 //│ ║  l.+3: 	fun read(callback: () -> Box) = callback().item.value
-//│ ║        	         ^^^^^^^^^^^^^^^^^^^
+//│ ║        	                         ^^^
 //│ ╟── 'read' is exposed by this compilation unit.
 //│ ║  l.+3: 	fun read(callback: () -> Box) = callback().item.value
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

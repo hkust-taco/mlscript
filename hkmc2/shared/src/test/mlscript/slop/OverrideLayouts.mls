@@ -207,18 +207,19 @@ declare class DeclaredRebinding extends DeclaredBase {
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // The same declaration-only path checks scalar representations after correspondence.
-:ge
 declare class DeclaredTypedBase {
   declare fun pick(value: Int): Int
 }
+
+:ge
 declare class DeclaredNarrowing extends DeclaredTypedBase {
   declare override fun pick(value: Str): Int
 }
 //│ ╔══[COMPILATION ERROR] Parameter 'value' of overriding member 'pick' is represented as 'Str', which cannot hold the values represented as 'Int' that the member it overrides accepts
-//│ ║  l.+5: 	  declare override fun pick(value: Str): Int
+//│ ║  l.+2: 	  declare override fun pick(value: Str): Int
 //│ ║        	                            ^^^^^^^^^^
 //│ ╟── The overridden member 'pick' is defined here
-//│ ║  l.+2: 	  declare fun pick(value: Int): Int
+//│ ║  l.XX: 	  declare fun pick(value: Int): Int
 //│ ╙──      	              ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

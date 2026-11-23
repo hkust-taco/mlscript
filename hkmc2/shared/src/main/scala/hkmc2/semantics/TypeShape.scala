@@ -4,6 +4,16 @@ package semantics
 import hkmc2.utils.*, shorthands.*
 import codegen.Erasure
 
+/** The interface needed from a type. Member lookup combines the fields of an intersection.
+  * Comparing a provided value with a required type visits each component separately.
+  * A captured argument describes what a value can provide by its output bound and what
+  * an implementation must supply by its input bound.
+  */
+private[semantics] enum TypeView:
+  case Members, Provided, Required
+
+  def bound(argument: TypeArgument): DeclaredType = if this == Required then argument.input else argument.output
+
 /** A proper type interpretation, separate from both type arguments and value shapes.
   * Compound types retain links to their operands so forward aliases need not be expanded eagerly.
   */
@@ -102,6 +112,14 @@ object TypeShape:
       System.identityHashCode(host), System.identityHashCode(arguments))
     protected def sameValue(other: ValueKey): Bool = other match
       case that: Parameter => symbol == that.symbol && host == that.host && arguments == that.arguments
+      case _ => false
+  // A qualified type member can refer to a receiver parameter whose exact type
+  // is unknown. Its two bounds describe that one type independently of where the
+  // member appears, including inside another function's parameter type.
+  final case class CapturedArgument(argument: TypeArgument) extends TypeShape:
+    protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), argument.hashCode)
+    protected def sameValue(other: ValueKey): Bool = other match
+      case that: CapturedArgument => argument == that.argument
       case _ => false
   // An omitted argument owns one source inference node. It is not a quantified
   // binder and is never instantiated at a call site; marks distinguish its flows.
@@ -279,6 +297,8 @@ final class DeclaredType private (private[semantics] val reference: DeclaredType
         val left = previous.orderedAtoms
         val right = current.orderedAtoms
         if left.size == right.size && left.lazyZip(right).forall(_.sameUse(_)) then canonical else shape
+      case (TypeShape.CapturedArgument(previous), TypeShape.CapturedArgument(current)) =>
+        if previous.input.sameUse(current.input) && previous.output.sameUse(current.output) then canonical else shape
       case _ => lastWords("Only synthesized type nodes have a per-use interpretation")
     if shared is canonical then this else new DeclaredType(reference, bindings)(origin, namespaces, S(shared))
   private[semantics] def withNamespaces(plan: TypeNamespaces)(using ResolutionContext): DeclaredType =
@@ -471,11 +491,6 @@ enum TypeArgumentResolution:
     case Type(resolution) => resolution.source
     case Wildcard(tree, _, _) => tree
 
-  /** The written type observed on reads. An input-only bound supplies no output type to traverse. */
-  def readType: Opt[TypeResolution] = this match
-    case Type(resolution) => S(resolution)
-    case Wildcard(_, _, output) => output
-
   def foreachType(f: TypeResolution => Unit): Unit = this match
     case Type(resolution) => f(resolution)
     case Wildcard(_, input, output) => input.foreach(f); output.foreach(f)
@@ -489,6 +504,9 @@ final class TypeArgument(val input: DeclaredType, val output: DeclaredType) exte
     * remain proper type references; their later resolution cannot change this choice.
     */
   def at(positive: Bool): DeclaredType = if positive then output else input
+  def foreachBound(visit: DeclaredType => Unit): Unit =
+    visit(input)
+    if output isnt input then visit(output)
   def map(f: DeclaredType => DeclaredType): TypeArgument =
     val in = f(input)
     val out = if input is output then in else f(output)

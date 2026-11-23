@@ -99,9 +99,6 @@ wasm.i64.add(wasm.i32.const(1), wasm.i32.const(2))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Int64'
 //│ ║  l.+1: 	wasm.i64.add(wasm.i32.const(1), wasm.i32.const(2))
 //│ ╙──      	             ^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Int64'
-//│ ║  l.+1: 	wasm.i64.add(wasm.i32.const(1), wasm.i32.const(2))
-//│ ╙──      	                                ^^^^^^^^^^^^^^^^^
 //│ Wasm result:
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -235,9 +232,6 @@ wasm.f64.add(wasm.f32.const(1.5), wasm.f32.const(2.25))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Float32' at an unrelated type 'Float64'
 //│ ║  l.+1: 	wasm.f64.add(wasm.f32.const(1.5), wasm.f32.const(2.25))
 //│ ╙──      	             ^^^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Float32' at an unrelated type 'Float64'
-//│ ║  l.+1: 	wasm.f64.add(wasm.f32.const(1.5), wasm.f32.const(2.25))
-//│ ╙──      	                                  ^^^^^^^^^^^^^^^^^^^^
 //│ Wasm result:
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

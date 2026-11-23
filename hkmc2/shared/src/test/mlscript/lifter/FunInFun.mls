@@ -182,6 +182,7 @@ f(1, 2, 1000)
 //│ let g, h, Capture$scope0;
 //│ define Capture$scope0 as class Capture$scope0¹ {
 //│   constructor Capture$scope0⁰(mutated$0) {
+//│     @js.plainField
 //│     define mutated$0⁰ as val mutated$0¹ = mutated$0;
 //│     end
 //│   }
@@ -270,6 +271,7 @@ g()(1)
 //│ let h, f, baseCall, Capture$scope0, f$;
 //│ define Capture$scope0 as class Capture$scope0³ {
 //│   constructor Capture$scope0²(y$0) {
+//│     @js.plainField
 //│     define y$0⁰ as val y$0¹ = y$0;
 //│     end
 //│   }
@@ -460,6 +462,7 @@ fun f(x) =
 //│ let g, Capture$scope0, g$;
 //│ define Capture$scope0 as class Capture$scope0⁵ {
 //│   constructor Capture$scope0⁴(x$0) {
+//│     @js.plainField
 //│     define x$0⁰ as val x$0¹ = x$0;
 //│     end
 //│   }

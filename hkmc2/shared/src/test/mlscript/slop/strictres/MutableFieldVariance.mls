@@ -435,3 +435,24 @@ private fun test() =
   holder.record.f.value
 test()
 //│ = 6
+
+
+// A write through an override inherits the input bound of the receiver's field.
+:ge
+class Base
+class Child(val value: Int) extends Base
+private class Slot[T](seed: T) with
+  open mut val item: T = seed
+private class Middle[T](seed: T) extends Slot[T](seed) with
+  override mut val item = seed
+private fun assigned(value) = value.value
+private fun store(p: Middle[in (Base -> Int) out (Child -> Int)]) = set p.item = assigned
+store(new mut Middle[Child -> Int](x => 0))
+assigned(Child(10))
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+7: 	private fun assigned(value) = value.value
+//│ ║        	                              ^^^^^^^^^^^
+//│ ╟── Value of type 'Base' does not contain member 'value'
+//│ ║  l.+8: 	private fun store(p: Middle[in (Base -> Int) out (Child -> Int)]) = set p.item = assigned
+//│ ╙──      	                                ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

@@ -194,7 +194,7 @@ fun test: Function = new C
 //│ ║  l.+1: 	fun test: Function = new C
 //│ ╙──      	                     ^^^^^
 //│ Wasm result:
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ = {}
 
 :e
 fun test: Function = (new C) as Object
@@ -202,7 +202,7 @@ fun test: Function = (new C) as Object
 //│ ║  l.+1: 	fun test: Function = (new C) as Object
 //│ ╙──      	                      ^^^^^
 //│ Wasm result:
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ = {}
 
 fun castToObj(x): Object = x
 //│ Wasm result:

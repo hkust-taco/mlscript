@@ -1687,6 +1687,40 @@ inference, but returning it or storing it in an exposed record or tuple makes it
 interface subject to the same check. Callable result annotations provide the
 declared parameter interface when checking returned functions.
 
+Every type named in an exposed annotation exposes its public instance operations,
+including inherited methods and writes to mutable fields. For example,
+`fun make(): Cell` exposes those operations on `Cell`. Both `Box[Cell]` and
+`Phantom[Cell]` expose `Cell`, even if `Phantom` never uses its type parameter.
+The same rule follows type aliases and the parameter and result types of functions.
+For example, when `Reader[T] = T -> Str` and `Box[T]` is generic, `Reader[Box]`
+exposes `Box` and admits unknown values for its contents wherever it occurs in
+an exposed signature. Writing `Reader[Box[Item]]` specifies the contents.
+In a local expression such as `Box(item) as Box`, the contents are inferred from `item`.
+The annotation of a value that escapes is exposed too, even when it is written on a private
+definition: if `private fun reader(): Box -> Str` is returned by an exported function with
+no result annotation, clients can call the result with boxes of unknown contents.
+An omitted type argument can also expose an inferred value. For example, if the body of
+`fun callbacks(): Box` supplies a function as the box's contents, that function
+must also accept external calls.
+
+An exposed operation admits calls or writes to every implementation that overrides
+it. An unannotated member also exposes the values its implementations return or
+store, including values supplied to a field through a constructor argument or a later write.
+Every override must handle the parameter types and arguments its base admits,
+even in a private hierarchy. If `Base.read(x)` leaves `x` unannotated, both
+`new Base().read(null)` and `p.read(null)` with `p: Base` supply `null` to
+the corresponding parameter in the base and every override.
+An override that omits a parameter or mutable field annotation inherits the
+base member's type for that input. For example, if `Middle[T]` overrides
+`Slot[T].item: T` without repeating the annotation, a write through `Middle[Int]`
+uses `Int`, and an override of `Middle[Argument]` inherits `Argument`.
+If no declaration in the field's override chain supplies a type, writes through
+it reach the overriding field even in a private hierarchy. Each field keeps its
+own initializer.
+If the base parameter has type `Box[Item]` and the override writes `x: Box`,
+the overriding body must handle unknown contents even when all local calls
+supply boxes of `Item`. Writing `x: Box[Item]` gives the body access to `Item`.
+
 Generic parameters remain opaque regardless of strict mode, visibility, or local
 callers. For example, `private fun read[A](x: A) = x.a` is invalid because `A`
 does not supply member `a`, even when every call supplies a record with that field.
@@ -1750,17 +1784,17 @@ with their established representations; new uses cannot widen them.
 
 A mutable field holds its initializer and then the values assigned to it, through any receiver that
 can be an instance of its class, so an unannotated mutable field takes the representation of all of
-them. Since other compilation units can assign values to the mutable fields that a compilation unit
-exposes, those must declare their types, as their representations must not depend on the values that
-the compilation unit happens to assign to them:
+them. Other compilation units can assign values to the mutable fields that a compilation unit
+exposes, so an unannotated exposed mutable field also admits unknown inputs, like the unannotated
+parameter of an exposed function. Declaring its type restricts them:
 
 ```mlscript
 private class Cell(mut val value)  // `value` is represented as `Int32`
 private fun reset(cell) = set cell.value = wasm.i32.const(0)
 reset(Cell(wasm.i32.const(1)))
 
-class Counter(mut val count)       // error: `count` is exposed, so its type must be declared
-class Counter(mut val count: Int)  // ok
+class Counter(mut val count)       // `count` is exposed, so it has an unknown representation
+class Tally(mut val count: Int)    // `count` is represented as `Int`
 ```
 
 Mutable record fields (see Record Literals) can be assigned too, but cannot declare their types:

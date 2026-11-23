@@ -30,7 +30,7 @@ identity(input64)
 //│ throw "This code cannot be run as its compilation yielded an error."
 
 // A lambda with valid parameters can still fail its return coercions during lowering.
-// Failed lowering must not pass that IR to optimization or a backend.
+// Each rejected coercion lowers to the error, so that no value reaches a slot of another representation.
 :ge
 :sir
 :siret
@@ -43,7 +43,18 @@ mixedResult(true)
 //│ ║  l.+1: 	private val mixedResult = (flag: Bool) => if flag then input32 else input64
 //│ ╙──      	                                                                    ^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ throw "This code cannot be run as its compilation yielded an error."
+//│ let lambda;
+//│ define lambda as fun lambda⁰(flag: Bool⁰): ? {
+//│   match flag
+//│     true =>
+//│       throw "This code cannot be run as its compilation yielded an error."
+//│     else
+//│       throw "This code cannot be run as its compilation yielded an error."
+//│   end
+//│ };
+//│ @private
+//│ define mixedResult⁰ as val mixedResult¹: Function⁰ = lambda⁰;
+//│ return mixedResult¹(true)
 
 // Nested lambdas with representable results remain valid.
 :sir
@@ -52,16 +63,16 @@ private val referenceFactory = (value: Int) => (ignored: Int) => value
 referenceFactory(42)(1)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let lambda, callPrefix: ?;
-//│ define lambda as fun lambda¹(value: Int⁰): ? {
+//│ define lambda as fun lambda²(value: Int⁰): ? {
 //│   let lambda1;
 //│   @private
-//│   define lambda1 as fun lambda⁰(ignored: Int⁰): ? {
+//│   define lambda1 as fun lambda¹(ignored: Int⁰): ? {
 //│     return value
 //│   };
-//│   return lambda⁰
+//│   return lambda¹
 //│ };
 //│ @private
-//│ define referenceFactory⁰ as val referenceFactory¹: Function⁰ = lambda¹;
+//│ define referenceFactory⁰ as val referenceFactory¹: Function⁰ = lambda²;
 //│ set callPrefix = referenceFactory¹(42);
 //│ return callPrefix(1)
 
@@ -79,6 +90,17 @@ factory(input32)(1)
 //│ ║  l.+2: 	factory(input32)(1)
 //│ ╙──      	        ^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda, callPrefix: ?;
+//│ define lambda as fun lambda⁴(value: Int32): ? {
+//│   let lambda1;
+//│   @private
+//│   define lambda1 as fun lambda³(ignored: Int⁰): ? {
+//│     throw "This code cannot be run as its compilation yielded an error."
+//│   };
+//│   return lambda³
+//│ };
+//│ @private
+//│ define factory⁰ as val factory¹: Function⁰ = lambda⁴;
 //│ throw "This code cannot be run as its compilation yielded an error."
 
 // Erasure failure rejects the whole block before branch cloning or closure construction.
@@ -174,7 +196,8 @@ RejectedMutable(input32)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ throw "This code cannot be run as its compilation yielded an error."
 
-// Discarding a failed lowering also removes its function bodies from symbols used by the inliner.
+// The body of a function whose result coercion fails is the error, so that a later use
+// cannot obtain the rejected value from it, including through the inliner.
 :ge
 :sir
 :siret
@@ -184,7 +207,11 @@ badReturn()
 //│ ║  l.+1: 	private fun badReturn(): Int32 = "wrong"
 //│ ╙──      	                                 ^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ throw "This code cannot be run as its compilation yielded an error."
+//│ @private
+//│ define badReturn⁰ as fun badReturn¹(): Int32 {
+//│   throw "This code cannot be run as its compilation yielded an error."
+//│ };
+//│ return badReturn¹()
 
 :soir
 :siret
@@ -192,11 +219,24 @@ private fun laterCaller(): Int32 = badReturn()
 laterCaller()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ @private
-//│ define laterCaller⁰ as fun laterCaller¹(): Int32 { return badReturn⁰() };
-//│ return badReturn⁰()
+//│ define laterCaller⁰ as fun laterCaller¹(): Int32 { return badReturn¹() };
+//│ return badReturn¹()
 
 // Phase failure belongs to one block; the next independent block still compiles and runs.
 :js
 :expect 42
 (value => value)(42)
+//│ = 42
+
+// A failed return coercion in one method leaves a sibling method usable in the same module.
+:ge
+:js
+:expect 42
+module MixedResults with
+  fun healthy() = 42
+  fun invalid(): Int32 = "wrong"
+MixedResults.healthy()
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int32'
+//│ ║  l.+3: 	  fun invalid(): Int32 = "wrong"
+//│ ╙──      	                         ^^^^^^^
 //│ = 42
