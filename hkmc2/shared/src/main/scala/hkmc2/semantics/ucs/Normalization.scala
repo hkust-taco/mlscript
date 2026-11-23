@@ -69,18 +69,6 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         val filteredEntries = lhs.entries.filter:
           (fieldName1, _) => rhsEntries.forall { (fieldName2, _) => !(fieldName1 === fieldName2)}
         FlatPattern.Record(filteredEntries)
-      case rhs: FlatPattern.ClassLike => rhs.symbol match
-        case cls: ClassSymbol => cls.defn match
-          case S(ClassDef.Parameterized(params = paramList)) =>
-            // Only `val` parameters are accessible as fields, so only those
-            // can subsume a Record entry. This keeps `assuming` consistent
-            // with `compareCasePattern`'s record and class check.
-            val filteredEntries = lhs.entries.filter:
-              (fieldName1, _) => paramList.params.forall:
-                case param: Param => !(param.flags.isVal && fieldName1 === param.sym.id)
-            FlatPattern.Record(filteredEntries)
-          case S(_) | N => lhs
-        case _: ModuleOrObjectSymbol => lhs
       case _ => lhs
 
   inline def apply(split: Split): Split = normalize(split)(using VarSet())
@@ -244,7 +232,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
             else thatPattern match
             case thatPattern: FlatPattern.Record =>
               log(dbg"Case 1.1.4: $thatPattern is a record")
-              // we can use information if pattern is itself a record, or if it is a constructor with arguments
+              // A preceding record test may already have read some of these fields.
               val simplifiedRecord = thatPattern assuming pattern
               if simplifiedRecord.entries.isEmpty then
                 S(tail)
@@ -611,15 +599,6 @@ object Normalization:
     case (Lit(Tree.BoolLit(_)), ClassLike(symbol = blt.`Bool`)) => true
     case (Record(entries1), Record(entries2)) =>
       entries1.forall { (fieldName1, _) => entries2.exists { (fieldName2, _) => fieldName1 === fieldName2 } }
-    case (Record(entries), rhs: ClassLike) =>
-      val clsParams = rhs.symbol match
-        case symbol: ClassSymbol => symbol.defn match
-          case S(ClassDef.Parameterized(params = paramList)) => paramList.params
-          case S(_) | N => Nil
-        case _: ModuleOrObjectSymbol => Nil
-      entries.forall { (fieldName, _) => clsParams.exists {
-        case Param(flags = FldFlags(isVal = isVal), sym = sym) => isVal && fieldName === sym.id
-      }}
     // Check the class hierarchy via extends clauses. This includes virtual
     // classes such as `Int <: Num`, whose relationship is declared in Prelude.
     // `Int31` deliberately does not extend `Num`: converting it to a `Num`

@@ -11,6 +11,14 @@ fun take_2(p) =
     { :x, :y } then x + y
     else 0
 
+// A value with a length field can reach the second arm when the Array test fails.
+:expect [1, 2]
+private fun sizeKind(value) = if value is
+  Array then 1
+  {length: n} then n
+[sizeKind([]), sizeKind({length: 2})]
+//│ = [1, 2]
+
 take_1({x: 0, y: 10})
 //│ = 10
 
