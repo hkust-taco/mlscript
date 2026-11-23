@@ -1651,6 +1651,12 @@ extends Importer:
   trace[Term](dbg"Elab subterm ${tree.showDbg}", r => s"~> ${r.showDbg}"):
     
     def error = Term.Error().withLocOf(tree)
+
+    def invalMLReference(op: => Term): Term =
+      if newResolution then
+        raise(ErrorReport(msg"InvalML region and reference operations require legacy resolution." -> tree.toLoc :: Nil))
+        error
+      else op.withLocOf(tree)
     
     /** Elaborate the parameters of a function type. Unlike other tuples, these may be marked optional,
       * as in `(Int, Int?) -> Int`, in which case the parameter type also includes `null`,
@@ -2005,9 +2011,9 @@ extends Importer:
       raise:
         ErrorReport(msg"Unexpected infix use of keyword '${kw.name}' here" -> tree.toLoc :: Nil)
       error
-    case OpApp(lhs, Ident(":="),rhs :: Nil) =>
+    case OpApp(lhs, Ident(":="), rhs :: Nil) => invalMLReference:
       Term.SetRef(subterm(lhs), subterm(rhs))
-    case App(Ident("!"), Tup(rhs :: Nil)) =>
+    case App(Ident("!"), Tup(rhs :: Nil)) => invalMLReference:
       Term.Deref(subterm(rhs))
     case App(Ident("~"), Tup(rhs :: Nil)) =>
       Term.Neg(subterm(rhs, Tpe)).withLocOf(tree)
@@ -2273,11 +2279,17 @@ extends Importer:
       Blk(subterm(body) :: Nil, unit).mkLocWith(kw)
     case PrefixApp(kw @ Keywrd(Keyword.`drop`), body) =>
       Term.Drop(subterm(body)).mkLocWith(kw)
-    case Region(id: Ident, body) =>
-      val sym = VarSymbol(id, erasedType = N, mut = true)
-      given Ctx = ctx + (id.name -> sym)
-      Term.Region(sym, subterm(body))
-    case RegRef(reg, value) => Term.RegRef(subterm(reg), subterm(value))
+    case Region(name, body) => invalMLReference:
+      name match
+        case id: Ident =>
+          val sym = VarSymbol(id, erasedType = N, mut = true)
+          given Ctx = ctx + (id.name -> sym)
+          Term.Region(sym, subterm(body))
+        case _ =>
+          raise(ErrorReport(msg"Expected an identifier for the region name." -> name.toLoc :: Nil))
+          error
+    case RegRef(reg, value) => invalMLReference:
+      Term.RegRef(subterm(reg), subterm(value))
     case Outer(S(_)) =>
       raise(ErrorReport(msg"Illegal outer binding." -> tree.toLoc :: Nil))
       error
@@ -2400,7 +2412,7 @@ extends Importer:
     case Reft(base, body) =>
       raise(ErrorReport(msg"Unsupported refinement in this position." -> tree.toLoc :: Nil))
       error
-    case Dummy | _: SplitPoint | _: LexicalNew | _: Region | _: Effectful =>
+    case Dummy | _: SplitPoint | _: LexicalNew | _: Effectful =>
       lastWords(s"Unexpected ${tree.describe} in subterm position: $tree")
     case Dummy | _: SplitPoint | _: Pun | _: LetLike | _: TyTup | _: Directive =>
       raise(ErrorReport(msg"Unsupported term in this position (${tree.describe})." -> tree.toLoc :: Nil))

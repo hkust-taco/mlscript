@@ -5816,6 +5816,7 @@ class NewResolver:
     case _: SynthIf | _: SynthWhile =>
       lastWords("Lowering-generated control flow must not enter resolution")
     case _: Region | _: RegRef | _: Deref | _: SetRef =>
-      lastWords("InvalML reference operations require legacy resolution")
+      // A legacy import can expose a function whose result must be inferred from its body.
+      resolError(trm, msg"Cannot infer the result of a legacy InvalML region or reference operation." -> N :: Nil)
   
 end NewResolver
