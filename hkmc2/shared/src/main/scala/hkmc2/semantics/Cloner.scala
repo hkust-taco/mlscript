@@ -583,7 +583,10 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
       case DynNew(cls, args) => DynNew(cls.cloned, args.map(_.cloned))
       case term @ SelProj(prefix, cls, proj) =>
         copySelection(term, SelProj(prefix.cloned, cls.cloned, proj)(term.sym.map(_.subst), term.resSym, term.typ, term.originalCtx))
-      case Asc(term, ty) => Asc(term.cloned, ty.cloned)
+      case asc @ Asc(term, ty) =>
+        val copy = Asc(term.cloned, ty.cloned)
+        copy.erasedType = asc.erasedType.map(valueType)
+        copy
       case CompType(lhs, rhs, pol) => CompType(lhs.cloned, rhs.cloned, pol)
       case Neg(rhs) => Neg(rhs.cloned)
       case Region(name, body) =>

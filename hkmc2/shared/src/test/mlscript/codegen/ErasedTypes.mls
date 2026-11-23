@@ -891,7 +891,10 @@ fun useMember: Int = M.memberGetter
 // would silently take the getter's result type and the cast would be dropped.
 fun callMember: Int = M.memberGetter{as Function}()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define callMember⁰ as fun callMember¹(): Int⁰ { return (M².memberGetter¹() as! Int⁰) }; end
+//│ define callMember⁰ as fun callMember¹(): Int⁰ {
+//│   return ((M².memberGetter¹ as! Function⁰)() as! Int⁰)
+//│ };
+//│ end
 
 
 // An instantiation is typed as its class, so it cannot fill a primitive slot. Were the `Instantiate` type

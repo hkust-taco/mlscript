@@ -1192,6 +1192,7 @@ sealed abstract class Result extends Located:
     case DynSelect(qual, fld, _) => qual.subBlocks ::: fld.subBlocks
     case SuperSelect(qual, base, key) => qual.subBlocks ::: base.subBlocks ::: key.subBlocks
     case Lambda(params, body) => body :: Nil
+    case Cast(value, _, _) => value.subBlocks
     case Tuple(mut, elems) => elems.flatMap(_.value.subBlocks)
     case _ => Nil
   
@@ -1308,13 +1309,29 @@ sealed abstract class Result extends Located:
     *
     * Narrowing to an unrelated type is reported as an error, and this result is yielded unchanged.
     *
-    * This is the only place where [[Config.checkCasts]] is consulted: it fixes each cast's `check` flag at the
-    * point the coercion is introduced, so that the transformers rebuilding casts downstream need not carry a
-    * [[Config]] of their own. [[coerceToKnown]] builds the unchecked casts of generated code instead.
+    * Like [[ascribeTo]], this records [[Config.checkCasts]] on the cast when lowering introduces it.
+    * [[coerceToKnown]] builds unchecked casts for values whose representation the compiler knows.
     */
   def coerceTo(expected: ErasedValueType, loc: Opt[Loc])(using Ctx, State, Raise, Config): Result =
-    if needsCastTo(expected, reportUnrelated(loc)) then Cast(this, expected, config.checkCasts)(loc) else this
+    if needsCastTo(expected, reportUnrelated(loc)) then Cast.refined(this, expected, config.checkCasts)(loc) else this
   
+  /** Lowers an explicit `as` to its erased target. A source ascription can request a runtime check
+    * between disjoint reference types. If the target has no representation or requires an unboxed
+    * conversion, report the error and return `N` so lowering stops this path.
+    */
+  final def ascribeTo(target: ErasedValueType, loc: Opt[Loc])(using Ctx, State, Raise, Config): Opt[Result] =
+    val actual = erasedType_!.canonicalize
+    val expected = target.canonicalize
+    val needed = (actual, expected) match
+      case (ErasedType.AnyRef(_, from), ErasedType.AnyRef(_, to)) => S(!ErasedType.isSubtypeOf(from, to).contains(true))
+      case _ => ErasedType.needsCast(actual, expected)
+    needed match
+    case S(false) => S(this)
+    case S(true) => S(Cast.refined(this, target, config.checkCasts)(loc))
+    case N =>
+      reportUnrelated(loc)(actual, expected)
+      N
+
   /** Coerces a value that the compiler knows to have `expected`'s representation, such as a
     * temporary that generated code binds to the result of an untyped runtime helper.
     *
@@ -1476,18 +1493,18 @@ case class Instantiate(mut: Bool, cls: Path, argss: Ls[Ls[Arg]])(val metadata: I
   * `check` records whether the coercion is meant to be verified at runtime. No pass expands it into a type test
   * yet, so a checked cast currently generates the same code as an unchecked one.
   *
-  * `check` is decided once, where the coercion is introduced: [[Result.coerceTo]] reads [[Config.checkCasts]], and
+  * [[Result.coerceTo]] and [[Result.ascribeTo]] read [[Config.checkCasts]] when they introduce the coercion.
   * [[Result.coerceToKnown]] builds unchecked casts for values whose representation the compiler knows. Every other
   * site that rebuilds a cast must *copy* the flag rather than re-derive it, so that the configuration does not have
   * to be threaded through the IR transformers.
   *
   * Invariants:
-  * - `value` is not a cast.
+  * - Nested casts preserve inner checks that can fail even when the outer check would succeed.
   * - The operand of a [[CastResult]] is not a path.
   * - The smart constructors preserve `Nothing`-typed paths, including `undefined`, unchanged.
-  * - Semantic construction narrows to a proper subtype of `value`'s erased type. Substitution can later expose a
-  *   more precise operand: [[Cast.refined]] drops a cast whose operand already fits, and an operand of an unrelated
-  *   reference type yields a cast that fails at run time. The cast of a `Nothing`-typed non-path operand remains:
+  * - Implicit coercions narrow to a subtype. Explicit ascriptions and substitutions can give a cast an operand
+  *   of an unrelated reference type. [[Cast.refined]] drops a cast whose operand already fits.
+  *   The cast of a `Nothing`-typed non-path operand remains:
   *   backends must evaluate that operand's effects before materializing a value of the target representation.
   */
 sealed trait Cast extends Result:
@@ -1513,58 +1530,59 @@ object Cast:
   
   /** Builds a cast of `value`, which is a path if and only if `value` is one.
     *
-    * Like [[path]], this collapses a nested cast. Use [[path]] for an operand that is statically a path, so that
-    * the result is statically a path as well.
+    * Like [[path]], this collapses an unchecked inner cast. Use [[path]] for a statically known path
+    * to retain that type on the result.
     */
   def apply(value: Result, target: ErasedValueType, check: Bool)(toLoc: Opt[Loc]): Result =
     value match
       case value: Path => path(value, target, check)(toLoc)
-      case CastResult(inner, _, innerCheck) => new CastResult(inner, target, check || innerCheck)(toLoc)
+      case CastResult(inner, _, false) => new CastResult(inner, target, check)(toLoc)
       case _ => new CastResult(value, target, check)(toLoc)
   
-  /** Builds a cast of a path while collapsing a nested cast and preserving `Nothing`-typed paths unchanged.
+  /** Builds a cast of a path, preserving checked operands and `Nothing`-typed paths.
     *
-    * Collapsing `Cast(Cast(v, T), U)` to `Cast(v, U)` drops the inner test. The `T`-typed intermediate goes with it,
-    * so no value is left in a wrongly-typed slot. However, an unchecked failure *can be lost* - if a cast is
-    * undecidable a `Cast` will be inserted anyways, and determining this fact here would require threading `Ctx` and
-    * `State` wherever `Cast` nodes need to be built.
-    *
-    * Note that explicitly-checked casts are never lost to preserve the semantics of eagerly failing when casts fail.
-    * The exception is a cast of a bottom-typed path, which fits every representation without a test. Returning
-    * that path preserves its effects, including when it is itself a cast to `Nothing`.
+    * An unchecked inner cast supplies no test. A checked inner cast can fail even when the original operand
+    * fits the outer target, as in `("s" as Int) as Str`. Returning a bottom-typed path directly preserves
+    * its effects, including when it is itself a cast to `Nothing`.
     */
   def path(value: Path, target: ErasedValueType, check: Bool)(toLoc: Opt[Loc]): Path =
     value match
       case _ if value.erasedType.contains(ErasedType.Nothing) => value
-      case CastPath(inner, _, innerCheck) => new CastPath(inner, target, check || innerCheck)(toLoc)
+      case CastPath(inner, _, false) => new CastPath(inner, target, check)(toLoc)
       case _ => new CastPath(value, target, check)(toLoc)
   
-  /** Whether `operand` already fits `target`, so that casting it is redundant. A `Nothing`-typed operand fits
-    * every target, but the cast of a non-path one is how backends materialize the target's representation
-    * (see [[Cast]]), so it is not redundant. [[path]] already returns `Nothing`-typed paths unchanged. */
-  private def fits(operand: Result, target: ErasedValueType)(using Ctx, State): Bool =
-    !operand.erasedType.contains(ErasedType.Nothing)
-      && ErasedType.needsCast(operand.erasedType_!.canonicalize, target.canonicalize).contains(false)
-  
-  /** Builds a cast like [[apply]], and also drops it when the operand already fits `target`.
-    *
-    * Semantic construction never builds such a cast (see `Result.coerceTo`), but substituting a
-    * more precise operand into an existing cast can make it redundant: inlining `h(5)` with
-    * `fun h(y) = g(y)` and `fun g(x: Int)` yields `5 as! Int`. A redundant check cannot fail,
-    * so even a checked cast can be dropped.
+  /** Whether a value of `actual` already has the representation required by `target`.
+    * A non-path operand of type `Nothing` still needs a cast to materialize the target
+    * representation. Likewise, an outer cast to `Nothing` cannot discharge an inner check.
+    */
+  private def fits(actual: ErasedValueType, target: ErasedValueType)(using Ctx, State): Bool =
+    val from = actual.canonicalize
+    from != ErasedType.Nothing && ErasedType.needsCast(from, target.canonicalize).contains(false)
+
+  private def canDropInner(inner: Cast, target: ErasedValueType, check: Bool)(using Ctx, State): Bool =
+    !inner.check || check && fits(target, inner.target)
+
+  /** Builds a cast with the class hierarchy available. Drops casts whose operand already fits
+    * and inner checks implied by the outer check, as in `(x as Object) as Box`.
+    * Substitution can also make a cast redundant, for example when inlining replaces the operand
+    * of a checked cast to `Int` with an integer literal.
     */
   def refined(value: Result, target: ErasedValueType, check: Bool)(toLoc: Opt[Loc])(using Ctx, State): Result =
     value match
       case value: Path => refinedPath(value, target, check)(toLoc)
-      case _ => Cast(value, target, check)(toLoc) match
-        case CastResult(operand, target, _) if fits(operand, target) => operand
-        case cast => cast
+      case inner: CastResult if canDropInner(inner, target, check) =>
+        refined(inner.value, target, check)(toLoc)
+      case _ if fits(value.erasedType_!, target) => value
+      case _ => new CastResult(value, target, check)(toLoc)
   
-  /** Builds a cast like [[path]], and also drops it when the operand already fits `target` (see [[refined]]). */
+  /** Refines a cast as in [[refined]], preserving its use in a path position. */
   def refinedPath(value: Path, target: ErasedValueType, check: Bool)(toLoc: Opt[Loc])(using Ctx, State): Path =
-    path(value, target, check)(toLoc) match
-      case CastPath(operand, target, _) if fits(operand, target) => operand
-      case cast => cast
+    value match
+      case _ if value.erasedType.contains(ErasedType.Nothing) => value
+      case inner: CastPath if canDropInner(inner, target, check) =>
+        refinedPath(inner.value, target, check)(toLoc)
+      case _ if fits(value.erasedType_!, target) => value
+      case _ => new CastPath(value, target, check)(toLoc)
 
 case class Lambda(params: LoweredParamList, body: Block)(val annot: Ls[Annot], val toLoc: Opt[Loc]) extends Result:
   def withLoc(loc: Opt[Loc]): Lambda = if loc == toLoc then this else copy()(annot, loc)
@@ -1603,7 +1621,7 @@ sealed abstract class Path extends TrivialResult:
     case _ => false
   /** Coerces this path like [[Result.coerceTo]]; a cast of a path is itself a path. */
   override def coerceTo(expected: ErasedValueType, loc: Opt[Loc])(using Ctx, State, Raise, Config): Path =
-    if needsCastTo(expected, reportUnrelated(loc)) then Cast.path(this, expected, config.checkCasts)(loc) else this
+    if needsCastTo(expected, reportUnrelated(loc)) then Cast.refinedPath(this, expected, config.checkCasts)(loc) else this
   /** Coerces this path like [[Result.coerceToKnown]]; a cast of a path is itself a path. */
   override def coerceToKnown(expected: ErasedValueType, loc: Opt[Loc])(using Ctx, State, Raise): Path =
     if needsCastTo(expected, reportUnknown(loc)) then Cast.path(this, expected, check = false)(loc) else this

@@ -350,6 +350,9 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
         td.tsym.initializeErasure(erasedDefinitionSignature(td, overrideChecks))
     definitions.foreach(eraseDefinition(_, Set.empty))
     statements.foreach:
+      // Code generation and the InvalML typer can each erase the same elaborated tree.
+      case asc: Asc if !asc.isErased =>
+        asc.erasedType = eraseSignature(asc.ty).map(representable(_, asc.ty.toLoc))
       case LetDecl(sym: TermSymbol, _) if !sym.isErased => sym.initializeErasure(N)
       case _ => ()
     // Compare signatures only after every definition has completed erasure.
