@@ -418,6 +418,10 @@ class BlockMemberSymbol(val nme: Str, val trees: Ls[TypeOrTermDef], val nameIsMe
     case t: Tree.TermDef /* if t.k is  */ => t
   def trmImplTree: Opt[Tree.TermDef] = trees.collectFirst:
     case t: Tree.TermDef if t.rhs.isDefined => t
+  /** A signature written apart from the definition, as `fun f: Int -> Int` next to `fun f(x) = x`:
+    * a term declaration with a result type, but no body and no parameter lists. */
+  def trmSigTree: Opt[Tree.TermDef] = trees.collectFirst:
+    case t: Tree.TermDef if t.rhs.isEmpty && t.paramLists.isEmpty && t.annotatedResultType.isDefined => t
   
   def isParameterizedMethod: Bool = trmTree.exists(_.isParameterizedMethod)
   

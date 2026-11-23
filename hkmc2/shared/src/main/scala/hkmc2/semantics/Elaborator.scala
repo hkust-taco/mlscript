@@ -2610,7 +2610,6 @@ extends Importer:
             member.trmImplTree.isEmpty || defn.body.nonEmpty
       then member.complete()
     val fieldInterpretation = resultInterp.elements
-    val newSignatureTrees = mutable.Map.empty[Str, Tree] // * Store trees of signatures
     
     // * Check for double/incompatible definitions and declarations
     blk.definedSymbols.foreach: (name, sym) =>
@@ -2675,13 +2674,6 @@ extends Importer:
         if decls.length > 1 then
           raise(ErrorReport(msg"Multiple declarations of symbol '$name'" -> N ::
             decls.map(msg"declared here" -> _.toLoc)))
-        val sig = decls.collectFirst:
-          case td
-            if td.annotatedResultType.isDefined
-            && td.paramLists.isEmpty
-            => td.annotatedResultType.get
-        sig.foreach: sig =>
-          newSignatureTrees += name -> sig
     
     // TODO extract this into a separate method
     // * @param funs:
@@ -2930,7 +2922,7 @@ extends Importer:
                 res
               
               // * Elaborate signature
-              val st = td.annotatedResultType.orElse(newSignatureTrees.get(id.name)) // FIXME: may elaborate external sig twice!!
+              val st = td.annotatedResultType.orElse(sym.trmSigTree.flatMap(_.annotatedResultType)) // FIXME: may elaborate external sig twice!!
               val s = st.map:
                 // unwrap possible module modifier
                 // e.g, `fun f: module M`
