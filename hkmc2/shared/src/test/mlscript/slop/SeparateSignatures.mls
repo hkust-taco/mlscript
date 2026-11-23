@@ -262,3 +262,65 @@ fun definitionTypeParams[A](x) = x
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+// Class members follow the same rules...
+:e
+class Members with
+  fun method: Int -> Int
+  fun method(x) = x + 1
+  fun getter: Int
+  fun getter = 1
+  private fun privateMember: Int -> Int
+  fun privateMember(x) = x
+let m = new Members
+[m.method(1), m.getter]
+//│ ╔══[COMPILATION ERROR] The signature and the definition of 'privateMember' must have the same visibility
+//│ ╟── signature here
+//│ ║  l.+6: 	  private fun privateMember: Int -> Int
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── definition here
+//│ ║  l.+7: 	  fun privateMember(x) = x
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = [2, 1]
+//│ m = Members
+
+// ... and so do `val` pairs, and pairs in modules, objects, and nested blocks.
+class ValMembers with
+  val field: Int
+  val field = 1
+(new ValMembers).field
+//│ = 1
+
+module ModuleMembers with
+  fun f: Int -> Int
+  fun f(x) = x + 1
+  val v: Int
+  val v = 2
+[ModuleMembers.f(1), ModuleMembers.v]
+//│ = [2, 2]
+
+object ObjectMembers with
+  fun f: Int -> Int
+  fun f(x) = x * 2
+ObjectMembers.f(3)
+//│ = 6
+
+fun nested(x) =
+  fun inner: Int -> Int
+  fun inner(y) = y + x
+  inner(1)
+nested(2)
+//│ = 3
+
+:e
+fun nestedLate(x) =
+  fun inner(y) = y
+  fun inner: Int -> Int
+  inner(x)
+//│ ╔══[COMPILATION ERROR] The signature of 'inner' must be written before its definition
+//│ ║  l.+3: 	  fun inner: Int -> Int
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── defined here
+//│ ║  l.+2: 	  fun inner(y) = y
+//│ ╙──      	  ^^^^^^^^^^^^^^^^
+
+
