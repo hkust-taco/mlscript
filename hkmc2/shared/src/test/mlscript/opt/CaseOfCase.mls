@@ -55,7 +55,8 @@ foo("ok")
 
 
 
-private fun map(opt, f) = if opt is
+// Later worksheet blocks call map, so its result must survive optimization of this block.
+fun map[A, B](opt: Option[A], f: A -> B): Option[B] = if opt is
   Some(value) then Some(f(value))
   None then None
 
@@ -65,16 +66,17 @@ private fun map(opt, f) = if opt is
 fun test(x) = x map(=> _ + 1) map(=> _ * 2)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define test⁰ as fun test¹(x) {
-//│   match x
+//│   let opt, inlinedVal, arg$Some$0$, arg$Some$0$1;
+//│   set opt = (x as! Object⁰);
+//│   match opt
 //│     Some⁰ =>
-//│       match undefined
-//│         Some⁰ =>
-//│           return undefined
-//│         None⁰ =>
-//│           return Option⁰.None⁰
-//│         else
-//│           throw new globalThis⁰.Error⁰("match error")
-//│       end
+//│       let inlinedVal1, inlinedVal2;
+//│       set arg$Some$0$1 = opt.value⁰;
+//│       set inlinedVal1 = +⁰(arg$Some$0$1, 1);
+//│       set inlinedVal = Option⁰.Some¹(inlinedVal1);
+//│       set arg$Some$0$ = inlinedVal.value⁰;
+//│       set inlinedVal2 = *⁰(arg$Some$0$, 2);
+//│       return Option⁰.Some¹(inlinedVal2)
 //│     None⁰ =>
 //│       return Option⁰.None⁰
 //│     else
@@ -83,6 +85,10 @@ fun test(x) = x map(=> _ + 1) map(=> _ * 2)
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect [Some(8), None]
+[test(Some(3)), test(None)]
+//│ = [Some(8), None]
 
 
 // Optimizes similarly
@@ -90,23 +96,20 @@ fun test(x) = x map(=> _ + 1) map(=> _ * 2)
 fun test(x) = x map(=> _ + 1) map(=> _ * 2) map(=> "Result: " + _)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define test² as fun test³(x) {
-//│   match x
+//│   let opt, inlinedVal, inlinedVal1, arg$Some$0$, arg$Some$0$1, arg$Some$0$2;
+//│   set opt = (x as! Object⁰);
+//│   match opt
 //│     Some⁰ =>
-//│       match undefined
-//│         Some⁰ =>
-//│           match undefined
-//│             Some⁰ =>
-//│               return undefined
-//│             None⁰ =>
-//│               return Option⁰.None⁰
-//│             else
-//│               throw new globalThis⁰.Error⁰("match error")
-//│           end
-//│         None⁰ =>
-//│           return Option⁰.None⁰
-//│         else
-//│           throw new globalThis⁰.Error⁰("match error")
-//│       end
+//│       let inlinedVal2, inlinedVal3, inlinedVal4;
+//│       set arg$Some$0$2 = opt.value⁰;
+//│       set inlinedVal2 = +⁰(arg$Some$0$2, 1);
+//│       set inlinedVal = Option⁰.Some¹(inlinedVal2);
+//│       set arg$Some$0$1 = inlinedVal.value⁰;
+//│       set inlinedVal3 = *⁰(arg$Some$0$1, 2);
+//│       set inlinedVal1 = Option⁰.Some¹(inlinedVal3);
+//│       set arg$Some$0$ = inlinedVal1.value⁰;
+//│       set inlinedVal4 = +⁰("Result: ", arg$Some$0$);
+//│       return Option⁰.Some¹(inlinedVal4)
 //│     None⁰ =>
 //│       return Option⁰.None⁰
 //│     else
@@ -115,6 +118,10 @@ fun test(x) = x map(=> _ + 1) map(=> _ * 2) map(=> "Result: " + _)
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect [Some("Result: 8"), None]
+[test(Some(3)), test(None)]
+//│ = [Some("Result: 8"), None]
 
 
 // Optimizes similarly
@@ -125,22 +132,20 @@ fun test(x) = if x map(=> _ + 1) is
   None then null
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define test⁴ as fun test⁵(x) {
-//│   let arg$Some$0$;
-//│   match x
+//│   let arg$Some$0$, opt, inlinedVal, arg$Some$0$1;
+//│   set opt = (x as! Object⁰);
+//│   match opt
 //│     Some⁰ =>
-//│       match undefined
-//│         Some⁰ =>
-//│           set arg$Some$0$ = undefined.value⁰;
-//│           match arg$Some$0$
-//│             0 =>
-//│               return []
-//│             else
-//│               return [arg$Some$0$]
-//│           end
-//│         None⁰ =>
-//│           return null
+//│       let inlinedVal1;
+//│       set arg$Some$0$1 = opt.value⁰;
+//│       set inlinedVal1 = +⁰(arg$Some$0$1, 1);
+//│       set inlinedVal = Option⁰.Some¹(inlinedVal1);
+//│       set arg$Some$0$ = inlinedVal.value⁰;
+//│       match arg$Some$0$
+//│         0 =>
+//│           return []
 //│         else
-//│           throw new globalThis⁰.Error⁰("match error")
+//│           return [arg$Some$0$]
 //│       end
 //│     None⁰ =>
 //│       return null
@@ -150,6 +155,10 @@ fun test(x) = if x map(=> _ + 1) is
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect [[], [4], null]
+[test(Some(-1)), test(Some(3)), test(None)]
+//│ = [[], [4], null]
 
 
 
