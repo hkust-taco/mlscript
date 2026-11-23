@@ -285,6 +285,11 @@ object Resolvable:
 
 case class SrcScope(outer: Elaborator.OuterCtx, parent: Opt[SrcScope]):
   
+  /** Bring a value defined at the root into this scope, capturing each intervening definition in lexical order. */
+  def captureFromRoot[A](value: A)(capture: (A, AnyDefinitionSymbol) => A): A =
+    val enclosing = parent.fold(value)(_.captureFromRoot(value)(capture))
+    outer.resolutionBoundary.fold(enclosing)(capture(enclosing, _))
+
   /** Whether code written in this scope can access the private members of `owner`: whether it is nested in the
     * definition of `owner` or of one of its companions, which are the other class-like definitions of its block member
     * symbol. These are found through `owner`, whose definition is complete, unlike the definitions enclosing this scope,

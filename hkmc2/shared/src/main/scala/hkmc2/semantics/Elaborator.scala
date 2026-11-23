@@ -322,6 +322,7 @@ object Elaborator:
       val Function = assumeBuiltinCls("Function")
       lazy val Promise = assumeBuiltinCls("Promise")
       lazy val Iterator = assumeBuiltinAls("Iterator")
+      lazy val Indexable = assumeBuiltinAls("Indexable")
       lazy val Awaited = assumeBuiltinAls("Awaited")
       lazy val Nothing = assumeBuiltinTpe("Nothing")
       val Error = assumeBuiltinCls("Error")
@@ -1186,7 +1187,7 @@ extends Importer:
     if newResolution then pipeTerm(term, binding)
     Head.Let(binding, term)
   
-  protected def mkMatch(scrutinee: Term, pattern: Pattern, consequent: SimpleSplit) =
+  protected def mkMatch(scrutinee: Term, pattern: Pattern, consequent: SimpleSplit)(using SrcScope) =
     log(dbg"mkMatch: scrutinee = ${scrutinee.showDbg}, pattern = ${pattern.showDbg}, consequent = ${consequent.showDbg}")
     matchScrutPat(scrutinee, pattern)
     // Captures carry the scope crossings needed to resolve extracted bindings,
@@ -3499,10 +3500,7 @@ extends Importer:
       // Builtins ignore local name shadowing, but their interfaces still enter
       // the parameter's lexical scopes. Without these captures a generic Array
       // method mixes inference inside the function with inference outside it.
-      def capture(scope: Ctx): Term =
-        val outer = scope.parent.fold[Term](initial)(capture)
-        scope.outer.resolutionBoundary.fold(outer)(Term.Capture(outer, _))
-      listenTypeInstances(capture(ctx)): shape =>
+      listenTypeInstances(ctx.scope.captureFromRoot[Term](initial)(Term.Capture(_, _))): shape =>
         if p.sym.currentShapes.add(shape) then p.sym.notifyShapeListeners(shape)
   
   /** Elaborate a subtyping constraint. */

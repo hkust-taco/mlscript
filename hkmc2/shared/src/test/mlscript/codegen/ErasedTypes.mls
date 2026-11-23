@@ -1243,7 +1243,7 @@ if asWrapper(fortyTwo) is
   [a, b] then "pair"
   else "other"
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let scrut: ?, a: ?, b: ?, element1$: ?, element0$: ?, tmp: Unknown;
+//│ let scrut: ?, a: Unknown, b: Unknown, element1$: ?, element0$: ?, tmp: Unknown;
 //│ set tmp = fortyTwo¹();
 //│ set scrut = asWrapper¹((tmp as!! Wrapper⁰));
 //│ match scrut

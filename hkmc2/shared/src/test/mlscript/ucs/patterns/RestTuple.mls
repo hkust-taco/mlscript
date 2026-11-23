@@ -1,5 +1,6 @@
 :.
 :js
+#lang(strictResolution: true)
 
 
 :sjs
@@ -10,10 +11,9 @@ fun nonsense(xs) = if xs is
 //│ let nonsense;
 //│ nonsense = function nonsense(xs) {
 //│   if (runtime.Tuple.isArrayLike(xs) && xs.length >= 0) {
-//│     let inlinedVal, tmp;
+//│     let tmp;
 //│     tmp = xs.length - 0;
-//│     inlinedVal = runtime.safeCall(xs.slice(0, tmp));
-//│     return inlinedVal /* as! Str */
+//│     return runtime.safeCall(xs.slice(0, tmp))
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ };
@@ -39,7 +39,7 @@ fun lead_and_last(xs) = if xs is
 //│     tmp2 = xs.length - 1;
 //│     runtime.safeCall(xs.slice(1, tmp2));
 //│     lastElement1$ = runtime.Tuple.get(xs, -1);
-//│     return element0$ + lastElement1$ /* as! Int */
+//│     return element0$ + lastElement1$
 //│   } else if (runtime.Tuple.isArrayLike(xs) && xs.length === 0) {
 //│     return 0
 //│   }
@@ -79,7 +79,7 @@ fun nested_tuple_patterns(xs) = if xs is
 //│       element1$ = runtime.Tuple.get(inlinedVal, 1);
 //│       tmp6 = element0$ + element0$1;
 //│       tmp7 = tmp6 + element1$;
-//│       return tmp7 + lastElement1$ /* as! Int */
+//│       return tmp7 + lastElement1$
 //│     }
 //│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│   } else if (runtime.Tuple.isArrayLike(xs) && xs.length === 0) {

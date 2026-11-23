@@ -3424,7 +3424,7 @@ class NewResolver:
     * Check their bindings against an arbitrary input, so a local caller cannot
     * supply undeclared assumptions to guards or transformations.
     */
-  def checkPatternDefinition(definition: PatternDef)(using ResolutionContext): Unit =
+  def checkPatternDefinition(definition: PatternDef)(using ResolutionContext, SrcScope): Unit =
     val source = Term.MemberRef(definition.bsym)(N, FlowSymbol.pat()(using rctx.owner))
     val unknown = UnknownValueShape(source, fromPublicInterface = false)(ShapeProvenance(
       msg"Pattern '${definition.sym.nme}' accepts values of unknown shape." -> definition.headerLoc :: Nil))
@@ -3435,13 +3435,13 @@ class NewResolver:
     * Both scrutinee and constructor shapes can arrive after this registration.
     * The heads of constructor patterns observe the values reaching their scrutinee
     * (see scrutineeNamespaces). */
-  def matchShapePat(shape: Shape, pattern: Pattern)(matched: ShapeListener[Shape])(using ResolutionContext): Unit =
+  def matchShapePat(shape: Shape, pattern: Pattern)(matched: ShapeListener[Shape])(using ResolutionContext, SrcScope): Unit =
     scrutineeNamespaces(shape, pattern)
     matchObservedShapePat(shape, pattern)(matched)
 
   /** Match a value whose namespaces `pattern` already observed (see scrutineeNamespaces). The views
     * of a declared type, and the patterns testing the same scrutinee as `pattern`, observe none. */
-  private def matchObservedShapePat(shape: Shape, pattern: Pattern)(matched: ShapeListener[Shape])(using ResolutionContext): Unit =
+  private def matchObservedShapePat(shape: Shape, pattern: Pattern)(matched: ShapeListener[Shape])(using ResolutionContext, SrcScope): Unit =
     shape match
       case value @ Marked(_: InstanceShape, _) if pattern.isInstanceOf[Pattern.Constructor] || pattern.isInstanceOf[Pattern.Tuple] =>
         listenInstanceViews(value)(matchObservedShapePat(_, pattern)(matched))
@@ -3683,7 +3683,7 @@ class NewResolver:
       case Pattern.Tuple(leading, spread) =>
         val trailing = spread.fold(Nil)(_._3)
         val required = leading.length + trailing.length
-        def tupleBindings(tuple: TupleShape, marks: Marks)(using ResolutionContext): Unit =
+        def tupleBindings(tuple: TupleShape, marks: Marks, input: TermShape)(using ResolutionContext): Unit =
           val segments = tuple.segments
           val known = segments.count(_.isInstanceOf[TupleShape.Fixed])
           val uncertain = known != segments.length
@@ -3694,14 +3694,22 @@ class NewResolver:
               value match
                 case value: TermShape => matchShapePat(value, patterns(index))(_ => ())
                 case NoShape => ()
-            tuple.exit(marks) match
-              case value: TermShape => matched(value)
-              case NoShape => ()
+            matched(input)
+        // The tuple guard also accepts IterableBase instances. Their indexing and slice implementations
+        // provide the indexed elements and the slice, whose representation can differ from the input.
+        def collectionBindings(input: TermShape, element: TermShape)(using ResolutionContext): Unit =
+          leading.foreach(matchShapePat(element, _)(_ => ()))
+          spread.foreach: (_, rest, trailing) =>
+            val slice = appliedType(prelude.builtins.Indexable, new ::(TypeArgument.invariant(extremeType(true)), Nil))
+            // The helper's result type comes from the prelude. Its fields' type arguments
+            // cross the same scopes as a reference to Indexable written at the pattern.
+            val captured = summon[SrcScope].captureFromRoot(slice)(captureType)
+            matchShapePat(instanceShape(captured), rest)(_ => ())
+            trailing.foreach(matchShapePat(element, _)(_ => ()))
+          matched(input)
         def narrow(value: TermShape)(using ResolutionContext): Unit = value match
-          case Marked(tuple: TupleShape, marks) => tupleBindings(tuple, marks)
-          case Marked(unknown: UnknownValueShape, marks) =>
-            tupleBindings(TupleShape(unknown.source,
-              TupleShape.Unknown(unknown.source, TupleShape.ValueField(unknown, Nil)) :: Nil)(this), marks)
+          case Marked(tuple: TupleShape, marks) => tupleBindings(tuple, marks, value)
+          case Marked(_: UnknownValueShape | _: DynShape, _) => collectionBindings(value, value)
           case Marked(nominal: NominalInstanceView, marks) =>
             // Bind the elements as instances of the declared element type:
             // binding a pattern variable does not request the type's interface,
@@ -3709,10 +3717,15 @@ class NewResolver:
             // would bind a separate tuple for each candidate of a type parameter
             // such as FingerTreeList's `Deep[T]`, and each such tuple creates
             // further rest views and Array interfaces.
-            arrayElementType(nominal).foreach: element =>
-              tupleBindings(TupleShape(element.output.resolution.source,
-                TupleShape.Unknown(element.output.resolution.source, TupleShape.TypedField(element, Nil)) :: Nil)(this), marks)
-          case _ => ()
+            arrayElementType(nominal) match
+              case S(element) =>
+                tupleBindings(TupleShape(element.output.resolution.source,
+                  TupleShape.Unknown(element.output.resolution.source, TupleShape.TypedField(element, Nil)) :: Nil)(this), marks, value)
+              case N if prelude.builtins.primitivelyRepresentedRoots.exists(_.asCls.exists(cls =>
+                  nominal.isInstanceOfClass(cls.defn.get))) => ()
+              case N => collectionBindings(value, unknownOutput)
+          case Marked(_: IntroShape | _: RecordShape | _: CallableTypeShape, _) => ()
+          case _ => collectionBindings(value, unknownOutput)
         shape match
           case value: TermShape => narrow(value)
           case sym: SymShape => fromSymbol(sym, narrow, Term.Missing, _ => (), false)
@@ -3749,7 +3762,7 @@ class NewResolver:
     case sel: NewSel => chainRoot(sel.prefix)
     case _ => N
 
-  def matchScrutPat(scrutinee: Term, pattern: Pattern)(using ResolutionContext): Unit = if newResolution then
+  def matchScrutPat(scrutinee: Term, pattern: Pattern)(using ResolutionContext, SrcScope): Unit = if newResolution then
     listenTerm(scrutinee)(sh => matchShapePat(sh, pattern)(_ => ()))
   
   /** Both class interpretations use the original class as their scheme owner.
