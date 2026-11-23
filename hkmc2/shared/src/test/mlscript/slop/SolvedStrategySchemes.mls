@@ -101,7 +101,8 @@ nested(20)
 
 // Recursive members share one solved scheme graph, while separate references
 // to that group still get independent instantiations.
-:fixme // Fusion returns the Int field in one copy and a branch function in the other, but both retain their SchemeBox result type.
+// Fusion returns the Int field in one copy and a branch function in the other. Both still declare a SchemeBox result.
+:fixme // Retype the specialized results in https://github.com/hkust-taco/mlscript/pull/624
 :checkIR
 :expect 42
 private fun evenBox(n: Int): SchemeBox =
