@@ -10,7 +10,7 @@ open i32.{ const }
 // Erasure must prepare an unboxed call target before lowering the caller's body.
 :expect 42
 fun caller(): Number = later(const(41))
-fun later(value: Number): Number = wasm.i32.add(value, const(1))
+fun later(value: Number): Number = i32.add(value, const(1))
 type Number = LaterNumber
 type LaterNumber = Int32
 caller()
@@ -99,7 +99,7 @@ private fun repeat(again, value) =
   if again then repeat(false, value) else value
 let first = repeat(true, const(40))
 let second = repeat(false, const(2))
-wasm.i32.add(first, second)
+i32.add(first, second)
 //│ Wasm result:
 //│ = 42
 
@@ -282,11 +282,11 @@ discard()
 :expect 42
 let calls = const(0)
 private fun absent(): Int64 =
-  set calls = wasm.i32.add(calls, const(1))
+  set calls = i32.add(calls, const(1))
   unsafe.undefined
 private fun consume(value: Int64): Int32 = calls
 let count = consume(absent())
-wasm.i32.add(count, const(41))
+i32.add(count, const(41))
 //│ Wasm result:
 //│ = 42
 
@@ -349,7 +349,7 @@ if derived.ownValue then derived.value else const(0)
 // Trailing arguments retain the inferred unboxed calling convention of the full argument list.
 :noInline
 :expect 42
-private fun add(left, right) = wasm.i32.add(left, right)
+private fun add(left, right) = i32.add(left, right)
 add(const(41)) \ const(1)
 //│ Wasm result:
 //│ = 42

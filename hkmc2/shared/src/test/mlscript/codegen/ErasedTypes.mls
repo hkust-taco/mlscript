@@ -664,22 +664,23 @@ fun sccG(): Num = sccF() + 0.5
 :js
 @tailrec
 fun annotLoop(n: Int): () = annotHelper(n)
-fun annotHelper(n) = if n <= 0 then () else annotLoop(n - 1)
+private fun annotHelper(n) = if n <= 0 then () else annotLoop(n - 1)
 annotHelper(100000)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ @tailrec
 //│ define annotLoop⁰ as fun annotLoop¹(n: Int⁰): Unit⁰ {
 //│   return annotHelper⁰(n)
 //│ };
-//│ define annotHelper¹ as fun annotHelper⁰(n: Unknown): Unit⁰ {
-//│   let scrut: ?, tmp: Unknown;
+//│ @private
+//│ define annotHelper¹ as fun annotHelper⁰(n: Int⁰): Unit⁰ {
+//│   let scrut: ?, tmp: Int⁰;
 //│   set scrut = <=⁰(n, 0);
 //│   match scrut
 //│     true =>
 //│       return runtime⁰.Unit⁰
 //│     else
 //│       set tmp = -⁰(n, 1);
-//│       return annotLoop¹((tmp as! Int⁰))
+//│       return annotLoop¹(tmp)
 //│   end
 //│ };
 //│ return annotHelper⁰(100000)
@@ -693,14 +694,14 @@ annotHelper(100000)
 //│         set id = 1;
 //│         continue loopLabel
 //│       1 =>
-//│         let scrut: ?, tmp: Unknown;
+//│         let scrut: ?, tmp: Int⁰;
 //│         set scrut = <=⁰(param0, 0);
 //│         match scrut
 //│           true =>
 //│             return runtime⁰.Unit⁰
 //│           else
 //│             set tmp = -⁰(param0, 1);
-//│             set param0 = (tmp as! Int⁰);
+//│             set param0 = tmp;
 //│             set id = 0;
 //│             continue loopLabel
 //│         end
@@ -713,8 +714,8 @@ annotHelper(100000)
 //│ define annotLoop⁰ as fun annotLoop¹(n: Int⁰): Unit⁰ {
 //│   return annotLoop_annotHelper⁰(0, n)
 //│ };
-//│ @inline
-//│ define annotHelper¹ as fun annotHelper⁰(n: Unknown): Unit⁰ {
+//│ @inline @private
+//│ define annotHelper¹ as fun annotHelper⁰(n: Int⁰): Unit⁰ {
 //│   return annotLoop_annotHelper⁰(1, n)
 //│ };
 //│ return annotLoop_annotHelper⁰(1, 100000)
