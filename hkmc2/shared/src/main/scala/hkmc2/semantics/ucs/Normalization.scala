@@ -48,9 +48,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
       case (FlatPattern.Lit(l1), FlatPattern.Lit(l2)) => l1 === l2
       case (FlatPattern.Tuple(n1, b1), FlatPattern.Tuple(n2, b2)) => n1 === n2 && b1 === b2
       case (FlatPattern.Record(ls1), FlatPattern.Record(ls2)) =>
-        ls1.lazyZip(ls2).forall:
-          case ((fieldName1, p1), (fieldName2, p2)) =>
-            fieldName1 === fieldName2 && p1 === p2
+        ls1 === ls2
       case (_: FlatPattern.ClassLike, _) | (_: FlatPattern.Lit, _) |
         (_: FlatPattern.Tuple, _) | (_: FlatPattern.Record, _) => false
     /** Checks if `lhs` can be subsumed under `rhs`. */
@@ -60,17 +58,6 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
       case lhs: FlatPattern.ClassLike => lhs.refined = true
       case _ => ()
   
-  extension (lhs: FlatPattern.Record)
-    /** reduces the record pattern `lhs` assuming we have matched `rhs`.
-      * It removes field matches that may now be unnecessary
-      */
-    infix def assuming(rhs: FlatPattern): FlatPattern.Record = rhs match
-      case FlatPattern.Record(rhsEntries) =>
-        val filteredEntries = lhs.entries.filter:
-          (fieldName1, _) => rhsEntries.forall { (fieldName2, _) => !(fieldName1 === fieldName2)}
-        FlatPattern.Record(filteredEntries)
-      case _ => lhs
-
   inline def apply(split: Split): Split = normalize(split)(using VarSet())
 
   /**
@@ -189,7 +176,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
     *   - Case 1.1.2: Branch pattern is more specific (`thatPattern <:< pattern`) → keep as-is,
     *     mark the specializing pattern as refined, and recurse into the tail so remaining
     *     branches on the same scrutinee are simplified with the known assumption.
-    *   - Case 1.1.4: Branch is a record → simplify fields already matched by the assumption.
+    *   - Case 1.1.4: Both patterns are records → reuse field reads with the same bindings.
     *   - Case 1.1.5: Specializing pattern is more specific (`pattern <:< thatPattern`) → keep as-is
     *     (the branch always matches when the assumption holds).
     *   - Case 1.1.6: Patterns are unrelated — if provably disjoint (e.g., different literals,
@@ -229,19 +216,15 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
               log(dbg"Case 1.1.2: $pattern <:< $thatPattern")
               pattern.markAsRefined
               rec(tail).map(newTail => split.copy(tail = newTail))
-            else thatPattern match
-            case thatPattern: FlatPattern.Record =>
-              log(dbg"Case 1.1.4: $thatPattern is a record")
-              // A preceding record test may already have read some of these fields.
-              val simplifiedRecord = thatPattern assuming pattern
-              if simplifiedRecord.entries.isEmpty then
-                S(tail)
-              else if simplifiedRecord.entries.length == thatPattern.entries.length then
-                // `assuming` only filters, so equal length means no field was
-                // removed — the split is structurally unchanged.
-                N
-              else
-                S(Split.Cons(Branch(thatScrutinee, simplifiedRecord, continuation), tail))
+            else (thatPattern, pattern) match
+            case (record: FlatPattern.Record, known: FlatPattern.Record) =>
+              // A successful record test also binds its field values. Reuse a read only
+              // when the earlier test initialized the same symbol for that field.
+              val pending = record.entries.filterNot(known.entries.contains)
+              if pending.isEmpty then
+                S(rec(continuation).getOrElse(continuation) ++ rec(tail).getOrElse(tail))
+              else if pending.length == record.entries.length then N
+              else S(Branch(thatScrutinee, FlatPattern.Record(pending), continuation) ~: tail)
             case _ =>
               if pattern <:< thatPattern then
                 // TODO: the warning will be useful when we have inheritance information
@@ -598,7 +581,7 @@ object Normalization:
     case (Lit(Tree.DecLit(_)), ClassLike(symbol = blt.`Num`)) => true
     case (Lit(Tree.BoolLit(_)), ClassLike(symbol = blt.`Bool`)) => true
     case (Record(entries1), Record(entries2)) =>
-      entries1.forall { (fieldName1, _) => entries2.exists { (fieldName2, _) => fieldName1 === fieldName2 } }
+      entries2.forall { (required, _) => entries1.exists { (field, _) => field === required } }
     // Check the class hierarchy via extends clauses. This includes virtual
     // classes such as `Int <: Num`, whose relationship is declared in Prelude.
     // `Int31` deliberately does not extend `Num`: converting it to a `Num`
