@@ -348,3 +348,11 @@ fun isNever(v) = if v is Never then 1 else 0
 isNever(1)
 //│ Wasm result:
 //│ = 0
+
+// Taking the length of a non-array or null would trap before the fallback.
+:noInline
+:expect 1
+fun emptyTuple(value: Any) = if value is [] then 1 else 0
+emptyTuple([]) + emptyTuple([1]) + emptyTuple(Foo(1)) + emptyTuple(1) + emptyTuple(null)
+//│ Wasm result:
+//│ = 1

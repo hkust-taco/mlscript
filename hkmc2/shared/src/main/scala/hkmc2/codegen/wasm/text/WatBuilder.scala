@@ -2711,21 +2711,14 @@ class WatBuilder(private val ctx: Ctx, linking: FileCompilation)(using TraceLogg
                       ))
                     end if
                   case Case.Tup(len, inf) =>
-                    val arrayRefType = RefType(HeapType.Array, nullable = true)
-                    val isArrayTest = ref.test(getScrutExpr, arrayRefType)
-
-                    // Length check
-                    val scrutArray = ref.cast(getScrutExpr, arrayRefType)
-                    val arrayLength = array.len(scrutArray)
-                    val lengthTest = if inf then
-                      i32.ge_u(arrayLength, i32.const(len))
-                    else
-                      i32.eq(arrayLength, i32.const(len))
-
-                    val testExpr = i32.and(isArrayTest, lengthTest)
+                    val arrayType = RefType(HeapType.Array, nullable = false)
+                    val length = array.len(ref.cast(getScrutExpr, arrayType))
+                    val lengthTest = if inf then i32.ge_u(length, i32.const(len)) else i32.eq(length, i32.const(len))
+                    // array.len traps on null and the cast traps on other values. Only a successful
+                    // non-null array test can reach the length check.
                     S(`if`(
-                      condition = testExpr,
-                      ifTrue = ifTrue,
+                      condition = ref.test(getScrutExpr, arrayType),
+                      ifTrue = `if`(lengthTest, ifTrue, N, Seq.empty),
                       ifFalse = N,
                       resultTypes = Seq.empty,
                     ))
