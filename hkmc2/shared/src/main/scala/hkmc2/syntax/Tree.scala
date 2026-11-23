@@ -607,6 +607,9 @@ trait TermDefImpl extends TypeOrTermDef:
   def isParameterizedMethod: Bool =
     (k is Fun) && paramLists.length > 0
   
+  def isSeparateSignature: Bool =
+    rhs.isEmpty && paramLists.isEmpty && annotatedResultType.isDefined
+  
 
 trait TypeOrTermDef extends Located:
   this: TypeDef | TermDef =>

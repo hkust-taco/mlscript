@@ -2674,48 +2674,59 @@ extends Importer:
         if decls.length > 1 then
           raise(ErrorReport(msg"Multiple declarations of symbol '$name'" -> N ::
             decls.map(msg"declared here" -> _.toLoc)))
+        sym.trmImplTree.foreach: impl =>
+          sym.trmDeclsAfterImpl.foreach: decl =>
+            raise:
+              ErrorReport:
+                // * A declaration of another shape is no separate signature wherever it is written, so the message does
+                // * not suggest moving it.
+                if decl.isSeparateSignature then
+                  msg"The signature of '$name' must be written before its definition" -> decl.toLoc
+                  :: msg"defined here" -> impl.toLoc
+                  :: Nil
+                else
+                  msg"A declaration of '$name' cannot follow its definition" -> decl.toLoc
+                  :: msg"defined here" -> impl.toLoc
+                  :: msg"Only a signature without parameter lists (`fun f: T`) can be written apart from a definition"
+                    -> N
+                  :: Nil
         (sym.trmSigTree, sym.trmImplTree) match
-        case (S(sig), S(impl)) =>
-          if sym.trmSigFollowsImpl then raise:
+        // * A late signature is ignored, so it gets only the error above.
+        case (S(sig), S(impl)) if !sym.trmDeclsAfterImpl.exists(_ is sig) =>
+          if impl.annotatedResultType.isDefined then raise:
             ErrorReport:
-              msg"The signature of '$name' must be written before its definition" -> sig.toLoc
-              :: msg"defined here" -> impl.toLoc
+              msg"The definition of '$name' cannot annotate its result type, as it has a separate signature"
+                -> impl.annotatedResultType.flatMap(_.toLoc)
+              :: msg"signature here" -> sig.toLoc
               :: Nil
-          else
-            if impl.annotatedResultType.isDefined then raise:
-              ErrorReport:
-                msg"The definition of '$name' cannot annotate its result type, as it has a separate signature"
-                  -> impl.annotatedResultType.flatMap(_.toLoc)
-                :: msg"signature here" -> sig.toLoc
-                :: Nil
-            if sig.k isnt impl.k then raise:
-              ErrorReport:
-                msg"The signature and the definition of '$name' must be of the same kind" -> N
-                :: msg"${sig.k.desc.capitalize} signature here" -> sig.toLoc
-                :: msg"${impl.k.desc.capitalize} definition here" -> impl.toLoc
-                :: Nil
-            // * Type parameters written only on the definition would be out of scope in the signature.
-            (impl.typeParams, sig.typeParams) match
-            case (S(own), N) => raise:
-              ErrorReport:
-                msg"The type parameters of '$name' must be written on its signature" -> own.toLoc
-                :: msg"signature here" -> sig.toLoc
-                :: Nil
-            case (S(own), S(sigTps)) if !sameTypeParamNames(own, sigTps) => raise:
-              ErrorReport:
-                msg"The signature and the definition of '$name' must have the same type parameters" -> N
-                :: msg"signature's type parameters" -> sigTps.toLoc
-                :: msg"definition's type parameters" -> own.toLoc
-                :: Nil
-            case _ => ()
+          if sig.k isnt impl.k then raise:
+            ErrorReport:
+              msg"The signature and the definition of '$name' must be of the same kind" -> N
+              :: msg"${sig.k.desc.capitalize} signature here" -> sig.toLoc
+              :: msg"${impl.k.desc.capitalize} definition here" -> impl.toLoc
+              :: Nil
+          // * Type parameters written only on the definition would be out of scope in the signature.
+          (impl.typeParams, sig.typeParams) match
+          case (S(own), N) => raise:
+            ErrorReport:
+              msg"The type parameters of '$name' must be written on its signature" -> own.toLoc
+              :: msg"signature here" -> sig.toLoc
+              :: Nil
+          case (S(own), S(sigTps)) if !sameTypeParamNames(own, sigTps) => raise:
+            ErrorReport:
+              msg"The signature and the definition of '$name' must have the same type parameters" -> N
+              :: msg"signature's type parameters" -> sigTps.toLoc
+              :: msg"definition's type parameters" -> own.toLoc
+              :: Nil
+          case _ => ()
         case _ => ()
     
-    /** Whether `td` is a separate signature that its definition elaborates, or that the pre-pass rejects for
-      * following the definition.
+    /** Whether `td` is a separate signature that its definition elaborates, or a declaration that the pre-pass rejects
+      * for following the definition.
       */
     def elaboratedByDefn(td: TermDef): Bool = td.name match
       case R(id) => members.get(id.name).exists: sym =>
-        sym.trmImplTree.isDefined && sym.trmSigTree.exists(_ eq td)
+        sym.trmDeclsAfterImpl.exists(_ is td) || sym.trmImplTree.isDefined && sym.trmSigTree.exists(_ is td)
       case L(_) => false
     
     // TODO extract this into a separate method
@@ -2747,6 +2758,10 @@ extends Importer:
       // * Skipped with its annotations (see `elaboratedByDefn`): elaborating it here would give the member a
       // * second `TermDefinition`.
       case PossiblyAnnotated(_, td: TermDef) :: sts if elaboratedByDefn(td) =>
+        // * Otherwise reported by the `TermDef` case.
+        td.symbName match
+        case S(L(d)) => raise(d)
+        case _ => ()
         reportUnusedAnnotations
         go(sts, Nil, acc)(N)
       // * Constructor blocks support no annotations: they are desugared into sibling classes
@@ -2924,7 +2939,7 @@ extends Importer:
             // * The separate signature this definition elaborates, with its statement's location and annotations, read
             // * from the block because `definedSymbols` drops annotations.
             val externalSig = sym.trmSigTree match
-              case S(sig) if !sym.trmSigFollowsImpl && sym.trmImplTree.exists(_ eq td) =>
+              case S(sig) if !sym.trmDeclsAfterImpl.exists(_ is sig) && sym.trmImplTree.exists(_ is td) =>
                 val (sigLoc, sigAnnotationTrees) = blk.desugStmts.iterator.collectFirst:
                   case stmt @ PossiblyAnnotated(anns, t) if t eq sig => (stmt.toLoc, anns)
                 .getOrElse(die)

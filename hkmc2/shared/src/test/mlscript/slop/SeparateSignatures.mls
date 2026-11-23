@@ -1,7 +1,7 @@
 :.
 
 // A signature written apart from its definition must precede it.
-// A late signature is reported and ignored.
+// A bodiless declaration written after its definition is reported and ignored.
 
 
 fun ok: Int -> Int
@@ -75,6 +75,91 @@ class K with
 //│ ╟── defined here
 //│ ║  l.+2: 	  fun k(x) = x
 //│ ╙──      	  ^^^^^^^^^^^^
+//│ = 1
+
+// A late declaration of any other shape is rejected too.
+:e
+fun lateParams(x) = x
+fun lateParams(x: Int): Int
+lateParams(1)
+//│ ╔══[COMPILATION ERROR] A declaration of 'lateParams' cannot follow its definition
+//│ ║  l.+2: 	fun lateParams(x: Int): Int
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── defined here
+//│ ║  l.+1: 	fun lateParams(x) = x
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Only a signature without parameter lists (`fun f: T`) can be written apart from a definition
+//│ = 1
+
+:e
+fun lateCurried(x) = x
+fun lateCurried(x: Int)(y: Int): Int
+lateCurried(1)
+//│ ╔══[COMPILATION ERROR] A declaration of 'lateCurried' cannot follow its definition
+//│ ║  l.+2: 	fun lateCurried(x: Int)(y: Int): Int
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── defined here
+//│ ║  l.+1: 	fun lateCurried(x) = x
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Only a signature without parameter lists (`fun f: T`) can be written apart from a definition
+//│ = 1
+
+:e
+fun lateBare(x) = x
+fun lateBare
+lateBare(1)
+//│ ╔══[COMPILATION ERROR] A declaration of 'lateBare' cannot follow its definition
+//│ ║  l.+2: 	fun lateBare
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── defined here
+//│ ║  l.+1: 	fun lateBare(x) = x
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ╙── Only a signature without parameter lists (`fun f: T`) can be written apart from a definition
+//│ = 1
+
+:e
+val lateBareVal = 1
+val lateBareVal
+lateBareVal
+//│ ╔══[COMPILATION ERROR] A declaration of 'lateBareVal' cannot follow its definition
+//│ ║  l.+2: 	val lateBareVal
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ╟── defined here
+//│ ║  l.+1: 	val lateBareVal = 1
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ╙── Only a signature without parameter lists (`fun f: T`) can be written apart from a definition
+//│ = 1
+//│ lateBareVal = 1
+
+// The reported location excludes the modifier.
+:e
+class KBare with
+  fun k(x) = x
+  open fun k(x: Int): Int
+(new KBare).k(1)
+//│ ╔══[COMPILATION ERROR] A declaration of 'k' cannot follow its definition
+//│ ║  l.+3: 	  open fun k(x: Int): Int
+//│ ║        	       ^^^^^^^^^^^^^^^^^^
+//│ ╟── defined here
+//│ ║  l.+2: 	  fun k(x) = x
+//│ ║        	  ^^^^^^^^^^^^
+//│ ╙── Only a signature without parameter lists (`fun f: T`) can be written apart from a definition
+//│ = 1
+
+// A skipped declaration still reports a malformed symbolic name.
+:e
+fun lateSymbolic(x) = x
+fun (class Lol) lateSymbolic: Int
+lateSymbolic(1)
+//│ ╔══[COMPILATION ERROR] The signature of 'lateSymbolic' must be written before its definition
+//│ ║  l.+2: 	fun (class Lol) lateSymbolic: Int
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── defined here
+//│ ║  l.+1: 	fun lateSymbolic(x) = x
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] This type definition is not a valid symbolic name
+//│ ║  l.+2: 	fun (class Lol) lateSymbolic: Int
+//│ ╙──      	     ^^^^^^^^^
 //│ = 1
 
 

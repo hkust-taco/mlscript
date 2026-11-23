@@ -421,11 +421,13 @@ class BlockMemberSymbol(val nme: Str, val trees: Ls[TypeOrTermDef], val nameIsMe
   /** A signature written apart from the definition, as `fun f: Int -> Int` next to `fun f(x) = x`:
     * a term declaration with a result type, but no body and no parameter lists. */
   def trmSigTree: Opt[Tree.TermDef] = trees.collectFirst:
-    case t: Tree.TermDef if t.rhs.isEmpty && t.paramLists.isEmpty && t.annotatedResultType.isDefined => t
-  /** Whether `trmSigTree` is written after `trmImplTree`. The elaborator rejects such a signature and ignores it. */
-  def trmSigFollowsImpl: Bool = (trmSigTree, trmImplTree) match
-    case (S(sig), S(impl)) => trees.indexWhere(_ eq impl) < trees.indexWhere(_ eq sig)
-    case _ => false
+    case t: Tree.TermDef if t.isSeparateSignature => t
+  /** The term declarations without a body written after `trmImplTree`, in source order. */
+  def trmDeclsAfterImpl: Ls[Tree.TermDef] = trmImplTree match
+    case S(impl) => trees.iterator.dropWhile(_ isnt impl).collect:
+        case t: Tree.TermDef if t.rhs.isEmpty => t
+      .toList
+    case N => Nil
   
   def isParameterizedMethod: Bool = trmTree.exists(_.isParameterizedMethod)
   
