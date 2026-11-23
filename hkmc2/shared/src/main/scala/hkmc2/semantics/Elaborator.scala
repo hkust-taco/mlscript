@@ -3900,15 +3900,11 @@ extends Importer:
     if newResolution then
       prepareErasure(res)
       settleUnboundReferences()
-      if config.language.strictResolution then
-        val exports = res.stats.collect:
-          case d: Definition if InterfaceExposure.isPublic(d) => d.bsym
-        val values = res.stats.collect:
-          case DefineVar(sym: LocalVarSymbol, rhs) => Term.SimpleRef(sym)(N) -> rhs.toLoc
-        InterfaceExposure(this).check(exports, (res.res -> res.res.toLoc) :: values)
-      else
-        // Explicit annotations still check callbacks whose signatures they hide.
-        InterfaceExposure(this).check(Nil, Nil)
+      val exports = res.stats.collect:
+        case d: Definition if InterfaceExposure.isPublic(d) => d.bsym
+      val values = res.stats.collect:
+        case DefineVar(sym: LocalVarSymbol, rhs) => Term.SimpleRef(sym)(N) -> rhs.toLoc
+      InterfaceExposure(this).check(exports, (res.res -> res.res.toLoc) :: values)
     rctx.completeBlock(res)
     (res, ctx)
   

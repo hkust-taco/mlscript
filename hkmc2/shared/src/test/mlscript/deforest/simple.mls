@@ -389,6 +389,9 @@ f(AA(AA(0)))
 //│ deforest > AA⁰(tmp²) ->
 //│ deforest > 	match: x¹⁶
 //│ deforest > 	fields: x¹⁶.aa⁰
+//│ deforest > AA⁰(0) ->
+//│ deforest > 	match: b¹
+//│ deforest > 	fields: b¹.aa⁰
 //│ deforest > <<< fusing <<<
 //│ = 1
 
@@ -433,7 +436,7 @@ outer1(p, 1, 2) + outer2(p, 3, 4) + inner(AA(5), 6)
 
 
 :expect 1
-fun mapHead(f, x) = if x is
+private fun mapHead(f, x) = if x is
   AAA(h, t) then f(h)
 mapHead(x => x, AAA(1, AAA(2, None)))
 //│ deforest > >>> fusing >>>
@@ -495,7 +498,7 @@ test(AA(1), AA(2), AA(3))
 
 
 :expect 141
-fun test(x) =
+private fun test(x) =
   let t = id of
     if x is
       AA(CCC(a)) then a
@@ -521,7 +524,7 @@ test(p)
 
 
 :expect 141
-fun test(x, y) =
+private fun test(x, y) =
   let t =
     if y is CCC then
       if x is
@@ -573,7 +576,7 @@ f(id(A)) + f(A)
 //│   end
 //│ };
 //│ set tmp = Predef⁰.id⁰(A⁰);
-//│ set tmp1 = f¹((tmp as! A⁰));
+//│ set tmp1 = f¹(tmp);
 //│ set deforest$lam = f$x_A⁰();
 //│ set tmp2 = f$f⁰(deforest$lam);
 //│ return +⁰(tmp1, tmp2)
@@ -610,14 +613,14 @@ f(A, B)
 //│ deforest > A⁰ ->
 //│ deforest > 	match: a⁵
 //│ deforest > B⁰ ->
-//│ deforest > 	match: b¹
+//│ deforest > 	match: b²
 //│ deforest > <<< fusing <<<
 //│ = 1
 
 
 
 :expect 6
-fun app(f) = f(1)
+private fun app(f) = f(1)
 fun identity(x) = x
 fun c1(x1) = if x1 is
   AA(i) then i
@@ -774,6 +777,8 @@ c1(1 :: Nil)
 //│ deforest > 	match: x²⁹
 //│ deforest > 	fields: x²⁹.h⁰
 //│ deforest > 	fields: x²⁹.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: t¹
 //│ deforest > <<< fusing <<<
 //│ = 0
 
@@ -786,7 +791,7 @@ fun g1(y1) = if y1 is
   AA then 0
 fun g2(y2) = if y2 is
   AA then 1
-fun apply(f) =
+private fun apply(f) =
   let inner = AA(0)
   f(AA(inner))
 apply(f)
@@ -794,6 +799,8 @@ apply(f)
 //│ deforest > AA⁰(inner⁰) ->
 //│ deforest > 	match: x³⁰
 //│ deforest > 	fields: x³⁰.aa⁰
+//│ deforest > AA⁰(0) ->
+//│ deforest > 	match: y1⁰
 //│ deforest > <<< fusing <<<
 //│ = 0
 
@@ -975,6 +982,30 @@ fun f4(ls4) = if ls4 is
   Nil then 5
 f1(to(4)) + f2(to(5)) + f3(to(6)) + f4(to(7))
 //│ deforest > >>> fusing >>>
+//│ deforest > Cons⁰(n⁰, tmp⁸) ->
+//│ deforest > 	match: ls4⁰
+//│ deforest > 	fields: ls4⁰.h⁰
+//│ deforest > 	fields: ls4⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls4⁰
+//│ deforest > Cons⁰(n⁰, tmp⁸) ->
+//│ deforest > 	match: ls3⁰
+//│ deforest > 	fields: ls3⁰.h⁰
+//│ deforest > 	fields: ls3⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls3⁰
+//│ deforest > Cons⁰(n⁰, tmp⁸) ->
+//│ deforest > 	match: ls2⁰
+//│ deforest > 	fields: ls2⁰.h⁰
+//│ deforest > 	fields: ls2⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls2⁰
+//│ deforest > Cons⁰(n⁰, tmp⁸) ->
+//│ deforest > 	match: ls1⁰
+//│ deforest > 	fields: ls1⁰.h⁰
+//│ deforest > 	fields: ls1⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls1⁰
 //│ deforest > <<< fusing <<<
 //│ = 88
 

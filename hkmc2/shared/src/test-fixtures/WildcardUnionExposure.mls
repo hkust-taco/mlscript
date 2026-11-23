@@ -1,6 +1,4 @@
-// This file also serves as a compilation-unit fixture for WildcardUnionInterfaces.
-// Loose worksheet checking accepts its local calls; importing it must check
-// the public inputs even though both resolution flags remain disabled.
+// External calls to the exported module can supply inputs with unknown shape.
 #lang(0.3.x)
 #lang(strictResolution: false, eagerResolution: false)
 

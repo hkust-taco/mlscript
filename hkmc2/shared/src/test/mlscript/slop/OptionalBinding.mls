@@ -93,7 +93,7 @@ let supplied = new Box(...makeArgs(true))
 [missing.value is null, supplied.value is null, count]
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let scrut: ?, scrut1: ?, tmp: Array⁰, constructorArgs: Array⁰, constructorArg: Int⁰, constructorArg1: Unknown, tmp1: Array⁰, constructorArgs1: Array⁰, constructorArg2: Int⁰, constructorArg3: Unknown, tmp2: Bool⁰, tmp3: Bool⁰;
-//│ define makeArgs⁰ as fun makeArgs¹(present: Bool⁰): Array⁰ {
+//│ define makeArgs⁰ as fun makeArgs¹(present: Unknown): Array⁰ {
 //│   let tmp4: Int⁰;
 //│   set tmp4 = +⁰(count⁰, 1);
 //│   set count⁰ = tmp4;

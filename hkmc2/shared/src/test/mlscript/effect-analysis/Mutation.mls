@@ -32,7 +32,7 @@ fun mutate_alias(value) =
   let local = value
   set local = 42
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function mutate_alias⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function mutate_alias⁰#0 @ <root> -> Pure
 //│ flow-analysis > <<< effect-analysis results <<<
 
 
@@ -295,7 +295,7 @@ fun mutate_local_loop(again) =
     set again = false
   local
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function mutate_local_loop⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function mutate_local_loop⁰#0 @ <root> -> Pure
 //│ flow-analysis > <<< effect-analysis results <<<
 
 

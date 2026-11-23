@@ -1,5 +1,4 @@
-// Worksheet checking accepts the local Int32 input with both resolution flags off.
-// Importing this file must also account for callers of its exported module.
+// Local unboxed calls and external callers must share one parameter representation.
 #lang(0.3.x)
 #lang(strictResolution: false, eagerResolution: false)
 

@@ -5,7 +5,7 @@
 // The diagnostic must trace Unknown to the parameter and the exported module.
 :ge
 #lang(strictResolution: false, eagerResolution: false)
-import "./ExposedUnboxedInput.mls"
+import "../../../test-fixtures/ExposedUnboxedInput.mls"
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
 //│ ║  l.XX: 	  fun identity(value) = value
 //│ ║        	               ^^^^^
@@ -20,7 +20,6 @@ import "./ExposedUnboxedInput.mls"
 //│ ║  l.XX: 	module ExposedUnboxedInput with
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-#lang(strictResolution: true, eagerResolution: true)
 val input: Int32 = unsafe.undefined
 
 // A private callback stored in an exposed tuple receives unknown inputs too.
@@ -42,6 +41,8 @@ val callbacks = [callback]
 //│ ╟── 'callbacks' is exposed by this compilation unit.
 //│ ║  l.+3: 	val callbacks = [callback]
 //│ ╙──      	^^^^^^^^^^^^^
+
+#lang(strictResolution: true, eagerResolution: true)
 
 // The unknown input can flow from an exposed function into a private helper.
 // Explain the original public parameter, rather than claiming the helper is exported.

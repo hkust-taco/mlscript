@@ -9,6 +9,10 @@
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
 //│ ║  l.+1: 	0 |
 //│ ╙──      	   ^
+//│ ╔══[COMPILATION ERROR] Resolution error in alternation
+//│ ║  l.+1: 	0 |
+//│ ║        	^^^
+//│ ╙── A type cannot be used as a runtime value.
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (alternation)
 //│ ║  l.+1: 	0 |
 //│ ╙──      	^^^
@@ -48,6 +52,10 @@ inc of 1 | + 1
 
 :todo // ?
 1 |> inc | + 1
+//│ ╔══[COMPILATION ERROR] Resolution error in alternation
+//│ ║  l.+1: 	1 |> inc | + 1
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╙── A type cannot be used as a runtime value.
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (alternation)
 //│ ║  l.+1: 	1 |> inc | + 1
 //│ ╙──      	^^^^^^^^^^^^^^

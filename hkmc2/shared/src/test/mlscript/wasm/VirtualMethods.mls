@@ -25,7 +25,7 @@ callF(B())
 //│   (type $Object (sub (struct (field $typeinfo@0 (mut (ref $TypeInfoBase))))))
 //│   (type $A (sub $Object (struct (field $typeinfo@0 (mut (ref $TypeInfoBase))))))
 //│   (type $B (sub $A (struct (field $typeinfo@0 (mut (ref $TypeInfoBase))))))
-//│   (type $virtual2 (func (param $this (ref $A)) (param $arg1 (ref null i31)) (result (ref null any))))
+//│   (type $virtual2 (func (param $this (ref $A)) (param $arg1 (ref null any)) (result (ref null any))))
 //│   (type $A_typeinfo (sub $TypeInfoBase (struct (field $tag@0 i32) (field $parent@1 (ref null $TypeInfoBase)) (field $slot0@2 (mut (ref null $virtual2))))))
 //│   (type $A_init (func (param $this (ref $A)) (result (ref $A))))
 //│   (type $A_ctor (func (result (ref $A))))
@@ -60,13 +60,12 @@ callF(B())
 //│         (local.get $this)))
 //│     (return
 //│       (local.get $this)))
-//│   (func $A_f (export "A_f") (type $virtual2) (param $this (ref $A)) (param $x (ref null i31)) (result (ref null any))
+//│   (func $A_f (export "A_f") (type $virtual2) (param $this (ref $A)) (param $x (ref null any)) (result (ref null any))
 //│     (return
-//│       (ref.cast (ref null i31)
-//│         (call $plus_impl
-//│           (local.get $x)
-//│           (ref.i31
-//│             (i32.const 1))))))
+//│       (call $plus_impl
+//│         (local.get $x)
+//│         (ref.i31
+//│           (i32.const 1)))))
 //│   (func $B_init (export "B_init") (type $B_init) (param $this (ref $B)) (result (ref $B))
 //│     (drop
 //│       (call $A_init
@@ -84,13 +83,12 @@ callF(B())
 //│         (local.get $this)))
 //│     (return
 //│       (local.get $this)))
-//│   (func $B_f (export "B_f") (type $virtual2) (param $this (ref $A)) (param $x (ref null i31)) (result (ref null any))
+//│   (func $B_f (export "B_f") (type $virtual2) (param $this (ref $A)) (param $x (ref null any)) (result (ref null any))
 //│     (return
-//│       (ref.cast (ref null i31)
-//│         (call $times_impl
-//│           (local.get $x)
-//│           (ref.i31
-//│             (i32.const 2))))))
+//│       (call $times_impl
+//│         (local.get $x)
+//│         (ref.i31
+//│           (i32.const 2)))))
 //│   (func $callF (export "callF") (type $callF) (param $a (ref null $A)) (result (ref null any))
 //│     (local $receiver (ref null any))
 //│     (return
@@ -451,7 +449,7 @@ class Producer() with
   open fun get() = new Producer()
 class StrProducer() extends Producer() with
   override fun get() = "str"
-fun produce(p) = p.get()
+private fun produce(p) = p.get()
 produce(StrProducer())
 //│ Wasm result:
 //│ = "str"
@@ -465,7 +463,7 @@ class Consumer() with
   open fun take(x) = x
 class EchoConsumer() extends Consumer() with
   override fun take(x) = x
-fun consume(c) = c.take(1)
+private fun consume(c) = c.take(1)
 consume(Consumer())
 consume(EchoConsumer())
 EchoConsumer().take("s")

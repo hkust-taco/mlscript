@@ -16,6 +16,10 @@
 //│ ╔══[COMPILATION ERROR] Name not found: a
 //│ ║  l.+1: 	[a, b] => [b, a]
 //│ ╙──      	              ^
+//│ ╔══[COMPILATION ERROR] Resolution error in constrained type
+//│ ║  l.+1: 	[a, b] => [b, a]
+//│ ║        	          ^^^^^^
+//│ ╙── A type cannot be used as a runtime value.
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (constrained type)
 //│ ║  l.+1: 	[a, b] => [b, a]
 //│ ╙──      	          ^^^^^^

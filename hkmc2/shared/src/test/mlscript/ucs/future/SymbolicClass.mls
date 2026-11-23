@@ -24,7 +24,7 @@ Cons(1, Nil)
 //│ ╙──      	     ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-fun map(f, xs) = if xs is
+private fun map(f, xs) = if xs is
   Nil then Nil
   x :: xs' then f(x) :: map(f, xs')
 

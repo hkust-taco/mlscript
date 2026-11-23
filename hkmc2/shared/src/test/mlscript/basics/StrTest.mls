@@ -52,6 +52,10 @@ concat of
 
 :ge
 ~"a"
+//│ ╔══[COMPILATION ERROR] Resolution error in negation type
+//│ ║  l.+1: 	~"a"
+//│ ║        	^^^^
+//│ ╙── A type cannot be used as a runtime value.
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (negation type)
 //│ ║  l.+1: 	~"a"
 //│ ╙──      	^^^^

@@ -50,7 +50,7 @@ f(10000, 20000, 0)
 //│                 set id = 0;
 //│                 continue loopLabel
 //│               else
-//│                 return (param2 as! Int⁰)
+//│                 return param2
 //│             end
 //│         end
 //│       else
@@ -181,10 +181,10 @@ fun g(n) =
 //│         set tmp3 = -¹(argList.length⁰, 0);
 //│         set inlinedVal = argList.slice⁰(5, tmp3);
 //│         set param0 = argList.0;
-//│         do (argList.1 as! Int⁰);
-//│         do (argList.2 as! Int⁰);
-//│         do (argList.3 as! Int⁰);
-//│         do (argList.4 as! Int⁰);
+//│         do argList.1;
+//│         do argList.2;
+//│         do argList.3;
+//│         do argList.4;
 //│         set param5 = inlinedVal;
 //│         set id = 0;
 //│         continue loopLabel

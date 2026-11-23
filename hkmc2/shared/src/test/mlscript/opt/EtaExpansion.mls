@@ -64,7 +64,7 @@ h(1)(2)
 :expect 15
 @affine(1) fun f(a)(b) = a + b
 fun h(a)(b) = a * b
-fun g(k, x) = k(x)
+private fun g(k, x) = k(x)
 g(f, 1)(2) + g(h, 3)(4)
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
@@ -77,6 +77,7 @@ g(f, 1)(2) + g(h, 3)(4)
 //│ define h² as fun h³(a)(b) {
 //│   return *⁰(a, b)
 //│ };
+//│ @private
 //│ define g⁴ as fun g⁵(k, x) {
 //│   return (k(x) as!! Function⁰)
 //│ };
@@ -96,14 +97,14 @@ g(f, 1)(2) + g(h, 3)(4)
 :expect 15
 @affine(1) fun f(a)(b) = a + b
 fun h(a)(b) = a * b
-fun g(k, x) = k(x)
+private fun g(k, x) = k(x)
 g(f, 1)(2) + g(h, 3)(4)
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > g⁶#0 @ g⁷: [2, 1]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let tmp, baseCall, tmp1, g$g;
-//│ @private
+//│ @private @private
 //│ define g$g as fun g$g⁰(k, x)(eta$0$0) {
 //│   let eta$res;
 //│   set eta$res = (k(x) as!! Function⁰);
@@ -116,6 +117,7 @@ g(f, 1)(2) + g(h, 3)(4)
 //│ define h⁴ as fun h⁵(a)(b) {
 //│   return *⁰(a, b)
 //│ };
+//│ @private
 //│ define g⁶ as fun g⁷(k, x) {
 //│   return (k(x) as!! Function⁰)
 //│ };
@@ -317,7 +319,7 @@ node()()
 :expect 13
 @affine(1) fun k1(a)(b) = a + b
 fun k2(a)(b) = a * b
-fun f(k, x) =
+private fun f(k, x) =
   fun g(y) =
     if y > 1 do print("g")
     k(y)
@@ -345,11 +347,12 @@ f(k1, 1) + f(k2, 5)
 //│ define k2⁰ as fun k2¹(a)(b) {
 //│   return *⁰(a, b)
 //│ };
+//│ @private
 //│ define f⁸ as fun f⁹(k, x) {
 //│   let h;
 //│   set h = g⁸(k, x);
 //│   do Predef⁰.print⁰("between");
-//│   return (h(2) as!! Int⁰)
+//│   return h(2)
 //│ };
 //│ set tmp = f⁹(k1¹, 1);
 //│ set tmp1 = f⁹(k2¹, 5);
@@ -368,7 +371,7 @@ f(k1, 1) + f(k2, 5)
 :expect 13
 @affine(1) fun k1(a)(b) = a + b
 fun k2(a)(b) = a * b
-fun f(k, x) =
+private fun f(k, x) =
   fun a(y) = b(y)
   fun b(y) = k(y)
   let h = a(x)
@@ -386,7 +389,7 @@ f(k1, 1) + f(k2, 5)
 //│ define f_a$a as fun f_a$a⁰(k, y)(eta$0$0) {
 //│   return f_a_b$b⁰(k, y)(eta$0$0)
 //│ };
-//│ @private
+//│ @private @private
 //│ define f$f as fun f$f⁰(k, x) {
 //│   return f_a$a⁰(k, x)(2)
 //│ };
@@ -403,10 +406,11 @@ f(k1, 1) + f(k2, 5)
 //│ define k2² as fun k2³(a1)(b1) {
 //│   return *⁰(a1, b1)
 //│ };
+//│ @private
 //│ define f¹⁰ as fun f¹¹(k, x) {
 //│   let h;
 //│   set h = a⁰(k, x);
-//│   return (h(2) as!! Int⁰)
+//│   return h(2)
 //│ };
 //│ set tmp = f$f⁰(k1³, 1);
 //│ set tmp1 = f¹¹(k2³, 5);
@@ -423,7 +427,7 @@ f(k1, 1) + f(k2, 5)
 :expect 13
 @affine(1) fun k1(a)(b) = a + b
 fun k2(a)(b) = a * b
-fun f(k, x) =
+private fun f(k, x) =
   fun get(o: C) = if o is C then o.x
   fun g(y) = k(y)
   class C(val x)
@@ -439,7 +443,7 @@ f(k1, 1) + f(k2, 5)
 //│   set eta$res = (k(y) as!! Function⁰);
 //│   return eta$res(eta$0$0)
 //│ };
-//│ @private
+//│ @private @private
 //│ define f$f as fun f$f¹(k, x) {
 //│   let C, tmp2, tmp3;
 //│   define C as class C¹ {
@@ -471,6 +475,7 @@ f(k1, 1) + f(k2, 5)
 //│ define k2⁴ as fun k2⁵(a)(b) {
 //│   return *⁰(a, b)
 //│ };
+//│ @private
 //│ define f¹² as fun f¹³(k, x) {
 //│   let C, h, tmp2, tmp3;
 //│   define C as class C² {
@@ -504,14 +509,16 @@ g(1)(2)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let g$g;
 //│ @private
-//│ define g$g as fun g$g¹(x: Int⁰)(eta$0$0: Int⁰): Int⁰ {
-//│   return f¹⁴(x)(eta$0$0)
+//│ define g$g as fun g$g¹(x: Unknown)(eta$0$0: Int⁰): Int⁰ {
+//│   return f¹⁴((x as!! Int⁰))(eta$0$0)
 //│ };
 //│ @affine(1)
 //│ define f¹⁵ as fun f¹⁴(a: Int⁰)(b: Int⁰): Int⁰ {
 //│   return +⁰(a, b)
 //│ };
-//│ define g¹⁰ as fun g¹¹(x: Int⁰)(eta$0$0: Int⁰): Int⁰ { return f¹⁴(x)(eta$0$0) };
+//│ define g¹⁰ as fun g¹¹(x: Unknown)(eta$0$0: Int⁰): Int⁰ {
+//│   return f¹⁴((x as!! Int⁰))(eta$0$0)
+//│ };
 //│ return g$g¹(1)(2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3

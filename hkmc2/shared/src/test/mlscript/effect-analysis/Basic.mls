@@ -71,9 +71,9 @@ fun node_unsafe(x) = leaf_unsafe(x)
 // The wrappers with inferred Int results include checked casts, so they are unsafe
 // even when their indirect calls are pure.
 fun answer() = 42
-fun leaf_pure_public(x) = x()
+fun leaf_pure_public(x: () -> Any) = x()
 private fun leaf_pure_private(x) = x()
-fun leaf_unsafe_public(x) = x()
+fun leaf_unsafe_public(x: () -> Any) = x()
 private fun leaf_unsafe_private(x) = x()
 fun node() = 
   leaf_pure_public(answer)
@@ -222,9 +222,9 @@ fun node_pure(x) = leaf_pure()
 
 // * Propagation through higher-order calls (polymorphic).
 fun answer() = 42
-fun leaf_pure_public(x) = x()
+fun leaf_pure_public(x: () -> Any) = x()
 private fun leaf_pure_private(x) = x()
-fun leaf_unsafe_public(x) = x()
+fun leaf_unsafe_public(x: () -> Any) = x()
 private fun leaf_unsafe_private(x) = x()
 fun node() = 
   leaf_pure_public(answer)
@@ -238,14 +238,14 @@ fun node() =
 //│ flow-analysis > function leaf_pure_private⁰#0 @ leaf_pure_private² -> UnsafeEta
 //│ flow-analysis > function leaf_pure_private⁰#0 @ node⁰.leaf_pure_private¹ -> UnsafeEta
 //│ flow-analysis > function leaf_pure_public⁰#0 @ leaf_pure_public² -> UnsafeEta
-//│ flow-analysis > function leaf_pure_public⁰#0 @ node⁰.leaf_pure_public¹ -> UnsafeEta
+//│ flow-analysis > function leaf_pure_public⁰#0 @ node⁰.leaf_pure_public¹ -> Pure
 //│ flow-analysis > function leaf_unsafe_private⁰#0 @ leaf_unsafe_private² -> UnsafeEta
 //│ flow-analysis > function leaf_unsafe_private⁰#0 @ node⁰.leaf_unsafe_private¹ -> UnsafeEta
 //│ flow-analysis > function leaf_unsafe_public⁰#0 @ leaf_unsafe_public² -> UnsafeEta
 //│ flow-analysis > function leaf_unsafe_public⁰#0 @ node⁰.leaf_unsafe_public¹ -> UnsafeEta
 //│ flow-analysis > function node¹#0 @ node⁰ -> UnsafeEta
 //│ flow-analysis > call leaf_pure_private⁰@result³#0 @ node⁰ -> UnsafeEta
-//│ flow-analysis > call leaf_pure_public⁰@result¹#0 @ node⁰ -> UnsafeEta
+//│ flow-analysis > call leaf_pure_public⁰@result¹#0 @ node⁰ -> Pure
 //│ flow-analysis > call leaf_unsafe_private⁰@result⁷#0 @ node⁰ -> UnsafeEta
 //│ flow-analysis > call leaf_unsafe_public⁰@result⁵#0 @ node⁰ -> UnsafeEta
 //│ flow-analysis > call x²@result⁴#0 @ leaf_unsafe_public² -> UnsafeEta

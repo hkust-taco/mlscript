@@ -47,6 +47,16 @@ h.'lol + 2
 //│ ╔══[COMPILATION ERROR] Name not found: h
 //│ ║  l.+2: 	h.'lol + 2
 //│ ╙──      	^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+1: 	  fun lol(k) = k(1)
+//│ ║        	               ^^^^
+//│ ╟── Value of unknown shape cannot be called like a function.
+//│ ╟── Parameter 'k' admits values of unknown shape.
+//│ ║  l.+1: 	  fun lol(k) = k(1)
+//│ ║        	          ^
+//│ ╟── 'lol' is exposed by this compilation unit.
+//│ ║  l.+1: 	  fun lol(k) = k(1)
+//│ ╙──      	  ^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :re

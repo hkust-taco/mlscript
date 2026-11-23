@@ -194,7 +194,7 @@ increment(41)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let increment;
 //│ @private
-//│ define increment as fun increment⁰(_0: Int⁰): ? {
+//│ define increment as fun increment⁰(_0: Unknown): ? {
 //│   return +⁰(_0, 1)
 //│ };
 //│ set increment¹ = increment⁰;

@@ -98,7 +98,7 @@ f()
 //│ 	at f (Debugging.mls:19:14)
 
 :re
-fun lambda_test(f) =
+private fun lambda_test(f) =
   f()
   200
 lambda_test(() =>
@@ -133,7 +133,7 @@ res.resumeWith(42)
 
 
 
-abstract class Debugger() with
+private abstract class Debugger() with
   fun break(payload)
 
 module Test with

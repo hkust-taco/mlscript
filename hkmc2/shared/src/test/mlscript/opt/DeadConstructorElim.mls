@@ -8,7 +8,7 @@ data class B(y)
 data class C(z)
 class P(x) with
   print(x)
-class D with
+private class D with
   fun app(cb) = cb(A(1))
 class O with
   fun x = print("get x")
@@ -176,12 +176,13 @@ g() + g()
 :soir
 :noInline
 :expect 3
-fun app(k) = k(C(1))
+private fun app(k) = k(C(1))
 app(c => 2) + app(c => if c is C then 1 else 0)
 //│ dead-constructor-elim > >>> dead-constructor-elim results >>>
 //│ dead-constructor-elim > <<< dead-constructor-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let lambda, tmp, lambda1, tmp1;
+//│ @private
 //│ define app⁰ as fun app¹(k) {
 //│   let tmp2;
 //│   set tmp2 = C⁰(1);
@@ -211,7 +212,7 @@ app(c => 2) + app(c => if c is C then 1 else 0)
 :noInline
 :expect 3
 fun ctor() = C(1)
-fun app(k) = k(ctor())
+private fun app(k) = k(ctor())
 app(c => 2) + app(c => if c is C then 1 else 0)
 //│ dead-constructor-elim > >>> dead-constructor-elim results >>>
 //│ dead-constructor-elim > eliminable: Call(member:C²‹term:C⁰›, [[1]])
@@ -222,7 +223,7 @@ app(c => 2) + app(c => if c is C then 1 else 0)
 //│ define lambda$lambda as fun lambda$lambda⁰() {
 //│   return 2
 //│ };
-//│ @private
+//│ @private @private
 //│ define app$app as fun app$app⁰(k) {
 //│   do app_ctor$ctor⁰();
 //│   return (k() as! Int⁰)
@@ -234,6 +235,7 @@ app(c => 2) + app(c => if c is C then 1 else 0)
 //│ define ctor⁰ as fun ctor¹() {
 //│   return C⁰(1)
 //│ };
+//│ @private
 //│ define app² as fun app³(k) {
 //│   let tmp2;
 //│   set tmp2 = ctor¹();
@@ -312,7 +314,7 @@ r()
 // the ctor is dead, but `y.x` is kept
 :soir
 :noInline
-fun s(y) =
+private fun s(y) =
   let unused = A(y.x)
   2
 s(new O)
@@ -320,7 +322,7 @@ s(new O)
 //│ dead-constructor-elim > eliminable: Call(member:A²‹term:A⁰›, [[Select(y⁰, Ident(x))]])
 //│ dead-constructor-elim > <<< dead-constructor-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp; define s⁰ as fun s¹(y) { do y.x¹; return 2 }; set tmp = new O⁰(); return s¹(tmp)
+//│ let tmp; @private define s⁰ as fun s¹(y) { do y.x¹; return 2 }; set tmp = new O⁰(); return s¹(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > get x
 //│ = 2
@@ -329,7 +331,7 @@ s(new O)
 
 :soir
 :noInline
-fun t(y) =
+private fun t(y) =
   let unused = [y.z, 1, y.x, y!z]
   2
 t(new O)
@@ -338,6 +340,7 @@ t(new O)
 //│ dead-constructor-elim > <<< dead-constructor-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let tmp;
+//│ @private
 //│ define t⁰ as fun t¹(y) { do y.z⁰; do y.x¹; do y!"z"; return 2 };
 //│ set tmp = new O⁰();
 //│ return t¹(tmp)
@@ -351,7 +354,7 @@ t(new O)
 
 :soir
 :noInline
-fun u(y) =
+private fun u(y) =
   let b = A([y.z, y.x])
   if b is A then 1 else 0
 u(new O)
@@ -360,6 +363,7 @@ u(new O)
 //│ dead-constructor-elim > <<< dead-constructor-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let tmp;
+//│ @private
 //│ define u⁰ as fun u¹(y) {
 //│   let b;
 //│   do y.z⁰;
@@ -383,12 +387,12 @@ u(new O)
 
 :soir
 :noInline
-fun v(y) = [y.z, y.x]
+private fun v(y) = [y.z, y.x]
 v(new O)
 //│ dead-constructor-elim > >>> dead-constructor-elim results >>>
 //│ dead-constructor-elim > <<< dead-constructor-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp; define v⁰ as fun v¹(y) { return [y.z⁰, y.x¹] }; set tmp = new O⁰(); return v¹(tmp)
+//│ let tmp; @private define v⁰ as fun v¹(y) { return [y.z⁰, y.x¹] }; set tmp = new O⁰(); return v¹(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > get z
 //│ > get x
@@ -398,7 +402,7 @@ v(new O)
 
 :soir
 :noInline
-fun w(y) =
+private fun w(y) =
   let b = [y.z, 1]
   if b is [_, n] then n else 0
 w(new O)
@@ -406,6 +410,7 @@ w(new O)
 //│ dead-constructor-elim > <<< dead-constructor-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let tmp;
+//│ @private
 //│ define w⁰ as fun w¹(y) {
 //│   let b, element1$;
 //│   set b = [y.z⁰, 1];

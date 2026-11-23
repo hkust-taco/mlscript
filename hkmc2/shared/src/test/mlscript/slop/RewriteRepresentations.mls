@@ -13,7 +13,7 @@ forward(5)
 //│ define takeInt⁰ as fun takeInt¹(value) {
 //│   return value
 //│ };
-//│ define forward⁰ as fun forward¹(value) { return takeInt¹(value) };
+//│ define forward⁰ as fun forward¹(value) { return takeInt¹((value as! Int⁰)) };
 //│ return takeInt¹(5)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 5

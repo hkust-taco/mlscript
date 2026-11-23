@@ -80,7 +80,7 @@ sum(10000)
 //│           return runtime.Unit
 //│         }
 //│       case 1:
-//│         tmp3 = runtime.resumeValue /* as! Int */;
+//│         tmp3 = runtime.resumeValue;
 //│         return n + tmp3;
 //│     }
 //│   } else {
@@ -91,9 +91,9 @@ sum(10000)
 //│ $_stack$_safe$_body$_1 = (undefined, function () {
 //│   return sum(10000)
 //│ });
-//│ tmp1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_1) /* as! Int */;
+//│ tmp1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_1);
 //│ if (runtime.curEffect === null) { return tmp1 }
-//│ return runtime.topLevelEffect(false) /* as! Int */;
+//│ return runtime.topLevelEffect(false);
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 50005000
 
@@ -101,7 +101,7 @@ sum(10000)
 :stackSafe
 let ctr = 0
 fun dummy(x) = x
-fun foo(f) = 
+private fun foo(f) =
   if ctr > 10000 then 0
   else 
     set ctr += 1
@@ -149,7 +149,7 @@ abstract class Eff with
 // functions and lambdas inside handlers
 :stackSafe 100
 :expect 50005000
-fun foo(h) = h.perform()
+private fun foo(h) = h.perform()
 handle h = Eff with
   fun perform()(resume) =
     let f = ()
@@ -185,11 +185,11 @@ module A with
 A.x
 //│ = 50005000
 
-abstract class Eff with
+private abstract class Eff with
   fun perform(a): Int
 
 :re
-fun foo(h) = h.perform(2)
+private fun foo(h) = h.perform(2)
 handle h = Eff with
   fun perform(a)(resume) =
     let f = ()
@@ -261,11 +261,11 @@ fun f(n) =
   trivial()
 f(10000)
 
-abstract class Eff with
+private abstract class Eff with
   fun raise()
 
 :re
-fun shift_stack(n, f) =
+private fun shift_stack(n, f) =
   if n >= 0 then
     shift_stack(n - 1, f)
   else
@@ -291,7 +291,7 @@ let
   M = 100
 
 :stackSafe
-fun shift_stack(n, f) =
+private fun shift_stack(n, f) =
   if n >= 0 then
     shift_stack(n - 1, f)
   else

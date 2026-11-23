@@ -175,7 +175,7 @@ fun showProps(x, y, props) = Object.entries(props)
 
 fun output(i, s) = print of "  ".repeat(i) + s
 
-fun t(kind, props) =
+private fun t(kind, props) =
   if graphics.has(kind) then
     (args, ...) => output of args.'i, kind + " " + showProps(args.'x, args.'y, props)
   else
@@ -212,8 +212,24 @@ t('group)
 //│ ║  l.+1: 	t('group)
 //│ ║        	^^^^^^^^^
 //│ ╟── Function 't' expected 2 arguments, but got 1
-//│ ║  l.XX: 	fun t(kind, props) =
-//│ ╙──      	^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	private fun t(kind, props) =
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.XX: 	      children Iter.each of child => child of
+//│ ║        	                                     ^^^^^^^^
+//│ ║  l.XX: 	        x: args.'x + props.'x
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	        y: args.'y + props.'y
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	        i: args.'i + 1
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Value of unknown shape cannot be called like a function.
+//│ ╟── Rest parameter 'children' admits elements of unknown shape.
+//│ ║  l.XX: 	    (...children) => (args) =>
+//│ ║        	     ^^^^^^^^^^^
+//│ ╟── This value is exposed by this compilation unit.
+//│ ║  l.+1: 	t('group)
+//│ ╙──      	^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 't' expected at least 2 arguments but got 1
 
 :todo // * Make second parameter optional
@@ -222,8 +238,8 @@ t('group)
 //│ ║  l.+1: 	t('group)
 //│ ║        	^^^^^^^^^
 //│ ╟── Function 't' expected 2 arguments, but got 1
-//│ ║  l.XX: 	fun t(kind, props) =
-//│ ╙──      	^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	private fun t(kind, props) =
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 't' expected at least 2 arguments but got 1
 
 let empty = Object.create of null

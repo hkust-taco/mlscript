@@ -1,6 +1,5 @@
 :.
 :js
-#lang(strictResolution: true)
 
 
 :sjs

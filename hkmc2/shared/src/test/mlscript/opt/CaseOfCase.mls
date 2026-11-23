@@ -55,7 +55,7 @@ foo("ok")
 
 
 
-fun map(opt, f) = if opt is
+private fun map(opt, f) = if opt is
   Some(value) then Some(f(value))
   None then None
 
@@ -65,16 +65,16 @@ fun map(opt, f) = if opt is
 fun test(x) = x map(=> _ + 1) map(=> _ * 2)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define test⁰ as fun test¹(x) {
-//│   let inlinedVal, arg$Some$0$, arg$Some$0$1;
 //│   match x
 //│     Some⁰ =>
-//│       let inlinedVal1, inlinedVal2;
-//│       set arg$Some$0$1 = x.value⁰;
-//│       set inlinedVal1 = +⁰(arg$Some$0$1, 1);
-//│       set inlinedVal = Option⁰.Some¹(inlinedVal1);
-//│       set arg$Some$0$ = inlinedVal.value⁰;
-//│       set inlinedVal2 = *⁰(arg$Some$0$, 2);
-//│       return Option⁰.Some¹(inlinedVal2)
+//│       match undefined
+//│         Some⁰ =>
+//│           return undefined
+//│         None⁰ =>
+//│           return Option⁰.None⁰
+//│         else
+//│           throw new globalThis⁰.Error⁰("match error")
+//│       end
 //│     None⁰ =>
 //│       return Option⁰.None⁰
 //│     else
@@ -90,19 +90,23 @@ fun test(x) = x map(=> _ + 1) map(=> _ * 2)
 fun test(x) = x map(=> _ + 1) map(=> _ * 2) map(=> "Result: " + _)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define test² as fun test³(x) {
-//│   let inlinedVal, inlinedVal1, arg$Some$0$, arg$Some$0$1, arg$Some$0$2;
 //│   match x
 //│     Some⁰ =>
-//│       let inlinedVal2, inlinedVal3, inlinedVal4;
-//│       set arg$Some$0$2 = x.value⁰;
-//│       set inlinedVal2 = +⁰(arg$Some$0$2, 1);
-//│       set inlinedVal = Option⁰.Some¹(inlinedVal2);
-//│       set arg$Some$0$1 = inlinedVal.value⁰;
-//│       set inlinedVal3 = *⁰(arg$Some$0$1, 2);
-//│       set inlinedVal1 = Option⁰.Some¹(inlinedVal3);
-//│       set arg$Some$0$ = inlinedVal1.value⁰;
-//│       set inlinedVal4 = +⁰("Result: ", arg$Some$0$);
-//│       return Option⁰.Some¹(inlinedVal4)
+//│       match undefined
+//│         Some⁰ =>
+//│           match undefined
+//│             Some⁰ =>
+//│               return undefined
+//│             None⁰ =>
+//│               return Option⁰.None⁰
+//│             else
+//│               throw new globalThis⁰.Error⁰("match error")
+//│           end
+//│         None⁰ =>
+//│           return Option⁰.None⁰
+//│         else
+//│           throw new globalThis⁰.Error⁰("match error")
+//│       end
 //│     None⁰ =>
 //│       return Option⁰.None⁰
 //│     else
@@ -121,19 +125,22 @@ fun test(x) = if x map(=> _ + 1) is
   None then null
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define test⁴ as fun test⁵(x) {
-//│   let arg$Some$0$, inlinedVal, arg$Some$0$1;
+//│   let arg$Some$0$;
 //│   match x
 //│     Some⁰ =>
-//│       let inlinedVal1;
-//│       set arg$Some$0$1 = x.value⁰;
-//│       set inlinedVal1 = +⁰(arg$Some$0$1, 1);
-//│       set inlinedVal = Option⁰.Some¹(inlinedVal1);
-//│       set arg$Some$0$ = inlinedVal.value⁰;
-//│       match arg$Some$0$
-//│         0 =>
-//│           return []
+//│       match undefined
+//│         Some⁰ =>
+//│           set arg$Some$0$ = undefined.value⁰;
+//│           match arg$Some$0$
+//│             0 =>
+//│               return []
+//│             else
+//│               return [arg$Some$0$]
+//│           end
+//│         None⁰ =>
+//│           return null
 //│         else
-//│           return [arg$Some$0$]
+//│           throw new globalThis⁰.Error⁰("match error")
 //│       end
 //│     None⁰ =>
 //│       return null
@@ -196,7 +203,7 @@ fun prefixDependency(x) =
 //│     else
 //│       set tmp = PrefixBox⁰(false);
 //│       end
-//│   set copy = (tmp.value¹ as! Bool⁰);
+//│   set copy = tmp.value¹;
 //│   match tmp
 //│     PrefixBox¹ =>
 //│       return copy

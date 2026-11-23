@@ -242,7 +242,7 @@ class Cell(mut val v: Int) with
 //│     define v² as val v³: Int⁰ = v;
 //│     end
 //│   }
-//│   method put⁰ = fun put¹(x: ?): Unit⁰ {
+//│   method put⁰ = fun put¹(x: Unknown): Unit⁰ {
 //│     set Cell².this.v³ = (x as! Int⁰);
 //│     return runtime⁰.Unit⁰
 //│   }
@@ -252,7 +252,7 @@ class Cell(mut val v: Int) with
 //│   method twice⁰ = fun twice¹(x: Num⁰): Int⁰ {
 //│     return (+⁰(x, x) as! Int⁰)
 //│   }
-//│   method whatever⁰ = fun whatever¹(a: ?): ? { return a }
+//│   method whatever⁰ = fun whatever¹(a: Unknown): Unknown { return a }
 //│ };
 //│ end
 
@@ -260,7 +260,7 @@ class Cell(mut val v: Int) with
 // Record the parameter and result representations of an unannotated variadic function.
 fun rest(a, ...xs) = xs
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define rest⁰ as fun rest¹(a: ?, ...xs: Array⁰): Array⁰ { return xs }; end
+//│ define rest⁰ as fun rest¹(a: Unknown, ...xs: Array⁰): Array⁰ { return xs }; end
 
 
 // Closure capture (`:lift`) preserves the inferred representation of the mutable local `n` in its generated
@@ -671,15 +671,15 @@ annotHelper(100000)
 //│ define annotLoop⁰ as fun annotLoop¹(n: Int⁰): Unit⁰ {
 //│   return annotHelper⁰(n)
 //│ };
-//│ define annotHelper¹ as fun annotHelper⁰(n: Int⁰): Unit⁰ {
-//│   let scrut: ?, tmp: Int⁰;
+//│ define annotHelper¹ as fun annotHelper⁰(n: Unknown): Unit⁰ {
+//│   let scrut: ?, tmp: Unknown;
 //│   set scrut = <=⁰(n, 0);
 //│   match scrut
 //│     true =>
 //│       return runtime⁰.Unit⁰
 //│     else
 //│       set tmp = -⁰(n, 1);
-//│       return annotLoop¹(tmp)
+//│       return annotLoop¹((tmp as! Int⁰))
 //│   end
 //│ };
 //│ return annotHelper⁰(100000)
@@ -693,14 +693,14 @@ annotHelper(100000)
 //│         set id = 1;
 //│         continue loopLabel
 //│       1 =>
-//│         let scrut: ?, tmp: Int⁰;
+//│         let scrut: ?, tmp: Unknown;
 //│         set scrut = <=⁰(param0, 0);
 //│         match scrut
 //│           true =>
 //│             return runtime⁰.Unit⁰
 //│           else
 //│             set tmp = -⁰(param0, 1);
-//│             set param0 = tmp;
+//│             set param0 = (tmp as! Int⁰);
 //│             set id = 0;
 //│             continue loopLabel
 //│         end
@@ -714,7 +714,7 @@ annotHelper(100000)
 //│   return annotLoop_annotHelper⁰(0, n)
 //│ };
 //│ @inline
-//│ define annotHelper¹ as fun annotHelper⁰(n: Int⁰): Unit⁰ {
+//│ define annotHelper¹ as fun annotHelper⁰(n: Unknown): Unit⁰ {
 //│   return annotLoop_annotHelper⁰(1, n)
 //│ };
 //│ return annotLoop_annotHelper⁰(1, 100000)
@@ -1047,7 +1047,7 @@ fun useGetFn() = useFn(getFn)
 // differently-typed slot as a checked downcast. This is what lets an interop body call a mistyped operator.
 fun viaUntyped(s, radix): Str = @untyped parseIt(s, radix)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define viaUntyped⁰ as fun viaUntyped¹(s: ?, radix: ?): Str⁰ {
+//│ define viaUntyped⁰ as fun viaUntyped¹(s: Unknown, radix: Unknown): Str⁰ {
 //│   let tmp: Unknown;
 //│   set tmp = globalThis⁰.parseIt⁰((s as! Str⁰), (radix as! Int⁰));
 //│   return (tmp as! Str⁰)
@@ -1062,7 +1062,7 @@ fun viaTyped(s, radix): Str = parseIt(s, radix)
 //│ ║  l.+1: 	fun viaTyped(s, radix): Str = parseIt(s, radix)
 //│ ╙──      	                              ^^^^^^^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define viaTyped⁰ as fun viaTyped¹(s: ?, radix: ?): Str⁰ {
+//│ define viaTyped⁰ as fun viaTyped¹(s: Unknown, radix: Unknown): Str⁰ {
 //│   throw "This code cannot be run as its compilation yielded an error."
 //│ };
 //│ end

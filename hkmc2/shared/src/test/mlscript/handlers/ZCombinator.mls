@@ -4,10 +4,12 @@
 :lift
 :stackSafe
 
-let selfApp(f) = f(f)
+type Fact = Int -> Int
+type Self = Self -> Fact
+let selfApp = (f: Self) => f(f)
 //│ selfApp = fun selfApp
 
-fun mkrec(g) =
+fun mkrec(g: Fact -> Fact): Fact =
   selfApp of self =>
     g of y => self(self)(y)
 
@@ -27,7 +29,7 @@ fact(10000)
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
 :stackSafe
-fun mkrec(g) =
+fun mkrec(g: Fact -> Fact): Fact =
   selfApp of self =>
     g of y => selfApp(self)(y)
 
@@ -58,7 +60,7 @@ fact(10000)
 
 
 :stackSafe 6
-set selfApp = f => f(f)
+set selfApp = (f: Self) => f(f)
 
 :expect 3628800
 fact(10)
@@ -66,14 +68,14 @@ fact(10)
 
 
 :stackSafe 6
-set selfApp = f => f(f)
+set selfApp = (f: Self) => f(f)
 
 fact(1000)
 //│ = Infinity
 
 // simplified version without lambdas for easier debugging
 :stackSafe 6
-fun mkrec(g) =
+fun mkrec(g: Fact -> Fact): Fact =
   fun a(self) =
     fun b(y) = selfApp(self)(y)
     g(b)

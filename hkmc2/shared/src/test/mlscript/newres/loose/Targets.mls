@@ -63,9 +63,16 @@ call()
 
 :e
 fun unknownReceiver(x) = x.missing
-//│ ╔══[COMPILATION ERROR] This selection of member 'missing' has no resolved target
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+1: 	fun unknownReceiver(x) = x.missing
-//│ ╙──      	                         ^^^^^^^^^
+//│ ║        	                         ^^^^^^^^^
+//│ ╟── Cannot resolve member 'missing' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+1: 	fun unknownReceiver(x) = x.missing
+//│ ║        	                    ^
+//│ ╟── 'unknownReceiver' is exposed by this compilation unit.
+//│ ║  l.+1: 	fun unknownReceiver(x) = x.missing
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
 
 // Allowing multiple targets does not make class definitions assignable.
 :e

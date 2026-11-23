@@ -11,8 +11,8 @@ module Keys {
 
 :expect [41, 42, 42, 1337]
 open class Base {
-  @jsSymbol(Keys.first) open fun read() = 41
-  @jsSymbol(Keys.strKey) open fun hi = 1337
+  @jsSymbol(Keys.first) open fun read(): Int = 41
+  @jsSymbol(Keys.strKey) open fun hi: Int = 1337
 }
 class Child extends Base {
   @jsSymbol(Keys.first) override fun read() = super.read() + 1
@@ -80,8 +80,8 @@ class Renamed extends Base {
 //│ ║  l.+2: 	  @jsSymbol(Keys.first) override fun other() = 0
 //│ ║        	                                     ^^^^^
 //│ ╟── The inherited member is declared here.
-//│ ║  l.XX: 	  @jsSymbol(Keys.first) open fun read() = 41
-//│ ╙──      	                             ^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  @jsSymbol(Keys.first) open fun read(): Int = 41
+//│ ╙──      	                             ^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Member 'other' is marked 'override' but overrides no inherited member
 //│ ║  l.+2: 	  @jsSymbol(Keys.first) override fun other() = 0
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -95,7 +95,7 @@ class DifferentKey extends Base {
 //│ ║  l.+2: 	  @jsSymbol(Keys.second) override fun read() = 0
 //│ ║        	                                      ^^^^
 //│ ╟── The inherited member is declared here.
-//│ ║  l.XX: 	  @jsSymbol(Keys.first) open fun read() = 41
+//│ ║  l.XX: 	  @jsSymbol(Keys.first) open fun read(): Int = 41
 //│ ╙──      	                                 ^^^^
 
 // An override must keep the runtime key declared by its parent.
@@ -107,7 +107,7 @@ class MissingSymbol extends Base {
 //│ ║  l.+2: 	  override fun read() = 0
 //│ ║        	               ^^^^
 //│ ╟── The inherited member is declared here.
-//│ ║  l.XX: 	  @jsSymbol(Keys.first) open fun read() = 41
+//│ ║  l.XX: 	  @jsSymbol(Keys.first) open fun read(): Int = 41
 //│ ╙──      	                                 ^^^^
 
 :e
@@ -245,7 +245,7 @@ import "../../mlscript-compile/SymbolKeyLibrary.mls"
 :expect 57
 val holderAlias = holder
 open class HeldBase {
-  @jsSymbol(holder.key) open fun read() = 0
+  @jsSymbol(holder.key) open fun read(): Int = 0
 }
 class HeldChild extends HeldBase {
   @jsSymbol(holderAlias.key) override fun read() = 57
@@ -416,7 +416,7 @@ SymbolKeyLibrary.makeLocal(65).read()
 private fun baseWithLocalKey() =
   @fresh val baseKey = Symbol("base")
   open class LocalBase {
-    @jsSymbol(baseKey) open fun read() = 66
+    @jsSymbol(baseKey) open fun read(): Int = 66
   }
   LocalBase.class
 val EscapedBase = baseWithLocalKey()

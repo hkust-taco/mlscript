@@ -27,7 +27,7 @@ open Option.{ Some, None }
 let numObjectConstructed = 0
 //│ numObjectConstructed = 0
 
-fun withCounting(f) =
+private fun withCounting(f) =
   let before = numObjectConstructed
   let result = f()
   print("Constructed " + (numObjectConstructed - before) + " object(s)")

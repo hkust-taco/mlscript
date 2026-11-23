@@ -37,6 +37,9 @@ f(a, 2) + g(a) + f(BB(3), 2) + f(AA(AA(4)), 5)
 //│ deforest > AA⁰(tmp⁰) ->
 //│ deforest > 	match: x⁰
 //│ deforest > 	fields: x⁰.x¹
+//│ deforest > AA⁰(4) ->
+//│ deforest > 	match: a⁰
+//│ deforest > 	fields: a⁰.x¹
 //│ deforest > BB⁰(3) ->
 //│ deforest > 	match: x⁰
 //│ deforest > 	fields: x⁰.x²
@@ -58,9 +61,15 @@ f(AA(AA(3)), 9) + f(AA(AA(4)), 10)
 //│ deforest > AA⁰(tmp¹) ->
 //│ deforest > 	match: x³
 //│ deforest > 	fields: x³.x¹
+//│ deforest > AA⁰(4) ->
+//│ deforest > 	match: a¹
+//│ deforest > 	fields: a¹.x¹
 //│ deforest > AA⁰(tmp²) ->
 //│ deforest > 	match: x³
 //│ deforest > 	fields: x³.x¹
+//│ deforest > AA⁰(3) ->
+//│ deforest > 	match: a¹
+//│ deforest > 	fields: a¹.x¹
 //│ deforest > <<< fusing <<<
 //│ = 30
 
@@ -78,6 +87,9 @@ f(AA(AA(3)))
 //│ deforest > AA⁰(tmp³) ->
 //│ deforest > 	match: x⁴
 //│ deforest > 	fields: x⁴.x¹
+//│ deforest > AA⁰(3) ->
+//│ deforest > 	match: a²
+//│ deforest > 	fields: a².x¹
 //│ deforest > <<< fusing <<<
 //│ = 5
 
@@ -129,8 +141,8 @@ fun f(a) = if a is
 f(AA(BB(B)))
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(tmp⁷) ->
-//│ deforest > 	match: a⁰
-//│ deforest > 	fields: a⁰.x¹
+//│ deforest > 	match: a³
+//│ deforest > 	fields: a³.x¹
 //│ deforest > BB⁰(B⁰) ->
 //│ deforest > 	match: arg$AA$0$²
 //│ deforest > 	fields: arg$AA$0$².x²
@@ -191,6 +203,9 @@ f1(aa(BB(cc))) + f2(aa(BB(CC(0)))) + f3(cc)
 //│ deforest > AA⁰(x⁸) ->
 //│ deforest > 	match: x¹⁰
 //│ deforest > 	fields: x¹⁰.x¹
+//│ deforest > BB⁰(cc⁰) ->
+//│ deforest > 	match: x1⁰
+//│ deforest > 	fields: x1⁰.x²
 //│ deforest > <<< fusing <<<
 //│ = "ccf2f3cc"
 //│ cc = CC("cc")
@@ -557,11 +572,11 @@ fun test(a, b) =
 test(B, B) + test(A, A)
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
-//│ deforest > 	match: a¹
+//│ deforest > 	match: a⁴
 //│ deforest > A⁰ ->
 //│ deforest > 	match: b⁰
 //│ deforest > B⁰ ->
-//│ deforest > 	match: a¹
+//│ deforest > 	match: a⁴
 //│ deforest > B⁰ ->
 //│ deforest > 	match: b⁰
 //│ deforest > <<< fusing <<<
@@ -582,6 +597,16 @@ fun sum(ls) = if ls is
   h :: t then h + sum(t)
 sum(prodDouble(4))
 //│ deforest > >>> fusing >>>
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls⁰
+//│ deforest > Cons⁰(n⁰, tmp¹³) ->
+//│ deforest > 	match: ls⁰
+//│ deforest > 	fields: ls⁰.h⁰
+//│ deforest > 	fields: ls⁰.t⁰
+//│ deforest > Cons⁰(n⁰, tmp¹⁴) ->
+//│ deforest > 	match: ls⁰
+//│ deforest > 	fields: ls⁰.h⁰
+//│ deforest > 	fields: ls⁰.t⁰
 //│ deforest > <<< fusing <<<
 //│ = 20
 

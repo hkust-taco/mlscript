@@ -7,6 +7,10 @@ let n = 0
 
 :e
 n is 0 | 1
+//│ ╔══[COMPILATION ERROR] Resolution error in alternation
+//│ ║  l.+1: 	n is 0 | 1
+//│ ║        	^^^^^^^^^^
+//│ ╙── A type cannot be used as a runtime value.
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (alternation)
 //│ ║  l.+1: 	n is 0 | 1
 //│ ╙──      	^^^^^^^^^^
