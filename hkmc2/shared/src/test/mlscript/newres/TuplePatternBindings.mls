@@ -115,3 +115,11 @@ fun reversedRest(values) = if values is [..rest] then rest.toReversed()
 fun arrayRest(values: Array[Str] | Str) = if values is [_, ..rest] then rest.toReversed()
 arrayRest(["A", "B", "C"])
 //│ = ["C", "B"]
+
+// Lazy construction supplies its own methods while tuple patterns retain the known field positions.
+:expect ["A", 3, true]
+private fun describeLazy(xs: Array[Int]) =
+  let values = ["a", ..xs]
+  if values is [first, .._] as whole then [first.toUpperCase(), whole.materialize().length, Array.isArray([...whole])]
+describeLazy([1, 2])
+//│ = ["A", 3, true]

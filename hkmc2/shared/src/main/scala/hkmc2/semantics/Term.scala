@@ -304,6 +304,14 @@ object SrcScope:
 
 
 
+/** A positional aggregate. A lazy spread makes its runtime value a lazy concatenation. */
+sealed trait TupleLiteral extends ShapeHost:
+  val fields: Ls[Elem]
+  val tree: Tree.Tup
+  lazy val hasLazySpread: Bool = fields.exists:
+    case Spd(SpreadKind.Lazy, _, _) => true
+    case _ => false
+
 enum Term extends Statement, AutoLocated, ShapePublisher:
   /** Filled by the type interpreter during elaboration; erasure validates the completed result. */
   private[hkmc2] var typeInterpretation: Opt[TypeResolution] = N
@@ -353,9 +361,9 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
     * interface (`obj.[idx]`); it does not require a compile-time index value.
     * `arrayIdx` independently selects array indexing in the generated code. */
   case DynSel(prefix: Term, fld: Term, arrayIdx: Bool, checked: Bool)
-  case Tup(fields: Ls[Elem])(val tree: Tree.Tup) extends Term, ShapeHost
+  case Tup(fields: Ls[Elem])(val tree: Tree.Tup) extends Term, TupleLiteral
   case Mut(underlying: Tup | Rcd | New | DynNew)
-  case CtxTup(fields: Ls[Elem])(val tree: Tree.Tup) extends Term, ShapeHost
+  case CtxTup(fields: Ls[Elem])(val tree: Tree.Tup) extends Term, TupleLiteral
   case IfLike(kw: Keyword.SplitLike, form: IfLikeForm, split: SimpleSplit) extends Term, ShapeHost
   /** `If` expressions synthesized by the pattern compiler. It should only be
    *  created and used in `Lowering`. One must make sure that all terms in the

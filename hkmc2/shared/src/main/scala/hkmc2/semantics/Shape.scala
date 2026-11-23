@@ -1029,11 +1029,15 @@ class RefinedShape(val base: TermShape, val refinements: Ls[Str -> Term]) extend
 /** A tuple candidate selects a value shape for each spread. Ordinary fields stay
   * lazy. Recursive spreads can have unknown length; retain the known fields around
   * them instead of discarding either those fields or the unresolved possibilities.
+  * A lazy literal carries its runtime collection interface. Eager layouts use the builtin Array interface.
   */
 final class TupleShape private (val source: Term, val elements: Ls[TupleShape.Element],
-    val instances: TypeSubstitution)(resolver: NewResolver) extends CoreHeadShape:
+    val instances: TypeSubstitution, val collection: Opt[TermShape])(resolver: NewResolver) extends CoreHeadShape:
+  /** The runtime collection supplies non-positional members and determines nominal class membership. */
+  def runtimeParent(using ResolutionContext): TermShape =
+    collection.fold[TermShape](arrayParent)(resolver.instantiateShape(_, instances))
   def arrayParent(using ResolutionContext): NominalInstanceView = resolver.tupleArrayParent(this)
-  override def isInstanceOfClass(cls: ClassLikeDef)(using ResolutionContext): Bool = arrayParent.isInstanceOfClass(cls)
+  override def isInstanceOfClass(cls: ClassLikeDef)(using ResolutionContext): Bool = runtimeParent.isInstanceOfClass(cls)
   private lazy val sourceSegments: Ls[TupleShape.Segment] = elements.flatMap:
     case segment: TupleShape.Segment => segment :: Nil
     case TupleShape.Rest(_, segments) => segments
@@ -1079,10 +1083,10 @@ final class TupleShape private (val source: Term, val elements: Ls[TupleShape.El
       loop(segments, index, false) match
         case Nil => MemberLookup.Missing
         case fields => MemberLookup.Indexed(fields, Nil)
-    case _ => arrayParent.getMember(name)
+    case _ => runtimeParent.getMember(name)
   override def getMemberThrough(name: MemberKey, receiver: Marks)(using ResolutionContext): MemberLookup = MemberKey.index(name) match
     case S(index) if index >= 0 => super.getMemberThrough(name, receiver)
-    case _ => arrayParent.getMemberThrough(name, receiver)
+    case _ => runtimeParent.getMemberThrough(name, receiver)
 
 /** Values whose members and call results are deliberately checked only at runtime.
   * Unlike UnknownValueShape, this authorizes dynamic operations; it is introduced
@@ -1193,8 +1197,14 @@ object TupleShape:
     * interning and create a distinct inference candidate for the same tuple.
     */
   def apply(source: Term, elements: Ls[Element])(resolver: NewResolver)(using state: ResolutionContext): TupleShape =
-    state.canonicalTuple((source, elements, TypeSubstitution.empty)):
-      new TupleShape(source, elements, TypeSubstitution.empty)(resolver)
+    state.canonicalTuple((source, elements, TypeSubstitution.empty, N)):
+      new TupleShape(source, elements, TypeSubstitution.empty, N)(resolver)
+  /** A lazy tuple has the positions of its concatenated operands and the interface of the runtime collection. */
+  def lazyLiteral(source: Term, layout: TupleShape, marks: Marks, receiver: TermShape)(resolver: NewResolver)
+      (using state: ResolutionContext): TupleShape =
+    val fields = Spread(layout, marks) :: Nil
+    state.canonicalTuple((source, fields, TypeSubstitution.empty, S(receiver))):
+      new TupleShape(source, fields, TypeSubstitution.empty, S(receiver))(resolver)
   /** The view of `tuple` through the complete effective substitution `instances`,
     * canonical like the tuple itself: one identity per source, element list, and
     * substitution, whichever sequence of substitutions produced the view. Copying
@@ -1202,8 +1212,8 @@ object TupleShape:
     * NewResolver.instantiateShape composes the substitution before calling this. */
   def view(tuple: TupleShape, instances: TypeSubstitution)(resolver: NewResolver)
       (using state: ResolutionContext): TupleShape =
-    state.canonicalTuple((tuple.source, tuple.elements, instances)):
-      new TupleShape(tuple.source, tuple.elements, instances)(resolver)
+    state.canonicalTuple((tuple.source, tuple.elements, instances, tuple.collection)):
+      new TupleShape(tuple.source, tuple.elements, instances, tuple.collection)(resolver)
   sealed abstract class Element extends ValueKey
   sealed abstract class Segment extends Element:
     /** The deferred value of one element, independently of the segment's length. */

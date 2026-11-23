@@ -1606,6 +1606,34 @@ extends Importer:
     res
   
   
+  /** Elaborate a tuple literal and give a lazy concatenation the result interface of its runtime constructor. */
+  private def tupleLiteral[T <: Term.Tup | Term.CtxTup](tuple: T, interp: Interpretation)(using Ctx, UnderCtx): T =
+    withTypeBinders(tuple)
+    if interp != Tpe && tuple.hasLazySpread then
+      if !newResolution then
+        // New-resolution importers can observe values from units that recorded no constructor interface.
+        tuple.currentShapes.add(UnknownValueShape.at(tuple))
+      else
+        val tree = tuple.tree
+        // Flatten the operands for positional inference. The runtime constructor independently
+        // determines the collection's members, including materialize and its implementation of slice.
+        val layout = withTypeBinders(new Term.Tup(tuple.fields.map:
+          case spread: Spd => spread.copy(k = SpreadKind.Eager)
+          case field => field
+        )(tree))
+        val constructor = Option.when(State.runtimeSymbolsInitialized):
+          val runtimeTuple = runtimeMember(State.tupleSymbol)
+          def member(name: Str): Tree = Tree.Sel(Tree.Trm(runtimeTuple), Ident(name)).withLocOf(tree)
+          val arguments = tuple.fields.flatMap:
+            case Spd(SpreadKind.Lazy, operand, _) =>
+              PlainFld(subterm(member("split"))) :: PlainFld(operand) :: Nil
+            case element => element :: Nil
+          val target = member("lazyConcat")
+          app(subterm(target), withTypeBinders(Term.Tup(arguments)(tree)))(
+            new Tree.App(target, tree).withLocOf(tree), N, FlowSymbol.app())
+        resolveLazyTuple(tuple, layout, constructor)
+    tuple
+
   /** Request the reference's term interpretation in expression positions.
     * Listeners can wait for forward definitions to complete.
     */
@@ -2130,11 +2158,11 @@ extends Importer:
           , N, rs)
       ))
     case tree @ Tup(TermDef(Ins, f, N) :: fs) =>
-      withTypeBinders(Term.CtxTup((f :: fs).map(fld(_, interp.elements)))(tree))
+      tupleLiteral(new Term.CtxTup((f :: fs).map(fld(_, interp.elements)))(tree), interp)
     case Modified(kw @ Keywrd(Keyword.`mut`), tree @ Tup(fields)) =>
-      Term.Mut(withTypeBinders(new Term.Tup(fields.map(fld(_, interp.elements)))(tree))).mkLocWith(kw)
+      Term.Mut(tupleLiteral(new Term.Tup(fields.map(fld(_, interp.elements)))(tree), interp)).mkLocWith(kw)
     case tree @ Tup(fields) =>
-      withTypeBinders(Term.Tup(fields.map(fld(_, interp.elements)))(tree))
+      tupleLiteral(new Term.Tup(fields.map(fld(_, interp.elements)))(tree), interp)
       
     case DynamicNew(Apps(c, args)) =>
       val (mut, c2) = c match

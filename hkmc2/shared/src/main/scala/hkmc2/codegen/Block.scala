@@ -1296,8 +1296,8 @@ sealed abstract class Result extends Located:
         case ctor: ClassCtorSymbol => S(ctor.associatedCls)
         case sym => sym.asCls
       clsSym.map(sym => ErasedType.ValueLike(rsc = S(false), sym))
-    // * A tuple literal is typed as `Array` at runtime.
-    case Tuple(_, _) => S(ErasedType.Array)
+    // A lazy spread calls Tuple.lazyConcat, which constructs a lazy collection.
+    case tuple: Tuple => S(if tuple.hasLazySpread then ErasedType.Unknown else ErasedType.Array)
     case _: Lambda => S(ErasedType.Function(rsc = S(false)))
     case _ => N
 
@@ -1594,6 +1594,7 @@ case class Lambda(params: LoweredParamList, body: Block)(val annot: Ls[Annot], v
 
 
 case class Tuple(mut: Bool, elems: Ls[Arg])(val toLoc: Opt[Loc]) extends Result:
+  def hasLazySpread: Bool = elems.exists(_.spread.contains(SpreadKind.Lazy))
   def withLoc(loc: Opt[Loc]): Tuple = if loc == toLoc then this else copy()(loc)
 
 case class Record(mut: Bool, elems: Ls[RcdArg])(val toLoc: Opt[Loc]) extends Result:

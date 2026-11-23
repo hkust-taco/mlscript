@@ -129,7 +129,7 @@ final class NewResolverState(val owner: Elaborator.State):
   // tuple's Array parent); their identities must survive reconstruction. Tuple and
   // record views are keyed by their effective binder substitution, so the same
   // view has one identity whichever sequence of substitutions produced it.
-  private[semantics] val tupleShapes: Cache[(Term, Ls[TupleShape.Element], TypeSubstitution), TupleShape] =
+  private[semantics] val tupleShapes: Cache[(Term, Ls[TupleShape.Element], TypeSubstitution, Opt[TermShape]), TupleShape] =
     new Cache(_.tupleShapes, identity)
   private[semantics] val recordShapes: Cache[(Term.Rcd, Ls[RecordShape.Element], TypeSubstitution), RecordShape] =
     new Cache(_.recordShapes, identity)
@@ -721,7 +721,7 @@ final class ResolutionContext private[semantics] (
     val graph = if origin == null then null else origin.originalData.owner
     val defining = if graph == null then this else inGraph(graph.context)
     cache(state).getOrElseUpdate(key, cache(defining.state).get(key)(using defining).getOrElse(make))(using state.context)
-  def canonicalTuple(key: (Term, Ls[TupleShape.Element], TypeSubstitution))(make: => TupleShape): TupleShape =
+  def canonicalTuple(key: (Term, Ls[TupleShape.Element], TypeSubstitution, Opt[TermShape]))(make: => TupleShape): TupleShape =
     canonical(key._1, _.tupleShapes, key)(shapeView(key._3)(make))
   def canonicalRecord(key: (Term.Rcd, Ls[RecordShape.Element], TypeSubstitution))(make: => RecordShape): RecordShape =
     canonical(key._1, _.recordShapes, key)(shapeView(key._3)(make))

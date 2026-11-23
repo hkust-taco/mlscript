@@ -1328,7 +1328,7 @@ class NewResolver:
       case TupleShape.UnknownField(_, _) => S(Set.empty)
       case TupleShape.ViewedField(source, instances, _) => ambientSupport(segmentSupport(source), instances)
       case TupleShape.Unknown(_, element) => segmentSupport(element)
-    tuple.elements.foldLeft[Binders](S(Set.empty)): (acc, element) =>
+    tuple.elements.foldLeft(tuple.collection.fold[Binders](S(Set.empty))(shapeSupport)): (acc, element) =>
       union(acc, element match
         case segment: TupleShape.Segment => segmentSupport(segment)
         case TupleShape.Spread(shape, _) => shapeSupport(shape)
@@ -2229,7 +2229,7 @@ class NewResolver:
                 if nominal.defn is cls then cls.tparams.zip(arguments).foreach: (param, pattern) =>
                   nominal.bindings.get(param.sym).foreach(constrain(_, pattern))
                 else nominalParent(nominal).foreach(parent)
-              case tuple: TupleShape => parent(tuple.arrayParent)
+              case tuple: TupleShape => parent(tuple.runtimeParent)
               case _ => ()
           constrainNominal(value)
         case TypeShape.Alias(_, N) => observeNamespaces
@@ -2824,9 +2824,9 @@ class NewResolver:
     loop(signature, if td.flags.hasResultAnnotation then 0 else td.params.length)
 
   private def tupleArrayParents(using rs: ResolutionContext) = rs.state.tupleArrayParents
-  /** A tuple is an Array whose element argument is the union of its field shapes.
-    * Cache the parent before following fields: a recursive tuple can require its
-    * own Array interface while one of those fields is still being resolved.
+  /** The Array interface for a positional layout has the union of its field shapes as its element type.
+    * Eager tuples use this as their runtime parent. Lazy tuples can use its element type for indexing.
+    * Cache the parent before following fields because a recursive field may require that same interface.
     */
   private[semantics] def tupleArrayParent(tuple: TupleShape)(using ResolutionContext): NominalInstanceView =
     tupleArrayParents.get(tuple) match
@@ -3299,7 +3299,7 @@ class NewResolver:
               xs.take(xs.length - suffix.length).map(segment => TupleShape.Unknown(tuple.source, segment.element)) ::: suffix
             else suffix
       val remaining = drop(drop(tuple.segments, expectedCount, true).reverse, trailing, true).reverse
-      val rest = if remaining == tuple.segments then tuple else TupleShape.restView(tuple, remaining)(this)
+      val rest = if tuple.collection.isEmpty && remaining == tuple.segments then tuple else TupleShape.restView(tuple, remaining)(this)
       publish(expectedCount, rest.exit(marks).enter(mss))
   
   private def checkArgumentArity(args: Term, arity: Arity, src: Term,
@@ -3683,6 +3683,11 @@ class NewResolver:
       case Pattern.Tuple(leading, spread) =>
         val trailing = spread.fold(Nil)(_._3)
         val required = leading.length + trailing.length
+        def matchSlice(rest: Pattern)(using ResolutionContext): Unit =
+          val slice = appliedType(prelude.builtins.Indexable, new ::(TypeArgument.invariant(extremeType(true)), Nil))
+          // A reference to the helper's prelude result type crosses the pattern's lexical scopes.
+          val captured = summon[SrcScope].captureFromRoot(slice)(captureType)
+          matchShapePat(instanceShape(captured), rest)(_ => ())
         def tupleBindings(tuple: TupleShape, marks: Marks, input: TermShape)(using ResolutionContext): Unit =
           val segments = tuple.segments
           val known = segments.count(_.isInstanceOf[TupleShape.Fixed])
@@ -3691,7 +3696,8 @@ class NewResolver:
             val patterns = leading ::: spread.toList.flatMap((_, rest, trailing) => rest :: trailing)
             val arity = Arity(leading.length, leading.length, spread.nonEmpty, trailing.length)
             zipTupleShapes(Nil, arity, tuple, marks): (index, value) =>
-              value match
+              if tuple.collection.isDefined && spread.nonEmpty && index == leading.length then matchSlice(patterns(index))
+              else value match
                 case value: TermShape => matchShapePat(value, patterns(index))(_ => ())
                 case NoShape => ()
             matched(input)
@@ -3700,11 +3706,7 @@ class NewResolver:
         def collectionBindings(input: TermShape, element: TermShape)(using ResolutionContext): Unit =
           leading.foreach(matchShapePat(element, _)(_ => ()))
           spread.foreach: (_, rest, trailing) =>
-            val slice = appliedType(prelude.builtins.Indexable, new ::(TypeArgument.invariant(extremeType(true)), Nil))
-            // The helper's result type comes from the prelude. Its fields' type arguments
-            // cross the same scopes as a reference to Indexable written at the pattern.
-            val captured = summon[SrcScope].captureFromRoot(slice)(captureType)
-            matchShapePat(instanceShape(captured), rest)(_ => ())
+            matchSlice(rest)
             trailing.foreach(matchShapePat(element, _)(_ => ()))
           matched(input)
         def narrow(value: TermShape)(using ResolutionContext): Unit = value match
@@ -5450,6 +5452,18 @@ class NewResolver:
         rctx.recordResolution(ref, ref.resolvedTargets.contains(symbol))(ref.resolvedTargets ::= symbol)
       case _ => ()
   
+  /** Combine a lazy literal's known positions with the collection returned by the runtime concatenation.
+    * While bootstrapping the runtime, only the positions are available. */
+  def resolveLazyTuple(tuple: Tup | CtxTup, layout: Tup, constructor: Opt[Term])(using ResolutionContext): Unit =
+    def attach(receiver: TermShape)(using ResolutionContext): Unit =
+      listenTerm(layout):
+        case Marked(fields: TupleShape, marks) =>
+          publishActivated(tuple, TupleShape.lazyLiteral(tuple, fields, marks, receiver)(this))
+        case _ => softAssert(false, "An eager tuple layout must produce tuple shapes")
+    constructor match
+      case S(call) => listenTermViews(call)(attach)
+      case N => attach(UnknownValueShape.at(tuple))
+
   /** Subscribe to spread operands once for each tuple or record AST node. Record
     * the node before calling start: a recursive spread can call listen on the same
     * node before start returns. Testing shapes.isEmpty would not prevent duplicate
@@ -5572,12 +5586,11 @@ class NewResolver:
           case value: TermShape => receive(value, false)
       observe(underlying, Nil): (value, invoked) =>
         if invoked then listener(value) else instantiate(value)(listener)
-    case mut @ Mut(underlying: Tup) => listener(mutableArray(mut, underlying))
+    case tuple: (Tup | CtxTup) if tuple.hasLazySpread => tuple.replayShapes(listener)
+    case mut @ Mut(underlying: Tup) if !underlying.hasLazySpread => listener(mutableArray(mut, underlying))
     case Mut(underlying) => listenTerm(underlying)(listener)
     case tuple: (Tup | CtxTup) => listenAggregate(tuple, listener): publish =>
-        val elements = tuple match
-          case Tup(fields) => fields
-          case CtxTup(fields) => fields
+        val elements = tuple.fields
         val fields = elements.collect { case Fld(_, key, S(value)) => (key, value) }
         val named = if fields.isEmpty then Nil else
           // Reuse the defining graph's property symbols when an imported tuple
@@ -5605,12 +5618,12 @@ class NewResolver:
           })(using defining), Nil) :: Nil
         def expand(elems: Ls[Elem], reversed: Ls[TupleShape.Element])(using ResolutionContext): Unit = elems match
           case Nil =>
-            // A sole spread preserves its operand's shape and context exactly.
+            // A sole eager spread of an array preserves its layout and collection interface.
             // Besides avoiding wrappers, this lets recursive rest forwarding
             // reach the same fixed point as forwarding an ordinary parameter.
             val shape = (reversed, named) match
-              case (TupleShape.Spread(shape, NoMarks) :: Nil, Nil) => shape
-              case (TupleShape.Spread(shape, marks: SomeMarks) :: Nil, Nil) => MarkedShape(shape, marks)
+              case (TupleShape.Spread(shape, NoMarks) :: Nil, Nil) if shape.collection.isEmpty => shape
+              case (TupleShape.Spread(shape, marks: SomeMarks) :: Nil, Nil) if shape.collection.isEmpty => MarkedShape(shape, marks)
               case _ => TupleShape(tuple, reversed.reverse ::: named)(this)
             publish(shape)
           // Lowering evaluates fields in source order, but packs all named

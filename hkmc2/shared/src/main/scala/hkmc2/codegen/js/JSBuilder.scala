@@ -430,10 +430,9 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       val inner = doc"new $calls"
       if mut then inner else doc"$freeze(${inner})"
     case Tuple(mut, es) if es.isEmpty => if mut then "[]" else doc"$freeze([])"
-    case Tuple(mut, es) =>
+    case tuple @ Tuple(mut, es) =>
       val inner =
-        val lazyConcat = es.exists(!_.spread.fold(true)(_.isEager))
-        if lazyConcat
+        if tuple.hasLazySpread
         then doc"$runtimeVar.Tuple.lazyConcat(${es.map(argument).mkDocument(doc", ")})"
         else bracketed("[", "]", insertBreak = true):
           es.map(argument).mkDocument(doc", # ")
