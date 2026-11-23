@@ -39,12 +39,14 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
           these)
   
   extension (lhs: FlatPattern)
-    /** Checks if two patterns are the same. */
-    def =:=(rhs: FlatPattern): Bool = (lhs, rhs) match
+    /** Whether a successful test of `lhs` supplies the test and all field bindings required by `rhs`. */
+    def canReuseFor(rhs: FlatPattern): Bool = (lhs, rhs) match
       case (lhs: FlatPattern.ClassLike, rhs: FlatPattern.ClassLike) =>
         // Constructor terms may carry the same preliminary overload-set symbol
         // while resolution selected different class-like definitions.
-        lhs.symbol is rhs.symbol
+        // Merging also reuses positional field reads. A bare constructor test
+        // has no bindings for a later destructuring pattern on the same value.
+        (lhs.symbol is rhs.symbol) && lhs.arguments.getOrElse(Nil).length >= rhs.arguments.getOrElse(Nil).length
       case (FlatPattern.Lit(l1), FlatPattern.Lit(l2)) => l1 === l2
       case (FlatPattern.Tuple(n1, b1), FlatPattern.Tuple(n2, b2)) => n1 === n2 && b1 === b2
       case (FlatPattern.Record(ls1), FlatPattern.Record(ls2)) =>
@@ -172,7 +174,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
     * `UseSplit` reference is preserved to maintain join-point sharing.
     *
     * In mode `+` (positive), keeps branches consistent with the assumption:
-    *   - Case 1.1.1: Same pattern (`=:=`) → merge continuation and tail via alias bindings.
+    *   - Case 1.1.1: Same test with the required bindings → merge continuation and tail via alias bindings.
     *   - Case 1.1.2: Branch pattern is more specific (`thatPattern <:< pattern`) → keep as-is,
     *     mark the specializing pattern as refined, and recurse into the tail so remaining
     *     branches on the same scrutinee are simplified with the known assumption.
@@ -209,7 +211,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         if scrutinee.sym is thatScrutinee.sym then mode match
           case + =>
             log(dbg"Case 1.1: $scrutinee === $thatScrutinee")
-            if thatPattern =:= pattern then
+            if pattern.canReuseFor(thatPattern) then
               log(dbg"Case 1.1.1: $pattern =:= $thatPattern")
               S(aliasBindings(pattern, thatPattern)(rec(continuation).getOrElse(continuation) ++ rec(tail).getOrElse(tail)))
             else if thatPattern <:< pattern then
@@ -252,7 +254,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
                       S(head.copy(continuation = optCont.getOrElse(continuation)) ~: optTail.getOrElse(tail))
           case - =>
             log(dbg"Case 1.2: $scrutinee === $thatScrutinee")
-            if thatPattern =:= pattern || thatPattern <:< pattern then
+            if pattern.canReuseFor(thatPattern) || thatPattern <:< pattern then
               log(dbg"Case 1.2.1: $pattern =:= (or <:<) $thatPattern")
               S(rec(tail).getOrElse(tail))
             else
@@ -281,6 +283,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
   
   private def aliasBindings(p: FlatPattern, q: FlatPattern): Split => Split = (p, q) match
     case (FlatPattern.ClassLike(_, _, S(ss1), _), FlatPattern.ClassLike(_, _, S(ss2), _)) =>
+      // canReuseFor ensures ss1 provides every position of ss2; the branch needs only that prefix.
       ss1.iterator.zip(ss2.iterator).foldLeft(identity[Split]):
         case (acc, (l, r)) if l._1 === r._1 => acc
         case (acc, (l, r)) => innermost => Split.Let(r._1, l._1.safeRef, acc(innermost))
