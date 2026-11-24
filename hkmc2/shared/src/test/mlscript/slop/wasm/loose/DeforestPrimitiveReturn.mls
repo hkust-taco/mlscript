@@ -45,3 +45,88 @@ wasm.ref.i31(f(wasm.i32.const(42)))
 //│ return wasm⁰.ref⁰.i31⁰(tmp1)
 //│ Wasm result:
 //│ = 42
+
+
+// Projecting a fused field replaces the object by an unboxed value in every slot it passes through.
+:expect 1
+data class Unboxed(p: Int32)
+private fun project(b: Unboxed): Int32 = b.p
+wasm.ref.i31(project(Unboxed(wasm.i32.const(1))))
+//│ deforest > >>> fusing >>>
+//│ deforest > Unboxed⁰(tmp⁰) ->
+//│ deforest > 	select: p
+//│ deforest > <<< fusing <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Int32, tmp1: Int32, tmp2: Int32, Unboxed_p: Int32;
+//│ @private
+//│ define project⁰ as fun project¹(b: Int32): Int32 {
+//│   return b
+//│ };
+//│ @data
+//│ define Unboxed¹ as class Unboxed² {
+//│   val p⁰: Int32;
+//│   constructor Unboxed⁰(p: Int32) {
+//│     define p⁰ as val p¹: Int32 = p;
+//│     end
+//│   }
+//│ };
+//│ set tmp = wasm⁰.i32⁰.const⁰(1);
+//│ set Unboxed_p = tmp;
+//│ set tmp2 = Unboxed_p;
+//│ set tmp1 = project¹(tmp2);
+//│ return wasm⁰.ref⁰.i31⁰(tmp1)
+//│ Wasm result:
+//│ = 1
+
+
+// The unboxed projection also reaches slots that hold references. Typing these slots from the flow
+// leaves them without a common representation, which this valid program then reports as an error.
+// Fusion should keep such a constructor.
+:fixme
+:expect 1
+data class Reference(n: Int)
+private fun ignore(x: Any): Int = 0
+private fun mixed(c: Bool): Int =
+  let b = Unboxed(wasm.i32.const(1))
+  let o = Reference(2)
+  if c then wasm.ref.i31(b.p) else ignore(if c then b else o)
+mixed(true)
+//│ deforest > >>> fusing >>>
+//│ deforest > Unboxed⁰(tmp¹) ->
+//│ deforest > 	select: p
+//│ deforest > <<< fusing <<<
+//│ ═══[COMPILATION ERROR] Types 'Int32' and 'Reference' have no common representation
+//│ ═══[COMPILATION ERROR] Types 'Int32' and 'Reference' have no common representation
+//│ ═══[COMPILATION ERROR] Types 'Int32' and 'Reference' have no common representation
+//│ ═══[COMPILATION ERROR] Types 'Int32' and 'Reference' have no common representation
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ @private
+//│ define ignore⁰ as fun ignore¹(x: ‹incompatible(Int32, Reference⁰)›): Int⁰ {
+//│   return 0
+//│ };
+//│ @private
+//│ define mixed⁰ as fun mixed¹(c: Bool⁰): Int⁰ {
+//│   let o: Reference⁰, tmp: Int32, tmp1: ‹incompatible(Int32, Reference⁰)›, b: Int32, Unboxed_p: Int32;
+//│   set tmp = wasm⁰.i32⁰.const⁰(1);
+//│   set Unboxed_p = tmp;
+//│   set b = Unboxed_p;
+//│   set o = Reference¹(2);
+//│   match c
+//│     true =>
+//│       return wasm⁰.ref⁰.i31⁰(b)
+//│     true =>
+//│       set tmp1 = b;
+//│       return ignore¹(tmp1)
+//│     else
+//│       set tmp1 = o;
+//│       return ignore¹(tmp1)
+//│   end
+//│ };
+//│ @data
+//│ define Reference² as class Reference⁰ {
+//│   val n⁰: Int⁰;
+//│   constructor Reference¹(n: Int⁰) { define n⁰ as val n¹: Int⁰ = n; end }
+//│ };
+//│ return mixed¹(true)
+//│ Wasm result:
+//│ = 1
