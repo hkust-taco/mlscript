@@ -154,11 +154,9 @@ object TrackableFieldSelect:
         case ps :: Nil => ps.restParam.isEmpty &&
           ((ps.params is source.params) || ps.params.corresponds(source.params)(_.sym is _.sym))
         case _ => false
-    for
-      definition <- cls.defn if definition.auxParams.isEmpty
-      params <- definition.paramsOpt
-      if cls.irClsLikeDefn.forall(sameParameters(_, params))
-    yield cls.destructuredFields
+    cls.defn.collect:
+      case definition: ClassDef.Parameterized if definition.auxParams.isEmpty &&
+          cls.irClsLikeDefn.forall(sameParameters(_, definition.params)) => definition.primaryFields
 
   def unapply(s: Select): Opt[Path -> (field: TermSymbol, owner: ClassSymbol)] =
     s.symbol match

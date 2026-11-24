@@ -319,19 +319,14 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
           case FlatPattern.ClassLike(ctor, symbol, argsOpt, _refined) =>
             for args <- argsOpt; (arg, _) <- args do LoweringCtx.loweringCtx.collectScopedSym(arg)
             /** Make a continuation that creates the match. */
-            def k(ctorSym: ClassLikeSymbol, clsParams: Ls[TermSymbol])(st: Path): Block =
-              val args = argsOpt.getOrElse(Nil)
-              // Normalization should reject cases where the user provides
-              // more sub-patterns than there are actual class parameters.
-              assert(argsOpt.isEmpty || args.length <= clsParams.length, (argsOpt, clsParams))
-              def mkArgs(args: Ls[TermSymbol -> (LocalVarSymbol -> Opt[Loc])])(using LoweringCtx): Case -> Block = args match
-                case Nil =>
-                  Case.Cls(ctorSym, st) -> lowerSplit(tail, cont)
-                case (param, (arg, loc)) :: args =>
-                  val (cse, blk) = mkArgs(args)
+            def k(ctorSym: ClassLikeSymbol, clsParams: Opt[Ls[TermSymbol]])(st: Path): Block =
+              def mkArgs(fields: Ls[TermSymbol], args: Ls[LocalVarSymbol -> Opt[Loc]]): Block = (fields, args) match
+                case (_, Nil) => lowerSplit(tail, cont)
+                case (param :: ps, (arg, loc) :: rest) =>
                   // Positional patterns do not spell the field name. Locate the extraction at the sub-pattern.
-                  (cse, Assign(arg, Select(sr, Tree.Ident(param.id.name))(S(param), loc)(false), blk))
-              mkMatch(mkArgs(clsParams.iterator.zip(args).toList))
+                  Assign(arg, Select(sr, Tree.Ident(param.id.name))(S(param), loc)(false), mkArgs(ps, rest))
+                case (Nil, _ :: _) => lastWords(s"Missing positional field for pattern of ${ctorSym.nme}")
+              mkMatch(Case.Cls(ctorSym, st) -> mkArgs(clsParams.getOrElse(Nil), argsOpt.getOrElse(Nil)))
             symbol match
               case cls: ClassSymbol if ctx.builtins.virtualClasses contains cls =>
                 // [invariant:0] Some classes (e.g., `Int`) from `Prelude` do
@@ -340,11 +335,11 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
                 // In this case the second parameter of `Case.Cls` will not be used.
                 // So we do not elaborate `ctor` when the `cls` is virtual
                 // and use it `Predef.unreachable` here.
-                k(cls, Nil)(unreachableFn)
+                k(cls, N)(unreachableFn)
               case cls: ClassSymbol =>
                 subTerm_nonTail(ctor)(k(cls, cls.destructuredFields))
               case mod: ModuleOrObjectSymbol =>
-                subTerm_nonTail(ctor)(k(mod, Nil))
+                subTerm_nonTail(ctor)(k(mod, N))
           case FlatPattern.Tuple(len, inf) => mkMatch(Case.Tup(len, inf) -> lowerSplit(tail, cont))
           case FlatPattern.Record(entries) =>
             for (_, s) <- entries do LoweringCtx.loweringCtx.collectScopedSym(s)

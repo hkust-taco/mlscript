@@ -1117,6 +1117,10 @@ object ClassDef:
       ctorAnnotations: Ls[Annot],
   )(val toLoc: Opt[Loc], val headerLoc: Opt[Loc], val ctorLoc: Opt[Loc]) extends ClassDef:
     val paramsOpt: Opt[ParamList] = S(params)
+    /** The field symbol bound to each primary constructor parameter, in declaration order. */
+    lazy val primaryFields: Ls[TermSymbol] = params.params.map: param =>
+      // A cloned class has its own field symbols and erasures. Follow its parameter bindings.
+      param.fldSym.flatMap(_.asTrm).getOrElse(lastWords(s"Missing field for parameter ${param.sym.nme} of ${sym.nme}"))
   
   case class Plain(
       owner: Opt[InnerSymbol],

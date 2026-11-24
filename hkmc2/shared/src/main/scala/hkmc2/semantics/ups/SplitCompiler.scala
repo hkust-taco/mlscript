@@ -37,7 +37,10 @@ object SplitCompiler:
       while scrutinees.size <= i do
         val index = scrutinees.size
         val representation = cs match
-          case cls: ClassSymbol => cls.destructuredFields(index).erasedType
+          case cls: ClassSymbol =>
+            val fields = cls.destructuredFields.getOrElse:
+              lastWords(s"Positional sub-pattern of class ${cls.nme} without a primary parameter list")
+            fields(index).erasedType
           // The values that a pattern definition extracts come from its untyped `unapply` result.
           case _: PatternSymbol => N
         scrutinees += TempSymbol(N, initErasedType = representation, s"arg$$${cs.nme}$$$index$$").toScrut

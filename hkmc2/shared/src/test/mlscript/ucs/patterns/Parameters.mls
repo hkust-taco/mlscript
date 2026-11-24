@@ -148,6 +148,16 @@ new AuxiliaryOnly(4) is AuxiliaryOnly
 //│ = true
 
 :e
+new AuxiliaryOnly(4) is AuxiliaryOnly()
+//│ ╔══[COMPILATION ERROR] Resolution error in constructor
+//│ ║  l.+1: 	new AuxiliaryOnly(4) is AuxiliaryOnly()
+//│ ║        	                        ^^^^^^^^^^^^^^^
+//│ ╟── Class definition 'AuxiliaryOnly' does not take pattern arguments.
+//│ ║  l.XX: 	class AuxiliaryOnly with
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
+//│ = false
+
+:e
 fun extractAuxiliary(x: AuxiliaryOnly) = if x is AuxiliaryOnly(value) then value else 0
 //│ ╔══[COMPILATION ERROR] Resolution error in constructor
 //│ ║  l.+1: 	fun extractAuxiliary(x: AuxiliaryOnly) = if x is AuxiliaryOnly(value) then value else 0
@@ -155,6 +165,12 @@ fun extractAuxiliary(x: AuxiliaryOnly) = if x is AuxiliaryOnly(value) then value
 //│ ╟── Class definition 'AuxiliaryOnly' does not take pattern arguments.
 //│ ║  l.XX: 	class AuxiliaryOnly with
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^
+
+:expect true
+class EmptyPrimary() with
+  constructor(val value)
+new EmptyPrimary()(4) is EmptyPrimary()
+//│ = true
 
 object Main with
   fun run(input) = if input is Data(count) then 0
