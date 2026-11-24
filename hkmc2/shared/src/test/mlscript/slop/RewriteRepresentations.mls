@@ -105,7 +105,7 @@ pattern Lower = "a"..="z"
 //│ let scrut: Str⁰, scrut1: Str⁰, unapplyResult: ?, output: ?, bindings: ?, tmp: Bool⁰, unapplyResult1: ?, output1: ?, bindings1: ?, tmp1: Bool⁰;
 //│ define Lower⁰ as pattern Lower¹ {
 //│   method unapply⁰ = fun unapply¹(input: ?): ? {
-//│     let isGreaterThanLower: ?, isLessThanUpper: ?;
+//│     let isGreaterThanLower: Bool⁰, isLessThanUpper: Bool⁰;
 //│     set isGreaterThanLower = <=⁰("a", input);
 //│     match isGreaterThanLower
 //│       true =>
@@ -121,7 +121,7 @@ pattern Lower = "a"..="z"
 //│     end
 //│   }
 //│   method unapplyStringPrefix⁰ = fun unapplyStringPrefix¹(input: ?): ? {
-//│     let stringHead: Str⁰, stringTail: Str⁰, nonEmpty: Bool⁰, isGreaterThanLower: ?, isLessThanUpper: ?, tmp2: Array⁰;
+//│     let stringHead: Str⁰, stringTail: Str⁰, nonEmpty: Bool⁰, isGreaterThanLower: Bool⁰, isLessThanUpper: Bool⁰, tmp2: Array⁰;
 //│     match input
 //│       Str⁰ =>
 //│         set nonEmpty = <⁰(0, input.length﹖);
