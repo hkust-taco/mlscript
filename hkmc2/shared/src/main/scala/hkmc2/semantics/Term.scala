@@ -664,8 +664,10 @@ final case class RcdField(field: Term, rhs: Term, sym: BlockMemberSymbol)(val ke
 
 object RcdField:
   /** Construct a generated value field whose symbol does not participate in source erasure. */
-  def apply(field: Term, rhs: Term)(using State): RcdField = make(field, rhs, N, false, N)
-  def source(field: Term, rhs: Term)(using State): RcdField = make(field, rhs, N, true, N)
+  def apply(field: Term, rhs: Term)(using State): RcdField =
+    make(field, rhs, signature = N, initializer = S(rhs), source = false, symbol = N)
+  def source(field: Term, rhs: Term)(using State): RcdField =
+    make(field, rhs, signature = N, initializer = S(rhs), source = true, symbol = N)
   /** Declare a structural field with the given type or bounds. Its term symbol carries the
     * read type for erasure. The field retains the written bounds for reads and assignments. */
   def signature(field: Term, bounds: Term, symbol: Opt[SymbolKey])(using State, Ctx): RcdField =
@@ -673,16 +675,15 @@ object RcdField:
       case Term.WildcardTy(_, output) =>
         output.getOrElse(ctx.builtins.Any.ref(new Tree.Ident("Any").withLocOf(bounds)))
       case tpe => tpe
-    make(field, bounds, S(readType), true, symbol)
+    make(field, bounds, signature = S(readType), initializer = N, source = true, symbol = symbol)
   /** Create a record property with a fresh member symbol so that selection can identify its definition.
-    * In a record value such as `{x: 1}`, `rhs` supplies the initializer and `signature` is empty.
-    * In a record type such as `mut {x: in Int out Num}`, `rhs` holds the written bounds and
-    * `signature` supplies the read type. Only this second form passes a signature here.
-    * An ordinary [[TermDefinition]] can have both a signature and a body.
+    * The field retains `rhs`, a value expression or structural field bounds. Its member definition
+    * takes its declared read type from `signature` and its body from `initializer` independently.
     * `source` indicates that source erasure will assign the symbol's representation.
     * `symbol` supplies the property key for an `@jsSymbol` field.
     */
-  private def make(field: Term, rhs: Term, signature: Opt[Term], source: Bool, symbol: Opt[SymbolKey])(using State): RcdField =
+  private def make(field: Term, rhs: Term, signature: Opt[Term], initializer: Opt[Term],
+      source: Bool, symbol: Opt[SymbolKey])(using State): RcdField =
     val name = field match
       case Term.Lit(Tree.StrLit(name)) => name
       case _ => "computed field"
@@ -694,10 +695,8 @@ object RcdField:
     // that pass need an initialized, unknown representation before consumers can query it.
     if !source then tsym.initializeErasure(N)
     sym.tsym = S(tsym)
-    // Value-field lookup removes the synthetic definition's capture mark, leaving
-    // enclosing call-site marks intact. A structural type field instead refers
-    // directly to its written type: projection does not invoke a value definition.
-    val body = Option.when(signature.isEmpty)(Term.Capture(rhs, tsym))
+    // Field lookup removes this initializer's capture mark, leaving enclosing call-site marks intact.
+    val body = initializer.map(Term.Capture(_, tsym))
     tsym.defn = S(TermDefinition(RecordField, sym, tsym, Nil, N, signature, body, TermDefFlags.empty,
       Modulefulness.none, symbol.toList.map(Annot.JsSymbol(_)(field.toLoc)), N)(field.toLoc, field.toLoc, N))
     sym.complete()
