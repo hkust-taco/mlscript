@@ -1,18 +1,48 @@
-NOTE: This is a temporary tracking document for the decomposition of the original PR #575 into smaller reviewable units.
-  It should be removed once the extraction is complete (ie, the remaining PRs are merged).
-
-
 # Extraction plan for PR #575
 
-Status updated 2026-11-15: E01–E03, B01–B05, E08, E14, E17–E18, structural
-Iterator, E21–E24, E27, E31, E35 and E36 are merged upstream; upstream's cast
-refactor covers E19. The branch incorporates `hkmc2` through `26c31e8a9`. The
-approved split retains E12 and E32 with shape-based erasure and moves E29–E30 and
-E33–E34 to separate follow-ups after #575. E20 remains an independent fix. The
-historical batch dependencies below describe the original extraction order,
-subject to this revised scope.
+## Merge status on 2026-11-24
 
-## Scope and baseline
+[Upstream #575](https://github.com/hkust-taco/mlscript/pull/575) is open from
+`LPTK/compute-erased-types-from-shapes` into `hkust-taco/hkmc2`. The feature
+branch incorporates the upstream tip `9fba08b08` through `b47200fea`. Its latest
+feature merge is `228a8370c`. At those commits #575 changes 36 compiler Scala
+files (+2,861/−1,073) and seven Scala test files (+141/−25). Remove this
+temporary plan once the remaining extractions have landed.
+
+| Where the original 36 work items stand | Items |
+| --- | --- |
+| In `hkmc2` and inherited by #575 (29) | E01–E11, E13–E19, E21–E28, E31, E35–E36 |
+| On `compute-erased-types-from-shapes`, awaiting #575 for upstream delivery (5) | E12, E29–E30, E32–E33 |
+| Still to merge separately (2) | E20, E34 |
+
+### Integrated on the feature branch
+
+| Work | What landed on `compute-erased-types-from-shapes` |
+| --- | --- |
+| Core inference, E12 and E32 | #575 carries shape-based erasure, constructor-companion signatures through cloning, and the read/write model for mutable fields. The branch also incorporates the exposure and failed-coercion fixes from [LPTK #34](https://github.com/LPTK/mlscript/pull/34). |
+| E29–E30 | [LPTK #35](https://github.com/LPTK/mlscript/pull/35) merged at `228a8370c`. It retypes fused values and their callers and proves representation casts across all incoming producers. The earlier [upstream #624](https://github.com/hkust-taco/mlscript/pull/624) closed unmerged. #575 now carries the reviewed implementation. |
+| E33 | Explicit input and output bounds on fields of a whole mutable record, such as `mut { f: in S out T }`, landed directly on this branch in [`0eee40929`](https://github.com/LPTK/mlscript/commit/0eee40929d60b1cc7f4c52b5d7c7420ed5f53b32). |
+
+[LPTK #33](https://github.com/LPTK/mlscript/pull/33) supplied the original
+codegen and flow-analysis fixes before the extraction began. Their reviewed
+pieces now appear in the upstream merge record and in #35.
+
+### Remaining merges
+
+| Work | Destination and order |
+| --- | --- |
+| E20 — propagate partial calls with checked arguments | [Upstream #626](https://github.com/hkust-taco/mlscript/pull/626) is open from `codex/pr575-partial-call-arguments` into `hkmc2`. It preserves the timing and order of argument evaluation and can merge independently of #575. |
+| E34 — allow individual record fields to be mutable | After #575 lands in `hkmc2`, port the per-field `mut` syntax, semantics and mixed-field tests from `codex/pr575-mutable-record-syntax`. The old [upstream #625](https://github.com/hkust-taco/mlscript/pull/625) closed unmerged and also contains E33. Reuse the field-bound implementation already in #575 when preparing the E34 diff. |
+
+### Related follow-ups
+
+These branches address work outside the original 36 items.
+
+- The unchecked-casts branch uses the proofs from #35 to remove redundant runtime checks while preserving the cast's target type. [`codex/flow-proved-unchecked-casts`](https://github.com/LPTK/mlscript/tree/codex/flow-proved-unchecked-casts)
+- The call-signature branch gives indirect calls erased signatures. #35 retains targeted `:fixme` cases for an indirect call losing its fused result and a generated match branch returning an unboxed value. Revisit those cases when integrating call signatures. [`call-node-signatures`](https://github.com/LPTK/mlscript/tree/call-node-signatures)
+- The two-phase cloning branch addresses the existing `InnerClass` failure in `slop/ClonedBindings.mls`, where an inferred result names a local class. It was developed on the original inference snapshot. [`codex/two-phase-cloning`](https://github.com/LPTK/mlscript/tree/codex/two-phase-cloning)
+
+## Original scope and baseline
 
 This plan decomposes [PR #575](https://github.com/hkust-taco/mlscript/pull/575),
 “Compute erased types from new-resolution shape analysis”. The original analysis
@@ -50,22 +80,29 @@ regression inputs, embedded golden output and generated JavaScript. Extensive
 diff-test updates are acceptable when they follow from that bounded source
 change. Do not split a theme into tiny PRs solely to reduce its snapshot diff.
 
-## Completed extractions
+## Merged into `hkmc2`
 
-| Work item | Merged PR | Outcome |
+| Work item | Upstream PR or commit | Outcome |
 | --- | --- | --- |
 | E01 | [#594](https://github.com/hkust-taco/mlscript/pull/594) | Parser/operator construction and printing agree on tuple arguments; three golden files updated. |
 | E02 | [#595](https://github.com/hkust-taco/mlscript/pull/595) | Corrected the defensive EOF error payload and stack result. Current parsing consumes all tokens, so existing tests do not exercise that fallback and goldens are unchanged. |
 | E03 | [#596](https://github.com/hkust-taco/mlscript/pull/596) | Fixed the fish formatter's list tail and added empty/singleton/multiple-item regressions. Both nonempty cases failed before the fix. |
-| B01 (E04–E07) | [#597](https://github.com/hkust-taco/mlscript/pull/597) | Corrected library and fixture declarations; override-fixture annotations stay with B05 and E36 remains deferred. |
+| B01 (E04–E07) | [#597](https://github.com/hkust-taco/mlscript/pull/597) | Corrected library and fixture declarations. The override-fixture annotations landed with B05. |
 | B02 (E09, E16) | [#598](https://github.com/hkust-taco/mlscript/pull/598) | Resolved builtin results and abortive expression flow, with independent JS/Wasm regressions. |
 | B03 (E10–E11) | [#599](https://github.com/hkust-taco/mlscript/pull/599) | Separated async/generator body payloads from Promise/Iterator call results, including cloning and currying. |
 | B04 (E13, E25–E26, E28) | [#600](https://github.com/hkust-taco/mlscript/pull/600) | Shared immutable callable signatures across definitions and their symbols; preserved them through copying and calling-convention changes. E12 stays with B07. |
 | E08 | [#601](https://github.com/hkust-taco/mlscript/pull/601) | Located representation-conversion diagnostics at their source. |
 | E14 | [#602](https://github.com/hkust-taco/mlscript/pull/602) | Combined representation inheritance with source argument-layout checks, Wasm signature checks and exposed open-member annotation requirements. |
 | E15 / B05 | [#606](https://github.com/hkust-taco/mlscript/pull/606) | Undefined has the representationless `Nothing` type; Wasm materializes placeholders, including non-null nominal references. Upstream also adapted ordinary bottom-typed expressions and return handling. |
-| E17–E18 | [#610](https://github.com/hkust-taco/mlscript/pull/610) | Typed tuple extraction and positional alignment use a shared `ArgumentLayout`, including under-applied calls and optional slots before trailing parameters. E35's test consolidation remains on this branch. |
+| E17–E18 | [#610](https://github.com/hkust-taco/mlscript/pull/610) | Typed tuple extraction and positional alignment use a shared `ArgumentLayout`, including under-applied calls and optional slots before trailing parameters. |
 | E19 | [#614](https://github.com/hkust-taco/mlscript/pull/614) | Upstream's `CastPath`/`CastResult` split and `RefinesCasts` supersede the original redundant-cast patch. No separate E19 extraction remains. |
+| E21–E23 | [#627](https://github.com/hkust-taco/mlscript/pull/627) | Constructor elision preserves effects and field values. Match fusion preserves arm order and default-branch argument layouts. |
+| E24 | [#628](https://github.com/hkust-taco/mlscript/pull/628) | Fusion respects the representation of a field in a container that stays allocated. |
+| E27 | [`e62a8c172`](https://github.com/hkust-taco/mlscript/commit/e62a8c172ca516cd9e9f2ff7d1aa2ee30748d73d) | Separated unknown getter effects from primitive value flow. |
+| E31 | [`4967bcd7d`](https://github.com/hkust-taco/mlscript/commit/4967bcd7d8c525e310c3dfcccd7da0ba88fb8bbd) | Record-copy exposure follows the fields that survive overwriting. |
+| E35 | [`ebc9b572f`](https://github.com/hkust-taco/mlscript/commit/ebc9b572f36c7eeac212dab34c232134e9546fb6) | Consolidated the optional-binding regressions, preserving the unsafe-call probes. |
+| E36 | [`0a444b612`](https://github.com/hkust-taco/mlscript/commit/0a444b612e7c81d62f53b040ad9a74ea09ba7340) | Removed the unused `Runtime.plus_impl` prototype. |
+| Structural Iterator (unnumbered) | [`015668cf4`](https://github.com/hkust-taco/mlscript/commit/015668cf4b7d2b3d7f5bb125b0e16c4e8244c048) | Generator results and iterator implementations use the structural `next` protocol. |
 
 E01–E03 and B01 each passed `hkmc2AllTests/test` with 1,155 tests; B02 passed
 with 1,157. The upstream snapshot `1ad11c54c` contains
@@ -84,56 +121,31 @@ the full suite ran 1,172 tests. The incoming JS cast-comment fixtures use broad
 input annotations and an unchecked nominal receiver so inference and redundant
 cast elimination preserve the coercions those rendering tests exercise.
 
-## Reduced #575 and independent follow-ups
+## Historical integration snapshots
 
-### Current split for review
+These snapshots preserve the measurements, test results and reasons for the
+earlier splits. The [remaining merges](#remaining-merges) section tracks the live queue.
 
-The core branch retains inference, constructor-companion signatures and the
-complete mutable-field read/write model. Its record tests use the existing
-whole-record `mut {...}` syntax and interval type arguments through aliases.
-The new field declaration syntax and the optimizer transformation belong to
-separate follow-ups:
+### Reduced #575 on 2026-11-15
 
-| Work | Branch | Merge order |
-| --- | --- | --- |
-| E29–E30: deforestation retyping and cast proofs | `codex/pr575-deforestation-retyping` | After #575 (#624, closed until then) |
-| E33–E34: mutable-record declarations | `codex/pr575-mutable-record-syntax` | After #575 (#625, closed until then) |
-| E20: partial-call arguments | `codex/pr575-partial-call-arguments` | Independent, targeting `hkmc2` (#626, open) |
-| E21–E23: constructor and match safety | `codex/pr575-constructor-safety` | Merged as #627 |
-| E24: fusion across container storage | `codex/pr575-fusion-storage` | Merged as #628 |
-
-The two new follow-ups share the reduced #575 as their review base. Their PRs
-must be retargeted to `hkmc2` after #575 merges. They do not depend on each other.
-Keep all E29–E30 slot and caller adaptations together when integrating the
-deforestation follow-up.
-
-Against `26c31e8a9`, the core contains **1,028 changed compiler Scala lines across
-18 files** (827 additions, 201 deletions), plus **42 changed Scala test lines
-across two files**. E31 removes the three overwritten-record exposure fixmes.
-Without E30's cast proofs, five constructor regressions pass conservatively
-again. Upstream's #627 fixed the constructor/match failures, including the
-optional-field fusion case and its dependent worksheet check, so their targeted
-E21–E23 fixmes are gone. E24's nominal-storage regression moves with the
-deforestation follow-up. Four `:fixme` blocks remain:
-
-- `T/deforest/simple.mls`: the recursive result-slot failure that E29 resolves.
-- `T/slop/ClonedBindings.mls`: a cloned function whose inferred result names a
-  class declared in the function's own body.
-- `T/slop/wasm/MutableFields.mls` (two blocks): a private class used from a
-  later Wasm worksheet block.
-
-The branch passes `hkmc2AllTests/test` with these markers; all regenerated
-golden output is committed.
+The reduced core kept inference, E12 and E32. At that point E29–E30 and
+E33–E34 had been split off for separate review. Against `26c31e8a9`, the core
+contained **1,028 changed compiler Scala lines across 18 files** (827 additions
+and 201 deletions), plus **42 changed Scala test lines across two files**.
+E31 and #627 had resolved the overwritten-record and constructor/match failures.
+The four remaining `:fixme` blocks at that snapshot covered the recursive fused
+result, the cloned local class and two uses of a private Wasm class from a later
+worksheet block. #35 has since resolved the recursive fused result.
 
 ### Previous Iterator and E27 integration
 
-The latest merge incorporates structural Iterator (`015668cf4`) and E27
-(`e62a8c172`). It adopts upstream's typed alias lookup for Iterator and Awaited.
+This merge incorporated structural Iterator (`015668cf4`) and E27
+(`e62a8c172`). It adopted upstream's typed alias lookup for Iterator and Awaited.
 Metals compilation and `hkmc2AllTests/test` passed; the full suite ran **1,294
-tests**. The regenerated golden changes only update resolver line numbers in
-the existing override diagnostics. The ten agreed fixmes below remain.
+tests**. The regenerated goldens updated resolver line numbers in the existing
+override diagnostics. That snapshot retained the ten fixmes described below.
 
-Against `e62a8c172`, the remaining Scala diff is:
+The table records the Scala diff at `e62a8c172`.
 
 | Category | Files | Additions | Deletions | Changed lines |
 | --- | ---: | ---: | ---: | ---: |
@@ -141,18 +153,15 @@ Against `e62a8c172`, the remaining Scala diff is:
 | Scala tests | 2 | 42 | 8 | 50 |
 | Total Scala | 26 | 1,124 | 258 | 1,382 |
 
-This integration exposes no additional prerequisite for merging the reduced
-feature. Further extraction would reduce review scope:
+At that snapshot two further extractions could reduce review scope.
 
-- E29–E30 still form a separate optimizer transformation: representation
-  retyping and flow-proved cast removal. Their current hunks account for about
-  **420 changed Scala lines across nine files**. Keep parameters, locals,
-  captures, results and caller coercions together; any standalone extraction
-  still needs adaptation and independent validation on `hkmc2`.
-- E33–E34 add mutable-record declaration syntax, roughly **100–150 changed
-  Scala lines** interleaved with E32. They could follow the core feature once
-  its E32 read/write model is available. This is an estimate of the syntax
-  feature's hunks, not a validated standalone patch.
+- E29–E30 formed a single optimizer transformation covering representation
+  retyping and flow-proved cast removal. Its hunks then accounted for about
+  **420 changed Scala lines across nine files**. Parameters, locals,
+  captures, results and caller coercions subsequently landed together in #35.
+- E33–E34 accounted for an estimated **100–150 changed Scala lines** of
+  mutable-record declaration syntax interleaved with E32. E33 subsequently
+  landed on the inference branch.
 
 E32 remains necessary for the retained precise mutable-field inference.
 Removing only its assignment tracking or interface-write exposure would make
@@ -161,12 +170,12 @@ known failures, but it still combines these themes with shape-based erasure.
 
 ### Previous reduction and independently validated follow-ups
 
-The reduction removes the E20 partial-call optimization, E21–E23 constructor
+The reduction removed the E20 partial-call optimization, E21–E23 constructor
 and match fixes, E24 storage constraints, and E31 shadow-aware exposure. E32
-still observes assigned values and external writes through contextual record
-copies; its traversal conservatively exposes overwritten fields until E31 lands.
-The original optional-binding test files and `Runtime.plus_impl` are restored,
-deferring E35's consolidation and E36's cleanup.
+continued to observe assigned values and external writes through contextual
+record copies. Its traversal exposed overwritten fields until E31 landed.
+The reduction restored the original optional-binding tests and
+`Runtime.plus_impl`, deferring E35 and E36 at that point.
 
 Regressions for deferred compiler bugs retain their assertions. Targeted `:fixme`s identify the
 deferred failures and name their E-number so the corresponding follow-up can
@@ -187,10 +196,9 @@ changed Scala lines**, counting additions and removals. These counts include
 the two retained Scala test files. The commit includes regenerated goldens and
 the restored runtime helper's generated JavaScript.
 
-The following branch names, counts and test results describe their independently
-validated versions on the old base. After #575 merges, adapt the deferred fixes
-to the retained inference code and regenerate goldens, including removing their
-temporary `:fixme`s. E27 and Iterator have since landed upstream.
+The following branch names, counts and test results describe the independently
+validated versions on the old base. Every row except E20 has since landed in
+`hkmc2`.
 
 Every branch below starts directly at `hkmc2` / `hkust-taco/hkmc2` commit
 `bae948bd5896748e7fde850785d9fdefd585c925`; none targets or depends on another
@@ -264,50 +272,33 @@ E27 prepares the flow-analysis invariant consumed by E29.
 | E33–E34: mutable-record declarations | Keep E32 | Explicit bounds and per-field mutability need the complete read/write constraint model. |
 | Shape-erasure feature | Retained in this PR | Observe all source-slot inputs before erasure and preserve physical representation boundaries. |
 
-The six deferred branches can follow #575. When integrating them, preserve the
-retained implementation in shared files and remove only the fixmes their fixes
-resolve. The original independent validation does not replace validation on the
-new base.
+The reduction originally allowed six branches to follow #575. Most of that
+work subsequently landed on one of the two integration branches.
 
-## Consolidated batches
+## Original batches and their outcomes
 
-**The table below groups the original themes; the revised scope above controls what lands in #575.** E01–E03 and B01–B05 are merged,
-including E04's nofib aliases in the library/fixture batch. There is no
-additional tiny nofib PR. The E-numbers remain stable references to individual
-work items; B01–B10 group the broader themes. The ready branches above define
-the review boundaries for this wave.
-
-B01 is merged as #597 (extracted locally as `771a80b9f` on
-`codex/pr575-fixture-corrections`). B02 is merged as #598 (extracted locally
-as `aef07eead` on `codex/pr575-expression-results`). B03 is merged as #599
-(extracted locally as `9afbadaf7` on `codex/pr575-async-generator-results`).
-B04 is merged as #600. E08 and E14 were extracted separately from B05 as #601
-and #602. E15 completed B05 as #606; E17–E18 completed B06's implementation as
-#610. E19 is covered by #614. E27 is upstream; E20–E24 and E31 have independent
-extraction commits listed above.
-The prerequisite column records the original order for extracting all themes
-before inference; it does not require postponing #575 for the deferred fixes.
+The E-numbers identify individual work items. B01–B10 group their original
+review themes. The prerequisite column records the dependencies used to design
+the batches. The [remaining merges](#remaining-merges) give the order for the
+two outstanding items.
 
 | Batch | Review theme | Work items | Prerequisites | Scope |
 | --- | --- | --- | --- | --- |
-| B01 | Library and fixture corrections | E04–E07 | — | Remaining nofib character-list aliases, class-object references, open-method signatures and exported mutable-storage annotations. E36 now has a separate approved extraction. |
+| B01 | Library and fixture corrections | E04–E07 | — | #597 brought the nofib aliases, class-object references, open-method signatures and exported mutable-storage annotations into `hkmc2`. |
 | B02 | Expression-result resolution | E09, E16 | — | Builtin result information and correct treatment of returns, abortive branches and loops. |
 | B03 | Async and generator results | E10–E11 | — | Body payloads versus Promise/Iterator results, including cloning and currying. |
 | B04 | Callable signatures through transformations | E13, E25–E26, E28 | — | Generated functions, cloned symbols, eta expansion, DPE and deforestation-generated callables. |
 | B05 | Undefined values across runtime representations | E15 | E14 (merged) | Merged as #606 with representationless `Nothing` and Wasm placeholders. E08 and E14 are complete. |
-| B06 | Optional and variadic arguments | E17–E18, E35 | B05 | Implementation merged as #610; E35's regression consolidation remains. |
-| B07 | Optimizer safety | E12, E20–E24 | — | E19 is covered by #614. Type constructor companions; preserve checks and evaluation order; validate constructor effects, field mappings, branch selection and storage compatibility before elimination/fusion. |
-| B08 | Representation-changing deforestation | E27, E29–E30 | B04, B05, B07 | Separate effects from values, retype every affected slot and function instance, and prove casts against all incoming producers. |
-| B09 | Mutable-field resolution and exposure | E31–E32 | — | Shadowing, assignments, interface-permitted writes and structural read/write constraints. |
-| B10 | Mutable-record declarations | E33–E34 | B09 | Explicit input/output bounds and per-field mutability, with documentation and regressions. |
+| B06 | Optional and variadic arguments | E17–E18, E35 | B05 | #610 and the E35 regression consolidation are in `hkmc2`. |
+| B07 | Optimizer safety | E12, E20–E24 | — | E12 is in #575. E21–E24 are upstream through #627 and #628. E20 has its own open PR, #626. |
+| B08 | Representation-changing deforestation | E27, E29–E30 | B04, B05, B07 | E27 is upstream. LPTK #35 merged E29–E30 into the feature branch. |
+| B09 | Mutable-field resolution and exposure | E31–E32 | — | E31 is upstream. #575 carries E32's assignment tracking and interface-permitted writes. |
+| B10 | Mutable-record declarations | E33–E34 | B09 | E33 is in #575. E34 remains a separate syntax and semantics follow-up. |
 
-B08 and B09 are likely the largest batches. Keep their coupled invariants
-intact, but keep neighboring themes in their own batches. Check the actual
-implementation diff before finalizing each extraction; these boundaries are
-based on source inspection, not measurements of completed standalone patches.
-An internal work-item dependency does not require another PR when both items
-belong to the same batch. Do not introduce unused APIs or temporary incomplete
-behavior merely to reproduce the original fine-grained sequence.
+The original batch boundaries grouped changes that had to preserve a shared
+invariant. In B08, updating a function's calling convention requires retyping
+its parameters, result and callers together. In B09, a precise mutable read
+must account for all writes the interface admits.
 
 B01 was extracted from `66add69d3` and passed `hkmc2AllTests/test` with 1,155
 tests. Its reviewed diff contains 16 files, 42 additions and 36 deletions,
@@ -372,16 +363,14 @@ retyped parameter bindings and specialized functions to shared signatures.
 
 ## What independently mergeable means
 
-Every standalone batch targets `hkmc2`, includes its own tests and current golden
-outputs, and must work on its target. Once #575 lands, later fixes can use its
-retained implementation. Do not target another unmerged extraction branch.
+An independent extraction targets `hkmc2` and includes its tests and golden
+outputs. A dependent change can use the feature branch for review, as #35 did,
+or target `hkmc2` once its prerequisites land there. Validate each extraction
+on its actual target.
 
-A dash means no semantic prerequisite was identified by source inspection.
-It is a standalone candidate, not a claim that the batch has already passed
-tests. The remaining B07–B10 work has not been built in isolation. The complete original source
-snapshot passed 1,165 tests, and E01–E03 and B01–B04 passed their own full suites,
-but these results do not establish the correctness of the remaining
-intermediate subsets.
+A dash in the dependency tables means source inspection found no semantic
+prerequisite. The original source snapshot passed 1,165 tests. The integration
+snapshots above record which branches were also tested independently.
 
 Prefer explicit annotations in extracted regressions so that representation
 fixes can be demonstrated before inference is enabled. Keep the original
@@ -507,7 +496,7 @@ after another value can have replaced it.
 | --- | --- | --- | --- |
 | E31 | Follow only surviving record fields during interface exposure | — | The reverse, shadow-aware traversal and contextual memoization in InterfaceExposure's record case, including initializer exposure. Preserve unknown-key conservatism and nested spread contexts. Re-express overwrittenSource, direct/spread replacement, and computed-key cases from T/slop/strictres/MutableFields.mls using escaping callbacks, so they test resolution/exposure without the later missing-field-annotation diagnostic. E31 is now extracted independently while mutable reads remain conservative; add assignment-flow handling with E32. |
 | E32 | Account for every write when resolving and exposing mutable fields | E31 | NewResolver's `assignField/writeField/listenAssignedValues/assignableTargets`, projected lookup, class/record read paths, Elaborator's assignment hook, owned caches, and InterfaceExposure's unknown writes and assigned-value traversal. Include the structural input/output representation and constraints: RecordTypeShape/MemberLookup.Typed carry TypeArgument pairs through identity, substitution, support, transport, intersections and reads; `declaredField`, `constrainRecord` and `listenFieldInput` propagate writes negatively and reads positively. Exercise classes and existing `mut {f: T}` syntax, including existing interval type arguments, before introducing per-field syntax. Test projections, all receiver forms, multiple classes, escaping callbacks, late assignments, nested spreads, immutable-copy controls and both structural constraint directions. Adapt TypeRelationTest while preserving its bounded-growth property. Exclude erasure observations and the requirement to annotate exposed fields. |
-| E33 | Support explicit input/output bounds on mutable record fields | E32 | The typeArgument elaboration helper, direct field-bound syntax, missing-output provenance, and immutable-field rejection. Test `mut {f: in S out T}`, parenthesized bounds, input-only/output-only fields, nested negative positions, aliases and recursive interfaces. Use the relevant MutableFieldVariance blocks with both whole-record and per-field mutability alongside E34 in B10. Do not claim complete structural subtype checking or add it in this extraction. |
+| E33 | Support explicit input/output bounds on mutable record fields | E32 | Implemented on the feature branch in `0eee40929`. MutableFieldVariance covers direct bounds in `mut {f: in S out T}`, input-only and output-only fields, nested positions and aliases. E34 extends this coverage to individual mutable fields. |
 | E34 | Allow individual record fields to be declared mutable | E32, E33 | The `RcdField.mut` metadata, value/type elaboration, pretty-printing, cloning, RecordShape lookup, exposure and structural-interface flag threading, and Lowering's `allocatesMutable`. Support `{mut f: value, label: other}` end to end, including its type form and spread copies. Extract the mixed-field and copied-record tests from MutableFields, the MutableRecord pattern from ClonedBindings, and the BadMut expectation change. Move the corresponding reference documentation here. Keep source erasure deferral for record slots in #575. |
 
 E32 keeps direct assignments and writes admitted by declared interfaces together.
@@ -523,16 +512,16 @@ MutableFields tests instead assert the later erasure diagnostic; those blocks
 stay with #575. In particular:
 
 - assigned callbacks receiving unknown external arguments can test E32 directly;
-- missing annotations on an exported mutable class field test the final erasure
-  policy and cannot be moved to E32 unchanged;
+- writes from unknown clients to an exposed mutable field contribute unknown
+  input to inference, as established by LPTK #34;
 - ordinary mutable-record variance tests can be moved to E32 using whole-record
   syntax, without prematurely introducing E34;
 - per-field values and their full type semantics must be present together when
   B10 lands.
 
-B10 is a language-feature review covering E33/E34. It preserves the syntax and
-behavior already proposed by #575; extraction does not authorize inventing
-further syntax, changing dispatch, or extending the public library API.
+E33 already supplies explicit bounds for fields in a whole mutable record.
+The remaining B10 review covers E34's per-field `mut` in record values and
+types, including how spreading or copying a record treats those fields.
 
 Use `dtest newres/Records`, the appropriate split blocks from
 `sdtest strictres/MutableFields` and `sdtest strictres/MutableFieldVariance`,
@@ -547,12 +536,10 @@ as fixmes rather than weakening their expectations.
 | E35 | Consolidate optional-binding regressions without losing coverage | E15, E17, E18 | Reconcile T/slop/OptionalBinding.mls and T/slop/strictres/OptionalNull.mls into T/slop/strictres/OptionalBinding.mls, along with the duplicated tail-recursive case removed from strictres/OptionalParams.mls. Audit cases one by one: omission, supplied null/undefined, lambdas, currying, spreads, tail recursion, closures, constructor elimination and dynamic construction. E17/E18 are already merged; the standalone consolidation is validated above. Do not copy current golden output into an older compiler or treat unsafe.undefined observations as new semantics. |
 | E36 (approved) | Remove the unused Runtime Int31 addition prototype | — | The deletion of `Runtime.plus_impl` at the end of C/Runtime.mls and its generated output. No callers were found on the extraction base, and removal was explicitly approved on 2026-11-07. The `wasm.plus_impl` intrinsic is a different symbol and remains. |
 
-E35 originally belonged to B06, whose implementation has since merged; its audited
-consolidation now has an independent branch. E36 was initially deferred pending
-approval; the user approved removal on 2026-11-07 and its independent branch is
-now validated. Neither item is a prerequisite for compiler implementation work.
+E35 and E36 both landed in `hkmc2` as independent commits. The upstream
+merge record above links each one.
 
-## 6. What remains in #575
+## 6. Shape inference carried by #575
 
 Keep the actual shape-erasure feature as one coherent final change:
 
@@ -579,11 +566,11 @@ temporarily assigning unknown representations to the other slots. That would
 create incompatible intermediate calling boundaries and require temporary
 behavior not present in the intended design.
 
-The main compiler files left should be Erasure.scala, ErasureInputs.scala,
+The original inventory placed the core in Erasure.scala, ErasureInputs.scala,
 NewResolver.scala, NewResolverState.scala, Elaborator.scala, Pattern.scala,
-Symbol.scala and the source-record initialization part of Term.scala. This is
-an expected boundary, not a promised line count before the extractions are
-built and merged.
+Symbol.scala and the source-record initialization part of Term.scala. The
+feature branch also carries the later exposure fixes, explicit field bounds
+and deforestation work listed in the merge status.
 
 Retain the inference portions of T/newres/{Erasure,wasm/Erasure}.mls,
 codegen/ErasedTypes.mls, wasm/ReplImports.mls, the strict mutable-field cases,
@@ -603,8 +590,8 @@ case; do not cite that empty scratch file as evidence that inference works.
 
 Known failing regressions must stay visible with the appropriate owner:
 
-- the inferred result naming a class inside a cloned function body stays with
-  the core inference/cloning integration;
+- the inferred result naming a class inside a cloned function body is covered
+  by the two-phase cloning follow-up;
 - Wasm session classes whose fields reference other session classes remain
   worksheet/import fixmes;
 - an unboxed result returned through a deforestation-generated closure remains
@@ -612,9 +599,9 @@ Known failing regressions must stay visible with the appropriate owner:
 - changed override parameter layouts are now checked by #602's shared source
   correspondence rules; keep those checks when integrating inferred representations.
 
-Adding erased signatures to IR Call nodes is a separate planned follow-up,
-outside this extraction plan. It must not become an unannounced prerequisite
-for merging these existing changes.
+The remaining numbered extractions can be reviewed separately from this core.
+See [related follow-ups](#related-follow-ups) for erased call signatures and
+the cloned local class.
 
 ## 7. Shared-file ownership map
 
@@ -635,7 +622,7 @@ Use this map when taking hunks; do not copy an entire shared compiler file.
 | codegen/OptionalParams.scala | E17 |
 | codegen/PolyInstantiationRewrite.scala | E28's function replacement; E29's complete value/instance retyping |
 | codegen/SymbolRefresher.scala | E12; E28/E29 helpers as used |
-| codegen/deforest/Deforest.scala | E21–E24 |
+| codegen/deforest/Deforest.scala | E21–E24 and E29's checks on slot representations |
 | codegen/deforest/Rewrite.scala | E23, E25/E26, E29/E30 |
 | codegen/flowAnalysis/FlowAnalysis.scala | E27, E29, E30 |
 | codegen/flowAnalysis/FlowWebComputation.scala | E24 |
@@ -703,10 +690,12 @@ The earlier #592 reconciliation used an unchanged-tree merge only after exact
 tree equality was established. Do not apply that strategy blindly to future
 extractions, whose patches may have been adapted to a smaller base.
 
-The upstream synchronization target is `4967bcd7d8c525e310c3dfcccd7da0ba88fb8bbd`,
-including E17–E18 (#610), the cast refactor (#614), retained MIR definition symbols,
-JDK 25, Wasm file imports (#576), structural Iterator, E27, E31, E35 and E36. Measure each
-proposed extraction against this updated target before starting it.
+### Earlier upstream synchronizations
+
+The synchronization at `4967bcd7d` included E17–E18 (#610), the cast refactor
+(#614), retained MIR definition symbols, JDK 25, Wasm file imports (#576),
+structural Iterator, E27, E31, E35 and E36. The subsequent merge at
+`b47200fea` incorporated `hkmc2` through `9fba08b08`, including #627 and #628.
 
 The previous integration kept the upstream override checker, source layouts and unchanged
 inherited result representations while retaining shape-based inference. Override
@@ -738,14 +727,9 @@ expectations use the runner's BigInt rendering.
 Metals compilation and `hkmc2AllTests/test` passed; the full suite ran 1,294 tests
 with an 8 GB SBT heap. All resulting golden-output changes accompany the merge.
 
-The independent local branches and measured Scala counts are listed above.
-E20 and the other ready work have now been extracted and validated on `bae948bd5`.
-
-The current order is to review the reduced #575 with E12 and E32 retained,
-then land E29–E30 and E33–E34 separately. E20–E24 also have independent PRs;
-adapt their temporary-failure markers if they land after #575. E31, E35 and E36
-are already upstream. Regenerate shared golden outputs when combining the
-follow-ups.
+The historical measurements above use `bae948bd5` for the independent
+extractions. See [remaining merges](#remaining-merges) for the current targets
+and order.
 
 ## 9. Validation and review gates
 
