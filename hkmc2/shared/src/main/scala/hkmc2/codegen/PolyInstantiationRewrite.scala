@@ -58,14 +58,21 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
   given eState: Elaborator.State = constraintSolver.eState
   given pre: FlowPreAnalyzer = constraintSolver.preAnalyzer
   
+  // Rewriters look these up for every call they keep, so index the root functions once.
+  private lazy val inPlaceInstIds: Map[TermSymbol, InstantiationId] =
+    collector.synthesizedInstIdToFunSym.iterator.map((instId, fun) => fun -> instId).toMap
+  
   // the instantiation id where the original definition of a root function is rewritten in place
   protected final def inPlaceInstId(fun: TermSymbol): InstantiationId =
-    collector.synthesizedInstIdToFunSym.collectFirst:
-      case (instId, f) if f is fun => instId
-    .getOrElse(Nil)
+    inPlaceInstIds.getOrElse(fun, Nil)
   
-  private lazy val sharedRetypedSymbols: LinkedHashMap[(InstantiationId, ValueSymbol), ValueSymbol] =
-    retypedVariables.map((key, tpe) => key -> retypedSymbol(key._2, tpe))
+  // The symbols that replace the retyped ones, grouped by the instance that binds them: every rewriter
+  // and every planned signature reads the replacements of one instance.
+  private lazy val sharedRetypedSymbols: collection.Map[InstantiationId, Map[ValueSymbol, ValueSymbol]] =
+    val res = MutMap.empty[InstantiationId, Map[ValueSymbol, ValueSymbol]]
+    for ((instId, sym), tpe) <- retypedVariables do
+      res(instId) = res.getOrElse(instId, Map.empty) + (sym -> retypedSymbol(sym, tpe))
+    res
   
   private def retypedSymbol(previous: Symbol, tpe: ErasedValueType): ValueSymbol = previous match
     case v: VarSymbol if v.erasedType.contains(tpe) => v
@@ -76,10 +83,10 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
     case t: TermSymbol => SymbolRefresher.copyTermSymbol(t, t.owner, S(tpe))
     case _ => lastWords(s"cannot give $previous the erased type $tpe")
   
+  // the replacements visible in one instance: those of the bindings it shares with every instance, and its own
   private def retypedSymbolsAt(instId: InstantiationId): Map[ValueSymbol, ValueSymbol] =
-    def at(id: InstantiationId) = sharedRetypedSymbols.iterator.collect:
-      case ((`id`, sym), retyped) => sym -> retyped
-    (at(Nil) ++ at(instId)).toMap
+    val shared = sharedRetypedSymbols.getOrElse(Nil, Map.empty)
+    if instId.isEmpty then shared else shared ++ sharedRetypedSymbols.getOrElse(instId, Map.empty)
   
   // Plan new parameter bindings together with their signature. Body rewriting uses the same
   // replacements; ordinary BlockTransformer parameter substitution only permits renaming.

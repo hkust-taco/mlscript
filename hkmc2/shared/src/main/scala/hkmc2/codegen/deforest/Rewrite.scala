@@ -75,8 +75,8 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     go(producers, declared, Set.empty)
 
   // N when the existing slot keeps its declaration, as no fused value reaches it
-  private def retypedSlotType(producers: Ls[ProdStrat], declared: Opt[ErasedValueType]): Opt[ErasedValueType] =
-    if producers.exists(isFused) then slotTypeFromFlow(producers, declared) else N
+  private def retypedSlotType(producers: Iterable[ProdStrat], declared: Opt[ErasedValueType]): Opt[ErasedValueType] =
+    if producers.exists(isFused) then slotTypeFromFlow(producers.toList, declared) else N
 
   // A proved cast can disappear when fusion changes its operand's representation.
   // Keep other casts: even a check known to succeed can still narrow a physical anyref
@@ -336,10 +336,9 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
   // update the correct new erased type info to the new symbols before rewriting bodies that refer to them.
   // we do this after information like free variables are computed, as those are needed for branch function types
   locally {
+    val ctorsOfBranch = ctorWhichBranch.groupMap(_._2)((id, _) => solver.fusingCtorInfo(id))
     for (branchId, params) <- branchFunParamFieldSyms do
-      val ctors = ctorWhichBranch.iterator.collect:
-        case (id, branch) if branch == branchId => solver.fusingCtorInfo(id)
-      .toList
+      val ctors = ctorsOfBranch(branchId)
       params.zipWithIndex.foreach: (param, index) =>
         val types = ctors.map: ctor =>
           val (field, prod) = ctor.args(index)
@@ -416,6 +415,21 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
       r.coerceToOr(tpe, N)(k): (_, _) =>
         Assign.discard(r, k(Value.Lit(Tree.UnitLit(false))(N).coerceTo(tpe, N)))
     
+    // The signature planned for the definition that a reference to `f` reaches when this rewrite keeps
+    // the reference, ie when the instance it denotes has no copy and remains the original definition.
+    private def signatureInPlace(f: TermSymbol): FunDefn.Signature =
+      signatureAt(if pre.res.rootFunDefns.contains(f) then inPlaceInstId(f) else instId, f)
+    
+    // The result type that fusion gives to a definition without parameter lists which keeps its symbol,
+    // or `N` when that result keeps its type. The rewritten definition only replaces the current one after
+    // every body is rewritten. Until then, a read through the symbol still has the previous result type,
+    // which the coercion into a retyped slot would take for a value of an unrelated type.
+    private def retypedResultInPlace(f: TermSymbol): Opt[ErasedValueType] =
+      pre.res.funSymToFunDefn.get(f).filter(_.params.isEmpty).flatMap: original =>
+        val planned = signatureInPlace(f)
+        if planned is original.signature then N
+        else S(planned.result.callType.getOrElse(ErasedType.Unknown))
+    
     // calls `fun` with possibly remapped `args`
     def mkCall(fun: Path, args: Ls[LocalVarSymbol])(k: Result => Block): Block =
       applyArgs(args.map(s => Arg(N, s.asPath))): args2 =>
@@ -464,21 +478,26 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
           // already have changed, so compare the saved definition with the planned signature.
           val original = pre.res.funSymToFunDefn.get(f).map(_.signature.erasure)
           val rewritten =
-            if (f2 is f) && original.nonEmpty then
-              val targetInstId = if pre.res.rootFunDefns.contains(f) then inPlaceInstId(f) else instId
-              S(signatureAt(targetInstId, f).erasure)
+            if (f2 is f) && original.nonEmpty then S(signatureInPlace(f).erasure)
             else f2.erasedSignature
           (original, rewritten) match
             case (S(originalSignature: ErasedFuncSignature), S(rewrittenSignature: ErasedFuncSignature))
                 if originalSignature != rewrittenSignature =>
               val original = originalSignature.paramLists
               val retyped = rewrittenSignature.paramLists
+              // Retyping keeps the parameters of a signature, so both signatures have the same
+              // parameter lists, of the same lengths.
+              assert(original.corresponds(retyped)(_.sizeCompare(_) == 0),
+                s"retyping changed the parameter lists of ${f.nme}: $original -> $retyped")
               val slotss = original.iterator.zip(retyped).map(_.iterator.zip(_))
-              // truncating `slotss` only drops the lists a partial application leaves unapplied
-              val argss3 = argss2.iterator.zip(slotss).map: (args, slots) =>
-                if args.exists(_.spread.isDefined) then args.map(_ -> N)
-                else args.map(_ -> slots.nextOption())
-              .toList
+              // A partial application leaves the last lists of `slotss` unused. An over-application
+              // passes its remaining argument lists to the function's result, whose parameters this
+              // signature does not describe. An argument list can also be longer than its slots,
+              // when its last arguments go to a rest parameter.
+              val argss3 = argss2.map: args =>
+                slotss.nextOption() match
+                  case S(slots) if args.forall(_.spread.isEmpty) => args.map(_ -> slots.nextOption())
+                  case _ => args.map(_ -> N)
               applyListOf(argss3, applyListOf(_, (arg, k2) => arg match
                 case (a, S(slot)) => intoRetypedSlot(a.value, slot):
                   case value: Path => k2(Arg(N, value) -> N)
@@ -521,6 +540,10 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
           applyPath(from)(k)
         else
           super.applyPath(s)(k)
+      case ref @ FunRef(f, _) => retypedResultInPlace(f) match
+        // Like the result of a call to a function retyped in place, the read records its planned type.
+        case S(tpe) => super.applyPath(ref)(read => k(Cast.path(read, tpe, check = false)(ref.toLoc)))
+        case N => super.applyPath(ref)(k)
       case _ => super.applyPath(p)(k)
     
     // a free block member symbol of an extracted part becomes an `fv_` parameter, which needs a different node
@@ -628,39 +651,67 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
       override def applyFunDefn(fun: FunDefn): FunDefn =
         rewrittenInPlace.get(fun.dSym) match
           case Some((signature, rewrittenBody, annotations)) =>
-            FunDefn(fun.owner, fun.sym, fun.dSym.subst, signature, rewrittenBody)(fun.configOverride, annotations)
+            val dSym = fun.dSym.subst
+            if (dSym is fun.dSym) && (signature is fun.signature) && (rewrittenBody is fun.body) then fun
+            else FunDefn(fun.owner, fun.sym, dSym, signature, rewrittenBody)(fun.configOverride, annotations)
           case None => super.applyFunDefn(fun)
   
   lazy val retypedVariables =
     val slots = LinkedHashMap.empty[(InstantiationId, ValueSymbol), ErasedValueType]
     for (sym, instId, v) <- collector.symbolFlows do sym match
+      // The variable of a function definition holds what a reference to it evaluates to: its closure, or
+      // the result of a definition without parameter lists. That result belongs to the definition's
+      // signature, which `rewrittenSignatures` retypes; the definition keeps its symbol.
+      case sym: TermSymbol if pre.res.funSymToFunDefn.contains(sym) => ()
       case sym: (VarSymbol | TempSymbol | TermSymbol) =>
         val declared = sym match
           case sym: LocalVarSymbol => sym.erasedType
           case sym: TermSymbol => sym.erasedType
-        retypedSlotType(v.lowerBounds.toList, declared).foreach:
+        retypedSlotType(v.lowerBounds, declared).foreach:
           tpe => slots(instId -> sym) = tpe
       case _ => ()
     slots
   
-  // a function is retyped if fusion retypes one of its parameters or changes what it returns
+  /** The producers of the values that one instance of `fun` returns, where `v` is the variable of the
+    * definition symbol in that instance. A definition without parameter lists returns into `v` itself.
+    * Any other definition binds `v` to the closure of its first parameter list, whose last parameter list
+    * holds the result of the body. `N` when the analysis does not model the definition, as for class
+    * methods, whose variables are opaque.
+    */
+  private def returnedProducers(fun: FunDefn, v: StratVar): Opt[Ls[ProdStrat]] =
+    def isParamList(pf: ProdFun, idx: Int): Bool = pf.exprId match
+      case (sym: TermSymbol, `idx`) => sym is fun.dSym
+      case _ => false
+    def lastParamList(pf: ProdFun, idx: Int): ProdFun =
+      if idx == fun.params.size - 1 then pf else pf.res match
+        case next: ProdFun if isParamList(next, idx + 1) => lastParamList(next, idx + 1)
+        case res => lastWords(s"parameter list ${idx + 1} of ${fun.dSym.nme} has no closure in $res")
+    if fun.params.isEmpty then S(v.lowerBounds.toList)
+    else v.lowerBounds.iterator.collectFirst:
+      case pf: ProdFun if isParamList(pf, 0) => producersOf(lastParamList(pf, 0).res)
+  
+  // A function is retyped if fusion retypes one of its parameters or changes what it returns.
+  // Every instance of a function has a copy of the variable of its definition symbol, whether or not
+  // the instance is called. Finding the instances through the calls they receive would leave the
+  // signature of an uncalled function behind the retyped values its body returns, and would miss
+  // the definitions without parameter lists, which calls do not reach.
   lazy val rewrittenSignatures: LinkedHashMap[(InstantiationId, TermSymbol), FunDefn.Signature] =
     val res = LinkedHashMap.empty[(InstantiationId, TermSymbol), FunDefn.Signature]
-    for pf <- constraintSolver.prodFunsWithDests do pf.exprId match
-      case (fun: TermSymbol, idx) if idx == pre.res.funSymToFunDefn(fun).params.size - 1 =>
-        val instId = pf.concreteId.instId
-        val key = instId -> fun
-        val original = pre.res.funSymToFunDefn(fun).signature
-        val params = retypedParams(instId, original.params)
-        val maybeNewReturnType = retypedSlotType(producersOf(pf.res), original.result.bodyType)
-        if maybeNewReturnType.isDefined || (params isnt original.params) then
-          val retType = maybeNewReturnType.orElse(original.result.bodyType)
-          val result = original.result match
-            case _: ErasedResult.Direct[?] => ErasedResult.Direct(retType)
-            case _: ErasedResult.Async[?] => ErasedResult.Async(retType)
-            case _: ErasedResult.Generator[?] => ErasedResult.Generator(retType)
-          res(key) = FunDefn.Signature.fromParams(params, result)
-      case _ => ()
+    for
+      case (fun: TermSymbol, instId, v) <- collector.symbolFlows
+      definition <- pre.res.funSymToFunDefn.get(fun)
+      returned <- returnedProducers(definition, v)
+    do
+      val original = definition.signature
+      val params = retypedParams(instId, original.params)
+      val maybeNewReturnType = retypedSlotType(returned, original.result.bodyType)
+      if maybeNewReturnType.isDefined || (params isnt original.params) then
+        val retType = maybeNewReturnType.orElse(original.result.bodyType)
+        val result = original.result match
+          case _: ErasedResult.Direct[?] => ErasedResult.Direct(retType)
+          case _: ErasedResult.Async[?] => ErasedResult.Async(retType)
+          case _: ErasedResult.Generator[?] => ErasedResult.Generator(retType)
+        res(instId -> fun) = FunDefn.Signature.fromParams(params, result)
     res
   // ====== end: implements the abstract members of `PolyInstantiationRewrite` ======
 end DeforestRewriter
