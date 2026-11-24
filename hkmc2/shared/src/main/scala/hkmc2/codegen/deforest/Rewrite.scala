@@ -598,6 +598,8 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
           parent match
           case S(parentId) => rewriter.callRest(parentId.withInstId(instId))(Return(_))
           case N => Return(Value.Lit(Tree.UnitLit(true))(N))
+        // * The function needs an erased signature for its uses to be properly typed before IR attachment;
+        // * after the function is stored in a Define node, the latest erasure can be derived from it.
         fun.dSym.initializeErasure(S(fun.signature.erasure))
         fun
   end newRestFuns
