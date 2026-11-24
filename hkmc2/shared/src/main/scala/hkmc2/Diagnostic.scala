@@ -22,7 +22,7 @@ object Diagnostic:
     * prevent subsequent phases from running. Use one reporter per phase invocation so an
     * earlier worksheet block's errors do not prevent later blocks from being checked.
     */
-  final class Reporter(report: Raise) extends (Diagnostic => Unit):
+  final class Reporter(report: Raise) extends Raise:
     private var failed = false
     def hasErrors: Bool = failed
     /** Records failure from an error diagnosed earlier, without reporting that error again. */
