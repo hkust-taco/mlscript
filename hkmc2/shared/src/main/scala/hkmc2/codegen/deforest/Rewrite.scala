@@ -644,7 +644,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     slots
   
   // a function is retyped if fusion retypes one of its parameters or changes what it returns
-  lazy val rewrittenSignatures: Map[(InstantiationId, TermSymbol), FunDefn.Signature] =
+  lazy val rewrittenSignatures: LinkedHashMap[(InstantiationId, TermSymbol), FunDefn.Signature] =
     val res = LinkedHashMap.empty[(InstantiationId, TermSymbol), FunDefn.Signature]
     for pf <- constraintSolver.prodFunsWithDests do pf.exprId match
       case (fun: TermSymbol, idx) if idx == pre.res.funSymToFunDefn(fun).params.size - 1 =>
@@ -661,6 +661,6 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
             case _: ErasedResult.Generator[?] => ErasedResult.Generator(retType)
           res(key) = FunDefn.Signature.fromParams(params, result)
       case _ => ()
-    collection.immutable.ListMap.from(res)
+    res
   // ====== end: implements the abstract members of `PolyInstantiationRewrite` ======
 end DeforestRewriter

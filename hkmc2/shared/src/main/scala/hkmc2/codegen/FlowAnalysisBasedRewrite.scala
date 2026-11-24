@@ -320,8 +320,8 @@ class FlowAnalysisBasedRewrite(
       res(instId -> fun) = FunctionRewrite(signature, removed, etaParams.size)
     res
   
-  lazy val rewrittenSignatures: Map[(InstantiationId, TermSymbol), FunDefn.Signature] =
-    collection.immutable.ListMap.from(functionRewrites.iterator.map((id, rewrite) => id -> rewrite.signature))
+  lazy val rewrittenSignatures: LinkedHashMap[(InstantiationId, TermSymbol), FunDefn.Signature] =
+    functionRewrites.map((id, rewrite) => id -> rewrite.signature)
   // ====== end: implements the abstract members of `PolyInstantiationRewrite` ======
   
 end FlowAnalysisBasedRewrite

@@ -47,7 +47,7 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
   
   // Complete signatures after parameter removal, eta expansion, or representation changes. Copied and in-place definitions
   // must use the same convention without mutating the source symbol's write-once signature.
-  def rewrittenSignatures: Map[(InstantiationId, TermSymbol), FunDefn.Signature]
+  def rewrittenSignatures: LinkedHashMap[(InstantiationId, TermSymbol), FunDefn.Signature]
   // ====== the abstract members ======
   
   
