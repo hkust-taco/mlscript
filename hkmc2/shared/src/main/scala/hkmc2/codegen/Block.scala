@@ -619,7 +619,7 @@ object HandleBlock:
         val sym = BlockMemberSymbol(cls.nme + handler.sym.nme, Nil, true)
         val fDef = FunDefn.withFreshSymbol(
           N, sym, LoweredParamList.plain(Param.simple(handler.resumeSym) :: Nil)(N) :: Nil,
-          handler.body
+          N, handler.body
           )(N, annotations = Nil)
         val rSym = TempSymbol(N, initErasedType = N, "suspendRes")
         Scoped(Set(sym, rSym), Define(
@@ -629,7 +629,7 @@ object HandleBlock:
       S(cls),
       handler.sym,
       handler.params,
-      body
+      N, body
     )(N, annotations = Nil)
 
   private def create(
@@ -644,7 +644,7 @@ object HandleBlock:
   )(using Config, Elaborator.State, Elaborator.Ctx) =
     val sym = new BlockMemberSymbol("handleBlock$", Nil, false)
 
-    val bodyDefn = FunDefn.withFreshSymbol(N, sym, LoweredParamList.plain(Nil)(N) :: Nil, body)(N, annotations = Nil)
+    val bodyDefn = FunDefn.withFreshSymbol(N, sym, LoweredParamList.plain(Nil)(N) :: Nil, N, body)(N, annotations = Nil)
     
     val handlerMtds = handlers.map(createHandlerMtd(cls))
 
@@ -928,8 +928,9 @@ object FunDefn:
   def unapply(fun: FunDefn): Some[(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, dSym: TermSymbol, params: Ls[LoweredParamList], body: Block)] =
     Some((fun.owner, fun.sym, fun.dSym, fun.params, fun.body))
   
-  def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[LoweredParamList], body: Block)(configOverride: Opt[Config], annotations: Ls[Annot])(using State) =
-    val signature = Signature.fromParams(params, ErasedResult.fromAnnotations(N, annotations))
+  def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[LoweredParamList],
+      bodyType: Opt[ErasedValueType], body: Block)(configOverride: Opt[Config], annotations: Ls[Annot])(using State) =
+    val signature = Signature.fromParams(params, ErasedResult.fromAnnotations(bodyType, annotations))
     val tSym = TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme))
     sym.tsym = S(tSym)
     FunDefn(owner, sym, tSym, signature, body)(configOverride, annotations)
@@ -1622,8 +1623,9 @@ object Cast:
       case _ if fits(value.erasedType_!, target) => value
       case _ => new CastPath(value, target, check)(toLoc)
 
-case class Lambda(params: LoweredParamList, body: Block)(val annot: Ls[Annot], val toLoc: Opt[Loc]) extends Result:
-  def withLoc(loc: Opt[Loc]): Lambda = if loc == toLoc then this else copy()(annot, loc)
+/** An anonymous function. Its body returns values of `bodyType`. The lambda itself has representation `Function`. */
+case class Lambda(params: LoweredParamList, body: Block)(val bodyType: Opt[ErasedValueType], val annot: Ls[Annot], val toLoc: Opt[Loc]) extends Result:
+  def withLoc(loc: Opt[Loc]): Lambda = if loc == toLoc then this else copy()(bodyType, annot, loc)
   lazy val affine: Bool = annot.exists(_.isInstanceOf[Annot.Affine])
 
 

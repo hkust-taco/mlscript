@@ -262,9 +262,9 @@ class FlowAnalysisBasedRewrite(
         withEtaArgss(etaParams.map(_.args)):
           applyFunBodyLikeBlock(lam.body)
       val wrappedBody = etaParams.map(_.params).foldRight(body2): (params, body) =>
-        Return(Lambda(params, body)(Nil, N))
+        Return(Lambda(params, body)(Block.returnType(body), Nil, N))
       if (params2 is lam.params) && (wrappedBody is lam.body) then lam
-      else Lambda(params2, wrappedBody)(lam.annot, lam.toLoc)
+      else Lambda(params2, wrappedBody)(lam.bodyType, lam.annot, lam.toLoc)
     
   end Rewriter
   

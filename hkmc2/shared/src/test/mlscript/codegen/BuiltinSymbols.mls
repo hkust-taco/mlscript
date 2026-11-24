@@ -54,7 +54,7 @@ case Int then 0
 //│             paramLists = Ls of
 //│               Ls of
 //│                 S of Unknown
-//│             result = Direct of N
+//│             result = Direct of S of ValueLike(?)
 //│         body = Match:
 //│           scrut = SimpleRef of caseScrut⁰
 //│           arms = Ls of

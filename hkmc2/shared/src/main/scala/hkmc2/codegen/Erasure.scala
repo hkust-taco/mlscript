@@ -87,12 +87,12 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
   /** The observations that constrain a slot. Erasure checks parameters before results, so an
     * override whose parameters have no representation cannot cause a second error at its base.
     */
-  private def observations(symbol: ErasureInputs.InputSymbol): Iterator[TermShape | TermDefinition] =
+  private def observations(symbol: ErasureInputs.InputSlot): Iterator[TermShape | TermDefinition] =
     if !config.language.useNewResolution then Iterator.empty
     else summon[State].newResolverState.erasureInputs.observations(symbol): td =>
-      !td.isErroneous && parameterError(td).isEmpty
+      !td.isErroneous && parameterError(td.params).isEmpty
 
-  private def inferredType(symbol: ErasureInputs.InputSymbol): Opt[ErasedValueType] =
+  private def inferredType(symbol: ErasureInputs.InputSlot): Opt[ErasedValueType] =
     joined(observations(symbol).flatMap(valueType).toList)
 
   /** The representation of a slot that holds values of each of `types`, or `N` when there are none. */
@@ -141,7 +141,7 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
   /** An external input that contributed to this slot's inferred representation, if any.
     * Its provenance identifies the exposed interface even when the value flowed into a private helper.
     */
-  private def externalInputOrigin(symbol: ErasureInputs.InputSymbol): Opt[UnknownValueShape] =
+  private def externalInputOrigin(symbol: ErasureInputs.InputSlot): Opt[UnknownValueShape] =
     val inputs = summon[State].newResolverState.erasureInputs
     if !config.language.useNewResolution || !inputs.isPrepared(symbol) then N
     else observations(symbol).collect { case value: TermShape => value.applicationHead._1 }.collectFirst:
@@ -160,7 +160,7 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
     * checked; every other compilation unit is erased after the runtime is loaded.
     */
   private def representable(tpe: ErasedValueType, loc: Opt[Loc],
-      inferredSource: Opt[ErasureInputs.InputSymbol]): ErasedValueType =
+      inferredSource: Opt[ErasureInputs.InputSlot]): ErasedValueType =
     if !summon[State].runtimeSymbolsInitialized then tpe
     else tpe.canonicalize match
       case incompatible @ ErasedType.Incompatible(lhs, rhs) if !incompatible.reported =>
@@ -185,8 +185,8 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
   /** A diagnosed parameter error that prevents checking this definition's result, if any.
     * Reuse the error in its result signature so overrides cannot mistake a skipped result for `Unknown`.
     */
-  private def parameterError(td: TermDefinition): Opt[ErasedType.Incompatible] =
-    td.params.iterator.flatMap(_.allParams).flatMap(p => representationError(p.sym.erasedType)).nextOption()
+  private def parameterError(params: IterableOnce[ParamList]): Opt[ErasedType.Incompatible] =
+    params.iterator.flatMap(_.allParams).flatMap(p => representationError(p.sym.erasedType)).nextOption()
   
   private def declaredType(sign: Opt[Term], modulefulness: Modulefulness): Opt[ErasedValueType] =
     modulefulness.msym match
@@ -252,7 +252,7 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
     */
   private def erasedDefinitionSignature(td: TermDefinition, overrides: OverrideChecks): Opt[ErasedValueType | ErasedCallableSignature] =
     val declared = Annot.declareModifierOf(td.annotations).isDefined
-    val resultType = parameterError(td) match
+    val resultType = parameterError(td.params) match
       case S(error) =>
         reporter.markFailed()
         S(error)
@@ -396,8 +396,8 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
     // counts alone do not suffice: optional and trailing parameters can redistribute the inputs.
     // Retain the traversed declarations: handlers remove the resumption parameter list from them.
     val observed =
-      if config.language.useNewResolution then summon[State].newResolverState.erasureInputs.symbols
-      else Nil
+      if config.language.useNewResolution then summon[State].newResolverState.erasureInputs.slots
+      else Iterator.empty
     // Observations can refer to earlier worksheet declarations. Reuse their initialized signatures
     // without reporting their override diagnostics again in this program.
     val sourceDefinitions = statements.collect { case td: TermDefinition => td }.toList.distinctBy(_.tsym)
@@ -454,6 +454,10 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
     // are the class's lists, and a saturated call always produces its instance.
     statements.foreach:
       // Code generation and the InvalML typer can each erase the same elaborated tree.
+      case lam: Lam if !lam.resultSlot.isErased =>
+        val slot = lam.resultSlot
+        slot.erasedType = parameterError(Iterator.single(lam.params)).orElse:
+          inferredType(slot).map(representable(_, lam.body.toLoc, S(slot)))
       case asc: Asc if !asc.isErased =>
         asc.erasedType = eraseSignature(asc.ty).map(representable(_, asc.ty.toLoc, N))
       case cls: ClassLikeDef => cls.ctorSym.foreach: symbol =>

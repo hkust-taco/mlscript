@@ -312,6 +312,14 @@ sealed trait TupleLiteral extends ShapeHost:
     case Spd(SpreadKind.Lazy, _, _) => true
     case _ => false
 
+/** Identifies the values a lambda body produces on normal completion.
+  * Resolution collects those values under this slot and erasure assigns their common representation.
+  */
+final class LambdaResultSlot extends HasDelayedErasedType[ErasedValueType]
+
+sealed trait LambdaImpl:
+  val resultSlot = new LambdaResultSlot
+
 enum Term extends Statement, AutoLocated, ShapePublisher:
   /** Filled by the type interpreter during elaboration; erasure validates the completed result. */
   private[hkmc2] var typeInterpretation: Opt[TypeResolution] = N
@@ -376,7 +384,7 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
    *  branch matches. Used by `ups.FixedPointCompiler` to drive the generated
    *  matcher machine. */
   case SynthWhile(split: Split)
-  case Lam(params: ParamList, body: Term)
+  case Lam(params: ParamList, body: Term) extends Term, LambdaImpl
   case FunTy(lhs: Term, rhs: Term, eff: Opt[Term])
   case Forall(tvs: Ls[QuantVar], outer: Opt[VarSymbol], body: Term)
   case Constrained(constraints: Ls[SubConstraint], body: Term)

@@ -2,7 +2,7 @@
 #lang(0.3.x)
 open annotations.{ * }
 
-// A generated lambda has a function representation, even when its result is unspecified.
+// The binding holds a function, and the generated function returns the inferred Int.
 :noInline
 :sir
 :siret
@@ -12,7 +12,7 @@ val increment: Int -> Int = (value: Int) => value + 1
 increment(41)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let lambda;
-//│ define lambda as fun lambda⁰(value: Int⁰): ? {
+//│ define lambda as fun lambda⁰(value: Int⁰): Int⁰ {
 //│   return +⁰(value, 1)
 //│ };
 //│ define increment⁰ as val increment¹: Function⁰ = lambda⁰;

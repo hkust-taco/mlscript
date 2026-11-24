@@ -446,7 +446,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                         case (sym, params, split) =>
                           val paramLists = LoweredParamList.fixed(params) :: Nil
                           val bodyBlock = inScopedBlock(ucs.Normalization(this)(split)(Ret))
-                          FunDefn.withFreshSymbol(N, sym, paramLists, bodyBlock)(configOverride = N, annotations = Nil)
+                          FunDefn.withFreshSymbol(N, sym, paramLists, N, bodyBlock)(configOverride = N, annotations = Nil)
                       // The return type is intended to be consistent with `gatherMembers`
                       (mtds, Nil, Nil, End())
                     case _ => gatherMembers(defn.body)
@@ -667,11 +667,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             val freshParamList = LoweredParamList(ps.flags, freshParams, N)(ps.toLoc)
             if ctorParamLists.isMls then
               val freshArgs = freshSyms.map(s => Arg(N, s.asSimpleRef))
-              Lambda(freshParamList, Return(etaExpand(rest, accArgss :+ freshArgs)))(Nil, loc)
+              Lambda(freshParamList, Return(etaExpand(rest, accArgss :+ freshArgs)))(N, Nil, loc)
             else
               val forwarding = OptionalParams.forwarding(freshParamList, fixedArity = true)
               Lambda(forwarding.params,
-                Return(etaExpand(rest, accArgss :+ forwarding.args)))(Nil, loc)
+                Return(etaExpand(rest, accArgss :+ forwarding.args)))(N, Nil, loc)
         k(etaExpand(remainingParamss, acc.reverse))
     if ctorParamLists.lists.isEmpty then
       // * Need to specially handle no-param classes
@@ -1001,7 +1001,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme), sig.ret)
         tl.log(dbg"Ref builtin $sym")
         assert(paramLists.length === 1)
-        return k(Lambda(paramLists.head, bodyBlock)(Nil, ref.toLoc))
+        return k(Lambda(paramLists.head, bodyBlock)(sig.ret, Nil, ref.toLoc))
       case N => ()
     case bs: BlockMemberSymbol =>
       disamb.flatMap(_.defn) match
@@ -1504,17 +1504,19 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           msg"Unexpected left-hand side in assignment (${lhs.describe})" -> lhs.toLoc :: Nil, S(lhs),
           source = Diagnostic.Source.Compilation)
       
-    case st.Lam(params, body) =>
+    case lam @ st.Lam(params, body) =>
       warnStmt
-      val (paramLists, bodyBlock) = setupFunctionDef(params :: Nil, body, N, N)
+      // Pattern compilation also synthesizes lambdas after source erasure.
+      val bodyType = if lam.resultSlot.isErased then lam.resultSlot.erasedType else N
+      val (paramLists, bodyBlock) = setupFunctionDef(params :: Nil, body, N, bodyType)
       val affineAnnots = annots.collect:
         case a @ Annot.Affine(0) => a
       if k.isInstanceOf[TailOp] || bodyBlock.size <= 5
-      then k(Lambda(paramLists.head, bodyBlock)(affineAnnots, trm.toLoc))
+      then k(Lambda(paramLists.head, bodyBlock)(bodyType, affineAnnots, trm.toLoc))
       else
         val lamSym = new BlockMemberSymbol("lambda", Nil, false)
         loweringCtx.collectScopedSym(lamSym)
-        val lamDef = FunDefn.withFreshSymbol(N, lamSym, paramLists, bodyBlock)(configOverride = N, annotations = affineAnnots)
+        val lamDef = FunDefn.withFreshSymbol(N, lamSym, paramLists, bodyType, bodyBlock)(configOverride = N, annotations = affineAnnots)
         Define(
           lamDef,
           k(lamDef.asPath))
@@ -1912,7 +1914,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case lam @ Lambda(params, body) =>
         val lamSym = BlockMemberSymbol("lambda", Nil, false)
         loweringCtx.collectScopedSym(lamSym)
-        val lamDef = FunDefn.withFreshSymbol(N, lamSym, params :: Nil, body)(configOverride = N, annotations = lam.annot)
+        val lamDef = FunDefn.withFreshSymbol(N, lamSym, params :: Nil, lam.bodyType, body)(configOverride = N, annotations = lam.annot)
         Define(lamDef, k(lamDef.asPath))
       case r =>
         val l = loweringCtx.registerTempSymbol(N, erasedType = r.erasedType)

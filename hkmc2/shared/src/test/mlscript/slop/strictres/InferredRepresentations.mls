@@ -31,7 +31,7 @@ private fun viaBindings() =
 //│ define viaBindings⁰ as fun viaBindings¹(): Array⁰ {
 //│   let f: Function⁰, g: Function⁰, tmp2: ?, tmp3: ?, f1;
 //│   @private
-//│   define f1 as fun f⁰(x: Unknown): ? {
+//│   define f1 as fun f⁰(x: Unknown): Unknown {
 //│     return x
 //│   };
 //│   set f = f⁰;

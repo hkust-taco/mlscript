@@ -550,10 +550,12 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
       case IfLike(kw, form, split) => IfLike(kw, form, simpleSplit(split))
       case SynthIf(value) => SynthIf(split(value))
       case SynthWhile(value) => SynthWhile(split(value))
-      case Lam(params, body) =>
+      case lam @ Lam(params, body) =>
         val scope = nested
         scope.bindParameters(params :: Nil)
-        Lam(scope.parameterList(params), scope.term(body))
+        val copy = Lam(scope.parameterList(params), scope.term(body))
+        if lam.resultSlot.isErased then copy.resultSlot.erasedType = lam.resultSlot.erasedType.map(scope.valueType)
+        copy
       case FunTy(lhs, rhs, eff) => FunTy(lhs.cloned, rhs.cloned, eff.map(_.cloned))
       case Forall(tvs, outer, body) =>
         val scope = nested

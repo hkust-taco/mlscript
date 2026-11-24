@@ -2416,7 +2416,7 @@ class WatBuilder(private val ctx: Ctx, linking: FileCompilation)(using TraceLogg
 
                   val result = pss.foldRight(bod):
                     case (ps, block) =>
-                      Return(Lambda(ps, block)(Nil, N))
+                      Return(Lambda(ps, block)(N, Nil, N))
                   // Nested functions are not predeclared in `program` - declare them now.
                   // Note that predeclaring functions twice causes an orphaned type to be duplicated in the module.
                   if ctx.getFunc(sym).isEmpty then predeclareTopLevelFun(sym, dSym, ps)

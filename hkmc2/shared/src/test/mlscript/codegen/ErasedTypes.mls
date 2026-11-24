@@ -821,7 +821,7 @@ val over: Int = thunk(2)
 //│ define thunk⁰ as fun thunk¹(): Function⁰ {
 //│   let lambda;
 //│   @private
-//│   define lambda as fun lambda⁰(b: Int⁰): ? {
+//│   define lambda as fun lambda⁰(b: Int⁰): Int⁰ {
 //│     return +⁰(b, 1)
 //│   };
 //│   return lambda⁰
@@ -935,16 +935,16 @@ val g: Int -> Int = (x: Int) => x
 //│ define mk² as fun mk³(): Function⁰ {
 //│   let lambda2;
 //│   @private
-//│   define lambda2 as fun lambda¹(x: Int⁰): ? {
+//│   define lambda2 as fun lambda¹(x: Int⁰): Int⁰ {
 //│     return x
 //│   };
 //│   return lambda¹
 //│ };
-//│ define lambda as fun lambda²(x: Int⁰): ? {
+//│ define lambda as fun lambda²(x: Int⁰): Int⁰ {
 //│   return x
 //│ };
 //│ do applyF¹(lambda²);
-//│ define lambda1 as fun lambda³(x: Int⁰): ? {
+//│ define lambda1 as fun lambda³(x: Int⁰): Int⁰ {
 //│   return x
 //│ };
 //│ define g² as val g³: Function⁰ = lambda³;
@@ -1082,7 +1082,7 @@ module Plain with
 //│   method f⁶ = fun f⁷: Function⁰ {
 //│     let lambda;
 //│     @private
-//│     define lambda as fun lambda⁴(x: Int⁰): ? { return x };
+//│     define lambda as fun lambda⁴(x: Int⁰): Int⁰ { return x };
 //│     return lambda⁴
 //│   }
 //│ };
@@ -1191,7 +1191,7 @@ fun lamUntyped(): Int = @untyped ((x: Int) => x)
 //│ define lamUntyped⁰ as fun lamUntyped¹(): Int⁰ {
 //│   let tmp: Unknown, lambda;
 //│   @private
-//│   define lambda as fun lambda⁵(x: Int⁰): ? {
+//│   define lambda as fun lambda⁵(x: Int⁰): Int⁰ {
 //│     return x
 //│   };
 //│   set tmp = lambda⁵;
@@ -1377,7 +1377,7 @@ fun capturingLoop(n: Int, acc: Str) =
 //│     else
 //│       let g1;
 //│       @private
-//│       define g1 as fun g⁴(): ? {
+//│       define g1 as fun g⁴(): Str⁰ {
 //│         return acc
 //│       };
 //│       set g = g⁴;
@@ -1400,7 +1400,7 @@ fun capturingLoop(n: Int, acc: Str) =
 //│       else
 //│         let g;
 //│         @private
-//│         define g as fun g⁴(): ? {
+//│         define g as fun g⁴(): Str⁰ {
 //│           return acc1
 //│         };
 //│         set tmp = -⁰(n, 1);

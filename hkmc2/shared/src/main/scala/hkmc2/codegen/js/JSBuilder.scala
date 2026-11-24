@@ -288,9 +288,9 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     paramLists match
     case Nil => body
     case params :: Nil =>
-      Return(Lambda(params, body)(if generator then Annot.Generator()(N) :: Nil else Nil, N))
+      Return(Lambda(params, body)(N, if generator then Annot.Generator()(N) :: Nil else Nil, N))
     case params :: rest =>
-      Return(Lambda(params, curriedFunctionBody(rest, body, generator))(Nil, N))
+      Return(Lambda(params, curriedFunctionBody(rest, body, generator))(S(ErasedType.Function(S(false))), Nil, N))
 
   /** Looks through the casts that a JS program does not materialize. */
   @tailrec

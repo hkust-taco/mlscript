@@ -194,7 +194,7 @@ increment(41)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let increment;
 //│ @private
-//│ define increment as fun increment⁰(_0: Unknown): ? {
+//│ define increment as fun increment⁰(_0: Unknown): Unknown {
 //│   return +⁰(_0, 1)
 //│ };
 //│ set increment¹ = increment⁰;
@@ -217,7 +217,7 @@ apply(41) \ _ + 1
 //│ define apply⁰ as fun apply¹(value: Int⁰, f: Function⁰): Int⁰ {
 //│   return (f(value) as! Int⁰)
 //│ };
-//│ define lambda as fun lambda⁰(_0: Int⁰): ? { return +⁰(_0, 1) };
+//│ define lambda as fun lambda⁰(_0: Int⁰): Int⁰ { return +⁰(_0, 1) };
 //│ return apply¹(41, lambda⁰)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42

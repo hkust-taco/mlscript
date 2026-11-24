@@ -4,7 +4,7 @@ package semantics
 import scala.collection.mutable
 import hkmc2.utils.*, shorthands.*
 import Term.*
-import ErasureInputs.{InputSymbol, ResultSlot}
+import ErasureInputs.{InputSlot, InputSymbol, ResultSlot}
 
 /** Source declarations needed both when observing inference and when assigning representations.
   * Several declarations are outside subStatements: split bindings, handler parameters,
@@ -118,26 +118,26 @@ private[hkmc2] final class ErasureDeclarations(root: Statement):
   * of the defining compilation unit. Later writes in an importing unit reach that unit's copy.
   */
 private[hkmc2] final class ErasureInputs:
-  private val values = mutable.Map.empty[InputSymbol, TermShapeHost]
+  private val values = mutable.Map.empty[InputSlot, TermShapeHost]
   private val results = mutable.Map.empty[TermSymbol, ResultSlot]
 
   // Includes property declarations synthesized by named-tuple resolution, which
   // have source expressions but are not separate nodes in the source syntax.
-  def symbols: Ls[InputSymbol] = values.keysIterator.toList
+  def slots: Iterator[InputSlot] = values.keysIterator
 
-  private[semantics] def register(symbol: InputSymbol)(connect: ResolutionContext.Listener => Unit)
-      (using ResolutionContext): TermShapeHost = values.get(symbol) match
+  private[semantics] def register(slot: InputSlot)(connect: ResolutionContext.Listener => Unit)
+      (using ResolutionContext): TermShapeHost = values.get(slot) match
     case S(host) => host
     case N =>
       val host = new TermShapeHost
-      values(symbol) = host
+      values(slot) = host
       // Even an unused/unproductive definition has a completed, empty observation.
       host.inferenceHost
       connect(host.publish)
       host
 
-  /** Whether `symbol` is a source slot of this compilation unit that was prepared for erasure. */
-  def isPrepared(symbol: InputSymbol): Bool = values.contains(symbol)
+  /** Whether resolution prepared this slot in the current compilation unit. */
+  def isPrepared(slot: InputSlot): Bool = values.contains(slot)
 
   /** The values a caller can receive through `member`. Connect the declaration once, before
     * replaying any of its results, so recursive members share the same slot.
@@ -155,9 +155,9 @@ private[hkmc2] final class ErasureInputs:
   /** The completed inputs to a source slot, including the values or declared results of the
     * overrides that `includeOverride` accepts.
     */
-  def observations(symbol: InputSymbol)(includeOverride: TermDefinition => Bool): Iterator[TermShape | TermDefinition] =
-    val host = values.getOrElse(symbol, lastWords("Source slot was not prepared for erasure"))
-    val overriding = symbol match
+  def observations(slot: InputSlot)(includeOverride: TermDefinition => Bool): Iterator[TermShape | TermDefinition] =
+    val host = values.getOrElse(slot, lastWords("Source slot was not prepared for erasure"))
+    val overriding = slot match
       case member: TermSymbol =>
         for
           slot <- results.get(member).iterator
@@ -172,6 +172,7 @@ private[hkmc2] object ErasureInputs:
     * Elaboration temporaries include the saved value restored by a backtracking assignment.
     */
   type InputSymbol = LocalVarSymbol | TermSymbol
+  type InputSlot = InputSymbol | LambdaResultSlot
 
   private def completed[A](host: Host[A]): Iterator[A] =
     assert(host.originalData.completed, "Erasure requires completed value observations")

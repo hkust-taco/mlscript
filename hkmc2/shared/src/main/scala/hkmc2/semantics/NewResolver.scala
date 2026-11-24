@@ -61,6 +61,9 @@ class NewResolver:
       case _ => ()
     declarations.statements.foreach:
       case td: TermDefinition => observeErasureDefinition(td)
+      case lam: Lam if !lam.resultSlot.isErased =>
+        rctx.state.erasureInputs.register(lam.resultSlot): publish =>
+          listenTermViews(lam.body)(publish)
       case _ => ()
 
   private def observeErasure(symbol: ErasureInputs.InputSymbol)(connect: Listener => Unit)(using ResolutionContext): Opt[TermShapeHost] =

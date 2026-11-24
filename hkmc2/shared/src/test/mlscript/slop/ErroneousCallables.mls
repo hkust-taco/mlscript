@@ -29,32 +29,34 @@ identity(input64)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ throw "This code cannot be run as its compilation yielded an error."
 
-// A lambda with valid parameters can still fail its return coercions during lowering.
-// Each rejected coercion lowers to the error, so that no value reaches a slot of another representation.
+// The branches of a lambda body must have a common result representation.
 :ge
 :sir
 :siret
 private val mixedResult = (flag: Bool) => if flag then input32 else input64
 mixedResult(true)
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int64' have no common representation
 //│ ║  l.+1: 	private val mixedResult = (flag: Bool) => if flag then input32 else input64
-//│ ╙──      	                                                       ^^^^^^^
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int64' at an unrelated type 'Unknown'
-//│ ║  l.+1: 	private val mixedResult = (flag: Bool) => if flag then input32 else input64
-//│ ╙──      	                                                                    ^^^^^^^
+//│ ╙──      	                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let lambda;
-//│ define lambda as fun lambda⁰(flag: Bool⁰): ? {
-//│   match flag
-//│     true =>
-//│       throw "This code cannot be run as its compilation yielded an error."
-//│     else
-//│       throw "This code cannot be run as its compilation yielded an error."
-//│   end
-//│ };
+//│ throw "This code cannot be run as its compilation yielded an error."
+
+// A direct call to a lambda preserves the unboxed representation of its captured value.
+:sir
+:siret
+:checkIR
+private fun captureWord(n: Int32): Int32 = (() => n)()
+captureWord(input32)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ @private
-//│ define mixedResult⁰ as val mixedResult¹: Function⁰ = lambda⁰;
-//│ return mixedResult¹(true)
+//│ define captureWord⁰ as fun captureWord¹(n: Int32): Int32 {
+//│   let lambda;
+//│   define lambda as fun lambda⁰(): Int32 {
+//│     return n
+//│   };
+//│   return lambda⁰()
+//│ };
+//│ return captureWord¹(input32⁰)
 
 // Nested lambdas with representable results remain valid.
 :sir
@@ -63,10 +65,10 @@ private val referenceFactory = (value: Int) => (ignored: Int) => value
 referenceFactory(42)(1)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let lambda, callPrefix: ?;
-//│ define lambda as fun lambda²(value: Int⁰): ? {
+//│ define lambda as fun lambda²(value: Int⁰): Function⁰ {
 //│   let lambda1;
 //│   @private
-//│   define lambda1 as fun lambda¹(ignored: Int⁰): ? {
+//│   define lambda1 as fun lambda¹(ignored: Int⁰): Int⁰ {
 //│     return value
 //│   };
 //│   return lambda¹
@@ -76,26 +78,22 @@ referenceFactory(42)(1)
 //│ set callPrefix = referenceFactory¹(42);
 //│ return callPrefix(1)
 
-// FIXME: First-class unboxed lambdas still use unknown call and return representations.
-// Int32 is representable, so erasure succeeds; lowering reports the unsupported coercions.
+// FIXME: Calling through the function value factory uses an unknown parameter representation for its Int32 argument.
 :fixme
 :sir
 :siret
 private val factory = (value: Int32) => (ignored: Int) => value
 factory(input32)(1)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
-//│ ║  l.+1: 	private val factory = (value: Int32) => (ignored: Int) => value
-//│ ╙──      	                                                          ^^^^^
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
 //│ ║  l.+2: 	factory(input32)(1)
 //│ ╙──      	        ^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let lambda, callPrefix: ?;
-//│ define lambda as fun lambda⁴(value: Int32): ? {
+//│ define lambda as fun lambda⁴(value: Int32): Function⁰ {
 //│   let lambda1;
 //│   @private
-//│   define lambda1 as fun lambda³(ignored: Int⁰): ? {
-//│     throw "This code cannot be run as its compilation yielded an error."
+//│   define lambda1 as fun lambda³(ignored: Int⁰): Int32 {
+//│     return value
 //│   };
 //│   return lambda³
 //│ };

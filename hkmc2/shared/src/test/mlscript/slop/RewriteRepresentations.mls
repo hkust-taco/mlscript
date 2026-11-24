@@ -71,10 +71,10 @@ delay(42).run()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let lambda, tmp: Thunk⁰, lambda$;
 //│ @inline
-//│ define lambda$ as fun lambda$⁰(value: Int⁰)(): ? {
+//│ define lambda$ as fun lambda$⁰(value: Int⁰)(): Int⁰ {
 //│   return lambda⁰(value)
 //│ };
-//│ define lambda as fun lambda⁰(value: Int⁰): ? {
+//│ define lambda as fun lambda⁰(value: Int⁰): Int⁰ {
 //│   return value
 //│ };
 //│ define delay⁰ as fun delay¹(value: Int⁰): Thunk⁰ {
