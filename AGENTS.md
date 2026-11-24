@@ -134,12 +134,15 @@ of what led to the current implementation,
 especially if it involves non-obvious decisions/trade-offs
 or if alternative approaches were considered and rejected.
 
-Comments must be understandable from the current code alone. Assume no access to the discussions,
-commit history, or earlier versions of the implementation. Explain the concrete
-invariant, behavior, and failures being prevented. Name the relevant data and operations;
-avoid vague claims about where a "lifecycle" or "responsibility" belongs. If history
-or a rejected alternative matters, include enough context to explain the tradeoff
-after commits are squashed.
+Comments must be understandable from the current code and behavior alone.
+Assume no access to the discussions, commit history, or earlier versions of the implementation.
+Telltale sign to watch out for: words such as “still” and “now” when they (wrongly) assume
+the reader will know a previous state of the codebase.
+Consider that the commits of a given branch will likely be squashed and the detailed history lost.
+If history or a rejected alternative matters, include enough context to explain the tradeoff.
+
+Explain the concrete invariant, behavior, and failures being prevented.
+Name the relevant data and operations; avoid vague claims about where a "lifecycle" or "responsibility" belongs.
 
 Do NOT include comments that simply describe what the code is doing
 without adding any additional insight, or comments that talk about
