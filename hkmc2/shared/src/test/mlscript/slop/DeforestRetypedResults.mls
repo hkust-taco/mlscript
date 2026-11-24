@@ -1,0 +1,249 @@
+:.
+:lift
+:noInline
+:checkIR
+
+// Fusion can change what a function returns. The signature of every instance of the function
+// then has to follow, including instances that no call reaches and definitions without parameter lists.
+
+data class Box(v: Int)
+
+
+// In mono mode, nothing marks the result of an uncalled private function as escaping. The constructor
+// that one path matches and the other returns is fused, so the result type admits its closure.
+:deforest mono
+:sir
+:siret
+:expect 42
+private fun uncalled(n: Int, c: Bool): Box =
+  let x = Box(n)
+  if c then
+    if x is Box(v) then Box(v + 1) else Box(0)
+  else x
+42
+//│ deforest > >>> fusing >>>
+//│ deforest > Box⁰(n⁰) ->
+//│ deforest > 	match: x⁰
+//│ deforest > 	fields: x⁰.v⁰
+//│ deforest > <<< fusing <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let $x_Box, $x_rest, $c_rest;
+//│ @affine(1) @private
+//│ define $x_Box as fun $x_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: Int⁰, fv_v: Int⁰, fv_tmp: Int⁰): ? {
+//│   set fv_arg$Box$0$ = Box_v;
+//│   set fv_v = fv_arg$Box$0$;
+//│   set fv_tmp = +⁰(fv_v, 1);
+//│   return Box⁰(fv_tmp)
+//│ };
+//│ @private
+//│ define $x_rest as fun $x_rest⁰(): ? {
+//│   return $c_rest⁰()
+//│ };
+//│ @private
+//│ define $c_rest as fun $c_rest⁰(): ? {
+//│   return null
+//│ };
+//│ @private
+//│ define uncalled⁰ as fun uncalled¹(n: Int⁰, c: Bool⁰): Object⁰ {
+//│   let v: Int⁰, arg$Box$0$: Int⁰, tmp: Int⁰, x: Function⁰, Box_v: Int⁰;
+//│   set Box_v = n;
+//│   set x = $x_Box⁰(Box_v);
+//│   match c
+//│     true =>
+//│       return (x(arg$Box$0$, v, tmp) as! Object⁰)
+//│     else
+//│       return x
+//│   end
+//│ };
+//│ return 42
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+
+// A definition without parameter lists returns into the variable of its own symbol. Its result is
+// retyped like that of any other function, and a read through the retained symbol takes the new type.
+:deforest mono
+:sir
+:siret
+:expect 1
+module Mono with
+  private fun boxed = Box(1)
+  fun read = if boxed is Box(v) then v else 0
+Mono.read
+//│ deforest > >>> fusing >>>
+//│ deforest > Box⁰(1) ->
+//│ deforest > 	match: scrut⁰
+//│ deforest > 	fields: scrut⁰.v⁰
+//│ deforest > <<< fusing <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let $scrut_Box, $scrut_rest;
+//│ @affine(1) @private
+//│ define $scrut_Box as fun $scrut_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: Int⁰, fv_v: Int⁰): ? {
+//│   set fv_arg$Box$0$ = Box_v;
+//│   set fv_v = fv_arg$Box$0$;
+//│   return fv_v
+//│ };
+//│ @private
+//│ define $scrut_rest as fun $scrut_rest⁰(): ? {
+//│   return null
+//│ };
+//│ define Mono⁰ as class Mono¹
+//│ module Mono² {
+//│   method boxed⁰ = fun boxed¹: Function⁰ {
+//│     let Box_v: Int⁰;
+//│     set Box_v = 1;
+//│     return $scrut_Box⁰(Box_v)
+//│   }
+//│   method read⁰ = fun read¹: Int⁰ {
+//│     let v: Int⁰, arg$Box$0$: Int⁰, scrut: Function⁰;
+//│     set scrut = (Mono².this.boxed¹ as!! Function⁰);
+//│     return (scrut(arg$Box$0$, v) as! Int⁰)
+//│   }
+//│ };
+//│ return Mono².read¹
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1
+
+
+// In poly mode, the instance that returns a closure is a copy whose signature has that result, and the
+// read of the copy has it too. Taking the read for a value of the previous type would drop it as unreachable.
+// FIXME: the JavaScript backend rejects the top-level copy of a definition without parameter lists.
+// That failure predates the retyping of fused values.
+:fixme
+:deforest
+:sir
+:siret
+:expect 1
+module Poly with
+  private fun boxed = Box(1)
+  fun read() = if boxed is Box(v) then v else 0
+Poly.read()
+//│ deforest > >>> fusing >>>
+//│ deforest > Box⁰(1) ->
+//│ deforest > 	match: scrut¹
+//│ deforest > 	fields: scrut¹.v⁰
+//│ deforest > Box⁰(1) ->
+//│ deforest > 	match: scrut¹
+//│ deforest > 	fields: scrut¹.v⁰
+//│ deforest > <<< fusing <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let read$scrut_Box, read$scrut_rest, read$scrut_Box1, read$scrut_rest1, read_boxed$boxed, read$read, read_boxed$boxed1;
+//│ @private @private
+//│ define read_boxed$boxed as fun read_boxed$boxed⁰: Function⁰ {
+//│   let Box_v: Int⁰;
+//│   set Box_v = 1;
+//│   return read$scrut_Box⁰(Box_v)
+//│ };
+//│ @private
+//│ define read$read as fun read$read⁰(): Int⁰ {
+//│   let v: Int⁰, arg$Box$0$: Int⁰, scrut: Function⁰;
+//│   set scrut = read_boxed$boxed⁰;
+//│   return (scrut(arg$Box$0$, v) as! Int⁰)
+//│ };
+//│ @private @private
+//│ define read_boxed$boxed1 as fun read_boxed$boxed¹: Function⁰ {
+//│   let Box_v: Int⁰;
+//│   set Box_v = 1;
+//│   return read$scrut_Box¹(Box_v)
+//│ };
+//│ @affine(1) @private
+//│ define read$scrut_Box as fun read$scrut_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: Int⁰, fv_v: Int⁰): ? {
+//│   set fv_arg$Box$0$ = Box_v;
+//│   set fv_v = fv_arg$Box$0$;
+//│   return fv_v
+//│ };
+//│ @affine(1) @private
+//│ define read$scrut_Box1 as fun read$scrut_Box¹(Box_v: Int⁰)(fv_arg$Box$0$: Int⁰, fv_v: Int⁰): ? {
+//│   set fv_arg$Box$0$ = Box_v;
+//│   set fv_v = fv_arg$Box$0$;
+//│   return fv_v
+//│ };
+//│ @private
+//│ define read$scrut_rest as fun read$scrut_rest⁰(): ? {
+//│   return null
+//│ };
+//│ @private
+//│ define read$scrut_rest1 as fun read$scrut_rest¹(): ? {
+//│   return null
+//│ };
+//│ define Poly⁰ as class Poly¹
+//│ module Poly² {
+//│   method boxed² = fun boxed³: Box¹ {
+//│     return Box⁰(1)
+//│   }
+//│   method read² = fun read³(): Int⁰ {
+//│     let v: Int⁰, arg$Box$0$: Int⁰, scrut: Function⁰;
+//│     set scrut = read_boxed$boxed¹;
+//│     return (scrut(arg$Box$0$, v) as! Int⁰)
+//│   }
+//│ };
+//│ return read$read⁰()
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: cannot generate function with no parameter list
+
+
+// A partial application coerces the arguments of the parameter lists that it applies.
+:deforest mono
+:expect 3
+private fun curried(b: Box)(n: Int): Int = if b is Box(v) then v + n else n
+private fun partial() =
+  let g = curried(Box(1))
+  g(2)
+partial()
+//│ deforest > >>> fusing >>>
+//│ deforest > Box⁰(1) ->
+//│ deforest > 	match: b⁰
+//│ deforest > 	fields: b⁰.v⁰
+//│ deforest > <<< fusing <<<
+//│ = 3
+
+
+// A method is rewritten in place at the root, and its calls reach functions retyped there.
+:deforest mono
+:expect 42
+private fun produce(n: Int): Box = if n == 0 then Box(42) else produce(n - 1)
+private fun consume(box: Box): Int = if box is Box(value) then value
+class Caller with
+  fun run() = consume(produce(2))
+new Caller().run()
+//│ deforest > >>> fusing >>>
+//│ deforest > Box⁰(42) ->
+//│ deforest > 	match: box⁰
+//│ deforest > 	fields: box⁰.v⁰
+//│ deforest > <<< fusing <<<
+//│ = 42
+
+
+// An indirect call can return either producer's object. Reading its field must use the call's
+// result even when projection would change the result of both producers to an unboxed word.
+declare module Math with
+  declare fun imul(x: Int, y: Int): Int32
+  declare fun abs(x: Int32): Int
+data class Word(bits: Int32)
+
+// FIXME: make() loses its Int32 result after fusion and passes undefined to read.
+:fixme
+:deforest
+:expect 49
+private fun first(): Word = Word(Math.imul(42, 1))
+private fun second(): Word = Word(Math.imul(7, 1))
+private fun read(w: Word): Int = Math.abs(w.bits)
+private fun choose(c: Bool): Int =
+  let make = if c then first else second
+  read(make())
+choose(true) + choose(false)
+//│ deforest > >>> fusing >>>
+//│ deforest > Word⁰(tmp⁰) ->
+//│ deforest > 	select: bits
+//│ deforest > Word⁰(tmp¹) ->
+//│ deforest > 	select: bits
+//│ deforest > Word⁰(tmp⁰) ->
+//│ deforest > 	select: bits
+//│ deforest > Word⁰(tmp¹) ->
+//│ deforest > 	select: bits
+//│ deforest > Word⁰(tmp⁰) ->
+//│ deforest > 	select: bits
+//│ deforest > Word⁰(tmp¹) ->
+//│ deforest > 	select: bits
+//│ deforest > <<< fusing <<<
+//│ ═══[RUNTIME ERROR] Expected: '49', got: 'NaN'
+//│ = NaN

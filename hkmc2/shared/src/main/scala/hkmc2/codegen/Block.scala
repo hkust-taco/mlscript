@@ -1333,6 +1333,22 @@ sealed abstract class Result extends Located:
     castRequirementTo(expected, reportUnrelated(loc)).map: needed =>
       if needed then Cast.refined(this, expected, config.checkCasts)(loc) else this
   
+  /** Coerces this result to `expected` and passes it to `coerced`. When the representations
+    * are unrelated, calls `unrelated` so the caller can replace an unreachable use of the value.
+    * Unrepresentable unions still report an error and pass the unchanged result to `coerced`.
+    */
+  def coerceToOr[R](expected: ErasedValueType, loc: Opt[Loc])(coerced: Result => R)
+      (unrelated: (CanonicalErasedValueType, CanonicalErasedValueType) => R)(using Ctx, State, Raise, Config): R =
+    val actual = erasedType_!.canonicalize
+    val declared = expected.canonicalize
+    ErasedType.needsCast(actual, declared) match
+      case S(false) => coerced(this)
+      case S(true) => coerced(Cast.refined(this, expected, config.checkCasts)(loc))
+      case N if actual.isInstanceOf[ErasedType.Incompatible] || declared.isInstanceOf[ErasedType.Incompatible] =>
+        reportUnrelated(loc)(actual, declared)
+        coerced(this)
+      case N => unrelated(actual, declared)
+  
   /** Lowers an explicit `as` to its erased target. A source ascription can request a runtime check
     * between disjoint reference types. If the target has no representation or requires an unboxed
     * conversion, report the error and return `N` so lowering stops this path.

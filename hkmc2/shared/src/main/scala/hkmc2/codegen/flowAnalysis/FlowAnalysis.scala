@@ -80,7 +80,7 @@ object FlowAnalysis:
     nonAffineTracking: Bool,
     accumulatorTracking: Bool,
     logEffects: Bool,
-  )(using Config, TraceLogger, Elaborator.State, Raise, SymbolPrinter) =
+  )(using Config, TraceLogger, Elaborator.State, Elaborator.Ctx, Raise, SymbolPrinter) =
     given State = new State
     val pre = new FlowPreAnalyzer(pgrm)
     val collector = new FlowConstraintsCollector(
@@ -250,7 +250,7 @@ extension (effect: EffectVar)
   inline def foreach(inline f: StratVar => Unit): Unit =
     effect.fold(())(f)
 
-class StratVar(val name: Str, val sourceSymbol: Opt[Symbol], val generatedForFun: Opt[TermSymbol])(using eState: Elaborator.State)
+class StratVar(val name: Str, val sourceSymbol: Opt[Symbol], val generatedForFun: Opt[TermSymbol], val instantiationId: Opt[InstantiationId])(using eState: Elaborator.State)
   extends Symbol(using eState) with ProdStrat with ConsStrat:
   def nme: Str = name
   def subst(using SymbolSubst): StratVar = this
@@ -269,13 +269,13 @@ object StratVar:
   
 
   def freshVar(nme: String)(using fState: FlowAnalysis.State): StratVar =
-    freshVar(nme, N, N)
+    freshVar(nme, N, N, N)
   def freshVar(nme: String, generatedForFun: TermSymbol)(using fState: FlowAnalysis.State): StratVar =
-    freshVar(nme, N, S(generatedForFun))
-  def freshVar(nme: String, sourceSymbol: Opt[Symbol], generatedForFun: Opt[TermSymbol])(using fState: FlowAnalysis.State): StratVar =
+    freshVar(nme, N, S(generatedForFun), N)
+  def freshVar(nme: String, sourceSymbol: Opt[Symbol], generatedForFun: Opt[TermSymbol], instantiationId: Opt[InstantiationId])(using fState: FlowAnalysis.State): StratVar =
     val ownName = if nme.isEmpty then "$stratvar" else nme
     val name = generatedForFun.fold(ownName)(fun => s"${ownName}_for_${fun.nme}")
-    val stratVar = StratVar(name, sourceSymbol, generatedForFun)(using fState.eState)
+    val stratVar = StratVar(name, sourceSymbol, generatedForFun, instantiationId)(using fState.eState)
     fState.stratVars += stratVar
     stratVar
   def freshVar(nme: String, forFunOpt: Opt[TermSymbol])(using fState: FlowAnalysis.State): StratVar =
@@ -329,6 +329,9 @@ class Ctor(
   val args: Ls[SelField -> ProdStrat]
 ) extends ProdStrat with StratWithOrigin[ResultId]:
   val dests: mutable.Set[ConcreteCtorConsumer | MarkerConsStrat] = MutSet.empty
+  def allocatedType: ErasedValueType = ctor match
+    case cls: (ClassSymbol | ModuleOrObjectSymbol) => ErasedType.ValueLike(S(false), cls)
+    case _: Int => ErasedType.Array
   override def toString(): String =
     s"$ctor(${args.map(_.toString()).mkString(", ")})"
 
@@ -344,6 +347,18 @@ class ConsFun(
   val srcs: mutable.Set[ProdFun | MarkerProdStrat] = MutSet.empty
   override def toString(): String =
     s"(${params.map(_.toString()).mkString(", ")}) -> ${res.toString()}"
+
+/** A runtime representation check whose incoming values determine whether it can fail.
+  * A proved check permits fusion to change its operand's representation; any unknown or
+  * incompatible producer prevents that change.
+  */
+class CastConsumer(
+  val exprId: ResultId,
+  val instantiationId: Opt[InstantiationId],
+  val target: ErasedValueType,
+) extends ConsStrat with StratWithOrigin[ResultId]:
+  val sources = LinkedHashSet.empty[ProdStrat]
+  var succeeds = true
 
 case object UnknownCons extends MarkerConsStrat
 
@@ -491,7 +506,7 @@ class FlowPreAnalyzer(val pgrm: Program)(using
     def registerStratVar(sym: Symbol, nme: String): Unit =
       val currentRootFun = ctx.tails.collectFirst:
         case InCtx.Fn(fun) :: tl if isTopLvlLikeFunCtx(tl) => fun.dSym
-      res.generatedVars.getOrElseUpdate(sym, freshVar(nme, S(sym), currentRootFun))
+      res.generatedVars.getOrElseUpdate(sym, freshVar(nme, S(sym), currentRootFun, N))
     
     private inline def withCtx(newCtx: InCtx)(inline body: => Any)(after: => Unit = ()): Unit =
       ctx = newCtx :: ctx
@@ -783,7 +798,7 @@ class FlowConstraintsCollector(
   val mono: Bool,
   val nonAffineTracking: Bool,
   val accumulatorTracking: Bool,
-):
+)(using val eCtx: Elaborator.Ctx):
   given FlowPreAnalyzer = preAnalyzer
   given Raise = preAnalyzer.raise
   given fState: FlowAnalysis.State = preAnalyzer.fState
@@ -868,13 +883,14 @@ class FlowConstraintsCollector(
       case S(forScc) =>
         if v.generatedForFun.flatMap(funToSccRep).contains(forScc) then
           variables.getOrElseUpdate(v, locally:
-            val vv = new StratVar(v.name, v.sourceSymbol, v.generatedForFun)
+            val vv = new StratVar(v.name, v.sourceSymbol, v.generatedForFun, v.instantiationId)
             fState.stratVars += vv
+            if symbolFlowVars(v) then symbolFlowVars += vv
             vv
           )
         else 
           environment.getOrElseUpdate(v, locally:
-            freshVar(s"env_${v.name}", N, S(forScc))
+            freshVar(s"env_${v.name}", N, S(forScc), N)
           )
       case N => v
     
@@ -919,6 +935,16 @@ class FlowConstraintsCollector(
   private val nonlocals = preAnalyzer.res.capturedVars.valuesIterator.flatten
     .filterNot(_ == eState.runtimeSymbol).toSet
   
+  // Keep the solved flows for each physical copy of a symbol. A representation-changing
+  // rewrite needs locals as well as parameters; variables copied through several schemes
+  // retain the full path to the instance that owns their runtime slot.
+  val symbolFlows = mutable.Buffer.empty[(Symbol, InstantiationId, StratVar)]
+  // Effect variables can name a source function too, but their bounds describe effects.
+  // Only copies of runtime slots can determine erased types.
+  private val symbolFlowVars = MutSet.from(preAnalyzer.res.generatedVars.values)
+  for (sym, v) <- preAnalyzer.res.generatedVars if mono || v.generatedForFun.isEmpty do
+    symbolFlows += ((sym, Nil, v))
+  
   /** [[Instantiator]] instantiates a strategy graph for a function producer
     * ([[ProdFun]]), represented by a polymorphic splitting scheme
     * ([[StratScheme]]).
@@ -942,6 +968,7 @@ class FlowConstraintsCollector(
     private val copiesOfCtor = MutMap.empty[Ctor, Ctor]
     private val copiesOfDtor = MutMap.empty[Dtor, Dtor]
     private val copiesOfFieldSel = MutMap.empty[FieldSel, FieldSel]
+    private val copiesOfCastConsumer = MutMap.empty[CastConsumer, CastConsumer]
     
     private val existingVars = MutSet.empty[StratVar]
 
@@ -959,6 +986,7 @@ class FlowConstraintsCollector(
       case c: ConsFun => duplicateConsFun(c)
       case d: Dtor => duplicateDtor(d)
       case s: FieldSel => duplicateFieldSel(s)
+      case c: CastConsumer => duplicateCastConsumer(c)
       case c: MarkerConsStrat => c
       case pAcc: PossibleAccumulator => duplicateStratVar(pAcc.s).asPossibleAccumulator
       case iPrm: IntoParam => duplicateStratVar(iPrm.s).asIntoParam
@@ -966,7 +994,12 @@ class FlowConstraintsCollector(
     private def duplicateStratVar(s: StratVar): StratVar =
       assert(s.generatedForFun.flatMap(funToSccRep).contains(groupRep))
       copiesOfStratVar.getOrElseUpdate(s, locally:
-        val copy = freshVar(s.name, s.sourceSymbol, cc.forFun)
+        val instId = S(newInstantiation(s.instantiationId))
+        val copy = freshVar(s.name, s.sourceSymbol, cc.forFun, instId)
+        if symbolFlowVars(s) then
+          symbolFlowVars += copy
+          for sym <- s.sourceSymbol if cc.forScc.isEmpty do
+            symbolFlows += ((sym, instId.get, copy))
         cc.strategies += copy
         copy
       )
@@ -1025,11 +1058,18 @@ class FlowConstraintsCollector(
       case c: Ctor => copiesOfCtor(c)
       case s: MarkerProdStrat => s
 
+    private def duplicateCastConsumer(c: CastConsumer): CastConsumer = copiesOfCastConsumer.getOrElseUpdate(c, locally:
+      val copy = new CastConsumer(c.exprId, S(newInstantiation(c.instantiationId)), c.target)
+      cc.strategies += copy
+      copy
+    )
+
     private def copiedConsStrat(c: ConsStrat): ConsStrat = c match
       case v: StratVar => copiesOfStratVar(v)
       case c: ConsFun => copiesOfConsFun(c)
       case d: Dtor => copiesOfDtor(d)
       case s: FieldSel => copiesOfFieldSel(s)
+      case c: CastConsumer => copiesOfCastConsumer(c)
       case c: MarkerConsStrat => c
       case pAcc: PossibleAccumulator => copiesOfStratVar(pAcc.s).asPossibleAccumulator
       case iPrm: IntoParam => copiesOfStratVar(iPrm.s).asIntoParam
@@ -1080,6 +1120,12 @@ class FlowConstraintsCollector(
         copy.srcs += src.match
           case c: Ctor => copiesOfCtor(c)
           case p: MarkerProdStrat => p
+      
+      // Solved scheme edges do not run through the solver again. Preserve every source
+      // already checked so a later failing input also invalidates the copied producers.
+      for (original, copy) <- copiesOfCastConsumer do
+        copy.succeeds = original.succeeds
+        original.sources.foreach(p => copy.sources += copiedProdStrat(p))
       
       s
   
@@ -1214,7 +1260,7 @@ class FlowConstraintsCollector(
       case (sym: TermSymbol, _) => S(sym)
       case _: ResultId => N
     val effect =
-      freshVar(s"effect_$funLamId", sourceSymbol, cc.forFun)
+      freshVar(s"effect_$funLamId", sourceSymbol, cc.forFun, cc.instId)
     params.foreach: ps =>
       ps.restParam.foreach: p =>
         cc.constrainOpaque(generatedVars(p.sym))
@@ -1503,10 +1549,10 @@ class FlowConstraintsCollector(
           case DynSelectKind.Member(sym) => generatedVars(sym)
           case DynSelectKind.ArrayIdx | DynSelectKind.Unknown => UnknownProd
       // * A cast passes its operand through; a checked one may also throw.
-      case Cast(value, _, check) =>
-        if check then constrainEffect(UnsafeEta)
-        val valueStrat = processResult(value)
-        cc.constrain(valueStrat, UnknownCons)
+      case cast: Cast =>
+        if cast.check then constrainEffect(UnsafeEta)
+        val valueStrat = processResult(cast.value)
+        cc.constrain(valueStrat, new CastConsumer(cast.uid, cc.instId, cast.target))
         valueStrat
       case Value.MemberRef(_, disamb) =>
         disamb match
@@ -1545,6 +1591,7 @@ class FlowConstraintSolver(
 )(
   val scope: collector.ConstraintScope
 ):
+  given Elaborator.Ctx = collector.eCtx
   given tl: TraceLogger = collector.tl
   given fState: FlowAnalysis.State = collector.fState
   given eState: Elaborator.State = collector.eState
@@ -1558,6 +1605,7 @@ class FlowConstraintSolver(
   val consumersWithSrcs = mutable.Buffer.empty[ConcreteCtorConsumer]
   val prodFunsWithDests = mutable.Buffer.empty[ProdFun]
   val consFunsWithSrcs = mutable.Buffer.empty[ConsFun]
+  val castsWithSrcs = mutable.Buffer.empty[CastConsumer]
   
   val functionEffectVars = LinkedHashMap.empty[ConcreteId[FunId], EffectVar]
   val callEffectVars = LinkedHashMap.empty[ConcreteId[CallId], EffectVar]
@@ -1577,6 +1625,8 @@ class FlowConstraintSolver(
       if c.dests.nonEmpty && registered.add(c) then ctorsWithDests += c
     case d: ConcreteCtorConsumer =>
       if d.srcs.nonEmpty && registered.add(d) then consumersWithSrcs += d
+    case c: CastConsumer =>
+      if c.sources.nonEmpty && registered.add(c) then castsWithSrcs += c
     case _ => ()
   
   private def addCtorDest(c: Ctor, d: ConcreteCtorConsumer | MarkerConsStrat): Unit =
@@ -1765,6 +1815,21 @@ class FlowConstraintSolver(
         for l <- p.lowerBounds do handle(l, c)
       case (p, c: StratVar) => if c.lowerBounds.add(p) then
         for u <- c.upperBounds do handle(p, u)
+      case (p, c: CastConsumer) =>
+        if c.sources.add(p) then
+          register(c)
+          val actual = p match
+            case ctor: Ctor => S(ctor.allocatedType)
+            case _: ProdFun => S(ErasedType.Function(S(false)))
+            case UnknownProd => N
+            case UnsafeEta => lastWords("effect producer in cast value flow")
+            case _: StratVar => lastWords("cast producer variable was not propagated")
+          val succeeds = actual.exists: tpe =>
+            ErasedType.needsCast(tpe.canonicalize, c.target.canonicalize).contains(false)
+          if c.succeeds && !succeeds then
+            c.succeeds = false
+            c.sources.toList.foreach(p => handle(p, UnknownCons))
+          else if !c.succeeds then handle(p, UnknownCons)
       case _ => () // ignore other cases
     end handle
     
@@ -1810,6 +1875,8 @@ class FlowConstraintSolver(
           s.srcs.foreach(visit)
         case d: ConcreteCtorConsumer =>
           d.srcs.foreach(visit)
+        case c: CastConsumer =>
+          c.sources.foreach(visit)
         case p: PossibleAccumulator => visit(p.s)
         case p: IntoParam => visit(p.s)
         case _: MarkerProdStrat | _: MarkerConsStrat => ()

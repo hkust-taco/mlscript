@@ -104,50 +104,94 @@ fun len(ls) = if ls is
   h :: t then 1 + len(t)
 len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│ deforest > >>> fusing >>>
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls¹
+//│ deforest > Cons⁰(h¹, tmp¹) ->
+//│ deforest > 	match: ls¹
+//│ deforest > 	fields: ls¹.h⁰
+//│ deforest > 	fields: ls¹.t⁰
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > flatten$flatten⁰#0 @ <root>: [1, 5]
+//│ eta-expansion > flatten_append$append⁰#0 @ <root>: [2, 5]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
+//│ let tmp, tmp1, tmp2, tmp3, tmp4, flatten$flatten, flatten_append$append$worker, flatten$flatten$worker, inlinedVal;
+//│ @inline @private
+//│ define flatten$flatten as fun flatten$flatten⁰(xss)(eta$0$1, eta$0$2, eta$0$4) {
+//│   return flatten$flatten$worker⁰(xss, eta$0$1, eta$0$2, eta$0$4)
+//│ };
+//│ @private
+//│ define flatten$flatten$worker as fun flatten$flatten$worker⁰(xss, eta$0$1, eta$0$2, eta$0$4) {
+//│   let arg$Cons$0$, arg$Cons$1$;
+//│   match xss
+//│     Nil⁰ =>
+//│       return 0
+//│     Cons¹ =>
+//│       let ys;
+//│       set arg$Cons$0$ = xss.h⁰;
+//│       set arg$Cons$1$ = xss.t⁰;
+//│       set ys = flatten$flatten⁰(arg$Cons$1$);
+//│       return flatten_append$append$worker⁰(arg$Cons$0$, ys, eta$0$1, eta$0$2, eta$0$4)
+//│     else
+//│       @pure throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ @private
+//│ define flatten_append$append$worker as fun flatten_append$append$worker⁰(xs, ys, eta$0$1, eta$0$2, eta$0$4) {
+//│   let arg$Cons$1$;
+//│   match xs
+//│     Nil⁰ =>
+//│       return ys(eta$0$1, eta$0$2, eta$0$4)
+//│     Cons¹ =>
+//│       let inlinedVal1, inlinedVal2;
+//│       set arg$Cons$1$ = xs.t⁰;
+//│       set inlinedVal2 = flatten_append$append$worker⁰(arg$Cons$1$, ys, undefined, undefined, undefined);
+//│       set inlinedVal1 = (inlinedVal2 as! Int⁰);
+//│       return +⁰(1, inlinedVal1)
+//│     else
+//│       @pure throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
 //│ @pure
 //│ define append⁰ as fun append¹(xs, ys) {
-//│   let arg$Cons$0$, arg$Cons$1$, tmp6;
+//│   let arg$Cons$0$, arg$Cons$1$, tmp5;
 //│   match xs
 //│     Nil⁰ =>
 //│       return ys
 //│     Cons¹ =>
 //│       set arg$Cons$0$ = xs.h⁰;
 //│       set arg$Cons$1$ = xs.t⁰;
-//│       set tmp6 = append¹(arg$Cons$1$, ys);
-//│       return Cons⁰(arg$Cons$0$, tmp6)
+//│       set tmp5 = append¹(arg$Cons$1$, ys);
+//│       return Cons⁰(arg$Cons$0$, tmp5)
 //│     else
 //│       @pure throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
 //│ @pure
 //│ define flatten⁰ as fun flatten¹(xss) {
-//│   let arg$Cons$0$, arg$Cons$1$, tmp6;
+//│   let arg$Cons$0$, arg$Cons$1$, tmp5;
 //│   match xss
 //│     Nil⁰ =>
 //│       return Nil⁰
 //│     Cons¹ =>
 //│       set arg$Cons$0$ = xss.h⁰;
 //│       set arg$Cons$1$ = xss.t⁰;
-//│       set tmp6 = flatten¹(arg$Cons$1$);
-//│       return (append¹(arg$Cons$0$, tmp6) as! Object⁰)
+//│       set tmp5 = flatten¹(arg$Cons$1$);
+//│       return (append¹(arg$Cons$0$, tmp5) as! Object⁰)
 //│     else
 //│       @pure throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
 //│ define len⁰ as fun len¹(ls) {
-//│   let arg$Cons$1$, tmp6;
+//│   let arg$Cons$1$, tmp5;
 //│   match ls
 //│     Nil⁰ =>
 //│       return 0
 //│     Cons¹ =>
 //│       set arg$Cons$1$ = ls.t⁰;
-//│       set tmp6 = len¹(arg$Cons$1$);
-//│       return +⁰(1, tmp6)
+//│       set tmp5 = len¹(arg$Cons$1$);
+//│       return +⁰(1, tmp5)
 //│     else
 //│       @pure throw new globalThis⁰.Error⁰("match error")
 //│   end
@@ -157,8 +201,8 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│ set tmp2 = Cons⁰(3, Nil⁰);
 //│ set tmp3 = Cons⁰(tmp2, Nil⁰);
 //│ set tmp4 = Cons⁰(tmp1, tmp3);
-//│ set tmp5 = flatten¹(tmp4);
-//│ return len¹(tmp5)
+//│ set inlinedVal = flatten$flatten$worker⁰(tmp4, undefined, undefined, undefined);
+//│ return (inlinedVal as! Int⁰)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
 

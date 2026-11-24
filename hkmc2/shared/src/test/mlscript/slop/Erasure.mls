@@ -49,6 +49,8 @@ private fun classify(value: Any) =
   if parent is Parent then 1 else 0
 classify(Child(42))
 //│ deforest > >>> fusing >>>
+//│ deforest > Child⁰(42) ->
+//│ deforest > 	match: scrut⁰
 //│ deforest > <<< fusing <<<
 //│ = 1
 

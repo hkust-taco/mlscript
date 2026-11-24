@@ -76,7 +76,7 @@ read(Holder(Box(42), 1), true)
 //│ deforest > 	fields: scrut⁰.value⁰
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp: Box⁰, tmp1: Holder³, $scrut_Box, $scrut_rest, $choose_rest, Box_value: Int⁰;
+//│ let tmp: Holder³, $scrut_Box, $scrut_rest, $choose_rest, tmp1: Function⁰, Box_value: Int⁰;
 //│ @affine(1) @private
 //│ define $scrut_Box as fun $scrut_Box⁰(Box_value1: Int⁰)(fv_arg$Box$0$: Int⁰, fv_value: Int⁰): ? {
 //│   set fv_arg$Box$0$ = Box_value1;
@@ -93,10 +93,10 @@ read(Holder(Box(42), 1), true)
 //│ };
 //│ @private
 //│ define read² as fun read³(holder: Holder³, choose: Bool⁰): Int⁰ {
-//│   let scrut: ?, value: Int⁰, arg$Box$0$: Int⁰;
+//│   let value: Int⁰, arg$Box$0$: Int⁰, scrut: Function⁰;
 //│   match choose
 //│     true =>
-//│       set scrut = holder.box²;
+//│       set scrut = (holder.box² as! Function⁰);
 //│       return (scrut(arg$Box$0$, value) as! Int⁰)
 //│     else
 //│       return holder.other²
@@ -113,9 +113,9 @@ read(Holder(Box(42), 1), true)
 //│   }
 //│ };
 //│ set Box_value = 42;
-//│ set tmp = $scrut_Box⁰(Box_value);
-//│ set tmp1 = Holder⁵(tmp, 1);
-//│ return read³(tmp1, true)
+//│ set tmp1 = $scrut_Box⁰(Box_value);
+//│ set tmp = Holder⁵(tmp1, 1);
+//│ return read³(tmp, true)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 

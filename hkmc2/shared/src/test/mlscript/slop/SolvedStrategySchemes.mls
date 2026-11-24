@@ -101,8 +101,7 @@ nested(20)
 
 // Recursive members share one solved scheme graph, while separate references
 // to that group still get independent instantiations.
-// Fusion returns the Int field in one copy and a branch function in the other. Both still declare a SchemeBox result.
-:fixme // Retype the specialized results in https://github.com/hkust-taco/mlscript/pull/624
+// Fusion returns the Int field in one copy and a branch function in the other, so each copy needs its own result type.
 :checkIR
 :expect 42
 private fun evenBox(n: Int): SchemeBox =
@@ -117,8 +116,6 @@ evenBox(2).value + fromMatch
 //│ deforest > SchemeBox⁰(21) ->
 //│ deforest > 	select: value
 //│ deforest > <<< fusing <<<
-//│ ═══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'SchemeBox'
-//│ ═══[COMPILATION ERROR] Cannot use a value of type 'Function' at an unrelated type 'SchemeBox'
 //│ = 42
 //│ fromMatch = 21
 
