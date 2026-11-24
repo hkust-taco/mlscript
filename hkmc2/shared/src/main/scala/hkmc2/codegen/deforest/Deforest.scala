@@ -260,11 +260,10 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Con
           else N
     end mergeDests
 
-    val prodRoots =
-      for
-        ctor <- constraintSolver.ctorsWithDests
-        if mergeDests(ctor, ctor.dests.toSet).isEmpty
-      yield ctor
+    val (prodRoots, candidates) = constraintSolver.ctorsWithDests.partitionMap: ctor =>
+      mergeDests(ctor, ctor.dests.toSet) match
+        case S(dest) => Right(ctor -> dest)
+        case N => Left(ctor)
     val consRoots =
       for
         dtor <- constraintSolver.consumersWithSrcs
@@ -311,10 +310,10 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Con
       val toRemoveDtor = result.markedConsumers
 
       for
-        ctor <- constraintSolver.ctorsWithDests
+        (ctor, dest) <- candidates
         if !toRemoveCtor(ctor)
       do
-        finalCtorDests(ctor.concreteId) = mergeDests(ctor, ctor.dests.toSet).get
+        finalCtorDests(ctor.concreteId) = dest
         fusingCtorInfo(ctor.concreteId) = ctor
       for
         dtor <- constraintSolver.consumersWithSrcs
