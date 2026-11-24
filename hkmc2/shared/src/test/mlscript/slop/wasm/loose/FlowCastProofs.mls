@@ -232,3 +232,41 @@ copiedSuccessfulCast(true, SuccessfulOtherBox(2, 3)) + copiedSuccessfulCast(true
 //│ return +⁰(tmp1, tmp2)
 //│ Wasm result:
 //│ = 2
+
+
+// A proved cast still reads its operand. A constructor that only reaches such a cast has no
+// other consumer, and eliminating it would make the cast fail on an unspecified value.
+:expect 42
+:soir
+fun provedCast(): Int =
+  fun check(x: Any): Int =
+    val unused: ProofBox = x
+    42
+  check(ProofBox(1))
+provedCast()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define provedCast⁰ as fun provedCast¹() {
+//│   let check, tmp;
+//│   define check as fun check²(x) {
+//│     do (x as! ProofBox⁰);
+//│     return 42
+//│   };
+//│   set tmp = ProofBox¹(1);
+//│   return check²(tmp)
+//│ };
+//│ return provedCast¹()
+//│ Wasm result:
+//│ = 42
+
+
+// The same holds for the constructors copied along with a reusable scheme.
+:flowBasedOpt poly
+:expect 42
+fun copiedProvedCast(): Int =
+  fun check(x: Any): Int =
+    val unused: ProofBox = x
+    42
+  check(ProofBox(1))
+copiedProvedCast()
+//│ Wasm result:
+//│ = 42

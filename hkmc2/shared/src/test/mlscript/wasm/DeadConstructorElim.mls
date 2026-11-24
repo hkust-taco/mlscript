@@ -21,6 +21,9 @@ cast()
 //│ Wasm result:
 //│ = 42
 
+// A cast reads its operand, so this allocation stays: the cast would fail on the unspecified value
+// that replaces an eliminated constructor (see `slop/wasm/loose/FlowCastProofs.mls`).
+// TODO: eliminate the allocation together with a proved cast whose operands are all eliminated.
 :flowBasedOpt mono
 :soir
 fun cast() =
@@ -30,7 +33,7 @@ fun cast() =
   42
 cast()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ define cast² as fun cast³() { return 42 }; return cast³()
+//│ define cast² as fun cast³() { do Box⁰(1); return 42 }; return cast³()
 //│ Wasm result:
 //│ = 42
 
