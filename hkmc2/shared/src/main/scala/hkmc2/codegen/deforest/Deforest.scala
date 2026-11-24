@@ -100,6 +100,19 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Con
     case (ctor, FinalDestMatch(dtor, _)) =>
       ctor.instId :: dtor.instId :: Nil
 
+  /** The function whose body directly contains the match or label `id`. `N` when `id` lies outside of
+    * every function body, as in the top-level block or in a constructor.
+    */
+  def enclosingFun(id: ResultId | LabelSymbol): Opt[FunDefn] =
+    val ctx = id match
+      case label: LabelSymbol => preAnalyzer.res.labelSymToCtxOfLabel(label)
+      case scrut: ResultId => preAnalyzer.res.matchScrutToCtxOfMatch(scrut)
+    ctx.iterator.collectFirst:
+      case preAnalyzer.InCtx.Fn(fun) => S(fun)
+      case _: (preAnalyzer.InCtx.Lam | preAnalyzer.InCtx.TopLvl | preAnalyzer.InCtx.Mod | preAnalyzer.InCtx.ModCtor
+        | preAnalyzer.InCtx.Cls | preAnalyzer.InCtx.ClsPreCtor | preAnalyzer.InCtx.ClsCtor) => N
+    .flatten
+
   /** Whether fusion replaces the values that `p` produces. */
   def isFused(p: ProdStrat): Bool = p match
     case c: Ctor => finalCtorDests.contains(c.concreteId)

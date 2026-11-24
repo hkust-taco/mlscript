@@ -336,12 +336,15 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
       returnType = tpe
       try rewrite finally returnType = enclosing
     
+    // rewrites code of the body of `fun`, whose returns write the result slot of `fun` in this instance
+    def returningIntoResultOf[A](fun: FunDefn)(rewrite: => A): A =
+      returningInto(fun.signature.result.bodyType -> signatureAt(instId, fun.dSym).result.bodyType)(rewrite)
+    
     def rewriteFunDefn(fun: FunDefn): RewrittenFunDefn =
       val signature = signatureAt(instId, fun.dSym)
       val params = signature.params.mapConserve(applyParamList)
       val signature2 = if params is signature.params then signature else signature.copy(params = params)
-      val body = returningInto(fun.signature.result.bodyType -> signature.result.bodyType):
-        applyBlock(fun.body)
+      val body = returningIntoResultOf(fun)(applyBlock(fun.body))
       (signature2, body, fun.annotations)
     
     override def applyFunDefn(fun: FunDefn): FunDefn =
@@ -353,8 +356,9 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
           && (signature is fun.signature) && (body is fun.body) then fun
       else FunDefn(owner, sym, dSym, signature, body)(fun.configOverride, annotations)
     
-    // An indirect call through a Function local has no result signature. Coerce its value
-    // to the return type of the enclosing function, whose return this call replaces.
+    // The call replaces returns of the enclosing function, so its value goes into the result slot
+    // of that function. A call through a Function local has no result signature and always needs
+    // the coercion; a call to a continuation needs it when the continuation's result is wider.
     private def returnCall(call: Result): Block = Return(returnType.retyped.fold(call)(call.coerceTo(_, N)))
     
     // a slot that fusion retypes takes the type the flow gives it
@@ -560,15 +564,23 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
   /** Extracts a block into a function whose last parameter list binds its free variables.
     * A path that falls through the block continues in `rest`. Both explicit returns and
     * the continuation contribute their rewritten value types to the function's result.
+    *
+    * The block is a part of the code around the match or label `from`. It returns for the function
+    * that contains `from`, so its returns go into the result slot of that function like the returns
+    * that stay there. A returned value whose type is unrelated to a slot typed from the flow is then
+    * dropped as in the function itself (see `coerceIntoFlowTypedSlot`), and does not give the extracted
+    * function a result type that its callers in that function could not coerce.
     */
-  private def extractedFun(instId: InstantiationId, syms: (BlockMemberSymbol, TermSymbol),
+  private def extractedFun(from: MatchOrLabelId, instId: InstantiationId, syms: (BlockMemberSymbol, TermSymbol),
       params: Ls[LoweredParamList], fvs: Ls[LocalVarSymbol], body: Block, annotations: Ls[Annot])
       (rest: Rewriter => Block): FunDefn =
     val captures = params.last.paramSyms
     assert(fvs.sizeCompare(captures) == 0)
     val rewriter = mkCopyRewriter(instId, Nil, body, Map.from(fvs.lazyZip(captures)))
-    val rewritten = rewriter.applyBlock(body)
-    val complete = if rewritten.isAbortive then rewritten else Begin(rewritten, rest(rewriter))
+    def extract: Block =
+      val rewritten = rewriter.applyBlock(body)
+      if rewritten.isAbortive then rewritten else Begin(rewritten, rest(rewriter))
+    val complete = solver.enclosingFun(from).fold(extract)(rewriter.returningIntoResultOf(_)(extract))
     val result = ErasedResult.Direct(Block.returnType(complete).map(_.canonicalize))
     val signature = FunDefn.Signature.fromParams(params, result)
     FunDefn(N, syms._1, syms._2, signature, complete)(N, annotations)
@@ -581,7 +593,8 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
         val instId = id.getInstId
         val (body, parent) = restOriginalBodiesAndParentRest(id.withoutInstId)
         val fvs = restFnFvs(id)
-        extractedFun(instId, syms, captureParams(instId, fvs) :: Nil, fvs, body, PrivateModifier :: Nil): rewriter =>
+        extractedFun(id.withoutInstId, instId, syms, captureParams(instId, fvs) :: Nil, fvs, body,
+            PrivateModifier :: Nil): rewriter =>
           parent match
           case S(parentId) => rewriter.callRest(parentId.withInstId(instId))(Return(_))
           case N => Return(Value.Lit(Tree.UnitLit(true))(N))
@@ -592,7 +605,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     val newBranchFuns =
       for (id@(dtorId, whichBranch), syms) <- branchFunSyms yield
         val body = branchOriginalBodies(dtorId.exprId -> whichBranch)
-        extractedFun(dtorId.instId, syms, branchParams(id), dtorBranchFnFvs(dtorId), body,
+        extractedFun(dtorId.exprId, dtorId.instId, syms, branchParams(id), dtorBranchFnFvs(dtorId), body,
             AffineAnnotForBranchFns :: PrivateModifier :: Nil): rewriter =>
           rewriter.callRest(dtorId)(Return(_))
     end newBranchFuns
