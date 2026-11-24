@@ -655,8 +655,7 @@ final case class LetDecl(sym: LocalVarSymbol | TermSymbol, annotations: Ls[Annot
   * selected statically until their key is known. Cloning preserves this identity.
   */
 final case class RcdField(field: Term, rhs: Term, sym: BlockMemberSymbol)(val key: Opt[MemberKey]) extends Statement, AutoLocated:
-  // The two-argument RcdField.apply sets sym.tsym and its definition before
-  // constructing this node. Lowering clones reuse the same initialized symbols.
+  // Fresh fields have a completed member definition. Lowering clones reuse its symbols.
   val tsym: TermSymbol = sym.tsym.get
   require((tsym.k is RecordField) && tsym.owner.isEmpty && tsym.defn.exists(_.sym is sym))
   field match
@@ -664,7 +663,7 @@ final case class RcdField(field: Term, rhs: Term, sym: BlockMemberSymbol)(val ke
     case _ => ()
 
 object RcdField:
-  // Lowering and pattern compilation synthesize fields after source erasure.
+  /** Construct a generated value field whose symbol does not participate in source erasure. */
   def apply(field: Term, rhs: Term)(using State): RcdField = make(field, rhs, N, false, N)
   def source(field: Term, rhs: Term)(using State): RcdField = make(field, rhs, N, true, N)
   /** Declare a structural field with the given type or bounds. Its term symbol carries the
@@ -675,6 +674,14 @@ object RcdField:
         output.getOrElse(ctx.builtins.Any.ref(new Tree.Ident("Any").withLocOf(bounds)))
       case tpe => tpe
     make(field, bounds, S(readType), true, symbol)
+  /** Create a record property with a fresh member symbol so that selection can identify its definition.
+    * In a record value such as `{x: 1}`, `rhs` supplies the initializer and `signature` is empty.
+    * In a record type such as `mut {x: in Int out Num}`, `rhs` holds the written bounds and
+    * `signature` supplies the read type. Only this second form passes a signature here.
+    * An ordinary [[TermDefinition]] can have both a signature and a body.
+    * `source` indicates that source erasure will assign the symbol's representation.
+    * `symbol` supplies the property key for an `@jsSymbol` field.
+    */
   private def make(field: Term, rhs: Term, signature: Opt[Term], source: Bool, symbol: Opt[SymbolKey])(using State): RcdField =
     val name = field match
       case Term.Lit(Tree.StrLit(name)) => name
@@ -683,6 +690,8 @@ object RcdField:
     id.withLocOf(field)
     val sym = new BlockMemberSymbol(name, Nil)
     val tsym = TermSymbol(RecordField, N, id)
+    // Source erasure skips symbols whose erasure is already initialized. Fields outside
+    // that pass need an initialized, unknown representation before consumers can query it.
     if !source then tsym.initializeErasure(N)
     sym.tsym = S(tsym)
     // Value-field lookup removes the synthetic definition's capture mark, leaving
