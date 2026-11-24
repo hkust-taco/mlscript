@@ -148,14 +148,14 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
     * for direct calls to the override too: its layout must pass [[wasmLayoutFailure]], and its inputs
     * must also fit the inherited representations. A parameter comparison reports the source failure
     * first, or the additional Wasm restriction when the source comparison succeeds.
-    * Run this after erasure initializes parameter and member signatures; pairs with an erroneous
-    * member or a member whose erasure has not completed are skipped.
+    * Run this after erasure initializes parameter and member signatures. An erroneous declaration
+    * has no reliable signature to compare with its counterpart.
     */
   def checkSignatures(): Unit =
     edges.foreach: edge =>
       val td = edge.overriding
       val base = edge.inherited.tsym
-      if !td.isErroneous && !edge.inherited.isErroneous && td.tsym.isErased && base.isErased then
+      if !td.isErroneous && !edge.inherited.isErroneous then
         val actualResult = td.tsym.sourceErasedResult
         val baseResult = base.sourceErasedResult
         val actualType = actualResult.callType
