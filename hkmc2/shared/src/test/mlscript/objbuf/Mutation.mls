@@ -35,7 +35,7 @@ class A(x) with
 //│   constructor(x) {
 //│     this.#x = x;
 //│     this.#x1 = this.#x;
-//│     this.z = this.#x1;
+//│     this.#z = this.#x1;
 //│   }
 //│   static {
 //│     A2.size = 3;

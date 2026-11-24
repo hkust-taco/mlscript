@@ -19,17 +19,18 @@ quiet(40, 2)
 
 
 // Cast comments stay attached to callees, constructor arguments, and returned values after inlining.
-// The operands come from a function that is not inlined, so the casts remain needed.
+// Broad annotations and opaque operands keep these coercions present after inference and inlining.
 :sjs
 :expect 42
 class Box(val value: Int)
-fun asFunction(value): Function = value
+fun asFunction(value: Any): Function = value
 fun read(box: Box): Int = box.value
-fun invoke(f, x) = asFunction(f)(x)
-@annotations.noInline fun opaque(value) = value
-invoke(opaque(x => read(new Box(x))), opaque(42))
+fun invoke(f: Any, x: Any) = asFunction(f)(x)
+fun construct(x: Any): Int = read(new Box(x))
+@annotations.noInline fun opaque(value: Any): Any = value
+invoke(opaque(construct), opaque(42))
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let read, asFunction, Box1, invoke, opaque, lambda, tmp, tmp1;
+//│ let read, asFunction, Box1, invoke, opaque, construct, tmp, tmp1;
 //│ asFunction = function asFunction(value) {
 //│   return value /* as! Function */
 //│ };
@@ -38,6 +39,11 @@ invoke(opaque(x => read(new Box(x))), opaque(42))
 //│ };
 //│ invoke = function invoke(f, x) {
 //│   return runtime.safeCall(f /* as! Function */(x))
+//│ };
+//│ construct = function construct(x) {
+//│   let tmp2;
+//│   tmp2 = globalThis.Object.freeze(new Box1.class(x /* as! Int */));
+//│   return tmp2.value
 //│ };
 //│ opaque = function opaque(value) {
 //│   return value
@@ -55,12 +61,7 @@ invoke(opaque(x => read(new Box(x))), opaque(42))
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Box", ["value"]];
 //│ });
-//│ lambda = (undefined, function (x) {
-//│   let tmp2;
-//│   tmp2 = globalThis.Object.freeze(new Box1.class(x /* as! Int */));
-//│   return tmp2.value
-//│ });
-//│ tmp = opaque(lambda);
+//│ tmp = opaque(construct);
 //│ tmp1 = opaque(42);
 //│ return runtime.safeCall(tmp /* as! Function */(tmp1))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -68,19 +69,20 @@ invoke(opaque(x => read(new Box(x))), opaque(42))
 
 
 // Looking through a commented cast must still parenthesize a negative literal used as a receiver.
-// The simplifier drops a cast that the literal already fits, so the target here is unrelated
-// to Int; the JS backend erases the cast, so the call still runs on the number.
+// An unchecked nominal target keeps the cast after constant propagation exposes the integer.
 :noCheckCasts
 :sjs
 :expect "-1"
-fun asStr(value): Str = value
-asStr(-1).toString()
+declare class Stringable with
+  fun toString(): Str
+fun asReceiver(value: Any): Stringable = value
+asReceiver(-1).toString()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let asStr;
-//│ asStr = function asStr(value) {
-//│   return value /* as!! Str */
+//│ let asReceiver;
+//│ asReceiver = function asReceiver(value) {
+//│   return value /* as!! Stringable */
 //│ };
-//│ return runtime.safeCall((-1 /* as!! Str */).toString())
+//│ return runtime.safeCall((-1 /* as!! Stringable */).toString())
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = "-1"
 
@@ -90,7 +92,7 @@ asStr(-1).toString()
 :sjs
 :expect 42
 declare class id"Odd*/\n\u2028Type"
-fun castOdd(value): id"Odd*/\n\u2028Type" = value
+fun castOdd(value: Any): id"Odd*/\n\u2028Type" = value
 castOdd(42)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let castOdd;

@@ -1,0 +1,41 @@
+:.
+
+// Worksheet blocks are compiled one after the other, and the representations erasure infers for a block's
+// definitions are final once it is compiled. Under strict resolution, a block exposes its public definitions,
+// whose parameters therefore admit the values that later blocks pass. Private definitions and top-level `let`
+// variables are not exposed: later blocks must use them with the representations inferred from their own block.
+// See `slop/loose/ErasureAcrossBlocks.mls` for the behavior without strict resolution.
+
+
+fun exposed(x) = x
+exposed(1)
+//│ = 1
+
+:expect "a"
+exposed("a")
+//│ = "a"
+
+
+private fun hidden(x) = x
+hidden(1)
+//│ = 1
+
+// The parameter of `hidden` was inferred as an `Int` from the block above.
+:ge
+hidden("a")
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.+1: 	hidden("a")
+//│ ╙──      	       ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+let counter = 1
+//│ counter = 1
+
+:ge
+set counter = "hello"
+counter
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.+1: 	set counter = "hello"
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

@@ -110,8 +110,6 @@ let b = new mut Copies(20)(30)
 
 
 // Mutable fields are separate from the immutable incoming constructor arguments.
-// FIXME: flow analysis cannot track an auxiliary field alongside a main parameter list.
-:fixme
 :expect [10, 3]
 class MutableFields(mut val x: Int) with
   constructor(mut val y: Int)
@@ -122,7 +120,8 @@ let fields = new mut MutableFields(1)(2)
 fields.update()
 set fields.x = 10
 [fields.x, fields.y]
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: None.get
+//│ = [10, 3]
+//│ fields = MutableFields(10)
 
 
 // Both forms of explicit mutable field still support writes.

@@ -87,6 +87,7 @@ maxOpt(id(1 :: 2 :: Nil))
 
 
 :soir
+:siret
 :expect Some(2)
 fun modSome(x, m) = if x is
   Some(n) and
@@ -103,10 +104,10 @@ modSome(Some(17), 3)
 //│ deforest > 	fields: x⁴.x⁵
 //│ deforest > <<< fusing <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let Some_x, fv_scrut, fv_m, fv_tmp, inlinedVal;
-//│ define modSome⁰ as fun modSome¹(x, m) {
+//│ let Some_x: Unknown, fv_scrut: Bool⁰, fv_m: Unknown, fv_tmp: Unknown, inlinedVal: Object⁰;
+//│ define modSome⁰ as fun modSome¹(x: Unknown, m: Unknown): Object⁰ {
 //│   loop loopLabel:
-//│     let scrut, arg$Some$0$, tmp, tmp1;
+//│     let scrut: Bool⁰, arg$Some$0$: Unknown, tmp: Unknown, tmp1: Some¹;
 //│     match x
 //│       Some¹ =>
 //│         set arg$Some$0$ = x.x⁵;
@@ -161,7 +162,7 @@ maxOpt2(id(1 :: 2 :: 3 :: Nil), None)
 //│ = Some(3)
 
 :expect Nil
-fun zipWith(xsys, f) = if xsys is
+private fun zipWith(xsys, f) = if xsys is
   [hx :: tx, hy :: ty] then f(hx, hy) :: zipWith([tx, ty], f)
   [Nil, Nil] then Nil
 zipWith([id(Nil), id(Nil)], (x, y) => x)

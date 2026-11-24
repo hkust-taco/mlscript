@@ -440,7 +440,7 @@ outer1(p, 1, 2) + outer2(p, 3, 4) + inner(AA(5), 6)
 
 
 :expect 1
-fun mapHead(f, x) = if x is
+private fun mapHead(f, x) = if x is
   AAA(h, t) then f(h)
 mapHead(x => x, AAA(1, AAA(2, None)))
 //│ deforest > >>> fusing >>>
@@ -502,7 +502,7 @@ test(AA(1), AA(2), AA(3))
 
 
 :expect 141
-fun test(x) =
+private fun test(x) =
   let t = id of
     if x is
       AA(CCC(a)) then a
@@ -528,7 +528,7 @@ test(p)
 
 
 :expect 141
-fun test(x, y) =
+private fun test(x, y) =
   let t =
     if y is CCC then
       if x is
@@ -561,7 +561,7 @@ f(id(A)) + f(A)
 //│ let tmp, tmp1, tmp2, f$x_A, f$x_rest, f$f, deforest$lam;
 //│ @private
 //│ define f$f as fun f$f⁰(x) {
-//│   return x()
+//│   return (x() as! Int⁰)
 //│ };
 //│ @affine(1) @private
 //│ define f$x_A as fun f$x_A⁰()() {
@@ -624,7 +624,7 @@ f(A, B)
 
 
 :expect 6
-fun app(f) = f(1)
+private fun app(f) = f(1)
 fun identity(x) = x
 fun c1(x1) = if x1 is
   AA(i) then i
@@ -795,7 +795,7 @@ fun g1(y1) = if y1 is
   AA then 0
 fun g2(y2) = if y2 is
   AA then 1
-fun apply(f) =
+private fun apply(f) =
   let inner = AA(0)
   f(AA(inner))
 apply(f)

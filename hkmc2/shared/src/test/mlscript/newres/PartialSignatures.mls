@@ -133,6 +133,151 @@ read(new Child)
 //│ ╙──      	                            ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
+// LocalChild.read inherits Any even though its only direct call supplies a record with 'only'.
+:e
+private class LocalBase with
+  open fun read(x: Any): Int = 0
+private class LocalChild extends LocalBase with
+  override fun read(x) = x.only
+private fun throughBase(p: LocalBase) = p.read(null)
+new LocalChild().read({only: 7})
+throughBase(new LocalChild)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+4: 	  override fun read(x) = x.only
+//│ ║        	                         ^^^^^^
+//│ ╟── Value with an empty interface does not contain member 'only'
+//│ ║  l.+2: 	  open fun read(x: Any): Int = 0
+//│ ║        	                   ^^^
+//│ ╟── Type 'Any' is declared without a member interface.
+//│ ║  in ../decls/Prelude.mls
+//│ ║  l.XX: 	declare type Any
+//│ ╙──      	             ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A call through the base type supplies the unannotated parameter of its override.
+:e
+private class ReadBase with
+  open fun read(x): Int = 0
+private class ReadChild extends ReadBase with
+  override fun read(x) = x.only
+private fun runRead(p: ReadBase) = p.read(null)
+new ReadChild().read({only: 7})
+runRead(new ReadChild)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+4: 	  override fun read(x) = x.only
+//│ ║        	                         ^^^^^^
+//│ ╟── Null literal does not contain member 'only'
+//│ ║  l.+5: 	private fun runRead(p: ReadBase) = p.read(null)
+//│ ╙──      	                                          ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// The only value for x arrives through the second application of a saved nominal method.
+:expect 8
+private class ReadItem(val only: Int)
+private class CurriedReader with
+  fun read(n: Int)(x): Int = n + x.only
+private fun remaining(p: CurriedReader) = p.read(1)
+remaining(new CurriedReader)(ReadItem(7))
+//│ = 8
+
+// An explicit projection locates the method even when the receiver's type has no member interface.
+:expect 9
+private class ProjectionReader with
+  fun read(x): Int = x.only
+private fun projectedRead(p: Any, x) = p.ProjectionReader#read(x)
+projectedRead(new ProjectionReader, ReadItem(9))
+//│ = 9
+
+// A saved nominal method retains each call's own type argument through its remaining parameter list.
+:expect [7, 9]
+private class ReadOther(val other: Int)
+private class PolyReadBase with
+  open fun choose[A]()(x: A): A = x
+private class PolyReadChild extends PolyReadBase with
+  override fun choose[B]()(x): B = x
+private fun chooseBoth(p: PolyReadChild) =
+  let choose = p.choose
+  [choose()(ReadItem(7)).only, choose()(ReadOther(9)).other]
+chooseBoth(new PolyReadChild)
+//│ = [7, 9]
+
+// The override must also handle every type a base caller can choose for A.
+:e
+private class PolyBase with
+  open fun inspect[A](x: A): Int = 0
+private class PolyChild extends PolyBase with
+  override fun inspect(x) = x.only
+new PolyChild().inspect({only: 7})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+4: 	  override fun inspect(x) = x.only
+//│ ║        	                            ^^^^^^
+//│ ╟── Cannot resolve member 'only' of a value with unknown shape.
+//│ ║  l.+2: 	  open fun inspect[A](x: A): Int = 0
+//│ ║        	                         ^
+//│ ╟── Type parameter 'A' does not specify a member interface.
+//│ ║  l.+2: 	  open fun inspect[A](x: A): Int = 0
+//│ ╙──      	                   ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Each call instantiates the inherited argument type, whether the override names it or omits it.
+:expect [11, 22, 33, 44]
+private class LeftItem(val left: Int)
+private class RightItem(val right: Int)
+private class IdentityBase with
+  open fun id[A](x: A): A = x
+private class NamedIdentity extends IdentityBase with
+  override fun id[B](x) = x
+private class InferredIdentity extends IdentityBase with
+  override fun id(x) = x
+[
+  new NamedIdentity().id[LeftItem](LeftItem(11)).left,
+  new NamedIdentity().id[RightItem](RightItem(22)).right,
+  new InferredIdentity().id(LeftItem(33)).left,
+  new InferredIdentity().id(RightItem(44)).right,
+]
+//│ = [11, 22, 33, 44]
+
+// Storing the generic method once still permits a different type argument on each invocation.
+:expect [7, 8]
+private val savedIdentity = new NamedIdentity().id
+[savedIdentity[LeftItem](LeftItem(7)).left, savedIdentity[RightItem](RightItem(8)).right]
+//│ = [7, 8]
+//│ savedIdentity = fun id
+
+// An explicitly written result B reads the type argument inferred through the inherited parameter x.
+:expect [7, 9]
+private class ResultBase with
+  open fun id[A](x: A): A = x
+private class NamedResult extends ResultBase with
+  override fun id[B](x): B = x
+private val pick = new NamedResult().id
+[pick(LeftItem(7)).left, pick(RightItem(9)).right]
+//│ = [7, 9]
+//│ pick = fun id
+
+// A single selection can dispatch to overrides with different method type parameters.
+:expect [5, 6]
+private class OtherIdentity extends IdentityBase with
+  override fun id[C](x) = x
+private fun receiver(flag) = if flag then new NamedIdentity else new OtherIdentity
+private fun dispatch[T](x: T, flag) = receiver(flag).id[T](x)
+[dispatch[LeftItem](LeftItem(5), true).left, dispatch[RightItem](RightItem(6), false).right]
+//│ = [5, 6]
+
+// An explicit type argument determines which members a direct caller can select on the result.
+:e
+private class General
+private class Special extends General with
+  val extra = 5
+new NamedIdentity().id[General](new Special).extra
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+4: 	new NamedIdentity().id[General](new Special).extra
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Value of type 'General' does not contain member 'extra'
+//│ ║  l.+4: 	new NamedIdentity().id[General](new Special).extra
+//│ ╙──      	                       ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
 // A separate polymorphic signature retains binders for explicit type application.
 :expect [11, 12]
 class First(val first: Int)

@@ -8,7 +8,7 @@ module M2 { val v = 2 }
 fun foo(x: M1 | M2) = x.u
 
 :expect [1, undefined]
-fun bar(x, flag) = if flag then x.u else 0
+private fun bar(x, flag) = if flag then x.u else 0
 tuple of
   bar(M1, true)
   bar(M2, true)
@@ -17,7 +17,7 @@ tuple of
 
 // A miss can arrive before the candidate that resolves the selection.
 :expect [0, 1]
-fun later(x, flag) = if flag then x.u else 0
+private fun later(x, flag) = if flag then x.u else 0
 [later(M2, false), later(M1, true)]
 //│ = [0, 1]
 
@@ -118,7 +118,7 @@ fun ambiguous(x: M1 | M2 | M3) = x.u
 // Unknown inputs are tolerated when another input resolves the selection.
 :expect [0, 1]
 #lang(0.3.x)
-fun withUnknown(x, flag) = if flag then x.u else 0
+private fun withUnknown(x, flag) = if flag then x.u else 0
 [withUnknown(M2 as Any, false), withUnknown(M1, true)]
 //│ = [0, 1]
 
@@ -159,7 +159,14 @@ fun noCandidate(x) = x.absent
 //│ ╟── Module 'M1' does not contain member 'absent'
 //│ ║  in Leniency.mls:XX
 //│ ║  l.XX: 	module M1 { val u = 1 }
-//│ ╙──      	^^^^^^^^^
+//│ ║        	^^^^^^^^^
+//│ ╟── Cannot resolve member 'absent' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+1: 	fun noCandidate(x) = x.absent
+//│ ║        	                ^
+//│ ╟── 'noCandidate' is exposed by this compilation unit.
+//│ ║  l.+1: 	fun noCandidate(x) = x.absent
+//│ ╙──      	^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A computed key is another source of uncertainty about the selected member.

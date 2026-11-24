@@ -52,7 +52,7 @@ let n = 0
 class A with
   fun bump = set n = 1
 private fun f(a, b) = a
-fun g(o) = f(n, o.bump)
+private fun g(o) = f(n, o.bump)
 g(new A)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > f⁴#0 @ <root> -> eliminable: {1}
@@ -63,6 +63,7 @@ g(new A)
 //│ define f⁴ as fun f⁵(a) {
 //│   return a
 //│ };
+//│ @private
 //│ define g⁴ as fun g⁵(o) {
 //│   let arg;
 //│   set arg = n⁰;

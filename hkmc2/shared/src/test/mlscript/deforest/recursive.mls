@@ -16,7 +16,7 @@ object L
 
 
 // :sir
-fun map(f, ls_map) = if ls_map is
+private fun map(f, ls_map) = if ls_map is
   h :: t then f(h) :: map(f, t)
   Nil then Nil
 let c = Cons(1, Nil) in
@@ -32,7 +32,7 @@ let c = Cons(1, Nil) in
 //│ = Cons(2, Nil)
 
 // :sir
-fun map(f, ls_map) = if ls_map is
+private fun map(f, ls_map) = if ls_map is
   h :: t then f(h) :: map(f, t)
   Nil then Nil
 fun c(a) = Cons(a, Nil)
@@ -49,7 +49,7 @@ map(x => x + 1, c(1))
 
 
 :expect Cons(2, Cons(3, Nil))
-fun map(ls, f) = if ls is
+private fun map(ls, f) = if ls is
   Nil then Nil
   h :: t then f(h) :: map(t, f)
 map(1 :: 2 :: Nil, x => x + 1)
@@ -85,7 +85,7 @@ sum(enum(3))
 
 
 :expect Cons(4, Cons(6, Nil))
-fun map(ls, f) = if ls is
+private fun map(ls, f) = if ls is
   Nil then Nil
   h :: t then f(h) :: map(t, f)
 map(map(id(1 :: 2 :: Nil), x => x + 1), x => x * 2)
@@ -100,7 +100,7 @@ map(map(id(1 :: 2 :: Nil), x => x + 1), x => x * 2)
 //│ = Cons(4, Cons(6, Nil))
 
 :expect Cons(7, Cons(5, Cons(3, Cons(1, Nil))))
-fun map(f, ls) = if ls is
+private fun map(f, ls) = if ls is
   Nil then Nil
   h :: t then f(h) :: map(f, t)
 fun enum(a) = if a < 0 then Nil else a :: enum(a - 1)
@@ -180,7 +180,7 @@ f1(to(4))
 //│ = 12
 
 :expect Cons(4, Cons(6, Nil))
-fun map(ls, f) = if ls is
+private fun map(ls, f) = if ls is
   Nil then Nil
   h :: t then f(h) :: map(t, f)
 fun succ(x) = x + 1
@@ -264,7 +264,7 @@ f1(to(4, Nil), 0) + f2(to(5, Nil), 0) + f1(to(6, Nil), 0)
 //│ = 51
 
 :expect Cons(12, Cons(18, Nil))
-fun map(ls, f) = if ls is
+private fun map(ls, f) = if ls is
   Nil then Nil
   h :: t then f(h) :: map(t, f)
 fun succ(x) = x + 1
@@ -302,10 +302,10 @@ map(map(map(1 :: 2 :: Nil, succ), double), triple)
 
 :expect Cons(11, Cons(9, Cons(7, Cons(5, Cons(3, Cons(1, Nil))))))
 fun mk(n) = if n < 0 then Nil else n :: mk(n - 1)
-fun map(f, ls_map) = if ls_map is
+private fun map(f, ls_map) = if ls_map is
   h :: t then f(h) :: map(f, t)
   Nil then Nil
-fun map1(f, ls_map1) = if ls_map1 is
+private fun map1(f, ls_map1) = if ls_map1 is
   h :: t then f(h) :: map1(f, t)
   Nil then Nil
 fun incr(x) = x + 1
@@ -357,7 +357,7 @@ sum(enumFromTo(1,10))
 
 :expect Cons(5, Cons(6, Cons(7, Nil)))
 fun enumFromTo(a, b) = if a < b then a :: enumFromTo(a + 1, b) else Nil
-fun map(f, ls) =
+private fun map(f, ls) =
   if ls is
     Nil then Nil
     h :: t then f(h) :: map(f, t)
@@ -374,7 +374,7 @@ map(x => x + 4, enumFromTo(1, 4))
 
 :expect Cons(5, Cons(6, Cons(7, Nil)))
 fun enumFromTo(a, b) = if a < b then a :: enumFromTo(a + 1, b) else Nil
-fun map(f, ls) =
+private fun map(f, ls) =
   (if ls is
     Nil then f => Nil
     h :: t then f => f(h) :: map(f, t)
@@ -413,7 +413,7 @@ sum(enumFromTo(1, 10), 0)
 :expect Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Cons(6, Nil))))))
 fun mk(n) = if n < 0 then Nil else n :: mk(n - 1)
 fun incr(x) = x + 1
-fun map(f, xs_map) = if xs_map is
+private fun map(f, xs_map) = if xs_map is
   Nil then Nil
   x :: xs then f(x) :: map(f, xs)
 fun rev(xs_rev, acc) = if xs_rev is
@@ -435,7 +435,7 @@ map(incr, rev(id(mk(5)), Nil))
 :expect Cons(1, Cons(2, Cons(3, Cons(4, Nil))))
 fun mk(n) = if n < 0 then Nil else n :: mk(n - 1)
 fun incr(x) = x + 1
-fun map(f, xs_map) = if xs_map is
+private fun map(f, xs_map) = if xs_map is
   Nil then Nil
   x :: xs then f(x) :: map(f, xs)
 fun rev(xs_rev, acc) = if xs_rev is
@@ -552,7 +552,7 @@ last(p)
 
 
 :expect Cons(1, Cons(0, Nil))
-fun map(f, xs_map) = if xs_map is
+private fun map(f, xs_map) = if xs_map is
   Nil then Nil
   x :: xs then f(x) :: map(f, xs)
 map(x => if x is A then 1 else 0, A :: B :: Nil)
@@ -654,7 +654,7 @@ max(3 :: 2 :: 4 :: 1 :: 0 :: Nil, 0)
 
 
 :expect Some(4)
-fun filter(ls, f) = if ls is
+private fun filter(ls, f) = if ls is
   h :: t and
     f(h) then h :: filter(t, f)
     else filter(t, f)
@@ -666,7 +666,7 @@ fun last(ls_last) =
   if ls_last is
     h :: t then Some(go(h, t))
     Nil then None
-fun lastFilter(ls, f) = last(filter(ls, f))
+private fun lastFilter(ls, f) = last(filter(ls, f))
 lastFilter(id(1 :: 2 :: 3 :: 4 :: 5 :: Nil), x => (x % 2 == 0))
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
@@ -988,11 +988,11 @@ f(3)
 //│ };
 //│ @private
 //│ define f$g as fun f$g⁰(a) {
-//│   return a(undefined, undefined, undefined)
+//│   return (a(undefined, undefined, undefined) as! Int⁰)
 //│ };
 //│ @private
 //│ define f$g1 as fun f$g¹(a) {
-//│   return a(undefined, undefined, undefined)
+//│   return (a(undefined, undefined, undefined) as! Int⁰)
 //│ };
 //│ @affine(1) @private
 //│ define f$a_A as fun f$a_A⁰(A_x)(fv_arg$A$0$, fv_y, fv_tmp) {

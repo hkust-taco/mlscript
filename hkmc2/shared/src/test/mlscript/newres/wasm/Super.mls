@@ -1,5 +1,7 @@
 :.
 
+// Open members of public classes are exposed to other compilation units, which can override them,
+// so their parameter and result types are annotated.
 :expect 10
 class Base() { open fun f(x: Int): Int = x + 1 }
 class Child() extends Base() { override fun f(x) = super.f(x + 1) * 2 }
@@ -97,13 +99,12 @@ FieldChild().x
 //│   (type $entry (func (result (ref null i31))))
 //│   (import "repl6" "FieldChild_ctor" (func $FieldChild_ctor (type $FieldChild_ctor)))
 //│   (func $entry (export "entry") (type $entry) (result (ref null i31))
-//│     (local $tmp (ref null any))
+//│     (local $tmp (ref null $FieldChild))
 //│     (local.set $tmp
 //│       (call $FieldChild_ctor))
 //│     (return
 //│       (struct.get $FieldChild $x@1
-//│         (ref.cast (ref null $FieldChild)
-//│           (local.get $tmp)))))
+//│         (local.get $tmp))))
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 9

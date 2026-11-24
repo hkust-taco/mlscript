@@ -1,0 +1,38 @@
+:.
+
+
+// An argument passed through a written class type contributes to the parameter's representation.
+:expect 0
+private class Reader() with
+  fun read(x) = 0
+private fun readText(p: Reader) = p.read("text")
+Reader().read(1) + readText(Reader())
+//│ Wasm result:
+//│ = 0
+
+
+// An unannotated override can make the base's parameter optional.
+:expect 1
+private class Required() with
+  open fun pass(x) = 0
+private class Optional() extends Required() with
+  override fun pass(x?) = 1
+Required().pass(1) + Optional().pass()
+//│ Wasm result:
+//│ = 1
+
+
+// A constructor field and a body field implement the same abstract field with different representations.
+:expect "s"
+private abstract class ItemSource with
+  val item
+private class HeldItem(val item) extends ItemSource
+private class FixedItem extends ItemSource with
+  override val item = 42
+private fun readItem(s: ItemSource) = s.item
+readItem(new FixedItem)
+readItem(HeldItem("s"))
+//│ Wasm result:
+//│ = "s"
+
+

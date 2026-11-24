@@ -1,0 +1,8 @@
+:.
+
+// Arrays and other tuple-like collections can also match a record pattern.
+:expect [true, true, false, false]
+private fun recordFirst(xs) = xs is ({length: _} & [_])
+private fun tupleFirst(xs) = xs is ([_] & {length: _})
+[recordFirst([1]), tupleFirst([1]), recordFirst([1, 2]), tupleFirst({length: 1})]
+//│ = [true, true, false, false]

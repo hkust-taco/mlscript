@@ -285,6 +285,11 @@ object Resolvable:
 
 case class SrcScope(outer: Elaborator.OuterCtx, parent: Opt[SrcScope]):
   
+  /** Bring a value defined at the root into this scope, capturing each intervening definition in lexical order. */
+  def captureFromRoot[A](value: A)(capture: (A, AnyDefinitionSymbol) => A): A =
+    val enclosing = parent.fold(value)(_.captureFromRoot(value)(capture))
+    outer.resolutionBoundary.fold(enclosing)(capture(enclosing, _))
+
   /** Whether code written in this scope can access the private members of `owner`: whether it is nested in the
     * definition of `owner` or of one of its companions, which are the other class-like definitions of its block member
     * symbol. These are found through `owner`, whose definition is complete, unlike the definitions enclosing this scope,
@@ -298,6 +303,22 @@ object SrcScope:
   given s: Ctx => SrcScope = summon[Ctx].scope
 
 
+
+/** A positional aggregate. A lazy spread makes its runtime value a lazy concatenation. */
+sealed trait TupleLiteral extends ShapeHost:
+  val fields: Ls[Elem]
+  val tree: Tree.Tup
+  lazy val hasLazySpread: Bool = fields.exists:
+    case Spd(SpreadKind.Lazy, _, _) => true
+    case _ => false
+
+/** Identifies the values a lambda body produces on normal completion.
+  * Resolution collects those values under this slot and erasure assigns their common representation.
+  */
+final class LambdaResultSlot extends HasDelayedErasedType[ErasedValueType]
+
+sealed trait LambdaImpl:
+  val resultSlot = new LambdaResultSlot
 
 enum Term extends Statement, AutoLocated, ShapePublisher:
   /** Filled by the type interpreter during elaboration; erasure validates the completed result. */
@@ -348,9 +369,9 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
     * interface (`obj.[idx]`); it does not require a compile-time index value.
     * `arrayIdx` independently selects array indexing in the generated code. */
   case DynSel(prefix: Term, fld: Term, arrayIdx: Bool, checked: Bool)
-  case Tup(fields: Ls[Elem])(val tree: Tree.Tup) extends Term, ShapeHost
+  case Tup(fields: Ls[Elem])(val tree: Tree.Tup) extends Term, TupleLiteral
   case Mut(underlying: Tup | Rcd | New | DynNew)
-  case CtxTup(fields: Ls[Elem])(val tree: Tree.Tup) extends Term, ShapeHost
+  case CtxTup(fields: Ls[Elem])(val tree: Tree.Tup) extends Term, TupleLiteral
   case IfLike(kw: Keyword.SplitLike, form: IfLikeForm, split: SimpleSplit) extends Term, ShapeHost
   /** `If` expressions synthesized by the pattern compiler. It should only be
    *  created and used in `Lowering`. One must make sure that all terms in the
@@ -363,7 +384,7 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
    *  branch matches. Used by `ups.FixedPointCompiler` to drive the generated
    *  matcher machine. */
   case SynthWhile(split: Split)
-  case Lam(params: ParamList, body: Term)
+  case Lam(params: ParamList, body: Term) extends Term, LambdaImpl
   case FunTy(lhs: Term, rhs: Term, eff: Opt[Term])
   case Forall(tvs: Ls[QuantVar], outer: Opt[VarSymbol], body: Term)
   case Constrained(constraints: Ls[SubConstraint], body: Term)
@@ -560,6 +581,14 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
 end Term
 
 object Term:
+  /** Builds a lambda after source erasure with the representation of its body's result.
+    * Pass `N` when the generated body has no known result representation.
+    */
+  def erasedLambda(params: ParamList, body: Term, resultType: Opt[ErasedValueType]): Lam =
+    val lam: Lam = Lam(params, body)
+    lam.resultSlot.erasedType = resultType
+    lam
+
   /** Compute the free variable names of a block given its statements and the
     * free vars of its result term. Processes statements right-to-left so that
     * bindings introduced by `LetDecl`, `TermDefinition`, class definitions,
@@ -642,8 +671,7 @@ final case class LetDecl(sym: LocalVarSymbol | TermSymbol, annotations: Ls[Annot
   * selected statically until their key is known. Cloning preserves this identity.
   */
 final case class RcdField(field: Term, rhs: Term, sym: BlockMemberSymbol)(val key: Opt[MemberKey]) extends Statement, AutoLocated:
-  // The two-argument RcdField.apply sets sym.tsym and its definition before
-  // constructing this node. Lowering clones reuse the same initialized symbols.
+  // Fresh fields have a completed member definition. Lowering clones reuse its symbols.
   val tsym: TermSymbol = sym.tsym.get
   require((tsym.k is RecordField) && tsym.owner.isEmpty && tsym.defn.exists(_.sym is sym))
   field match
@@ -651,25 +679,42 @@ final case class RcdField(field: Term, rhs: Term, sym: BlockMemberSymbol)(val ke
     case _ => ()
 
 object RcdField:
-  def apply(field: Term, rhs: Term)(using State): RcdField = make(field, rhs, false, N)
-  def signature(field: Term, sign: Term)(using State): RcdField = make(field, sign, true, N)
-  def signature(field: Term, sign: Term, symbol: SymbolKey)(using State): RcdField =
-    make(field, sign, true, S(symbol))
-  private def make(field: Term, rhs: Term, signature: Bool, symbol: Opt[SymbolKey])(using State): RcdField =
+  /** Construct a generated value field whose symbol does not participate in source erasure. */
+  def apply(field: Term, rhs: Term)(using State): RcdField =
+    make(field, rhs, signature = N, initializer = S(rhs), source = false, symbol = N)
+  def source(field: Term, rhs: Term)(using State): RcdField =
+    make(field, rhs, signature = N, initializer = S(rhs), source = true, symbol = N)
+  /** Declare a structural field with the given type or bounds. Its term symbol carries the
+    * read type for erasure. The field retains the written bounds for reads and assignments. */
+  def signature(field: Term, bounds: Term, symbol: Opt[SymbolKey])(using State, Ctx): RcdField =
+    val readType = bounds match
+      case Term.WildcardTy(_, output) =>
+        output.getOrElse(ctx.builtins.Any.ref(new Tree.Ident("Any").withLocOf(bounds)))
+      case tpe => tpe
+    make(field, bounds, signature = S(readType), initializer = N, source = true, symbol = symbol)
+  /** Create a record property with a fresh member symbol so that selection can identify its definition.
+    * The field retains `rhs`, a value expression or structural field bounds. Its member definition
+    * takes its declared read type from `signature` and its body from `initializer` independently.
+    * `source` indicates that source erasure will assign the symbol's representation.
+    * `symbol` supplies the property key for an `@jsSymbol` field.
+    */
+  private def make(field: Term, rhs: Term, signature: Opt[Term], initializer: Opt[Term],
+      source: Bool, symbol: Opt[SymbolKey])(using State): RcdField =
     val name = field match
       case Term.Lit(Tree.StrLit(name)) => name
       case _ => "computed field"
     val id = new Tree.Ident(name)
     id.withLocOf(field)
     val sym = new BlockMemberSymbol(name, Nil)
-    val tsym = TermSymbol(RecordField, N, id, erasure = N)
+    val tsym = TermSymbol(RecordField, N, id)
+    // Source erasure skips symbols whose erasure is already initialized. Fields outside
+    // that pass need an initialized, unknown representation before consumers can query it.
+    if !source then tsym.initializeErasure(N)
     sym.tsym = S(tsym)
-    // Value-field lookup removes the synthetic definition's capture mark, leaving
-    // enclosing call-site marks intact. A structural type field instead refers
-    // directly to its written type: projection does not invoke a value definition.
-    tsym.defn = S(TermDefinition(RecordField, sym, tsym, Nil, N,
-      if signature then S(rhs) else N,
-      if signature then N else S(Term.Capture(rhs, tsym)), TermDefFlags.empty, Modulefulness.none, symbol.toList.map(Annot.JsSymbol(_)(field.toLoc)), N)(field.toLoc, field.toLoc, N))
+    // Field lookup removes this initializer's capture mark, leaving enclosing call-site marks intact.
+    val body = initializer.map(Term.Capture(_, tsym))
+    tsym.defn = S(TermDefinition(RecordField, sym, tsym, Nil, N, signature, body, TermDefFlags.empty,
+      Modulefulness.none, symbol.toList.map(Annot.JsSymbol(_)(field.toLoc)), N)(field.toLoc, field.toLoc, N))
     sym.complete()
     RcdField(field, rhs, sym)(symbol.orElse(field match
       case Term.Lit(Tree.StrLit(name)) => S(name)
@@ -1088,6 +1133,10 @@ object ClassDef:
       ctorAnnotations: Ls[Annot],
   )(val toLoc: Opt[Loc], val headerLoc: Opt[Loc], val ctorLoc: Opt[Loc]) extends ClassDef:
     val paramsOpt: Opt[ParamList] = S(params)
+    /** The field symbol bound to each primary constructor parameter, in declaration order. */
+    lazy val primaryFields: Ls[TermSymbol] = params.params.map: param =>
+      // A cloned class has its own field symbols and erasures. Follow its parameter bindings.
+      param.fldSym.flatMap(_.asTrm).getOrElse(lastWords(s"Missing field for parameter ${param.sym.nme} of ${sym.nme}"))
   
   case class Plain(
       owner: Opt[InnerSymbol],

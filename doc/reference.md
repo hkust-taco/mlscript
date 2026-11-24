@@ -36,7 +36,7 @@ which is an evolving language that has not stabilized just yet.
 The repository contains two kinds of MLscript files:
 
 * **Compilation files**, in `hkmc2/shared/src/test/mlscript-compile/`, which are compiled to JavaScript `.mls` modules.
-* **Diff-test files**, in `hkmc2/shared/src/test/mlscript/`, which contain both source code and *golden test output*.
+* **Diff-test (aka "worksheet") files**, in `hkmc2/shared/src/test/mlscript/`, which contain both source code and *golden test output*.
   Lines beginning with `//│` are compiler output that is updated automatically — not source code.
   Regular `//` comment lines are source code.
   Diff-test blocks are separated by empty lines and tested one after the other.
@@ -769,6 +769,8 @@ value, so only a member without parameter lists can override it, while `fun f(x:
 An override must accept the runtime representations of the inherited parameters, and its results
 must fit the inherited result representation. Unannotated parameters inherit their representations;
 an ordinary member without a result annotation uses the inherited result representation too.
+An inherited representation that is itself inferred accounts for the overriding members
+(see Inferred Runtime Representations).
 An annotated parameter may accept a wider representation on JavaScript. Wasm compiles overrides
 with the introducing method's physical signature, so their parameter representations must match.
 For the same reason, Wasm also requires an override to keep the introducing method's number of
@@ -881,11 +883,15 @@ Modules cannot extend classes. Objects can extend classes.
 
 ```mlscript
 {a: 1, b: 2}          // immutable (frozen) record
-mut {a: 1, b: 2}      // mutable record
+mut {a: 1, b: 2}      // mutable record: all its fields are mutable
 {}                   // fresh empty immutable record
 mut {}               // fresh empty mutable record
 (a: 1, b: 2)          // record in parentheses (same thing)
 ```
+
+Only mutable fields can be assigned. Fields are immutable unless their whole record is mutable.
+A mutable record also makes mutable the fields it copies from the records it spreads.
+A record spreading another one copies the current values of its fields.
 
 `{}` denotes an empty record in expression and type positions. It is distinct
 from Unit, written `()`. Empty statement bodies such as `do {}` still return Unit.
@@ -1681,6 +1687,40 @@ inference, but returning it or storing it in an exposed record or tuple makes it
 interface subject to the same check. Callable result annotations provide the
 declared parameter interface when checking returned functions.
 
+Every type named in an exposed annotation exposes its public instance operations,
+including inherited methods and writes to mutable fields. For example,
+`fun make(): Cell` exposes those operations on `Cell`. Both `Box[Cell]` and
+`Phantom[Cell]` expose `Cell`, even if `Phantom` never uses its type parameter.
+The same rule follows type aliases and the parameter and result types of functions.
+For example, when `Reader[T] = T -> Str` and `Box[T]` is generic, `Reader[Box]`
+exposes `Box` and admits unknown values for its contents wherever it occurs in
+an exposed signature. Writing `Reader[Box[Item]]` specifies the contents.
+In a local expression such as `Box(item) as Box`, the contents are inferred from `item`.
+The annotation of a value that escapes is exposed too, even when it is written on a private
+definition: if `private fun reader(): Box -> Str` is returned by an exported function with
+no result annotation, clients can call the result with boxes of unknown contents.
+An omitted type argument can also expose an inferred value. For example, if the body of
+`fun callbacks(): Box` supplies a function as the box's contents, that function
+must also accept external calls.
+
+An exposed operation admits calls or writes to every implementation that overrides
+it. An unannotated member also exposes the values its implementations return or
+store, including values supplied to a field through a constructor argument or a later write.
+Every override must handle the parameter types and arguments its base admits,
+even in a private hierarchy. If `Base.read(x)` leaves `x` unannotated, both
+`new Base().read(null)` and `p.read(null)` with `p: Base` supply `null` to
+the corresponding parameter in the base and every override.
+An override that omits a parameter or mutable field annotation inherits the
+base member's type for that input. For example, if `Middle[T]` overrides
+`Slot[T].item: T` without repeating the annotation, a write through `Middle[Int]`
+uses `Int`, and an override of `Middle[Argument]` inherits `Argument`.
+If no declaration in the field's override chain supplies a type, writes through
+it reach the overriding field even in a private hierarchy. Each field keeps its
+own initializer.
+If the base parameter has type `Box[Item]` and the override writes `x: Box`,
+the overriding body must handle unknown contents even when all local calls
+supply boxes of `Item`. Writing `x: Box[Item]` gives the body access to `Item`.
+
 Generic parameters remain opaque regardless of strict mode, visibility, or local
 callers. For example, `private fun read[A](x: A) = x.a` is invalid because `A`
 does not supply member `a`, even when every call supplies a record with that field.
@@ -1701,6 +1741,84 @@ is unknown is not automatically dynamic. If inference includes both a dynamic
 candidate and a known candidate with an invalid operation, the known error is
 still reported. Dynamic values also do not remove the need for an unambiguous
 class or type identity in constructor patterns, class projections, or type references.
+
+### Inferred Runtime Representations
+
+Compilation chooses a runtime *representation* for each slot that holds values: parameters,
+results, fields, and variables. On the JavaScript backend, all values share one representation,
+so representations mostly matter on the Wasm backend, where an `Int32` is an unboxed `i32` and
+a class instance is a reference to the class's struct. A type annotation determines the
+representation of its slot. With new resolution (`#lang(0.3.x)`), an unannotated slot takes the
+representation of the values that resolution observes flowing into it:
+
+```mlscript
+private fun roundtrip(value) = value  // `value` and the result are represented as `Int32`
+roundtrip(wasm.i32.const(42))
+```
+
+A value is converted to the representation of each slot it flows into. Converting between
+unrelated representations is a compilation error, whether the slot's representation is declared
+or inferred, and so is a slot whose values have no common representation. This also rejects
+programs whose only problem is a misleading annotation, which the JavaScript backend would run:
+
+```mlscript
+class Tree
+class App(callee: Tree, argument: Tree)
+fun mk(t: Tree) = App(t, 1 :: Nil)  // error: a list is used at the representation of `Tree`
+
+let value = wasm.i32.const(1)
+set value = wasm.i64.const(2)       // error: `Int32` and `Int64` have no common representation
+```
+
+Compilation files check their exported interfaces to allow for arbitrary calls from
+unknown compilation units (see [Resolution](#resolution)).
+(Worksheet blocks perform this exposure check for their public definitions only with
+`#lang(strictResolution: true)`.)
+Unannotated parameters exposed by these checks are made to admit unknown (boxed) inputs.
+So, a file exporting `fun foo(x) = x` and also containing the code `(n: Int32) => foo(n)`
+fails to compile, as `x` is inferred to have an unknown representation.
+
+Worksheet blocks are compiled one after the other, and the representations inferred for a block
+are final once it is compiled. Later blocks must use earlier definitions and `let` variables
+with their established representations; new uses cannot widen them.
+
+A mutable field holds its initializer and then the values assigned to it, through any receiver that
+can be an instance of its class, so an unannotated mutable field takes the representation of all of
+them. Other compilation units can assign values to the mutable fields that a compilation unit
+exposes, so an unannotated exposed mutable field also admits unknown inputs, like the unannotated
+parameter of an exposed function. Declaring its type restricts them:
+
+```mlscript
+private class Cell(mut val value)  // `value` is represented as `Int32`
+private fun reset(cell) = set cell.value = wasm.i32.const(0)
+reset(Cell(wasm.i32.const(1)))
+
+class Counter(mut val count)       // `count` is exposed, so it has an unknown representation
+class Tally(mut val count: Int)    // `count` is represented as `Int`
+```
+
+Mutable record fields (see Record Literals) can be assigned too, but cannot declare their types:
+when exposed, they take the unknown representation. Through a record type declaring a mutable
+field, the values it describes can be assigned values of that field's input type, which their own
+fields therefore admit. Exposing a record also exposes values stored by assignments, including
+through fields copied by a mutable spread: those values can be read by clients just like initializers.
+
+Overrides inherit the representations of the members they override (see Virtual Methods), so an
+unannotated member with none to inherit takes the representations of its whole override family.
+Its result takes the representation of what the members overriding it return, as calls resolved to
+it can dispatch to them: an annotated override contributes its declared result, and an unannotated
+one the values that it returns. Each of its parameters takes the representation of the arguments
+passed to the unannotated parameters overriding it, which inherit that representation. An annotated
+overriding parameter keeps its own representation, which must still accept the inherited one.
+
+```mlscript
+private class Visitor() with
+  open fun visit(node) = ()       // the result holds `()` and integers: unknown representation
+private class Counter() extends Visitor() with
+  override fun visit(node) = 1
+```
+
+Annotating the overridden member fixes its representations, which its overrides must then fit.
 
 ### Generic Type Parameters
 
@@ -1768,7 +1886,23 @@ lookup still combines the fields of record intersections.
 
 ```mlscript
 type Point = { x: Num, y: Num }
+type CursorView = mut { position: in Int out (Int | Str) }
 ```
+
+`CursorView` accepts an `Int` on writes to `position` and exposes `Int | Str` on reads.
+A mutable record field can use the same forms as a type argument. A plain `T` supplies both bounds,
+`in S` has the output bound `Any`, and `out T` has the input bound `Nothing`.
+For `type Cell[A] = mut { f: A }`, `Cell[in S out T]` is equivalent to `mut { f: in S out T }`.
+An immutable `{ f: U }` has only a read interface.
+
+Field outputs are covariant and field inputs are contravariant. Thus `mut { f: S } <: mut { f: T }`
+contributes both `S <: T` for reads and `T <: S` for writes. Substitution interprets the two
+positions separately. Enclosing negative positions reverse polarity, as for function inputs.
+Intersecting record interfaces intersects their shared fields' output types and unions their
+input types. Assigning a callback constrains it against the input type independently of reads.
+
+New resolution propagates these constraints for type-argument inference and callback checking.
+It does not perform complete structural subtyping checks; InvalML does not yet support record types.
 
 Under new resolution, recursive type aliases must be guarded: every recursive
 cycle must pass through a record, tuple, function arrow, or nominal type.
@@ -2462,6 +2596,11 @@ Option.unsafe.get(opt)
 ```
 
 ### Iter Module
+
+The prelude's `Iterator[T]` is a structural interface with
+`next: () -> ({ value: T, done: Bool })`. Classes and records can implement it
+without inheriting from a runtime class. Generator calls expose `Iterator[Any]`;
+the resolver does not yet track their yielded element types.
 
 ```mlscript
 import "./Iter.mls"

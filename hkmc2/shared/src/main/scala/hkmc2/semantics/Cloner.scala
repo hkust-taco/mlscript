@@ -90,8 +90,7 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
 
   private def bindLocal(symbol: LocalVarSymbol): Unit = symbol match
     case s: VarSymbol => variables.getOrElseUpdate(s, {
-      val copy = new VarSymbol(s.id, mut = s.mut)
-      if s.isErased then copy.erasedType = s.erasedType.map(valueType)
+      val copy = new VarSymbol(s.id, erasedType = s.erasedType.map(valueType), mut = s.mut)
       copy.sourceAliases = s.sourceAliases
       copy.decl = s.decl
       copy.shapes.copyFrom(s.shapes)
@@ -194,7 +193,7 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
   private def prepare(stats: Ls[Statement]): Unit =
     prepareDefinitions(stats)
     prepareLocals(stats)
-    terms.foreach: (source, copy) =>
+    (terms.iterator ++ constructors.iterator).foreach: (source, copy) =>
       copy.initializeErasure:
         source.sourceErasure.map:
           case sig: ErasedCallableSignature => sig.mapTypes(valueType)
@@ -550,10 +549,10 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
       case IfLike(kw, form, split) => IfLike(kw, form, simpleSplit(split))
       case SynthIf(value) => SynthIf(split(value))
       case SynthWhile(value) => SynthWhile(split(value))
-      case Lam(params, body) =>
+      case lam @ Lam(params, body) =>
         val scope = nested
         scope.bindParameters(params :: Nil)
-        Lam(scope.parameterList(params), scope.term(body))
+        Term.erasedLambda(scope.parameterList(params), scope.term(body), lam.resultSlot.erasedType.map(scope.valueType))
       case FunTy(lhs, rhs, eff) => FunTy(lhs.cloned, rhs.cloned, eff.map(_.cloned))
       case Forall(tvs, outer, body) =>
         val scope = nested

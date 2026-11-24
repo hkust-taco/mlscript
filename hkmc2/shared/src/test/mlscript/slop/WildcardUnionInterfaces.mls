@@ -175,7 +175,7 @@ private fun eager(value: MaybeAnswer) =
 :ge
 :!js
 #lang(strictResolution: false, eagerResolution: false)
-import "./WildcardUnionExposure.mls"
+import "../../../test-fixtures/WildcardUnionExposure.mls"
 //│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
 //│ ║  l.XX: 	    answer
 //│ ║        	    ^^^^^^

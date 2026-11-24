@@ -3,7 +3,7 @@
 
 open annotations.{ * }
 
-fun check(pred, what) = Array.from(length: 10).forEach of (_, i, _) =>
+private fun check(pred, what) = Array.from(length: 10).forEach of (_, i, _) =>
   let n = i.toString()
   print of n, (if pred(n) then "is" else "is not"), what
 

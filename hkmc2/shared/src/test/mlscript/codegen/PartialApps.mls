@@ -88,11 +88,13 @@ h(1)
 
 
 :sjs
-let i = _(0, 1, _)
+private val i = _(0, 1, _)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let i, i1; i1 = function i(_0, _1) { return runtime.safeCall(_0(0, 1, _1)) }; i = i1;
+//│ let i, lambda2;
+//│ lambda2 = (undefined, function (_0, _1) { return runtime.safeCall(_0(0, 1, _1)) });
+//│ i = lambda2;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ i = fun i
+//│ i = fun
 
 i(print, 2)
 //│ > 0 1 2
@@ -104,20 +106,13 @@ i(print)(2)
 //│ ║  l.+1: 	i(print)(2)
 //│ ║        	^^^^^^^^
 //│ ╟── Function literal expected 2 arguments, but got 1
-//│ ║  l.XX: 	let i = _(0, 1, _)
-//│ ╙──      	        ^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function 'i' expected at least 2 arguments but got 1
+//│ ║  l.XX: 	private val i = _(0, 1, _)
+//│ ╙──      	                ^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function expected at least 2 arguments but got 1
 
-// The sum flows to every call of `i`'s argument, including the ill-arity `i(print)(2)` above,
-// whose application of that result is reported when this block resolves the sum.
-:e
+// The ill-arity call above does not prevent a later call with both arguments.
+:expect 3
 i((x, y, z) => x + y + z, 2)
-//│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.XX: 	i(print)(2)
-//│ ║        	^^^^^^^^^^^
-//│ ╟── Value of type 'Int' cannot be called like a function.
-//│ ║  l.+1: 	i((x, y, z) => x + y + z, 2)
-//│ ╙──      	               ^^^^^^^^^
 //│ = 3
 
 // :re
@@ -126,15 +121,12 @@ i((...args) => [...args], _)(2)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.+1: 	i((...args) => [...args], _)(2)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Value of type 'Int' cannot be called like a function.
-//│ ║  l.XX: 	i((x, y, z) => x + y + z, 2)
-//│ ║        	               ^^^^^^^^^
 //│ ╟── Tuple literal cannot be called like a function.
 //│ ║  l.+1: 	i((...args) => [...args], _)(2)
 //│ ║        	                   ^^^^
 //│ ╟── Tuple literal cannot be called like a function.
-//│ ║  l.XX: 	let i = _(0, 1, _)
-//│ ╙──      	         ^^^^^^^^^
+//│ ║  l.XX: 	private val i = _(0, 1, _)
+//│ ╙──      	                 ^^^^^^^^^
 //│ = fun
 
 
@@ -161,6 +153,9 @@ i((...args) => [...args], _)(2)
 //│ ║  in ../../mlscript-compile/Predef.mls
 //│ ║  l.XX: 	fun (|>) pipeInto[A, B](x: A, f: A -> B): B = f(x)
 //│ ╙──      	                                 ^^^^^^
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Function'
+//│ ║  l.+1: 	123 |> (_ + 1 >> _ * 2)
+//│ ╙──      	        ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function expected at least 2 arguments but got 1
 
 (_ + 1 + _ * 2) of 123, 456
@@ -201,7 +196,12 @@ let j = _.x.y(1, _) in j((x: y: tuple), 0)
 
 data class C(a, b, c)
 
+// Without parentheses the placeholder abstracts over the whole pipeline, which calls a C instance.
+:ge
 2 |> C(1, _, 3) |> print
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'C' at an unrelated type 'Function'
+//│ ║  l.+1: 	2 |> C(1, _, 3) |> print
+//│ ╙──      	     ^^^^^^^^^^
 //│ = fun
 
 2 |> (C(1, _, 3)) |> print
@@ -233,7 +233,18 @@ data class C(a, b, c)
 //│ = -1
 
 // * Note: missing parens
+:e
 _ - _ of 1, 2
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+1: 	_ - _ of 1, 2
+//│ ║        	    ^^^^^^^^^
+//│ ╟── Value of unknown shape cannot be called like a function.
+//│ ╟── Parameter '_1' admits values of unknown shape.
+//│ ║  l.+1: 	_ - _ of 1, 2
+//│ ║        	    ^
+//│ ╟── This value is exposed by this compilation unit.
+//│ ║  l.+1: 	_ - _ of 1, 2
+//│ ╙──      	^^^^^^^^^^^^^
 //│ = fun
 
 
@@ -285,21 +296,21 @@ _ - _ of 1, 2
 :sjs
 1 |. (_ - 2)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda8;
-//│ lambda8 = (undefined, function (_0) { return _0 - 2 });
-//│ return Predef.passTo(1, lambda8)
+//│ let lambda9;
+//│ lambda9 = (undefined, function (_0) { return _0 - 2 });
+//│ return Predef.passTo(1, lambda9)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
 :sjs
 1 |. (_ - 2)()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda9, args;
-//│ lambda9 = (undefined, function (_0) {
+//│ let lambda10, args;
+//│ lambda10 = (undefined, function (_0) {
 //│   return _0 - 2
 //│ });
 //│ args = [];
-//│ return runtime.safeCall(lambda9(1, ...args))
+//│ return runtime.safeCall(lambda10(1, ...args))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = -1
 

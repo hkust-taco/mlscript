@@ -154,21 +154,22 @@ f(1)
 //│ ╟── Function literal expected 2 arguments, but got 1
 //│ ║  l.XX: 	fun add = => _ + _
 //│ ╙──      	             ^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+2: 	f(1)
+//│ ║        	^^^^
+//│ ╟── Value of unknown shape cannot be called like a function.
+//│ ╟── The shape of this value is unknown.
+//│ ║  l.XX: 	fun add = => _ + _
+//│ ╙──      	             ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ f = undefined
 
 let f = => add of _, 1
 //│ f = fun f
 
-// The sum computed by `add` now also reaches the erroneous `f` defined above, which this call reports.
-:e
+// This call uses the new definition of f.
+:expect 2
 f(1)
-//│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.XX: 	f(1)
-//│ ║        	^^^^
-//│ ╟── Value of type 'Int' cannot be called like a function.
-//│ ║  l.XX: 	fun add = => _ + _
-//│ ╙──      	             ^^^^^
 //│ = 2
 
 

@@ -86,10 +86,7 @@ class CompilerCtx(
     val report = dependencyRecorder.fold(summon[Raise])(_.report)
     
     def mk =
-      var hasErrors = false
-      given Raise = diagnostic =>
-        if !(diagnostic.kind is Diagnostic.Kind.Warning) then hasErrors = true
-        report(diagnostic)
+      given reporter: Diagnostic.Reporter = new Diagnostic.Reporter(report)
       val dependencies = new CompilerCtx.DependencyRecorder(report)
       val modulePath = (file.up / io.RelPath(file.baseName + ".mjs")).toString
       val debug = new DebugContext
@@ -219,7 +216,7 @@ class CompilerCtx(
       val ir =
         artifactConfig.givenIn:
           given Elaborator.State = state
-          given codegen.Erasure = codegen.Erasure(blk)(using artifactConfig, prelude, state)
+          given codegen.Erasure = codegen.Erasure(blk, summon[Raise])(using artifactConfig, prelude, state)
           val low = ltl.givenIn:
             new codegen.Lowering()(using artifactConfig, ltl, summon[Raise], state, prelude, summon[SymbolPrinter])
           optimize(low.program(blk, Set.empty))
@@ -228,7 +225,7 @@ class CompilerCtx(
         CompilationUnitAbi:
           CompilerCtx.allocateModulePrivateExportNames(ir)(using state, summon[Raise])
       Artifact(parsed, blk0, ir, artifactConfig, prelude, state, compilationUnit, rootConfig,
-        dependencies.result, dependencies.sourceImports.toList, hasErrors, lastMod)
+        dependencies.result, dependencies.sourceImports.toList, reporter.hasErrors, lastMod)
     
     val artifact = cache.upsert(file)(
       isCurrent = (cachedFile, art) =>
@@ -292,7 +289,7 @@ class CompilerCtx(
         // Prelude declarations have no executable program, but their signatures and nominal hierarchy
         // must be erased before any compilation unit can use them.
         given Ctx = ctx
-        elaborationConfig.givenIn(codegen.Erasure(blk))
+        elaborationConfig.givenIn(codegen.Erasure(blk, summon[Raise]))
         PreludeArtifact(parse.resultBlk, blk, ctx, state, rootConfig, lastMod),
     )
   

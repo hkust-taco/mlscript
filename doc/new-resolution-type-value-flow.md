@@ -237,6 +237,14 @@ signatures subsequently interpret them from the member's positive interface.
 `TransparentAliasPolarity.mls` covers shorthand and explicit projections;
 `VarianceAliases.mls` covers captured binders and nested identity aliases.
 
+A qualified type member refers to the particular receiver in its name. For a
+value `family: Family[in Dog out Animal]` with `type Element = T`, a value of
+type `family.Element` can be any `Animal`, including when it arrives as a
+function argument. The resolver keeps the receiver argument's bounds together
+when it resolves that type name. Reading a value uses its output bound and
+checking a supplied value uses its input bound. `QualifiedTypeBounds.mls`
+exercises both cases, including a function type defined inside the receiver.
+
 `DeclaredType.positive` records this lexical polarity, independently of a later
 constraint's direction. `TypeArgumentResolution.Wildcard` retains written parts;
 `TypeArgument` retains both interpreted bounds as proper `DeclaredType` references.
@@ -564,10 +572,13 @@ expanding its alias reuses it. Declaration variance applies to omitted arguments
 and excess arguments are rejected, including in unused annotations. An empty hole
 waits for evidence instead of immediately publishing an unknown candidate.
 
-Written fragments continue to restrict the interface. Abstract types remain
-`TypeShape.Abstract`; variance extremes are not holes. Interface exposure adds
-unknown values to genuinely missing external inputs, including callback results.
-Those unknown candidates remain alongside any local evidence.
+Written fragments continue to restrict the interface. Abstract types keep their
+`TypeShape.Abstract` representation, and the extreme bounds supplied by variance stay fixed. Every
+omitted generic argument in an exposed signature admits an unknown value alongside
+any local evidence. This rule applies in callback parameters and results and in
+arguments to type aliases, including arguments the alias body never uses.
+The written type of a value that escapes without an exposed signature, such as the
+result of a private function returned by an exported one, is exposed in the same way.
 
 Current limitations are [omitted-argument context precision](new-resolution-future-work.md#omitted-argument-contexts)
 and [missing selected member types](new-resolution-future-work.md#inferred-member-signatures).

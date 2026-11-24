@@ -10,10 +10,11 @@ object None
 :sjs
 if Some(0) is Some(x) then x
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let scrut;
+//│ let scrut, arg$Some$0$;
 //│ scrut = Some1(0);
 //│ if (scrut instanceof Some1.class) {
-//│   return scrut.value
+//│   arg$Some$0$ = scrut.value;
+//│   return arg$Some$0$ /* as! Int */
 //│ }
 //│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -27,8 +28,10 @@ let s = Some(0)
 if s is
   Some(x) then x
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let arg$Some$0$1;
 //│ if (s instanceof Some1.class) {
-//│   return s.value
+//│   arg$Some$0$1 = s.value;
+//│   return arg$Some$0$1 /* as! Int */
 //│ }
 //│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -155,10 +158,10 @@ fun f(x) = if x is
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f4;
 //│ f4 = function f(x2) {
-//│   let scrut1, arg$Some$0$1;
+//│   let scrut1, arg$Some$0$4;
 //│   if (x2 instanceof Some1.class) {
-//│     arg$Some$0$1 = x2.value;
-//│     scrut1 = arg$Some$0$1 > 0;
+//│     arg$Some$0$4 = x2.value;
+//│     scrut1 = arg$Some$0$4 > 0;
 //│     if (scrut1 === true) {
 //│       return 42
 //│     }
@@ -219,10 +222,10 @@ fun f(x) = print of if x is
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f6;
 //│ f6 = function f(x2) {
-//│   let arg$Some$0$1;
+//│   let arg$Some$0$4;
 //│   if (x2 instanceof Some1.class) {
-//│     arg$Some$0$1 = x2.value;
-//│     if (arg$Some$0$1 === 0) {
+//│     arg$Some$0$4 = x2.value;
+//│     if (arg$Some$0$4 === 0) {
 //│       return Predef.print("0")
 //│     }
 //│     return Predef.print("oops");

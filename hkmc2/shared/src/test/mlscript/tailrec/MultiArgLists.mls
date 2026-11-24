@@ -281,7 +281,7 @@ fun f(a)(...z) = if z is
 //│ @private
 //│ define f$tailrec as fun f$tailrec⁰(a, z) {
 //│   loop loopLabel:
-//│     let middleElements, tmp;
+//│     let xs, tmp;
 //│     match z
 //│       Array(0) =>
 //│         return a
@@ -290,10 +290,10 @@ fun f(a)(...z) = if z is
 //│         do runtime⁰.Tuple⁰.get⁰(z, 0);
 //│         set tmp1 = -¹(z.length¹, 0);
 //│         set inlinedVal = z.slice¹(1, tmp1);
-//│         set middleElements = (inlinedVal as!! Array⁰);
+//│         set xs = (inlinedVal as! Array⁰);
 //│         set tmp = +⁰(a, 1);
 //│         set a = tmp;
-//│         set z = mut [...middleElements];
+//│         set z = mut [...xs];
 //│         continue loopLabel
 //│       else
 //│         throw new globalThis⁰.Error⁰("match error")
@@ -352,9 +352,9 @@ fun f(a)(b) = f(a)(b)
 //│           erasure = Signature:
 //│             paramLists = Ls of
 //│               Ls of
-//│                 N
+//│                 S of Unknown
 //│               Ls of
-//│                 N
+//│                 S of Unknown
 //│             result = Direct of N
 //│         body = Return of Call:
 //│           fun = MemberRef{disamb=term:f$tailrec²}:
@@ -495,7 +495,7 @@ fun f(n)(a)(...z) =
 //│ @private
 //│ define f$tailrec as fun f$tailrec³(n, a, z) {
 //│   loop loopLabel:
-//│     let scrut, res, tmp, middleElements, tmp1;
+//│     let scrut, xs, res, tmp, tmp1;
 //│     set scrut = >⁰(n, 0);
 //│     match scrut
 //│       true =>
@@ -512,9 +512,9 @@ fun f(n)(a)(...z) =
 //│             do runtime⁰.Tuple⁰.get⁰(z, 0);
 //│             set tmp3 = -¹(z.length¹, 0);
 //│             set inlinedVal = z.slice¹(1, tmp3);
-//│             set middleElements = (inlinedVal as!! Array⁰);
+//│             set xs = (inlinedVal as! Array⁰);
 //│             set tmp1 = +⁰(a, 1);
-//│             set tmp2 = mut [...middleElements];
+//│             set tmp2 = mut [...xs];
 //│             set res = f$tailrec³(n, tmp1, tmp2);
 //│             do Predef⁰.print⁰("hi!");
 //│             return res

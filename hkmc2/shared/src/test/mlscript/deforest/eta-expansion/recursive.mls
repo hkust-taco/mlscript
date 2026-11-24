@@ -142,7 +142,7 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│   let arg$Cons$1$;
 //│   match xs
 //│     Nil⁰ =>
-//│       return ys(eta$0$1, eta$0$2, eta$0$4)
+//│       return (ys(eta$0$1, eta$0$2, eta$0$4) as! Int⁰)
 //│     Cons¹ =>
 //│       let inlinedVal;
 //│       set arg$Cons$1$ = xs.t⁰;
@@ -177,7 +177,7 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│       set arg$Cons$0$ = xss.h⁰;
 //│       set arg$Cons$1$ = xss.t⁰;
 //│       set tmp5 = flatten¹(arg$Cons$1$);
-//│       return append¹(arg$Cons$0$, tmp5)
+//│       return (append¹(arg$Cons$0$, tmp5) as! Object⁰)
 //│     else
 //│       @pure throw new globalThis⁰.Error⁰("match error")
 //│   end

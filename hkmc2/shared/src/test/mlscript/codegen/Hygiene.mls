@@ -196,22 +196,48 @@ module Whoops with
 //│ ║  l.+2: 	  val v: module Whoops = this
 //│ ╙──      	                         ^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let Whoops2;
+//│ let Whoops1;
 //│ (class Whoops {
 //│   static {
-//│     Whoops2 = this
+//│     Whoops1 = this
 //│   }
 //│   static {
-//│     Whoops.v = Whoops;
-//│     (class Whoops1 {
+//│     throw "This code cannot be run as its compilation yielded an error.";
+//│   }
+//│   static f() {
+//│     return "Hello"
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Whoops"];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Use a successfully compiled module for the runtime hygiene checks.
+:sjs
+module Whoops with
+  val v = this
+  fun f() = "Hello"
+  module Whoops with
+    val w: module Whoops = this
+    fun g() = f()
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let Whoops4;
+//│ (class Whoops2 {
+//│   static {
+//│     Whoops4 = this
+//│   }
+//│   static {
+//│     Whoops2.v = Whoops2;
+//│     (class Whoops3 {
 //│       static {
-//│         Whoops.Whoops = this
+//│         Whoops2.Whoops = this
 //│       }
 //│       static {
-//│         Whoops1.w = Whoops1;
+//│         Whoops3.w = Whoops3;
 //│       }
 //│       static g() {
-//│         return Whoops.f()
+//│         return Whoops2.f()
 //│       }
 //│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "Whoops"];

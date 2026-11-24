@@ -54,7 +54,7 @@ fun inputs(first: Items[in Int], second: Items[in Int]) =
 //│ ║  l.+2: 	  [(() => first)().[0].missing, (() => second)().[0].missing]
 //│ ║        	                  ^^^^^^^^^^^^
 //│ ╟── Value with an empty interface does not contain member 'missing'
-//│ ╟── This type argument specifies only an input bound.
+//│ ╟── Only an input bound appears here.
 //│ ║  l.+1: 	fun inputs(first: Items[in Int], second: Items[in Int]) =
 //│ ║        	                        ^^^^^^
 //│ ╙── Values read through it have no output bound more specific than 'Any'.
@@ -62,7 +62,7 @@ fun inputs(first: Items[in Int], second: Items[in Int]) =
 //│ ║  l.+2: 	  [(() => first)().[0].missing, (() => second)().[0].missing]
 //│ ║        	                                                ^^^^^^^^^^^^
 //│ ╟── Value with an empty interface does not contain member 'missing'
-//│ ╟── This type argument specifies only an input bound.
+//│ ╟── Only an input bound appears here.
 //│ ║  l.+1: 	fun inputs(first: Items[in Int], second: Items[in Int]) =
 //│ ║        	                                               ^^^^^^
 //│ ╙── Values read through it have no output bound more specific than 'Any'.

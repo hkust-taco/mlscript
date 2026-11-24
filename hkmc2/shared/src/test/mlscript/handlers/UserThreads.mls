@@ -151,14 +151,14 @@ abstract class ThreadEffect with
   fun xchg(x: Int): Int
 
 val tasks = mut []
-fun enqueue(k, x) =
+fun enqueue(k: Any -> Any, x) =
   tasks.push(() => k(x))
 fun dequeue() =
   if tasks.length != 0 do
     tasks.shift(){as Function}()
 //│ tasks = []
 
-let exchanger = None
+let exchanger = None as Option
 //│ exchanger = None
 
 fun start(thread: ThreadEffect -> ()) =

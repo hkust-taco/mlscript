@@ -147,6 +147,7 @@ handle h = Effects.Offset("wrong") { fun perform(arg)(k) = k(arg) }
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
 //│ ║  l.+1: 	handle h = Effects.Offset("wrong") { fun perform(arg)(k) = k(arg) }
 //│ ╙──      	                          ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 abstract class CurriedEffect(val x: Int)(val y: Int) {
   fun perform(): Int
@@ -178,6 +179,7 @@ handle h = CurriedEffect(1)("wrong") { fun perform()(k) = k(42) }
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
 //│ ║  l.+1: 	handle h = CurriedEffect(1)("wrong") { fun perform()(k) = k(42) }
 //│ ╙──      	                            ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 handle h = CurriedEffect(1)(2)(3) { fun perform()(k) = k(42) }

@@ -3,7 +3,7 @@
 
 
 fun id(x) = x
-fun foo(f, g) = f(g(1))
+private fun foo(f, g) = f(g(1))
 
 
 foo(id(x => 1), id(y => 2)) 
@@ -25,8 +25,8 @@ foo(id of x => 1, id of y => 2)
 //│ ║  l.+1: 	foo(id of x => 1, id of y => 2) 
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Function 'foo' expected 2 arguments, but got 1
-//│ ║  l.XX: 	fun foo(f, g) = f(g(1))
-//│ ╙──      	^^^^^^^^^^^^^
+//│ ║  l.XX: 	private fun foo(f, g) = f(g(1))
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected at least 2 arguments but got 1
 
 

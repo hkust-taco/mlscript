@@ -77,7 +77,7 @@ fun f() = if A(1, Nil) is
 
 // Every branch repeats, so this loop never assigns Unit to x.
 :sjs
-fun f(x) =
+private fun f(x) =
   let =x
   x = while x is
     A(a, _) then a()

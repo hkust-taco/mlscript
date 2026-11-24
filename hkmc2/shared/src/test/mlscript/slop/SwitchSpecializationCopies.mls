@@ -5,7 +5,7 @@
 // The first case resets the local after an opaque call. The next case completes
 // normally, so specialization must retain both the assignment and the switch break.
 :sjs
-fun copySwitch(initial, choose, effect) =
+fun copySwitch(initial, choose, effect: () -> Any) =
   let state = initial
   if state is 0 do
     effect()

@@ -138,7 +138,7 @@ wideOf(2)
 //│         set id = 2;
 //│         continue loopLabel
 //│       2 =>
-//│         let scrut: ?, w: Wide⁰, tmp: Int⁰;
+//│         let scrut: Unknown, w: Wide⁰, tmp: Int⁰;
 //│         set scrut = <=⁰(param0, 0);
 //│         match scrut
 //│           true =>
@@ -279,14 +279,12 @@ fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
 //│ ╔══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
 //│ ║  l.+1: 	fun sccF(): Int31 = wasm.ref.i31(sccG())
 //│ ╙──      	    ^^^^
-//│ ═══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
 //│ ╔══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
 //│ ║  l.+1: 	fun sccF(): Int31 = wasm.ref.i31(sccG())
 //│ ╙──      	    ^^^^
 //│ ╔══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
 //│ ║  l.+2: 	fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
 //│ ╙──      	    ^^^^
-//│ ═══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
 //│ ═══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `(ref null any)` to `i32` in a different type hierarchy
 //│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `(ref null any)` to `i32` in a different type hierarchy

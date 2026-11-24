@@ -38,13 +38,13 @@ fun f() =
 //│     let saveOffset;
 //│     pc = runtime.resumePc /* as! Int */;
 //│     saveOffset = runtime.resumeIdx /* as! Int */;
-//│     i = runtime.resumeArr.at(saveOffset);
+//│     i = runtime.resumeArr.at(saveOffset) /* as! Int */;
 //│     saveOffset = saveOffset + 1;
-//│     j = runtime.resumeArr.at(saveOffset);
+//│     j = runtime.resumeArr.at(saveOffset) /* as! Int */;
 //│     saveOffset = saveOffset + 1;
-//│     k = runtime.resumeArr.at(saveOffset);
+//│     k = runtime.resumeArr.at(saveOffset) /* as! Int */;
 //│     saveOffset = saveOffset + 1;
-//│     scrut = runtime.resumeArr.at(saveOffset);
+//│     scrut = runtime.resumeArr.at(saveOffset) /* as! Bool */;
 //│     saveOffset = saveOffset + 1;
 //│     tmp = runtime.resumeArr.at(saveOffset);
 //│     runtime.resumePc = -1;
@@ -98,7 +98,7 @@ f()
 //│ 	at f (Debugging.mls:19:14)
 
 :re
-fun lambda_test(f) =
+private fun lambda_test(f) =
   f()
   200
 lambda_test(() =>
@@ -133,7 +133,7 @@ res.resumeWith(42)
 
 
 
-abstract class Debugger() with
+private abstract class Debugger() with
   fun break(payload)
 
 module Test with

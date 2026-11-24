@@ -4,7 +4,7 @@
 :lift
 
 
-fun foo(f) =
+private fun foo(f) =
   let y = 1
   fun bar() =
     f()

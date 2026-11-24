@@ -81,7 +81,7 @@ object Config:
     baseDir = baseDir,
     sanityChecks = N, // TODO make the default S
     // sanityChecks = S(SanityChecks(light = true)),
-    checkCasts = true,
+    checkCasts = default.checkCasts,
     effectHandlers = N,
     liftDefns = S(LiftDefns()),
     patMatConsequentSharingThreshold = default.patMatConsequentSharingThreshold, // minimum: 1
@@ -102,6 +102,7 @@ object Config:
     val patMatConsequentSharingThreshold = S(15)
     val deadBranchRemoval = false // TODO
     val inlineThreshold = 10
+    val checkCasts = true
   
   /** A language version, as named in `#lang` directives (e.g., `0.3.1` or `0.3.x`).
     * A `patch` of `N` stands for the `x` of a version like `0.3.x`, which denotes the latest state

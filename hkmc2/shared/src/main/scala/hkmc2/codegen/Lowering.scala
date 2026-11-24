@@ -226,7 +226,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     LoweringCtx.nestFunc(returnType).givenIn:
       term(t):
         new TailOp(transfersControl = true):
-          override def apply(k: Result): Block = Ret(castTo(k, returnType, N))
+          override def apply(k: Result): Block = castTo(k, returnType, N)(Ret(_))
   
   def parentConstructor(ctorParamLists: ConstructorParams, args: Ls[Term], loc: Opt[Loc])(using LoweringCtx) =
     lowerSuperCtorCall(ctorParamLists, args, loc)(c => Assign(NoSymbol, c, End()))
@@ -345,12 +345,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                 debugLoweringThen[Path](td.extraAnnotations)(k => subTerm_nonTail(bod)(k)(using LoweringCtx.nestFunc(N))): r =>
                   // Assign(td.sym, r,
                   //   term(st.Blk(stats, res))(k)))
-                  Define(
-                    // A field synthesized from a constructor parameter has an unlocated body (the parameter
-                    // reference); its declared name then locates diagnostics about the field's representation.
-                    ValDefn(td.tsym, td.sym, castPathTo(r, td.tsym.sourceErasedType, bod.toLoc.orElse(td.tsym.toLoc)))(cfgOverride, td.annotations),
-                    continueBlock(stats, res),
-                  )
+                  // A field synthesized from a constructor parameter has an unlocated body (the parameter
+                  // reference); its declared name then locates diagnostics about the field's representation.
+                  castPathTo(r, td.tsym.sourceErasedType, bod.toLoc.orElse(td.tsym.toLoc)): value =>
+                    Define(
+                      ValDefn(td.tsym, td.sym, value)(cfgOverride, td.annotations),
+                      continueBlock(stats, res),
+                    )
             case syntax.Fun =>
               val cfgOverride = definitionConfigOverride(td.extraAnnotations)
               val (paramLists, bodyBlock) = debugLowering(td.extraAnnotations):
@@ -445,7 +446,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                         case (sym, params, split) =>
                           val paramLists = LoweredParamList.fixed(params) :: Nil
                           val bodyBlock = inScopedBlock(ucs.Normalization(this)(split)(Ret))
-                          FunDefn.withFreshSymbol(N, sym, paramLists, bodyBlock)(configOverride = N, annotations = Nil)
+                          FunDefn.withFreshSymbol(N, sym, paramLists, N, bodyBlock)(configOverride = N, annotations = Nil)
                       // The return type is intended to be consistent with `gatherMembers`
                       (mtds, Nil, Nil, End())
                     case _ => gatherMembers(defn.body)
@@ -666,11 +667,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             val freshParamList = LoweredParamList(ps.flags, freshParams, N)(ps.toLoc)
             if ctorParamLists.isMls then
               val freshArgs = freshSyms.map(s => Arg(N, s.asSimpleRef))
-              Lambda(freshParamList, Return(etaExpand(rest, accArgss :+ freshArgs)))(Nil, loc)
+              Lambda(freshParamList, Return(etaExpand(rest, accArgss :+ freshArgs)))(N, Nil, loc)
             else
               val forwarding = OptionalParams.forwarding(freshParamList, fixedArity = true)
               Lambda(forwarding.params,
-                Return(etaExpand(rest, accArgss :+ forwarding.args)))(Nil, loc)
+                Return(etaExpand(rest, accArgss :+ forwarding.args)))(N, Nil, loc)
         k(etaExpand(remainingParamss, acc.reverse))
     if ctorParamLists.lists.isEmpty then
       // * Need to specially handle no-param classes
@@ -767,20 +768,20 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     target match
     case sym: TermSymbol if (sym.k is MutVal) || (sym.k is LetBind) =>
       sym.owner match
-      case S(owner) => AssignField(owner.asThis, sym.id, castTo(rhs, sym.sourceErasedType, loco), rest)(S(sym))
+      case S(owner) => castTo(rhs, sym.sourceErasedType, loco)(AssignField(owner.asThis, sym.id, _, rest)(S(sym)))
       case N => nope
     case sym: LocalVarSymbol =>
-      if !sym.mut then nope else Assign(sym, castTo(rhs, sym.erasedType, loco), rest)
+      if !sym.mut then nope else castTo(rhs, sym.erasedType, loco)(Assign(sym, _, rest))
     case sym => nope
 
   private def defineSymbol(sym: Symbol, rhs: Result, rest: Block)(using LoweringCtx): Block =
     sym match
     case sym: TermSymbol =>
       sym.owner match
-      case S(owner) => AssignField(owner.asThis, sym.id, castTo(rhs, sym.sourceErasedType, sym.toLoc), rest)(S(sym))
+      case S(owner) => castTo(rhs, sym.sourceErasedType, sym.toLoc)(AssignField(owner.asThis, sym.id, _, rest)(S(sym)))
       case N => lastWords(s"tried to define top-level symbol ${sym.showDbg} in a local scope")
     case sym: LocalVarSymbol =>
-      Assign(sym, castTo(rhs, sym.erasedType, sym.toLoc), rest)
+      castTo(rhs, sym.erasedType, sym.toLoc)(Assign(sym, _, rest))
     case sym =>
       lastWords(s"tried to define non-variable symbol ${sym.showDbg}")
   
@@ -1000,7 +1001,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme), sig.ret)
         tl.log(dbg"Ref builtin $sym")
         assert(paramLists.length === 1)
-        return k(Lambda(paramLists.head, bodyBlock)(Nil, ref.toLoc))
+        return k(Lambda(paramLists.head, bodyBlock)(sig.ret, Nil, ref.toLoc))
       case N => ()
     case bs: BlockMemberSymbol =>
       disamb.flatMap(_.defn) match
@@ -1429,8 +1430,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             case S(sym: TermSymbol) =>
               subTerm_nonTail(prefix): p =>
                 subTerm_nonTail(rhs): r =>
-                  assignNamedField(p, memberIdent(ref.id, member), castPathTo(r, sym.sourceErasedType, ref.toLoc),
-                    k(unit), ref.keyAccess, unsafe)(S(sym), ref.resolvedTargets)
+                  castPathTo(r, sym.sourceErasedType, ref.toLoc): value =>
+                    assignNamedField(p, memberIdent(ref.id, member), value,
+                      k(unit), ref.keyAccess, unsafe)(S(sym), ref.resolvedTargets)
             case N if ref.resolvedTargets.forall(_.isInstanceOf[TermSymbol]) =>
               subTerm_nonTail(prefix): p =>
                 subTerm_nonTail(rhs): r =>
@@ -1447,7 +1449,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           case S(sym: TermSymbol) =>
             subTerm_nonTail(prefix): p =>
               subTerm_nonTail(rhs): r =>
-                assignNamedField(p, name, castPathTo(r, sym.sourceErasedType, sel.toLoc), k(unit), sel.keyAccess, unsafe)(S(sym), sel.resolvedTargets)
+                castPathTo(r, sym.sourceErasedType, sel.toLoc): value =>
+                  assignNamedField(p, name, value, k(unit), sel.keyAccess, unsafe)(S(sym), sel.resolvedTargets)
           case N if sel.resolvedTargets.forall(_.isInstanceOf[TermSymbol]) =>
             subTerm_nonTail(prefix): p =>
               subTerm_nonTail(rhs): r =>
@@ -1458,14 +1461,15 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case sel @ Sel(prefix, nme) =>
         subTerm(prefix): p =>
           subTerm_nonTail(rhs): r =>
-            assignNamedField(
-              p,
-              nme,
-              castPathTo(r, fieldErasedType(resolvedSelectionSymbol), sel.toLoc),
-              k(unit),
-              N,
-              unsafe,
-            )(resolvedSelectionSymbol, Nil)
+            castPathTo(r, fieldErasedType(resolvedSelectionSymbol), sel.toLoc): value =>
+              assignNamedField(
+                p,
+                nme,
+                value,
+                k(unit),
+                N,
+                unsafe,
+              )(resolvedSelectionSymbol, Nil)
       case sel @ SynthSel(prefix, nme) =>
         // * See the doc in the `term` case for `SynthSel` for why we fall back to `sel.sym` here
         val sym = resolvedSelectionSymbol match
@@ -1476,7 +1480,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         softAssert(sym.nonEmpty, s"Missing symbol for synthetic assignment target ${sel.showDbg}")
         subTerm(prefix): p =>
           subTerm_nonTail(rhs): r =>
-            assignNamedField(p, memberIdent(nme, sel.sym), castPathTo(r, fieldErasedType(sym), sel.toLoc), k(unit), N, unsafe)(sym, Nil)
+            castPathTo(r, fieldErasedType(sym), sel.toLoc): value =>
+              assignNamedField(p, memberIdent(nme, sel.sym), value, k(unit), N, unsafe)(sym, Nil)
       case sel @ DynSel(prefix, fld, ai, _) =>
         subTerm(prefix): p =>
           subTerm_nonTail(fld): f =>
@@ -1485,30 +1490,32 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case sel @ SelProj(prefix, _, proj) =>
         subTerm(prefix): p =>
           subTerm_nonTail(rhs): r =>
-            assignNamedField(
-              p,
-              memberIdent(proj, sel.sym),
-              castPathTo(r, fieldErasedType(resolvedSelectionSymbol), sel.toLoc),
-              k(unit),
-              N,
-              unsafe,
-            )(resolvedSelectionSymbol, Nil)
+            castPathTo(r, fieldErasedType(resolvedSelectionSymbol), sel.toLoc): value =>
+              assignNamedField(
+                p,
+                memberIdent(proj, sel.sym),
+                value,
+                k(unit),
+                N,
+                unsafe,
+              )(resolvedSelectionSymbol, Nil)
       case _ => fail:
         ErrorReport(
           msg"Unexpected left-hand side in assignment (${lhs.describe})" -> lhs.toLoc :: Nil, S(lhs),
           source = Diagnostic.Source.Compilation)
       
-    case st.Lam(params, body) =>
+    case lam @ st.Lam(params, body) =>
       warnStmt
-      val (paramLists, bodyBlock) = setupFunctionDef(params :: Nil, body, N, N)
+      val bodyType = lam.resultSlot.erasedType
+      val (paramLists, bodyBlock) = setupFunctionDef(params :: Nil, body, N, bodyType)
       val affineAnnots = annots.collect:
         case a @ Annot.Affine(0) => a
       if k.isInstanceOf[TailOp] || bodyBlock.size <= 5
-      then k(Lambda(paramLists.head, bodyBlock)(affineAnnots, trm.toLoc))
+      then k(Lambda(paramLists.head, bodyBlock)(bodyType, affineAnnots, trm.toLoc))
       else
         val lamSym = new BlockMemberSymbol("lambda", Nil, false)
         loweringCtx.collectScopedSym(lamSym)
-        val lamDef = FunDefn.withFreshSymbol(N, lamSym, paramLists, bodyBlock)(configOverride = N, annotations = affineAnnots)
+        val lamDef = FunDefn.withFreshSymbol(N, lamSym, paramLists, bodyType, bodyBlock)(configOverride = N, annotations = affineAnnots)
         Define(
           lamDef,
           k(lamDef.asPath))
@@ -1584,11 +1591,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       
     case Try(sub, finallyDo) =>
       val l = loweringCtx.registerTempSymbol(S(sub), erasedType = N)
-      TryBlock(
-        subTerm_nonTail(sub)(p => Assign(l, p, End())),
-        subTerm_nonTail(finallyDo)(_ => End()),
-        k(l.asSimpleRef)
-      )
+      val body = subTerm_nonTail(sub): p =>
+        l.erasedType = p.erasedType
+        Assign(l, p, End())
+      val cleanup = subTerm_nonTail(finallyDo)(_ => End())
+      TryBlock(body, cleanup, if body.isAbortive || cleanup.isAbortive then End() else k(l.asSimpleRef))
     
     case Quoted(body) => quote(body)(k)
     
@@ -1859,8 +1866,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                 val (expTy, expRest) = expected match
                   case e :: es => (e, es)
                   case Nil => (N, Nil)
-                asr ::= Arg(N, castPathTo(ar, expTy, a.toLoc))
-                rec(as, expRest)
+                castPathTo(ar, expTy, a.toLoc): value =>
+                  asr ::= Arg(N, value)
+                  rec(as, expRest)
               case S(_) =>
                 asr ::= Arg(spd, ar)
                 rec(as, Nil)
@@ -1905,29 +1913,34 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case lam @ Lambda(params, body) =>
         val lamSym = BlockMemberSymbol("lambda", Nil, false)
         loweringCtx.collectScopedSym(lamSym)
-        val lamDef = FunDefn.withFreshSymbol(N, lamSym, params :: Nil, body)(configOverride = N, annotations = lam.annot)
+        val lamDef = FunDefn.withFreshSymbol(N, lamSym, params :: Nil, lam.bodyType, body)(configOverride = N, annotations = lam.annot)
         Define(lamDef, k(lamDef.asPath))
       case r =>
         val l = loweringCtx.registerTempSymbol(N, erasedType = r.erasedType)
         Assign(l, r, k(l.asSimpleRef))
 
-  /** Wraps the lowered result `r` with a [[Cast]] when it must be downcasted to fit the `expected` erased type of the
-    * slot it flows into.
+  /** Lowers the flow of the lowered result `r` into a slot of erased type `expected`, where `k` builds the code
+    * that stores the value it receives into that slot.
     *
-    *  - If `expected` is a subtype of `r`'s type, `r` is wrapped with a downcast.
-    *  - If `expected` and `r` are unrelated, a compile-time error is raised and `r` returns uncast.
-    *  - Otherwise, `r` is returned unchanged.
+    *  - If `expected` is a subtype of `r`'s type, `k` receives `r` wrapped with a downcast.
+    *  - If `expected` and `r` are unrelated, this method reports a compile-time error and yields [[compError]]
+    *    without calling `k`.
+    *  - Otherwise, `k` receives `r` unchanged.
     *
     * An absent `expected` is an unannotated slot, which holds the top reference type rather than no type at all.
     * When the caller has no better location for the coercion (e.g., an implicit return), diagnostics point at
     * the coerced value itself.
     */
-  def castTo(r: Result, expected: Opt[ErasedValueType], loc: Opt[Loc]): Result =
-    r.coerceTo(expected.getOrElse(ErasedType.Unknown), loc.orElse(r.toLoc))
+  def castTo(r: Result, expected: Opt[ErasedValueType], loc: Opt[Loc])(k: Result => Block): Block =
+    // A value of an unrelated type does not fit the slot, so the code that would store it throws, as the code
+    // of other erroneous terms does. Every slot of the lowered program then holds values of its own
+    // representation. The optimizer and the backends rely on that, including for the definitions that the
+    // inliner of another compilation unit obtains from this unit's symbols.
+    r.tryCoerceTo(expected.getOrElse(ErasedType.Unknown), loc.orElse(r.toLoc)).fold(compError)(k)
   
   /** Like [[castTo]], for a path that flows into a path position: a cast of a path is itself a path. */
-  def castPathTo(p: Path, expected: Opt[ErasedValueType], loc: Opt[Loc]): Path =
-    p.coerceTo(expected.getOrElse(ErasedType.Unknown), loc.orElse(p.toLoc))
+  def castPathTo(p: Path, expected: Opt[ErasedValueType], loc: Opt[Loc])(k: Path => Block): Block =
+    p.tryCoerceTo(expected.getOrElse(ErasedType.Unknown), loc.orElse(p.toLoc)).fold(compError)(k)
 
   /** The declared erased type of the field a selection resolves to, if it is an annotated `TermSymbol`. */
   private def fieldErasedType(s: Opt[Symbol]): Opt[ErasedValueType] =
@@ -1951,6 +1964,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     summon[Erasure].requireCompleted(main)
     
     val (imps, funs, rest) = splitBlock(main.stats, Nil, Nil, Nil)
+    if summon[Erasure].hasErrors then return Program(imps.map(imp => imp.sym -> imp.str), compError)
     
     // * File-level values participate in the compilation unit's default export and private ABI.
     // * Only values inside local blocks can be replaced by fresh variables without breaking that linkage.
@@ -2029,7 +2043,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           case ((param, ArgumentLayout.Source.Element(index, minimumLength)), rest) =>
             OptionalParams.bindFromTuple(args, index, param.sym, minimumLength, rest)
           case ((param, ArgumentLayout.Source.Slice(start, trailing)), rest) =>
-            Assign(param.sym, castTo(slice(args, start, trailing), param.sym.erasedType, param.toLoc), rest)
+            castTo(slice(args, start, trailing), param.sym.erasedType, param.toLoc)(Assign(param.sym, _, rest))
         check.fold(extracted)(Assign.discard(_, extracted))
       (loweredParams, prologue)
     case _ => (loweredParams, body => body)
@@ -2171,7 +2185,7 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
       paramLists match
         case Nil => ???
         case h :: Nil => (h, bod)
-        case h :: t => go(t, Term.Lam(h, bod))
+        case h :: t => go(t, Term.erasedLambda(h, bod, N))
     go(paramLists.reverse, bod)
   
   def setupFunctionBody(params: ParamList, bod: Term, name: Option[Str], returnType: Opt[ErasedValueType])(using LoweringCtx): Block = inScopedBlock:
@@ -2217,7 +2231,7 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
       tmp2 -> pureCall(traceLogResetFn, Arg(N, prevIndentLvlSym.asSimpleRef) :: Nil),
       tmp3 -> pureCall(traceLogFn, Arg(N, retMsgSym.asSimpleRef) :: Nil)
     ) |>:
-      Ret(castTo(resSym.asSimpleRef, returnType, N))
+      castTo(resSym.asSimpleRef, returnType, N)(Ret(_))
     )
 
 

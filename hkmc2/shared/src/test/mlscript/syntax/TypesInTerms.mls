@@ -4,6 +4,10 @@
 
 :ge
 1 | 2
+//│ ╔══[COMPILATION ERROR] Resolution error in alternation
+//│ ║  l.+1: 	1 | 2
+//│ ║        	^^^^^
+//│ ╙── A type cannot be used as a runtime value.
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (alternation)
 //│ ║  l.+1: 	1 | 2
 //│ ╙──      	^^^^^
@@ -11,6 +15,10 @@
 
 :ge
 print("A") & print("B")
+//│ ╔══[COMPILATION ERROR] Resolution error in composition
+//│ ║  l.+1: 	print("A") & print("B")
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── A type cannot be used as a runtime value.
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (composition)
 //│ ║  l.+1: 	print("A") & print("B")
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
@@ -18,6 +26,10 @@ print("A") & print("B")
 
 :ge
 ~false
+//│ ╔══[COMPILATION ERROR] Resolution error in negation type
+//│ ║  l.+1: 	~false
+//│ ║        	^^^^^^
+//│ ╙── A type cannot be used as a runtime value.
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (negation type)
 //│ ║  l.+1: 	~false
 //│ ╙──      	^^^^^^

@@ -67,8 +67,10 @@ region r1 in
 //│ ╟── because: cannot constrain  'r2  <:  r1
 //│ ╙── because: cannot constrain  ¬r1  <:  r1
 //│ ╔══[COMPILATION ERROR] Type error in block
+//│ ║  l.+1: 	region r1 in
+//│ ║        	^^^^^^^^^^^^
 //│ ║  l.+2: 	  let g = (r => region r2 in f(r, r2)) in
-//│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.+3: 	    region r3 in g(r3)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'eff  <:  ⊥
@@ -98,8 +100,10 @@ region x in
 //│ ╟── because: cannot constrain  ⊤  <:  'reg
 //│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ ╔══[COMPILATION ERROR] Type error in block
+//│ ║  l.+1: 	region x in
+//│ ║        	^^^^^^^^^^^
 //│ ║  l.+2: 	  naive_helper(x)
-//│ ║        	  ^^^^^^^^^^^^^^^
+//│ ║        	^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'eff  <:  ⊥
 //│ ╟── because: cannot constrain  ¬'x2 ∧ 'eff1  <:  ⊥
 //│ ╟── because: cannot constrain  'eff1  <:  'x2
@@ -139,7 +143,7 @@ region x in
   (region y in let t = helper(x) in 42) as [A] -> Int
 //│ ╔══[COMPILATION ERROR] Type error in region expression with expected type [outer, 'A] -> Int
 //│ ║  l.+2: 	  (region y in let t = helper(x) in 42) as [A] -> Int
-//│ ║        	                       ^^^^^^^^^^^^^^^
+//│ ║        	   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'eff  <:  ⊥
 //│ ╟── because: cannot constrain  ¬'y ∧ x  <:  ⊥
 //│ ╟── because: cannot constrain  x  <:  'y

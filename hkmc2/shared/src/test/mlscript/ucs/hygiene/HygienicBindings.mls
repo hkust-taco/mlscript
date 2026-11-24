@@ -87,7 +87,7 @@ fun h2(a) =
 //│ >    a is member:Option⁰.None‹object:None⁰›^term:h2⁰ then 0
 
 // :w
-fun h3(x, y, f, p) =
+private fun h3(x, y, f, p) =
   if x is
     _ and f(x) is y and p(x) then y
     None then y
@@ -103,7 +103,7 @@ h3("anything", "anything", _ => "not me", _ => false) ~~> "anyway"
 
 // :ducs:postprocess.result
 // :w
-fun h4(x, y, p) =
+private fun h4(x, y, p) =
   if x is
     y and p(x) then y
     None then y
@@ -126,7 +126,7 @@ h4("anything", "not me", justFalse)
 //│ = "default"
 
 // :ducs:postprocess.result
-fun h5(x, y, p) =
+private fun h5(x, y, p) =
   if x is
     Some(y) and p(x) then y
     None then y

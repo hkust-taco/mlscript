@@ -1,0 +1,28 @@
+:.
+
+// The Wasm parameter slot must accept values from later calls to the public function.
+
+
+fun ident(x) = x
+ident(1)
+//│ Wasm result:
+//│ = 1
+
+:expect "a"
+ident("a")
+//│ Wasm result:
+//│ = "a"
+
+
+class Foo
+private class Box(val v)
+let b = Box(new Foo)
+//│ Wasm result:
+//│ = {}
+
+// Reading this field requires the session module to import both Box's struct type and the Foo type
+// used in its inferred field representation.
+:expect {}
+b.v
+//│ Wasm result:
+//│ = {}

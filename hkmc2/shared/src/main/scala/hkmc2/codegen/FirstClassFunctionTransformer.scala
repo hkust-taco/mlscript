@@ -28,7 +28,7 @@ class FirstClassFunctionTransformer
     )
     val defSym = new BlockMemberSymbol("Function$", Nil, false)
     val forwarding = OptionalParams.forwarding(params, fixedArity = false)
-    val callDef = FunDefn.withFreshSymbol(Some(clsSym), new BlockMemberSymbol("call", Nil, true), forwarding.params :: Nil,
+    val callDef = FunDefn.withFreshSymbol(Some(clsSym), new BlockMemberSymbol("call", Nil, true), forwarding.params :: Nil, N,
       Return(Call(p, forwarding.args ne_:: Nil)(CallMetadata.defaultMlsFun, N)))(N, annotations = Nil)
     ClsLikeDefn(None, clsSym, defSym, None, syntax.Cls, None, Nil,
       Some(State.globalThisSymbol.asThis.sel(ctx.builtins.Function)),
@@ -132,7 +132,7 @@ class FirstClassFunctionTransformer
           case head :: rest =>
             val newBody = rec(rest)
             val funSym = new BlockMemberSymbol("lambda$", Nil, false)
-            val funDef = FunDefn.withFreshSymbol(None, funSym, head :: Nil, newBody)(N, annotations = Nil)
+            val funDef = FunDefn.withFreshSymbol(None, funSym, head :: Nil, N, newBody)(N, annotations = Nil)
             Scoped(Set(funSym), Define(funDef, Return(funDef.sym.asMemberRef(funDef.dSym))))
           case Nil => fd.body
         // The curried definition keeps its symbol under its new signature (see `TermSymbol.irErasure`).

@@ -113,7 +113,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
     
     if noCodeGen.isUnset then
       given Elaborator.Ctx = curCtx
-      given codegen.Erasure = codegen.Erasure(blk)
+      given codegen.Erasure = codegen.Erasure(blk, summon[Raise])
       lazy val blockPrinter =
         given ShowCfg = ShowCfg(
           showErasedTypes = showIRErasedTypes.isSet,

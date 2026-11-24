@@ -1,0 +1,60 @@
+:.
+
+// A class body can run on an instance of a subclass, so a member reached through `this` can be an override.
+
+
+// A call through `this` supplies its argument to the override's parameter.
+:e
+private class CallingBase with
+  open fun use(x) = 0
+  fun run(v) = this.use(v)
+private class SelectingChild extends CallingBase with
+  override fun use(x) = x.only
+new SelectingChild().use({only: 1})
+new SelectingChild().run(null)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+5: 	  override fun use(x) = x.only
+//│ ║        	                        ^^^^^^
+//│ ╟── Null literal does not contain member 'only'
+//│ ║  l.+7: 	new SelectingChild().run(null)
+//│ ╙──      	                         ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// TODO: Include what each override returns in the result of a call through `this`.
+:breakme
+:e
+private class ListingBase with
+  open fun wrap(x) = [x]
+  fun firstOnly(v) = this.wrap(v).0.only
+private class NullListing extends ListingBase with
+  override fun wrap(x) = [null]
+new ListingBase().wrap({only: 1})
+new NullListing().firstOnly({only: 1})
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of null (reading 'only')
+
+
+// TODO: The same applies to a call through the implicit receiver.
+:breakme
+:e
+private class EchoBase with
+  open fun echo(x) = {only: 1}
+  fun run(v) = echo(v).only
+private class Echo extends EchoBase with
+  override fun echo(x) = x
+new Echo().run(null)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of null (reading 'only')
+
+
+// TODO: The same applies to a field read through `this`.
+:breakme
+:e
+private class FieldBase with
+  open val item = {only: 1}
+  fun read() = this.item.only
+private class NullField extends FieldBase with
+  override val item = null
+new NullField().read()
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of null (reading 'only')
+
+

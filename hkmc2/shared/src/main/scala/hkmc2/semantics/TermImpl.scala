@@ -111,7 +111,7 @@ trait LeadingDotSelImpl(using State):
 
 type NewResolvable = NewResolvableImpl & Term
 
-/** Suppress follow-on diagnostics after a resolution or flow error.
+/** Suppress follow-on diagnostics after an error makes a term or definition unfit for compilation.
   * Lowering does not compile erroneous terms and definitions, nor references to erroneous definitions. */
 trait PossiblyErroneous:
   var isErroneous: Bool = false

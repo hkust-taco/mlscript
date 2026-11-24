@@ -46,12 +46,16 @@ r ! a
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // * Note: artifact from BbML/InvalML
+#lang(useNewResolution: false)
+
 :sjs
 !(r)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ return r.value
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
+
+#lang(useNewResolution: true)
 
 
 let t = [1, 2, 3]

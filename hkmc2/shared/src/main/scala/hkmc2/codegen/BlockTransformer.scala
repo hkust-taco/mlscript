@@ -379,7 +379,7 @@ class BlockTransformer(subst: SymbolSubst):
   def applyLam(lam: Lambda): Lambda =
     val params2 = applyParamList(lam.params)
     val body2 = applyFunBodyLikeBlock(lam.body)
-    if (params2 is lam.params) && (body2 is lam.body) then lam else Lambda(params2, body2)(lam.annot, lam.toLoc)
+    if (params2 is lam.params) && (body2 is lam.body) then lam else Lambda(params2, body2)(lam.bodyType, lam.annot, lam.toLoc)
   
   def applyListOf[A](ls: List[A], f: (A, (A => Block)) => Block)(k: List[A] => Block): Block =
     def rec(ls: List[A], k: List[A] => Block): Block = ls match

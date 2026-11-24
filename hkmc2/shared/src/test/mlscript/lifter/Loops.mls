@@ -54,6 +54,7 @@ fun foo() =
 //│ };
 //│ define Capture$scope0 as class Capture$scope0¹ {
 //│   constructor Capture$scope0⁰(x$0) {
+//│     @js.plainField
 //│     define x$0¹ as val x$0⁰ = x$0;
 //│     end
 //│   }

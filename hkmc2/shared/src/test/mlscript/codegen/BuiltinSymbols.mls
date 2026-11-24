@@ -53,8 +53,8 @@ case Int then 0
 //│           erasure = Signature:
 //│             paramLists = Ls of
 //│               Ls of
-//│                 N
-//│             result = Direct of N
+//│                 S of Unknown
+//│             result = Direct of S of ValueLike(?)
 //│         body = Match:
 //│           scrut = SimpleRef of caseScrut⁰
 //│           arms = Ls of
