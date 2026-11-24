@@ -341,3 +341,53 @@ instances(true)
 //│ return instances$instances⁰(true)
 //│ Wasm result:
 //│ = 3
+
+
+// Projecting the result of makeWord changes its return type from Unboxed to Int32. Its match
+// must still return that word to the caller.
+// FIXME: the extracted branch and the indirect call to it both have an unknown result type.
+:fixme
+:deforest mono
+:expect 42
+private fun makeWord(n: Int32): Unboxed =
+  let flag = Empty()
+  if flag is Empty then Unboxed(n) else Unboxed(wasm.i32.const(0))
+private fun readWord(x: Unboxed): Int32 = x.p
+wasm.ref.i31(readWord(makeWord(wasm.i32.const(42))))
+//│ deforest > >>> fusing >>>
+//│ deforest > Empty⁰() ->
+//│ deforest > 	match: flag⁰
+//│ deforest > Unboxed⁰(n²) ->
+//│ deforest > 	select: p
+//│ deforest > Unboxed⁰(tmp⁴) ->
+//│ deforest > 	select: p
+//│ deforest > <<< fusing <<<
+//│ ═══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Int32, tmp1: Int32, $flag_Empty, $flag_rest, tmp2: Int32;
+//│ @affine(1) @private
+//│ define $flag_Empty as fun $flag_Empty⁰()(fv_n: Int32): ? {
+//│   let Unboxed_p: Int32;
+//│   set Unboxed_p = fv_n;
+//│   return Unboxed_p
+//│ };
+//│ @private
+//│ define $flag_rest as fun $flag_rest⁰(): ? {
+//│   return null
+//│ };
+//│ @private
+//│ define makeWord⁰ as fun makeWord¹(n: Int32): Int32 {
+//│   let tmp3: Int32, flag: Function⁰;
+//│   set flag = $flag_Empty⁰();
+//│   return flag(n)
+//│ };
+//│ @private
+//│ define readWord⁰ as fun readWord¹(x: Int32): Int32 {
+//│   return x
+//│ };
+//│ set tmp = wasm⁰.i32⁰.const⁰(42);
+//│ set tmp2 = (makeWord¹(tmp) as!! Int32);
+//│ set tmp1 = readWord¹(tmp2);
+//│ return wasm⁰.ref⁰.i31⁰(tmp1)
+//│ Wasm result:
+//│ = 42
