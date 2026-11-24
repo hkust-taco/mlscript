@@ -16,8 +16,8 @@
 
 import "../../../mlscript-compile/Option.mls"
 
-open annotations { compile }
-open Option { Some, None }
+open annotations.{ compile }
+open Option.{ Some, None }
 
 // Construction prints make every allocation visible, so unnecessary
 // reconstruction of list nodes shows up as extra `new ...` lines.

@@ -59,6 +59,23 @@ instead observes each component independently, including through aliases, type
 parameters, and inference holes. The type-view cache distinguishes these two
 observations so inferred arguments cannot change the interface of an annotation.
 
+Opaque declared types expose an empty member interface. An intersection can use
+members supplied by its other components, and an opaque wildcard-open contributes
+no candidates. Eager resolution requires each union alternative of a selected
+receiver to provide the member; loose resolution permits a known missing
+alternative when another supplies a target. For wildcard opens, this check
+applies only to sources that supply a candidate. One missing-member witness per
+reference and opened source survives until block completion, so arrival order
+does not hide a partially matching source. Unknown inputs from exposed interfaces
+still require checking even when another alternative or open supplies a target.
+The `()` type exposes the same Unit shape as its literal, retaining that literal
+as the diagnostic witness through aliases and scope transport.
+
+An empty declared interface makes no claim about runtime fields. Record spreads
+of opaque values remain unknown overwrite barriers, and unresolved inferred values
+retain their uncertainty. Neither may silently reveal an earlier field or remove
+a potentially competing wildcard-open candidate.
+
 A `DeclaredType` contains:
 
 - A source `TypeResolution` node.
@@ -221,16 +238,30 @@ signatures subsequently interpret them from the member's positive interface.
 `VarianceAliases.mls` covers captured binders and nested identity aliases.
 
 `DeclaredType.positive` records this lexical polarity, independently of a later
-constraint's direction. `TypeShape.Wildcard` retains written parts;
-`TypeShape.Argument` retains both contextual argument parts.
-Neither transplants supplied syntax into the callee's binding environment.
+constraint's direction. `TypeArgumentResolution.Wildcard` retains written parts;
+`TypeArgument` retains both interpreted bounds as proper `DeclaredType` references.
+Neither a wildcard nor a bound pair is a `TypeShape` or a value shape. A scalar
+occurrence selects one bound before a constraint observes it, including when the
+bound's resolution is still pending. Both subsequent constraint directions use
+that selected type. Neither operation transplants supplied syntax into the
+callee's binding environment.
 
-`TypeShape.SelectedArgument` saves one requested part for a scalar occurrence when
-the argument is deferred. Both subsequent constraint directions use that same
-selected type; an invariant argument makes separate selections for its two parts.
-Selections are cached by argument reference and polarity; selecting an existing
-selection is idempotent. Forwarding cycles retain subscriptions but stop repeated observation.
-For a fixed argument-reference set, selection adds at most two nodes per reference.
+Explicit parameter bindings live in a separate publisher of `TypeArgumentBinding`.
+Each binding records both bounds and the normalized path into the parameter's
+scope. Binding a parameter also publishes an `InstanceShape` of the output type
+into `TypeShape.Parameter.host`, so reads subscribe to that one host for both
+inferred values and explicit outputs. The host delivers an output shared by
+different bindings once, while those bindings retain their input obligations
+without repeating value flow. Constraints on the
+parameter subscribe to bindings and use their input types. The same entry/exit
+marks filter both operations, so another activation cannot constrain the binding.
+`TypeShape.Parameter` retains both originating hosts, allowing importers to copy
+inferred values and explicit bindings independently of their exporters. Repeated
+bindings and constraints deduplicate in these hosts and in the relation graph.
+
+Tuple fields and separate parameter signatures likewise keep their bound pairs
+in their interface data. Reading a field or entering a callback publishes only
+its output type; constraining a field or parameter selects its input type.
 
 ### Iteration and synthesized applications
 
@@ -279,6 +310,15 @@ scope retains every binding. The analysis follows the finite source graph,
 never live inference bounds. Applied type-argument counts are recorded when the
 application is interpreted so dependency summaries do not depend on observation
 order.
+
+Deferred transport and type-view caches project retained instances before
+choosing their keys, using this same support analysis. Otherwise an independent
+arm of `A | ()` would get a fresh observation graph for every instance of `A`,
+and an irrelevant ambient binding would create a distinct contextual reference
+before `InstanceShape` removed that binding. Unknown forward dependencies retain
+the whole environment; known dependencies include transitive instance-site
+requirements even when their bounds have not yet arrived. This projection
+changes neither scope paths nor activation environments.
 
 Activation environments are not projected: they select which body's events a
 listener accepts, independently of what the delivered value can observe.
@@ -457,6 +497,13 @@ directions for constraint transport; it is not a mathematical inverse
 on candidates. A wildcard exit can consume an entry carrying a call-site ID.
 Re-entering without an ID does not restore it. Exit followed by entry must not be
 cancelled as an identity, including on deferred references.
+
+Observing a contextual reference without explicit type arguments subscribes to
+the source's cached type views and transports each delivered shape. Distinct
+paths share that source interpretation, including bounds published later. The
+cache installs its host before following references, so recursive observations
+reuse the same endpoint. An application still interprets its arguments in the
+template's source scope before transporting the result.
 
 The relevant scope crossings are:
 

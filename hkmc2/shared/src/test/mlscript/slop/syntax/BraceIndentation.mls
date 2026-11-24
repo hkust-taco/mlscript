@@ -65,10 +65,14 @@ M.{
 }
 //│ = 13
 
-:expect ()
+:expect {}
 M.{
-  // Empty local open.
+  // An empty record in the opened scope.
 }
+//│ = {}
+
+:expect ()
+M.{ () }
 
 // Neither the opened members nor local bindings escape the braces.
 :e

@@ -6,6 +6,10 @@
 
 -J-Xss8M
 
+# Temporarily suppress Unsafe warnings from dependencies using the old Scala 3 lazy-val implementation.
+# Keep this aligned with the documented javaOptions setting for forked JVMs in build.sbt.
+-J--sun-misc-unsafe-memory-access=allow
+
 # The options below were inspired by a message I got on some runs with more than usual memory retention:
 #   [warn] In the last 10 seconds, 5.067 (50.7%) were spent in GC. [Heap: 0.01GB free of 1.00GB, max 1.00GB] Consider increasing the JVM heap using `-Xmx` or try a different collector, e.g. `-XX:+UseG1GC`, for better performance.
 
@@ -16,4 +20,6 @@
 -J-Xmx4G
 
 #-J-XX:+UseG1GC # does not seem to make much of a difference
+-J-XX:+UseCompactObjectHeaders
+-J-XX:+UseStringDeduplication
 

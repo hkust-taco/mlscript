@@ -14,11 +14,11 @@
 // site. The machine does not restart the redex search from the root of the
 // scrutinee after each rewriting step.
 
-open annotations { compile }
+open annotations.{ compile }
 
 import "../../../mlscript-compile/Option.mls"
 
-open Option { Some, None }
+open Option.{ Some, None }
 
 
 // ————— A flat fixed point: peeling nested wrappers —————

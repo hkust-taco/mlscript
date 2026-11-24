@@ -1,0 +1,68 @@
+:.
+#lang(eagerResolution: true)
+
+type Left[A] = A
+module Left with
+  val Pick = 1
+type Right[A] = A
+module Right with
+  val Pick = 2
+
+// Repeated variance interpretation must keep equal underlying types' different
+// alias namespaces, including when the order of the calls is reversed.
+class Box[out A](val value: A)
+fun left(box: Box[Left[Int]]) = box.value
+fun right(box: Box[Right[Int]]) = box.value
+
+:expect [1, 2, 2, 1]
+[left(Box(Pick)), right(Box(Pick)), right(Box(Pick)), left(Box(Pick))]
+//│ = [1, 2, 2, 1]
+
+// These annotations have equal canonical formulas. Their observations must
+// retain both their own written witnesses and their reversed operand order.
+:e
+fun use[A, B](first: Left[A] | Right[B], second: Right[B] | Left[A]) = ()
+use(Pick, Pick)
+//│ ╔══[COMPILATION ERROR] Reference 'Pick' is ambiguous, as flow requires its value to have types with distinct implicit namespaces.
+//│ ║  l.+2: 	use(Pick, Pick)
+//│ ║        	    ^^^^
+//│ ╟── This type selects 'Left.Pick'.
+//│ ║  l.+1: 	fun use[A, B](first: Left[A] | Right[B], second: Right[B] | Left[A]) = ()
+//│ ║        	                     ^^^^^^^
+//│ ╟── This type selects 'Right.Pick'.
+//│ ║  l.+1: 	fun use[A, B](first: Left[A] | Right[B], second: Right[B] | Left[A]) = ()
+//│ ╙──      	                               ^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Reference 'Pick' is ambiguous, as flow requires its value to have types with distinct implicit namespaces.
+//│ ║  l.+2: 	use(Pick, Pick)
+//│ ║        	          ^^^^
+//│ ╟── This type selects 'Right.Pick'.
+//│ ║  l.+1: 	fun use[A, B](first: Left[A] | Right[B], second: Right[B] | Left[A]) = ()
+//│ ║        	                                                 ^^^^^^^^
+//│ ╟── This type selects 'Left.Pick'.
+//│ ║  l.+1: 	fun use[A, B](first: Left[A] | Right[B], second: Right[B] | Left[A]) = ()
+//│ ╙──      	                                                            ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Transporting equal input-only views through the same alias must not reuse
+// the first parameter's diagnostic location for the second parameter.
+type Items[A] = Array[A]
+
+:e
+fun inputs(first: Items[in Int], second: Items[in Int]) =
+  [(() => first)().[0].missing, (() => second)().[0].missing]
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	  [(() => first)().[0].missing, (() => second)().[0].missing]
+//│ ║        	                  ^^^^^^^^^^^^
+//│ ╟── Value with an empty interface does not contain member 'missing'
+//│ ╟── This type argument specifies only an input bound.
+//│ ║  l.+1: 	fun inputs(first: Items[in Int], second: Items[in Int]) =
+//│ ║        	                        ^^^^^^
+//│ ╙── Values read through it have no output bound more specific than 'Any'.
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	  [(() => first)().[0].missing, (() => second)().[0].missing]
+//│ ║        	                                                ^^^^^^^^^^^^
+//│ ╟── Value with an empty interface does not contain member 'missing'
+//│ ╟── This type argument specifies only an input bound.
+//│ ║  l.+1: 	fun inputs(first: Items[in Int], second: Items[in Int]) =
+//│ ║        	                                               ^^^^^^
+//│ ╙── Values read through it have no output bound more specific than 'Any'.

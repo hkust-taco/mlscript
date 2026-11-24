@@ -85,7 +85,7 @@ case
 //│       return Predef⁰.print⁰("empty")
 //│     Array(1+) =>
 //│       set element0$ = runtime⁰.Tuple⁰.get⁰(caseScrut, 0);
-//│       set middleElements = runtime⁰.Tuple⁰.slice⁰(caseScrut, 1, 0);
+//│       set middleElements = (runtime⁰.Tuple⁰.slice⁰(caseScrut, 1, 0) as!! Array⁰);
 //│       set xs = middleElements;
 //│       set x = element0$;
 //│       return Predef⁰.print⁰("non-empty", x)

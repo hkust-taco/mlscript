@@ -20,12 +20,21 @@ Captures.Nested.run(3)
 // The import alias is immutable, even though fields of the imported module may change.
 :e
 set Captures = Captures
-//│ ╔══[COMPILATION ERROR] Cannot assign to an immutable binding
+//│ ╔══[COMPILATION ERROR] Cannot assign to module 'ModuleReceiverCapture'
 //│ ║  l.+1: 	set Captures = Captures
 //│ ║        	    ^^^^^^^^^^^^^^^^^^^
 //│ ╟── Defined here:
-//│ ║  l.XX: 	import "../../mlscript-compile/ModuleReceiverCapture.mls" as Captures
-//│ ╙──      	                                                             ^^^^^^^^
+//│ ║  in ../../mlscript-compile/ModuleReceiverCapture.mls
+//│ ║  l.XX: 	module ModuleReceiverCapture with
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  mut val value: Int = 41
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  module Nested with
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	    @inline
+//│ ║        	^^^^^^^^^^^
+//│ ║  l.XX: 	... (more lines omitted) ...
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // An imported alias must also preserve the enclosing receiver when calling read directly.
@@ -33,6 +42,6 @@ set Captures = Captures
 :expect 42
 Captures.Nested.read()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ return Captures⁰.value⁰
+//│ return ModuleReceiverCapture⁰.value⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42

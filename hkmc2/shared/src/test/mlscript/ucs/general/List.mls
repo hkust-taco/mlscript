@@ -4,8 +4,8 @@
 import "../../../mlscript-compile/Stack.mls"
 import "../../../mlscript-compile/Option.mls"
 
-open Stack
-open Option { Some, None }
+open Stack.{ * }
+open Option.{ Some, None }
 
 
 fun length(xs) = if xs is

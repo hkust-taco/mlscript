@@ -11,7 +11,7 @@
       (system:
       let 
         sbtOverlay = self: super: {
-          sbt = super.sbt.override { jre = super.jdk17_headless; };
+          sbt = super.sbt.override { jre = super.jdk25_headless; };
         };
         pkgs = import nixpkgs { 
           inherit system;
@@ -27,7 +27,7 @@
               gmp
               mimalloc
               sbt
-              nodejs_24
+              nodejs_26
             ];
           };
       });

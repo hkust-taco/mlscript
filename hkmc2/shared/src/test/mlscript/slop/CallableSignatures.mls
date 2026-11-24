@@ -1,6 +1,6 @@
 :.
 #lang(0.3.x)
-open annotations
+open annotations.{ * }
 
 // A generated lambda has a function representation, even when its result is unspecified.
 :noInline
@@ -92,7 +92,7 @@ capture(39)
 //│   return +⁰‹(?, ?) => ?›(tmp, second)
 //│ };
 //│ define capture⁰ as fun capture¹(value: Int⁰): Int⁰ {
-//│   return (addCaptured⁰‹(Int⁰, Int⁰) => (Int⁰) => Int⁰›(value, 1)(2) as! Int⁰)
+//│   return addCaptured⁰‹(Int⁰, Int⁰) => (Int⁰) => Int⁰›(value, 1)(2)
 //│ };
 //│ return capture¹‹(Int⁰) => Int⁰›(39)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -143,24 +143,24 @@ fun capturedGenerator(value: Int) =
   generate("unused", 2)
 capturedGenerator(40).next().value
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp: ?, tmp1: Unknown, capturedGenerator_generate$generate, capturedGenerator_generate$generate1, capturedGenerator$capturedGenerator;
+//│ let tmp: ?, tmp1: ?, capturedGenerator_generate$generate, capturedGenerator$capturedGenerator, capturedGenerator_generate$generate1;
 //│ @private @generator
 //│ define capturedGenerator_generate$generate as fun capturedGenerator_generate$generate⁰(value: Int⁰, n: Int⁰): generator Int⁰ {
 //│   return +⁰‹(?, ?) => ?›(value, n)
+//│ };
+//│ @private
+//│ define capturedGenerator$capturedGenerator as fun capturedGenerator$capturedGenerator⁰(value: Int⁰): ? {
+//│   return capturedGenerator_generate$generate⁰‹(Int⁰, Int⁰) => generator Int⁰›(value, 2)
 //│ };
 //│ @private @generator
 //│ define capturedGenerator_generate$generate1 as fun capturedGenerator_generate$generate¹(value: Int⁰, n: Int⁰): generator Int⁰ {
 //│   return +⁰‹(?, ?) => ?›(value, n)
 //│ };
-//│ @private
-//│ define capturedGenerator$capturedGenerator as fun capturedGenerator$capturedGenerator⁰(value: Int⁰): ? {
+//│ define capturedGenerator⁰ as fun capturedGenerator¹(value: Int⁰): ? {
 //│   return capturedGenerator_generate$generate¹‹(Int⁰, Int⁰) => generator Int⁰›(value, 2)
 //│ };
-//│ define capturedGenerator⁰ as fun capturedGenerator¹(value: Int⁰): ? {
-//│   return capturedGenerator_generate$generate⁰‹(Int⁰, Int⁰) => generator Int⁰›(value, 2)
-//│ };
 //│ set tmp = capturedGenerator$capturedGenerator⁰‹(Int⁰) => ?›(40);
-//│ set tmp1 = tmp.next⁰‹() => Unknown›();
+//│ set tmp1 = tmp.next⁰‹(...Array⁰) => ?›();
 //│ return tmp1.value⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
@@ -178,8 +178,8 @@ fun capturedGeneratorFunction(value: Int) =
   generate
 capturedGeneratorFunction(40)(2).next().value
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let generate, baseCall: ?, tmp: ?, tmp1: Unknown, generate$;
-//│ define generate$ as fun generate$⁰(value: Int⁰)(n: Int⁰): Iterator⁰ {
+//│ let generate, baseCall: ?, tmp: ?, tmp1: ?, generate$;
+//│ define generate$ as fun generate$⁰(value: Int⁰)(n: Int⁰): Unknown {
 //│   return generate⁰‹(Int⁰, Int⁰) => generator Int⁰›(value, n)
 //│ };
 //│ @generator
@@ -187,11 +187,11 @@ capturedGeneratorFunction(40)(2).next().value
 //│   return +⁰‹(?, ?) => ?›(value, n)
 //│ };
 //│ define capturedGeneratorFunction⁰ as fun capturedGeneratorFunction¹(value: Int⁰): ? {
-//│   return generate$⁰‹(Int⁰) => (Int⁰) => Iterator⁰›(value)
+//│   return generate$⁰‹(Int⁰) => (Int⁰) => Unknown›(value)
 //│ };
 //│ set baseCall = capturedGeneratorFunction¹‹(Int⁰) => ?›(40);
 //│ set tmp = baseCall‹(...Array⁰) => ?›(2);
-//│ set tmp1 = tmp.next⁰‹() => Unknown›();
+//│ set tmp1 = tmp.next⁰‹(...Array⁰) => ?›();
 //│ return tmp1.value⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
@@ -210,17 +210,16 @@ fun capturedAsyncFunction(value: Int) =
   add
 capturedAsyncFunction(40)(2)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let add, baseCall: ?, add$, add1;
-//│ define add1 as fun add²(value: Int⁰, n: Int⁰)(): Int⁰ {
-//│   return +⁰‹(?, ?) => ?›(value, n)
-//│ };
+//│ let add, baseCall: ?, add$;
 //│ define add$ as fun add$⁰(value: Int⁰)(n: Int⁰): Promise⁰ {
-//│   return add³‹(Int⁰, Int⁰) => Promise⁰›(value, n)
+//│   return add²‹(Int⁰, Int⁰) => Promise⁰›(value, n)
 //│ };
-//│ define add as fun add³(value: Int⁰, n: Int⁰): Promise⁰ {
-//│   let tmp: Function⁰;
-//│   set tmp = add²‹(Int⁰, Int⁰) => () => Int⁰›(value, n);
-//│   return runtime⁰.toJsAsync﹖‹(...Array⁰) => ?›(tmp)
+//│ define add as fun add²(value: Int⁰, n: Int⁰): Promise⁰ {
+//│   let add$async;
+//│   define add$async as fun add³(): Int⁰ {
+//│     return +⁰‹(?, ?) => ?›(value, n)
+//│   };
+//│   return (runtime⁰.toJsAsync﹖‹(...Array⁰) => ?›(add³) as! Promise⁰)
 //│ };
 //│ define capturedAsyncFunction⁰ as fun capturedAsyncFunction¹(value: Int⁰): ? {
 //│   return add$⁰‹(Int⁰) => (Int⁰) => Promise⁰›(value)
@@ -244,19 +243,18 @@ fun capturedCurriedAsyncFunction(value: Int) =
   add
 capturedCurriedAsyncFunction(39)(1)(2)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let add, baseCall: ?, callPrefix: ?, add$, add1;
-//│ define add1 as fun add⁴(value: Int⁰, first: Int⁰, second: Int⁰)(): Int⁰ {
-//│   let tmp: Int⁰;
-//│   set tmp = +⁰‹(?, ?) => ?›(value, first);
-//│   return +⁰‹(?, ?) => ?›(tmp, second)
-//│ };
+//│ let add, baseCall: ?, callPrefix: ?, add$;
 //│ define add$ as fun add$¹(value: Int⁰)(first: Int⁰): Function⁰ {
-//│   return add⁵‹(Int⁰, Int⁰) => (Int⁰) => Promise⁰›(value, first)
+//│   return add⁴‹(Int⁰, Int⁰) => (Int⁰) => Promise⁰›(value, first)
 //│ };
-//│ define add as fun add⁵(value: Int⁰, first: Int⁰)(second: Int⁰): Promise⁰ {
-//│   let tmp: Function⁰;
-//│   set tmp = add⁴‹(Int⁰, Int⁰, Int⁰) => () => Int⁰›(value, first, second);
-//│   return runtime⁰.toJsAsync﹖‹(...Array⁰) => ?›(tmp)
+//│ define add as fun add⁴(value: Int⁰, first: Int⁰)(second: Int⁰): Promise⁰ {
+//│   let add$async;
+//│   define add$async as fun add⁵(): Int⁰ {
+//│     let tmp: Int⁰;
+//│     set tmp = +⁰‹(?, ?) => ?›(value, first);
+//│     return +⁰‹(?, ?) => ?›(tmp, second)
+//│   };
+//│   return (runtime⁰.toJsAsync﹖‹(...Array⁰) => ?›(add⁵) as! Promise⁰)
 //│ };
 //│ define capturedCurriedAsyncFunction⁰ as fun capturedCurriedAsyncFunction¹(value: Int⁰): ? {
 //│   return add$¹‹(Int⁰) => (Int⁰) => Function⁰›(value)

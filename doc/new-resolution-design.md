@@ -263,3 +263,79 @@ collection and assignment lowering must handle resolved direct references and
 retain the existing binding/assignment checks. Constructor-pattern resolution
 discards every nested capture when recovering class identity; leaving one behind
 can make generated patterns test a constructor function instead of its class.
+
+## Implicit namespaces
+
+User-facing rules are in the [language reference](reference.md#implicit-namespaces).
+An unbound capitalized value is an `UnresolvedRef` with `NameLookup.NamespacesThenOpens`;
+a leading-dot selection is one with `NameLookup.LeadingDot` and no wildcard prefixes. It
+initially publishes a `NamespaceProbe`; as flow reveals namespaces, it immediately
+looks up and publishes their candidates. Block settlement decides wildcard fallback
+and diagnoses the resulting candidates. The probe travels along ordinary value edges and
+through the operations of the chains rooted at the reference, which derive their result
+from an operand: selections (including projections and checked or dynamic accesses),
+applications, type applications, and instantiations (with `new` or `new!`).
+Elaboration's interpretation roles decide where implicit namespacing applies: chained
+selection receivers (`Receiver(chained = true)`) and the classes instantiated by `new`
+(`Clss(instantiated = true)`) use it, whereas types, `extends` clauses, and annotations
+only consult explicit bindings and wildcard opens.
+
+The probe is not a value, wherever it arrives: as a value, or as the view of a type
+variable that it reached. `ShapeObserver` dispatches observed shapes to distinct value
+and probe callback types, preserving the original shape and marks without a wrapper.
+`listenInstanceViews`, `listenTermViews`, `listenReceiver`, and `listenClass` use it to
+hide probes from value consumers and deliver them to the chains that pass them on.
+`listenInstanceFlow` and type-view hosts retain both kinds of flow, as their consumers
+can need either. `inferTypeArguments` records an observation before following either endpoint,
+then observes probes reaching a declared type, directly or as the view of a type variable.
+A probe stands for a value of the whole required type, whose namespaces `typeNamespaces`
+discovers. The same observation key governs structural constraints and namespace discovery;
+there is no separate relation table that could discard a later argument's namespace.
+A constructor pattern's head instead observes the values that reach its scrutinee
+(`scrutineeNamespaces`, in `matchShapePat`), before the views of declared types erase
+the declarations that these types name. `valueNamespaces` follows the types of declared
+values, including the values that reach their type parameters, and the classes of
+instances. Record patterns read the fields of their input with the member lookups of
+selections, at a site that the elaborator records.
+
+Interned type references include local alias annotations and the identities of their
+arguments. Ordinary types carry no namespace annotation and serve directly as view and
+constraint keys. There is no parallel observation graph. Thus `Box[FirstAlias[X]]` and
+`Box[SecondAlias[X]]` retain different argument references without attaching the argument's
+namespaces to `Box` itself. Projecting a field exposes that argument's annotated type.
+Diagnostic locations do not participate in interning. Per-use interpretations of synthesized
+nodes preserve diagnostic witnesses and operand order, and must have the same child types
+as the interned source.
+
+Expanding an alias with a companion or declaring namespace prepends its identity to a local
+`TypeNamespaces` priority list. The first occurrence of an alias is enough: for a fixed
+name and lexical scope, trying it again cannot discover a different provider. Repeated
+`Identity[Identity[A]]` forwarding therefore reaches the same annotated reference. Aliases
+with no namespaces add no metadata. Eager argument reduction remains necessary for the
+current recursive cache scheme, so suspended alias applications cannot accumulate in its
+substitution environments. The interner stores child references without diagnostic payloads
+and imports each shared reference once into the consuming unit.
+
+`typeNamespaces` follows the type graph using the ordinary `reduceType` application rules.
+It first tries the type's local alias priorities, then its head constructor, body, or inferred
+values. Each class or alias contributes the first of its own namespaces (its companion,
+then its declaring module) that provides an accessible member (`firstProvider`). Required
+types constrain probes; provided type parameters additionally observe incoming values.
+
+Boolean components that survive normalization contribute independently. An annotation on
+a Boolean formula distributes its priorities over the surviving atoms when the formula is
+combined again. Distinct annotated atoms remain distinct; recursive normalization needs no
+separate merge of namespace observations. Discarded components contribute no namespaces:
+`Any | A` has the namespace behavior of `Any`, and `A | (A & B)` has that of `A`.
+`ImplicitNamespaces.consulted` decides each namespace once per reference: it is pending
+until defined, then missing the name, inaccessible, selected through a path from
+`AccessPath.valuePath` (whose paths carry the same `Capture`s as written references),
+or found late.
+
+`settleUnboundReferences` runs before interface exposure and block completion, and takes
+the references of the current block from `accessSites`. It lets capitalized references
+without namespaces fall back to their wildcard opens in source order, then diagnoses
+missing and ambiguous names. Namespaces revealed afterwards are reported against the
+settled candidates and never change them; `AccessPath.reachable` checks their paths
+without building them. `LeadingDotSelections.mls` and the `ImplicitNamespace*.mls` files
+in `slop/` cover these rules.

@@ -456,8 +456,8 @@ val escapedCallback = @annotations.async {value => value.answer}
 //│ ║        	                                          ^^^^^
 //│ ╟── This value is fulfilled by this promise.
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.XX: 	declare class Promise[out A](executor: ((A | Promise[A]) -> unsafe.undefined, Any -> unsafe.undefined) -> unsafe.undefined) {
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	declare class Promise[out A](executor: ((A | Promise[A]) -> (), Any -> ()) -> ()) {
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── 'escapedCallback' is exposed by this compilation unit.
 //│ ║  in Promises.mls:+1
 //│ ║  l.+1: 	val escapedCallback = @annotations.async {value => value.answer}

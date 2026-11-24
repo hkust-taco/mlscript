@@ -1,0 +1,54 @@
+:js
+:silent
+
+:exit
+====================================================================================================
+
+import "../../../../hkmc2/shared/src/test/mlscript-compile/Benchmark.mls"
+open Benchmark
+
+let suite = mkSuite()
+
+import "../../../../hkmc2/shared/src/test/mlscript-compile/handlers-bench/countdown.mls"
+print(countdown.run(2000))
+suite.add("countdown", () => countdown.run(2000))
+//│ > 0
+
+import "../../../../hkmc2/shared/src/test/mlscript-compile/handlers-bench/fibonacci_recursive.mls"
+print(fibonacci_recursive.run(20))
+suite.add("fibonacci_recursive", () => fibonacci_recursive.run(20))
+//│ > 6765
+
+import "../../../../hkmc2/shared/src/test/mlscript-compile/handlers-bench/generator.mls"
+print(generator.run(15))
+suite.add("generator", () => generator.run(15))
+//│ > 65519
+
+import "../../../../hkmc2/shared/src/test/mlscript-compile/handlers-bench/handler_sieve.mls"
+print(handler_sieve.run(500))
+suite.add("handler_sieve", () => handler_sieve.run(500))
+//│ > 21536
+
+import "../../../../hkmc2/shared/src/test/mlscript-compile/handlers-bench/iterator.mls"
+print(iterator.run(2000))
+suite.add("iterator", () => iterator.run(2000))
+//│ > 2001000
+
+// Stack overflows with larger values because of the nested `handleEffects` call in the continuation
+import "../../../../hkmc2/shared/src/test/mlscript-compile/handlers-bench/parsing_dollars.mls"
+print(parsing_dollars.run(30))
+suite.add("parsing_dollars", () => parsing_dollars.run(30))
+//│ > 465
+
+import "../../../../hkmc2/shared/src/test/mlscript-compile/handlers-bench/product_early.mls"
+print(product_early.run(1000))
+suite.add("product_early", () => product_early.run(1000))
+//│ > 0
+
+import "../../../../hkmc2/shared/src/test/mlscript-compile/handlers-bench/resume_nontail.mls"
+print(resume_nontail.run(1000))
+suite.add("resume_nontail", () => resume_nontail.run(1000))
+//│ > 708
+
+runSuite(suite)
+writeResults(suite, "handlers.json")

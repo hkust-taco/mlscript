@@ -48,9 +48,9 @@ r.foo
 :sjs
 let r = ({} as dyn)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let r3; r3 = runtime.Unit;
+//│ let r3; r3 = globalThis.Object.freeze({});
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ r = ()
+//│ r = {}
 
 :re
 r.x
@@ -67,7 +67,7 @@ r.foo
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'foo' yielded 'undefined'
 
 let s = ({} as dyn)
-//│ s = ()
+//│ s = {}
 
 set s.foo = 2
 

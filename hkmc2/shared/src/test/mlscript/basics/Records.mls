@@ -2,13 +2,13 @@
 :js
 
 
-// * Note that this currently denotes unit, not an empty record...
-// * (we could make them the same thing) 
+// Empty braces denote a fresh record; Unit is written `()`.
 
 {}
+//│ = {}
 
 let r = {}
-//│ r = ()
+//│ r = {}
 
 
 {1}
@@ -106,6 +106,8 @@ let rcd = new {
 //│ ║        	^^^^^^^^^
 //│ ║  l.+4: 	      "..."
 //│ ║        	^^^^^^^^^^^
+//│ ║  l.+5: 	... (more lines omitted) ...
+//│ ║        	^^^
 //│ ╙── Invalid class expression: block
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ rcd = undefined

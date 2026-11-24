@@ -1,0 +1,57 @@
+:js
+:effectHandlers
+:lift
+
+// Resumable handlers currently require legacy resolution; these tests cover their MIR optimization.
+
+abstract class Effect with
+  fun perform(arg): Any
+
+
+// A single spread node supplies the continuation's arguments, not the resumed value itself.
+:expect 42
+handle h = Effect with
+  fun perform(xs)(k) = k(...xs)
+h.perform([42])
+//│ = 42
+
+
+// Passing the resumption as its own argument must preserve its binding.
+:expect 42
+handle h = Effect with
+  fun perform(x)(k) = k(k)
+h.perform(0)
+42
+//│ = 42
+
+// A nested lambda can capture the resumption without calling it again.
+:expect 42
+handle h = Effect with
+  fun perform(x)(k) =
+    let capture = () => k
+    k(capture)
+h.perform(0)()
+42
+//│ = 42
+
+// Named local functions have the same capture requirements as lambdas.
+:expect 42
+handle h = Effect with
+  fun perform(x)(k) =
+    fun capture() = k
+    k(capture)
+h.perform(0)()
+42
+//│ = 42
+
+// A nested class method can retain the resumption too.
+:expect 42
+handle h = Effect with
+  fun perform(x)(k) =
+    class Capture with
+      fun read() = k
+    k(new Capture)
+h.perform(0).read()
+42
+//│ = 42
+

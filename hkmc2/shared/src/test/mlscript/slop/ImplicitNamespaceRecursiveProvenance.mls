@@ -1,0 +1,62 @@
+:.
+#lang(eagerResolution: true)
+
+module First with
+  data class Some[T](value: T)
+module Second with
+  data class Some[T](value: T)
+type FirstAlias[T] = T
+module FirstAlias with
+  val Some = First.Some
+type SecondAlias[T] = T
+module SecondAlias with
+  val Some = Second.Some
+
+type Alternating[A, B] = {value: A, next: Alternating[B, A]}
+
+// Distinct semantic arguments preserve the permutation through repeated selections.
+:expect [1, 2, 3]
+fun distinct[X, Y](chain: Alternating[FirstAlias[X] | Nothing, SecondAlias[Y] | Nothing]) =
+  [if chain.value is Some(v) then v else 0,
+    if chain.next.value is Some(v) then v else 0,
+    if chain.next.next.value is Some(v) then v else 0]
+distinct({value: First.Some(1), next: {value: Second.Some(2), next: {value: First.Some(3), next: null}}})
+//│ = [1, 2, 3]
+
+// Equal semantic arguments still carry different namespaces. Swapping the
+// arguments twice must restore FirstAlias, without expanding the semantic graph.
+:expect [4, 5, 6]
+fun same[X](chain: Alternating[FirstAlias[X] | Nothing, SecondAlias[X] | Nothing]) =
+  [if chain.value is Some(v) then v else 0,
+    if chain.next.value is Some(v) then v else 0,
+    if chain.next.next.value is Some(v) then v else 0]
+same({value: First.Some(4), next: {value: Second.Some(5), next: {value: First.Some(6), next: null}}})
+//│ = [4, 5, 6]
+
+// Identity forwarding must preserve the original namespace without retaining an
+// ever-growing history of Identity[Identity[...]] applications.
+type Identity[A] = A
+type ForwardChain[A] = {value: A, next: ForwardChain[Identity[A]]}
+
+:expect [7, 8, 9]
+fun forward[X](chain: ForwardChain[FirstAlias[X] | Nothing]) =
+  [if chain.value is Some(v) then v else 0,
+    if chain.next.value is Some(v) then v else 0,
+    if chain.next.next.value is Some(v) then v else 0]
+forward({value: First.Some(7), next: {value: First.Some(8), next: {value: First.Some(9), next: null}}})
+//│ = [7, 8, 9]
+
+// A forwarding alias with its own companion takes priority over the original
+// argument's companion. Repeating it must preserve that priority and terminate.
+type Shadow[A] = A
+module Shadow with
+  val Some = Second.Some
+type ShadowChain[A] = {value: A, next: ShadowChain[Shadow[A]]}
+
+:expect [10, 11, 12]
+fun shadow[X](chain: ShadowChain[FirstAlias[X] | Nothing]) =
+  [if chain.value is Some(v) then v else 0,
+    if chain.next.value is Some(v) then v else 0,
+    if chain.next.next.value is Some(v) then v else 0]
+shadow({value: First.Some(10), next: {value: Second.Some(11), next: {value: Second.Some(12), next: null}}})
+//│ = [10, 11, 12]

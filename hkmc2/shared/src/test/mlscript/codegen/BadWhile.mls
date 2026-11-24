@@ -7,7 +7,7 @@ while {} do()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ lbl: while (true) {
 //│   let scrut;
-//│   scrut = runtime.Unit;
+//│   scrut = globalThis.Object.freeze({});
 //│   if (scrut === true) { continue lbl }
 //│   break;
 //│ }

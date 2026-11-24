@@ -348,7 +348,10 @@ enum Tree extends AutoLocated:
       group.stmts.foldRight(body): (binding, body) =>
         binding.asLetLike(kw, S(body)).desugared
     case LetLike(kw, group: Block, N, N) =>
-      group.withStmts(group.stmts.map(_.asLetLike(kw, N)))
+      // An empty binding/assignment group performs no statements and returns
+      // Unit, even when used as an expression such as `else set {}`.
+      if group.stmts.isEmpty then Unt().withLocOf(group)
+      else group.withStmts(group.stmts.map(_.asLetLike(kw, N)))
     
     // TODO generalize to pattern-let and rm this special case
     case LetLike(kw, und @ Under(), r, b) =>

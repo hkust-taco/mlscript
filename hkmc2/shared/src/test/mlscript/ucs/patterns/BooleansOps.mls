@@ -18,13 +18,13 @@ n is (0 | 1)
 
 :e
 if 5 is a & b then a
-//│ ╔══[COMPILATION ERROR] Name not found: b
-//│ ║  l.+1: 	if 5 is a & b then a
-//│ ╙──      	            ^
 //│ ╔══[COMPILATION ERROR] Resolution error in composition
 //│ ║  l.+1: 	if 5 is a & b then a
 //│ ║        	   ^^^^^^^^^^
 //│ ╙── A type cannot be used as a runtime value.
+//│ ╔══[COMPILATION ERROR] Name not found: b
+//│ ║  l.+1: 	if 5 is a & b then a
+//│ ╙──      	            ^
 //│ ╔══[COMPILATION ERROR] Name not found: a
 //│ ║  l.+1: 	if 5 is a & b then a
 //│ ╙──      	                   ^

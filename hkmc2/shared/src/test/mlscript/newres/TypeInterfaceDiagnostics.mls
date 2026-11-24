@@ -9,7 +9,7 @@ xs.0.value
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+4: 	xs.0.value
 //│ ║        	^^^^^^^^^^
-//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── Value with an empty interface does not contain member 'value'
 //│ ╟── This type argument specifies only an input bound.
 //│ ║  l.+3: 	let xs = (mut [] as Items[in Item])
 //│ ║        	                          ^^^^^^^
@@ -26,7 +26,7 @@ xs.0.value
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+4: 	xs.0.value
 //│ ║        	^^^^^^^^^^
-//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── Value with an empty interface does not contain member 'value'
 //│ ╟── This type argument specifies only an input bound.
 //│ ║  l.+3: 	let xs = (mut [] as Items[in Item])
 //│ ║        	                          ^^^^^^^
@@ -52,7 +52,7 @@ box.item.value
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+4: 	box.item.value
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── Value with an empty interface does not contain member 'value'
 //│ ╟── This type argument supplies only an input bound for 'T'.
 //│ ║  l.+3: 	let box = (new Box(Item(4)) as Box[Item])
 //│ ║        	                                   ^^^^
@@ -71,7 +71,7 @@ xs.0.value
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+3: 	xs.0.value
 //│ ║        	^^^^^^^^^^
-//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── Value with an empty interface does not contain member 'value'
 //│ ║  l.+2: 	let xs = (mut [Item(5)] as Array[Any])
 //│ ║        	                                 ^^^
 //│ ╟── Type 'Any' is declared without a member interface.
@@ -88,7 +88,7 @@ fun inspect(value: Hidden) = value.member
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+2: 	fun inspect(value: Hidden) = value.member
 //│ ║        	                             ^^^^^^^^^^^^
-//│ ╟── Cannot resolve member 'member' of a value with unknown shape.
+//│ ╟── Value with an empty interface does not contain member 'member'
 //│ ║  l.+2: 	fun inspect(value: Hidden) = value.member
 //│ ║        	                   ^^^^^^
 //│ ╟── Type 'Hidden' is declared without a member interface.
@@ -111,7 +111,9 @@ fun inspect(value: ~Int) = value.member
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+1: 	fun inspect(value: ~Int) = value.member
 //│ ║        	                           ^^^^^^^^^^^^
-//│ ╟── Cannot resolve member 'member' of a value with unknown shape.
+//│ ╟── Value with an empty interface does not contain member 'member'
+//│ ║  l.+1: 	fun inspect(value: ~Int) = value.member
+//│ ║        	                   ^^^^
 //│ ╟── This negated type does not specify a member interface.
 //│ ║  l.+1: 	fun inspect(value: ~Int) = value.member
 //│ ╙──      	                   ^^^^
@@ -123,9 +125,7 @@ fun invoke(xs: Array[in Item]) = xs.0()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.+2: 	fun invoke(xs: Array[in Item]) = xs.0()
 //│ ║        	                                 ^^^^^^
-//│ ╟── Value with no known interface cannot be called like a function.
-//│ ║  l.+2: 	fun invoke(xs: Array[in Item]) = xs.0()
-//│ ║        	                     ^^^^^^^
+//│ ╟── Value with an empty interface cannot be called like a function.
 //│ ╟── This type argument specifies only an input bound.
 //│ ║  l.+2: 	fun invoke(xs: Array[in Item]) = xs.0()
 //│ ║        	                     ^^^^^^^
@@ -142,7 +142,7 @@ pair.1.item.value
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+6: 	pair.1.item.value
 //│ ║        	^^^^^^^^^^^^^^^^^
-//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── Value with an empty interface does not contain member 'value'
 //│ ╟── This type argument supplies only an input bound for 'R'.
 //│ ║  l.+4: 	type Pair[A] = [Left[A], Right[A]]
 //│ ║        	                               ^
@@ -165,7 +165,7 @@ delay(pair)().1.item.value
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+7: 	delay(pair)().1.item.value
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── Value with an empty interface does not contain member 'value'
 //│ ╟── This type argument supplies only an input bound for 'R'.
 //│ ║  l.+4: 	type Pair[A] = [Left[A], Right[A]]
 //│ ║        	                               ^
@@ -286,7 +286,7 @@ fun inspect(value: Alias) = value.member
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+3: 	fun inspect(value: Alias) = value.member
 //│ ║        	                            ^^^^^^^^^^^^
-//│ ╟── Cannot resolve member 'member' of a value with unknown shape.
+//│ ╟── Value with an empty interface does not contain member 'member'
 //│ ║  l.+3: 	fun inspect(value: Alias) = value.member
 //│ ║        	                   ^^^^^
 //│ ╟── Type 'Hidden' is declared without a member interface.
@@ -300,7 +300,7 @@ fun secondInputOnly(xs: Array[in Str]) = xs.[0].length
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+1: 	fun firstInputOnly(xs: Array[in Int]) = xs.[0].length
 //│ ║        	                                          ^^^^^^^^^^^
-//│ ╟── Cannot resolve member 'length' of a value with unknown shape.
+//│ ╟── Value with an empty interface does not contain member 'length'
 //│ ╟── This type argument specifies only an input bound.
 //│ ║  l.+1: 	fun firstInputOnly(xs: Array[in Int]) = xs.[0].length
 //│ ║        	                             ^^^^^^
@@ -308,7 +308,7 @@ fun secondInputOnly(xs: Array[in Str]) = xs.[0].length
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+2: 	fun secondInputOnly(xs: Array[in Str]) = xs.[0].length
 //│ ║        	                                           ^^^^^^^^^^^
-//│ ╟── Cannot resolve member 'length' of a value with unknown shape.
+//│ ╟── Value with an empty interface does not contain member 'length'
 //│ ╟── This type argument specifies only an input bound.
 //│ ║  l.+2: 	fun secondInputOnly(xs: Array[in Str]) = xs.[0].length
 //│ ║        	                              ^^^^^^

@@ -198,7 +198,7 @@ For example, `~mlscriptJVM/testOnly mlscript.DiffTests -- -z parser` will watch 
 Run `ctest` before running individual diff-tests, including `sdtest`,
 so the generated JavaScript dependencies are available.
 Also run `cwtest` before individual Wasm diff-tests, including those under `slop/wasm`.
-`hkmc2SlopTests/test` runs the main and Wasm compilation prerequisites automatically.
+`hkmc2WasmTests/test` and `hkmc2SlopTests/test` run the main and Wasm compilation prerequisites automatically.
 
 #### Useful SBT commands aliases (use these for more pleasant development)
 

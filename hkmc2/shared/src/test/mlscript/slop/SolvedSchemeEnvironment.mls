@@ -1,0 +1,67 @@
+:.
+:js
+
+#config(inlining: None, liftDefns: Some(LiftDefns), flowBasedOpt: Some(FlowBasedOpt(mono: false)))
+
+
+// Publishing a closure connects its scheme's local parameters to callers in
+// other schemes. Both installations must retain their captured arguments.
+:checkIR
+:expect [42, 43]
+let published = (value: Int) => value
+private fun publish(base: Int) =
+  set published = (value: Int) => base + value
+private fun install(base: Int) = publish(base)
+private fun invokePublished(value: Int) = published(value)
+install(40)
+let first = invokePublished(2)
+install(41)
+[first, invokePublished(2)]
+//│ = [42, 43]
+//│ first = 42
+//│ published = fun
+
+
+// The callback's effect reaches runCallback through its argument only after
+// instantiation. Eta expansion must keep that effect before the read.
+:checkIR
+:expect [1, 42, 1]
+let calls = 0
+let callback = () => ()
+private fun installCallback(action) = set callback = action
+private fun effectfulCallback() = set calls += 1
+@affine(0) private fun answer() = 42
+private fun runCallback(action) =
+  action()
+  answer
+installCallback(effectfulCallback)
+let saved = runCallback(callback)
+let before = calls
+[before, saved(), calls]
+//│ = [1, 42, 1]
+//│ before = 1
+//│ callback = fun effectfulCallback
+//│ calls = 1
+//│ saved = fun answer
+
+
+// Values flow out of a recursive scheme into one shared slot and back into a
+// separate scheme. Solving the functions before the assignments must preserve
+// both constructor alternatives and their fields.
+:checkIR
+:noTailRec
+:expect [20, 22]
+data class PublishedBox(value: Int)
+let publishedBox = PublishedBox(0)
+private fun publishBox(count: Int, value: Int) =
+  if count == 0 then set publishedBox = PublishedBox(value)
+  else publishBox(count - 1, value)
+private fun readBox() =
+  if publishedBox is PublishedBox(value) then value else -1
+publishBox(2, 20)
+let firstBox = readBox()
+publishBox(1, 22)
+[firstBox, readBox()]
+//│ = [20, 22]
+//│ firstBox = 20
+//│ publishedBox = PublishedBox(22)

@@ -1,0 +1,84 @@
+:.
+
+// Overwriting a spread field prevents its callback from escaping.
+:expect [0, 3]
+private fun hidden(value) = value.length
+private val original = {callback: hidden}
+val exported = {...original, callback: 0}
+[exported.callback, hidden("abc")]
+//│ = [0, 3]
+//│ exported = {callback: 0}
+//│ original = {callback: fun hidden}
+
+// Repeated direct fields and later spreads use the same last-write-wins rule.
+:expect [0, 1, 3]
+private fun hidden(value) = value.length
+fun direct() = {callback: hidden, callback: 0}
+fun spread() = {callback: hidden, ...{callback: 1}}
+[direct().callback, spread().callback, hidden("abc")]
+//│ = [0, 1, 3]
+
+// Scope exits and generic substitutions survive nested record copies.
+:expect [0, 3]
+private fun hidden(value) = value.length
+private fun wrap[T](callback: T) = {callback: callback}
+private fun intermediate() = {...wrap(hidden)}
+fun exported() = {...intermediate(), callback: 0}
+[exported().callback, hidden("abc")]
+//│ = [0, 3]
+
+// An unknown key cannot prove that an earlier callback was replaced.
+:e
+private fun retained(value) = value.length
+fun possible(key: Str) = {callback: retained, (key): 0}
+retained("abc")
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun retained(value) = value.length
+//│ ║        	                              ^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'length' of a value with unknown shape.
+//│ ╟── Parameter 'value' admits values of unknown shape.
+//│ ║  l.+1: 	private fun retained(value) = value.length
+//│ ║        	                     ^^^^^
+//│ ╟── This value is stored in this record field.
+//│ ║  l.+2: 	fun possible(key: Str) = {callback: retained, (key): 0}
+//│ ║        	                          ^^^^^^^^
+//│ ╟── This value is returned here.
+//│ ║  l.+2: 	fun possible(key: Str) = {callback: retained, (key): 0}
+//│ ║        	                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── 'possible' is exposed by this compilation unit.
+//│ ║  l.+2: 	fun possible(key: Str) = {callback: retained, (key): 0}
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Surviving callbacks still receive unknown inputs from callers of the exposed record.
+:e
+private fun retained(value) = value.length
+val exported = {...{callback: retained}, other: 0}
+retained("abc")
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun retained(value) = value.length
+//│ ║        	                              ^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'length' of a value with unknown shape.
+//│ ╟── Parameter 'value' admits values of unknown shape.
+//│ ║  l.+1: 	private fun retained(value) = value.length
+//│ ║        	                     ^^^^^
+//│ ╟── This value is stored in this record field.
+//│ ║  l.+2: 	val exported = {...{callback: retained}, other: 0}
+//│ ║        	                    ^^^^^^^^
+//│ ╟── 'exported' is exposed by this compilation unit.
+//│ ║  l.+2: 	val exported = {...{callback: retained}, other: 0}
+//│ ╙──      	^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ exported = {callback: fun retained, other: 0}
+
+// Different instances of one generic factory keep their declared callback inputs.
+:expect [3, 5]
+private fun length(value) = value.length
+private fun increment(value) = value + 1
+private fun wrap[T](callback: T -> Int) = {callback: callback}
+val strings = {...{...wrap[Str](length)}}
+val integers = {...wrap[Int](increment)}
+[length("abc"), increment(4)]
+//│ = [3, 5]
+//│ integers = {callback: fun increment}
+//│ strings = {callback: fun length}

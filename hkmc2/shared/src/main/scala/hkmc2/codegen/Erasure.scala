@@ -43,6 +43,7 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
         case Function(_, _) :: Nil => ErasedType.Function(S(false))
         case Polymorphic(_, _, body) :: Nil => erase(body, next)
         case Unit :: Nil => ErasedType.Unit
+        case Bottom :: Nil => ErasedType.Nothing
         case _ => ErasedType.Unknown
 
   /** Computes the runtime value representation denoted by a source type signature. With the new
@@ -91,6 +92,26 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
         case _ => N
     if config.language.useNewResolution then loop(resolution, Set.empty) else N
 
+  /** Rejects a declared type without a runtime representation, such as `Int32 | Str`:
+    * an unboxed primitive shares no representation with any other type, so no value of such
+    * a slot can be stored or passed. Reporting it once at the declaration replaces the errors
+    * that each coercion into or out of the slot would report. Class headers are published
+    * before declarations are erased, so canonicalizing here sees complete parent chains.
+    *
+    * The Prelude and Runtime are erased before the runtime's symbols exist, and
+    * canonicalizing a type such as `Unit` requires them. Those library declarations are not
+    * checked; every other compilation unit is erased after the runtime is loaded.
+    */
+  private def representable(tpe: ErasedValueType, loc: Opt[Loc]): ErasedValueType =
+    if !summon[State].runtimeSymbolsInitialized then tpe
+    else tpe.canonicalize match
+      case incompatible @ ErasedType.Incompatible(lhs, rhs) if !incompatible.reported =>
+        raise(ErrorReport(
+          msg"Types '${lhs.describe}' and '${rhs.describe}' have no common representation" -> loc :: Nil,
+          source = Diagnostic.Source.Compilation))
+        ErasedType.Incompatible(lhs, rhs)(reported = true)
+      case _ => tpe
+  
   private def declaredType(sign: Opt[Term], modulefulness: Modulefulness): Opt[ErasedValueType] =
     modulefulness.msym match
       case S(msym) => S(ErasedType.ValueLike(rsc = S(false), msym))
@@ -116,7 +137,7 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
         case TypeShape.Polymorphic(_, _, body) :: Nil => fullResult(body, count, seen + res)
         case TypeShape.Function(_, ret) :: Nil => fullResult(ret, count - 1, seen + res)
         case _ => ErasedType.Unknown
-    val resultType =
+    val candidateResultType =
       if config.language.useNewResolution && td.sign.nonEmpty && (td.k is syntax.Fun)
           && !td.flags.hasResultAnnotation && td.params.nonEmpty && !td.modulefulness.isModuleful
       then S(fullResult(td.sign.get.typeInterpretation.get, td.params.length, Set.empty))
@@ -128,7 +149,9 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
         // then reports any other base whose result the override does not fit.
         if config.language.useNewResolution && td.resultWrapperAnnotation.nonEmpty then N
         else overrides.validatedBases.getOrElse(td.tsym, Nil).iterator.filter(_.isErased)
-          .flatMap(_.declaredResultType).nextOption()
+          .flatMap(_.sourceDeclaredResultType).nextOption()
+    val resultType = candidateResultType.map:
+      representable(_, td.resultSignature.orElse(td.sign).flatMap(_.toLoc).orElse(td.tsym.toLoc))
     // The body produces the payload; callers receive the wrapper object instead.
     // Resolution gives calls of such functions the same wrapper shapes.
     val result =
@@ -321,7 +344,7 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
       */
     def eraseParameter(p: Param, visiting: Set[VarSymbol]): Unit =
       if !p.sym.isErased && !visiting(p.sym) then
-        p.sym.erasedType = declaredType(p.sign, p.modulefulness).orElse:
+        val erased = declaredType(p.sign, p.modulefulness).orElse:
           inheritedParams.get(p.sym) match
             case S(inherited) =>
               // Imported parameters are already erased; erroneous inheritance cycles can leave a
@@ -337,6 +360,8 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
             // Rest binding constructs an Array, including when lowering slices off trailing
             // arguments. Use that representation unless a declared or inherited type supplies one.
             case N => Option.when(restParameters(p.sym))(ErasedType.Array)
+        // Inherited parameter types can also join into a type without a representation.
+        p.sym.erasedType = erased.map(representable(_, p.sign.flatMap(_.toLoc).orElse(p.toLoc)))
     parameters.foreach: p =>
       eraseParameter(p, Set.empty)
       // Public fields have a BlockMemberSymbol; private/auxiliary constructor fields have a TermSymbol.
@@ -360,6 +385,9 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
         td.tsym.initializeErasure(erasedDefinitionSignature(td, overrideChecks))
     definitions.foreach(eraseDefinition(_, Set.empty))
     statements.foreach:
+      // Code generation and the InvalML typer can each erase the same elaborated tree.
+      case asc: Asc if !asc.isErased =>
+        asc.erasedType = eraseSignature(asc.ty).map(representable(_, asc.ty.toLoc))
       case LetDecl(sym: TermSymbol, _) if !sym.isErased => sym.initializeErasure(N)
       case _ => ()
     // Compare signatures only after every definition has completed erasure.

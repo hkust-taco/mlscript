@@ -207,7 +207,7 @@ module Foo with
 
 // * Inlining refreshes the module and class symbols, which must still share a private namespace.
 
-open annotations { inline, noInline }
+open annotations.{ inline, noInline }
 
 :expect [[1, 2], [3, 4]]
 @inline fun makePair(n) =

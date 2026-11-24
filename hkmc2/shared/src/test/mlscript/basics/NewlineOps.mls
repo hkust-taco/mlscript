@@ -170,9 +170,10 @@ let x
 2
   |> (a: _)
 .a
-//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (leading dot selection)
+//│ ╔══[COMPILATION ERROR] Cannot resolve leading-dot selection '.a'
 //│ ║  l.+3: 	.a
-//│ ╙──      	^^
+//│ ║        	^^
+//│ ╙── No type with an implicit namespace is required of its value.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

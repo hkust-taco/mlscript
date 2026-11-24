@@ -54,7 +54,7 @@ new Object() with { val x = 1 }
 new Object() with { val x = 1 } with { val y = 1 }
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'with' here
 //│ ║  l.+1: 	new Object() with { val x = 1 } with { val y = 1 }
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -98,7 +98,7 @@ new (Foo(123)) with { fun foo = 27 }
 new! (Foo(123)) with { fun foo = 27 }
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'with' here
 //│ ║  l.+1: 	new! (Foo(123)) with { fun foo = 27 }
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e

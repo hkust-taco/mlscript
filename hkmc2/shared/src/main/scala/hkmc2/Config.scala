@@ -13,6 +13,9 @@ enum CompilationTarget(val displayName: Str):
   case JS(emitCastComments: Bool) extends CompilationTarget("JavaScript")
   case Wasm extends CompilationTarget("Wasm")
 
+  /** Compares backend choices, ignoring options such as JavaScript cast comments. */
+  def sameBackend(that: CompilationTarget): Bool = ordinal == that.ordinal
+
 
 def config(using Config): Config = summon
 
@@ -149,6 +152,8 @@ object Config:
   ):
     def newUnderscoreAndApplicationSyntax: Bool =
       version.exists(_ > Language.v0_3_1.version.get)
+    def warnLegacyOpenSyntax: Bool =
+      version.exists(_ >= Language.v0_3_2.version.get)
   end Language
   
   object Language:
@@ -173,7 +178,14 @@ object Config:
       version = S(Version(0, 3, S(1))),
     )
     
-    val v0_3_x = v0_3_1.copy(
+    // Supports new-style underscore lambdas, eg `xs.map(=> _ + 1)`
+    // Moves from `open M { ... }` to `open M.{ ... }`, also supporting paths
+    val v0_3_2 = v0_3_1.copy(
+    )(
+      version = S(Version(0, 3, S(2))),
+    )
+    
+    val v0_3_x = v0_3_2.copy(
     )(
       version = S(Version(0, 3, N)),
     )
@@ -181,6 +193,7 @@ object Config:
     val presets: Map[Version, Language] = Ls(
       v0_2_x,
       v0_3_1,
+      v0_3_2,
       v0_3_x,
     ).map: lang =>
       lang.version.getOrElse(lastWords("language presets must specify a version")) -> lang
@@ -246,6 +259,8 @@ object Config:
     // One specific scenario is Rendering.mls, which Runtime.mls depends on, and hence using stack safety will
     // reference Runtime.mls during construction of the Rendering module, causing a cyclic dependency error.
     doNotInstrumentTopLevelModCtor: Bool = false,
+    // Whether tail resumptive handlers should be optimized.
+    optTailResumptiveHandlers: Bool = true
   )
   
   case class StackSafety(stackLimit: Int)
@@ -334,7 +349,7 @@ object Config:
     given Raise = _ => ()
     def modifier(tree: syntax.Tree): Config => Config = tree match
       case App(Directive(prefix, _), args) => modifier(Directive(prefix, args))
-      case Directive(Ident("config"), Tup(args)) => ConfigParser.parseOverrides(args)
+      case Directive(Ident("config"), Tup(args)) => ConfigParser.parseOverrides(args, allowCompilationTarget = true)
       case Directive(Ident("lang"), Tup(args)) => ConfigParser.parseLanguageDirective(args)
       case Directive(Ident("dbg"), Tup(args)) => ConfigParser.parseDebugDirective(args, definitionLocal = false, sourceDir)
       case _ => identity
@@ -439,9 +454,15 @@ object ConfigParser:
         case N => cfg
   
   /** Parse a list of config override arguments (from the Tup tree) into a Config modification function. */
-  def parseOverrides(args: Ls[Tree])(using Raise): Config => Config =
+  def parseOverrides(args: Ls[Tree], allowCompilationTarget: Bool)(using Raise): Config => Config =
     args.foldLeft(identity[Config]): (acc, arg) =>
-      val override_ = parseOverride(arg)
+      val override_ = arg match
+        case NamedArg("target", _) if !allowCompilationTarget =>
+          raise(ErrorReport(
+            msg"Compilation target can only be set by a top-level '#config' directive" -> arg.toLoc :: Nil,
+            source = Diagnostic.Source.Compilation))
+          identity[Config]
+        case _ => parseOverride(arg)
       cfg => override_(acc(cfg))
   
   /** Parse a single config override argument. */
@@ -467,6 +488,15 @@ object ConfigParser:
     case PrefixOpApp(Ident("-"), IntLit(v)) => S(-v.toInt)
     case _ =>
       expect("an integer value")(tree)
+      N
+
+  private def parseCompilationTarget(tree: Tree)(using Raise): Opt[CompilationTarget] = tree.deparenthesized match
+    case Sel(Ident("CompilationTarget"), Ident("JS")) | Ident("JS") =>
+      S(CompilationTarget.JS(emitCastComments = false))
+    case Sel(Ident("CompilationTarget"), Ident("Wasm")) | Ident("Wasm") =>
+      S(CompilationTarget.Wasm)
+    case _ =>
+      expect("CompilationTarget.JS or CompilationTarget.Wasm")(tree)
       N
 
   private def parseVersionName(tree: Tree)(using Raise): Opt[Str] = tree match
@@ -687,6 +717,7 @@ object ConfigParser:
       var checkInstantiateEffect = base.checkInstantiateEffect
       var softLifterError = base.softLifterError
       var doNotInstrumentTopLevelModCtor = base.doNotInstrumentTopLevelModCtor
+      var optTailResumptiveHandlers = base.optTailResumptiveHandlers
       args.foreach:
         case NamedArg("debug", value) =>
           setFrom(value)(parseBool)(v => debug = v)
@@ -698,9 +729,11 @@ object ConfigParser:
           setFrom(value)(parseBool)(v => softLifterError = v)
         case NamedArg("doNotInstrumentTopLevelModCtor", value) =>
           setFrom(value)(parseBool)(v => doNotInstrumentTopLevelModCtor = v)
+        case NamedArg("optTailResumptiveHandlers", value) =>
+          setFrom(value)(parseBool)(v => optTailResumptiveHandlers = v)
         case other =>
           unsupported("EffectHandlers", other)
-      S(Config.EffectHandlers(debug, stackSafety, checkInstantiateEffect, softLifterError, doNotInstrumentTopLevelModCtor))
+      S(Config.EffectHandlers(debug, stackSafety, checkInstantiateEffect, softLifterError, doNotInstrumentTopLevelModCtor, optTailResumptiveHandlers))
     case _ =>
       expect("EffectHandlers(...)")(tree)
       N
@@ -784,6 +817,8 @@ object ConfigParser:
   /** Parse a single field override like `tailRecOpt: false`. */
   private def parseField(name: Str, value: Tree)(using Raise): Config => Config = name match
     case "language" => parseLanguageOverride(value)
+    case "target" =>
+      parsedField(value)(parseCompilationTarget)(v => _.copy(target = v))
     case "noOpt" =>
       parsedField(value)(parseBool)(v => _.mapOptimizer(_ => Optimizer.NoOpt))
     case "tailRecOpt" =>

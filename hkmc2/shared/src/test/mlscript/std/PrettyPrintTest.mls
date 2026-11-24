@@ -3,8 +3,8 @@
 
 import "../../mlscript-compile/Rendering.mls"
 
-open Rendering { render }
-open Rendering
+open Rendering.{ render }
+open Rendering.{ * }
 
 // We set `breakLength` to 74. With the `print` function and diff test comments
 // added, we can use an 80-character-wide ruler to check whether line breaks

@@ -74,7 +74,7 @@ class FreshRecord
 val FreshRecord = { answer: 42 }
 //│ ╔══[COMPILATION ERROR] A class companion must be a function with a parameter list
 //│ ║  l.+2: 	val FreshRecord = { answer: 42 }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Arbitrary values cannot be overloaded with class 'FreshRecord'
 //│ ║  l.+1: 	class FreshRecord
 //│ ╙──      	^^^^^^^^^^^^^^^^^

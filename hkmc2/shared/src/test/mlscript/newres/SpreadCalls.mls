@@ -234,7 +234,7 @@ invokeUnknown(...opaque([() => 95]))
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.+1: 	fun invokeUnknown(f) = f()
 //│ ║        	                       ^^^
-//│ ╟── Value with no known interface cannot be called like a function.
+//│ ╟── Value with an empty interface cannot be called like a function.
 //│ ║  l.XX: 	fun opaque(values): Array[Any] = values
 //│ ║        	                          ^^^
 //│ ╟── Type 'Any' is declared without a member interface.
@@ -259,7 +259,7 @@ inspectUnknown(...opaque([Box(96)]))
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+1: 	fun inspectUnknown(x) = x.value
 //│ ║        	                        ^^^^^^^
-//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── Value with an empty interface does not contain member 'value'
 //│ ║  l.XX: 	fun opaque(values): Array[Any] = values
 //│ ║        	                          ^^^
 //│ ╟── Type 'Any' is declared without a member interface.
@@ -294,7 +294,7 @@ invokeRest(...opaque([() => 97]), Box(0))
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.+1: 	fun invokeRest(f, x, ...tail) = f()
 //│ ║        	                                ^^^
-//│ ╟── Value with no known interface cannot be called like a function.
+//│ ╟── Value with an empty interface cannot be called like a function.
 //│ ║  l.XX: 	fun opaque(values): Array[Any] = values
 //│ ║        	                          ^^^
 //│ ╟── Type 'Any' is declared without a member interface.

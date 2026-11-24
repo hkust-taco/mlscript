@@ -1,6 +1,6 @@
 :.
 #lang(0.3.x)
-open annotations
+open annotations.{ * }
 
 // Dead-parameter elimination and eta expansion prepare one signature for both
 // the original and each specialized copy, including the appended parameter bindings.
@@ -32,8 +32,8 @@ private fun partial(unused: Str, value: Int): Int -> Int = add(value)
 //│ define partial⁰ as fun partial¹(unused: Str⁰, value: Int⁰)(eta$0$0: Int⁰): Int⁰ {
 //│   return add⁰‹(Int⁰) => (Int⁰) => Int⁰›(value)(eta$0$0)
 //│ };
-//│ set tmp = partial$partial¹‹(Int⁰) => (Int⁰) => Int⁰›(40)(2);
-//│ set tmp1 = partial$partial⁰‹(Int⁰) => (Int⁰) => Int⁰›(41)(2);
+//│ set tmp = partial$partial⁰‹(Int⁰) => (Int⁰) => Int⁰›(40)(2);
+//│ set tmp1 = partial$partial¹‹(Int⁰) => (Int⁰) => Int⁰›(41)(2);
 //│ return [tmp, tmp1]
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [42, 43]
@@ -127,8 +127,8 @@ private fun nested(unused: Str, value: Int): Int =
 //│   };
 //│   return inner²‹(Int⁰) => Int⁰›(value)
 //│ };
-//│ set tmp = nested$nested¹‹(Int⁰) => Int⁰›(41);
-//│ set tmp1 = nested$nested⁰‹(Int⁰) => Int⁰›(42);
+//│ set tmp = nested$nested⁰‹(Int⁰) => Int⁰›(41);
+//│ set tmp1 = nested$nested¹‹(Int⁰) => Int⁰›(42);
 //│ return [tmp, tmp1]
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [42, 43]
@@ -146,13 +146,41 @@ private fun backward(unused: Str, count: Int, value: Int): Int =
   if count == 0 then value else forward(unused, count - 1, value)
 [forward("first", 2, 42), backward("second", 3, 43)]
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp: Int⁰, tmp1: Int⁰, backward$forward, forward$backward, backward$forward1, backward$backward, forward$forward, forward$backward1;
+//│ let tmp: Int⁰, tmp1: Int⁰, forward$forward, forward$backward, backward$forward, backward$backward, forward$backward1, backward$forward1;
 //│ @private @private
-//│ define backward$forward as fun backward$forward⁰(count: Int⁰, value: Int⁰): Int⁰ {
-//│   return backward⁰‹(Str⁰, Int⁰, Int⁰) => Int⁰›(undefined, count, value)
+//│ define forward$forward as fun forward$forward⁰(count: Int⁰, value: Int⁰): Int⁰ {
+//│   return forward$backward⁰‹(Int⁰, Int⁰) => Int⁰›(count, value)
 //│ };
 //│ @private @private
 //│ define forward$backward as fun forward$backward⁰(count: Int⁰, value: Int⁰): Int⁰ {
+//│   let scrut: ?, tmp2: Int⁰;
+//│   set scrut = Predef⁰.equals⁰‹(Unknown, Unknown) => Bool⁰›(count, 0);
+//│   match scrut
+//│     true =>
+//│       return value
+//│     else
+//│       set tmp2 = -⁰‹(?, ?) => ?›(count, 1);
+//│       return forward$forward⁰‹(Int⁰, Int⁰) => Int⁰›(tmp2, value)
+//│   end
+//│ };
+//│ @private @private
+//│ define backward$forward as fun backward$forward⁰(count: Int⁰, value: Int⁰): Int⁰ {
+//│   return backward$backward⁰‹(Int⁰, Int⁰) => Int⁰›(count, value)
+//│ };
+//│ @private @private
+//│ define backward$backward as fun backward$backward⁰(count: Int⁰, value: Int⁰): Int⁰ {
+//│   let scrut: ?, tmp2: Int⁰;
+//│   set scrut = Predef⁰.equals⁰‹(Unknown, Unknown) => Bool⁰›(count, 0);
+//│   match scrut
+//│     true =>
+//│       return value
+//│     else
+//│       set tmp2 = -⁰‹(?, ?) => ?›(count, 1);
+//│       return backward$forward⁰‹(Int⁰, Int⁰) => Int⁰›(tmp2, value)
+//│   end
+//│ };
+//│ @private @private
+//│ define forward$backward1 as fun forward$backward¹(count: Int⁰, value: Int⁰): Int⁰ {
 //│   let scrut: ?, tmp2: Int⁰;
 //│   set scrut = Predef⁰.equals⁰‹(Unknown, Unknown) => Bool⁰›(count, 0);
 //│   match scrut
@@ -165,39 +193,11 @@ private fun backward(unused: Str, count: Int, value: Int): Int =
 //│ };
 //│ @private @private
 //│ define backward$forward1 as fun backward$forward¹(count: Int⁰, value: Int⁰): Int⁰ {
-//│   return backward$backward⁰‹(Int⁰, Int⁰) => Int⁰›(count, value)
-//│ };
-//│ @private @private
-//│ define backward$backward as fun backward$backward⁰(count: Int⁰, value: Int⁰): Int⁰ {
-//│   let scrut: ?, tmp2: Int⁰;
-//│   set scrut = Predef⁰.equals⁰‹(Unknown, Unknown) => Bool⁰›(count, 0);
-//│   match scrut
-//│     true =>
-//│       return value
-//│     else
-//│       set tmp2 = -⁰‹(?, ?) => ?›(count, 1);
-//│       return backward$forward¹‹(Int⁰, Int⁰) => Int⁰›(tmp2, value)
-//│   end
-//│ };
-//│ @private @private
-//│ define forward$forward as fun forward$forward⁰(count: Int⁰, value: Int⁰): Int⁰ {
-//│   return forward$backward¹‹(Int⁰, Int⁰) => Int⁰›(count, value)
-//│ };
-//│ @private @private
-//│ define forward$backward1 as fun forward$backward¹(count: Int⁰, value: Int⁰): Int⁰ {
-//│   let scrut: ?, tmp2: Int⁰;
-//│   set scrut = Predef⁰.equals⁰‹(Unknown, Unknown) => Bool⁰›(count, 0);
-//│   match scrut
-//│     true =>
-//│       return value
-//│     else
-//│       set tmp2 = -⁰‹(?, ?) => ?›(count, 1);
-//│       return forward$forward⁰‹(Int⁰, Int⁰) => Int⁰›(tmp2, value)
-//│   end
+//│   return backward⁰‹(Str⁰, Int⁰, Int⁰) => Int⁰›(undefined, count, value)
 //│ };
 //│ @private
 //│ define forward¹ as fun forward⁰(unused: Str⁰, count: Int⁰, value: Int⁰): Int⁰ {
-//│   return forward$backward⁰‹(Int⁰, Int⁰) => Int⁰›(count, value)
+//│   return forward$backward¹‹(Int⁰, Int⁰) => Int⁰›(count, value)
 //│ };
 //│ @private
 //│ define backward¹ as fun backward⁰(unused: Str⁰, count: Int⁰, value: Int⁰): Int⁰ {
@@ -208,7 +208,7 @@ private fun backward(unused: Str, count: Int, value: Int): Int =
 //│       return value
 //│     else
 //│       set tmp2 = -⁰‹(?, ?) => ?›(count, 1);
-//│       return backward$forward⁰‹(Int⁰, Int⁰) => Int⁰›(tmp2, value)
+//│       return backward$forward¹‹(Int⁰, Int⁰) => Int⁰›(tmp2, value)
 //│   end
 //│ };
 //│ set tmp = forward$forward⁰‹(Int⁰, Int⁰) => Int⁰›(2, 42);
@@ -239,18 +239,17 @@ let lifted = capturedVariadic(30)
 //│   return sum⁰‹(Int⁰, Int⁰, ...Array⁰) => (Int⁰) => Int⁰›(base, first, ...args)
 //│ };
 //│ define sum as fun sum⁰(base: Int⁰, first: Int⁰, ...args: Array⁰)(extra: Int⁰): Int⁰ {
-//│   let optional: Unknown, middle: Array⁰, last: Int⁰, tmp2: Int⁰, tmp3: Unknown, tmp4: Unknown, tmp5: Unknown, tmp6: Unknown, leadingArgs: Array⁰;
+//│   let optional: Unknown, middle: Array⁰, last: Int⁰, tmp2: Int⁰, tmp3: Unknown, tmp4: Unknown, tmp5: Unknown, tmp6: Unknown;
 //│   do runtime⁰.checkVariadicArgs⁰‹(Str⁰, Int⁰, Int⁰, Array⁰) => ?›("sum", 2, 1, args);
-//│   set leadingArgs = runtime⁰.Tuple⁰.slice⁰‹(Unknown, Int⁰, Int⁰) => ?›(args, 0, 1);
-//│   match leadingArgs
-//│     Array(1+) =>
-//│       set optional = leadingArgs.0;
+//│   match args
+//│     Array(2+) =>
+//│       set optional = args.0;
 //│       end
 //│     else
 //│       set optional = null;
 //│       end
-//│   set middle = runtime⁰.Tuple⁰.slice⁰‹(Unknown, Int⁰, Int⁰) => ?›(args, 1, 1);
-//│   set last = args.-1;
+//│   set middle = runtime⁰.Tuple⁰.sliceArray⁰‹(Array⁰, Int⁰, Int⁰) => Array⁰›(args, 1, 1);
+//│   set last = (args.-1 as! Int⁰);
 //│   set tmp2 = +⁰‹(?, ?) => ?›(base, first);
 //│   match optional
 //│     Int⁰ =>

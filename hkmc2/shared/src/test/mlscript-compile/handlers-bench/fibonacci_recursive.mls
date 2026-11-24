@@ -1,0 +1,13 @@
+#lang(0.3.x)
+#config(effectHandlers: Some(EffectHandlers()))
+
+module fibonacci_recursive with ...
+
+fun fibonacci(n) =
+  if n ===
+    0 then 0
+    1 then 1
+    else fibonacci(n - 1) + fibonacci(n - 2)
+
+fun run(n) =
+  fibonacci(n)

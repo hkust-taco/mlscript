@@ -4,7 +4,7 @@
 import "../../../mlscript-compile/apps/parsing/ParseRule.mls"
 import "../../../mlscript-compile/apps/parsing/Keywords.mls"
 
-open ParseRule { Choice, rule }
+open ParseRule.{ Choice, rule }
 
 // Sequencing combines different result types and exposes the resulting rule interface.
 :expect Some("xxx")

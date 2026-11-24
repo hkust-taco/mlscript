@@ -32,7 +32,14 @@ fun cast() =
   42
 cast()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ define cast² as fun cast³() { let x; set x = Box⁰(1); do (x as! Box¹); return 42 }; return cast³()
+//│ define cast² as fun cast³() {
+//│   let x, unused;
+//│   set x = Box⁰(1);
+//│   set unused = (x as! Object⁰);
+//│   do (unused as! Box¹);
+//│   return 42
+//│ };
+//│ return cast³()
 //│ Wasm result:
 //│ = 42
 

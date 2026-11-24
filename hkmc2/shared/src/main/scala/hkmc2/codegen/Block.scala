@@ -21,6 +21,18 @@ import sem.Elaborator.{Ctx, State}
 
 The Middle IR (MIR) or "Block IR" or just "IR" is an implementation of a form of imperative ANF.
 
+Every function body in a valid executable IR program must return a value explicitly on each path
+that completes normally. This includes FunDefn and Lambda bodies, generated functions, and functions
+returning Unit. Lowering.returnedTerm establishes this property for source functions and handler bodies;
+subsequent IR transformations must preserve it.
+`End` nodes only fall through the current statement block; they should never supply an implicit Unit result.
+Inner and unreachable End nodes are legal, and functions that only throw or diverge need not contain Return.
+
+Program.main and class/module preCtor and ctor blocks are statement blocks that may fall through.
+BufferableTransform and ReflectionInstrumenter temporarily wrap constructor blocks in FunDefn to reuse
+function-processing code. These wrappers do not appear as executable functions; any emitted function
+must satisfy the explicit-return invariant.
+
 While the IR is mostly immutable, for easier manipulation and to enable some optimizations,
 we do assume that each DefinitionSymbol coming from the source program is "owned" by at most one IR definition;
 this is implemented by making the `Define` and `ClsLikeDefn` constructors
@@ -49,7 +61,10 @@ must refresh the corresponding symbols – see SymbolRefresher for this purpose.
 case class Program(
   imports: Ls[ImportSymbol -> Str],
   main: Block,
-)
+):
+  def mapMain(f: Block => Block): Program =
+    val result = f(main)
+    if result is main then this else copy(main = result)
 
 
 /** Symbol that can be used in a `SimpleRef`. */
@@ -374,7 +389,8 @@ end Block
 object Block:
   /** The union of the types returned from `block`, whose canonical form is their least upper bound.
     *
-    * `N` means there are no returns; an untyped return contributes `Unknown` instead. Nested function, lambda,
+    * `N` means there are no returns; `undefined` contributes `Nothing`, and an untyped return contributes
+    * `Unknown`. Nested function, lambda,
     * and class bodies have their own returns and are excluded. All other returns count, including unreachable
     * ones, since backends such as Wasm still validate their types.
     *
@@ -575,34 +591,56 @@ object HandleBlock:
     val bms = Elaborator.ctx.builtins.runtime.handle_suspension
     Call.of(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: bodyFun.asArg :: Nil) ne_:: Nil)(CallMetadata.mlsFunWithEffect, N)
   
+  def optTailResumptive(resumeSym: VarSymbol, body: Block)(using Config): Opt[Block] =
+    if !config.effectHandlers.exists(_.optTailResumptiveHandlers) then N
+    else
+      var hasOtherReturn = false
+      // Nested functions have independent returns, so mapReturn keeps the rewrite shallow.
+      // The recursive free-variable check still covers their captures and the rewritten calls' arguments.
+      val res = body.mapReturn:
+        // A spread argument holds a container whose elements supply the resumption's arguments.
+        case Return(Call(Value.SimpleRef(`resumeSym`), (Arg(N, value) :: Nil) :: Nil)) => Return(value)
+        case ret =>
+          hasOtherReturn = true
+          ret
+      if hasOtherReturn || res.freeVars.contains(resumeSym) then N
+      else S(res)
+  
+  def createHandlerMtd(cls: ClassSymbol)(handler: Handler)(using Config, Elaborator.State, Elaborator.Ctx) =
+    val body = optTailResumptive(handler.resumeSym, handler.body) match
+      case Some(value) => value
+      case None =>
+        val sym = BlockMemberSymbol(cls.nme + handler.sym.nme, Nil, true)
+        val fDef = FunDefn.withFreshSymbol(
+          N, sym, LoweredParamList.plain(Param.simple(handler.resumeSym) :: Nil)(N) :: Nil,
+          handler.body
+          )(N, annotations = Nil)
+        val rSym = TempSymbol(N, initErasedType = N, "suspendRes")
+        Scoped(Set(sym, rSym), Define(
+          fDef,
+          Return(suspend(cls.asThis, sym.asMemberRef(fDef.dSym)))))
+    FunDefn.withFreshSymbol(
+      S(cls),
+      handler.sym,
+      handler.params,
+      body
+    )(N, annotations = Nil)
+
   private def create(
       lhs: LocalVarSymbol,
       res: LocalVarSymbol,
       par: Path,
-      args: Ls[Path],
+      parentCall: Call,
       cls: ClassSymbol,
       handlers: Ls[Handler],
       body: Block,
       rest: Block
-  )(using Elaborator.State, Elaborator.Ctx) =
+  )(using Config, Elaborator.State, Elaborator.Ctx) =
     val sym = new BlockMemberSymbol("handleBlock$", Nil, false)
 
     val bodyDefn = FunDefn.withFreshSymbol(N, sym, LoweredParamList.plain(Nil)(N) :: Nil, body)(N, annotations = Nil)
     
-    val handlerMtds = handlers.map: handler =>
-      val sym = BlockMemberSymbol(cls.nme + handler.sym.nme, Nil, true)
-      val fDef = FunDefn.withFreshSymbol(
-        N, sym, LoweredParamList.plain(Param.simple(handler.resumeSym) :: Nil)(N) :: Nil,
-        handler.body
-        )(N, annotations = Nil)
-      val rSym = TempSymbol(N, initErasedType = N, "suspendRes")
-      FunDefn.withFreshSymbol(
-        S(cls),
-        handler.sym,
-        handler.params,
-        Scoped(Set(sym, rSym), Define(
-          fDef,
-          Return(suspend(cls.asThis, sym.asMemberRef(fDef.dSym))))))(N, annotations = Nil)
+    val handlerMtds = handlers.map(createHandlerMtd(cls))
 
     val clsDefn = ClsLikeDefn(
       N, // no owner
@@ -612,8 +650,7 @@ object HandleBlock:
       syntax.Cls,
       N, Nil,
       S(par), handlerMtds, Nil, Nil,
-      // Apparently, the lifter is not happy with any assignment in the preCtor...
-      Assign(NoSymbol, Call.of(State.builtinOpsMap("super").asSimpleRef, args.map(_.asArg) ne_:: Nil)(CallMetadata.mlsFunWithEffect, N), End()),
+      Assign(NoSymbol, parentCall, End()),
       End(),
       N,
       N,
@@ -633,16 +670,16 @@ object HandleBlock:
       lhs: LocalVarSymbol,
       res: LocalVarSymbol,
       par: Path,
-      args: Ls[Path],
+      parentCall: Call,
       cls: ClassSymbol,
       handlers: Ls[Handler],
       body: Block,
       rest: Block
-    )(using Elaborator.State, Elaborator.Ctx) =
+    )(using Config, Elaborator.State, Elaborator.Ctx) =
   rest match
   case Scoped(syms, rest) =>
-    Scoped(syms, create(lhs, res, par, args, cls, handlers, body, rest))
-  case _ => create(lhs, res, par, args, cls, handlers, body, rest)
+    Scoped(syms, create(lhs, res, par, parentCall, cls, handlers, body, rest))
+  case _ => create(lhs, res, par, parentCall, cls, handlers, body, rest)
 
 
 sealed abstract class Defn:
@@ -719,9 +756,9 @@ final case class FunDefn private(
     val configOverride: Opt[Config],
     val annotations: Ls[Annot],
 ) extends Defn:
-  // Keep this in the constructor so both `apply` and `copy` enforce it.
+  // A symbol generated in the IR without an erasure adopts the signature of its first definition. Passes can then
+  // give the definition another signature under the same symbol (see `TermSymbol.irErasure`).
   if !dSym.isErased then dSym.initializeErasure(S(signature.erasure))
-  else assert(dSym.erasure.exists(_ is signature.erasure), s"Conflicting signature for '${dSym.nme}'")
   def params: Ls[LoweredParamList] = signature.params
   def copy(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, dSym: TermSymbol,
       signature: FunDefn.Signature, body: Block)(configOverride: Opt[Config], annotations: Ls[Annot]): FunDefn =
@@ -842,14 +879,21 @@ private[codegen] object InlinerBodySummary:
     InlinerBodySummary(entries.toList, transitiveCallTargets)
 
 object FunDefn:
-  /** Parameter bindings and the immutable erasure shared with the definition symbol. Copies refresh
-    * their symbols and bindings; a change of parameter types, arity, or result also needs a new erasure.
+  /** Parameter bindings and the immutable erasure of a function definition, which `TermSymbol.irErasure` exposes for
+    * the definition's symbol. Copies refresh their symbols and bindings; a change of parameter types, arity, or result
+    * also needs a new erasure, but not a new symbol.
     */
   final case class Signature(
     params: Ls[LoweredParamList],
     erasure: ErasedCallableSignature,
   ):
     def result: ErasedResult[ErasedValueType] = erasure.result
+
+    /** A wrapper forwards the value seen by callers of the original function. Keep the published signature
+      * when the wrapper already has that result convention, so existing calls retain its identity. */
+    def forWrapper(annotations: Ls[Annot]): Signature =
+      val forwarded = ErasedResult.fromAnnotations(erasure.ret, annotations)
+      if forwarded == result then this else Signature.fromParams(params, forwarded)
   
   object Signature:
     def fromParams(params: Ls[LoweredParamList], result: ErasedResult[ErasedValueType]): Signature =
@@ -868,13 +912,12 @@ object FunDefn:
     /** Adopt the declaration header once, at the source-to-IR boundary. Legacy erasure may still
       * describe an async/generator body with a Direct result; subsequent rewrites retain that header.
       */
-    def fromLowering(params: Ls[LoweredParamList], sym: TermSymbol)(using Ctx, State): Signature =
-      val erasure = sym.erasure match
+    def fromLowering(params: Ls[LoweredParamList], sym: TermSymbol)(using Ctx, State, Erasure): Signature =
+      val erasure = sym.sourceErasure match
         case S(sig: ErasedCallableSignature) => sig
         case _ => lastWords(s"Missing callable signature for '${sym.nme}'")
       // Source cloning may reconstruct nominal types independently in the header and bindings.
-      // Compare their canonical representations once here; constructing or copying FunDefn only
-      // compares the shared erasure object, without traversing the parameters or their types.
+      // Compare their canonical representations once here, where the IR adopts the source signature.
       assert(matchesParams(erasure, params)((l, r) => (l is r) || l.canonicalize == r.canonicalize),
         s"Lowered parameters disagree with the signature of '${sym.nme}'")
       Signature(params, erasure)
@@ -1060,8 +1103,10 @@ final case class Handler(
   lazy val freeVars: Set[FreeSymbol] = body.freeVars -- params.flatMap(_.paramSyms) - sym - resumeSym
 
 
-/* Represents either unreachable code (for functions that must return a result)
- * or the end of a non-returning function or a REPL block */
+/** Falls through the current statement block, or marks an unreachable tail.
+  * Constructor and top-level statement blocks may end normally here. Reaching End at the boundary of an
+  * executable function violates the explicit-return invariant in the design notes above.
+  */
 case class End(msg: Str = "") extends BlockTail with ProductWithTail
 
 case class Unreachable(cause: Str) extends BlockTail with ProductWithTail
@@ -1159,6 +1204,7 @@ sealed abstract class Result extends Located:
     case DynSelect(qual, fld, _) => qual.subBlocks ::: fld.subBlocks
     case SuperSelect(qual, base, key) => qual.subBlocks ::: base.subBlocks ::: key.subBlocks
     case Lambda(params, body) => body :: Nil
+    case Cast(value, _, _) => value.subBlocks
     case Tuple(mut, elems) => elems.flatMap(_.value.subBlocks)
     case _ => Nil
   
@@ -1212,7 +1258,8 @@ sealed abstract class Result extends Located:
     case Value.Lit(_: Tree.DecLit) => S(ErasedType.Num)
     case Value.Lit(_: Tree.StrLit) => S(ErasedType.Str)
     case Value.Lit(_: Tree.BoolLit) => S(ErasedType.Bool)
-    // * Note: `UnitLit` stays untyped: Neither `null` nor `undefined` can be reasonably typed as `Unit`
+    case Value.Lit(Tree.UnitLit(false)) => S(ErasedType.Nothing)
+    // * `null` stays untyped; it does not denote a `Unit` value.
     // * WORKAROUND (see `semantics.BuiltinOperatorResults`): dynamic arithmetic signatures do not
     // * express operand-dependent results, which resolution approximates from their representations.
     case c @ Call(Value.SimpleRef(op: BuiltinSymbol), args :: Nil) if args.forall(_.spread.isEmpty) =>
@@ -1247,6 +1294,15 @@ sealed abstract class Result extends Located:
     case _: Lambda => S(ErasedType.Function(rsc = S(false)))
     case _ => N
 
+  /** `undefined` is an unspecified value of any representation, including unboxed primitives.
+    * The Cast smart constructor preserves the literal, whose Nothing type leaves the representation unconstrained.
+    * Reading back an `undefined` stored in a slot is undefined behavior (see Runtime Representations in
+    * `doc/reference.md`), so a backend may materialize it as any value of the slot's representation.
+    */
+  def isUndefined: Bool = this match
+    case Value.Lit(Tree.UnitLit(false)) => true
+    case _ => false
+
   /** The value type, using the top type when no representation is known. */
   lazy val erasedType_! : ErasedValueType = erasedType.getOrElse(ErasedType.Unknown)
 
@@ -1254,27 +1310,75 @@ sealed abstract class Result extends Located:
     *
     * Narrowing to an unrelated type is reported as an error, and this result is yielded unchanged.
     *
-    * This is the only place where [[Config.checkCasts]] is consulted: it fixes each cast's `check` flag at the
-    * point the coercion is introduced, so that the transformers rebuilding casts downstream need not carry a
-    * [[Config]] of their own.
+    * Like [[ascribeTo]], this records [[Config.checkCasts]] on the cast when lowering introduces it.
+    * [[coerceToKnown]] builds unchecked casts for values whose representation the compiler knows.
     */
-  def coerceTo(expected: ErasedValueType, loc: Opt[Loc])(using Ctx, State, Raise, Config): this.type | Cast =
+  def coerceTo(expected: ErasedValueType, loc: Opt[Loc])(using Ctx, State, Raise, Config): Result =
+    if needsCastTo(expected, reportUnrelated(loc)) then Cast.refined(this, expected, config.checkCasts)(loc) else this
+  
+  /** Lowers an explicit `as` to its erased target. A source ascription can request a runtime check
+    * between disjoint reference types. If the target has no representation or requires an unboxed
+    * conversion, report the error and return `N` so lowering stops this path.
+    */
+  final def ascribeTo(target: ErasedValueType, loc: Opt[Loc])(using Ctx, State, Raise, Config): Opt[Result] =
+    val actual = erasedType_!.canonicalize
+    val expected = target.canonicalize
+    val needed = (actual, expected) match
+      case (ErasedType.AnyRef(_, from), ErasedType.AnyRef(_, to)) => S(!ErasedType.isSubtypeOf(from, to).contains(true))
+      case _ => ErasedType.needsCast(actual, expected)
+    needed match
+    case S(false) => S(this)
+    case S(true) => S(Cast.refined(this, target, config.checkCasts)(loc))
+    case N =>
+      reportUnrelated(loc)(actual, expected)
+      N
+
+  /** Coerces a value that the compiler knows to have `expected`'s representation, such as a
+    * temporary that generated code binds to the result of an untyped runtime helper.
+    *
+    * The cast asserts that knowledge rather than testing it, so it is never checked. Unchecked
+    * casts are pure, so the simplifier can still propagate and eliminate them. A value of an
+    * unrelated type contradicts the claim and is reported as an internal error.
+    */
+  def coerceToKnown(expected: ErasedValueType, loc: Opt[Loc])(using Ctx, State, Raise): Result =
+    if needsCastTo(expected, reportUnknown(loc)) then Cast(this, expected, check = false)(loc) else this
+  
+  /** Whether coercing this result to `expected` needs a cast. Otherwise, `onUnrelated` reports
+    * the canonical types of an unrelated pair, and this result is used unchanged. */
+  protected def needsCastTo(expected: ErasedValueType,
+      onUnrelated: (CanonicalErasedValueType, CanonicalErasedValueType) => Unit)(using Ctx, State): Bool =
     val actual = erasedType_!.canonicalize
     val declared = expected.canonicalize
     ErasedType.needsCast(actual, declared) match
-      case S(false) => this
-      case S(true) => Cast(this, expected, config.checkCasts)(loc)
+      case S(needed) => needed
       case N =>
-        // * An `Incompatible` side is not an unrelated type but an unrepresentable one, so it gets its own message.
-        def membersOf(et: CanonicalErasedValueType): Opt[(CanonicalErasedValueType, CanonicalErasedValueType)] = et match
-          case ErasedType.Incompatible(l, r) => S(l -> r)
-          case _ => N
-        val message = membersOf(actual).orElse(membersOf(declared)) match
-          case S((l, r)) => msg"Types '${l.describe}' and '${r.describe}' have no common representation"
-          case N => msg"Cannot use a value of type '${actual.describe}' at an unrelated type '${declared.describe}'"
-        raise:
-          ErrorReport(message -> loc :: Nil, source = Diagnostic.Source.Compilation)
-        this
+        onUnrelated(actual, declared)
+        false
+  
+  protected def reportUnrelated(loc: Opt[Loc])(using Ctx, State, Raise)
+      (actual: CanonicalErasedValueType, declared: CanonicalErasedValueType): Unit =
+    // * An `Incompatible` side is not an unrelated type but an unrepresentable one, so it gets its own message.
+    def membersOf(et: CanonicalErasedValueType): Opt[(CanonicalErasedValueType, CanonicalErasedValueType)] = et match
+      case ErasedType.Incompatible(l, r) => S(l -> r)
+      case _ => N
+    def reported(et: CanonicalErasedValueType): Bool = et match
+      case i: ErasedType.Incompatible => i.reported
+      case _ => false
+    val message = membersOf(actual).orElse(membersOf(declared)) match
+      case S((l, r)) => msg"Types '${l.describe}' and '${r.describe}' have no common representation"
+      case N => msg"Cannot use a value of type '${actual.describe}' at an unrelated type '${declared.describe}'"
+    // * Erasure already rejected the declaration of a reported type where it is written.
+    if !reported(actual) && !reported(declared) then
+      raise:
+        ErrorReport(message -> loc :: Nil, source = Diagnostic.Source.Compilation)
+  
+  protected def reportUnknown(loc: Opt[Loc])(using Ctx, State, Raise)
+      (actual: CanonicalErasedValueType, declared: CanonicalErasedValueType): Unit =
+    raise:
+      InternalError(
+        msg"A value of type '${actual.describe}' was expected to have type '${declared.describe}'" -> loc :: Nil,
+        extraInfo = S(this),
+      )
 
 /* mayRaiseEffects indicates whether this call may raise effect (algebraic effect),
  * regardless of whether the check for effect is inserted or not.
@@ -1314,22 +1418,32 @@ case class Call(fun: Path, argss: Ls[Ls[Arg]])
   require(argss.nonEmpty || signature.paramListCount == 0, "A call of a function must apply an argument list")
   require(argss.sizeCompare(signature.paramListCount) <= 0,
     s"A call applies ${argss.length} argument lists to a callee with ${signature.paramListCount} parameter lists")
-  Call.publishedSignature(fun) match
-    case S(_: ErasedGetterSignature) if argss.nonEmpty => ()
-    case S(published) => assert(published is signature,
+  /** Rewrites can build forward calls before publishing a new definition under the same symbol. Check the
+    * signature against the completed IR. Calls constructed against a published definition also check it immediately. */
+  def checkTargetSignature(): Unit =
+    assert(Call.targetSignature(fun, memberRead = argss.isEmpty).forall(_ is signature),
       "A call of a definition must use the signature published by that definition")
-    case N => ()
   def withLoc(loc: Opt[Loc]): Call = if loc == toLoc then this else copy()(signature, metadata, loc)
   /** This call, rebuilt by a rewrite that changes how its callee and arguments are expressed, but not which
     * argument lists it applies to which value. A callee that publishes a signature imposes it, as when renaming a
     * definition gives it a refreshed signature; other callees keep the signature of this call.
     */
   def rebuilt(fun: Path, argss: Ls[Ls[Arg]]): Result =
-    val sig = Call.publishedSignature(fun) match
-      case S(published: ErasedFuncSignature) => published
-      case S(published: ErasedGetterSignature) if argss.isEmpty => published
-      case _ => signature
-    Call(fun, argss)(sig, metadata, toLoc)
+    val target = Call.targetSignature(fun, memberRead = argss.isEmpty).getOrElse(signature)
+    // A source call can still span several lists of an already curried import. Substituting its operands
+    // preserves the source grouping until bindTarget can emit the intermediate function-object calls.
+    if argss.sizeCompare(target.paramListCount) > 0 && fun.targetSymbol.exists(this.fun.targetSymbol.contains) then
+      copy(fun, argss)(signature, metadata, toLoc)
+    else Call(fun, argss)(target, metadata, toLoc)
+  /** Bind the call to its physical target after definition signatures have been published. */
+  def bindTarget(fun: Path, argss: Ls[Ls[Arg]])(k: Result => Block)(using State): Block =
+    val target = Call.targetSignature(fun, memberRead = argss.isEmpty).getOrElse(signature)
+    target match
+      case sig: ErasedFuncSignature if argss.sizeCompare(sig.paramListCount) > 0 =>
+        FirstClassFunctionTransformer.applyCurried(this, fun, argss, sig)(k)
+      case _ =>
+        k(if (fun is this.fun) && (argss is this.argss) && (target is signature) then this
+          else Call(fun, argss)(target, metadata, toLoc))
   lazy val isKnownUnsaturatedCall: Bool =
     fun.targetSymbol match
     case S(ts: TermSymbol) =>
@@ -1352,7 +1466,9 @@ case class Call(fun: Path, argss: Ls[Ls[Arg]])
 object Call:
   
   def raw(fun: Path, argss: Ls[Ls[Arg]])(signature: ErasedCallableSignature, metadata: CallMetadata, toLoc: Opt[Loc]): Call =
-    new Call(fun, argss)(signature, metadata, toLoc)
+    val call = new Call(fun, argss)(signature, metadata, toLoc)
+    call.checkTargetSignature()
+    call
   
   def apply(fun: Path, argss: Ls[Ls[Arg]])(signature: ErasedCallableSignature, metadata: CallMetadata, toLoc: Opt[Loc]): Result =
     fun match
@@ -1374,19 +1490,44 @@ object Call:
   def publishedSignature(fun: Path): Opt[ErasedCallableSignature] = fun match
     case Value.SimpleRef(bs: BuiltinSymbol) => bs.erasedSignature
     case _ => fun.targetSymbol match
-      case S(ts: TermSymbol) if ts.isErased => ts.erasure.collect:
+      case S(ts: TermSymbol) if ts.isErased => ts.irErasure.collect:
         case sig: ErasedCallableSignature => sig
       case _ => N
+  
+  /** A call applying arguments to a getter applies the function value it returns. Only the getter read itself
+    * has the getter's published signature. */
+  def targetSignature(fun: Path, memberRead: Bool): Opt[ErasedCallableSignature] =
+    publishedSignature(fun).filter(sig => memberRead || sig.isInstanceOf[ErasedFuncSignature])
+  
+  /** A pass can change a definition's signature under its existing symbol. Recursive and forward calls can
+    * precede the new definition, so bind their immutable signatures once the pass has published all its definitions.
+    * Calls through function values retain the signature derived at their use site.
+    */
+  def refreshSignatures(block: Block, changed: collection.Set[TermSymbol]): Block =
+    if changed.isEmpty then block else
+      new BlockTransformer(SymbolSubst.Id):
+        override def applyResult(r: Result)(k: Result => Block): Block = r match
+          case c: Call =>
+            val signature = c.fun.targetSymbol match
+              case S(ts: TermSymbol) if changed(ts) => targetSignature(c.fun, memberRead = c.argss.isEmpty).getOrElse(c.signature)
+              case _ => c.signature
+            k(if signature is c.signature then c else c.copy()(signature, c.metadata, c.toLoc))
+          case _ => super.applyResult(r)(k)
+      .applyBlock(block)
+  
+  def bindSignatures(block: Block)(using State): Block =
+    new BlockTransformer(SymbolSubst.Id):
+      override def applyResult(r: Result)(k: Result => Block): Block = r match
+        case c: Call => c.bindTarget(c.fun, c.argss)(k)
+        case _ => super.applyResult(r)(k)
+    .applyBlock(block)
   
   /** The signature for applying `listCount` argument lists to `fun` when nothing is known about `fun` beyond its
     * IR: the signature it publishes, or else a dynamic one.
     */
   def signatureOf(fun: Path, listCount: Int): ErasedCallableSignature =
-    publishedSignature(fun) match
-      case S(sig: ErasedFuncSignature) => sig
-      case S(sig: ErasedGetterSignature) if listCount == 0 => sig
-      case _ if listCount == 0 => ErasedGetterSignature.dynamic
-      case _ => ErasedFuncSignature.dynamic(listCount)
+    targetSignature(fun, memberRead = listCount == 0).getOrElse:
+      if listCount == 0 then ErasedGetterSignature.dynamic else ErasedFuncSignature.dynamic(listCount)
   
   /** A call of `fun` applying `argss`, using [[signatureOf]]. */
   def of(fun: Path, argss: Ls[Ls[Arg]])(metadata: CallMetadata, toLoc: Opt[Loc]): Result =
@@ -1460,36 +1601,106 @@ case class Instantiate(mut: Bool, cls: Path, argss: Ls[Ls[Arg]])(val metadata: I
   * The coercion is a static assertion that backends may erase (as the JS backend does) or lower to a trapping
   * instruction (as the Wasm backend does with `ref.cast`).
   *
+  * A cast has one of two forms, depending on its operand. A [[CastPath]] coerces a path and is itself a path, so it
+  * can appear wherever a path is expected, such as an argument. A [[CastResult]] coerces any other result, such as a
+  * call, and can only appear where an arbitrary result is expected, such as the right-hand side of an assignment or
+  * a returned value. A cast therefore never disguises a computation as a path. The smart constructors choose the form
+  * from the operand, so each cast has a single representation; code that does not depend on the position matches
+  * both forms with the [[Cast]] extractor.
+  *
   * `check` records whether the coercion is meant to be verified at runtime. No pass expands it into a type test
   * yet, so a checked cast currently generates the same code as an unchecked one.
   *
-  * `check` is decided once, at the sole semantic construction site [[Result.coerceTo]], which reads
-  * [[Config.checkCasts]]. Every other site that rebuilds a cast must *copy* the flag rather than re-derive it, so
-  * that the configuration does not have to be threaded through the IR transformers.
+  * [[Result.coerceTo]] and [[Result.ascribeTo]] read [[Config.checkCasts]] when they introduce the coercion.
+  * [[Result.coerceToKnown]] builds unchecked casts for values whose representation the compiler knows. Every other
+  * site that rebuilds a cast must *copy* the flag rather than re-derive it, so that the configuration does not have
+  * to be threaded through the IR transformers.
   *
   * Invariants:
-  * - `value` is not a `Cast`.
-  * - `target` must be a proper subtype of `value`'s erased type.
+  * - Nested casts preserve inner checks that can fail even when the outer check would succeed.
+  * - The operand of a [[CastResult]] is not a path.
+  * - The smart constructors preserve `Nothing`-typed paths, including `undefined`, unchanged.
+  * - Implicit coercions narrow to a subtype. Explicit ascriptions and substitutions can give a cast an operand
+  *   of an unrelated reference type. [[Cast.refined]] drops a cast whose operand already fits.
+  *   The cast of a `Nothing`-typed non-path operand remains:
+  *   backends must evaluate that operand's effects before materializing a value of the target representation.
   */
-case class Cast private(value: Result, target: ErasedValueType, check: Bool)(val toLoc: Opt[Loc]) extends Path:
-  def withLoc(loc: Opt[Loc]): Cast = if loc == toLoc then this else copy()(loc)
+sealed trait Cast extends Result:
+  def value: Result
+  def target: ErasedValueType
+  def check: Bool
+
+/** A cast of a path, which is itself a path. See [[Cast]], whose smart constructors maintain the invariants. */
+final case class CastPath private[codegen](value: Path, target: ErasedValueType, check: Bool)(val toLoc: Opt[Loc])
+    extends Path, Cast:
+  def withLoc(loc: Opt[Loc]): CastPath = if loc == toLoc then this else copy()(loc)
+
+/** A cast of a result that is not a path, which can only appear where a result is expected. See [[Cast]], whose
+  * smart constructors maintain the invariants. */
+final case class CastResult private[codegen](value: Result, target: ErasedValueType, check: Bool)(val toLoc: Opt[Loc])
+    extends Cast:
+  def withLoc(loc: Opt[Loc]): CastResult = if loc == toLoc then this else copy()(loc)
 
 object Cast:
-  /** Builds a cast while collapsing a nested cast.
+  /** Matches both forms of casts, for code that does not depend on the position of the cast. */
+  def unapply(cast: Cast): Some[(value: Result, target: ErasedValueType, check: Bool)] =
+    Some((cast.value, cast.target, cast.check))
+  
+  /** Builds a cast of `value`, which is a path if and only if `value` is one.
     *
-    * This node is malformed if the target type is not a proper subtype of the value's erased type.
-    *
-    * Collapsing `Cast(Cast(v, T), U)` to `Cast(v, U)` drops the inner test. The `T`-typed intermediate goes with it,
-    * so no value is left in a wrongly-typed slot. However, an unchecked failure *can be lost* - if a cast is
-    * undecidable a `Cast` will be inserted anyways, and determining this fact here would require threading `Ctx` and
-    * `State` wherever `Cast` nodes need to be built.
-    *
-    * Note that explicitly-checked casts are never lost to preserve the semantics of eagerly failing when casts fail.
+    * Like [[path]], this collapses an unchecked inner cast. Use [[path]] for a statically known path
+    * to retain that type on the result.
     */
-  def apply(value: Result, target: ErasedValueType, check: Bool)(toLoc: Opt[Loc]): Cast =
+  def apply(value: Result, target: ErasedValueType, check: Bool)(toLoc: Opt[Loc]): Result =
     value match
-      case Cast(inner, _, innerCheck) => new Cast(inner, target, check || innerCheck)(toLoc)
-      case _ => new Cast(value, target, check)(toLoc)
+      case value: Path => path(value, target, check)(toLoc)
+      case CastResult(inner, _, false) => new CastResult(inner, target, check)(toLoc)
+      case _ => new CastResult(value, target, check)(toLoc)
+  
+  /** Builds a cast of a path, preserving checked operands and `Nothing`-typed paths.
+    *
+    * An unchecked inner cast supplies no test. A checked inner cast can fail even when the original operand
+    * fits the outer target, as in `("s" as Int) as Str`. Returning a bottom-typed path directly preserves
+    * its effects, including when it is itself a cast to `Nothing`.
+    */
+  def path(value: Path, target: ErasedValueType, check: Bool)(toLoc: Opt[Loc]): Path =
+    value match
+      case _ if value.erasedType.contains(ErasedType.Nothing) => value
+      case CastPath(inner, _, false) => new CastPath(inner, target, check)(toLoc)
+      case _ => new CastPath(value, target, check)(toLoc)
+  
+  /** Whether a value of `actual` already has the representation required by `target`.
+    * A non-path operand of type `Nothing` still needs a cast to materialize the target
+    * representation. Likewise, an outer cast to `Nothing` cannot discharge an inner check.
+    */
+  private def fits(actual: ErasedValueType, target: ErasedValueType)(using Ctx, State): Bool =
+    val from = actual.canonicalize
+    from != ErasedType.Nothing && ErasedType.needsCast(from, target.canonicalize).contains(false)
+
+  private def canDropInner(inner: Cast, target: ErasedValueType, check: Bool)(using Ctx, State): Bool =
+    !inner.check || check && fits(target, inner.target)
+
+  /** Builds a cast with the class hierarchy available. Drops casts whose operand already fits
+    * and inner checks implied by the outer check, as in `(x as Object) as Box`.
+    * Substitution can also make a cast redundant, for example when inlining replaces the operand
+    * of a checked cast to `Int` with an integer literal.
+    */
+  def refined(value: Result, target: ErasedValueType, check: Bool)(toLoc: Opt[Loc])(using Ctx, State): Result =
+    value match
+      case value: Path => refinedPath(value, target, check)(toLoc)
+      case inner: CastResult if canDropInner(inner, target, check) =>
+        refined(inner.value, target, check)(toLoc)
+      case _ if fits(value.erasedType_!, target) => value
+      case _ => new CastResult(value, target, check)(toLoc)
+  
+  /** Refines a cast as in [[refined]], preserving its use in a path position. */
+  def refinedPath(value: Path, target: ErasedValueType, check: Bool)(toLoc: Opt[Loc])(using Ctx, State): Path =
+    value match
+      case _ if value.erasedType.contains(ErasedType.Nothing) => value
+      case inner: CastPath if canDropInner(inner, target, check) =>
+        refinedPath(inner.value, target, check)(toLoc)
+      case _ if fits(value.erasedType_!, target) => value
+      case _ => new CastPath(value, target, check)(toLoc)
 
 case class Lambda(params: LoweredParamList, body: Block)(val annot: Ls[Annot], val toLoc: Opt[Loc]) extends Result:
   def withLoc(loc: Opt[Loc]): Lambda = if loc == toLoc then this else copy()(annot, loc)
@@ -1524,10 +1735,22 @@ sealed abstract class Path extends TrivialResult:
     case Value.SimpleRef(sym: LocalVarSymbol) => !sym.mut
     case Value.MemberRef(_, disamb) => stableMember(disamb)
     case sel: Select => sel.qual.isStable && sel.symbol.exists(stableMember)
-    case Cast(path: Path, _, false) => path.isStable
+    case CastPath(path, _, false) => path.isStable
     case _ => false
+  /** Coerces this path like [[Result.coerceTo]]; a cast of a path is itself a path. */
+  override def coerceTo(expected: ErasedValueType, loc: Opt[Loc])(using Ctx, State, Raise, Config): Path =
+    if needsCastTo(expected, reportUnrelated(loc)) then Cast.refinedPath(this, expected, config.checkCasts)(loc) else this
+  /** Coerces this path like [[Result.coerceToKnown]]; a cast of a path is itself a path. */
+  override def coerceToKnown(expected: ErasedValueType, loc: Opt[Loc])(using Ctx, State, Raise): Path =
+    if needsCastTo(expected, reportUnknown(loc)) then Cast.path(this, expected, check = false)(loc) else this
   def selN(id: Tree.Ident): Path = Select(this, id)(N, N)(false)
-  def sel(id: Tree.Ident, sym: DefinitionSymbol[?]): Path = Select(this, id)(S(sym), N)(false)
+  /** A compiler-generated selection of the member defined by `sym`. The JS backend emits a selection
+    * by its identifier, while the IR printer and the Wasm backend identify it by its symbol, so the
+    * identifier takes the symbol's name to keep both views in sync. Selections from source code build
+    * a `Select` directly: their identifier keeps its source location for diagnostics, and their symbol
+    * is the resolved target, which may be named differently from the member read. For instance, with
+    * `let constructors = {make: Direct}`, `constructors.make` reads field `make` but resolves to class `Direct`. */
+  def sel(sym: DefinitionSymbol[?]): Select = Select(this, Tree.Ident(sym.nme))(S(sym), N)(false)
   def selSN(id: Str): Path = selN(new Tree.Ident(id))
   def asArg = Arg(spread = N, this)
   def targetSymbol: Opt[DefinitionSymbol[?]] = this match

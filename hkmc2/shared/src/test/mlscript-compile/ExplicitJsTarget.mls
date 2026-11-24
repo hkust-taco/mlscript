@@ -1,0 +1,7 @@
+#lang(0.3.x)
+#config(target: CompilationTarget.JS)
+
+import "./GenericLibrary.mls"
+
+module ExplicitJsTarget with
+  fun answer(): Int = GenericLibrary.identity(42)

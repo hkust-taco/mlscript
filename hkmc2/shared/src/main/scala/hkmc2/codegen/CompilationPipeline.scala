@@ -23,8 +23,7 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
   def extraSymbolsToPreserveFrom(prog: Program): Set[ScopedSymbol] = Set.empty
   
   private inline def blockPass(inline pass: Block => Block)(prog: Program): Program =
-    val blk = pass(prog.main)
-    if blk is prog.main then prog else Program(prog.imports, blk)
+    prog.mapMain(pass)
   
   def run(prog: Program, printer: Program => Str, symbolsToPreserve: Set[ScopedSymbol], otl: TL)(using TL): Program =
     var result = prog
@@ -34,7 +33,8 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
       passHook(passName, before, result)
     
     runPass("LambdaRewriter")(LambdaRewriter.desugar)
-    // deforestation only supports lifted programs
+    // Deforestation requires lifted definitions. Handler lowering also needs
+    // nested definitions lifted before computing saved locals and resumption calls.
     runPass("Lifter"): prog =>
       if config.liftDefns.isDefined || config.deforest.isDefined then
         if config.deforest.isDefined && config.liftDefns.isEmpty then
@@ -55,6 +55,8 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
               symbolsToPreserve.collect{case s: semantics.LocalVarSymbol => s})
     runPass("HandlerLowering"): prog =>
       HandlerLowering(new HandlerPaths, config.effectHandlers).translateProgram(prog)
+    // Create wrapper-local async thunks after handler lowering has recorded the
+    // source function's argument lists and receiver for resumption.
     runPass("AsyncLowering")(AsyncLowering().transform)
     runPass("Flattening")(blockPass(_.flattened))
     runPass("BufferableTransform")(BufferableTransform().transform)
@@ -69,6 +71,9 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
       else prog
     runPass("ClassParamFlattener")(ClassParamFlattener.apply)
     runPass("ReflectionInstrumenter")(ReflectionInstrumenter(using summon).apply)
+    // Source lowering groups calls by the written parameter lists, which staged code also reflects.
+    // Optimizers and backends consume the conventions of the completed IR definitions, including imports.
+    runPass("BindCallSignatures")(_.mapMain(Call.bindSignatures))
     preOptimizeHook(result)
     
     // * We run this pass here first, before inlining so that the @tailrec/@tailcall annotations

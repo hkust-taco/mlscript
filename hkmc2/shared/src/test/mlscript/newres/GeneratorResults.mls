@@ -26,7 +26,7 @@ iterator.next()
 //│   return 1
 //│ };
 //│ set iterator⁰ = counted¹‹() => generator Int⁰›();
-//│ return iterator⁰.next⁰‹() => Unknown›()
+//│ return iterator⁰.next⁰‹(...Array⁰) => ?›()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = {value: 0, done: false}
 //│ iterator =  {}

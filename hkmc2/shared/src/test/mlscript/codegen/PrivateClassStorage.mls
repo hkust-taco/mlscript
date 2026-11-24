@@ -1,7 +1,7 @@
 :.
 :js
 
-open annotations { inline, noInline }
+open annotations.{ inline, noInline }
 
 
 // Private parameterized classes keep both their constructor wrapper and class value private.

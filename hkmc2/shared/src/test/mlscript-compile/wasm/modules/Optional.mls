@@ -1,0 +1,12 @@
+#lang(0.3.x)
+#config(target: CompilationTarget.Wasm, inlining: None)
+
+// Exercise fixed-arity optional calls through a separately compiled file's ABI.
+open class Optional {
+  constructor(val value?: Int)
+  open fun choose(x?: Int): Int =
+    if x is null then
+      if value is null then 41 else value
+    else x
+}
+fun Optional(x?) = if x is null then 41 else 42

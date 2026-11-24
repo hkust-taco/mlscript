@@ -62,7 +62,7 @@ copied.value
 :expect 10
 fun fromOpen() =
   let opened = ({value: 10} as dyn)
-  open opened
+  open opened.{ * }
   value
 fromOpen()
 //│ = 10
@@ -149,7 +149,7 @@ skipFirst(...([0, {value: 15}] as dyn))
 :expect 16
 fun mixedOpen() =
   let source = if hide(true) then ({value: 16} as dyn) else {value: 17}
-  open source
+  open source.{ * }
   value
 mixedOpen()
 //│ = 16

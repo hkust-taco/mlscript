@@ -1,3 +1,4 @@
+:.
 :js
 :effectHandlers
 :lift
@@ -91,7 +92,7 @@ handleEffects(f)
 
 abstract class Eff with
   fun perform(): ()
-data class Box(n)
+data class Box(mut val n)
 let box = new mut Box(0)
 //│ box = Box(0)
 

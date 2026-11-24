@@ -3,7 +3,7 @@
 
 import "../../../mlscript-compile/Stack.mls"
 
-open Stack
+open Stack.{ * }
 
 fun f(xs) = if xs is
   [..xs] then 0

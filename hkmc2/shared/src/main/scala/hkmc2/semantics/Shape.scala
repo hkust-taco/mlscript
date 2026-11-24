@@ -63,6 +63,7 @@ sealed trait Shape extends ShapeEvent:
     case ns: NewShape => s"NewShape(${ns.cls.showDbg}, ${ns.argss.map(_.showDbg).mkString(", ")})"
     case is: IntroShape => s"IntroShape(${is.trm.showDbg})"
     case _: DynShape => "DynShape"
+    case probe: NamespaceProbe => s"NamespaceProbe(${probe.ref.showDbg})"
     case us: UnknownValueShape => s"UnknownValueShape(${us.source.showDbg})"
     case ts: TupleShape => s"TupleShape(${ts.source.showDbg})"
     case rs: RecordShape => s"RecordShape(${rs.source.showDbg})"
@@ -98,7 +99,7 @@ object ShapeIdentity:
     // These producers own graph nodes, including synthesized inference hosts.
     // Adding a variant requires choosing its equality policy here.
     case _: (TupleShape | RecordShape | IntroShape | DefnShape | BaseShape |
-        AppShape | NewShape | SymShape | ErrShape | DynShape) => shape
+        AppShape | NewShape | SymShape | ErrShape | DynShape | NamespaceProbe) => shape
 
   /** Only one pointer to the existing view; no copied fields or product key. */
   final class View private[ShapeIdentity] (private val shape: ShapeEvent) extends ValueKey:
@@ -209,7 +210,7 @@ type ContextualSource = AppShape | NewShape | DefnShape | BaseShape | IntroShape
   * Removing these views preserves the full application chain and its marks.
   */
 final case class ShapeParts(value: CoreTermShape, instances: TypeSubstitution,
-    supplied: Opt[Ls[DeclaredType]])
+    supplied: Opt[Ls[TypeArgument]])
 
 /** A lexical resolution boundary, independent of a definition's term/type interpretation.
   * A class and its companion constructor enter the same instance scope. Keeping their
@@ -460,7 +461,7 @@ enum MemberLookup:
   case Found(member: BlockMemberSymbol | RecordMember, marks: Ls[Marks])
   // Declared members expose signatures only. Their marks transport dependent
   // type arguments; they never authorize reading an implementation's value flow.
-  case Declared(member: BlockMemberSymbol, bindings: Map[VarSymbol, DeclaredType], marks: Ls[Marks], annotation: Opt[Term], positive: Bool)
+  case Declared(member: BlockMemberSymbol, bindings: Map[VarSymbol, TypeArgument], marks: Ls[Marks], annotation: Opt[Term], positive: Bool)
   // A structural field already has its lexical bindings and intersection applied.
   case Typed(field: RcdField, tpe: DeclaredType, marks: Ls[Marks])
   // A preceding spread can place several different fields at the same index.
@@ -578,7 +579,7 @@ class AppShape(val receiver: CoreTermShape, val args: Term, val src: Term.App)(u
   override def toString: String = s"AppShape($receiver, ${args.showDbg})"
 
 class NewShape(val receiver: DefnShape, val classTarget: ClassValueTarget, val clsMarks: Ls[Marks], val argss: Ls[Term], val src: Term.New,
-    val supplied: Opt[Ls[DeclaredType]])(using DebugPrinter) extends CoreShape:
+    val supplied: Opt[Ls[TypeArgument]])(using DebugPrinter) extends CoreShape:
   def cls: ClassSymbol = ClassValueShape.definitionOf(classTarget).sym
   protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup =
     if isSaturated then receiver.getInstanceMember(name).withMarks(clsMarks)
@@ -642,7 +643,7 @@ extends SymShape(source.sym, source.resSym, source.markss)
   * type, and constructor interpretations of the same overload set.
   */
 final class DeclaredSymShape(symbol: BlockMemberSymbol, site: FlowSymbol, marks: Ls[Marks],
-    val bindings: Map[VarSymbol, DeclaredType], val annotation: Opt[Term], val positive: Bool) extends CoreSymShape(symbol, site, marks)
+    val bindings: Map[VarSymbol, TypeArgument], val annotation: Opt[Term], val positive: Bool) extends CoreSymShape(symbol, site, marks)
 
 
 // TODO: make it not a TermShape?
@@ -710,7 +711,9 @@ object InstanceShape:
     * reports the first annotation's location. Witness wrappers are not interned;
     * retaining them in a cache would duplicate entries for the same semantic
     * value. All views share the origin-free reference's candidate identity,
-    * so diagnostic evidence cannot multiply inference flow.
+    * so diagnostic evidence cannot multiply inference flow. Local alias annotations and
+    * argument references do distinguish candidates: equal interfaces can name
+    * different namespaces, including those exposed by their fields and results.
     */
   def apply(tpe: DeclaredType)(resolver: NewResolver)(using state: ResolutionContext): InstanceShape =
     val projected = resolver.projectType(tpe)
@@ -745,7 +748,7 @@ final case class ContextualShape(source: ContextualSource, instances: TypeSubsti
   * A ContextualShape alone does not record scheme consumption. Complete annotated
   * CallableTypeShape views record consumption by substituting and clearing `scheme`.
   */
-final case class SpecializedShape(declaration: DefnShape, arguments: Ls[DeclaredType],
+final case class SpecializedShape(declaration: DefnShape, arguments: Ls[TypeArgument],
     instances: TypeSubstitution) extends NonAppTermShape:
   def describe: Str = declaration.describe
   def toLoc: Opt[Loc] = declaration.toLoc
@@ -773,7 +776,7 @@ final case class ActivatedShapeEvent(value: Shape, instances: TypeSubstitution) 
   * Provenance can instead identify the construct that introduces an interface,
   * such as the async annotation that creates a Promise result.
   */
-final class NominalInstanceView(val defn: ClassLikeDef, val bindings: Map[VarSymbol, DeclaredType],
+final class NominalInstanceView(val defn: ClassLikeDef, val bindings: Map[VarSymbol, TypeArgument],
     val parent: Opt[TermShape])(val annotation: Opt[Term], val provenance: ShapeProvenance)(resolver: NewResolver) extends CoreHeadShape:
   def describe: Str = s"value of type '${defn.sym.nme}'"
   override def toString: Str = s"NominalInstanceView(${defn.sym}, $bindings, $parent)"
@@ -842,7 +845,7 @@ final case class WrappedResult(annotation: Annot.Async | Annot.Generator, remain
   * counterpart of SpecializedShape, not an inference-event activation.
   */
 final case class CallableTypeShape(source: Term, paramLists: NELs[DeclaredParams],
-    result: Opt[DeclaredType], scheme: Opt[TypeScheme], supplied: Opt[Ls[DeclaredType]],
+    result: Opt[DeclaredType], scheme: Opt[TypeScheme], supplied: Opt[Ls[TypeArgument]],
     declaration: Opt[TermDefinition], wrappedResult: Opt[WrappedResult]) extends CoreHeadShape:
   def tparams: Ls[DeclaredTypeParameter] = scheme.toList.flatMap(_.parameters)
   def describe: Str = declaration.fold("function with a declared signature")(d => s"function '${d.bsym.nme}'")
@@ -887,17 +890,20 @@ enum TypeInterfaceReason:
       case AbstractDeclaration(_, source) => result.withTypeOrigin(source)
       case _ => result
 
-/** A type view that authorizes no member operations. The diagnostic reason is
-  * excluded from the semantic key so alternative witnesses do not add inference flow.
+/** A declared type with an empty member interface. Lookup contributes no candidates
+  * to intersections or wildcard opens; hidden runtime fields remain inaccessible.
+  * Spreading such a value can still overwrite fields, so record spreads retain
+  * their separate unknown-value barrier. The diagnostic reason is excluded from
+  * the semantic key so alternative witnesses do not add inference flow.
   */
 final class OpaqueTypeShape(val source: Term)(val reason: TypeInterfaceReason) extends CoreHeadShape:
   override def isSelfContained: Bool = true
-  def describe: Str = "value with no known interface"
+  def describe: Str = "value with an empty interface"
   override def toString: Str = s"OpaqueTypeShape($source)"
   def toLoc: Opt[Loc] = source.toLoc
   def provenance: ShapeProvenance = reason.provenance
   protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup =
-    MemberLookup.Unknown(MemberLookup.Uncertainty.ValueShape, false, provenance)
+    MemberLookup.Missing
 
 class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends CoreHeadShape:
   /** Instance lookup is shared by constructor calls and explicit `new`.
@@ -1063,6 +1069,26 @@ object DynShape:
   private val instance = new DynShape
   def apply(): DynShape = instance
 
+/** The value of a reference whose implicit namespace flow is to determine (see
+  * NewResolver.unresolvedRef), like the legacy flow analysis's leading-dot producer.
+  * The probe travels along ordinary value edges, and the operations deriving their result
+  * from an operand pass it on as their result: selections (including projections and
+  * checked or dynamic accesses), applications, type applications, and instantiations
+  * (with `new` or `new!`). The reference is then the root of the chain that they form.
+  * Class selections (`C.class`) denote a definition rather than derive a value, and the
+  * other consumers of values ignore probes. When it reaches a declared type, the implicit
+  * namespaces of that type provide candidates of the reference (see
+  * NewResolver.inferTypeArguments). It is not an actual value: the consumers of values
+  * ignore it rather than diagnose it (see ShapeObserver). It refers
+  * to nothing, so it records no scope exits; entries still restrict where it can return.
+  */
+final class NamespaceProbe(val ref: Term.UnresolvedRef) extends CoreHeadShape:
+  override def isSelfContained: Bool = true
+  def describe: Str = ref.describe + s" '${ref.writtenName}'"
+  override def toString: Str = s"NamespaceProbe(${ref.id.name})"
+  def toLoc: Opt[Loc] = ref.toLoc
+  protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup = MemberLookup.All(Nil)
+
 /** A shared diagnostic witness, independent of resolution marks. Messages,
   * locations, and the flattened chain are evaluated only when reporting an error.
   * Discovery retains one witness per reached shape to bound recursive paths.
@@ -1157,7 +1183,7 @@ object TupleShape:
     def marks: Ls[Marks]
     def withMarks(outer: Ls[Marks]): Fixed = this match
       case Field(field, inner) => Field(field, inner ::: outer)
-      case TypedField(tpe, inner) => TypedField(tpe, inner ::: outer)
+      case TypedField(bounds, inner) => TypedField(bounds, inner ::: outer)
       case UnknownField(source, inner) => UnknownField(source, inner ::: outer)
       case ValueField(value, inner) => ValueField(value, inner ::: outer)
       case ViewedField(source, instances, inner) => ViewedField(source, instances, inner ::: outer)
@@ -1180,10 +1206,13 @@ object TupleShape:
     protected def sameValue(other: ValueKey): Bool = other match
       case that: ValueField => value.comparison == that.value.comparison && marks == that.marks
       case _ => false
-  final case class TypedField(tpe: DeclaredType, marks: Ls[Marks]) extends Fixed:
-    protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), tpe.hashCode, marks.hashCode)
+  /** A field whose contents a type declares. Reads observe `bounds.output`, and constraints
+    * on the field's contents use `bounds.input`. A tuple type's field has one type for both;
+    * an Array element can have two, as in `Array[in A out B]`. */
+  final case class TypedField(bounds: TypeArgument, marks: Ls[Marks]) extends Fixed:
+    protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), bounds.hashCode, marks.hashCode)
     protected def sameValue(other: ValueKey): Bool = other match
-      case that: TypedField => tpe == that.tpe && marks == that.marks
+      case that: TypedField => bounds == that.bounds && marks == that.marks
       case _ => false
   // Mutable tuple slots retain their positions, but their initializer cannot
   // supply the shape of later reads (including reads through a spread copy).

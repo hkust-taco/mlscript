@@ -1,0 +1,35 @@
+:.
+:!js
+
+
+// Nested local scopes must not inherit permission to select the compilation target.
+#config(target: JS)
+
+:ge
+{
+  #config(target: Wasm)
+  42
+}
+//│ ╔══[COMPILATION ERROR] Compilation target can only be set by a top-level '#config' directive
+//│ ║  l.+2: 	  #config(target: Wasm)
+//│ ╙──      	          ^^^^^^^^^^^^
+
+:ge
+mut {
+  #config(target: Wasm)
+  answer: 42
+}
+//│ ╔══[COMPILATION ERROR] Compilation target can only be set by a top-level '#config' directive
+//│ ║  l.+2: 	  #config(target: Wasm)
+//│ ╙──      	          ^^^^^^^^^^^^
+
+:ge
+module Nested with
+  #config(target: Wasm)
+  fun answer() = 42
+//│ ╔══[COMPILATION ERROR] Compilation target can only be set by a top-level '#config' directive
+//│ ║  l.+2: 	  #config(target: Wasm)
+//│ ╙──      	          ^^^^^^^^^^^^
+
+// A later worksheet block still enters a top-level scope.
+#config(target: CompilationTarget.JS)

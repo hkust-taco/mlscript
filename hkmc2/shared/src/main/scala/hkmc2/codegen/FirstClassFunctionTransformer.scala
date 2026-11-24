@@ -31,7 +31,7 @@ class FirstClassFunctionTransformer
     val callDef = FunDefn.withFreshSymbol(Some(clsSym), new BlockMemberSymbol("call", Nil, true), forwarding.params :: Nil,
       Return(Call.of(p, forwarding.args :: Nil)(CallMetadata.defaultMlsFun, N)))(N, annotations = Nil)
     ClsLikeDefn(None, clsSym, defSym, None, syntax.Cls, None, Nil,
-      Some(Select(State.globalThisSymbol.asThis, Tree.Ident("Function"))(Some(ctx.builtins.Function), N)(false)),
+      Some(State.globalThisSymbol.asThis.sel(ctx.builtins.Function)),
       callDef :: Nil, Nil, Nil, Assign.discard(
         Call.of(State.builtinOpsMap("super").asSimpleRef, Nil :: Nil)(CallMetadata.defaultFun, N),
         End()), End(), None, None, None, methodKeys = Map.empty)(N, annotations = Nil)
@@ -101,27 +101,24 @@ class FirstClassFunctionTransformer
     // * A member read applies nothing, so its selection is not a function object.
     case Call(_, Nil) => super.applyResult(r)(k)
     case c @ Call(fun, argss) => applyListOf(argss, (args, k2) => applyArgs(args)(k2)): argss2 =>
-      def call(f: Path) =
-        if (f is fun) && (argss is argss2)
-        then c
-        else c.rebuilt(f, argss2)
+      def call(f: Path): Block = c.bindTarget(f, argss2)(k)
       fun match
         case ref @ Value.SimpleRef(sym) => sym match
-          case _: VarSymbol |  _: TempSymbol => k(call(ref.selSN("call")))
-          case _ => k(call(fun))
-        case ref @ Value.MemberRef(_, _) => k(call(fun))
+          case _: VarSymbol |  _: TempSymbol => call(ref.selSN("call"))
+          case _ => call(fun)
+        case ref @ Value.MemberRef(_, _) => call(fun)
         case sel: Select => sel.symbol match
-          case Some(s: TermSymbol) => k(call(resolvedCallee(fun, s)))
+          case Some(s: TermSymbol) => call(resolvedCallee(fun, s))
           case _ =>
             raise(ErrorReport(msg"Cannot determine if ${sel.name.name} is a function object." -> fun.toLoc :: Nil,
                 source = Diagnostic.Source.Compilation))
-            k(call(fun))
-        case DynSelect(_, _, DynSelectKind.Member(s)) => k(call(resolvedCallee(fun, s)))
+            call(fun)
+        case DynSelect(_, _, DynSelectKind.Member(s)) => call(resolvedCallee(fun, s))
         case s: DynSelect =>
           raise(ErrorReport(msg"Cannot determine if the dynamic selection is a function object." -> s.toLoc :: Nil,
               source = Diagnostic.Source.Compilation))
-          k(call(fun))
-        case _ => k(call(fun))
+          call(fun)
+        case _ => call(fun)
     case _: Lambda => lastWords("Lambda functions should be rewritten into function definitions first.")
     case _ => super.applyResult(r)(k)
   
@@ -137,9 +134,36 @@ class FirstClassFunctionTransformer
             val funDef = FunDefn.withFreshSymbol(None, funSym, head :: Nil, newBody)(N, annotations = Nil)
             Scoped(Set(funSym), Define(funDef, Return(funDef.sym.asMemberRef(funDef.dSym))))
           case Nil => fd.body
-        FunDefn.withFreshSymbol(fd.owner, fd.sym, head :: Nil, rec(tail))(fd.configOverride, fd.annotations)
+        // The curried definition keeps its symbol under its new signature (see `TermSymbol.irErasure`).
+        val signature = FunDefn.Signature.fromParams(head :: Nil, ErasedResult.fromAnnotations(N, fd.annotations))
+        FunDefn(fd.owner, fd.sym, fd.dSym, signature, rec(tail))(fd.configOverride, fd.annotations)
   
   def transform(b: Block): Block =
     val desugared = new DesugarMultipleParamList().applyBlock(b)
     new CollectFunDefns().applyBlock(desugared)
     applyBlock(desugared)
+
+object FirstClassFunctionTransformer:
+  /** The function-object transform is the only pass that removes parameter lists from a retained definition.
+    * Each later list applies the returned object's `call` method. The original call supplies the parameter
+    * and result types for those methods, including when an earlier compilation unit transformed the definition.
+    */
+  def applyCurried(c: Call, fun: Path, argss: Ls[Ls[Arg]], entry: ErasedFuncSignature)
+        (k: Result => Block)(using State): Block =
+    assert(entry.paramListCount == 1)
+    val source = c.signature match
+      case s: ErasedFuncSignature => s
+      case _ => lastWords("A curried application needs a function signature")
+    def applyLists(callee: Path, signature: ErasedFuncSignature, lists: Ls[Ls[Arg]],
+          remainingParams: Ls[ErasedParamList[ErasedValueType]]): Block = lists match
+      case args :: Nil => k(Call(callee, args :: Nil)(signature, c.metadata, c.toLoc))
+      case args :: rest =>
+        val prefix = Call(callee, args :: Nil)(signature, c.metadata.copy(annotations = Nil), c.toLoc)
+        val tmp = TempSymbol(N, initErasedType = prefix.erasedType, "callPrefix")
+        val result = if remainingParams.tail.isEmpty then source.result
+          else ErasedResult.Direct(S(ErasedType.Function(S(false))))
+        val next = ErasedFuncSignature.Signature(remainingParams.head :: Nil, result)
+        Scoped(Set.single(tmp), Assign(tmp, prefix,
+          applyLists(tmp.asSimpleRef.selSN("call"), next, rest, remainingParams.tail)))
+      case Nil => lastWords("A curried application needs an argument list")
+    applyLists(fun, entry, argss, source.paramLists.tail)

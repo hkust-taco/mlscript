@@ -1,7 +1,7 @@
 :.
 :js
 
-open scope { locally }
+open scope.{ locally }
 
 
 :sir

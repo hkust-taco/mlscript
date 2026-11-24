@@ -1,0 +1,11 @@
+#lang(0.3.x)
+#config(target: CompilationTarget.Wasm, inlining: None)
+
+module Representations with
+  open class Base() {
+    open fun add(value: Int32): Int32 = wasm.i32.add(value, wasm.i32.const(1))
+  }
+  fun dispatch(base: Base, value: Int32): Int32 = base.add(value)
+  fun absent(): Int32 = unsafe.undefined
+  fun count(n: Int, acc: Int32): Int32 =
+    if n is 0 then acc else count(n - 1, wasm.i32.add(acc, wasm.i32.const(1)))

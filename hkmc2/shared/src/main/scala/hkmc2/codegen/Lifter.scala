@@ -410,7 +410,8 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
               else
                 val newSym = closureMap.get(d) match
                   case None =>
-                    val newSym = TempSymbol(N, initErasedType = N, d.nme + "$here")
+                    // The closure replaces the reference, so it keeps the reference's representation.
+                    val newSym = TempSymbol(N, initErasedType = r.erasedType, d.nme + "$here")
                     extraLocals.add(newSym)
                     syms.addOne(d -> newSym) // add to `syms`: this closure will be initialized in `applyBlock`
                     closureMap.addOne(d -> newSym) // add to `closureMap`: `newSym` refers to the closure and can be used later
@@ -430,7 +431,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
               case cls: LiftedClass if !cls.isTrivial =>
                 val newSym = closureMap.get(d) match
                   case None =>
-                    val newSym = TempSymbol(N, initErasedType = N, d.nme + "$here")
+                    val newSym = TempSymbol(N, initErasedType = r.erasedType, d.nme + "$here")
                     extraLocals.add(newSym)
                     syms.addOne(d -> newSym)
                     closureMap.addOne(d -> newSym)
@@ -1083,11 +1084,9 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     private lazy val mainAnnotations =
       if liftedFromStagedModule && !fun.isStaged then Annot.Modifier(Keyword.`staged`)(N) :: fun.annotations
       else fun.annotations
-    // Captures change the physical signature. Keep the source declaration's published signature
-    // intact; rewritten direct calls and the partial-application wrapper use this fresh identity.
-    lazy val mainDsym =
-      if isTrivial then fun.dSym
-      else SymbolRefresher.copyTermSymbol(fun.dSym, N, S(mainSignature.erasure))
+    // Captures change the physical signature, but not the definition's symbol (see `TermSymbol.irErasure`).
+    // Rewritten direct calls and the partial-application wrapper refer to the lifted definition through it.
+    def mainDsym: TermSymbol = fun.dSym
     val auxSym = BlockMemberSymbol(fun.sym.nme + "$", Nil, fun.sym.nameIsMeaningful)
     private lazy val auxDsym = new TermSymbol(syntax.Fun, N, Tree.Ident(auxSym.nme))
     
@@ -1116,7 +1115,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
           syms.map(sym => Arg(N, sym.asSimpleRef)) ::: Arg(S(SpreadKind.Eager), value.asSimpleRef) :: Nil
         case None => syms.map(s => Arg(N, s.asSimpleRef))
       
-      val call = Call.of(mainSym.asMemberRef(mainDsym), args :: Nil)(CallMetadata.mlsFunWithEffect, N)
+      val call = new Call(mainSym.asMemberRef(mainDsym), args :: Nil)(mainSignature.erasure, CallMetadata.mlsFunWithEffect, N)
       val bod = Return(call)
       // The wrapper forwards a Promise, Iterator, or remaining function directly. Its Direct signature
       // must not be lowered as another async or generator body. The added capture list still shifts
@@ -1140,10 +1139,10 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         if argss is c.argss then c
         else c.copy(argss = argss)(c.signature, c.metadata, c.toLoc)
       else
-        Call.rawOf(
+        new Call(
           mainSym.asMemberRef(mainDsym),
           (formatArgs ::: argss.head) :: argss.tail
-        )(c.metadata.copy(isMlsFun = true), c.toLoc)
+        )(mainSignature.erasure, c.metadata.copy(isMlsFun = true), c.toLoc)
     
     def rewriteRef(using ctx: LifterCtxNew): Call =
       if isTrivial then lastWords("tried to rewrite a ref to a trivial function")
@@ -1474,4 +1473,5 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     val newSyms = syms ++ topLevelRewriter.extraDefns.map(_.sym)
     val withDefns = topLevelRewriter.extraDefns.foldLeft(transformed):
       case (acc, d) => Define(d, acc)
-    Scoped(newSyms, withDefns)
+    val changed = ctx.liftedScopes.valuesIterator.collect { case f: LiftedFunc if !f.isTrivial => f.mainDsym }.toSet
+    Call.refreshSignatures(Scoped(newSyms, withDefns), changed)

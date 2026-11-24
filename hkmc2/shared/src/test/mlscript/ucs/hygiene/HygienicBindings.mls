@@ -3,7 +3,7 @@
 
 import "../../../mlscript-compile/Option.mls"
 
-open Option { Some, None }
+open Option.{ Some, None }
 
 fun (~~>) expect(a, b) = if a == b then () else throw Error("unexpected result")
 

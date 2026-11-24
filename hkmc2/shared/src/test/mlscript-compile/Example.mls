@@ -1,7 +1,7 @@
 #lang(0.3.x)
 
 import "./Predef.mls"
-open Predef
+open Predef.{ * }
 
 
 fun privFun = "hi"

@@ -1,0 +1,6 @@
+// FailedImports compiles this source with the Wasm backend, which rejects its host import.
+#lang(0.3.x)
+#config(target: Wasm)
+
+import "node:fs"
+fun HostImportFixture() = 42

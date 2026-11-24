@@ -1,7 +1,7 @@
 :.
 
 // Wildcard lookup waits for the module's type members.
-open Types
+open Types.{ * }
 fun double(n: Scalar): Scalar = n + n
 module Types with
   type Scalar = Int
@@ -9,7 +9,7 @@ double(21)
 //│ = 42
 
 // Explicit bindings take precedence over wildcard type names.
-open OtherTypes
+open OtherTypes.{ * }
 type Scalar = Int
 module OtherTypes with
   type Scalar = Str
@@ -19,8 +19,8 @@ explicit(42)
 
 // An unused signature still diagnoses ambiguous wildcard type names.
 :ge
-open LeftTypes
-open RightTypes
+open LeftTypes.{ * }
+open RightTypes.{ * }
 module LeftTypes with
   type Ambiguous = Int
 module RightTypes with

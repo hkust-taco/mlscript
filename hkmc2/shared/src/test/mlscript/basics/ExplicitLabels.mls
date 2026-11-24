@@ -34,9 +34,6 @@ missing.break(1)
 //│ ╔══[COMPILATION ERROR] Name not found: missing
 //│ ║  l.+1: 	missing.break(1)
 //│ ╙──      	^^^^^^^
-//│ ╔══[COMPILATION ERROR] This selection of member 'break' has no resolved target
-//│ ║  l.+1: 	missing.break(1)
-//│ ╙──      	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -45,9 +42,6 @@ missing.continue
 //│ ╔══[COMPILATION ERROR] Name not found: missing
 //│ ║  l.+1: 	missing.continue
 //│ ╙──      	^^^^^^^
-//│ ╔══[COMPILATION ERROR] This selection of member 'continue' has no resolved target
-//│ ║  l.+1: 	missing.continue
-//│ ╙──      	^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -74,9 +68,6 @@ lbl:
 //│ ╔══[COMPILATION ERROR] Name not found: lbl
 //│ ║  l.+2: 	  lbl.break(1)
 //│ ╙──      	  ^^^
-//│ ╔══[COMPILATION ERROR] This selection of member 'break' has no resolved target
-//│ ║  l.+2: 	  lbl.break(1)
-//│ ╙──      	  ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ lbl = undefined
 
@@ -163,7 +154,4 @@ do
 //│ ╔══[COMPILATION ERROR] Name not found: only
 //│ ║  l.+4: 	    only.break(x)
 //│ ╙──      	    ^^^^
-//│ ╔══[COMPILATION ERROR] This selection of member 'break' has no resolved target
-//│ ║  l.+4: 	    only.break(x)
-//│ ╙──      	    ^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

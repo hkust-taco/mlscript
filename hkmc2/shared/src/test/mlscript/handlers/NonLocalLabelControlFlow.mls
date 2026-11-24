@@ -88,7 +88,7 @@ continueFromNestedFunctionWithEffects()
 //│       end
 //│     else
 //│       let saveOffset;
-//│       set pc = runtime⁰.resumePc﹖;
+//│       set pc = (runtime⁰.resumePc﹖ as! Int⁰);
 //│       set runtime⁰.resumePc﹖ = -1;
 //│       end
 //│   loop main:
@@ -112,7 +112,8 @@ continueFromNestedFunctionWithEffects()
 //│                 set pc = 2;
 //│                 continue main
 //│               else
-//│                 return runtime⁰.unwind﹖(loop⁰, 2, "NonLocalLabelControlFlow.mls:65:24", null, null, 1, 2, scope0$cap, nonLocalHandler$root, 0)
+//│                 do runtime⁰.unwind﹖(loop⁰, 2, "NonLocalLabelControlFlow.mls:65:24", null, null, 1, 2, scope0$cap, nonLocalHandler$root, 0);
+//│                 return undefined
 //│             end
 //│           else
 //│             set pc = 1;
@@ -155,9 +156,9 @@ continueFromNestedFunctionWithEffects()
 //│       end
 //│     else
 //│       let saveOffset;
-//│       set pc = runtime⁰.resumePc﹖;
-//│       set saveOffset = runtime⁰.resumeIdx﹖;
-//│       set scope0$cap = runtime⁰.resumeArr﹖.saveOffset;
+//│       set pc = (runtime⁰.resumePc﹖ as! Int⁰);
+//│       set saveOffset = (runtime⁰.resumeIdx﹖ as! Int⁰);
+//│       set scope0$cap = (runtime⁰.resumeArr﹖.saveOffset as! Capture$scope0¹);
 //│       set runtime⁰.resumePc﹖ = -1;
 //│       end
 //│   loop main:
@@ -177,7 +178,8 @@ continueFromNestedFunctionWithEffects()
 //│             null =>
 //│               break brk1
 //│             else
-//│               return runtime⁰.unwind﹖(continueFromNestedFunctionWithEffects¹, 3, null, null, null, 1, 0, 1, scope0$cap)
+//│               do runtime⁰.unwind﹖(continueFromNestedFunctionWithEffects¹, 3, null, null, null, 1, 0, 1, scope0$cap);
+//│               return undefined
 //│           end
 //│         set pc = 3;
 //│         end

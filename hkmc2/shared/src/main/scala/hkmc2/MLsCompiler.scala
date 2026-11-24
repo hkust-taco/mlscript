@@ -46,7 +46,7 @@ object MLsCompiler:
     def termFile: io.Path
 
 /**
-  * The compiler that compiles MLscript code into JavaScript modules.
+  * Compiles an MLscript source module using its configured JavaScript or WASM target.
   *
   * @param mkRaise generates a separate `Raise` function for each file.
   */
@@ -60,7 +60,19 @@ class MLsCompiler
   import cctx.paths.*
   
   
-  def compileModule(file: io.Path): Unit =
+  /** Compiles `file` with its configured target, returning whether it emitted the requested module's code.
+    * A JavaScript module is written even if its source has errors. WASM code is not emitted if its source has errors or if compiling
+    * it, its runtime, or one of its imports fails. A failed WASM compilation replaces the failed module's `.mjs`
+    * with a diagnostic loader that throws on import, retaining existing WAT; the result remains `false`.
+    * Dependencies compiled successfully during the request may already have been written.
+    * The reserved `RuntimeWasm.mjs` host library is never replaced by a diagnostic loader.
+    * Callers must check the result before automatically loading output, since existing files may be stale.
+    *
+    * The request reports the diagnostics of the artifacts that it builds, but not those of the artifacts that it
+    * reuses from the cache (see `CompilerCtx.getElaboratedBlock`). So a request for an unchanged WASM source with
+    * errors reports nothing and returns `false`.
+    */
+  def compileModule(file: io.Path): Bool =
     
     given Raise = mkRaise(file)
     given DebugPrinter = new DebugPrinter(N)
@@ -78,6 +90,8 @@ class MLsCompiler
         import hkmc2.Message.MessageContext
         WarningReport(msg"Missing language version specification for file `${file.relativeToOrSame(config.baseDir).toString}`" -> artifact.tree.toLoc.map(_.left)
           :: msg"Specify a version with #lang; the latest available is #lang(${Config.Language.latestVersion.name})" -> N :: Nil)
+    if artifact.config.target is CompilationTarget.Wasm then
+      return new codegen.wasm.WasmCompiler(using cctx, compilerTL).compile(file, artifact, mkRaise).isDefined
     given Elaborator.Ctx = artifact.ctx
     val jsb = compilerTL.givenIn:
       codegen.js.JSBuilder()
@@ -92,6 +106,7 @@ class MLsCompiler
       jsb.program(artifact.ir, exportedSymbol, out)
     val jsStr = je.stripBreaks.mkString(100)
     cctx.fs.write(out, jsStr)
+    true
   
   
 end MLsCompiler

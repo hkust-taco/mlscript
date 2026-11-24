@@ -23,10 +23,8 @@ class WorkerWrapper
     (using DebugPrinter, State, Config, Raise)
   extends BlockTransformer(SymbolSubst.Id):
   import tl.*
-  
-  // Collect replacements while splitting functions, then substitute across the whole
-  // program so forward references and recursive calls use the direct-result wrapper.
-  private val wrapperSymbols = collection.mutable.Map.empty[TermSymbol, TermSymbol]
+
+  private val generatorWrappers = collection.mutable.Set.empty[TermSymbol]
 
   private def withInline(annotations: Ls[Annot]): Ls[Annot] =
     if annotations.exists(_.isInstanceOf[Annot.Inline]) then annotations else Annot.Inline()(N) :: annotations
@@ -89,26 +87,17 @@ class WorkerWrapper
     val wrapperBody = Return(
       Call.of(worker.asPath, workerArgs :: Nil)(CallMetadata.mlsFunWithEffect, N),
     )
-    // The generator body now belongs to the worker. The wrapper returns its Iterator
-    // directly, while the source symbol keeps the payload for later source cloning.
+    // The generator body now belongs to the worker. The wrapper returns its Iterator directly
+    // under the same symbol, whose source erasure keeps the payload for later source cloning.
     val wrapperAnnotations = withInline(fun.annotations.filter:
       case Annot.NoInline() | Annot.Generator() => false
       case _ => true)
-    val wrapperSignature =
-      if fun.generator then FunDefn.Signature.fromParams(fun.params,
-        ErasedResult.fromAnnotations(fun.signature.erasure.ret, wrapperAnnotations))
-      else fun.signature
-    val wrapperDSym =
-      if wrapperSignature.erasure isnt fun.signature.erasure then
-        val copy = SymbolRefresher.copyTermSymbol(fun.dSym, fun.owner, S(wrapperSignature.erasure))
-        assert(!wrapperSymbols.contains(fun.dSym), "A generator symbol must have only one definition")
-        wrapperSymbols(fun.dSym) = copy
-        copy
-      else fun.dSym
+    val wrapperSignature = if fun.generator then fun.signature.forWrapper(wrapperAnnotations) else fun.signature
+    if wrapperSignature isnt fun.signature then generatorWrappers += fun.dSym
     val wrapper = FunDefn(
       fun.owner,
       fun.sym,
-      wrapperDSym,
+      fun.dSym,
       wrapperSignature,
       wrapperBody,
     )(fun.configOverride, wrapperAnnotations)
@@ -121,13 +110,7 @@ class WorkerWrapper
     else fun.copy(fun.owner, fun.sym, fun.dSym, fun.signature, body)(fun.configOverride, annotations)
   
   override def applyProgram(prog: Program): Program =
-    val transformed = super.applyProgram(prog)
-    val replacements = wrapperSymbols.toMap
-    wrapperSymbols.clear()
-    val res = if replacements.isEmpty then transformed else
-      val subst = new SymbolSubst:
-        override def mapTermSym(sym: TermSymbol): TermSymbol = replacements.getOrElse(sym, sym)
-      BlockTransformer(subst).applyProgram(transformed)
+    val res = super.applyProgram(prog).mapMain(Call.refreshSignatures(_, generatorWrappers))
     if res isnt prog then log("▶ Worker-wrapper:\n" + printer(res))
     res
   

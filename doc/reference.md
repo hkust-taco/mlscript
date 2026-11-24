@@ -112,9 +112,10 @@ let x = 1 in
 "hello"     // String literal
 true        // Boolean literal
 false       // Boolean literal
-()          // Unit literal (empty tuple/record)
+()          // Unit literal
+{}          // Empty record (distinct from Unit)
 null        // Null
-undefined   // Undefined
+undefined   // Undefined: an unspecified value (see Runtime Representations)
 ```
 
 **String escape sequences:**
@@ -233,6 +234,22 @@ fun foo() =
   val result = compute()
   result + 1
 ```
+
+### Runtime Representations
+
+Type annotations can require a particular runtime representation, including the unboxed
+Wasm types `Int32`, `Int64`, `Float32`, and `Float64`.
+
+`undefined` denotes an unspecified value of any representation. It can be stored in or passed
+to any slot, but reading it back is undefined behavior: the JavaScript backend produces JS
+`undefined` (or `()` for a function returning it), while the Wasm backend may produce any value
+of the slot's representation, such as zero or a null reference. Compiler-generated placeholders,
+such as those left by dead-parameter elimination, rely on this rule. `null` remains an ordinary
+value and does not have this freedom to inhabit unboxed representations.
+
+In the IR, `undefined` has type `Nothing`: joining it with another representation leaves that
+representation unchanged, and casting the literal leaves it unchanged. This type does not imply
+unreachable control flow; evaluating an expression of type `Nothing` can still have effects.
 
 ---
 
@@ -865,8 +882,13 @@ Modules cannot extend classes. Objects can extend classes.
 ```mlscript
 {a: 1, b: 2}          // immutable (frozen) record
 mut {a: 1, b: 2}      // mutable record
+{}                   // fresh empty immutable record
+mut {}               // fresh empty mutable record
 (a: 1, b: 2)          // record in parentheses (same thing)
 ```
+
+`{}` denotes an empty record in expression and type positions. It is distinct
+from Unit, written `()`. Empty statement bodies such as `do {}` still return Unit.
 
 ### Field Access
 
@@ -1352,7 +1374,7 @@ if term is refined(Term) and term is
 The `@compile` annotation forces compile-time expansion of a pattern:
 
 ```mlscript
-open annotations { compile }
+open annotations.{ compile }
 fun foo(x) = if x is @compile Box then "yes" else "no"
 fun foo(x) = if x is @compile 42 then "yes" else "no"
 ```
@@ -1841,16 +1863,75 @@ import "../../mlscript-compile/Iter.mls"
 Bring module members into scope:
 
 ```mlscript
-open Option
-open Stack { Cons, Nil }           // selective open
-open Iter                          // open all members
-do open M; ...                     // locally open
+open Option.{ * }
+open Stack.{ Cons, Nil }           // selective `open`
+open Iter.{ * }                    // open all members
+
+Stack.{ print(Nil) }               // local `open`
+type AnyList =
+  Stack.{ Cons | Nil }
 ```
+
+Selective opens accept dotted paths and nested groups. Each selected leaf becomes
+a binding in the enclosing scope; intermediate path segments do not introduce bindings:
+
+```mlscript
+open Foo.Bar.c                    // import c
+open Foo.Bar.{ c, d }             // import c and d
+open Foo.{ a, b, Bar.{ c, d } }    // import a, b, c, and d
+```
+
+Indentation can replace the braces after a dot, including in nested groups:
+
+```mlscript
+open Foo.
+  a
+  b
+  Bar.
+    c, d
+```
+
+Operator names work in either form, including `open Stack.{ :: }` or a lone `::`
+on an indented line after `open Stack.`. In dotted lists, a bare `*` selects all
+members; `(*)` selects the multiplication operator. These forms work in every
+language version:
+
+```mlscript
+open M.{ * }                      // wildcard open
+open M.{ (*) }                    // import only the * operator
+```
+
+Use `as` to rename an imported member or module, and `as _` to hide a member:
+
+```mlscript
+open M.m as n
+open M as N                       // bind the module itself as N
+open M.N.{ m as n, o, p }
+open M.{ *, m as _ }              // all members except m
+```
+
+Each statement processes its entries from left to right. Renaming or hiding
+removes earlier imports of that member from the same statement, including its
+earlier wildcards. A later wildcard or explicit import can expose the name again:
+
+```mlscript
+open M.{ *, m as n }              // n is available; m is excluded
+open M.{ m as n, * }              // both m and n are available
+open M.{ *, m as _, * }           // m is available again
+```
+
+These exclusions apply to the selected receiver and do not remove lexical bindings
+or imports from earlier statements. Hidden names must still exist in the source.
+
+The old `open Foo { a, b }` form, its indentation-only equivalent, and the bare
+wildcard form `open Foo` remain supported. From `0.3.2`, they warn and suggest
+the dotted forms. Earlier versions also retain `open Foo` for wildcards and treat
+`*` as an operator name in undotted selective opens. `open Foo.Bar` imports `Bar` itself.
 
 With `newResolution` enabled, wildcard opens are consulted only when a name has
 no explicit binding in the current scope or any enclosing scope. Explicit
 bindings include local variables, parameters, member definitions, imports, and
-selective opens such as `open Stack { Cons, Nil }`. An inner wildcard open does
+selective opens such as `open Stack.{ Cons, Nil }`. An inner wildcard open does
 not shadow an explicit binding in an outer scope. Moving a wildcard open before
 or after an explicit binding does not give it priority over that binding.
 
@@ -1861,7 +1942,7 @@ even though `M` also provides a member named `x`:
 val x = 1
 module M { val x = 2; val y = 3 }
 fun example() =
-  open M
+  open M.{ * }
   x + y                            // explicit x; y from M
 ```
 
@@ -1872,6 +1953,83 @@ over an overloaded class or function supplied by a wildcard open.
 
 If wildcard lookup finds several distinct members with the requested name, the
 reference is ambiguous; the order of the opens does not choose a winner.
+Capitalized values first consult their [implicit namespaces](#implicit-namespaces).
+
+### Implicit Namespaces
+
+With `newResolution` enabled, a capitalized name without an explicit binding can
+name a member of an *implicit namespace* of the type that its value is required
+to have, such as the companion module or object of the class or type alias of that
+type. Resolution finds these types by following the flow of the value into parameter,
+result, and field annotations, as well as ascriptions.
+
+```mlscript
+import "./Option.mls" // type Option[A] = Option.{ Some[A] | None }
+
+fun get(x: Option[Int]) = if x is Option.Some(v) then v else 0
+get(Some(1)) // selects Option.Some
+get(None)    // selects Option.None
+```
+
+The implicit namespaces of a type come from the classes and type aliases that it
+names as written, before aliases are expanded:
+
+- A class has its companion module or object, then the module or object declaring
+  it, then the namespaces of its parent class.
+- A type alias has its companion module or object, then the module or object
+  declaring it, then the namespaces of the classes and aliases that its body names.
+- The components of a union or an intersection are considered separately.
+
+Each class or alias only contributes the first of its namespaces that defines an
+accessible member with the requested name. For instance, where `paint` takes a
+`Palette.Hue`, `paint(Red)` selects `Palette.Hue.Red` if the companion module `Hue`
+defines `Red`, even if the declaring module `Palette` defines another `Red`; and
+where `Bird` extends `Animal` without a companion of its own, a parameter of type
+`Bird` makes the members of the companion of `Animal` available.
+
+This applies to values and to the classes instantiated by `new`. As in Swift's
+implicit member chains, such a name can also be the root of a chain of selections
+and applications; the type required of the result of the chain determines the
+namespace. For instance, `Some` in `get(Some(1))`, `Red` in `paint(Red.lighter)`,
+and `Hex` in `paint(Hex("f00").lighter)` name members of the namespaces of the
+parameter types of `get` and `paint`. Types, their selection paths, and `extends`
+clauses only consult explicit bindings and wildcard opens.
+So do annotations, which are interpreted as soon as they are elaborated.
+
+In a pattern, the values that reach the scrutinee determine the namespaces of the
+head of a constructor pattern, as the type required of a value does. A value of a
+declared type has the namespaces of that type, and an instance of a class or object
+has those of its class. With `x: Option[Int]`, `if x is Some(v) then v else 0`
+tests for `Option.Some`, as does `if Option.Some(1) is Some(v) then v else 0`,
+whose class `Some` is declared by module `Option`. Nested patterns observe the
+values of the fields that they match. As for values, the head of a pattern can be
+a chain of selections whose root names the member, as `Plain` in `t is Plain.Grass`.
+
+A *leading-dot selection* `.name` explicitly requires an implicit namespace: it
+never consults the scope where it is written, neither its explicit bindings nor
+its wildcard opens, and its name need not be capitalized. For instance, with
+`module Color with val red = ...`, `paint(.red)` selects `Color.red`, even where
+another `red` is in scope, and `get(.None)` selects `Option.None`. Leading-dot
+selections can start chains too, as in `paint(.red.lighter)`, and they can head
+constructor patterns, as in `if x is .None then 0 else 1`.
+
+Implicit namespaces take precedence over wildcard opens, but not over explicit
+bindings, including selective opens such as `open AltOption.{ Some }`. A name
+whose value flows into types whose namespaces provide distinct members, such as
+`Option[Int]` and `AltOption[Int]`, is ambiguous.
+
+Resolution looks up implicit namespaces as flow reveals them, immediately
+propagating the candidates they supply. It settles each such name once the rest
+of its block (a file or a worksheet block) is resolved. If no namespace supplies
+a candidate for the name by then, its wildcard opens supply it. Names are settled
+in source order, so the definitions
+supplied to earlier names can reveal the namespaces of later ones: in
+`Wrap(Some(1))`, where an open supplies `Wrap`, its parameter type can be the
+namespace of `Some`. A namespace revealed later, for instance by a later
+worksheet block, cannot change the definition already selected; resolution
+reports it as an error instead, which qualifying the name resolves.
+Names without explicit bindings that are not found at all are reported at the
+same point, whether or not they are capitalized.
 
 ### `open M in` Scope
 
@@ -1899,12 +2057,12 @@ instance Foo::method(args)   // receiver-first syntax
 instance.Foo#method()        // hash syntax (inside open scope)
 ```
 
-### `open annotations { compile }`
+### `open annotations.{ compile }`
 
 Open the `annotations` module to use the `@compile` annotation in patterns:
 
 ```mlscript
-open annotations { compile }
+open annotations.{ compile }
 fun foo(x) = if x is @compile Box then "yes" else "no"
 ```
 
@@ -1916,7 +2074,9 @@ Flow types (`:flow` mode) enable type inference with a structural/flow-sensitive
 
 ### Leading Dot Access (Flow Values)
 
-In flow mode, a leading dot creates a *flow value* that resolves its type from context:
+With `newResolution` enabled, leading-dot selections resolve through
+[implicit namespaces](#implicit-namespaces). In the legacy flow mode, a leading dot
+creates a *flow value* that resolves its type from context:
 
 ```mlscript
 :flow
@@ -2229,7 +2389,7 @@ Math.sin(x); Math.cos(x); Math.tan(x)
 
 ### Predef Functions
 
-Imported automatically when `open Predef` is used (or when `import "./Predef.mls"` is present):
+Imported automatically when `open Predef.{ * }` is used (or when `import "./Predef.mls"` is present):
 
 ```mlscript
 fun id(x) = x
@@ -2265,7 +2425,7 @@ fun enterHandleBlock(handler, body) = ...
 
 ```mlscript
 import "./Stack.mls"
-open Stack
+open Stack.{ * }
 
 type Stack[A] = Cons[A] | Nil
 data class (::) Cons[A](head: A, tail: Stack[A])
@@ -2289,7 +2449,7 @@ xs :+ y                         // append single element
 
 ```mlscript
 import "./Option.mls"
-open Option { Some, None }
+open Option.{ Some, None }
 
 type Option[A] = Some[A] | None
 data class Some[T](value)
@@ -2305,7 +2465,7 @@ Option.unsafe.get(opt)
 
 ```mlscript
 import "./Iter.mls"
-open Iter
+open Iter.{ * }
 
 class Iterable(mk)           // wraps an iterator-factory
 class Iterator(next)         // wraps a next-function
@@ -2325,7 +2485,7 @@ xs toStack()                 // force to Stack
 
 ```mlscript
 import "./StrOps.mls"
-open StrOps
+open StrOps.{ * }
 
 (~) concat2(a, b)            // string concat with ~ operator
 concat(...xs)                // join multiple strings

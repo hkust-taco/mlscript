@@ -22,7 +22,7 @@ pattern MoreArity = Pair("meow", "woof", "moo")
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 // Nested modifiers and annotations belong to the whole declaration span.
-open annotations
+open annotations.{ * }
 @untyped
 public data class AnnotatedPair(val first, val second)
 

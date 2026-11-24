@@ -45,8 +45,8 @@ fun mutate_captured() =
 //│ flow-analysis > function lambda$⁰#1 @ <root> -> UnsafeEta
 //│ flow-analysis > function lambda⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > function mutate_captured⁰#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call lambda$⁰@result⁰#0 @ <root> -> Pure
-//│ flow-analysis > call lambda⁰@result¹#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call lambda$⁰@result¹#0 @ <root> -> Pure
+//│ flow-analysis > call lambda⁰@result⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 
 
@@ -137,8 +137,8 @@ fun observe_captured() =
 //│ flow-analysis > function lambda$⁰#1 @ <root> -> Pure
 //│ flow-analysis > function lambda⁰#0 @ <root> -> Pure
 //│ flow-analysis > function observe_captured⁰#0 @ <root> -> Pure
-//│ flow-analysis > call lambda$⁰@result⁰#0 @ <root> -> Pure
-//│ flow-analysis > call lambda⁰@result¹#0 @ <root> -> Pure
+//│ flow-analysis > call lambda$⁰@result¹#0 @ <root> -> Pure
+//│ flow-analysis > call lambda⁰@result⁰#0 @ <root> -> Pure
 //│ flow-analysis > <<< effect-analysis results <<<
 
 // * Observing a mutable state is an effect.
@@ -245,10 +245,10 @@ fun shared_captures() =
 //│ flow-analysis > function observe$⁰#1 @ <root> -> UnsafeEta
 //│ flow-analysis > function observe⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > function shared_captures⁰#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call mutate$⁰@result⁰#0 @ <root> -> Pure
-//│ flow-analysis > call mutate⁰@result²#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call observe$⁰@result¹#0 @ <root> -> Pure
-//│ flow-analysis > call observe⁰@result³#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call mutate$⁰@result³#0 @ <root> -> Pure
+//│ flow-analysis > call mutate⁰@result¹#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call observe$⁰@result²#0 @ <root> -> Pure
+//│ flow-analysis > call observe⁰@result⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 
 

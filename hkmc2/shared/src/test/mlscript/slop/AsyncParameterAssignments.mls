@@ -2,7 +2,7 @@
 :js
 
 
-// Async lowering moves the body to a helper with fresh bindings.
+// The async thunk shares the wrapper's parameter bindings.
 // Reads and writes of a mutable local copy must use the same binding.
 :await
 :expect 42

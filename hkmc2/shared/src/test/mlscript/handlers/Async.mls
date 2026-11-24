@@ -11,8 +11,8 @@ let fileSystem = fs as {promises: {
   readdir: Str -> Promise[Array[Str]]
 }}
 
-open annotations
-open handlers
+open annotations.{ * }
+open handlers.{ * }
 
 @async
 fun f(print_result: Bool) =

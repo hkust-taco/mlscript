@@ -5,7 +5,7 @@ import "../../../mlscript-compile/Stack.mls"
 import "../../../mlscript-compile/Iter.mls"
 import "../../../mlscript-compile/StrOps.mls"
 
-open Stack
+open Stack.{ * }
 
 fun showList(xs) = "[" + xs Iter.fromStack() Iter.joined(", ") + "]"
 

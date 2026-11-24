@@ -1,6 +1,6 @@
 #lang(0.3.x)
 
-import "binaryen"
+import "../RuntimeWasm.mls"
 
 import "../Predef.mls"
 import "../Runtime.mls"
@@ -9,9 +9,7 @@ module Wasm with ...
 
 // WebAssembly utilities
 fun instantiateWasmBinary(modBuf, importObject): dyn =
-  assert WebAssembly.validate of modBuf
-  let mod = new WebAssembly.Module(modBuf)
-  new WebAssembly.Instance(mod, importObject)
+  RuntimeWasm.instantiateBinary(modBuf, importObject)
 
 fun dumpWasmModImpExp(wasmMod) =
   console.log of "Imports: %s", WebAssembly.Module.imports(wasmMod)
@@ -21,30 +19,12 @@ fun dumpWasmInstImpExp(wasmInst: dyn) =
   console.log of "Imports: %s", wasmInst.imports
   console.log of "Exports: %s", wasmInst.exports
 
-// Binaryen helpers
-//
-// The `Features.All` argument to `parseText` is necessary to enable GC-related features.
-fun binaryenFmtWat(wat, foldExprs): String =
-  let mod = binaryen.parseText of wat, binaryen.Features.All
-  
-  // Note: it seems `mod.validate()` sometimes returns `1` instead of `true`; so we don't use `assert` here
-  Predef.js_assert of mod.validate()
-
-  let fmtWat = if foldExprs then mod.emitText() else mod.emitStackIR()
-
-  mod.dispose()
-  fmtWat
+// Binaryen helpers share validation and disposal with the file loader.
+fun binaryenFmtWat(wat, foldExprs): Str =
+  RuntimeWasm.formatWat(wat, foldExprs)
 
 fun binaryenCompileToModule(wat, importObject): dyn =
-  let mod = binaryen.parseText of wat, binaryen.Features.All
-
-  // Note: it seems `mod.validate()` sometimes returns `1` instead of `true`; so we don't use `assert` here
-  Predef.js_assert of mod.validate()
-
-  let modBuf = mod.emitBinary()
-  mod.dispose()
-
-  instantiateWasmBinary of modBuf, importObject
+  RuntimeWasm.compileWat(wat, importObject, "worksheet")
 
 fun unwrapWasmException(err: dyn, tag) =
   if (
@@ -57,9 +37,12 @@ fun unwrapWasmException(err: dyn, tag) =
   then err.getArg(tag, 0)
   else err
 
-fun binaryenRunFunc(wat, importObject, func: Function): Any =
+fun binaryenRunFunc(wat, importObject: dyn, func: Function): Any =
   let wasmInst = binaryenCompileToModule of wat, importObject
-  let exnTag = wasmInst.exports.mlx_exn
+  let exnTag =
+    if wasmInst.exports.mlx_exn === unsafe.undefined
+    then importObject.system.mlx_exn
+    else wasmInst.exports.mlx_exn
   Runtime.try_catch of
     () => func(wasmInst.exports)
     err => throw unwrapWasmException(err, exnTag)
@@ -67,3 +50,10 @@ fun binaryenRunFunc(wat, importObject, func: Function): Any =
 fun binaryenPrintFuncRes(wat, importObject, func) = 
   let result = binaryenRunFunc of wat, importObject, func
   Predef.print of Runtime.render of result
+
+
+fun worksheet(url: Str, entry: Str, native: dyn) = RuntimeWasm.worksheet(url, entry, native)
+
+fun printWorksheetResult(session: RuntimeWasm.Worksheet, wat: Str, entry: Str, pages: Int, index: Int) =
+  let result = session.run(wat, entry, pages, index)
+  Predef.print(Runtime.render(result))

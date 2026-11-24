@@ -199,3 +199,86 @@ first(counter, bumper.bump)
 //│ bumper = Bumper
 
 
+// Coercing the first argument to its declared type precedes the call in the second argument.
+:sir
+:expect 42
+fun chooseInt(n: Int, ignored) = n
+fun checkedFirst(value: Any) = chooseInt(value, bumpNow())
+checkedFirst(42)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define chooseInt⁰ as fun chooseInt¹(n, ignored) {
+//│   return n
+//│ };
+//│ define checkedFirst⁰ as fun checkedFirst¹(value) {
+//│   let arg, tmp;
+//│   set arg = (value as! Int⁰);
+//│   set tmp = bumpNow⁰();
+//│   return chooseInt¹(arg, tmp)
+//│ };
+//│ return checkedFirst¹(42)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+
+// Converting a curried definition to function objects keeps its symbol and gives
+// each returned object's call method one of the original parameter lists.
+:ftc
+:sir
+:siret
+:noInline
+:expect 42
+fun addThree(a: Int)(b: Int)(c: Int): Int = a + b + c
+addThree(10)(12)(20)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda$, lambda$1, Function$, Function$1, callPrefix: ?, callPrefix1: Function⁰;
+//│ define lambda$ as fun lambda$⁰(a: Int⁰, b: Int⁰, c: Int⁰): ? {
+//│   let tmp: Int⁰;
+//│   set tmp = +⁰‹(?, ?) => ?›(a, b);
+//│   return +⁰‹(?, ?) => ?›(tmp, c)
+//│ };
+//│ define Function$ as class Function$⁰ extends globalThis⁰.Function⁰ {
+//│   private val a⁰: Int⁰;
+//│   private val b⁰: Int⁰;
+//│   constructor(a: Int⁰, b: Int⁰) {
+//│     do super⁰‹(...Array⁰) => ?›();
+//│     end;
+//│     set Function$⁰.this.a⁰ = a;
+//│     set Function$⁰.this.b⁰ = b;
+//│     end
+//│   }
+//│   method call⁰ = fun call¹(c: Int⁰): ? {
+//│     return lambda$⁰‹(Int⁰, Int⁰, Int⁰) => ?›(Function$⁰.this.a⁰, Function$⁰.this.b⁰, c)
+//│   }
+//│ };
+//│ define lambda$1 as fun lambda$¹(a: Int⁰, b: Int⁰): ? {
+//│   let tmp: Function$⁰;
+//│   set tmp = new Function$⁰(a, b);
+//│   return tmp
+//│ };
+//│ define Function$1 as class Function$¹ extends globalThis⁰.Function⁰ {
+//│   private val a¹: Int⁰;
+//│   constructor(a: Int⁰) {
+//│     do super⁰‹(...Array⁰) => ?›();
+//│     end;
+//│     set Function$¹.this.a¹ = a;
+//│     end
+//│   }
+//│   method call² = fun call³(b: Int⁰): ? {
+//│     return lambda$¹‹(Int⁰, Int⁰) => ?›(Function$¹.this.a¹, b)
+//│   }
+//│ };
+//│ define addThree⁰ as fun addThree¹(a: Int⁰): ? {
+//│   let tmp: Function$¹;
+//│   set tmp = new Function$¹(a);
+//│   return tmp
+//│ };
+//│ set callPrefix = addThree¹‹(Int⁰) => ?›(10);
+//│ set callPrefix1 = callPrefix.call﹖‹(Int⁰) => Function⁰›(12);
+//│ return callPrefix1.call﹖‹(Int⁰) => Int⁰›(20)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+// A later worksheet block calls the same function through its published, single-list entry point.
+:expect 42
+addThree(20)(12)(10)
+//│ = 42

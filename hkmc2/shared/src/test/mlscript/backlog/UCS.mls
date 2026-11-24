@@ -111,12 +111,13 @@ module Foo with
 fun foo(x) = if x is Foo.
   Bar then "Bar"
   Foo then "Foo"
-//│ ╔══[PARSE ERROR] Expected end of input; found period instead
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (open-in).
 //│ ║  l.+1: 	fun foo(x) = if x is Foo.
-//│ ╙──      	                        ^
-//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (identifier).
-//│ ║  l.+1: 	fun foo(x) = if x is Foo.
-//│ ╙──      	                     ^^^
+//│ ║        	                     ^^^^
+//│ ║  l.+2: 	  Bar then "Bar"
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ║  l.+3: 	  Foo then "Foo"
+//│ ╙──      	^^^^^^^^^^^^^^^^
 
 fun foo(x) = if x is Foo
   .Bar then "Bar"

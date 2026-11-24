@@ -3,7 +3,7 @@
 :checkIR
 
 
-open js { plainField }
+open js.{ plainField }
 
 fun isDataField(obj, name) =
   let descriptor = globalThis.Object.getOwnPropertyDescriptor(obj, name)
