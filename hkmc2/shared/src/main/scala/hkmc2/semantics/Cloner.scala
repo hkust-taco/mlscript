@@ -90,8 +90,7 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
 
   private def bindLocal(symbol: LocalVarSymbol): Unit = symbol match
     case s: VarSymbol => variables.getOrElseUpdate(s, {
-      val copy = new VarSymbol(s.id, mut = s.mut)
-      if s.isErased then copy.erasedType = s.erasedType.map(valueType)
+      val copy = new VarSymbol(s.id, erasedType = s.erasedType.map(valueType), mut = s.mut)
       copy.sourceAliases = s.sourceAliases
       copy.decl = s.decl
       copy.shapes.copyFrom(s.shapes)
