@@ -852,7 +852,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
           // consequence split.
           (makeConsequent, alternative) => Split.Let(
             sym = lambdaSymbol,
-            term = Term.Lam(PlainParamList(params)(N), transform).mkClone,
+            term = Term.erasedLambda(PlainParamList(params)(N), transform, N).mkClone,
             // Declare the lambda function at the outermost level. Even if there
             // are multiple disjunctions in the consequent, we will not need to
             // repeat the `transform` term.
@@ -1135,7 +1135,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
         val lambdaSymbol = new TempSymbol(N, initErasedType = N, "transform")
         (makeConsequent, alternative) => Split.Let(
           sym = lambdaSymbol,
-          term = Term.Lam(PlainParamList(params)(N), transform),
+          term = Term.erasedLambda(PlainParamList(params)(N), transform, N),
           tail = make(
             // Note that the output is not used. Semantically, the `transform`
             // term can only access the matched values by bindings.
@@ -1221,7 +1221,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
     val matcherBody = Term.Blk(
       machine.prelude :+ Term.SynthWhile(machine.loop), machine.result)
     val callTerm = app(matcherSymbol.safeRef, tup(fld(scrutinee())), "fixed-point match result")
-    Split.Let(matcherSymbol, Term.Lam(machine.params, matcherBody),
+    Split.Let(matcherSymbol, Term.erasedLambda(machine.params, matcherBody, N),
       tempLet("fixedPointResult", callTerm): resultSymbol =>
         val outputSymbol = TempSymbol(N, initErasedType = N, "output").toScrut
         val consequent = outputPattern match
@@ -1289,7 +1289,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
     implementations.iterator.foldRight(innermostSplit):
       case ((symbol, paramList, term), innerSplit) =>
         log(term.showDbg)
-        Split.Let(symbol, Term.Lam(paramList, term), innerSplit)
+        Split.Let(symbol, Term.erasedLambda(paramList, term, N), innerSplit)
   
   /** Make a term like `MatchFailure(null)`. We will synthesize detailed
    *  error messages and pass them to the function. */
@@ -1387,7 +1387,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
     val decl = LetDecl(fieldSymbol, Nil)(N)
     val param = Param.simple(scrut)
     val paramList = PlainParamList(param :: Nil)(N)
-    val lambda = Term.Lam(paramList, Term.SynthIf(topmost))
+    val lambda = Term.erasedLambda(paramList, Term.SynthIf(topmost), N)
     val defineVar = DefineVar(fieldSymbol, lambda)(N)
     val field = RcdField(str(name), fieldSymbol.safeRef)
     decl :: defineVar :: field :: Nil

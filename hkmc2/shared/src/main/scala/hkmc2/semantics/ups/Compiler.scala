@@ -534,7 +534,7 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
         val makeSplit = completePattern(pattern, scrutinee, subScrutinees, Nil)
         (makeConsequent, alternative) => Split.Let(
           sym = transformSymbol,
-          term = Term.Lam(params, Blk(letBindings, term)).mkClone,
+          term = Term.erasedLambda(params, Blk(letBindings, term), N).mkClone,
           tail = makeSplit(
             // The `outputSymbol` is the output of `pattern`.
             //                vvvvvvvvvvvv

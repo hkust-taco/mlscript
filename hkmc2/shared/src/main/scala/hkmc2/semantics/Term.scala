@@ -581,6 +581,14 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
 end Term
 
 object Term:
+  /** Builds a lambda after source erasure with the representation of its body's result.
+    * Pass `N` when the generated body has no known result representation.
+    */
+  def erasedLambda(params: ParamList, body: Term, resultType: Opt[ErasedValueType]): Lam =
+    val lam: Lam = Lam(params, body)
+    lam.resultSlot.erasedType = resultType
+    lam
+
   /** Compute the free variable names of a block given its statements and the
     * free vars of its result term. Processes statements right-to-left so that
     * bindings introduced by `LetDecl`, `TermDefinition`, class definitions,

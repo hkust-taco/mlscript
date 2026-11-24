@@ -1506,8 +1506,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       
     case lam @ st.Lam(params, body) =>
       warnStmt
-      // Pattern compilation also synthesizes lambdas after source erasure.
-      val bodyType = if lam.resultSlot.isErased then lam.resultSlot.erasedType else N
+      val bodyType = lam.resultSlot.erasedType
       val (paramLists, bodyBlock) = setupFunctionDef(params :: Nil, body, N, bodyType)
       val affineAnnots = annots.collect:
         case a @ Annot.Affine(0) => a
@@ -2186,7 +2185,7 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
       paramLists match
         case Nil => ???
         case h :: Nil => (h, bod)
-        case h :: t => go(t, Term.Lam(h, bod))
+        case h :: t => go(t, Term.erasedLambda(h, bod, N))
     go(paramLists.reverse, bod)
   
   def setupFunctionBody(params: ParamList, bod: Term, name: Option[Str], returnType: Opt[ErasedValueType])(using LoweringCtx): Block = inScopedBlock:

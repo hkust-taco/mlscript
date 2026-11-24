@@ -553,9 +553,7 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
       case lam @ Lam(params, body) =>
         val scope = nested
         scope.bindParameters(params :: Nil)
-        val copy = Lam(scope.parameterList(params), scope.term(body))
-        if lam.resultSlot.isErased then copy.resultSlot.erasedType = lam.resultSlot.erasedType.map(scope.valueType)
-        copy
+        Term.erasedLambda(scope.parameterList(params), scope.term(body), lam.resultSlot.erasedType.map(scope.valueType))
       case FunTy(lhs, rhs, eff) => FunTy(lhs.cloned, rhs.cloned, eff.map(_.cloned))
       case Forall(tvs, outer, body) =>
         val scope = nested
