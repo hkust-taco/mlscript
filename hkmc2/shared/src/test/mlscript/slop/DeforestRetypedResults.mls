@@ -249,6 +249,77 @@ choose(true) + choose(false)
 //│ = NaN
 
 
+// In the other direction, a projected word reaches both readers as the argument of a call through a
+// function value. Such a call passes its arguments unchanged, so each reader receives the unboxed word.
+:deforest
+:expect 49
+private fun readA(w: Word): Int = Math.abs(w.bits)
+private fun readB(w: Word): Int = Math.abs(w.bits) + 7
+private fun pass(c: Bool): Int =
+  let reader = if c then readA else readB
+  reader(Word(Math.imul(21, 1)))
+pass(true) + pass(false)
+//│ deforest > >>> fusing >>>
+//│ deforest > Word⁰(tmp²) ->
+//│ deforest > 	select: bits
+//│ deforest > Word⁰(tmp²) ->
+//│ deforest > 	select: bits
+//│ deforest > Word⁰(tmp²) ->
+//│ deforest > 	select: bits
+//│ deforest > <<< fusing <<<
+//│ = 49
+
+
+// In mono mode the readers are retyped in place: their parameter becomes an Int32.
+:deforest mono
+:sir
+:siret
+:expect 49
+private fun readC(w: Word): Int = Math.abs(w.bits)
+private fun readD(w: Word): Int = Math.abs(w.bits) + 7
+private fun passMono(c: Bool): Int =
+  let reader = if c then readC else readD
+  reader(Word(Math.imul(21, 1)))
+passMono(true) + passMono(false)
+//│ deforest > >>> fusing >>>
+//│ deforest > Word⁰(tmp³) ->
+//│ deforest > 	select: bits
+//│ deforest > <<< fusing <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Int⁰, tmp1: Int⁰;
+//│ @private
+//│ define readC⁰ as fun readC¹(w: Int32): Int⁰ {
+//│   return globalThis⁰.Math⁰.abs⁰(w)
+//│ };
+//│ @private
+//│ define readD⁰ as fun readD¹(w: Int32): Int⁰ {
+//│   let tmp2: Int⁰;
+//│   set tmp2 = globalThis⁰.Math⁰.abs⁰(w);
+//│   return +⁰(tmp2, 7)
+//│ };
+//│ @private
+//│ define passMono⁰ as fun passMono¹(c: Bool⁰): Int⁰ {
+//│   let reader: Function⁰, tmp2: Function⁰, tmp3: Int32, tmp4: Int32, Word_bits: Int32;
+//│   match c
+//│     true =>
+//│       set tmp2 = readC¹;
+//│       end
+//│     else
+//│       set tmp2 = readD¹;
+//│       end
+//│   set reader = tmp2;
+//│   set tmp3 = globalThis⁰.Math⁰.imul⁰(21, 1);
+//│   set Word_bits = tmp3;
+//│   set tmp4 = Word_bits;
+//│   return (reader(tmp4) as! Int⁰)
+//│ };
+//│ set tmp = passMono¹(true);
+//│ set tmp1 = passMono¹(false);
+//│ return +⁰(tmp, tmp1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 49
+
+
 // A continuation extracted from a function returns for that function. Here fusion turns the result of
 // `route` into a closure, while the join continuation `σ` only returns the result of a call that never
 // returns, of the unrelated type `Away`. The continuation drops that value as `route` itself does, so
@@ -415,7 +486,7 @@ nested(1)
 //│ deforest > Box⁰(n³) ->
 //│ deforest > 	match: a²
 //│ deforest > 	fields: a².v⁰
-//│ deforest > Box⁰(tmp²) ->
+//│ deforest > Box⁰(tmp⁴) ->
 //│ deforest > 	match: b¹
 //│ deforest > 	fields: b¹.v⁰
 //│ deforest > <<< fusing <<<
@@ -447,7 +518,7 @@ nested(1)
 //│ };
 //│ @private
 //│ define nested⁰ as fun nested¹(n: Int⁰): Int⁰ {
-//│   let x: Int⁰, y: Int⁰, arg$Box$0$: Int⁰, tmp: Int⁰, arg$Box$0$1: Int⁰, b: Function⁰, a: Function⁰, Box_v: Int⁰;
+//│   let x: Int⁰, y: Int⁰, arg$Box$0$: Int⁰, tmp: Int⁰, arg$Box$0$1: Int⁰, a: Function⁰, b: Function⁰, Box_v: Int⁰;
 //│   set Box_v = n;
 //│   set a = $a_Box⁰(Box_v);
 //│   return (a(arg$Box$0$, x, tmp, b, arg$Box$0$1, y) as! Int⁰)
