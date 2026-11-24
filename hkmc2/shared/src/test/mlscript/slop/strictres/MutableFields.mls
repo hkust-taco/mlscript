@@ -202,16 +202,25 @@ fun put(value) = set store.value = value
 //│ store = Store(0)
 
 
-// Fields of a mutable record can be assigned. Reading a mutable field returns its initializer
-// and the values assigned to it.
+// Only the inner field needs to change. The label keeps its original value.
 :expect [2, "count"]
 private class Box(val value)
 private fun replaceInner() =
-  let record = mut {inner: Box(1), label: "count"}
+  let record = {mut inner: Box(1), label: "count"}
   set record.inner = Box(2)
   [record.inner.value, record.label]
 replaceInner()
 //│ = [2, "count"]
+
+// A mixed record's read-only field should reject an assignment.
+:breakme
+:e
+private fun overwriteLabel() =
+  let record = {mut count: 0, label: "count"}
+  set record.label = "changed"
+  record.label
+overwriteLabel()
+//│ = "changed"
 
 // Assigning through a mutable copy of a record assigns the fields of the copied record,
 // so the representations of those fields include the values assigned to them through the copy.
@@ -227,7 +236,7 @@ copy()
 // Copies of a record read the current values of its mutable fields.
 :expect ["many", "many"]
 private fun copyMutable() =
-  let source = mut {count: 0}
+  let source = {mut count: 0}
   set source.count = "many"
   let copied = {...source}
   [source.count, copied.count]
@@ -235,7 +244,10 @@ copyMutable()
 //│ = ["many", "many"]
 
 // The fields of an exposed record that are mutable cannot declare types: they take the unknown representation.
-val exposedRecord = mut {count: 0, label: "count"}
+:expect 5
+val exposedRecord = {mut count: 0, label: "count"}
+exposedRecord.label.length
+//│ = 5
 //│ exposedRecord = {count: 0, label: "count"}
 
 
@@ -244,7 +256,7 @@ val exposedRecord = mut {count: 0, label: "count"}
 // parameter types of its function type. Assignments through the record type need not be followed.
 :expect 3
 private class Holder(mut val item)
-private fun put(holder: mut {item: Str}) = set holder.item = "str"
+private fun put(holder: {mut item: Str}) = set holder.item = "str"
 private fun structural() =
   let holder = Holder("abc")
   put(holder)
@@ -578,11 +590,13 @@ fun exportPossibleReplacement(key: Str) = {item: PossiblyRetainedCell(input), (k
 
 // A frozen spread copy does not let clients write to the private mutable record that it copied.
 :expect 3
-private val privateMutableSource = mut {item: "abc"}
+private val privateMutableSource = {mut item: "abc"}
 val exportedImmutableCopy = {...privateMutableSource}
+val exportedMixedCopy = {...privateMutableSource, mut version: 0}
 privateMutableSource.item.length
 //│ = 3
 //│ exportedImmutableCopy = {item: "abc"}
+//│ exportedMixedCopy = {item: "abc", version: 0}
 //│ privateMutableSource = {item: "abc"}
 
 
@@ -590,7 +604,7 @@ privateMutableSource.item.length
 :ge
 private class FrozenCopiedCell(mut val value)
 fun exportFrozenCopy() =
-  let record = mut {item: 0}
+  let record = {mut item: 0}
   set record.item = FrozenCopiedCell(input)
   {...record}
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
@@ -601,10 +615,10 @@ fun exportFrozenCopy() =
 //│ ║  l.+1: 	private class FrozenCopiedCell(mut val value)
 //│ ║        	                                       ^^^^^
 //│ ╟── This value is stored in this record field.
-//│ ║  l.+3: 	  let record = mut {item: 0}
+//│ ║  l.+3: 	  let record = {mut item: 0}
 //│ ║        	                    ^^^^
 //│ ╟── This value is returned here.
-//│ ║  l.+3: 	  let record = mut {item: 0}
+//│ ║  l.+3: 	  let record = {mut item: 0}
 //│ ║        	                    ^^^^^^^^
 //│ ║  l.+4: 	  set record.item = FrozenCopiedCell(input)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

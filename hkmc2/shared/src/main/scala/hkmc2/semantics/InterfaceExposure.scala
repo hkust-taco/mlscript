@@ -343,14 +343,13 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
         val field = segment.element
         watch((tuple, field, marks))(resolver.listenTupleField(field)): shape =>
           emit(shape.exit(marks), path.via(msg"This value is stored in this tuple." -> tuple.source.toLoc))
-      case record: RecordShape => record.foreachReadableField(marks, instances): (member, context, bindings) =>
+      case record: RecordShape => record.foreachReadableField(marks, instances): (member, writable, context, bindings) =>
         val field = member.field
         val lookup = MemberLookup.Found(member, context)
         watch((field.tsym, member.mutable, context, bindings))(resolver.listenMemberValue(lookup,
           rctx.fieldProjectionSite(field.sym), field.rhs, bindings, () => ())): value =>
           emit(value, path.via(msg"This value is stored in this record field." -> field.toLoc))
-        // Copying a mutable source reads its writes. Clients can write only to a mutable result.
-        if record.source.mut then field.tsym.defn.foreach(exposeWrite(_, lookup.instantiate(bindings), path))
+        if writable then field.tsym.defn.foreach(exposeWrite(_, lookup.instantiate(bindings), path))
       case base: BaseShape => exposeClassInterface(base.defn)
       case callable: CallableTypeShape =>
         callable.declaration.filter(origin => rctx.state.isOwnedSym(origin.definition.tsym)).foreach: origin =>

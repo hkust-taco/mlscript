@@ -883,15 +883,17 @@ Modules cannot extend classes. Objects can extend classes.
 
 ```mlscript
 {a: 1, b: 2}          // immutable (frozen) record
+{mut a: 1, b: 2}      // only a is mutable
 mut {a: 1, b: 2}      // mutable record: all its fields are mutable
 {}                   // fresh empty immutable record
 mut {}               // fresh empty mutable record
 (a: 1, b: 2)          // record in parentheses (same thing)
 ```
 
-Only mutable fields can be assigned. Fields are immutable unless their whole record is mutable.
-A mutable record also makes mutable the fields it copies from the records it spreads.
-A record spreading another one copies the current values of its fields.
+Declare an individual field writable with `mut a: value`, or make every field writable with
+`mut {...}`. A spread copies the current values of its source fields. Copied fields are
+writable when the destination uses `mut {...}`. The JavaScript backend allocates a mixed
+record as an unfrozen object. The compiler does not yet reject every write to its read-only fields.
 
 `{}` denotes an empty record in expression and type positions. It is distinct
 from Unit, written `()`. Empty statement bodies such as `do {}` still return Unit.
@@ -1886,10 +1888,11 @@ lookup still combines the fields of record intersections.
 
 ```mlscript
 type Point = { x: Num, y: Num }
-type CursorView = mut { position: in Int out (Int | Str) }
+type CursorView = { mut position: in Int out (Int | Str), label: Str }
 ```
 
 `CursorView` accepts an `Int` on writes to `position` and exposes `Int | Str` on reads.
+Its `label` field supplies a read-only `Str`.
 A mutable record field can use the same forms as a type argument. A plain `T` supplies both bounds,
 `in S` has the output bound `Any`, and `out T` has the input bound `Nothing`.
 For `type Cell[A] = mut { f: A }`, `Cell[in S out T]` is equivalent to `mut { f: in S out T }`.

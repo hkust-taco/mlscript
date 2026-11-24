@@ -1652,8 +1652,8 @@ class NewResolver:
                     case key: SymbolKey => name -> Set(key)
                   case _ => N
                 publish(RecordTypeShape(fields.map((field, sign) =>
-                  field.key.get -> declaredField(sign, current, source.mut)).toMap,
-                  fields.collect { case (field, _) if source.mut => field.key.get }.toSet, aliases.toMap)(
+                  field.key.get -> declaredField(sign, current, source.mut || field.mut)).toMap,
+                  fields.collect { case (field, _) if source.mut || field.mut => field.key.get }.toSet, aliases.toMap)(
                   source, fields.map((field, _) => field.key.get -> field).toMap))
               case TypeShape.Union(left, right) => next(left); next(right)
               case TypeShape.Intersection(left, right) if view != TypeView.Members => next(left); next(right)
@@ -2182,8 +2182,10 @@ class NewResolver:
         // candidates through listenConstraintViews, avoiding candidate products.
         case TypeShape.Combined(formula) =>
           formula.orderedAtoms.foreach(atom => follow(atom.instantiate(tpe.instances), noTypeArguments, captures, next))
-        case TypeShape.Record(source, fields) => observe((actual, context) => constrainRecord(fields.map((field, sign) =>
-          (field, declaredField(sign, tpe, source.mut), source.mut)), actual, context, site))
+        case TypeShape.Record(source, fields) => observe((actual, context) => constrainRecord(fields.map { (field, sign) =>
+          val writable = source.mut || field.mut
+          (field, declaredField(sign, tpe, writable), writable)
+        }, actual, context, site))
         case TypeShape.Function(_, _) => observe((actual, context) => constrainFunction(tpe, actual, context, site))
         case TypeShape.Polymorphic(_, _, body) =>
           follow(declaredType(body, tpe), args, captures, next)
@@ -5606,7 +5608,7 @@ class NewResolver:
           val record = defining.state.namedTupleRecords.getOrElseUpdate(tuple, {
             val record: Rcd = Rcd(false, fields.map((key, value) =>
               // Like the record they are packed into at run time, named tuple fields are immutable.
-              val field = RcdField.source(key, value)(using rctx.owner)
+              val field = RcdField.source(key, value, mut = false)(using rctx.owner)
               lexicalBinders(tuple).foreach(binders => rctx.state.lexicalTypeBinders(field.tsym) = binders)
               observeErasureDefinition(field.tsym.defn.get)
               field))

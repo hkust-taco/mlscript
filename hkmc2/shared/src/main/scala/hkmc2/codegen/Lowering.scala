@@ -293,13 +293,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         case L((mut, flds, loc)) =>
           subTerm(bod): l =>
             continueBlock(stats, L((mut, RcdArg(N, l) :: flds, loc)))
-      case RcdField(lhs, rhs, _) :: stats =>
+      case (field @ RcdField(lhs, rhs, _)) :: stats =>
         res match
         case R(_) => wat("RcdField in non-Rcd context", res)
         case L((mut, flds, loc)) =>
           subTerm(lhs): l =>
             subTerm_nonTail(rhs): r =>
-              continueBlock(stats, L((mut, RcdArg(S(l), r) :: flds, loc)))
+              continueBlock(stats, L((mut || field.mut, RcdArg(S(l), r) :: flds, loc)))
       case (decl @ LetDecl(sym, annotations)) :: stats =>
         reportAnnotations(decl, annotations)
         if sym.asTrm.forall(_.owner.isEmpty) then

@@ -666,11 +666,12 @@ sealed trait Statement extends StatementImpl
 
 final case class LetDecl(sym: LocalVarSymbol | TermSymbol, annotations: Ls[Annot])(val toLoc: Opt[Loc]) extends Statement
 
-/** The symbol identifies the property, independently of any local binding used
-  * to evaluate its value. Computed keys also have an identity, but cannot be
-  * selected statically until their key is known. Cloning preserves this identity.
+/** A field in a record literal or structural record type. Its member symbol identifies the
+  * property independently of local bindings in its initializer and survives cloning. A computed
+  * field can be selected statically once its key is known. The `mut` flag marks a field declared
+  * writable independently of its enclosing record.
   */
-final case class RcdField(field: Term, rhs: Term, sym: BlockMemberSymbol)(val key: Opt[MemberKey]) extends Statement, AutoLocated:
+final case class RcdField(field: Term, rhs: Term, sym: BlockMemberSymbol)(val mut: Bool, val key: Opt[MemberKey]) extends Statement, AutoLocated:
   // Fresh fields have a completed member definition. Lowering clones reuse its symbols.
   val tsym: TermSymbol = sym.tsym.get
   require((tsym.k is RecordField) && tsym.owner.isEmpty && tsym.defn.exists(_.sym is sym))
@@ -681,17 +682,17 @@ final case class RcdField(field: Term, rhs: Term, sym: BlockMemberSymbol)(val ke
 object RcdField:
   /** Construct a generated value field whose symbol does not participate in source erasure. */
   def apply(field: Term, rhs: Term)(using State): RcdField =
-    make(field, rhs, signature = N, initializer = S(rhs), source = false, symbol = N)
-  def source(field: Term, rhs: Term)(using State): RcdField =
-    make(field, rhs, signature = N, initializer = S(rhs), source = true, symbol = N)
+    make(field, rhs, signature = N, initializer = S(rhs), source = false, mut = false, symbol = N)
+  def source(field: Term, rhs: Term, mut: Bool)(using State): RcdField =
+    make(field, rhs, signature = N, initializer = S(rhs), source = true, mut = mut, symbol = N)
   /** Declare a structural field with the given type or bounds. Its term symbol carries the
     * read type for erasure. The field retains the written bounds for reads and assignments. */
-  def signature(field: Term, bounds: Term, symbol: Opt[SymbolKey])(using State, Ctx): RcdField =
+  def signature(field: Term, bounds: Term, mut: Bool, symbol: Opt[SymbolKey])(using State, Ctx): RcdField =
     val readType = bounds match
       case Term.WildcardTy(_, output) =>
         output.getOrElse(ctx.builtins.Any.ref(new Tree.Ident("Any").withLocOf(bounds)))
       case tpe => tpe
-    make(field, bounds, signature = S(readType), initializer = N, source = true, symbol = symbol)
+    make(field, bounds, signature = S(readType), initializer = N, source = true, mut = mut, symbol = symbol)
   /** Create a record property with a fresh member symbol so that selection can identify its definition.
     * The field retains `rhs`, a value expression or structural field bounds. Its member definition
     * takes its declared read type from `signature` and its body from `initializer` independently.
@@ -699,7 +700,7 @@ object RcdField:
     * `symbol` supplies the property key for an `@jsSymbol` field.
     */
   private def make(field: Term, rhs: Term, signature: Opt[Term], initializer: Opt[Term],
-      source: Bool, symbol: Opt[SymbolKey])(using State): RcdField =
+      source: Bool, mut: Bool, symbol: Opt[SymbolKey])(using State): RcdField =
     val name = field match
       case Term.Lit(Tree.StrLit(name)) => name
       case _ => "computed field"
@@ -716,7 +717,7 @@ object RcdField:
     tsym.defn = S(TermDefinition(RecordField, sym, tsym, Nil, N, signature, body, TermDefFlags.empty,
       Modulefulness.none, symbol.toList.map(Annot.JsSymbol(_)(field.toLoc)), N)(field.toLoc, field.toLoc, N))
     sym.complete()
-    RcdField(field, rhs, sym)(symbol.orElse(field match
+    RcdField(field, rhs, sym)(mut, symbol.orElse(field match
       case Term.Lit(Tree.StrLit(name)) => S(name)
       case _ => N))
 final case class RcdSpread(rcd: Term) extends Statement, AutoLocated

@@ -1,15 +1,15 @@
 :.
 
 
-type CursorView = mut { position: in Int out (Int | Str) }
+type CursorView = { mut position: in Int out (Int | Str), label: Str }
 
-:expect ["start", 42]
+:expect ["start", 42, "cursor"]
 private fun reset(cursor: CursorView) =
   let before = cursor.position
   set cursor.position = 42
-  [before, cursor.position]
-reset(mut {position: "start"})
-//│ = ["start", 42]
+  [before, cursor.position, cursor.label]
+reset({mut position: "start", label: "cursor"})
+//│ = ["start", 42, "cursor"]
 
 
 // A field selection uses the representation of its output, including an unboxed output.
@@ -188,7 +188,7 @@ read(mut {item: Child(8)})
 class Base
 class Child(val value: Int) extends Base
 private fun assigned(value) = value.value
-private fun store(record: mut {callback: in (Base -> Int) out (Child -> Int)}) =
+private fun store(record: {mut callback: in (Base -> Int) out (Child -> Int)}) =
   set record.callback = assigned
 private fun test() =
   let record = mut {callback: assigned}
@@ -199,7 +199,7 @@ test()
 //│ ║  l.+3: 	private fun assigned(value) = value.value
 //│ ║        	                              ^^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'value'
-//│ ║  l.+4: 	private fun store(record: mut {callback: in (Base -> Int) out (Child -> Int)}) =
+//│ ║  l.+4: 	private fun store(record: {mut callback: in (Base -> Int) out (Child -> Int)}) =
 //│ ╙──      	                                             ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
