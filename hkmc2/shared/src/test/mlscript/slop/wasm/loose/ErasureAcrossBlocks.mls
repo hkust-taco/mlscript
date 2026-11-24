@@ -1,7 +1,6 @@
 :.
 
-// See `slop/loose/ErasureAcrossBlocks.mls`: without strict resolution, worksheet blocks infer the
-// representations of their public definitions from their own uses only.
+// The Wasm parameter slot must accept values from later calls to the public function.
 
 
 fun ident(x) = x
@@ -9,17 +8,14 @@ ident(1)
 //│ Wasm result:
 //│ = 1
 
-:ge
+:expect "a"
 ident("a")
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
-//│ ║  l.+1: 	ident("a")
-//│ ╙──      	      ^^^
 //│ Wasm result:
 //│ = "a"
 
 
 class Foo
-class Box(val v)
+private class Box(val v)
 let b = Box(new Foo)
 //│ Wasm result:
 //│ = {}

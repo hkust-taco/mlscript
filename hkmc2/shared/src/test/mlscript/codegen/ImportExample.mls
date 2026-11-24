@@ -46,8 +46,8 @@ n / 2
 
 // * Builtin operators can be shadowed/rebound
 
-open Example
-open Example { funnySlash, / }
+open Example.{ * }
+open Example.{ funnySlash, / }
 
 :sjs
 inc / 2
@@ -64,9 +64,9 @@ n / 2
 //│ ║  l.+1: 	n / 2
 //│ ╙──      	^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return runtime.safeCall(n(2))
+//│ throw "This code cannot be run as its compilation yielded an error."
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] TypeError: n is not a function
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 funnySlash(inc, 123)
 //│ = 124

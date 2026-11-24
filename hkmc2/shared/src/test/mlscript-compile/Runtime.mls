@@ -4,7 +4,7 @@ import "./Rendering.mjs"
 import "./LazyArray.mjs"
 import "./Iter.mjs"
 
-open annotations { pure }
+open annotations.{ pure }
 
 
 module Runtime with ...
@@ -180,7 +180,7 @@ mut val resumePc: Int = -1
 object FatalEffect
 object PrintStackEffect
 
-open js { plainField }
+open js.{ plainField }
 
 data class FunctionContFrame(@plainField mut val next: FunctionContFrame | null, saved: Array) with
   fun resume(value) =

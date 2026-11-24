@@ -3,7 +3,7 @@
 
 import "../../../mlscript-compile/apps/parsing/Test.mls"
 
-open Test { example }
+open Test.{ example }
 
 //   ____      _             __        ___               _ 
 //  / ___|___ | | ___  _ __  \ \      / / |__   ___  ___| |

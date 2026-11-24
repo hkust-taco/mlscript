@@ -6,10 +6,10 @@ import "./Option.mls"
 import "./Stack.mls"
 import "./Predef.mls"
 
-open annotations { jsSymbol }
-open Option { Some, None }
-open Stack { Nil, Cons }
-open Predef { id"??" }
+open annotations.{ jsSymbol }
+open Option.{ Some, None }
+open Stack.{ Nil, Cons }
+open Predef.{ id"??" }
 
 
 module Iter with ...
@@ -122,7 +122,7 @@ module Result with
 
 // A helper function to detect if `Symbol.iterator` is on an object, and if not,
 // indicate the object's class in the error message, which is useful for debugging.
-fun getIterator(something): Iterator =
+fun getIterator[A](something: Iterable[A]): Iterator[A] =
   let test = something.(Symbol.iterator)
   if test is unsafe.undefined then
     throw TypeError of "Not an iterable: " + if

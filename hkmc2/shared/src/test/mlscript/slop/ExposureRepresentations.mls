@@ -1,0 +1,267 @@
+:.
+:!js
+
+// Compiled exports admit external inputs even when strict resolution is off.
+// The diagnostic must trace Unknown to the parameter and the exported module.
+:ge
+#lang(strictResolution: false, eagerResolution: false)
+import "../../../test-fixtures/ExposedUnboxedInput.mls"
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.XX: 	  fun identity(value) = value
+//│ ║        	               ^^^^^
+//│ ╟── The exposed interface admits values of unknown representation unless a type annotation restricts them.
+//│ ╟── Parameter 'value' admits values of unknown shape.
+//│ ║  l.XX: 	  fun identity(value) = value
+//│ ║        	               ^^^^^
+//│ ╟── Member 'identity' is accessible here.
+//│ ║  l.XX: 	  fun identity(value) = value
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^
+//│ ╟── 'ExposedUnboxedInput' is exposed by this compilation unit.
+//│ ║  l.XX: 	module ExposedUnboxedInput with
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+val input: Int32 = unsafe.undefined
+
+// A private callback stored in an exposed tuple receives unknown inputs too.
+// Diagnose its parameter once and explain how it escapes.
+:ge
+private fun callback(value) = value
+callback(input)
+val callbacks = [callback]
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+1: 	private fun callback(value) = value
+//│ ║        	                     ^^^^^
+//│ ╟── The exposed interface admits values of unknown representation unless a type annotation restricts them.
+//│ ╟── Parameter 'value' admits values of unknown shape.
+//│ ║  l.+1: 	private fun callback(value) = value
+//│ ║        	                     ^^^^^
+//│ ╟── This value is stored in this tuple.
+//│ ║  l.+3: 	val callbacks = [callback]
+//│ ║        	                ^^^^^^^^^^
+//│ ╟── 'callbacks' is exposed by this compilation unit.
+//│ ║  l.+3: 	val callbacks = [callback]
+//│ ╙──      	^^^^^^^^^^^^^
+
+#lang(strictResolution: true, eagerResolution: true)
+
+// The unknown input can flow from an exposed function into a private helper.
+// Explain the original public parameter, rather than claiming the helper is exported.
+:ge
+private fun helper(value) = value
+fun forward(value) = helper(value)
+helper(input)
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+1: 	private fun helper(value) = value
+//│ ║        	                   ^^^^^
+//│ ╟── The exposed interface admits values of unknown representation unless a type annotation restricts them.
+//│ ╟── Parameter 'value' admits values of unknown shape.
+//│ ║  l.+2: 	fun forward(value) = helper(value)
+//│ ║        	            ^^^^^
+//│ ╟── 'forward' is exposed by this compilation unit.
+//│ ║  l.+2: 	fun forward(value) = helper(value)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^
+
+// An incompatible declared result is independent of inferred external inputs.
+// Its error must not blame the exposed parameter.
+:ge
+:sir
+:siret
+fun declared(value): Int32 | Any = value
+declared(0)
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+1: 	fun declared(value): Int32 | Any = value
+//│ ╙──      	                     ^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+
+// Reject the whole function after diagnosing its parameters, regardless of its body.
+// Keep both parameter errors, but skip the incompatible result annotation and body.
+:ge
+:sir
+:siret
+fun rejected(left, right): Int32 | Any =
+  if true then left else right
+rejected(input, input)
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+1: 	fun rejected(left, right): Int32 | Any =
+//│ ║        	             ^^^^
+//│ ╟── The exposed interface admits values of unknown representation unless a type annotation restricts them.
+//│ ╟── Parameter 'left' admits values of unknown shape.
+//│ ║  l.+1: 	fun rejected(left, right): Int32 | Any =
+//│ ║        	             ^^^^
+//│ ╟── 'rejected' is exposed by this compilation unit.
+//│ ║  l.+1: 	fun rejected(left, right): Int32 | Any =
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+1: 	fun rejected(left, right): Int32 | Any =
+//│ ║        	                   ^^^^^
+//│ ╟── The exposed interface admits values of unknown representation unless a type annotation restricts them.
+//│ ╟── Parameter 'right' admits values of unknown shape.
+//│ ║  l.+1: 	fun rejected(left, right): Int32 | Any =
+//│ ║        	                   ^^^^^
+//│ ╟── 'rejected' is exposed by this compilation unit.
+//│ ║  l.+1: 	fun rejected(left, right): Int32 | Any =
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+
+// An erroneous override contributes no result representation to its valid base.
+// Neither the erroneous method nor calls to it should reach lowering.
+:ge
+:sir
+:siret
+private class ValidBase() with
+  open fun take(value: Any) = 1
+private class RejectedOverride() extends ValidBase() with
+  override fun take(value: Int32 | Any) = input
+ValidBase().take(1)
+RejectedOverride().take(input)
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+4: 	  override fun take(value: Int32 | Any) = input
+//│ ╙──      	                           ^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+
+// A valid override must not be compared against an erroneous base's recovery signature.
+// Inheriting the rejected parameter also rejects an unannotated override without another error.
+:ge
+:sir
+:siret
+private class RejectedBase() with
+  open fun take(value: Int32 | Any): Int32 = input
+private class ValidOverride() extends RejectedBase() with
+  override fun take(value: Any): Int = 1
+private class RejectedChild() extends RejectedBase() with
+  override fun take(value) = value
+ValidOverride().take(1)
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+2: 	  open fun take(value: Int32 | Any): Int32 = input
+//│ ╙──      	                       ^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+
+// An inferred result can be unrepresentable even when every parameter is valid.
+// Reject the function and its call before lowering its branches.
+:ge
+:sir
+:siret
+fun inferred(flag: Bool) = if flag then input else 0
+inferred(true)
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int' have no common representation
+//│ ║  l.+1: 	fun inferred(flag: Bool) = if flag then input else 0
+//│ ╙──      	    ^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+
+// An unannotated getter inherits its base's rejected result without another diagnostic.
+// An override with a valid declared result keeps that independent representation.
+:ge
+:sir
+:siret
+private class RejectedResultBase() with
+  open fun value: Int32 | Any = input
+private class RejectedResultChild() extends RejectedResultBase() with
+  override fun value = input
+private class ValidResultChild() extends RejectedResultBase() with
+  override fun value: Int = 1
+ValidResultChild().value
+RejectedResultChild().value
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+2: 	  open fun value: Int32 | Any = input
+//│ ╙──      	                  ^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+
+// Promise and Iterator wrappers do not make an unrepresentable body result valid.
+:ge
+:sir
+:siret
+@annotations.async
+fun rejectedAsync(): Int32 | Any = input
+@annotations.generator
+fun rejectedGenerator(): Int32 | Any = input
+[rejectedAsync, rejectedGenerator]
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+2: 	fun rejectedAsync(): Int32 | Any = input
+//│ ╙──      	                     ^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+4: 	fun rejectedGenerator(): Int32 | Any = input
+//│ ╙──      	                         ^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+
+// A bad parameter suppresses only its own definition's result check.
+// The independent bad result still receives its diagnostic.
+:ge
+:sir
+:siret
+private fun badParameter(value: Int32 | Any): Int32 | Any = value
+private fun independentBadResult(): Int32 | Any = input
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+1: 	private fun badParameter(value: Int32 | Any): Int32 | Any = value
+//│ ╙──      	                                ^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+2: 	private fun independentBadResult(): Int32 | Any = input
+//│ ╙──      	                                    ^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+
+// Already-diagnosed parameter errors inherited in a later worksheet block still stop lowering.
+// Their result signatures carry the same error without diagnosing the inferred result again.
+:sir
+:siret
+private class LaterRejectedParameters() extends RejectedBase() with
+  override fun take(value) = value
+LaterRejectedParameters().take(input)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+
+// A previously diagnosed result error also rejects a later unannotated override without a new error.
+:sir
+:siret
+private class LaterRejectedResult() extends RejectedResultBase() with
+  override fun value = input
+LaterRejectedResult().value
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+
+// Promise/Iterator wrappers must not hide an erroneous payload from override checking.
+// These rejected members need no additional result-compatibility diagnostic against Int.
+:ge
+:sir
+:siret
+private class WrappedErrorBase() with
+  open fun take(value: Any): Int = 0
+private class WrappedParameterError() extends WrappedErrorBase() with
+  @annotations.async
+  override fun take(value: Int32 | Any) = value
+private class WrappedResultError() extends WrappedErrorBase() with
+  @annotations.generator
+  override fun take(value: Any): Int32 | Any = input
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+5: 	  override fun take(value: Int32 | Any) = value
+//│ ╙──      	                           ^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+8: 	  override fun take(value: Any): Int32 | Any = input
+//│ ╙──      	                                 ^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+
+// References to earlier failed definitions do not repeat the diagnostics of their signatures.
+:sir
+:siret
+badParameter(input)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+
+:sir
+:siret
+independentBadResult()
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ return independentBadResult⁰()
+
+:sir
+:siret
+[rejectedAsync, rejectedGenerator]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ return [rejectedAsync⁰, rejectedGenerator⁰]

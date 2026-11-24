@@ -1,0 +1,8 @@
+:.
+:js
+:effectHandlers
+:lift
+
+import "../../mlscript-compile/handlers-bench/product_early.mls"
+product_early.run(10)
+//│ = 0

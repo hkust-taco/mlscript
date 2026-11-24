@@ -1,0 +1,87 @@
+:.
+#lang(strictResolution: true)
+#lang(eagerResolution: true)
+open wasm.{ i32 }
+open i32.{ const }
+//│ Wasm result:
+//│ = {}
+
+
+// A class pattern reads each destructured field into a temporary before binding the pattern variables.
+// The temporaries take the representations of those fields, so unboxed fields can be destructured.
+:noInline
+:sir
+:siret
+:expect 42
+private class Pair(val fst, val snd)
+private fun sum(p) = if p is Pair(a, b) then wasm.i32.add(a, b) else const(0)
+sum(Pair(const(40), const(2)))
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Int32, tmp1: Int32, tmp2: Pair⁰;
+//│ @private
+//│ define sum⁰ as fun sum¹(p: Pair⁰): Int32 {
+//│   let a: Int32, b: Int32, arg$Pair$0$: Int32, arg$Pair$1$: Int32;
+//│   match p
+//│     Pair⁰ =>
+//│       set arg$Pair$0$ = p.fst⁰;
+//│       set arg$Pair$1$ = p.snd⁰;
+//│       set b = arg$Pair$1$;
+//│       set a = arg$Pair$0$;
+//│       return wasm⁰.i32⁰.add⁰(a, b)
+//│     else
+//│       return wasm⁰.i32⁰.const⁰(0)
+//│   end
+//│ };
+//│ @private
+//│ define Pair¹ as class Pair⁰ {
+//│   val fst¹: Int32;
+//│   val snd¹: Int32;
+//│   constructor Pair²(fst: Int32, snd: Int32) {
+//│     define fst¹ as val fst⁰: Int32 = fst;
+//│     define snd¹ as val snd⁰: Int32 = snd;
+//│     end
+//│   }
+//│ };
+//│ set tmp = wasm⁰.i32⁰.const⁰(40);
+//│ set tmp1 = wasm⁰.i32⁰.const⁰(2);
+//│ set tmp2 = Pair²(tmp, tmp1);
+//│ return sum¹(tmp2)
+//│ Wasm result:
+//│ = 42
+
+
+// Declared unboxed fields are destructured in the same way, including through nested patterns.
+:noInline
+:expect 42
+private class Leaf(val weight: Int32)
+private class Node(val left: Leaf, val right: Leaf)
+private fun total(node) = if node is Node(Leaf(l), Leaf(r)) then wasm.i32.add(l, r) else const(0)
+total(Node(Leaf(const(40)), Leaf(const(2))))
+//│ Wasm result:
+//│ = 42
+
+
+// Branches testing the same class share the extraction of its fields.
+:noInline
+:expect 42
+private class Tagged(val tag: Int, val payload: Int32)
+private fun select(t) = if t is
+  Tagged(0, p) then p
+  Tagged(1, p) then wasm.i32.add(p, const(1))
+  Tagged(_, p) then const(0)
+wasm.i32.add(select(Tagged(0, const(1))), select(Tagged(1, const(40))))
+//│ Wasm result:
+//│ = 42
+
+
+// A pattern variable bound to the whole instance does not prevent the extraction of its fields.
+:noInline
+:expect 42
+private class Cell(mut val value)
+private fun bump(c) = if c is Cell(v) as cell then
+  set cell.value = wasm.i32.add(v, const(1))
+  cell.value
+else const(0)
+bump(Cell(const(41)))
+//│ Wasm result:
+//│ = 42

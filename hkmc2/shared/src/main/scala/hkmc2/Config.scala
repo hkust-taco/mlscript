@@ -81,7 +81,7 @@ object Config:
     baseDir = baseDir,
     sanityChecks = N, // TODO make the default S
     // sanityChecks = S(SanityChecks(light = true)),
-    checkCasts = true,
+    checkCasts = default.checkCasts,
     effectHandlers = N,
     liftDefns = S(LiftDefns()),
     patMatConsequentSharingThreshold = default.patMatConsequentSharingThreshold, // minimum: 1
@@ -102,6 +102,7 @@ object Config:
     val patMatConsequentSharingThreshold = S(15)
     val deadBranchRemoval = false // TODO
     val inlineThreshold = 10
+    val checkCasts = true
   
   /** A language version, as named in `#lang` directives (e.g., `0.3.1` or `0.3.x`).
     * A `patch` of `N` stands for the `x` of a version like `0.3.x`, which denotes the latest state
@@ -152,6 +153,8 @@ object Config:
   ):
     def newUnderscoreAndApplicationSyntax: Bool =
       version.exists(_ > Language.v0_3_1.version.get)
+    def warnLegacyOpenSyntax: Bool =
+      version.exists(_ >= Language.v0_3_2.version.get)
   end Language
   
   object Language:
@@ -176,7 +179,14 @@ object Config:
       version = S(Version(0, 3, S(1))),
     )
     
-    val v0_3_x = v0_3_1.copy(
+    // Supports new-style underscore lambdas, eg `xs.map(=> _ + 1)`
+    // Moves from `open M { ... }` to `open M.{ ... }`, also supporting paths
+    val v0_3_2 = v0_3_1.copy(
+    )(
+      version = S(Version(0, 3, S(2))),
+    )
+    
+    val v0_3_x = v0_3_2.copy(
     )(
       version = S(Version(0, 3, N)),
     )
@@ -184,6 +194,7 @@ object Config:
     val presets: Map[Version, Language] = Ls(
       v0_2_x,
       v0_3_1,
+      v0_3_2,
       v0_3_x,
     ).map: lang =>
       lang.version.getOrElse(lastWords("language presets must specify a version")) -> lang
@@ -249,6 +260,8 @@ object Config:
     // One specific scenario is Rendering.mls, which Runtime.mls depends on, and hence using stack safety will
     // reference Runtime.mls during construction of the Rendering module, causing a cyclic dependency error.
     doNotInstrumentTopLevelModCtor: Bool = false,
+    // Whether tail resumptive handlers should be optimized.
+    optTailResumptiveHandlers: Bool = true
   )
   
   case class StackSafety(stackLimit: Int)
@@ -705,6 +718,7 @@ object ConfigParser:
       var checkInstantiateEffect = base.checkInstantiateEffect
       var softLifterError = base.softLifterError
       var doNotInstrumentTopLevelModCtor = base.doNotInstrumentTopLevelModCtor
+      var optTailResumptiveHandlers = base.optTailResumptiveHandlers
       args.foreach:
         case NamedArg("debug", value) =>
           setFrom(value)(parseBool)(v => debug = v)
@@ -716,9 +730,11 @@ object ConfigParser:
           setFrom(value)(parseBool)(v => softLifterError = v)
         case NamedArg("doNotInstrumentTopLevelModCtor", value) =>
           setFrom(value)(parseBool)(v => doNotInstrumentTopLevelModCtor = v)
+        case NamedArg("optTailResumptiveHandlers", value) =>
+          setFrom(value)(parseBool)(v => optTailResumptiveHandlers = v)
         case other =>
           unsupported("EffectHandlers", other)
-      S(Config.EffectHandlers(debug, stackSafety, checkInstantiateEffect, softLifterError, doNotInstrumentTopLevelModCtor))
+      S(Config.EffectHandlers(debug, stackSafety, checkInstantiateEffect, softLifterError, doNotInstrumentTopLevelModCtor, optTailResumptiveHandlers))
     case _ =>
       expect("EffectHandlers(...)")(tree)
       N

@@ -71,19 +71,9 @@ fun unknowns(x: Any | Hidden) = x.absent
 //│ ║  l.+2: 	fun unknowns(x: Any | Hidden) = x.absent
 //│ ║        	                                ^^^^^^^^
 //│ ╟── Value with an empty interface does not contain member 'absent'
+//│ ╟── This type permits values of any type, so no member interface is guaranteed.
 //│ ║  l.+2: 	fun unknowns(x: Any | Hidden) = x.absent
-//│ ║        	                ^^^
-//│ ╟── Type 'Any' is declared without a member interface.
-//│ ║  in ../../decls/Prelude.mls
-//│ ║  l.XX: 	declare type Any
-//│ ║        	             ^^^
-//│ ╟── Value with an empty interface does not contain member 'absent'
-//│ ║  in SelectionDiagnostics.mls:+1
-//│ ║  l.+2: 	fun unknowns(x: Any | Hidden) = x.absent
-//│ ║        	                      ^^^^^^
-//│ ╟── Type 'Hidden' is declared without a member interface.
-//│ ║  l.+1: 	declare type Hidden
-//│ ╙──      	             ^^^^^^
+//│ ╙──      	                ^^^^^^^^^^^^
 
 // Repeated calls must not repeat the same witness within the error.
 :e

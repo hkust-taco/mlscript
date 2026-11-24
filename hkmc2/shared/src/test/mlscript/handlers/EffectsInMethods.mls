@@ -1,3 +1,4 @@
+:.
 :js
 :effectHandlers
 :lift
@@ -5,11 +6,11 @@
 
 
 abstract class Effect with
-  fun perform(arg: Str): Str
+  fun perform(arg: Str, x: Int): Int
 
 
 class Test with
-  fun p(h, x) =
+  fun p(h: Effect, x) =
     h.perform("A", x) + h.perform("B", x + 1)
 let t = new Test
 //│ t = Test

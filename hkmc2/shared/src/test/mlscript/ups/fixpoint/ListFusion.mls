@@ -16,8 +16,8 @@
 
 import "../../../mlscript-compile/Option.mls"
 
-open annotations { compile }
-open Option { Some, None }
+open annotations.{ compile }
+open Option.{ Some, None }
 
 // Construction prints make every allocation visible, so unnecessary
 // reconstruction of list nodes shows up as extra `new ...` lines.
@@ -27,7 +27,7 @@ open Option { Some, None }
 let numObjectConstructed = 0
 //│ numObjectConstructed = 0
 
-fun withCounting(f) =
+private fun withCounting(f) =
   let before = numObjectConstructed
   let result = f()
   print("Constructed " + (numObjectConstructed - before) + " object(s)")

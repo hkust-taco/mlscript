@@ -7,7 +7,7 @@
 // naive backtracking translation, so `@compile` never changes the meaning
 // of a match.
 
-open annotations { compile }
+open annotations.{ compile }
 
 data class Box(val value)
 data class Tag(val value)

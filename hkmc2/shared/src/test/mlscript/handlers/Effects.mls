@@ -1,3 +1,4 @@
+:.
 :js
 :effectHandlers
 :lift
@@ -11,8 +12,11 @@ abstract class Effect with
 handle h = Effect with
   fun perform()(k) = "b"
 
+abstract class NullaryEffect with
+  fun perform(): Int
+
 :expect 42
-handle h = Effect with
+handle h = NullaryEffect with
   fun perform()(k) = k(42)
 h.perform()
 //│ = 42
@@ -36,7 +40,7 @@ h.perform("k")
 //│ = "k"
 
 :expect "hi"
-fun foo(e) = e.perform("hi")
+private fun foo(e) = e.perform("hi")
 handle h = Effect with
   fun perform(arg)(k) =
     print(arg)
@@ -45,7 +49,7 @@ foo(h)
 //│ > hi
 //│ = "hi"
 
-fun foo(e) = e.perform("hi")
+fun foo(e: Effect) = e.perform("hi")
 
 :expect "Hello World!"
 handle h = Effect with
@@ -72,14 +76,14 @@ in
   h.perform("5")
 result
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let result, h7, handleBlock$7, Handler$h$perform5, Handler$h$15, Handler$h$perform$4;
+//│ let result, h7, handleBlock$7, Handler$h$perform2, Handler$h$15, Handler$h$perform$1;
 //│ runtime.resetEffects();
-//│ Handler$h$perform$4 = function Handler$h$perform$(arg) {
+//│ Handler$h$perform$1 = function Handler$h$perform$(arg) {
 //│   return (k) => {
-//│     return Handler$h$perform5(arg, k)
+//│     return Handler$h$perform2(arg, k)
 //│   }
 //│ };
-//│ Handler$h$perform5 = function Handler$h$perform(arg, k) {
+//│ Handler$h$perform2 = function Handler$h$perform(arg, k) {
 //│   let v, pc;
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
@@ -93,7 +97,7 @@ result
 //│       if (runtime.curEffect === null) {
 //│         pc = 1;
 //│       } else {
-//│         runtime.unwind(Handler$h$perform5, 1, "Effects.mls:64:13", null, null, 1, 2, arg, k, 0);
+//│         runtime.unwind(Handler$h$perform2, 1, "Effects.mls:68:13", null, null, 1, 2, arg, k, 0);
 //│         return runtime.Unit
 //│       }
 //│     case 1:
@@ -115,7 +119,7 @@ result
 //│   }
 //│   perform(arg) {
 //│     let Handler$h$perform$here;
-//│     Handler$h$perform$here = Handler$h$perform$4(arg);
+//│     Handler$h$perform$here = Handler$h$perform$1(arg);
 //│     return runtime.mkEffect(this, Handler$h$perform$here)
 //│   }
 //│   toString() { return runtime.render(this); }
@@ -136,38 +140,38 @@ result
 //│       if (runtime.curEffect === null) {
 //│         pc = 4;
 //│       } else {
-//│         runtime.unwind(handleBlock$7, 4, "Effects.mls:68:3", null, null, 1, 0, 0);
+//│         runtime.unwind(handleBlock$7, 4, "Effects.mls:72:3", null, null, 1, 0, 0);
 //│         return runtime.Unit
 //│       }
 //│     case 4:
-//│       runtime.resumeValue;
+//│       runtime.resumeValue /* as! Str */;
 //│       runtime.resumeValue = runtime.safeCall(h7.perform("2"));
 //│       if (runtime.curEffect === null) {
 //│         pc = 3;
 //│       } else {
-//│         runtime.unwind(handleBlock$7, 3, "Effects.mls:69:3", null, null, 1, 0, 0);
+//│         runtime.unwind(handleBlock$7, 3, "Effects.mls:73:3", null, null, 1, 0, 0);
 //│         return runtime.Unit
 //│       }
 //│     case 3:
-//│       runtime.resumeValue;
+//│       runtime.resumeValue /* as! Str */;
 //│       runtime.resumeValue = runtime.safeCall(h7.perform("3"));
 //│       if (runtime.curEffect === null) {
 //│         pc = 2;
 //│       } else {
-//│         runtime.unwind(handleBlock$7, 2, "Effects.mls:70:3", null, null, 1, 0, 0);
+//│         runtime.unwind(handleBlock$7, 2, "Effects.mls:74:3", null, null, 1, 0, 0);
 //│         return runtime.Unit
 //│       }
 //│     case 2:
-//│       runtime.resumeValue;
+//│       runtime.resumeValue /* as! Str */;
 //│       runtime.resumeValue = runtime.safeCall(h7.perform("4"));
 //│       if (runtime.curEffect === null) {
 //│         pc = 1;
 //│       } else {
-//│         runtime.unwind(handleBlock$7, 1, "Effects.mls:71:3", null, null, 1, 0, 0);
+//│         runtime.unwind(handleBlock$7, 1, "Effects.mls:75:3", null, null, 1, 0, 0);
 //│         return runtime.Unit
 //│       }
 //│     case 1:
-//│       runtime.resumeValue;
+//│       runtime.resumeValue /* as! Str */;
 //│       return runtime.safeCall(h7.perform("5"));
 //│   }
 //│ });
@@ -189,16 +193,14 @@ fun f() = case [...x, y, z] then x
 //│ do runtime⁰.resetEffects﹖();
 //│ @private
 //│ define lambda as fun lambda⁰(caseScrut) {
-//│   let middleElements;
 //│   match caseScrut
 //│     Array(2+) =>
 //│       let inlinedVal, tmp;
 //│       set tmp = -⁰(caseScrut.length⁰, 2);
 //│       set inlinedVal = caseScrut.slice⁰(0, tmp);
-//│       set middleElements = (inlinedVal as!! Array⁰);
 //│       do runtime⁰.Tuple⁰.get⁰(caseScrut, -2);
 //│       do runtime⁰.Tuple⁰.get⁰(caseScrut, -1);
-//│       return middleElements
+//│       return inlinedVal
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
@@ -232,7 +234,7 @@ else
 //│ = 3
 
 :expect "Hello World!"
-fun foo(h) =
+private fun foo(h) =
   print("Entering foo")
   let result = h.perform("Hello")
   h.perform("?")
@@ -259,18 +261,18 @@ result
 //│ = "Hello World!"
 
 :expect "Hello World!"
-fun foo(h) =
+private fun foo(h) =
   print("Entering foo")
   let result = h.perform("Hello")
   h.perform("Oops!")
   print("Exiting foo")
   result
-fun bar(h) =
+private fun bar(h) =
   print("Entering bar")
   let result = foo(h) + " World"
   print("Exiting bar")
   result
-fun foobar(h) =
+private fun foobar(h) =
   print("Entering foobar")
   let result = bar(h) + "!"
   print("Exiting foobar")
@@ -307,24 +309,24 @@ if true do
   print(f())
 //│ > 3
 
-module A with
+private module A with
   data abstract class Effect(x) with
     fun test() = x
-    fun perform(arg)
+    fun perform()
 
 handle h = A.Effect(3) with
   fun perform()(k) = 0
 h.perform()
 //│ = 0
 
-fun f(perform) =
+private fun f(perform) =
   handle h = Effect with
     fun perform(arg)(k) = arg
   perform()
 f(() => 3)
 //│ = 3
 
-abstract class Cell with
+private abstract class Cell with
   fun getVal(): Int
   fun setVal(Int): ()
 
@@ -346,7 +348,7 @@ abstract class Eff with
   fun get(): Int
 
 :expect 120
-fun fact(e, factvalue) = 
+private fun fact(e, factvalue) =
   if factvalue != 0 then
     factvalue * fact(e, factvalue-1)
   else e.get()
@@ -378,6 +380,7 @@ sum(0, 100)
 
 // stack safe recursion
 :expect 450015000
+#config(effectHandlers: Some(EffectHandlers(optTailResumptiveHandlers:false)))
 handle h = StackDelay with
   fun raise()(k) =
     k(10)
@@ -389,6 +392,8 @@ fun sum(depth, x) =
 sum(0, 30000)
 //│ = 450015000
 
+#config(effectHandlers: Some(EffectHandlers()))
+
 :re
 fun sum(x) =
   if x != 0 then
@@ -397,8 +402,11 @@ fun sum(x) =
 sum(10000)
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
+abstract class Eff with
+  fun perform(): ()
+
 :expect 2
-fun foo(h) =
+private fun foo(h) =
   h.perform()
   if true then
     fun g() = 2
@@ -412,7 +420,7 @@ foo(h)
 //│ = 2
 
 :expect 3
-fun foo(h) =
+private fun foo(h) =
   h.perform()
   if false then
     fun g() = 2
@@ -426,7 +434,7 @@ foo(h)
 //│ = 3
 
 :expect 123
-fun foo(h) =
+private fun foo(h) =
   h.perform()
   fun A() = 1
   let a = if true then
@@ -453,7 +461,7 @@ foo(h)
 
 :fixme
 :expect 123
-fun foo(h) =
+private fun foo(h) =
   h.perform()
   fun A() = 1
   let a = if true then
@@ -509,5 +517,5 @@ class A with
   val x = 2
 handle h2 = A with
   fun perf()(k) = k(this.x)
-h2.perf()
+h2.'perf()
 //│ = 2

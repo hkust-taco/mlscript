@@ -209,7 +209,7 @@ foldr(+)()
 
 
 // An alternative implementation of foldr
-fun foldr(f)(first, ...rest: Array) =
+private fun foldr(f)(first, ...rest: Array) =
   let len = rest.length
   if len == 0 then first else...
   let

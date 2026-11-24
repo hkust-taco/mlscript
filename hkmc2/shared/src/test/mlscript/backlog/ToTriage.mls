@@ -140,9 +140,6 @@ class D extends id(C)
 //│ ║  l.+1: 	class D extends id(C)
 //│ ║        	                ^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
-//│ ╔══[COMPILATION ERROR] Too many parameter lists for parent class
-//│ ║  l.+1: 	class D extends id(C)
-//│ ╙──      	                ^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let D1, superBase;
 //│ superBase = Predef.id;
@@ -194,19 +191,16 @@ set (x += 1; ())
 
 import "../../mlscript-compile/Stack.mls"
 
-// The parser rejects this, but it should be allowed.
-open Stack { ::, Nil }
-//│ ╔══[COMPILATION ERROR] Illegal 'open' statement shape.
-//│ ║  l.+1: 	open Stack { ::, Nil }
-//│ ╙──      	     ^^^^^^^^^^^^^^^
+// A selective open can start with an operator name.
+open Stack.{ ::, Nil }
 
-// Instead, if we parenthesize the operator, it is rejected by the elaborator.
-open Stack { (::), Nil }
+// Selective opens require bare member names.
+open Stack.{ (::), Nil }
 //│ ╔══[COMPILATION ERROR] Illegal 'open' statement element.
-//│ ║  l.+1: 	open Stack { (::), Nil }
+//│ ║  l.+1: 	open Stack.{ (::), Nil }
 //│ ╙──      	             ^^^^
 
-open Stack { Nil, :: }
+open Stack.{ Nil, :: }
 
 :sjs
 1 :: Nil

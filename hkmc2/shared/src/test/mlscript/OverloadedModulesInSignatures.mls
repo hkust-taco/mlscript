@@ -29,6 +29,8 @@ fun f: ClsMod = 42
 //│ ║  l.+1: 	fun f: ClsMod = 42
 //│ ╙──      	                ^^
 
+// The rejected definition remains available for resolution diagnostics.
+:!js
 :rt
 f
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
@@ -36,9 +38,8 @@ f
 //│   res = Resolved{sym=term:f⁰,typ=class:ClsMod⁰}:
 //│     t = Ref{sym=member:f¹} of member:f¹
 //│     sym = term:f⁰
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = 42
 
+:js
 fun f: module ClsMod = ClsMod
 
 :rt

@@ -2,7 +2,7 @@
 
 import "../../mlscript-compile/MutMap.mls"
 import "../../mlscript-compile/Option.mls"
-open Option
+open Option.{ * }
 
 // A fresh map retains its inserted values through the curried get API and
 // the higher-order pipe helper. Some itself needs no nested class pattern.

@@ -30,13 +30,15 @@ fun mapi = s => f =>
       i := !(i) + 1
       f(!(i), x)
 //│ ╔══[COMPILATION ERROR] Type error in region expression with expected type Seq[out A, out E]
+//│ ║  l.+3: 	  region r in
+//│ ║        	  ^^^^^^^^^^^
 //│ ║  l.+4: 	    let i = r.ref 0
-//│ ║        	            ^^^^^^^
+//│ ║        	^^^^^^^^^^^^^^^^^^^
 //│ ║  l.+5: 	    map(s) of x =>
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ║  l.+6: 	      i := !(i) + 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.+7: 	      f(!(i), x)
+//│ ║  l.+7: 	... (more lines omitted) ...
 //│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  Seq[in ⊥ out 'B, in ⊥ out 'E1]  <:  Seq[in ⊥ out A, in ⊥ out E]
 //│ ╟── because: cannot constrain  'E1  <:  E

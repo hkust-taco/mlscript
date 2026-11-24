@@ -11,7 +11,7 @@
 // the whole chains rather than of their tails, so a match with zero steps
 // is allowed: the alternatives then process the original scrutinee.
 
-open annotations { compile }
+open annotations.{ compile }
 
 data class Box(val value)
 data class Tag(val value)

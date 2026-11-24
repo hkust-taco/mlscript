@@ -99,6 +99,7 @@ object Keyword:
   val `yield` = Keyword("yield", N, curPrec)
   val `yield*` = Keyword("yield*", N, curPrec)
   val `import` = Keyword("import", N, curPrec)
+  val `open` = Keyword("open", N, curPrec)
   
   val `fun` = Keyword("fun", N, N)
   // val `val` = Keyword("val", N, N)
@@ -158,7 +159,6 @@ object Keyword:
   val `using` = Keyword("using", N, N)
   val `module` = Keyword("module", N, N)
   val `object` = Keyword("object", N, N)
-  val `open` = Keyword("open", N, curPrec)
   val `type` = Keyword("type", N, N)
   val `forall` = Keyword("forall", N, N)
   val `exists` = Keyword("exists", N, N)

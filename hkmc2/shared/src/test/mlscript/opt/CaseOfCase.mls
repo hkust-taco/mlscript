@@ -3,10 +3,10 @@
 :js
 
 
-open annotations { inline }
+open annotations.{ inline }
 
 import "../../mlscript-compile/Option.mls"
-open Option
+open Option.{ * }
 
 
 :global
@@ -55,7 +55,8 @@ foo("ok")
 
 
 
-fun map(opt, f) = if opt is
+// Later worksheet blocks call map, so its result must survive optimization of this block.
+fun map[A, B](opt: Option[A], f: A -> B): Option[B] = if opt is
   Some(value) then Some(f(value))
   None then None
 
@@ -65,11 +66,12 @@ fun map(opt, f) = if opt is
 fun test(x) = x map(=> _ + 1) map(=> _ * 2)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define test⁰ as fun test¹(x) {
-//│   let inlinedVal, arg$Some$0$, arg$Some$0$1;
-//│   match x
+//│   let opt, inlinedVal, arg$Some$0$, arg$Some$0$1;
+//│   set opt = (x as! Object⁰);
+//│   match opt
 //│     Some⁰ =>
 //│       let inlinedVal1, inlinedVal2;
-//│       set arg$Some$0$1 = x.value⁰;
+//│       set arg$Some$0$1 = opt.value⁰;
 //│       set inlinedVal1 = +⁰(arg$Some$0$1, 1);
 //│       set inlinedVal = Option⁰.Some¹(inlinedVal1);
 //│       set arg$Some$0$ = inlinedVal.value⁰;
@@ -84,17 +86,22 @@ fun test(x) = x map(=> _ + 1) map(=> _ * 2)
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
+:expect [Some(8), None]
+[test(Some(3)), test(None)]
+//│ = [Some(8), None]
+
 
 // Optimizes similarly
 :soir
 fun test(x) = x map(=> _ + 1) map(=> _ * 2) map(=> "Result: " + _)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define test² as fun test³(x) {
-//│   let inlinedVal, inlinedVal1, arg$Some$0$, arg$Some$0$1, arg$Some$0$2;
-//│   match x
+//│   let opt, inlinedVal, inlinedVal1, arg$Some$0$, arg$Some$0$1, arg$Some$0$2;
+//│   set opt = (x as! Object⁰);
+//│   match opt
 //│     Some⁰ =>
 //│       let inlinedVal2, inlinedVal3, inlinedVal4;
-//│       set arg$Some$0$2 = x.value⁰;
+//│       set arg$Some$0$2 = opt.value⁰;
 //│       set inlinedVal2 = +⁰(arg$Some$0$2, 1);
 //│       set inlinedVal = Option⁰.Some¹(inlinedVal2);
 //│       set arg$Some$0$1 = inlinedVal.value⁰;
@@ -112,6 +119,10 @@ fun test(x) = x map(=> _ + 1) map(=> _ * 2) map(=> "Result: " + _)
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
+:expect [Some("Result: 8"), None]
+[test(Some(3)), test(None)]
+//│ = [Some("Result: 8"), None]
+
 
 // Optimizes similarly
 :soir
@@ -121,11 +132,12 @@ fun test(x) = if x map(=> _ + 1) is
   None then null
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define test⁴ as fun test⁵(x) {
-//│   let arg$Some$0$, inlinedVal, arg$Some$0$1;
-//│   match x
+//│   let arg$Some$0$, opt, inlinedVal, arg$Some$0$1;
+//│   set opt = (x as! Object⁰);
+//│   match opt
 //│     Some⁰ =>
 //│       let inlinedVal1;
-//│       set arg$Some$0$1 = x.value⁰;
+//│       set arg$Some$0$1 = opt.value⁰;
 //│       set inlinedVal1 = +⁰(arg$Some$0$1, 1);
 //│       set inlinedVal = Option⁰.Some¹(inlinedVal1);
 //│       set arg$Some$0$ = inlinedVal.value⁰;
@@ -143,6 +155,10 @@ fun test(x) = if x map(=> _ + 1) is
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect [[], [4], null]
+[test(Some(-1)), test(Some(3)), test(None)]
+//│ = [[], [4], null]
 
 
 
@@ -196,7 +212,7 @@ fun prefixDependency(x) =
 //│     else
 //│       set tmp = PrefixBox⁰(false);
 //│       end
-//│   set copy = (tmp.value¹ as! Bool⁰);
+//│   set copy = tmp.value¹;
 //│   match tmp
 //│     PrefixBox¹ =>
 //│       return copy

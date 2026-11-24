@@ -9,8 +9,8 @@ import "./Keywords.mls"
 import "./Token.mls"
 import "./Tree.mls"
 
-open Option { Some, None }
-open Predef { check, tuple }
+open Option.{ Some, None }
+open Predef.{ check, tuple }
 open Stack
 
 module ParseRule with ...
@@ -152,7 +152,7 @@ fun lazy(init) = new Lazy of init
 // =============================================
 
 data class ParseRule[A](name: Str, mut val choices: Stack[Choice[A]]) with
-  open Choice { Keyword, Ref, End, Siding }
+  open Choice.{ Keyword, Ref, End, Siding }
   
   fun map[B](op: A -> B): ParseRule[B] =
     new mut ParseRule of name, choices

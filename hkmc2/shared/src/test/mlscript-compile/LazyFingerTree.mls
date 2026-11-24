@@ -3,10 +3,10 @@ import "./Iter.mls"
 import "./Predef.mls"
 import "./FingerTreeList.mls"
 
-open Iter
-open Predef { id"??" }
-open LazyFingerTree
-open FingerTreeList
+open Iter.{ * }
+open Predef.{ id"??" }
+open LazyFingerTree.{ * }
+open FingerTreeList.{ * }
 
 fun normIdx(i, len) =
   if i < 0 then len + i

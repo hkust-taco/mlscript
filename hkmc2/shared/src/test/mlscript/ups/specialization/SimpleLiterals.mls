@@ -1,7 +1,7 @@
 :.
 :js
 
-open annotations { compile }
+open annotations.{ compile }
 
 pattern Zero = "0"
 pattern One = "1"
@@ -25,7 +25,7 @@ checkZeroOneTwo of "2"
 checkZeroOneTwo of "hello"
 
 import "../../../mlscript-compile/Option.mls"
-open Option
+open Option.{ * }
 
 fun observeZero(x) =
   print("zero " + x)

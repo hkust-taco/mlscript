@@ -18,9 +18,7 @@ xs.0.value
 //│ ║  l.+4: 	xs.0.value
 //│ ║        	^^^^^^^^^^
 //│ ╟── Value with an empty interface does not contain member 'value'
-//│ ║  l.+2: 	let xs = (mut [] as Array[in Item])
-//│ ║        	                          ^^^^^^^
-//│ ╟── This type argument specifies only an input bound.
+//│ ╟── Only an input bound appears here.
 //│ ║  l.+2: 	let xs = (mut [] as Array[in Item])
 //│ ║        	                          ^^^^^^^
 //│ ╙── Values read through it have no output bound more specific than 'Any'.
@@ -68,7 +66,7 @@ box.item.value
 //│ ║  l.+4: 	box.item.value
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── Value with an empty interface does not contain member 'value'
-//│ ╟── This type argument specifies only an input bound.
+//│ ╟── Only an input bound appears here.
 //│ ║  l.+3: 	let box = (new Box(Item(6)) as Box[in Item])
 //│ ║        	                                   ^^^^^^^
 //│ ╙── Values read through it have no output bound more specific than 'Any'.
@@ -96,7 +94,7 @@ box.apply(x => x.value)
 //│ ║  l.+5: 	box.apply(x => x.value)
 //│ ║        	               ^^^^^^^
 //│ ╟── Value with an empty interface does not contain member 'value'
-//│ ╟── This type argument specifies only an input bound.
+//│ ╟── Only an input bound appears here.
 //│ ║  l.+4: 	let box = (new Box(Item(8)) as Box[in Item])
 //│ ║        	                                   ^^^^^^^
 //│ ╙── Values read through it have no output bound more specific than 'Any'.

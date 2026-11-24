@@ -55,5 +55,7 @@ fun missing(value: {}) = value.answer
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+1: 	fun missing(value: {}) = value.answer
 //│ ║        	                         ^^^^^^^^^^^^
-//│ ╙── Record type does not contain member 'answer'
+//│ ╟── Record type does not contain member 'answer'
+//│ ║  l.+1: 	fun missing(value: {}) = value.answer
+//│ ╙──      	                   ^^
 

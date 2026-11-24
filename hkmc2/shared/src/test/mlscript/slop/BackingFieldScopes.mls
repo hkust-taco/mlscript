@@ -1,0 +1,59 @@
+:.
+
+// The JavaScript backend stores a public mutable member field in a private field of the class that
+// declares it, and initializes it through that private field. The initializer must therefore be
+// emitted inside the declaring class, including when that class is a module, an object, or a class
+// nested in another definition.
+
+
+:expect [1, 5]
+class Counted
+module Counted with
+  mut val count = 0
+  fun bump() = set count = count + 1
+Counted.bump()
+let afterBump = Counted.count
+set Counted.count = 5
+[afterBump, Counted.count]
+//│ = [1, 5]
+//│ afterBump = 1
+
+:expect [10, 11]
+class Outer with
+  module Inner with
+    mut val count = 10
+let holder = new Outer
+let initial = holder.Inner.count
+set holder.Inner.count = 11
+[initial, holder.Inner.count]
+//│ = [10, 11]
+//│ holder = Outer { Inner: class Inner }
+//│ initial = 10
+
+:expect [2, 3]
+module Top with
+  val base = 1
+  object Nested with
+    mut val count = base + 1
+let nestedInitial = Top.Nested.count
+set Top.Nested.count = 3
+[nestedInitial, Top.Nested.count]
+//│ = [2, 3]
+//│ nestedInitial = 2
+
+// The field initializer of a class defined in a method reads a parameter of the enclosing class.
+:expect [7, 8]
+class Host(val seed) with
+  fun make() =
+    class Captured with
+      mut val value = seed
+    new Captured
+let captured = Host(7).make()
+let capturedInitial = captured.value
+set captured.value = 8
+[capturedInitial, captured.value]
+//│ = [7, 8]
+//│ captured = Captured
+//│ capturedInitial = 7
+
+

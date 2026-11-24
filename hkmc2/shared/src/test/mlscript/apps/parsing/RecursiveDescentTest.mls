@@ -6,9 +6,9 @@ import "../../../mlscript-compile/apps/parsing/BasicExpr.mls"
 import "../../../mlscript-compile/apps/parsing/TokenHelpers.mls"
 import "../../../mlscript-compile/apps/parsing/Lexer.mls"
 
-open Lexer { lex }
-open RecursiveDescent { parse }
-open BasicExpr { Expr }
+open Lexer.{ lex }
+open RecursiveDescent.{ parse }
+open BasicExpr.{ Expr }
 
 fun example(input) =
   let tokens = lex of input, noWhitespace: false

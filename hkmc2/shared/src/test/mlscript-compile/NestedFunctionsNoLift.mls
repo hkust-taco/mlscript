@@ -4,7 +4,7 @@
 
 import "./Predef.mls"
 
-open annotations { inline }
+open annotations.{ inline }
 
 module NestedFunctionsNoLift with
   @inline fun not_recursive(n) =

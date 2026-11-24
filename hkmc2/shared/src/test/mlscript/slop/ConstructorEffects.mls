@@ -50,10 +50,10 @@ fun callback(run: () -> Int) = Callback(run)
 //│ flow-analysis > function observed⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > function update⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > function written⁰#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call +⁰@result³#0 @ <root> -> Pure
-//│ flow-analysis > call +⁰@result¹#0 @ <root> -> Pure
-//│ flow-analysis > call run@result⁰#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call update⁰@result²#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call +⁰@result²#0 @ <root> -> Pure
+//│ flow-analysis > call +⁰@result⁰#0 @ <root> -> Pure
+//│ flow-analysis > call run@result³#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call update⁰@result¹#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 //│ state = 0
 
@@ -75,8 +75,8 @@ class Child() extends Parent()
 fun inherited() = Child()
 //│ flow-analysis > >>> effect-analysis results >>>
 //│ flow-analysis > function inherited⁰#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call print@result¹#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call super⁰@result⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call print@result⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call super⁰@result¹#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 
 
@@ -95,10 +95,10 @@ val saved = make()
 //│ flow-analysis > function keep⁰#0 @ <root> -> Pure
 //│ flow-analysis > function keep⁰#1 @ <root> -> UnsafeEta
 //│ flow-analysis > function make⁰#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call +⁰@result²#0 @ <root> -> Pure
-//│ flow-analysis > call keep⁰@result³#0 @ <root> -> Pure
-//│ flow-analysis > call make⁰@result¹#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call saved⁰@result⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call +⁰@result¹#0 @ <root> -> Pure
+//│ flow-analysis > call keep⁰@result⁰#0 @ <root> -> Pure
+//│ flow-analysis > call make⁰@result²#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call saved⁰@result³#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 //│ = [1, 7]
 //│ calls = 1
@@ -118,8 +118,8 @@ saved_snapshot()
 //│ flow-analysis > function keep_snapshot⁰#0 @ <root> -> Pure
 //│ flow-analysis > function keep_snapshot⁰#1 @ <root> -> UnsafeEta
 //│ flow-analysis > function snapshot⁰#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call keep_snapshot⁰@result²#0 @ <root> -> Pure
-//│ flow-analysis > call saved_snapshot⁰@result⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call keep_snapshot⁰@result⁰#0 @ <root> -> Pure
+//│ flow-analysis > call saved_snapshot⁰@result²#0 @ <root> -> UnsafeEta
 //│ flow-analysis > call snapshot⁰@result¹#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 //│ = 41
@@ -142,10 +142,10 @@ build(3).value
 //│ flow-analysis > function build⁰#0 @ build² -> UnsafeEta
 //│ flow-analysis > function build⁰#0 @ build³ -> UnsafeEta
 //│ flow-analysis > function build⁰#0 @ build¹ -> UnsafeEta
-//│ flow-analysis > call -⁰@result²#0 @ <root> -> Pure
-//│ flow-analysis > call >⁰@result³#0 @ <root> -> Pure
-//│ flow-analysis > call build⁰@result¹#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call build⁰@result⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call -⁰@result¹#0 @ <root> -> Pure
+//│ flow-analysis > call >⁰@result⁰#0 @ <root> -> Pure
+//│ flow-analysis > call build⁰@result²#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call build⁰@result³#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 //│ = 3
 
@@ -159,10 +159,10 @@ fun build_effectful(n) = RecursiveEffect(n)
 //│ flow-analysis > >>> effect-analysis results >>>
 //│ flow-analysis > function build_effectful⁰#0 @ build_effectful² -> UnsafeEta
 //│ flow-analysis > function build_effectful⁰#0 @ build_effectful¹ -> UnsafeEta
-//│ flow-analysis > call +⁰@result³#0 @ <root> -> Pure
-//│ flow-analysis > call -⁰@result¹#0 @ <root> -> Pure
-//│ flow-analysis > call >⁰@result²#0 @ <root> -> Pure
-//│ flow-analysis > call build_effectful⁰@result⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call +⁰@result⁰#0 @ <root> -> Pure
+//│ flow-analysis > call -⁰@result²#0 @ <root> -> Pure
+//│ flow-analysis > call >⁰@result¹#0 @ <root> -> Pure
+//│ flow-analysis > call build_effectful⁰@result³#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 //│ recursive_effects = 0
 

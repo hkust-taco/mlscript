@@ -1,0 +1,10 @@
+:.
+:js
+:effectHandlers
+:lift
+
+// Note: computes f(n) = n + 2f(n-1) where f(0) = 0
+
+import "../../mlscript-compile/handlers-bench/resume_nontail.mls"
+resume_nontail.run(5)
+//│ = 37

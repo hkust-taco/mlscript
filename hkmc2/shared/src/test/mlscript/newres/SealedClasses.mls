@@ -34,6 +34,7 @@ class Invalid extends SealedClasses.Closed
 //│ ║  in ../../mlscript-compile/SealedClasses.mls
 //│ ║  l.XX: 	  class Closed { fun value() = 1 }
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Neither modifier on the subclass grants access to a sealed parent.
 :e
@@ -45,6 +46,7 @@ open class InvalidOpen extends SealedClasses.Closed
 //│ ║  in ../../mlscript-compile/SealedClasses.mls
 //│ ║  l.XX: 	  class Closed { fun value() = 1 }
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 abstract class InvalidAbstract extends SealedClasses.Closed
@@ -55,6 +57,7 @@ abstract class InvalidAbstract extends SealedClasses.Closed
 //│ ║  in ../../mlscript-compile/SealedClasses.mls
 //│ ║  l.XX: 	  class Closed { fun value() = 1 }
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Openness is not inherited by subclasses.
 :e
@@ -66,6 +69,7 @@ class InvalidGrandchild extends SealedClasses.ClosedChild
 //│ ║  in ../../mlscript-compile/SealedClasses.mls
 //│ ║  l.XX: 	  class ClosedChild extends Open
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 object InvalidObject extends SealedClasses.Closed
@@ -76,17 +80,18 @@ object InvalidObject extends SealedClasses.Closed
 //│ ║  in ../../mlscript-compile/SealedClasses.mls
 //│ ║  l.XX: 	  class Closed { fun value() = 1 }
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 new SealedClasses.Closed with { fun extra() = 4 }
 //│ ╔══[COMPILATION ERROR] Cannot extend sealed class 'Closed' outside its compilation unit
 //│ ║  l.+1: 	new SealedClasses.Closed with { fun extra() = 4 }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Class 'Closed' is defined here; declare it 'open' or 'abstract' to allow external subclasses
 //│ ║  in ../../mlscript-compile/SealedClasses.mls
 //│ ║  l.XX: 	  class Closed { fun value() = 1 }
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ = $anon
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 let storedParent = SealedClasses.Closed
@@ -98,7 +103,8 @@ class InvalidStored extends storedParent
 //│ ║  in ../../mlscript-compile/SealedClasses.mls
 //│ ║  l.XX: 	  class Closed { fun value() = 1 }
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ storedParent = class Closed
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ storedParent = undefined
 
 :e
 class InvalidAlias extends SealedClasses.alias
@@ -109,6 +115,7 @@ class InvalidAlias extends SealedClasses.alias
 //│ ║  in ../../mlscript-compile/SealedClasses.mls
 //│ ║  l.XX: 	  class Closed { fun value() = 1 }
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 class InvalidNested extends SealedClasses.Nested.Closed
@@ -119,6 +126,7 @@ class InvalidNested extends SealedClasses.Nested.Closed
 //│ ║  in ../../mlscript-compile/SealedClasses.mls
 //│ ║  l.XX: 	    class Closed
 //│ ╙──      	    ^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // The prelude's universal superclass is explicitly open.
 :expect 5
@@ -135,6 +143,7 @@ class InvalidParameterized extends SealedClasses.Parameterized[Int](1)
 //│ ║  in ../../mlscript-compile/SealedClasses.mls
 //│ ║  l.XX: 	  class Parameterized[A](val item: A)
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :expect 7
 class OpenParameterized extends SealedClasses.OpenParameterized[Int](7)

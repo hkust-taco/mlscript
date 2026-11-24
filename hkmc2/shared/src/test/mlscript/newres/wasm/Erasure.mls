@@ -1,6 +1,6 @@
 :.
-open wasm { i32 }
-open i32 { const }
+open wasm.{ i32 }
+open i32.{ const }
 //│ Wasm result:
 //│ = {}
 
@@ -10,7 +10,7 @@ open i32 { const }
 // Erasure must prepare an unboxed call target before lowering the caller's body.
 :expect 42
 fun caller(): Number = later(const(41))
-fun later(value: Number): Number = wasm.i32.add(value, const(1))
+fun later(value: Number): Number = i32.add(value, const(1))
 type Number = LaterNumber
 type LaterNumber = Int32
 caller()
@@ -99,7 +99,7 @@ private fun repeat(again, value) =
   if again then repeat(false, value) else value
 let first = repeat(true, const(40))
 let second = repeat(false, const(2))
-wasm.i32.add(first, second)
+i32.add(first, second)
 //│ Wasm result:
 //│ = 42
 
@@ -166,15 +166,8 @@ value
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int64' have no common representation
 //│ ║  l.+1: 	let value = const(1)
 //│ ╙──      	    ^^^^^
-//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int64' have no common representation
-//│ ║  l.+2: 	set value = wasm.i64.const(2)
-//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
-//│ ║  l.+1: 	let value = const(1)
-//│ ╙──      	            ^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `i64` to `(ref null any)` in a different type hierarchy
-//│ ║  l.+1: 	let value = const(1)
-//│ ╙──      	    ^^^^^
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // External callers already contribute Unknown; it conflicts with an unboxed input.
@@ -183,12 +176,16 @@ fun exported(value) = value
 exported(const(42))
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
 //│ ║  l.+1: 	fun exported(value) = value
-//│ ╙──      	             ^^^^^
-//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║        	             ^^^^^
+//│ ╟── The exposed interface admits values of unknown representation unless a type annotation restricts them.
+//│ ╟── Parameter 'value' admits values of unknown shape.
 //│ ║  l.+1: 	fun exported(value) = value
-//│ ╙──      	    ^^^^^^^^
+//│ ║        	             ^^^^^
+//│ ╟── 'exported' is exposed by this compilation unit.
+//│ ║  l.+1: 	fun exported(value) = value
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
 //│ Wasm result:
-//│ = 42
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // Explicit Any keeps its declared representation and rejects an unboxed initializer.
@@ -198,9 +195,8 @@ annotated
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
 //│ ║  l.+1: 	val annotated: Any = const(42)
 //│ ╙──      	                     ^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
-//│ ║  l.+1: 	val annotated: Any = const(42)
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // Undefined contributes no representation constraint to the result slot.
@@ -286,11 +282,11 @@ discard()
 :expect 42
 let calls = const(0)
 private fun absent(): Int64 =
-  set calls = wasm.i32.add(calls, const(1))
+  set calls = i32.add(calls, const(1))
   unsafe.undefined
 private fun consume(value: Int64): Int32 = calls
 let count = consume(absent())
-wasm.i32.add(count, const(41))
+i32.add(count, const(41))
 //│ Wasm result:
 //│ = 42
 
@@ -353,7 +349,7 @@ if derived.ownValue then derived.value else const(0)
 // Trailing arguments retain the inferred unboxed calling convention of the full argument list.
 :noInline
 :expect 42
-private fun add(left, right) = wasm.i32.add(left, right)
+private fun add(left, right) = i32.add(left, right)
 add(const(41)) \ const(1)
 //│ Wasm result:
 //│ = 42

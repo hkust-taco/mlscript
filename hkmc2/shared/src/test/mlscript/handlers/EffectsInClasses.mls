@@ -1,3 +1,4 @@
+:.
 :js
 :effectHandlers
 :lift
@@ -8,7 +9,7 @@ abstract class Effect with
 
 
 :sjs
-data class Lol(h) with
+data class Lol(h: Effect) with
   print(h.perform("k"))
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Lol1;
@@ -25,7 +26,7 @@ data class Lol(h) with
 //│     this.h = h;
 //│     tmp = runtime.safeCall(this.h.perform("k"));
 //│     if (runtime.curEffect !== null) {
-//│       tmp = runtime.illegalEffect("in a constructor");
+//│       tmp = runtime.illegalEffect("in a constructor") /* as! Str */;
 //│     }
 //│     Predef.print(tmp);
 //│     if (runtime.curEffect !== null) {
@@ -90,6 +91,7 @@ oops
 
 
 :fixme
+#config(effectHandlers: Some(EffectHandlers(optTailResumptiveHandlers:false)))
 let oops = 
   handle h = Effect with
     fun perform(arg)(k) =
@@ -99,9 +101,26 @@ let oops =
 //│ ═══[RUNTIME ERROR] Error: Effect Handler$h$6 is raised in a constructor
 //│ oops = undefined
 
+#config(effectHandlers: Some(EffectHandlers()))
+
 :fixme
 oops.h
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'h')
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	oops.h
+//│ ║        	^^^^^^
+//│ ╟── Cannot resolve member 'h' of a value with unknown shape.
+//│ ╟── An effect handler can replace the handled body's result.
+//│ ║  l.XX: 	  handle h = Effect with
+//│ ║        	             ^^^^^^^^^^^
+//│ ║  l.XX: 	    fun perform(arg)(k) =
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	      print(arg)
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	      k("b")
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.XX: 	... (more lines omitted) ...
+//│ ╙──      	^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 let obj = mut {s: unsafe.undefined}
 //│ obj = {s: undefined}

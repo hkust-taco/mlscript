@@ -593,11 +593,14 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         val p = Param(FldFlags.empty.copy(isVal = true), varSym, N, Modulefulness.none, Nil)(varSym.toLoc)
         varSym.decl = S(p) // * Currently this is only accessed to create the class' toString method
         
+        // * The fields of a capture object are ordinary properties, and the capture class declares no
+        // * public fields. The annotation records this on each field: JavaScript otherwise stores
+        // * a public mutable field in a private field behind accessors that its class declares.
         val vd = ValDefn(
           tSym,
           fldSym,
           varSym.asSimpleRef
-        )(N, Nil)
+        )(N, Annot.PlainField()(N) :: Nil)
         
         (sym -> varSym, p, vd)
     

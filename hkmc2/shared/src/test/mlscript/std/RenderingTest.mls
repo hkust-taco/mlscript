@@ -335,14 +335,14 @@ renderAsStr of Bar(123, 789)
 
 import "../../mlscript-compile/Stack.mls"
 
-open Stack
+open Stack.{ * }
 
 :ge
 renderAsStr of 1 :: 2 :: 3 :: 4
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Stack.Base'
 //│ ║  l.+1: 	renderAsStr of 1 :: 2 :: 3 :: 4
 //│ ╙──      	                              ^
-//│ = "Cons(1, Cons(2, Cons(3, 4)))"
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 renderAsStr of 1 :: 2 :: 3 :: 4 :: Nil
 //│ = "Cons(1, Cons(2, Cons(3, Cons(4, Nil))))"

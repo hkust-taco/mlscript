@@ -3,7 +3,7 @@
 
 // Ordinary references must resolve even when no caller asks for their shapes.
 fun forwardValue() = {
-  open Later
+  open Later.{ * }
   value
 }
 module Later { val value = 23 }
@@ -19,7 +19,7 @@ module Choices {
   fun Item() = 25
 }
 fun choices() = {
-  open Choices
+  open Choices.{ * }
   [Item(), (new (Item)).answer(), (new (Choices.{Item})).answer()]
 }
 
@@ -35,7 +35,7 @@ module Arguments {
   fun Item() = 26
 }
 fun construct() = {
-  open Arguments
+  open Arguments.{ * }
   (new Box(Item())).value
 }
 
@@ -46,7 +46,7 @@ construct()
 
 // Pattern targets retain the class interpretation; guards and results are terms.
 fun matchBox(box) = {
-  open Arguments
+  open Arguments.{ * }
   if box is Box(value) and value > 0 then Item() else 0
 }
 
@@ -59,7 +59,7 @@ fun matchBox(box) = {
 // aliases, type arguments, or ascriptions.
 module Types { type Alias = Int }
 fun annotated() = {
-  open Types
+  open Types.{ * }
   type Local = (Alias)
   type Pair = [Alias, Alias]
   type Fn = Alias -> Alias
@@ -78,7 +78,7 @@ annotated()
 // The same type-only name in an expression must still be rejected.
 :e
 fun invalidValue() = {
-  open Types
+  open Types.{ * }
   Alias
 }
 invalidValue()

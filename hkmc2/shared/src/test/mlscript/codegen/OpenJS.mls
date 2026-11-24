@@ -2,8 +2,8 @@
 :js
 
 
-open console { log }
-open Math { pow }
+open console.{ log }
+open Math.{ pow }
 
 
 log(123 pow(2))

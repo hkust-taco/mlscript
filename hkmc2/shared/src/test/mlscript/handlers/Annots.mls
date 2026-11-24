@@ -1,0 +1,25 @@
+:js
+:effectHandlers
+:lift
+
+open annotations
+
+:w
+handle h = Object with
+  @inline
+  @generator
+  @async
+  @tailrec
+  fun perform()(k) = k(0)
+//│ ╔══[WARNING] This annotation has no effect on handler methods.
+//│ ║  l.+2: 	  @inline
+//│ ╙──      	  ^^^^^^^
+//│ ╔══[WARNING] This annotation has no effect on handler methods.
+//│ ║  l.+3: 	  @generator
+//│ ╙──      	  ^^^^^^^^^^
+//│ ╔══[WARNING] This annotation has no effect on handler methods.
+//│ ║  l.+4: 	  @async
+//│ ╙──      	  ^^^^^^
+//│ ╔══[WARNING] This annotation has no effect on handler methods.
+//│ ║  l.+5: 	  @tailrec
+//│ ╙──      	  ^^^^^^^^

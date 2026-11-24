@@ -1,11 +1,11 @@
 :.
 :js
 
-open annotations
+open annotations.{ * }
 
 import "../../../mlscript-compile/Stack.mls"
 
-open Stack
+open Stack.{ * }
 
 pattern ListLike(pattern T) = Nil | (T :: ListLike(T))
 

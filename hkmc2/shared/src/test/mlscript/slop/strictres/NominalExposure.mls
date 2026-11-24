@@ -1,0 +1,1007 @@
+:.
+
+// A client can write the public field through the annotated result in a later block.
+// Only the factory supplies the constructor argument.
+private class Cell(seed) with
+  mut val item = seed.initial
+fun makeCell(): Cell = new mut Cell({initial: 0})
+
+:expect "changed"
+let cell = makeCell()
+set cell.item = "changed"
+cell.item
+//│ = "changed"
+//│ cell = Cell(_)
+
+
+// Public methods on a private superclass receive external arguments through the returned instance.
+private class Echo with
+  fun echo(value) = value
+private class Runner extends Echo
+fun makeRunner(): Runner = new Runner
+makeRunner().echo(0)
+//│ = 0
+
+:expect "hello"
+makeRunner().echo("hello")
+//│ = "hello"
+
+
+// An exposed annotation names both the envelope and the payload.
+private class Payload with
+  mut val value = 0
+private class Box[T](val contents: T)
+private class Envelope[T](x: T) extends Box[T](x)
+fun envelope(): Envelope[Payload] = Envelope(new mut Payload)
+
+:expect "boxed"
+let payload = envelope().contents
+set payload.value = "boxed"
+payload.value
+//│ = "boxed"
+//│ payload = Payload
+
+
+// Each annotation exposes its own type arguments, even after Box has already been visited.
+:e
+private class Sensitive with
+  fun read(x) = x.key
+fun numbers(): Box[Int] = Box(1)
+fun sensitive(): Box[Sensitive] = Box(new Sensitive)
+new Sensitive().read({key: 0})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	  fun read(x) = x.key
+//│ ║        	                ^^^^^
+//│ ╟── Cannot resolve member 'key' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+2: 	  fun read(x) = x.key
+//│ ║        	           ^
+//│ ╟── Member 'read' is accessible here.
+//│ ║  l.+2: 	  fun read(x) = x.key
+//│ ║        	  ^^^^^^^^^^^
+//│ ╟── This type argument appears in an exposed annotation.
+//│ ║  l.+4: 	fun sensitive(): Box[Sensitive] = Box(new Sensitive)
+//│ ║        	                     ^^^^^^^^^
+//│ ╟── 'sensitive' is exposed by this compilation unit.
+//│ ║  l.+4: 	fun sensitive(): Box[Sensitive] = Box(new Sensitive)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// A record result names a local type inside an application of an imported class.
+import "../../../mlscript-compile/GenericLibrary.mls"
+private class ImportedPayload with
+  mut val value = 0
+fun importedBox(): {box: GenericLibrary.Child[ImportedPayload]} = {box: GenericLibrary.Child(new mut ImportedPayload)}
+
+:expect "imported"
+let importedPayload = importedBox().box.item
+set importedPayload.value = "imported"
+importedPayload.value
+//│ = "imported"
+//│ importedPayload = ImportedPayload
+
+
+// Repeated calls grow the type argument, while exposure visits the finite set of declarations.
+private class Nest[T](val value: T) with
+  fun next(): Nest[Nest[T]] = Nest(this)
+private class NestedPayload with
+  mut val value = 0
+fun nested(): Nest[NestedPayload] = Nest(new mut NestedPayload)
+
+:expect "nested"
+let nestedPayload = nested().next().value.value
+set nestedPayload.value = "nested"
+nestedPayload.value
+//│ = "nested"
+//│ nestedPayload = NestedPayload
+
+
+// The written result exposes its type argument even when the class never uses its parameter.
+:e
+private class Phantom[T] with
+  fun next(): Phantom[Phantom[T]] = new Phantom[Phantom[T]]
+private class HiddenPayload with
+  fun read(x) = x.a
+fun phantom(): Phantom[HiddenPayload] = new Phantom[HiddenPayload]
+new HiddenPayload().read({a: 3})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+4: 	  fun read(x) = x.a
+//│ ║        	                ^^^
+//│ ╟── Cannot resolve member 'a' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+4: 	  fun read(x) = x.a
+//│ ║        	           ^
+//│ ╟── Member 'read' is accessible here.
+//│ ║  l.+4: 	  fun read(x) = x.a
+//│ ║        	  ^^^^^^^^^^^
+//│ ╟── This type argument appears in an exposed annotation.
+//│ ║  l.+5: 	fun phantom(): Phantom[HiddenPayload] = new Phantom[HiddenPayload]
+//│ ║        	                       ^^^^^^^^^^^^^
+//│ ╟── 'phantom' is exposed by this compilation unit.
+//│ ║  l.+5: 	fun phantom(): Phantom[HiddenPayload] = new Phantom[HiddenPayload]
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Extra subclass members and values hidden by a declared field type remain internal.
+private class PublicView(val visible: Any)
+private class Extra extends PublicView(42) with
+  fun local(x) = x.a
+private class Internal with
+  fun read(x) = x.b
+fun outward(): PublicView = new Extra
+fun erased(): PublicView = PublicView(new Internal)
+[new Extra().local({a: 1}), new Internal().read({b: 2})]
+//│ = [1, 2]
+
+
+// A typed domain reaches the unannotated override with the base's type argument.
+private class Argument(val word: Str)
+private class TypedService[T] with
+  open fun inspect(x: Box[T]): Str = ""
+private class TypedImplementation extends TypedService[Argument] with
+  override fun inspect(x) = x.contents.word
+fun typedService(): TypedService[Argument] = new TypedImplementation
+
+:expect "typed"
+typedService().inspect(Box(Argument("typed")))
+//│ = "typed"
+
+// Both operations inherit T through an unannotated override, then specialize U at the leaf.
+private class ChainBase[T](seed: T) with
+  open fun inspect(x: T): Str = ""
+  open mut val item: T = seed
+private class ChainMiddle[U](seed: U) extends ChainBase[U](seed) with
+  open override fun inspect(x) = ""
+  open override mut val item = seed
+private class ChainLeaf extends ChainMiddle[Argument](Argument("initial")) with
+  override fun inspect(x) = x.word
+  override mut val item = Argument("leaf")
+  fun read() = item.word
+private val chainLeaf = new mut ChainLeaf
+fun chainView(): ChainBase[Argument] = chainLeaf
+//│ chainLeaf = ChainLeaf
+
+:expect ["called", "written"]
+set chainView().item = Argument("written")
+[chainView().inspect(Argument("called")), chainLeaf.read()]
+//│ = ["called", "written"]
+
+// Writing Box in an exposed override leaves its contents unknown even when the base specifies them.
+:e
+private class BoxService with
+  open fun inspect(x: Box[Argument]): Str = ""
+private class BoxImplementation extends BoxService with
+  override fun inspect(x: Box) = x.contents.word
+fun boxService(): BoxService = new BoxImplementation
+new BoxImplementation().inspect(Box(Argument("inside")))
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+4: 	  override fun inspect(x: Box) = x.contents.word
+//│ ║        	                                 ^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'word' of a value with unknown shape.
+//│ ╟── This overriding annotation leaves a type argument unspecified.
+//│ ║  l.+4: 	  override fun inspect(x: Box) = x.contents.word
+//│ ║        	                          ^^^
+//│ ╟── Member 'inspect' is declared here.
+//│ ║  l.+2: 	  open fun inspect(x: Box[Argument]): Str = ""
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// A mutable override can receive a write even when its own declaration is hidden.
+:e
+private class FieldBase with
+  open mut val field = {value: 0}
+private class FieldImplementation extends FieldBase with
+  override mut val field = {value: 1}
+  fun read() = field.value
+fun fieldBase(): FieldBase = new mut FieldBase
+new FieldImplementation().read()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+5: 	  fun read() = field.value
+//│ ║        	               ^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── Field 'field' admits assigned values of unknown shape.
+//│ ║  l.+2: 	  open mut val field = {value: 0}
+//│ ║        	               ^^^^^
+//│ ╟── 'fieldBase' is exposed by this compilation unit.
+//│ ║  l.+6: 	fun fieldBase(): FieldBase = new mut FieldBase
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// The written Box on an overriding field also admits unknown contents.
+:e
+private class BoxFieldBase with
+  open mut val slot: Box[Argument] = Box(Argument("base"))
+private class BoxFieldChild extends BoxFieldBase with
+  override mut val slot: Box = Box(Argument("initial"))
+  fun read() = slot.contents.word
+private val boxedChild = new mut BoxFieldChild
+fun boxFieldView(): BoxFieldBase = boxedChild
+set boxFieldView().slot = Box(Argument("later"))
+boxedChild.read()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+5: 	  fun read() = slot.contents.word
+//│ ║        	               ^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'word' of a value with unknown shape.
+//│ ╟── This overriding annotation leaves a type argument unspecified.
+//│ ║  l.+4: 	  override mut val slot: Box = Box(Argument("initial"))
+//│ ║        	                         ^^^
+//│ ╟── Member 'slot' is declared here.
+//│ ║  l.+2: 	  open mut val slot: Box[Argument] = Box(Argument("base"))
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ boxedChild = BoxFieldChild
+
+
+// A complete field annotation supplies the contents on both sides of a write through the base.
+:expect ["initial", "assigned"]
+private class TypedBoxField with
+  open mut val slot: Box[Argument] = Box(Argument("base"))
+private class TypedBoxChild extends TypedBoxField with
+  override mut val slot: Box[Argument] = Box(Argument("initial"))
+  fun read() = slot.contents.word
+private val typedBoxChild = new mut TypedBoxChild
+fun typedBoxView(): TypedBoxField = typedBoxChild
+let initialWord = typedBoxView().slot.contents.word
+set typedBoxView().slot = Box(Argument("assigned"))
+[initialWord, typedBoxChild.read()]
+//│ = ["initial", "assigned"]
+//│ initialWord = "initial"
+//│ typedBoxChild = TypedBoxChild
+
+
+// An override can receive calls through the returned base interface.
+:e
+private class Service with
+  open fun inspect(x) = 0
+private class Implementation extends Service with
+  override fun inspect(x) = x.value
+fun service(): Service = new Implementation
+new Implementation().inspect({value: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+4: 	  override fun inspect(x) = x.value
+//│ ║        	                            ^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+2: 	  open fun inspect(x) = 0
+//│ ║        	                   ^
+//│ ╟── Member 'inspect' is accessible here.
+//│ ║  l.+2: 	  open fun inspect(x) = 0
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^
+//│ ╟── 'service' is exposed by this compilation unit.
+//│ ║  l.+5: 	fun service(): Service = new Implementation
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// The receiver's type arguments also apply to parameters specified by a separate signature.
+private class SignedService[T] with
+  fun inspect: T -> Str
+  open fun inspect(x) = ""
+private class SignedImplementation extends SignedService[Argument] with
+  override fun inspect(x) = x.word
+fun signedService(): SignedService[Argument] = new SignedImplementation
+
+:expect "signed"
+signedService().inspect(Argument("signed"))
+//│ = "signed"
+
+
+// Exposing a base method reaches every override, including one with no upcast to the base.
+:e
+private class SharedView with
+  open fun inspect(x) = 0
+private class InternalService extends SharedView with
+  override fun inspect(x) = x.value
+fun exposedView(): SharedView = new SharedView
+new InternalService().inspect({value: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+4: 	  override fun inspect(x) = x.value
+//│ ║        	                            ^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+2: 	  open fun inspect(x) = 0
+//│ ║        	                   ^
+//│ ╟── Member 'inspect' is accessible here.
+//│ ║  l.+2: 	  open fun inspect(x) = 0
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^
+//│ ╟── 'exposedView' is exposed by this compilation unit.
+//│ ║  l.+5: 	fun exposedView(): SharedView = new SharedView
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// An inferred base instance exposes the same fully annotated operation as a written result.
+:e
+private class InferredBase with
+  open fun inspect(x: Any): Int = 0
+private class InferredChild extends InferredBase with
+  override fun inspect(x) = x.only
+fun inferredBase() = new InferredBase
+new InferredChild().inspect({only: 7})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+4: 	  override fun inspect(x) = x.only
+//│ ║        	                            ^^^^^^
+//│ ╟── Value with an empty interface does not contain member 'only'
+//│ ║  l.+2: 	  open fun inspect(x: Any): Int = 0
+//│ ║        	                      ^^^
+//│ ╟── Type 'Any' is declared without a member interface.
+//│ ║  in ../../decls/Prelude.mls
+//│ ║  l.XX: 	declare type Any
+//│ ╙──      	             ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// A hierarchy used only within this unit retains local inference.
+:expect 4
+private class LocalBase with
+  open fun inspect(x) = 0
+private class LocalService extends LocalBase with
+  override fun inspect(x) = x.value
+new LocalService().inspect({value: 4})
+//│ = 4
+
+
+// Even a direct call to the private base contributes its argument to every override.
+:e
+private class LocalSource with
+  open fun inspect(x) = 0
+private class LocalMiddle extends LocalSource with
+  open override fun inspect(x) = 0
+private class LocalLeaf extends LocalMiddle with
+  override fun inspect(x) = x.only
+new LocalLeaf().inspect({only: 7})
+new LocalSource().inspect(null)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+6: 	  override fun inspect(x) = x.only
+//│ ║        	                            ^^^^^^
+//│ ╟── Null literal does not contain member 'only'
+//│ ║  l.+8: 	new LocalSource().inspect(null)
+//│ ╙──      	                          ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// The base is the only declaration called. Its parent type arguments determine x in the leaf.
+:expect "through base"
+private class LocalReader[T] with
+  open fun read(x: T): Str = ""
+private class MiddleReader[T] extends LocalReader[T] with
+  open override fun read(x) = ""
+private class WordReader extends MiddleReader[Argument] with
+  override fun read(x) = x.word
+private fun readLocal(p: LocalReader[Argument]) = p.read(Argument("through base"))
+readLocal(new WordReader)
+//│ = "through base"
+
+
+// A written Box on a private override admits unknown contents, even with only a typed local call.
+:e
+private class LocalBoxReader with
+  open fun read(x: Box[Argument]): Str = ""
+private class OwnBoxReader extends LocalBoxReader with
+  override fun read(x: Box) = x.contents.word
+new OwnBoxReader().read(Box(Argument("local")))
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+4: 	  override fun read(x: Box) = x.contents.word
+//│ ║        	                              ^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'word' of a value with unknown shape.
+//│ ╟── This overriding annotation leaves a type argument unspecified.
+//│ ║  l.+4: 	  override fun read(x: Box) = x.contents.word
+//│ ║        	                       ^^^
+//│ ╟── Member 'read' is declared here.
+//│ ║  l.+2: 	  open fun read(x: Box[Argument]): Str = ""
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Returning an inherited parameter exposes its declared type. A subtype passed by a direct
+// caller can still have methods whose only arguments come from this unit.
+:expect 7
+private class Input
+private class SpecificInput extends Input with
+  fun use(x) = x.only
+private class EchoBase with
+  open fun echo(x: Input): Input = x
+private class EchoChild extends EchoBase with
+  override fun echo(x) = x
+fun echoed() = new EchoChild().echo(new SpecificInput)
+new SpecificInput().use({only: 7})
+//│ = 7
+
+
+// A narrow factory annotation cannot narrow the domain that the implementation inherits.
+:e
+private class Consumer[T] with
+  open fun accept(x: T): Str = ""
+private class WideConsumer extends Consumer[Any] with
+  override fun accept(x) = x.word
+fun consumer(): Consumer[Argument] = new WideConsumer
+new WideConsumer().accept(Argument("local"))
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+4: 	  override fun accept(x) = x.word
+//│ ║        	                           ^^^^^^
+//│ ╟── Value with an empty interface does not contain member 'word'
+//│ ║  l.+3: 	private class WideConsumer extends Consumer[Any] with
+//│ ║        	                                            ^^^
+//│ ╟── Type 'Any' is declared without a member interface.
+//│ ║  in ../../decls/Prelude.mls
+//│ ║  l.XX: 	declare type Any
+//│ ╙──      	             ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Alias expansion erases this argument. Its occurrence in a public parameter still exposes it.
+:e
+private type Erases[T] = Int
+private class AliasPayload with
+  fun read(x) = x.key
+fun acceptErased(x: Erases[AliasPayload]) = 0
+new AliasPayload().read({key: 2})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+3: 	  fun read(x) = x.key
+//│ ║        	                ^^^^^
+//│ ╟── Cannot resolve member 'key' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+3: 	  fun read(x) = x.key
+//│ ║        	           ^
+//│ ╟── Member 'read' is accessible here.
+//│ ║  l.+3: 	  fun read(x) = x.key
+//│ ║        	  ^^^^^^^^^^^
+//│ ╟── This type argument appears in an exposed annotation.
+//│ ║  l.+4: 	fun acceptErased(x: Erases[AliasPayload]) = 0
+//│ ║        	                           ^^^^^^^^^^^^
+//│ ╟── 'acceptErased' is exposed by this compilation unit.
+//│ ║  l.+4: 	fun acceptErased(x: Erases[AliasPayload]) = 0
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// A later block can add an override after the inherited operation became public.
+:e
+private class LaterImplementation extends SharedView with
+  override fun inspect(x) = x.later
+new LaterImplementation().inspect({later: 3})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	  override fun inspect(x) = x.later
+//│ ║        	                            ^^^^^^^
+//│ ╟── Cannot resolve member 'later' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.XX: 	  open fun inspect(x) = 0
+//│ ║        	                   ^
+//│ ╟── Member 'inspect' is accessible here.
+//│ ║  l.XX: 	  open fun inspect(x) = 0
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^
+//│ ╟── 'exposedView' is exposed by this compilation unit.
+//│ ║  l.XX: 	fun exposedView(): SharedView = new SharedView
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// An inferred result can carry a written nominal interface out of a private helper.
+:e
+private class InferredPayload with
+  fun read(x) = x.key
+private fun hiddenFactory(): Phantom[InferredPayload] = new Phantom[InferredPayload]
+fun inferredFactory() = hiddenFactory()
+new InferredPayload().read({key: 2})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	  fun read(x) = x.key
+//│ ║        	                ^^^^^
+//│ ╟── Cannot resolve member 'key' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+2: 	  fun read(x) = x.key
+//│ ║        	           ^
+//│ ╟── Member 'read' is accessible here.
+//│ ║  l.+2: 	  fun read(x) = x.key
+//│ ║        	  ^^^^^^^^^^^
+//│ ╟── This type argument appears in an exposed annotation.
+//│ ║  l.+3: 	private fun hiddenFactory(): Phantom[InferredPayload] = new Phantom[InferredPayload]
+//│ ║        	                                     ^^^^^^^^^^^^^^^
+//│ ╟── This value is returned here.
+//│ ║  l.+4: 	fun inferredFactory() = hiddenFactory()
+//│ ║        	                        ^^^^^^^^^^^^^^^
+//│ ╟── 'inferredFactory' is exposed by this compilation unit.
+//│ ║  l.+4: 	fun inferredFactory() = hiddenFactory()
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// An exported alias also exposes the operations on each named type.
+:e
+private class NamedPayload with
+  fun read(x) = x.key
+type PublicAlias = Erases[NamedPayload]
+new NamedPayload().read({key: 2})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	  fun read(x) = x.key
+//│ ║        	                ^^^^^
+//│ ╟── Cannot resolve member 'key' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+2: 	  fun read(x) = x.key
+//│ ║        	           ^
+//│ ╟── Member 'read' is accessible here.
+//│ ║  l.+2: 	  fun read(x) = x.key
+//│ ║        	  ^^^^^^^^^^^
+//│ ╟── This type argument appears in an exposed annotation.
+//│ ║  l.+3: 	type PublicAlias = Erases[NamedPayload]
+//│ ║        	                          ^^^^^^^^^^^^
+//│ ╟── 'PublicAlias' is exposed by this compilation unit.
+//│ ║  l.+3: 	type PublicAlias = Erases[NamedPayload]
+//│ ╙──      	^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// The omitted argument is inferred from the stored callback, which a caller can obtain.
+:e
+private fun storedCallback(x) = x.key
+fun callbacks(): Box = Box(storedCallback)
+storedCallback({key: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun storedCallback(x) = x.key
+//│ ║        	                                ^^^^^
+//│ ╟── Cannot resolve member 'key' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+1: 	private fun storedCallback(x) = x.key
+//│ ║        	                           ^
+//│ ╟── Type argument 'T' is inferred here.
+//│ ║  l.+2: 	fun callbacks(): Box = Box(storedCallback)
+//│ ║        	                 ^^^
+//│ ╟── 'callbacks' is exposed by this compilation unit.
+//│ ║  l.+2: 	fun callbacks(): Box = Box(storedCallback)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// A returned callback can receive values that fill an omitted input type in its signature.
+:e
+private fun readBox(box: Box) = box.contents.word
+fun reader(dummy): Box -> Str = readBox
+readBox(Box(Argument("local")))
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun readBox(box: Box) = box.contents.word
+//│ ║        	                                ^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'word' of a value with unknown shape.
+//│ ╟── Type argument 'T' is omitted here and admits values of unknown shape.
+//│ ║  l.+2: 	fun reader(dummy): Box -> Str = readBox
+//│ ║        	                   ^^^
+//│ ╟── 'reader' is exposed by this compilation unit.
+//│ ║  l.+2: 	fun reader(dummy): Box -> Str = readBox
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// A callable reached through a record field admits the same external arguments.
+:e
+private fun readNestedBox(box: Box) = box.contents.word
+fun recordReader(dummy): {read: Box -> Str} = {read: readNestedBox}
+readNestedBox(Box(Argument("local")))
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun readNestedBox(box: Box) = box.contents.word
+//│ ║        	                                      ^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'word' of a value with unknown shape.
+//│ ╟── Type argument 'T' is omitted here and admits values of unknown shape.
+//│ ║  l.+2: 	fun recordReader(dummy): {read: Box -> Str} = {read: readNestedBox}
+//│ ║        	                                ^^^
+//│ ╟── Field 'read' is accessible here.
+//│ ║  l.+2: 	fun recordReader(dummy): {read: Box -> Str} = {read: readNestedBox}
+//│ ║        	                          ^^^^^^^^^^^^^^^^
+//│ ╟── 'recordReader' is exposed by this compilation unit.
+//│ ║  l.+2: 	fun recordReader(dummy): {read: Box -> Str} = {read: readNestedBox}
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// The callback's domain comes from a written argument of the record alias.
+:e
+private type ReaderOf[A] = {read: A -> Str}
+private fun readAliasBox(box: Box) = box.contents.word
+fun aliasReader(dummy): ReaderOf[Box] = {read: readAliasBox}
+readAliasBox(Box(Argument("local")))
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	private fun readAliasBox(box: Box) = box.contents.word
+//│ ║        	                                     ^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'word' of a value with unknown shape.
+//│ ╟── Type argument 'T' is omitted here and admits values of unknown shape.
+//│ ║  l.+3: 	fun aliasReader(dummy): ReaderOf[Box] = {read: readAliasBox}
+//│ ║        	                                 ^^^
+//│ ╟── This type argument appears in an exposed annotation.
+//│ ║  l.+3: 	fun aliasReader(dummy): ReaderOf[Box] = {read: readAliasBox}
+//│ ║        	                                 ^^^
+//│ ╟── 'aliasReader' is exposed by this compilation unit.
+//│ ║  l.+3: 	fun aliasReader(dummy): ReaderOf[Box] = {read: readAliasBox}
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// The payload's interface can escape as the actual type argument of a private generic call.
+:e
+private class ActualPayload with
+  fun read(x) = x.key
+private fun boxed[T](x: T): Box[T] = Box(x)
+fun actualBox() = boxed(new ActualPayload)
+new ActualPayload().read({key: 3})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	  fun read(x) = x.key
+//│ ║        	                ^^^^^
+//│ ╟── Cannot resolve member 'key' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+2: 	  fun read(x) = x.key
+//│ ║        	           ^
+//│ ╟── Member 'read' is accessible here.
+//│ ║  l.+2: 	  fun read(x) = x.key
+//│ ║        	  ^^^^^^^^^^^
+//│ ╟── This value is returned here.
+//│ ║  l.+4: 	fun actualBox() = boxed(new ActualPayload)
+//│ ║        	                  ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── 'actualBox' is exposed by this compilation unit.
+//│ ║  l.+4: 	fun actualBox() = boxed(new ActualPayload)
+//│ ╙──      	^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Only the escaping call supplies an interface. A private use of the same helper keeps local inference.
+:expect 6
+private class LocalPayload with
+  fun read(x) = x.local
+private fun packValue[T](x: T): Box[T] = Box(x)
+private val localBox = packValue(new LocalPayload)
+fun publicBox() = packValue(Argument("public"))
+localBox.contents.read({local: 6})
+//│ = 6
+//│ localBox = Box(LocalPayload)
+
+
+// An input-only type argument also names its actual type in the escaping interface.
+:e
+private class InputPayload with
+  fun read(x) = x.key
+private fun inputBox[T](x: T): Box[in T out Any] = Box(x)
+fun publicInputBox() = inputBox(new InputPayload)
+new InputPayload().read({key: 3})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	  fun read(x) = x.key
+//│ ║        	                ^^^^^
+//│ ╟── Cannot resolve member 'key' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+2: 	  fun read(x) = x.key
+//│ ║        	           ^
+//│ ╟── Member 'read' is accessible here.
+//│ ║  l.+2: 	  fun read(x) = x.key
+//│ ║        	  ^^^^^^^^^^^
+//│ ╟── This value is returned here.
+//│ ║  l.+4: 	fun publicInputBox() = inputBox(new InputPayload)
+//│ ║        	                       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── 'publicInputBox' is exposed by this compilation unit.
+//│ ║  l.+4: 	fun publicInputBox() = inputBox(new InputPayload)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Returning a method exposes its virtual operation even when the receiver stays private.
+:e
+private class DetachedBase with
+  open fun inspect(x: Any): Int = 0
+private class DetachedChild extends DetachedBase with
+  override fun inspect(x) = x.only
+fun inspectDetached() = new DetachedBase().inspect
+new DetachedChild().inspect({only: 7})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+4: 	  override fun inspect(x) = x.only
+//│ ║        	                            ^^^^^^
+//│ ╟── Value with an empty interface does not contain member 'only'
+//│ ║  l.+2: 	  open fun inspect(x: Any): Int = 0
+//│ ║        	                      ^^^
+//│ ╟── Type 'Any' is declared without a member interface.
+//│ ║  in ../../decls/Prelude.mls
+//│ ║  l.XX: 	declare type Any
+//│ ╙──      	             ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Returning a final method exposes its argument even when its declaring class stays private.
+:e
+private class ClosedReader with
+  fun read(x): Int = x.only
+private fun methodOf(p: ClosedReader) = p.read
+fun escapedRead() = methodOf(new ClosedReader)
+new ClosedReader().read({only: 7})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	  fun read(x): Int = x.only
+//│ ║        	                     ^^^^^^
+//│ ╟── Cannot resolve member 'only' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+2: 	  fun read(x): Int = x.only
+//│ ║        	           ^
+//│ ╟── This value is returned here.
+//│ ║  l.+4: 	fun escapedRead() = methodOf(new ClosedReader)
+//│ ║        	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── 'escapedRead' is exposed by this compilation unit.
+//│ ║  l.+4: 	fun escapedRead() = methodOf(new ClosedReader)
+//│ ╙──      	^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// The first application retains the second parameter list of a separately declared signature.
+:e
+private class CurriedBase with
+  fun inspect: Any -> Any -> Int
+  open fun inspect(first)(second) = 0
+private class CurriedChild extends CurriedBase with
+  override fun inspect(first)(second) = second.only
+fun detachedTail() = new CurriedBase().inspect(0)
+new CurriedChild().inspect(0)({only: 7})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+5: 	  override fun inspect(first)(second) = second.only
+//│ ║        	                                        ^^^^^^^^^^^
+//│ ╟── Value with an empty interface does not contain member 'only'
+//│ ║  l.+2: 	  fun inspect: Any -> Any -> Int
+//│ ║        	                      ^^^
+//│ ╟── Type 'Any' is declared without a member interface.
+//│ ║  in ../../decls/Prelude.mls
+//│ ║  l.XX: 	declare type Any
+//│ ╙──      	             ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// The supplied first argument flows to the override. External callers can only supply the second.
+:expect 7
+private val firstArgument = {only: 7}
+private class PartialBase with
+  open fun inspect(first)(second: Any): Int = 0
+private class PartialChild extends PartialBase with
+  override fun inspect(first)(second) = first.only
+fun remainingArgument() = new PartialBase().inspect(firstArgument)
+new PartialChild().inspect(firstArgument)(0)
+//│ = 7
+//│ firstArgument = {only: 7}
+
+
+// An external write can replace the inferred contents of the box stored in this field.
+:e
+private class BoxHolder with
+  mut val box: Box = Box(Argument("initial"))
+  fun read() = box.contents.word
+fun boxHolder(): BoxHolder = new mut BoxHolder
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+3: 	  fun read() = box.contents.word
+//│ ║        	               ^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'word' of a value with unknown shape.
+//│ ╟── Type argument 'T' is omitted here and admits values of unknown shape.
+//│ ║  l.+2: 	  mut val box: Box = Box(Argument("initial"))
+//│ ║        	               ^^^
+//│ ╟── Member 'box' is accessible here.
+//│ ║  l.+2: 	  mut val box: Box = Box(Argument("initial"))
+//│ ║        	      ^^^^^^^^^^^^
+//│ ╟── 'boxHolder' is exposed by this compilation unit.
+//│ ║  l.+4: 	fun boxHolder(): BoxHolder = new mut BoxHolder
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+// The public and private uses of Id[Box] have separate omitted arguments.
+:expect "local"
+private type Id[T] = T
+fun takeId(value: Id[Box]) = 0
+private fun produceBox(): Id[Box] = Box(Argument("local"))
+produceBox().contents.word
+//│ = "local"
+
+
+// A public result admits unknown contents even when its body always constructs the same box.
+:e
+fun publicWordBox(): Id[Box] = Box(Argument("local"))
+publicWordBox().contents.word
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	publicWordBox().contents.word
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'word' of a value with unknown shape.
+//│ ╟── Type argument 'T' is omitted here and admits values of unknown shape.
+//│ ║  l.+1: 	fun publicWordBox(): Id[Box] = Box(Argument("local"))
+//│ ║        	                        ^^^
+//│ ╟── This type argument appears in an exposed annotation.
+//│ ║  l.+1: 	fun publicWordBox(): Id[Box] = Box(Argument("local"))
+//│ ║        	                        ^^^
+//│ ╟── 'publicWordBox' is exposed by this compilation unit.
+//│ ║  l.+1: 	fun publicWordBox(): Id[Box] = Box(Argument("local"))
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+private type Reader[T] = T -> Str
+
+// An external caller supplies the omitted argument of the alias through the callback's domain.
+:e
+private fun readWord(x) = x.word
+fun readerWithInferredDomain(): Reader = readWord
+readerWithInferredDomain()(Argument("local"))
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun readWord(x) = x.word
+//│ ║        	                          ^^^^^^
+//│ ╟── Cannot resolve member 'word' of a value with unknown shape.
+//│ ╟── Type argument 'T' is omitted here and admits values of unknown shape.
+//│ ║  l.+2: 	fun readerWithInferredDomain(): Reader = readWord
+//│ ║        	                                ^^^^^^
+//│ ╟── 'readerWithInferredDomain' is exposed by this compilation unit.
+//│ ║  l.+2: 	fun readerWithInferredDomain(): Reader = readWord
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Reader[Box] in a parameter exposes Box even when this function supplies the callback argument.
+:e
+fun invoke(read: Reader[Box]) = read(Box(Argument("local")))
+invoke(box => box.contents.word)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	invoke(box => box.contents.word)
+//│ ║        	              ^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'word' of a value with unknown shape.
+//│ ╟── Type argument 'T' is omitted here and admits values of unknown shape.
+//│ ║  l.+1: 	fun invoke(read: Reader[Box]) = read(Box(Argument("local")))
+//│ ║        	                        ^^^
+//│ ╟── This type argument appears in an exposed annotation.
+//│ ║  l.+1: 	fun invoke(read: Reader[Box]) = read(Box(Argument("local")))
+//│ ║        	                        ^^^
+//│ ╟── 'invoke' is exposed by this compilation unit.
+//│ ║  l.+1: 	fun invoke(read: Reader[Box]) = read(Box(Argument("local")))
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Specifying the contents gives the callback access to Argument.word.
+:expect "typed"
+fun invokeTyped(read: Reader[Box[Argument]]) = read(Box(Argument("typed")))
+invokeTyped(box => box.contents.word)
+//│ = "typed"
+
+
+// The argument still exposes its class when expanding the alias would erase its name.
+:e
+private type Ignore[T] = Int
+private class IgnoredArgument with
+  fun read(x) = x.key
+fun count(x: Ignore[IgnoredArgument]) = x
+new IgnoredArgument().read({key: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+3: 	  fun read(x) = x.key
+//│ ║        	                ^^^^^
+//│ ╟── Cannot resolve member 'key' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+3: 	  fun read(x) = x.key
+//│ ║        	           ^
+//│ ╟── Member 'read' is accessible here.
+//│ ║  l.+3: 	  fun read(x) = x.key
+//│ ║        	  ^^^^^^^^^^^
+//│ ╟── This type argument appears in an exposed annotation.
+//│ ║  l.+4: 	fun count(x: Ignore[IgnoredArgument]) = x
+//│ ║        	                    ^^^^^^^^^^^^^^^
+//│ ╟── 'count' is exposed by this compilation unit.
+//│ ║  l.+4: 	fun count(x: Ignore[IgnoredArgument]) = x
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// A write through the private base type reaches the field read in the leaf.
+:e
+private class WriteRoot with
+  open mut val item = Argument("root")
+private class WriteMiddle extends WriteRoot with
+  open override mut val item = Argument("middle")
+private class WriteLeaf extends WriteMiddle with
+  override mut val item = Argument("leaf")
+  fun read() = item.word
+private fun clearItem(p: WriteRoot) = set p.item = null
+private val writeLeaf = new mut WriteLeaf
+clearItem(writeLeaf)
+writeLeaf.read()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+7: 	  fun read() = item.word
+//│ ║        	               ^^^^^^^^^
+//│ ╟── Null literal does not contain member 'word'
+//│ ║  l.+8: 	private fun clearItem(p: WriteRoot) = set p.item = null
+//│ ╙──      	                                                   ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ writeLeaf = WriteLeaf
+
+
+// The base's annotation reaches a private override even when nobody writes the field.
+:e
+private class BroadSlot with
+  open mut val item: Any = Argument("base")
+private class LocalSlot extends BroadSlot with
+  override mut val item = Argument("child")
+  fun read() = item.word
+new LocalSlot().read()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+5: 	  fun read() = item.word
+//│ ║        	               ^^^^^^^^^
+//│ ╟── Value with an empty interface does not contain member 'word'
+//│ ║  l.+2: 	  open mut val item: Any = Argument("base")
+//│ ║        	                     ^^^
+//│ ╟── Type 'Any' is declared without a member interface.
+//│ ║  in ../../decls/Prelude.mls
+//│ ║  l.XX: 	declare type Any
+//│ ╙──      	             ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Each field has its own initializer. Later assignments through the base can replace the child's value.
+:expect ["child", "written"]
+private class InitialSlot with
+  open mut val item = null
+private class WordSlot extends InitialSlot with
+  override mut val item = Argument("child")
+  fun read() = item.word
+private fun replaceItem(p: InitialSlot) = set p.item = Argument("written")
+private val wordSlot = new mut WordSlot
+let beforeWrite = wordSlot.read()
+replaceItem(wordSlot)
+[beforeWrite, wordSlot.read()]
+//│ = ["child", "written"]
+//│ beforeWrite = "child"
+//│ wordSlot = WordSlot
+
+
+// A private override's own bare Box also admits unknown contents.
+:e
+private class LocalBoxSlot with
+  open mut val item: Box[Argument] = Box(Argument("base"))
+private class BareBoxSlot extends LocalBoxSlot with
+  override mut val item: Box = Box(Argument("child"))
+  fun read() = item.contents.word
+new BareBoxSlot().read()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+5: 	  fun read() = item.contents.word
+//│ ║        	               ^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'word' of a value with unknown shape.
+//│ ╟── This overriding annotation leaves a type argument unspecified.
+//│ ║  l.+4: 	  override mut val item: Box = Box(Argument("child"))
+//│ ║        	                         ^^^
+//│ ╟── Member 'item' is declared here.
+//│ ║  l.+2: 	  open mut val item: Box[Argument] = Box(Argument("base"))
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Writes through either generic base admit Int on that receiver. The leaf inherits Argument.
+:expect ["word", 42, 43]
+private class Slot[T](seed: T) with
+  open mut val item: T = seed
+private class Middle[T](seed: T) extends Slot[T](seed) with
+  open override mut val item = seed
+private class WordSlotView extends Middle[Argument](Argument("base")) with
+  override mut val item = Argument("word")
+  fun read() = item.word
+private fun setNumber(p: Slot[Int]) = set p.item = 42
+private fun setMiddleNumber(p: Middle[Int]) = set p.item = 43
+private val numberSlot = new mut Slot[Int](0)
+private val middleNumberSlot = new mut Middle[Int](0)
+setNumber(numberSlot)
+set middleNumberSlot.item = 1
+setMiddleNumber(middleNumberSlot)
+[new WordSlotView().read(), numberSlot.item, middleNumberSlot.item]
+//│ = ["word", 42, 43]
+//│ middleNumberSlot = Middle(_)
+//│ numberSlot = Slot(_)
+
+
+// An abstract field supplies its annotation even when the base has no initializer or writes.
+:e
+private abstract class AbstractSlot with
+  mut val item: Any
+private class FilledSlot extends AbstractSlot with
+  override mut val item = Argument("filled")
+  fun read() = item.word
+new FilledSlot().read()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+5: 	  fun read() = item.word
+//│ ║        	               ^^^^^^^^^
+//│ ╟── Value with an empty interface does not contain member 'word'
+//│ ║  l.+2: 	  mut val item: Any
+//│ ║        	                ^^^
+//│ ╟── Type 'Any' is declared without a member interface.
+//│ ║  in ../../decls/Prelude.mls
+//│ ║  l.XX: 	declare type Any
+//│ ╙──      	             ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

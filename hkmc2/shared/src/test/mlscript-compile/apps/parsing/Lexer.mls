@@ -13,9 +13,9 @@ import "../../Iter.mls"
 import "./Token.mls"
 
 open Stack
-open StrOps { concat2, ~ }
-open Option { Some, None}
-open Token { LiteralKind, LineLookupTable }
+open StrOps.{ concat2, ~ }
+open Option.{ Some, None}
+open Token.{ LiteralKind, LineLookupTable }
 
 type TokenType = Token.Token
 type Opt[T] = Some[T] | None

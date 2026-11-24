@@ -237,17 +237,39 @@ signatures subsequently interpret them from the member's positive interface.
 `TransparentAliasPolarity.mls` covers shorthand and explicit projections;
 `VarianceAliases.mls` covers captured binders and nested identity aliases.
 
-`DeclaredType.positive` records this lexical polarity, independently of a later
-constraint's direction. `TypeShape.Wildcard` retains written parts;
-`TypeShape.Argument` retains both contextual argument parts.
-Neither transplants supplied syntax into the callee's binding environment.
+A qualified type member refers to the particular receiver in its name. For a
+value `family: Family[in Dog out Animal]` with `type Element = T`, a value of
+type `family.Element` can be any `Animal`, including when it arrives as a
+function argument. The resolver keeps the receiver argument's bounds together
+when it resolves that type name. Reading a value uses its output bound and
+checking a supplied value uses its input bound. `QualifiedTypeBounds.mls`
+exercises both cases, including a function type defined inside the receiver.
 
-`TypeShape.SelectedArgument` saves one requested part for a scalar occurrence when
-the argument is deferred. Both subsequent constraint directions use that same
-selected type; an invariant argument makes separate selections for its two parts.
-Selections are cached by argument reference and polarity; selecting an existing
-selection is idempotent. Forwarding cycles retain subscriptions but stop repeated observation.
-For a fixed argument-reference set, selection adds at most two nodes per reference.
+`DeclaredType.positive` records this lexical polarity, independently of a later
+constraint's direction. `TypeArgumentResolution.Wildcard` retains written parts;
+`TypeArgument` retains both interpreted bounds as proper `DeclaredType` references.
+Neither a wildcard nor a bound pair is a `TypeShape` or a value shape. A scalar
+occurrence selects one bound before a constraint observes it, including when the
+bound's resolution is still pending. Both subsequent constraint directions use
+that selected type. Neither operation transplants supplied syntax into the
+callee's binding environment.
+
+Explicit parameter bindings live in a separate publisher of `TypeArgumentBinding`.
+Each binding records both bounds and the normalized path into the parameter's
+scope. Binding a parameter also publishes an `InstanceShape` of the output type
+into `TypeShape.Parameter.host`, so reads subscribe to that one host for both
+inferred values and explicit outputs. The host delivers an output shared by
+different bindings once, while those bindings retain their input obligations
+without repeating value flow. Constraints on the
+parameter subscribe to bindings and use their input types. The same entry/exit
+marks filter both operations, so another activation cannot constrain the binding.
+`TypeShape.Parameter` retains both originating hosts, allowing importers to copy
+inferred values and explicit bindings independently of their exporters. Repeated
+bindings and constraints deduplicate in these hosts and in the relation graph.
+
+Tuple fields and separate parameter signatures likewise keep their bound pairs
+in their interface data. Reading a field or entering a callback publishes only
+its output type; constraining a field or parameter selects its input type.
 
 ### Iteration and synthesized applications
 
@@ -550,10 +572,13 @@ expanding its alias reuses it. Declaration variance applies to omitted arguments
 and excess arguments are rejected, including in unused annotations. An empty hole
 waits for evidence instead of immediately publishing an unknown candidate.
 
-Written fragments continue to restrict the interface. Abstract types remain
-`TypeShape.Abstract`; variance extremes are not holes. Interface exposure adds
-unknown values to genuinely missing external inputs, including callback results.
-Those unknown candidates remain alongside any local evidence.
+Written fragments continue to restrict the interface. Abstract types keep their
+`TypeShape.Abstract` representation, and the extreme bounds supplied by variance stay fixed. Every
+omitted generic argument in an exposed signature admits an unknown value alongside
+any local evidence. This rule applies in callback parameters and results and in
+arguments to type aliases, including arguments the alias body never uses.
+The written type of a value that escapes without an exposed signature, such as the
+result of a private function returned by an exported one, is exposed in the same way.
 
 Current limitations are [omitted-argument context precision](new-resolution-future-work.md#omitted-argument-contexts)
 and [missing selected member types](new-resolution-future-work.md#inferred-member-signatures).

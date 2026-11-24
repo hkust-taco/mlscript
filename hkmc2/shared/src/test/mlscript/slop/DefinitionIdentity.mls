@@ -1,7 +1,7 @@
 :.
 :js
 :checkIR
-open annotations
+open annotations.{ * }
 
 
 // Tail-call optimization makes the parameters of a self-recursive function mutable. The function keeps its symbol,

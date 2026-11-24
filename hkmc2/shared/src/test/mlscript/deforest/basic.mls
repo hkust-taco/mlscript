@@ -84,7 +84,7 @@ f(p())
 //│ @private
 //│ define f$f as fun f$f⁰(x) {
 //│   let y, arg$Y$0$, arg$X$0$;
-//│   return (x(arg$X$0$, arg$Y$0$, y) as! O⁰)
+//│   return x(arg$X$0$, arg$Y$0$, y)
 //│ };
 //│ @affine(1) @private
 //│ define f$x_X as fun f$x_X⁰(X_a)(fv_arg$X$0$, fv_arg$Y$0$, fv_y) {
@@ -94,7 +94,7 @@ f(p())
 //│ @affine(1) @private
 //│ define f$arg$X$0$_Y as fun f$arg$X$0$_Y⁰(Y_b)(fv_arg$Y$0$, fv_y) {
 //│   set fv_arg$Y$0$ = Y_b;
-//│   set fv_y = (fv_arg$Y$0$ as! O⁰);
+//│   set fv_y = fv_arg$Y$0$;
 //│   return fv_y
 //│ };
 //│ @private
@@ -118,7 +118,7 @@ f(p())
 //│       match arg$X$0$
 //│         Y¹ =>
 //│           set arg$Y$0$ = arg$X$0$.b⁰;
-//│           set y = (arg$Y$0$ as! O⁰);
+//│           set y = arg$Y$0$;
 //│           return y
 //│         else
 //│           throw new globalThis⁰.Error⁰("match error")
@@ -175,9 +175,6 @@ fun c(x, d) = if x is
   X(a) then c(X(a), d)
 () => c(X(3), 2)
 //│ deforest > >>> fusing >>>
-//│ deforest > X⁰(a²) ->
-//│ deforest > 	match: x⁴
-//│ deforest > 	fields: x⁴.a⁰
 //│ deforest > X⁰(3) ->
 //│ deforest > 	match: x⁴
 //│ deforest > 	fields: x⁴.a⁰
@@ -185,6 +182,9 @@ fun c(x, d) = if x is
 //│ deforest > 	match: x⁴
 //│ deforest > 	fields: x⁴.a⁰
 //│ deforest > X⁰(3) ->
+//│ deforest > 	match: x⁴
+//│ deforest > 	fields: x⁴.a⁰
+//│ deforest > X⁰(a²) ->
 //│ deforest > 	match: x⁴
 //│ deforest > 	fields: x⁴.a⁰
 //│ deforest > <<< fusing <<<
@@ -301,10 +301,10 @@ fun f(x) = if x is
   A(x) then 2
 f(A(2)) + f(A(3))
 //│ deforest > >>> fusing >>>
-//│ deforest > A⁰(3) ->
+//│ deforest > A⁰(2) ->
 //│ deforest > 	match: x¹⁰
 //│ deforest > 	fields: x¹⁰.x⁸
-//│ deforest > A⁰(2) ->
+//│ deforest > A⁰(3) ->
 //│ deforest > 	match: x¹⁰
 //│ deforest > 	fields: x¹⁰.x⁸
 //│ deforest > <<< fusing <<<

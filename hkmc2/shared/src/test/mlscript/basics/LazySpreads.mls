@@ -52,7 +52,7 @@ fun sum2 = case
 //│ sum2 = function sum2() {
 //│   let lambda;
 //│   lambda = (undefined, function (caseScrut) {
-//│     let lastElement1$3, middleElements3, element0$, tmp5, tmp6, tmp7;
+//│     let lastElement1$3, element0$, tmp5, tmp6, tmp7;
 //│     if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length === 0) {
 //│       return 0
 //│     } else if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length >= 2) {
@@ -60,11 +60,10 @@ fun sum2 = case
 //│       element0$ = runtime.Tuple.get(caseScrut, 0);
 //│       tmp8 = caseScrut.length - 1;
 //│       inlinedVal = runtime.safeCall(caseScrut.slice(1, tmp8));
-//│       middleElements3 = inlinedVal /* as!! Array */;
 //│       lastElement1$3 = runtime.Tuple.get(caseScrut, -1);
 //│       tmp5 = element0$ + lastElement1$3;
 //│       tmp6 = sum2();
-//│       tmp7 = runtime.safeCall(tmp6(middleElements3));
+//│       tmp7 = runtime.safeCall(tmp6(inlinedVal));
 //│       return tmp5 + tmp7
 //│     }
 //│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
@@ -121,10 +120,43 @@ sum2(..arr)
 //│ ═══[RUNTIME ERROR] Error: match error
 
 
-fun map2(f) = case
+private fun map2(f) = case
   [] then []
   [x, ..xs, y] then [f(x), ..map2(f)(xs), f(y)]
 
 :expect [10, 8, 6, 4, 2, 2, 4, 6, 8, 10]
 map2(x => x * 2)(arr)
 //│ = [10, 8, 6, 4, 2, 2, 4, 6, 8, 10]
+
+// A lazy spread builds a collection whose slice can keep its lazy representation.
+:sir
+:siret
+:expect [false, true]
+private fun rest(xs) = if xs is [_, ..ys] then ys
+[Array.isArray(rest([0, ..[1, 2]])), Array.isArray(rest([0, ...[1, 2]]))]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Array⁰, tmp1: Unknown, tmp2: Unknown, tmp3: ?, tmp4: Array⁰, tmp5: Array⁰, tmp6: Unknown, tmp7: ?;
+//│ @private
+//│ define rest⁰ as fun rest¹(xs: Unknown): Unknown {
+//│   let ys: Unknown, middleElements: ?, element0$: ?;
+//│   match xs
+//│     Array(1+) =>
+//│       set element0$ = runtime⁰.Tuple⁰.get⁰(xs, 0);
+//│       set middleElements = runtime⁰.Tuple⁰.slice⁰(xs, 1, 0);
+//│       set ys = middleElements;
+//│       return ys
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ set tmp = [1, 2];
+//│ set tmp1 = [0, ...tmp];
+//│ set tmp2 = rest¹(tmp1);
+//│ set tmp3 = globalThis⁰.Array¹.isArray⁰(tmp2);
+//│ set tmp4 = [1, 2];
+//│ set tmp5 = [0, ...tmp4];
+//│ set tmp6 = rest¹(tmp5);
+//│ set tmp7 = globalThis⁰.Array¹.isArray⁰(tmp6);
+//│ return [tmp3, tmp7]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [false, true]

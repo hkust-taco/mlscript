@@ -1,0 +1,242 @@
+:.
+:!js
+:checkIR
+
+val input32: Int32 = unsafe.undefined
+val input64: Int64 = unsafe.undefined
+
+// An unused lambda with a rejected parameter must not produce an invalid closure.
+:ge
+:sir
+:siret
+private val annotated = (value: Int32 | Int64) => value
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int64' have no common representation
+//│ ║  l.+1: 	private val annotated = (value: Int32 | Int64) => value
+//│ ╙──      	                                ^^^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+
+// Inferred lambda parameters obey the same rule, and their result is not diagnosed again.
+:ge
+:sir
+:siret
+private val identity = value => value
+identity(input32)
+identity(input64)
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int64' have no common representation
+//│ ║  l.+1: 	private val identity = value => value
+//│ ╙──      	                       ^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+
+// A lambda with valid parameters can still fail its return coercions during lowering.
+// Each rejected coercion lowers to the error, so that no value reaches a slot of another representation.
+:ge
+:sir
+:siret
+private val mixedResult = (flag: Bool) => if flag then input32 else input64
+mixedResult(true)
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
+//│ ║  l.+1: 	private val mixedResult = (flag: Bool) => if flag then input32 else input64
+//│ ╙──      	                                                       ^^^^^^^
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int64' at an unrelated type 'Unknown'
+//│ ║  l.+1: 	private val mixedResult = (flag: Bool) => if flag then input32 else input64
+//│ ╙──      	                                                                    ^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda;
+//│ define lambda as fun lambda⁰(flag: Bool⁰): ? {
+//│   match flag
+//│     true =>
+//│       throw "This code cannot be run as its compilation yielded an error."
+//│     else
+//│       throw "This code cannot be run as its compilation yielded an error."
+//│   end
+//│ };
+//│ @private
+//│ define mixedResult⁰ as val mixedResult¹: Function⁰ = lambda⁰;
+//│ return mixedResult¹(true)
+
+// Nested lambdas with representable results remain valid.
+:sir
+:siret
+private val referenceFactory = (value: Int) => (ignored: Int) => value
+referenceFactory(42)(1)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda, callPrefix: ?;
+//│ define lambda as fun lambda²(value: Int⁰): ? {
+//│   let lambda1;
+//│   @private
+//│   define lambda1 as fun lambda¹(ignored: Int⁰): ? {
+//│     return value
+//│   };
+//│   return lambda¹
+//│ };
+//│ @private
+//│ define referenceFactory⁰ as val referenceFactory¹: Function⁰ = lambda²;
+//│ set callPrefix = referenceFactory¹(42);
+//│ return callPrefix(1)
+
+// FIXME: First-class unboxed lambdas still use unknown call and return representations.
+// Int32 is representable, so erasure succeeds; lowering reports the unsupported coercions.
+:fixme
+:sir
+:siret
+private val factory = (value: Int32) => (ignored: Int) => value
+factory(input32)(1)
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
+//│ ║  l.+1: 	private val factory = (value: Int32) => (ignored: Int) => value
+//│ ╙──      	                                                          ^^^^^
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
+//│ ║  l.+2: 	factory(input32)(1)
+//│ ╙──      	        ^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda, callPrefix: ?;
+//│ define lambda as fun lambda⁴(value: Int32): ? {
+//│   let lambda1;
+//│   @private
+//│   define lambda1 as fun lambda³(ignored: Int⁰): ? {
+//│     throw "This code cannot be run as its compilation yielded an error."
+//│   };
+//│   return lambda³
+//│ };
+//│ @private
+//│ define factory⁰ as val factory¹: Function⁰ = lambda⁴;
+//│ throw "This code cannot be run as its compilation yielded an error."
+
+// Erasure failure rejects the whole block before branch cloning or closure construction.
+:ge
+:sir
+:siret
+if true then (value: Int32 | Int64) => value else (value: Int) => value
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int64' have no common representation
+//│ ║  l.+1: 	if true then (value: Int32 | Int64) => value else (value: Int) => value
+//│ ╙──      	                     ^^^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+
+// Reject the entire block before lowering any direct, projected, or first-class constructor use.
+:ge
+:sir
+:siret
+private class RejectedPrimary(val value: Int32 | Int64)
+RejectedPrimary(input32)
+new RejectedPrimary.class(input32)
+private val rejectedConstructor = RejectedPrimary
+rejectedConstructor(input32)
+private class ChildOfRejected() extends RejectedPrimary(input32)
+ChildOfRejected()
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int64' have no common representation
+//│ ║  l.+1: 	private class RejectedPrimary(val value: Int32 | Int64)
+//│ ╙──      	                                         ^^^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+
+// Auxiliary lists are part of the same constructor signature.
+:ge
+:sir
+:siret
+private class RejectedAuxiliary(label: Int) with
+  constructor(value: Int32 | Int64)
+RejectedAuxiliary(1)(input32)
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int64' have no common representation
+//│ ║  l.+2: 	  constructor(value: Int32 | Int64)
+//│ ╙──      	                     ^^^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+
+// All observed constructor arguments must have a common representation, even without an annotation.
+:ge
+:sir
+:siret
+private class RejectedInferred(val value)
+RejectedInferred(input32)
+RejectedInferred(input64)
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int64' have no common representation
+//│ ║  l.+1: 	private class RejectedInferred(val value)
+//│ ╙──      	                               ^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+
+// A companion module must not reintroduce the rejected class during lowering.
+:ge
+:sir
+:siret
+private class RejectedCompanion(value: Int32 | Int64)
+private module RejectedCompanion with
+  fun answer() = 42
+RejectedCompanion.answer()
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int64' have no common representation
+//│ ║  l.+1: 	private class RejectedCompanion(value: Int32 | Int64)
+//│ ╙──      	                                       ^^^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+
+// An unused local slot still needs a representation, independently of a callable signature.
+:ge
+:sir
+:siret
+let unused = input32
+set unused = input64
+42
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int64' have no common representation
+//│ ║  l.+1: 	let unused = input32
+//│ ╙──      	    ^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+
+// Mutable fields reuse their parameter's declared type and its already-reported error.
+:ge
+:sir
+:siret
+private class RejectedMutable(mut val value: Int32 | Int64)
+RejectedMutable(input32)
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int64' have no common representation
+//│ ║  l.+1: 	private class RejectedMutable(mut val value: Int32 | Int64)
+//│ ╙──      	                                             ^^^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+
+// The body of a function whose result coercion fails is the error, so that a later use
+// cannot obtain the rejected value from it, including through the inliner.
+:ge
+:sir
+:siret
+private fun badReturn(): Int32 = "wrong"
+badReturn()
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int32'
+//│ ║  l.+1: 	private fun badReturn(): Int32 = "wrong"
+//│ ╙──      	                                 ^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ @private
+//│ define badReturn⁰ as fun badReturn¹(): Int32 {
+//│   throw "This code cannot be run as its compilation yielded an error."
+//│ };
+//│ return badReturn¹()
+
+:soir
+:siret
+private fun laterCaller(): Int32 = badReturn()
+laterCaller()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @private
+//│ define laterCaller⁰ as fun laterCaller¹(): Int32 { return badReturn¹() };
+//│ return badReturn¹()
+
+// Phase failure belongs to one block; the next independent block still compiles and runs.
+:js
+:expect 42
+(value => value)(42)
+//│ = 42
+
+// A failed return coercion in one method leaves a sibling method usable in the same module.
+:ge
+:js
+:expect 42
+module MixedResults with
+  fun healthy() = 42
+  fun invalid(): Int32 = "wrong"
+MixedResults.healthy()
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int32'
+//│ ║  l.+3: 	  fun invalid(): Int32 = "wrong"
+//│ ╙──      	                         ^^^^^^^
+//│ = 42

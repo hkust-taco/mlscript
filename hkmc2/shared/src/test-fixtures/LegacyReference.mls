@@ -1,0 +1,4 @@
+#lang(0.2.x)
+
+module LegacyReference with
+  fun read(r) = !(r)

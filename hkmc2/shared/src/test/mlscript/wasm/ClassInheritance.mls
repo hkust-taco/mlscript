@@ -28,13 +28,13 @@ c.Parent#x + (c is Parent)
 //│   (type $TypeInfoBase (sub (struct (field $tag@0 i32) (field $parent@1 (ref null $TypeInfoBase)))))
 //│   (type $Object (sub (struct (field $typeinfo@0 (mut (ref $TypeInfoBase))))))
 //│   (type $Parent (sub $Object (struct (field $typeinfo@0 (mut (ref $TypeInfoBase))) (field $x@1 (mut (ref null any))))))
-//│   (type $Child (sub $Parent (struct (field $typeinfo@0 (mut (ref $TypeInfoBase))) (field $x@1 (mut (ref null any))) (field $y@2 (mut (ref null i31))))))
+//│   (type $Child (sub $Parent (struct (field $typeinfo@0 (mut (ref $TypeInfoBase))) (field $x@1 (mut (ref null any))) (field $y@2 (mut (ref null any))))))
 //│   (type $Parent_typeinfo (sub $TypeInfoBase (struct (field $tag@0 i32) (field $parent@1 (ref null $TypeInfoBase)))))
 //│   (type $Parent_init (func (param $this (ref $Parent)) (param $x (ref null any)) (result (ref $Parent))))
 //│   (type $Parent_ctor (func (param $x (ref null any)) (result (ref $Parent))))
 //│   (type $Child_typeinfo (sub $Parent_typeinfo (struct (field $tag@0 i32) (field $parent@1 (ref null $TypeInfoBase)))))
-//│   (type $Child_init (func (param $this (ref $Child)) (param $y (ref null i31)) (result (ref $Child))))
-//│   (type $Child_ctor (func (param $y (ref null i31)) (result (ref $Child))))
+//│   (type $Child_init (func (param $this (ref $Child)) (param $y (ref null any)) (result (ref $Child))))
+//│   (type $Child_ctor (func (param $y (ref null any)) (result (ref $Child))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $entry (func (result (ref null any))))
 //│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
@@ -64,14 +64,13 @@ c.Parent#x + (c is Parent)
 //│         (local.get $x)))
 //│     (return
 //│       (local.get $this)))
-//│   (func $Child_init (export "Child_init") (type $Child_init) (param $this (ref $Child)) (param $y (ref null i31)) (result (ref $Child))
-//│     (local $tmp (ref null i31))
+//│   (func $Child_init (export "Child_init") (type $Child_init) (param $this (ref $Child)) (param $y (ref null any)) (result (ref $Child))
+//│     (local $tmp (ref null any))
 //│     (local.set $tmp
-//│       (ref.cast (ref null i31)
-//│         (call $plus_impl
-//│           (local.get $y)
-//│           (ref.i31
-//│             (i32.const 1)))))
+//│       (call $plus_impl
+//│         (local.get $y)
+//│         (ref.i31
+//│           (i32.const 1))))
 //│     (drop
 //│       (call $Parent_init
 //│         (local.get $this)
@@ -82,13 +81,13 @@ c.Parent#x + (c is Parent)
 //│     (return
 //│       (ref.cast (ref $Child)
 //│         (local.get $this))))
-//│   (func $Child_ctor (export "Child_ctor") (type $Child_ctor) (param $y (ref null i31)) (result (ref $Child))
+//│   (func $Child_ctor (export "Child_ctor") (type $Child_ctor) (param $y (ref null any)) (result (ref $Child))
 //│     (local $this (ref $Child))
 //│     (local.set $this
 //│       (struct.new $Child
 //│         (global.get $Child_typeinfo)
 //│         (ref.null any)
-//│         (ref.null i31)))
+//│         (ref.null any)))
 //│     (drop
 //│       (call $Child_init
 //│         (local.get $this)
@@ -260,9 +259,8 @@ class B extends A
 //│ ╔══[COMPILATION ERROR] Inheritance cycle involving 'A'
 //│ ║  l.+1: 	class A extends B
 //│ ╙──      	^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Inheritance cycles are not supported.
-//│ ║  l.+1: 	class A extends B
-//│ ╙──      	^^^^^^^^^^^^^^^^^
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // Forward references resolve because class identities are allocated before any layout is built, and

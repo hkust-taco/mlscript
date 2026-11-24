@@ -65,6 +65,12 @@ fun bareLength(value: Str | BareType) =
 //│ = [undefined, true, false]
 
 // Runtime patterns still distinguish undefined from legitimate values.
+:expect [0, 3]
+fun length(value: Str | unsafe.undefined) =
+  if value is ~unsafe.undefined as text then text.length else 0
+[length(unsafe.undefined), length("abc")]
+//│ = [0, 3]
+
 :expect [true, false]
 fun isUndefined(value) = if value is unsafe.undefined then true else false
 [isUndefined(unsafe.undefined), isUndefined(null)]
@@ -121,7 +127,7 @@ spreadLengths(["abc"])
 //│ = [3]
 
 // Undefined must not grant dynamic access: a resolved member can use a symbol key.
-open annotations { fresh, jsSymbol }
+open annotations.{ fresh, jsSymbol }
 module Keys {
   @fresh val read = Symbol("read")
 }

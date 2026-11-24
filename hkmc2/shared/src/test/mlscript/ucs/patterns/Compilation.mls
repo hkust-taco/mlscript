@@ -1,7 +1,7 @@
 :.
 :js
 
-open annotations
+open annotations.{ * }
 
 // * Note: these syntaxes work but, the compilation doesn't support this yet
 
@@ -41,7 +41,7 @@ fun trimStart(str) =
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern (‹erroneous syntax›).
 //│ ║  l.+2: 	  if str is (@compile((" " | "\t") ~ rest)) then trimStart(rest) else str
 //│ ╙──      	                                          ^
-//│ ╔══[COMPILATION ERROR] Name not found in wildcard opens: rest
+//│ ╔══[COMPILATION ERROR] Name not found: rest
 //│ ║  l.+2: 	  if str is (@compile((" " | "\t") ~ rest)) then trimStart(rest) else str
 //│ ╙──      	                                                           ^^^^
 

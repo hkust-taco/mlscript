@@ -42,9 +42,6 @@ fun process(e) =
     Pair(Vec(xs), Vec(ys)) then n
     Pair(Vec(n),  Numb(n)) then n
     Pair(Numb(n), Vec(n))  then n
-//│ ╔══[COMPILATION ERROR] Name not found: n
-//│ ║  l.+4: 	    Pair(Vec(xs), Vec(ys)) then n
-//│ ╙──      	                                ^
 //│ ╔══[COMPILATION ERROR] Duplicated pattern variable.
 //│ ║  l.+5: 	    Pair(Vec(n),  Numb(n)) then n
 //│ ║        	                       ^
@@ -57,6 +54,9 @@ fun process(e) =
 //│ ╟── The previous definition is as follows.
 //│ ║  l.+6: 	    Pair(Numb(n), Vec(n))  then n
 //│ ╙──      	              ^
+//│ ╔══[COMPILATION ERROR] Name not found: n
+//│ ║  l.+4: 	    Pair(Vec(xs), Vec(ys)) then n
+//│ ╙──      	                                ^
 
 
 // * TODO: we might want to accept this and compare the two values for equality

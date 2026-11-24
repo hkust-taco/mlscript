@@ -205,7 +205,7 @@ module Foo with
 
 // * Inlining refreshes the module and class symbols, which must still share a private namespace.
 
-open annotations { inline, noInline }
+open annotations.{ inline, noInline }
 
 :expect [[1, 2], [3, 4]]
 @inline fun makePair(n) =
@@ -278,7 +278,7 @@ class PublicBase2 with
 class PrivateOverride2 extends PublicBase2 with
   private fun f = "B"
   fun viaThis = this.f
-  fun viaParam(that) = that.f
+  fun viaParam(that: PrivateOverride2) = that.f
 let po2 = new PrivateOverride2
 [po2.viaThis, po2.viaParam(po2)]
 //│ = ["B", "B"]

@@ -5,7 +5,7 @@
 import "../../mlscript-compile/Option.mls"
 
 
-open Option { isDefined }
+open Option.{ isDefined }
 
 Option.None isDefined()
 //│ = false
@@ -14,9 +14,13 @@ Option.Some(1) isDefined()
 //│ = true
 
 
+:w
 open Option
   Some, None
   isDefined
+//│ ╔══[WARNING] Selective 'open' without a dot is deprecated; add '.' after this path.
+//│ ║  l.+1: 	open Option
+//│ ╙──      	     ^^^^^^
 
 :sjs
 None isDefined()
@@ -67,7 +71,7 @@ new Some(1)
 //│ = true
 
 
-open Option { Some, None, isDefined }
+open Option.{ Some, None, isDefined }
 
 (new Some(1)) isDefined()
 //│ = true
@@ -92,9 +96,9 @@ Option.oops
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
-open Option { oops }
+open Option.{ oops }
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.+1: 	open Option { oops }
+//│ ║  l.+1: 	open Option.{ oops }
 //│ ║        	              ^^^^
 //│ ╟── Module 'Option' does not contain member 'oops'
 //│ ║  in ../../mlscript-compile/Option.mls

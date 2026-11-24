@@ -1,0 +1,57 @@
+:.
+
+// The new resolver trusts written signatures. An override that writes its own signature is compiled against
+// that signature, while the clients that reach it through the overridden declaration rely on the inherited one.
+// Comparing the two signatures is the responsibility of the type checker, which is not reimplemented yet.
+// Until then, only their representations are compared (see slop/OverrideRepresentations.mls).
+// TODO: The type checker should reject each override below.
+
+private class Narrow(val only: Int)
+
+fun invoke(f: Any -> Int) = f(null)
+
+
+// The override's result accepts fewer arguments than the inherited result does.
+:breakme
+:e
+private fun narrowCallback(x: Narrow) = x.only
+private class WideResult with
+  open fun get(): Any -> Int = x => 0
+private class NarrowResult extends WideResult with
+  override fun get(): Narrow -> Int = narrowCallback
+fun wideResult(): WideResult = new NarrowResult
+
+:fixme
+invoke(wideResult().get())
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of null (reading 'only')
+
+
+// The same for the written type of a field.
+:breakme
+:e
+private fun narrowField(x: Narrow) = x.only
+private class WideField with
+  open val callback: Any -> Int = x => 0
+private class NarrowField extends WideField with
+  override val callback: Narrow -> Int = narrowField
+fun wideField(): WideField = new NarrowField
+
+:fixme
+invoke(wideField().callback)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of null (reading 'only')
+
+
+// The override passes its callback parameter arguments that the inherited parameter's callbacks reject.
+:breakme
+:e
+private fun needsNarrow(x) = x.only
+private class NarrowCallbacks with
+  open fun run(f: Narrow -> Int): Int = 0
+private class AnyCallbacks extends NarrowCallbacks with
+  override fun run(f: Any -> Int) = f(null)
+fun narrowCallbacks(): NarrowCallbacks = new AnyCallbacks
+fun runNarrow() = narrowCallbacks().run(needsNarrow)
+
+:fixme
+runNarrow()
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of null (reading 'only')

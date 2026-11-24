@@ -16,7 +16,7 @@ object L
 
 
 // :sir
-fun map(f, ls_map) = if ls_map is
+private fun map(f, ls_map) = if ls_map is
   h :: t then f(h) :: map(f, t)
   Nil then Nil
 let c = Cons(1, Nil) in
@@ -32,7 +32,7 @@ let c = Cons(1, Nil) in
 //│ = Cons(2, Nil)
 
 // :sir
-fun map(f, ls_map) = if ls_map is
+private fun map(f, ls_map) = if ls_map is
   h :: t then f(h) :: map(f, t)
   Nil then Nil
 fun c(a) = Cons(a, Nil)
@@ -49,7 +49,7 @@ map(x => x + 1, c(1))
 
 
 :expect Cons(2, Cons(3, Nil))
-fun map(ls, f) = if ls is
+private fun map(ls, f) = if ls is
   Nil then Nil
   h :: t then f(h) :: map(t, f)
 map(1 :: 2 :: Nil, x => x + 1)
@@ -85,7 +85,7 @@ sum(enum(3))
 
 
 :expect Cons(4, Cons(6, Nil))
-fun map(ls, f) = if ls is
+private fun map(ls, f) = if ls is
   Nil then Nil
   h :: t then f(h) :: map(t, f)
 map(map(id(1 :: 2 :: Nil), x => x + 1), x => x * 2)
@@ -100,7 +100,7 @@ map(map(id(1 :: 2 :: Nil), x => x + 1), x => x * 2)
 //│ = Cons(4, Cons(6, Nil))
 
 :expect Cons(7, Cons(5, Cons(3, Cons(1, Nil))))
-fun map(f, ls) = if ls is
+private fun map(f, ls) = if ls is
   Nil then Nil
   h :: t then f(h) :: map(f, t)
 fun enum(a) = if a < 0 then Nil else a :: enum(a - 1)
@@ -130,18 +130,6 @@ fun cons1(a1) = if a1 is
 cons(f(0)) + cons1(f(1))
 //│ deforest > >>> fusing >>>
 //│ deforest > Nil⁰ ->
-//│ deforest > 	match: a1⁰
-//│ deforest > Cons⁰(x⁰, tmp⁶) ->
-//│ deforest > 	match: a1⁰
-//│ deforest > 	fields: a1⁰.h⁰
-//│ deforest > 	fields: a1⁰.t⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: a1⁰
-//│ deforest > Cons⁰(y⁰, tmp⁷) ->
-//│ deforest > 	match: a1⁰
-//│ deforest > 	fields: a1⁰.h⁰
-//│ deforest > 	fields: a1⁰.t⁰
-//│ deforest > Nil⁰ ->
 //│ deforest > 	match: a¹
 //│ deforest > Cons⁰(x⁰, tmp⁶) ->
 //│ deforest > 	match: a¹
@@ -153,6 +141,18 @@ cons(f(0)) + cons1(f(1))
 //│ deforest > 	match: a¹
 //│ deforest > 	fields: a¹.h⁰
 //│ deforest > 	fields: a¹.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: a1⁰
+//│ deforest > Cons⁰(x⁰, tmp⁶) ->
+//│ deforest > 	match: a1⁰
+//│ deforest > 	fields: a1⁰.h⁰
+//│ deforest > 	fields: a1⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: a1⁰
+//│ deforest > Cons⁰(y⁰, tmp⁷) ->
+//│ deforest > 	match: a1⁰
+//│ deforest > 	fields: a1⁰.h⁰
+//│ deforest > 	fields: a1⁰.t⁰
 //│ deforest > <<< fusing <<<
 //│ = 2
 
@@ -180,20 +180,14 @@ f1(to(4))
 //│ = 12
 
 :expect Cons(4, Cons(6, Nil))
-fun map(ls, f) = if ls is
+private fun map(ls, f) = if ls is
   Nil then Nil
   h :: t then f(h) :: map(t, f)
 fun succ(x) = x + 1
 fun double(x) = x * 2
 map(map(1 :: 2 :: Nil, succ), double)
 //│ deforest > >>> fusing >>>
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls⁴
-//│ deforest > Cons⁰(tmp⁹, tmp¹⁰) ->
-//│ deforest > 	match: ls⁴
-//│ deforest > 	fields: ls⁴.h⁰
-//│ deforest > 	fields: ls⁴.t⁰
-//│ deforest > Cons⁰(1, tmp¹¹) ->
+//│ deforest > Cons⁰(1, tmp⁹) ->
 //│ deforest > 	match: ls⁴
 //│ deforest > 	fields: ls⁴.h⁰
 //│ deforest > 	fields: ls⁴.t⁰
@@ -203,6 +197,12 @@ map(map(1 :: 2 :: Nil, succ), double)
 //│ deforest > 	fields: ls⁴.t⁰
 //│ deforest > Nil⁰ ->
 //│ deforest > 	match: ls⁴
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls⁴
+//│ deforest > Cons⁰(tmp¹⁰, tmp¹¹) ->
+//│ deforest > 	match: ls⁴
+//│ deforest > 	fields: ls⁴.h⁰
+//│ deforest > 	fields: ls⁴.t⁰
 //│ deforest > <<< fusing <<<
 //│ = Cons(4, Cons(6, Nil))
 
@@ -217,18 +217,18 @@ fun f2(ls) = if ls is
 fun wrap(n) = to(n)
 f1(wrap(4)) + f2(wrap(5))
 //│ deforest > >>> fusing >>>
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls⁵
 //│ deforest > Cons⁰(n², tmp¹²) ->
 //│ deforest > 	match: ls⁵
 //│ deforest > 	fields: ls⁵.h⁰
 //│ deforest > 	fields: ls⁵.t⁰
 //│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls⁶
+//│ deforest > 	match: ls⁵
 //│ deforest > Cons⁰(n², tmp¹²) ->
 //│ deforest > 	match: ls⁶
 //│ deforest > 	fields: ls⁶.h⁰
 //│ deforest > 	fields: ls⁶.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls⁶
 //│ deforest > <<< fusing <<<
 //│ = 10
 
@@ -242,29 +242,29 @@ fun f2(ls, acc) = if ls is
   h :: t then f2(t, acc + h + 1)
 f1(to(4, Nil), 0) + f2(to(5, Nil), 0) + f1(to(6, Nil), 0)
 //│ deforest > >>> fusing >>>
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls⁷
 //│ deforest > Cons⁰(n³, acc⁰) ->
 //│ deforest > 	match: ls⁷
 //│ deforest > 	fields: ls⁷.h⁰
 //│ deforest > 	fields: ls⁷.t⁰
 //│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls⁸
+//│ deforest > 	match: ls⁷
 //│ deforest > Cons⁰(n³, acc⁰) ->
 //│ deforest > 	match: ls⁸
 //│ deforest > 	fields: ls⁸.h⁰
 //│ deforest > 	fields: ls⁸.t⁰
 //│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls⁷
+//│ deforest > 	match: ls⁸
 //│ deforest > Cons⁰(n³, acc⁰) ->
 //│ deforest > 	match: ls⁷
 //│ deforest > 	fields: ls⁷.h⁰
 //│ deforest > 	fields: ls⁷.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls⁷
 //│ deforest > <<< fusing <<<
 //│ = 51
 
 :expect Cons(12, Cons(18, Nil))
-fun map(ls, f) = if ls is
+private fun map(ls, f) = if ls is
   Nil then Nil
   h :: t then f(h) :: map(t, f)
 fun succ(x) = x + 1
@@ -272,19 +272,7 @@ fun double(x) = x * 2
 fun triple(x) = x * 3
 map(map(map(1 :: 2 :: Nil, succ), double), triple)
 //│ deforest > >>> fusing >>>
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls⁹
-//│ deforest > Cons⁰(tmp¹³, tmp¹⁴) ->
-//│ deforest > 	match: ls⁹
-//│ deforest > 	fields: ls⁹.h⁰
-//│ deforest > 	fields: ls⁹.t⁰
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: ls⁹
-//│ deforest > Cons⁰(tmp¹³, tmp¹⁴) ->
-//│ deforest > 	match: ls⁹
-//│ deforest > 	fields: ls⁹.h⁰
-//│ deforest > 	fields: ls⁹.t⁰
-//│ deforest > Cons⁰(1, tmp¹⁵) ->
+//│ deforest > Cons⁰(1, tmp¹³) ->
 //│ deforest > 	match: ls⁹
 //│ deforest > 	fields: ls⁹.h⁰
 //│ deforest > 	fields: ls⁹.t⁰
@@ -294,6 +282,18 @@ map(map(map(1 :: 2 :: Nil, succ), double), triple)
 //│ deforest > 	fields: ls⁹.t⁰
 //│ deforest > Nil⁰ ->
 //│ deforest > 	match: ls⁹
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls⁹
+//│ deforest > Cons⁰(tmp¹⁴, tmp¹⁵) ->
+//│ deforest > 	match: ls⁹
+//│ deforest > 	fields: ls⁹.h⁰
+//│ deforest > 	fields: ls⁹.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: ls⁹
+//│ deforest > Cons⁰(tmp¹⁴, tmp¹⁵) ->
+//│ deforest > 	match: ls⁹
+//│ deforest > 	fields: ls⁹.h⁰
+//│ deforest > 	fields: ls⁹.t⁰
 //│ deforest > <<< fusing <<<
 //│ = Cons(12, Cons(18, Nil))
 
@@ -302,10 +302,10 @@ map(map(map(1 :: 2 :: Nil, succ), double), triple)
 
 :expect Cons(11, Cons(9, Cons(7, Cons(5, Cons(3, Cons(1, Nil))))))
 fun mk(n) = if n < 0 then Nil else n :: mk(n - 1)
-fun map(f, ls_map) = if ls_map is
+private fun map(f, ls_map) = if ls_map is
   h :: t then f(h) :: map(f, t)
   Nil then Nil
-fun map1(f, ls_map1) = if ls_map1 is
+private fun map1(f, ls_map1) = if ls_map1 is
   h :: t then f(h) :: map1(f, t)
   Nil then Nil
 fun incr(x) = x + 1
@@ -357,7 +357,7 @@ sum(enumFromTo(1,10))
 
 :expect Cons(5, Cons(6, Cons(7, Nil)))
 fun enumFromTo(a, b) = if a < b then a :: enumFromTo(a + 1, b) else Nil
-fun map(f, ls) =
+private fun map(f, ls) =
   if ls is
     Nil then Nil
     h :: t then f(h) :: map(f, t)
@@ -374,7 +374,7 @@ map(x => x + 4, enumFromTo(1, 4))
 
 :expect Cons(5, Cons(6, Cons(7, Nil)))
 fun enumFromTo(a, b) = if a < b then a :: enumFromTo(a + 1, b) else Nil
-fun map(f, ls) =
+private fun map(f, ls) =
   (if ls is
     Nil then f => Nil
     h :: t then f => f(h) :: map(f, t)
@@ -413,7 +413,7 @@ sum(enumFromTo(1, 10), 0)
 :expect Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Cons(6, Nil))))))
 fun mk(n) = if n < 0 then Nil else n :: mk(n - 1)
 fun incr(x) = x + 1
-fun map(f, xs_map) = if xs_map is
+private fun map(f, xs_map) = if xs_map is
   Nil then Nil
   x :: xs then f(x) :: map(f, xs)
 fun rev(xs_rev, acc) = if xs_rev is
@@ -421,12 +421,12 @@ fun rev(xs_rev, acc) = if xs_rev is
   Nil then acc
 map(incr, rev(id(mk(5)), Nil))
 //│ deforest > >>> fusing >>>
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: xs_map⁰
 //│ deforest > Cons⁰(x¹, acc¹) ->
 //│ deforest > 	match: xs_map⁰
 //│ deforest > 	fields: xs_map⁰.h⁰
 //│ deforest > 	fields: xs_map⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: xs_map⁰
 //│ deforest > <<< fusing <<<
 //│ = Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Cons(6, Nil))))))
 
@@ -435,7 +435,7 @@ map(incr, rev(id(mk(5)), Nil))
 :expect Cons(1, Cons(2, Cons(3, Cons(4, Nil))))
 fun mk(n) = if n < 0 then Nil else n :: mk(n - 1)
 fun incr(x) = x + 1
-fun map(f, xs_map) = if xs_map is
+private fun map(f, xs_map) = if xs_map is
   Nil then Nil
   x :: xs then f(x) :: map(f, xs)
 fun rev(xs_rev, acc) = if xs_rev is
@@ -516,12 +516,6 @@ fun rev(a, ys) = if ys is
   Nil then a
 count(0, rev(Nil, 1 :: 2 :: Nil))
 //│ deforest > >>> fusing >>>
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: xs⁰
-//│ deforest > Cons⁰(h¹, a⁷) ->
-//│ deforest > 	match: xs⁰
-//│ deforest > 	fields: xs⁰.h⁰
-//│ deforest > 	fields: xs⁰.t⁰
 //│ deforest > Cons⁰(1, tmp²⁶) ->
 //│ deforest > 	match: ys⁰
 //│ deforest > 	fields: ys⁰.h⁰
@@ -532,6 +526,12 @@ count(0, rev(Nil, 1 :: 2 :: Nil))
 //│ deforest > 	fields: ys⁰.t⁰
 //│ deforest > Nil⁰ ->
 //│ deforest > 	match: ys⁰
+//│ deforest > Cons⁰(h¹, a⁷) ->
+//│ deforest > 	match: xs⁰
+//│ deforest > 	fields: xs⁰.h⁰
+//│ deforest > 	fields: xs⁰.t⁰
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: xs⁰
 //│ deforest > <<< fusing <<<
 //│ = 2
 
@@ -552,7 +552,7 @@ last(p)
 
 
 :expect Cons(1, Cons(0, Nil))
-fun map(f, xs_map) = if xs_map is
+private fun map(f, xs_map) = if xs_map is
   Nil then Nil
   x :: xs then f(x) :: map(f, xs)
 map(x => if x is A then 1 else 0, A :: B :: Nil)
@@ -593,23 +593,23 @@ c(T(A, T(B, L, L), T(A, L, L)))
 //│ deforest > 	fields: x⁴.r⁰
 //│ deforest > A⁰ ->
 //│ deforest > 	match: n⁵
-//│ deforest > T⁰(A⁰, L⁰, L⁰) ->
-//│ deforest > 	match: x⁴
-//│ deforest > 	fields: x⁴.n⁴
-//│ deforest > 	fields: x⁴.l⁰
-//│ deforest > 	fields: x⁴.r⁰
-//│ deforest > A⁰ ->
-//│ deforest > 	match: n⁵
-//│ deforest > L⁰ ->
-//│ deforest > 	match: x⁴
-//│ deforest > L⁰ ->
-//│ deforest > 	match: x⁴
 //│ deforest > T⁰(B⁰, L⁰, L⁰) ->
 //│ deforest > 	match: x⁴
 //│ deforest > 	fields: x⁴.n⁴
 //│ deforest > 	fields: x⁴.l⁰
 //│ deforest > 	fields: x⁴.r⁰
 //│ deforest > B⁰ ->
+//│ deforest > 	match: n⁵
+//│ deforest > L⁰ ->
+//│ deforest > 	match: x⁴
+//│ deforest > L⁰ ->
+//│ deforest > 	match: x⁴
+//│ deforest > T⁰(A⁰, L⁰, L⁰) ->
+//│ deforest > 	match: x⁴
+//│ deforest > 	fields: x⁴.n⁴
+//│ deforest > 	fields: x⁴.l⁰
+//│ deforest > 	fields: x⁴.r⁰
+//│ deforest > A⁰ ->
 //│ deforest > 	match: n⁵
 //│ deforest > L⁰ ->
 //│ deforest > 	match: x⁴
@@ -654,7 +654,7 @@ max(3 :: 2 :: 4 :: 1 :: 0 :: Nil, 0)
 
 
 :expect Some(4)
-fun filter(ls, f) = if ls is
+private fun filter(ls, f) = if ls is
   h :: t and
     f(h) then h :: filter(t, f)
     else filter(t, f)
@@ -666,7 +666,7 @@ fun last(ls_last) =
   if ls_last is
     h :: t then Some(go(h, t))
     Nil then None
-fun lastFilter(ls, f) = last(filter(ls, f))
+private fun lastFilter(ls, f) = last(filter(ls, f))
 lastFilter(id(1 :: 2 :: 3 :: 4 :: 5 :: Nil), x => (x % 2 == 0))
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
@@ -973,11 +973,7 @@ f(3)
 //│ deforest > 	fields: a⁸.x⁹
 //│ deforest > <<< fusing <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f$a_A, f$a_A1, f$g, f$f, f$g1;
-//│ @private
-//│ define f$g as fun f$g⁰(a) {
-//│   return (a(undefined, undefined, undefined) as! Int⁰)
-//│ };
+//│ let f$a_A, f$a_A1, f$f, f$g, f$g1;
 //│ @private
 //│ define f$f as fun f$f⁰(x) {
 //│   let scrut, tmp;
@@ -987,22 +983,26 @@ f(3)
 //│       return 0
 //│     else
 //│       set tmp = f$a_A⁰(x);
-//│       return f$g¹(tmp)
+//│       return f$g⁰(tmp)
 //│   end
+//│ };
+//│ @private
+//│ define f$g as fun f$g⁰(a) {
+//│   return (a(undefined, undefined, undefined) as! Int⁰)
 //│ };
 //│ @private
 //│ define f$g1 as fun f$g¹(a) {
 //│   return (a(undefined, undefined, undefined) as! Int⁰)
 //│ };
 //│ @affine(1) @private
-//│ define f$a_A as fun f$a_A¹(A_x)(fv_arg$A$0$, fv_y, fv_tmp) {
-//│   set fv_tmp = -⁰(A_x, 1);
-//│   return f⁰(fv_tmp)
-//│ };
-//│ @affine(1) @private
-//│ define f$a_A1 as fun f$a_A⁰(A_x)(fv_arg$A$0$, fv_y, fv_tmp) {
+//│ define f$a_A as fun f$a_A⁰(A_x)(fv_arg$A$0$, fv_y, fv_tmp) {
 //│   set fv_tmp = -⁰(A_x, 1);
 //│   return f$f⁰(fv_tmp)
+//│ };
+//│ @affine(1) @private
+//│ define f$a_A1 as fun f$a_A¹(A_x)(fv_arg$A$0$, fv_y, fv_tmp) {
+//│   set fv_tmp = -⁰(A_x, 1);
+//│   return f⁰(fv_tmp)
 //│ };
 //│ define f¹ as fun f⁰(x) {
 //│   let scrut, tmp;
@@ -1012,16 +1012,15 @@ f(3)
 //│       return 0
 //│     else
 //│       set tmp = f$a_A¹(x);
-//│       return f$g⁰(tmp)
+//│       return f$g¹(tmp)
 //│   end
 //│ };
 //│ define g⁰ as fun g¹(a) {
-//│   let y, arg$A$0$, tmp;
+//│   let arg$A$0$, tmp;
 //│   match a
 //│     A² =>
 //│       set arg$A$0$ = a.x⁹;
-//│       set y = (arg$A$0$ as! Int⁰);
-//│       set tmp = -⁰(y, 1);
+//│       set tmp = -⁰(arg$A$0$, 1);
 //│       return f⁰(tmp)
 //│     else
 //│       return 1

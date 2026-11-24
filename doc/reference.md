@@ -36,7 +36,7 @@ which is an evolving language that has not stabilized just yet.
 The repository contains two kinds of MLscript files:
 
 * **Compilation files**, in `hkmc2/shared/src/test/mlscript-compile/`, which are compiled to JavaScript `.mls` modules.
-* **Diff-test files**, in `hkmc2/shared/src/test/mlscript/`, which contain both source code and *golden test output*.
+* **Diff-test (aka "worksheet") files**, in `hkmc2/shared/src/test/mlscript/`, which contain both source code and *golden test output*.
   Lines beginning with `//│` are compiler output that is updated automatically — not source code.
   Regular `//` comment lines are source code.
   Diff-test blocks are separated by empty lines and tested one after the other.
@@ -769,6 +769,8 @@ value, so only a member without parameter lists can override it, while `fun f(x:
 An override must accept the runtime representations of the inherited parameters, and its results
 must fit the inherited result representation. Unannotated parameters inherit their representations;
 an ordinary member without a result annotation uses the inherited result representation too.
+An inherited representation that is itself inferred accounts for the overriding members
+(see Inferred Runtime Representations).
 An annotated parameter may accept a wider representation on JavaScript. Wasm compiles overrides
 with the introducing method's physical signature, so their parameter representations must match.
 For the same reason, Wasm also requires an override to keep the introducing method's number of
@@ -1378,7 +1380,7 @@ if term is refined(Term) and term is
 The `@compile` annotation forces compile-time expansion of a pattern:
 
 ```mlscript
-open annotations { compile }
+open annotations.{ compile }
 fun foo(x) = if x is @compile Box then "yes" else "no"
 fun foo(x) = if x is @compile 42 then "yes" else "no"
 ```
@@ -1685,6 +1687,40 @@ inference, but returning it or storing it in an exposed record or tuple makes it
 interface subject to the same check. Callable result annotations provide the
 declared parameter interface when checking returned functions.
 
+Every type named in an exposed annotation exposes its public instance operations,
+including inherited methods and writes to mutable fields. For example,
+`fun make(): Cell` exposes those operations on `Cell`. Both `Box[Cell]` and
+`Phantom[Cell]` expose `Cell`, even if `Phantom` never uses its type parameter.
+The same rule follows type aliases and the parameter and result types of functions.
+For example, when `Reader[T] = T -> Str` and `Box[T]` is generic, `Reader[Box]`
+exposes `Box` and admits unknown values for its contents wherever it occurs in
+an exposed signature. Writing `Reader[Box[Item]]` specifies the contents.
+In a local expression such as `Box(item) as Box`, the contents are inferred from `item`.
+The annotation of a value that escapes is exposed too, even when it is written on a private
+definition: if `private fun reader(): Box -> Str` is returned by an exported function with
+no result annotation, clients can call the result with boxes of unknown contents.
+An omitted type argument can also expose an inferred value. For example, if the body of
+`fun callbacks(): Box` supplies a function as the box's contents, that function
+must also accept external calls.
+
+An exposed operation admits calls or writes to every implementation that overrides
+it. An unannotated member also exposes the values its implementations return or
+store, including values supplied to a field through a constructor argument or a later write.
+Every override must handle the parameter types and arguments its base admits,
+even in a private hierarchy. If `Base.read(x)` leaves `x` unannotated, both
+`new Base().read(null)` and `p.read(null)` with `p: Base` supply `null` to
+the corresponding parameter in the base and every override.
+An override that omits a parameter or mutable field annotation inherits the
+base member's type for that input. For example, if `Middle[T]` overrides
+`Slot[T].item: T` without repeating the annotation, a write through `Middle[Int]`
+uses `Int`, and an override of `Middle[Argument]` inherits `Argument`.
+If no declaration in the field's override chain supplies a type, writes through
+it reach the overriding field even in a private hierarchy. Each field keeps its
+own initializer.
+If the base parameter has type `Box[Item]` and the override writes `x: Box`,
+the overriding body must handle unknown contents even when all local calls
+supply boxes of `Item`. Writing `x: Box[Item]` gives the body access to `Item`.
+
 Generic parameters remain opaque regardless of strict mode, visibility, or local
 callers. For example, `private fun read[A](x: A) = x.a` is invalid because `A`
 does not supply member `a`, even when every call supplies a record with that field.
@@ -1734,25 +1770,31 @@ let value = wasm.i32.const(1)
 set value = wasm.i64.const(2)       // error: `Int32` and `Int64` have no common representation
 ```
 
-Slots that can receive values from outside the compilation unit admit them: the unannotated
-parameters of exposed definitions (see Resolution Interfaces) are inferred with unknown inputs.
-Worksheet blocks are compiled one after the other, so without `#lang(strictResolution: true)`,
-later blocks must use an earlier block's definitions with the representations inferred from that
-block's own uses.
+Compilation files check their exported interfaces to allow for arbitrary calls from
+unknown compilation units (see [Resolution](#resolution)).
+(Worksheet blocks perform this exposure check for their public definitions only with
+`#lang(strictResolution: true)`.)
+Unannotated parameters exposed by these checks are made to admit unknown (boxed) inputs.
+So, a file exporting `fun foo(x) = x` and also containing the code `(n: Int32) => foo(n)`
+fails to compile, as `x` is inferred to have an unknown representation.
+
+Worksheet blocks are compiled one after the other, and the representations inferred for a block
+are final once it is compiled. Later blocks must use earlier definitions and `let` variables
+with their established representations; new uses cannot widen them.
 
 A mutable field holds its initializer and then the values assigned to it, through any receiver that
 can be an instance of its class, so an unannotated mutable field takes the representation of all of
-them. Since other compilation units can assign values to the mutable fields that a compilation unit
-exposes, those must declare their types, as their representations must not depend on the values that
-the compilation unit happens to assign to them:
+them. Other compilation units can assign values to the mutable fields that a compilation unit
+exposes, so an unannotated exposed mutable field also admits unknown inputs, like the unannotated
+parameter of an exposed function. Declaring its type restricts them:
 
 ```mlscript
 private class Cell(mut val value)  // `value` is represented as `Int32`
 private fun reset(cell) = set cell.value = wasm.i32.const(0)
 reset(Cell(wasm.i32.const(1)))
 
-class Counter(mut val count)       // error: `count` is exposed, so its type must be declared
-class Counter(mut val count: Int)  // ok
+class Counter(mut val count)       // `count` is exposed, so it has an unknown representation
+class Tally(mut val count: Int)    // `count` is represented as `Int`
 ```
 
 Mutable record fields (see Record Literals) can be assigned too, but cannot declare their types:
@@ -1760,6 +1802,23 @@ when exposed, they take the unknown representation. Through a record type declar
 field, the values it describes can be assigned values of that field's input type, which their own
 fields therefore admit. Exposing a record also exposes values stored by assignments, including
 through fields copied by a mutable spread: those values can be read by clients just like initializers.
+
+Overrides inherit the representations of the members they override (see Virtual Methods), so an
+unannotated member with none to inherit takes the representations of its whole override family.
+Its result takes the representation of what the members overriding it return, as calls resolved to
+it can dispatch to them: an annotated override contributes its declared result, and an unannotated
+one the values that it returns. Each of its parameters takes the representation of the arguments
+passed to the unannotated parameters overriding it, which inherit that representation. An annotated
+overriding parameter keeps its own representation, which must still accept the inherited one.
+
+```mlscript
+private class Visitor() with
+  open fun visit(node) = ()       // the result holds `()` and integers: unknown representation
+private class Counter() extends Visitor() with
+  override fun visit(node) = 1
+```
+
+Annotating the overridden member fixes its representations, which its overrides must then fit.
 
 ### Generic Type Parameters
 
@@ -1827,16 +1886,18 @@ lookup still combines the fields of record intersections.
 
 ```mlscript
 type Point = { x: Num, y: Num }
-type Cursor[T] = mut { position: T }
-type CursorView = Cursor[in Int out (Int | Str)]
+type CursorView = mut { position: in Int out (Int | Str) }
 ```
 
-The values that a mutable record type describes can receive writes through its fields.
+`CursorView` accepts an `Int` on writes to `position` and exposes `Int | Str` on reads.
+A mutable record field can use the same forms as a type argument. A plain `T` supplies both bounds,
+`in S` has the output bound `Any`, and `out T` has the input bound `Nothing`.
+For `type Cell[A] = mut { f: A }`, `Cell[in S out T]` is equivalent to `mut { f: in S out T }`.
+An immutable `{ f: U }` has only a read interface.
+
 Field outputs are covariant and field inputs are contravariant. Thus `mut { f: S } <: mut { f: T }`
-contributes both `S <: T` for reads and `T <: S` for writes. An immutable `{ f: U }` has only a
-read interface. For `type Cell[A] = mut { f: A }`, `Cell[in S out T]` accepts `S` on writes and
-exposes `T` on reads. The two positions are interpreted separately before substituting type
-arguments; enclosing negative positions reverse these choices, as for function inputs.
+contributes both `S <: T` for reads and `T <: S` for writes. Substitution interprets the two
+positions separately. Enclosing negative positions reverse polarity, as for function inputs.
 Intersecting record interfaces intersects their shared fields' output types and unions their
 input types. Assigning a callback constrains it against the input type independently of reads.
 
@@ -1936,16 +1997,75 @@ import "../../mlscript-compile/Iter.mls"
 Bring module members into scope:
 
 ```mlscript
-open Option
-open Stack { Cons, Nil }           // selective open
-open Iter                          // open all members
-do open M; ...                     // locally open
+open Option.{ * }
+open Stack.{ Cons, Nil }           // selective `open`
+open Iter.{ * }                    // open all members
+
+Stack.{ print(Nil) }               // local `open`
+type AnyList =
+  Stack.{ Cons | Nil }
 ```
+
+Selective opens accept dotted paths and nested groups. Each selected leaf becomes
+a binding in the enclosing scope; intermediate path segments do not introduce bindings:
+
+```mlscript
+open Foo.Bar.c                    // import c
+open Foo.Bar.{ c, d }             // import c and d
+open Foo.{ a, b, Bar.{ c, d } }    // import a, b, c, and d
+```
+
+Indentation can replace the braces after a dot, including in nested groups:
+
+```mlscript
+open Foo.
+  a
+  b
+  Bar.
+    c, d
+```
+
+Operator names work in either form, including `open Stack.{ :: }` or a lone `::`
+on an indented line after `open Stack.`. In dotted lists, a bare `*` selects all
+members; `(*)` selects the multiplication operator. These forms work in every
+language version:
+
+```mlscript
+open M.{ * }                      // wildcard open
+open M.{ (*) }                    // import only the * operator
+```
+
+Use `as` to rename an imported member or module, and `as _` to hide a member:
+
+```mlscript
+open M.m as n
+open M as N                       // bind the module itself as N
+open M.N.{ m as n, o, p }
+open M.{ *, m as _ }              // all members except m
+```
+
+Each statement processes its entries from left to right. Renaming or hiding
+removes earlier imports of that member from the same statement, including its
+earlier wildcards. A later wildcard or explicit import can expose the name again:
+
+```mlscript
+open M.{ *, m as n }              // n is available; m is excluded
+open M.{ m as n, * }              // both m and n are available
+open M.{ *, m as _, * }           // m is available again
+```
+
+These exclusions apply to the selected receiver and do not remove lexical bindings
+or imports from earlier statements. Hidden names must still exist in the source.
+
+The old `open Foo { a, b }` form, its indentation-only equivalent, and the bare
+wildcard form `open Foo` remain supported. From `0.3.2`, they warn and suggest
+the dotted forms. Earlier versions also retain `open Foo` for wildcards and treat
+`*` as an operator name in undotted selective opens. `open Foo.Bar` imports `Bar` itself.
 
 With `newResolution` enabled, wildcard opens are consulted only when a name has
 no explicit binding in the current scope or any enclosing scope. Explicit
 bindings include local variables, parameters, member definitions, imports, and
-selective opens such as `open Stack { Cons, Nil }`. An inner wildcard open does
+selective opens such as `open Stack.{ Cons, Nil }`. An inner wildcard open does
 not shadow an explicit binding in an outer scope. Moving a wildcard open before
 or after an explicit binding does not give it priority over that binding.
 
@@ -1956,7 +2076,7 @@ even though `M` also provides a member named `x`:
 val x = 1
 module M { val x = 2; val y = 3 }
 fun example() =
-  open M
+  open M.{ * }
   x + y                            // explicit x; y from M
 ```
 
@@ -1967,6 +2087,83 @@ over an overloaded class or function supplied by a wildcard open.
 
 If wildcard lookup finds several distinct members with the requested name, the
 reference is ambiguous; the order of the opens does not choose a winner.
+Capitalized values first consult their [implicit namespaces](#implicit-namespaces).
+
+### Implicit Namespaces
+
+With `newResolution` enabled, a capitalized name without an explicit binding can
+name a member of an *implicit namespace* of the type that its value is required
+to have, such as the companion module or object of the class or type alias of that
+type. Resolution finds these types by following the flow of the value into parameter,
+result, and field annotations, as well as ascriptions.
+
+```mlscript
+import "./Option.mls" // type Option[A] = Option.{ Some[A] | None }
+
+fun get(x: Option[Int]) = if x is Option.Some(v) then v else 0
+get(Some(1)) // selects Option.Some
+get(None)    // selects Option.None
+```
+
+The implicit namespaces of a type come from the classes and type aliases that it
+names as written, before aliases are expanded:
+
+- A class has its companion module or object, then the module or object declaring
+  it, then the namespaces of its parent class.
+- A type alias has its companion module or object, then the module or object
+  declaring it, then the namespaces of the classes and aliases that its body names.
+- The components of a union or an intersection are considered separately.
+
+Each class or alias only contributes the first of its namespaces that defines an
+accessible member with the requested name. For instance, where `paint` takes a
+`Palette.Hue`, `paint(Red)` selects `Palette.Hue.Red` if the companion module `Hue`
+defines `Red`, even if the declaring module `Palette` defines another `Red`; and
+where `Bird` extends `Animal` without a companion of its own, a parameter of type
+`Bird` makes the members of the companion of `Animal` available.
+
+This applies to values and to the classes instantiated by `new`. As in Swift's
+implicit member chains, such a name can also be the root of a chain of selections
+and applications; the type required of the result of the chain determines the
+namespace. For instance, `Some` in `get(Some(1))`, `Red` in `paint(Red.lighter)`,
+and `Hex` in `paint(Hex("f00").lighter)` name members of the namespaces of the
+parameter types of `get` and `paint`. Types, their selection paths, and `extends`
+clauses only consult explicit bindings and wildcard opens.
+So do annotations, which are interpreted as soon as they are elaborated.
+
+In a pattern, the values that reach the scrutinee determine the namespaces of the
+head of a constructor pattern, as the type required of a value does. A value of a
+declared type has the namespaces of that type, and an instance of a class or object
+has those of its class. With `x: Option[Int]`, `if x is Some(v) then v else 0`
+tests for `Option.Some`, as does `if Option.Some(1) is Some(v) then v else 0`,
+whose class `Some` is declared by module `Option`. Nested patterns observe the
+values of the fields that they match. As for values, the head of a pattern can be
+a chain of selections whose root names the member, as `Plain` in `t is Plain.Grass`.
+
+A *leading-dot selection* `.name` explicitly requires an implicit namespace: it
+never consults the scope where it is written, neither its explicit bindings nor
+its wildcard opens, and its name need not be capitalized. For instance, with
+`module Color with val red = ...`, `paint(.red)` selects `Color.red`, even where
+another `red` is in scope, and `get(.None)` selects `Option.None`. Leading-dot
+selections can start chains too, as in `paint(.red.lighter)`, and they can head
+constructor patterns, as in `if x is .None then 0 else 1`.
+
+Implicit namespaces take precedence over wildcard opens, but not over explicit
+bindings, including selective opens such as `open AltOption.{ Some }`. A name
+whose value flows into types whose namespaces provide distinct members, such as
+`Option[Int]` and `AltOption[Int]`, is ambiguous.
+
+Resolution looks up implicit namespaces as flow reveals them, immediately
+propagating the candidates they supply. It settles each such name once the rest
+of its block (a file or a worksheet block) is resolved. If no namespace supplies
+a candidate for the name by then, its wildcard opens supply it. Names are settled
+in source order, so the definitions
+supplied to earlier names can reveal the namespaces of later ones: in
+`Wrap(Some(1))`, where an open supplies `Wrap`, its parameter type can be the
+namespace of `Some`. A namespace revealed later, for instance by a later
+worksheet block, cannot change the definition already selected; resolution
+reports it as an error instead, which qualifying the name resolves.
+Names without explicit bindings that are not found at all are reported at the
+same point, whether or not they are capitalized.
 
 ### `open M in` Scope
 
@@ -1994,12 +2191,12 @@ instance Foo::method(args)   // receiver-first syntax
 instance.Foo#method()        // hash syntax (inside open scope)
 ```
 
-### `open annotations { compile }`
+### `open annotations.{ compile }`
 
 Open the `annotations` module to use the `@compile` annotation in patterns:
 
 ```mlscript
-open annotations { compile }
+open annotations.{ compile }
 fun foo(x) = if x is @compile Box then "yes" else "no"
 ```
 
@@ -2011,7 +2208,9 @@ Flow types (`:flow` mode) enable type inference with a structural/flow-sensitive
 
 ### Leading Dot Access (Flow Values)
 
-In flow mode, a leading dot creates a *flow value* that resolves its type from context:
+With `newResolution` enabled, leading-dot selections resolve through
+[implicit namespaces](#implicit-namespaces). In the legacy flow mode, a leading dot
+creates a *flow value* that resolves its type from context:
 
 ```mlscript
 :flow
@@ -2324,7 +2523,7 @@ Math.sin(x); Math.cos(x); Math.tan(x)
 
 ### Predef Functions
 
-Imported automatically when `open Predef` is used (or when `import "./Predef.mls"` is present):
+Imported automatically when `open Predef.{ * }` is used (or when `import "./Predef.mls"` is present):
 
 ```mlscript
 fun id(x) = x
@@ -2360,7 +2559,7 @@ fun enterHandleBlock(handler, body) = ...
 
 ```mlscript
 import "./Stack.mls"
-open Stack
+open Stack.{ * }
 
 type Stack[A] = Cons[A] | Nil
 data class (::) Cons[A](head: A, tail: Stack[A])
@@ -2384,7 +2583,7 @@ xs :+ y                         // append single element
 
 ```mlscript
 import "./Option.mls"
-open Option { Some, None }
+open Option.{ Some, None }
 
 type Option[A] = Some[A] | None
 data class Some[T](value)
@@ -2405,7 +2604,7 @@ the resolver does not yet track their yielded element types.
 
 ```mlscript
 import "./Iter.mls"
-open Iter
+open Iter.{ * }
 
 class Iterable(mk)           // wraps an iterator-factory
 class Iterator(next)         // wraps a next-function
@@ -2425,7 +2624,7 @@ xs toStack()                 // force to Stack
 
 ```mlscript
 import "./StrOps.mls"
-open StrOps
+open StrOps.{ * }
 
 (~) concat2(a, b)            // string concat with ~ operator
 concat(...xs)                // join multiple strings

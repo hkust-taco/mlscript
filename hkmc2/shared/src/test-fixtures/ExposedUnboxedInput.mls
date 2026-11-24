@@ -1,0 +1,8 @@
+// Local unboxed calls and external callers must share one parameter representation.
+#lang(0.3.x)
+#lang(strictResolution: false, eagerResolution: false)
+
+module ExposedUnboxedInput with
+  val input: Int32 = unsafe.undefined
+  fun identity(value) = value
+  identity(input)

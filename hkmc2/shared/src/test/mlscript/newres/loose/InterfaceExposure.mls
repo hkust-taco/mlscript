@@ -1,15 +1,38 @@
 :.
 
-// Non-strict worksheet blocks retain local inference for public definitions.
-:expect 1
+// A known local call cannot supply the member interface for every external caller.
+:e
 fun select(x) = x.a
 select({a: 1})
-//│ = 1
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	fun select(x) = x.a
+//│ ║        	                ^^^
+//│ ╟── Cannot resolve member 'a' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+1: 	fun select(x) = x.a
+//│ ║        	           ^
+//│ ╟── 'select' is exposed by this compilation unit.
+//│ ║  l.+1: 	fun select(x) = x.a
+//│ ╙──      	^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-:expect 2
+:e
 fun returned() = x => x.a
 returned()({a: 2})
-//│ = 2
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	fun returned() = x => x.a
+//│ ║        	                      ^^^
+//│ ╟── Cannot resolve member 'a' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+1: 	fun returned() = x => x.a
+//│ ║        	                 ^
+//│ ╟── This value is returned here.
+//│ ║  l.+1: 	fun returned() = x => x.a
+//│ ║        	                 ^^^^^^^^
+//│ ╟── 'returned' is exposed by this compilation unit.
+//│ ║  l.+1: 	fun returned() = x => x.a
+//│ ╙──      	^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Type parameters remain opaque independently of visibility and exposure checks.
 :e

@@ -8,7 +8,7 @@ import "url"
 import "./Predef.mls"
 import "./StrOps.mls"
 
-open Predef
+open Predef.{ * }
 
 module Term with...
 

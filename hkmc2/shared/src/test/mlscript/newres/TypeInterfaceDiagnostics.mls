@@ -10,9 +10,7 @@ xs.0.value
 //│ ║  l.+4: 	xs.0.value
 //│ ║        	^^^^^^^^^^
 //│ ╟── Value with an empty interface does not contain member 'value'
-//│ ║  l.+2: 	type Items[A] = Array[A]
-//│ ║        	                      ^
-//│ ╟── This type argument specifies only an input bound.
+//│ ╟── Only an input bound appears here.
 //│ ║  l.+3: 	let xs = (mut [] as Items[in Item])
 //│ ║        	                          ^^^^^^^
 //│ ╙── Values read through it have no output bound more specific than 'Any'.
@@ -29,9 +27,7 @@ xs.0.value
 //│ ║  l.+4: 	xs.0.value
 //│ ║        	^^^^^^^^^^
 //│ ╟── Value with an empty interface does not contain member 'value'
-//│ ║  l.+2: 	type Items[A] = Array[A | Int]
-//│ ║        	                      ^^^^^^^
-//│ ╟── This type argument specifies only an input bound.
+//│ ╟── Only an input bound appears here.
 //│ ║  l.+3: 	let xs = (mut [] as Items[in Item])
 //│ ║        	                          ^^^^^^^
 //│ ╙── Values read through it have no output bound more specific than 'Any'.
@@ -130,9 +126,7 @@ fun invoke(xs: Array[in Item]) = xs.0()
 //│ ║  l.+2: 	fun invoke(xs: Array[in Item]) = xs.0()
 //│ ║        	                                 ^^^^^^
 //│ ╟── Value with an empty interface cannot be called like a function.
-//│ ║  l.+2: 	fun invoke(xs: Array[in Item]) = xs.0()
-//│ ║        	                     ^^^^^^^
-//│ ╟── This type argument specifies only an input bound.
+//│ ╟── Only an input bound appears here.
 //│ ║  l.+2: 	fun invoke(xs: Array[in Item]) = xs.0()
 //│ ║        	                     ^^^^^^^
 //│ ╙── Values read through it have no output bound more specific than 'Any'.
@@ -307,9 +301,7 @@ fun secondInputOnly(xs: Array[in Str]) = xs.[0].length
 //│ ║  l.+1: 	fun firstInputOnly(xs: Array[in Int]) = xs.[0].length
 //│ ║        	                                          ^^^^^^^^^^^
 //│ ╟── Value with an empty interface does not contain member 'length'
-//│ ║  l.+1: 	fun firstInputOnly(xs: Array[in Int]) = xs.[0].length
-//│ ║        	                             ^^^^^^
-//│ ╟── This type argument specifies only an input bound.
+//│ ╟── Only an input bound appears here.
 //│ ║  l.+1: 	fun firstInputOnly(xs: Array[in Int]) = xs.[0].length
 //│ ║        	                             ^^^^^^
 //│ ╙── Values read through it have no output bound more specific than 'Any'.
@@ -317,9 +309,7 @@ fun secondInputOnly(xs: Array[in Str]) = xs.[0].length
 //│ ║  l.+2: 	fun secondInputOnly(xs: Array[in Str]) = xs.[0].length
 //│ ║        	                                           ^^^^^^^^^^^
 //│ ╟── Value with an empty interface does not contain member 'length'
-//│ ║  l.+2: 	fun secondInputOnly(xs: Array[in Str]) = xs.[0].length
-//│ ║        	                              ^^^^^^
-//│ ╟── This type argument specifies only an input bound.
+//│ ╟── Only an input bound appears here.
 //│ ║  l.+2: 	fun secondInputOnly(xs: Array[in Str]) = xs.[0].length
 //│ ║        	                              ^^^^^^
 //│ ╙── Values read through it have no output bound more specific than 'Any'.

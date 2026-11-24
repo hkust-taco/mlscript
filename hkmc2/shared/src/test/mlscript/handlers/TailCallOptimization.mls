@@ -1,3 +1,4 @@
+:.
 :js
 :effectHandlers
 :lift
@@ -50,15 +51,15 @@ hi(0)
 //│       n = tmp2;
 //│       continue loopLabel;
 //│     }
-//│     runtime.unwind(hi, -1, "TailCallOptimization.mls:31:1", null, null, 1, 1, n, 0);
+//│     runtime.unwind(hi, -1, "TailCallOptimization.mls:32:1", null, null, 1, 1, n, 0);
 //│     return runtime.Unit;
 //│   }
 //│ };
 //│ $_stack$_safe$_body$_ = (undefined, function () {
 //│   return hi(0)
 //│ });
-//│ tmp1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_);
+//│ tmp1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_) /* as! Int */;
 //│ if (runtime.curEffect === null) { return tmp1 }
-//│ return runtime.topLevelEffect(false);
+//│ return runtime.topLevelEffect(false) /* as! Int */;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0

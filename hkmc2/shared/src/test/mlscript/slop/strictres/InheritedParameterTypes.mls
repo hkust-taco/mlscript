@@ -1,0 +1,127 @@
+:.
+
+private class Item(val n: Int)
+
+
+// An override that receives no direct call still inherits the written parameter type.
+:e
+private fun onlyOf(y) = y.only
+private class AnyReader with
+  open fun read(x: Any): Int = 0
+private class ForwardingReader extends AnyReader with
+  override fun read(x) = onlyOf(x)
+private fun readAny(p: AnyReader) = p.read(null)
+onlyOf({only: 1})
+readAny(new ForwardingReader)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun onlyOf(y) = y.only
+//│ ║        	                        ^^^^^^
+//│ ╟── Value with an empty interface does not contain member 'only'
+//│ ║  l.+3: 	  open fun read(x: Any): Int = 0
+//│ ║        	                   ^^^
+//│ ╟── Type 'Any' is declared without a member interface.
+//│ ║  in ../../decls/Prelude.mls
+//│ ║  l.XX: 	declare type Any
+//│ ╙──      	             ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// A middle class without an override passes the base's written type on to the leaf.
+:e
+private class TypedRoot with
+  open fun read(x: Any): Int = 0
+private class PlainMiddle extends TypedRoot
+private class TypedLeaf extends PlainMiddle with
+  override fun read(x) = x.only
+new TypedLeaf().read({only: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+5: 	  override fun read(x) = x.only
+//│ ║        	                         ^^^^^^
+//│ ╟── Value with an empty interface does not contain member 'only'
+//│ ║  l.+2: 	  open fun read(x: Any): Int = 0
+//│ ║        	                   ^^^
+//│ ╟── Type 'Any' is declared without a member interface.
+//│ ║  in ../../decls/Prelude.mls
+//│ ║  l.XX: 	declare type Any
+//│ ╙──      	             ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// The type parameters of an override correspond to those of its base by position.
+// The override's B stands for the base's A, which types both `x` and the result.
+:expect 7
+private class PairBase with
+  open fun first[A, B](x: A, y: B): A = x
+private class SwappedNames extends PairBase with
+  override fun first[B, A](x, y): B = x
+new SwappedNames().first(Item(7), 0).n
+//│ = 7
+
+
+// A base type parameter without a counterpart in the override remains opaque in its body.
+:e
+private class TwoParameters with
+  open fun pick[A, B](x: A, y: B): Int = 0
+private class OneParameter extends TwoParameters with
+  override fun pick[C](x, y) = y.only
+new OneParameter().pick(1, {only: 2})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+4: 	  override fun pick[C](x, y) = y.only
+//│ ║        	                               ^^^^^^
+//│ ╟── Cannot resolve member 'only' of a value with unknown shape.
+//│ ║  l.+2: 	  open fun pick[A, B](x: A, y: B): Int = 0
+//│ ║        	                               ^
+//│ ╟── Type parameter 'B' does not specify a member interface.
+//│ ║  l.+2: 	  open fun pick[A, B](x: A, y: B): Int = 0
+//│ ╙──      	                   ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Only the common prefix of the two type parameter lists is paired. An explicit type argument
+// at a direct call binds the override's own `C`, which stands for the base's `A`.
+:expect 3
+private class PickBase with
+  open fun pick[A, B](x: A, y: B): A = x
+private class PickFirst extends PickBase with
+  override fun pick[C](x, y): C = x
+new PickFirst().pick[Item](Item(3), 0).n
+//│ = 3
+
+
+// A call through the base supplies the base's type arguments, including `B`, which has no
+// counterpart in the override.
+:expect 2
+private class PickSource with
+  open fun pick[A, B](x: A, y: B): A = x
+private class PickOne extends PickSource with
+  override fun pick[C](x, y): C = x
+private fun pickThroughBase(p: PickSource) = p.pick[Item, Int](Item(2), 0).n
+pickThroughBase(new PickOne)
+//│ = 2
+
+
+// An override can declare more type parameters than its base. A direct call can supply the
+// extra `C`, which no call through the base can.
+:expect 5
+private class OneParameterBase with
+  open fun keep[A](x: A): A = x
+private class TwoParameterOverride extends OneParameterBase with
+  override fun keep[B, C](x): B = x
+new TwoParameterOverride().keep[Item, Int](Item(5)).n
+//│ = 5
+
+
+// The body returns `x`, whose type is the base's `A` and so the override's `B`, at the unrelated
+// type `C`. Nothing at the call determines `C`, so the result has no interface.
+:e
+private class OneParameterSource with
+  open fun keep[A](x: A): A = x
+private class UnrelatedResult extends OneParameterSource with
+  override fun keep[B, C](x): C = x
+new UnrelatedResult().keep(Item(8)).n
+//│ ╔══[COMPILATION ERROR] This selection of member 'n' has no resolved target
+//│ ║  l.+5: 	new UnrelatedResult().keep(Item(8)).n
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+

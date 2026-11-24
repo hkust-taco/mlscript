@@ -18,11 +18,11 @@ fun f(x) = if x is
   else 0
 f(Nil)
 //│ deforest > >>> fusing >>>
-//│ deforest > Nil⁰ ->
-//│ deforest > 	match: x⁰
 //│ deforest > A⁰(2) ->
 //│ deforest > 	match: x⁰
 //│ deforest > 	fields: x⁰.x¹
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: x⁰
 //│ deforest > <<< fusing <<<
 //│ = 0
 
@@ -103,23 +103,22 @@ modSome(Some(17), 3)
 //│ deforest > 	fields: x⁴.x⁵
 //│ deforest > <<< fusing <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let Some_x, fv_n, fv_scrut, fv_m, fv_tmp, inlinedVal;
+//│ let Some_x, fv_scrut, fv_m, fv_tmp, inlinedVal;
 //│ define modSome⁰ as fun modSome¹(x, m) {
 //│   loop loopLabel:
-//│     let n, scrut, arg$Some$0$, tmp, tmp1;
+//│     let scrut, arg$Some$0$, tmp, tmp1;
 //│     match x
 //│       Some¹ =>
 //│         set arg$Some$0$ = x.x⁵;
-//│         set n = (arg$Some$0$ as! Int⁰);
-//│         set scrut = >=⁰(n, m);
+//│         set scrut = >=⁰(arg$Some$0$, m);
 //│         match scrut
 //│           true =>
-//│             set tmp = -⁰(n, m);
+//│             set tmp = -⁰(arg$Some$0$, m);
 //│             set tmp1 = Some⁰(tmp);
 //│             set x = tmp1;
 //│             continue loopLabel
 //│           else
-//│             return Some⁰(n)
+//│             return Some⁰(arg$Some$0$)
 //│         end
 //│       None⁰ =>
 //│         return None⁰
@@ -132,15 +131,14 @@ modSome(Some(17), 3)
 //│ set fv_m = 3;
 //│ block inlinedLbl:
 //│   loop loopLabel:
-//│     set fv_n = (Some_x as! Int⁰);
-//│     set fv_scrut = >=⁰(fv_n, fv_m);
+//│     set fv_scrut = >=⁰(Some_x, fv_m);
 //│     match fv_scrut
 //│       true =>
-//│         set fv_tmp = -⁰(fv_n, fv_m);
+//│         set fv_tmp = -⁰(Some_x, fv_m);
 //│         set Some_x = fv_tmp;
 //│         continue loopLabel
 //│       else
-//│         set inlinedVal = Some⁰(fv_n);
+//│         set inlinedVal = Some⁰(Some_x);
 //│         break inlinedLbl
 //│     end
 //│   unreachable /* Rest of abortive labelled block */
@@ -163,7 +161,7 @@ maxOpt2(id(1 :: 2 :: 3 :: Nil), None)
 //│ = Some(3)
 
 :expect Nil
-fun zipWith(xsys, f) = if xsys is
+private fun zipWith(xsys, f) = if xsys is
   [hx :: tx, hy :: ty] then f(hx, hy) :: zipWith([tx, ty], f)
   [Nil, Nil] then Nil
 zipWith([id(Nil), id(Nil)], (x, y) => x)

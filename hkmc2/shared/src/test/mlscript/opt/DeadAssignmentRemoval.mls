@@ -50,9 +50,9 @@ fun f(x) =
   x = 1
   42
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define f⁰ as fun f¹(x) { let x1; set x1 = (x as! Int⁰); set x1 = 1; return 42 }; end
+//│ define f⁰ as fun f¹(x) { let x1; set x1 = x; set x1 = 1; return 42 }; end
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ define f⁰ as fun f¹(x) { do (x as! Int⁰); return 42 }; end
+//│ define f⁰ as fun f¹(x) { return 42 }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

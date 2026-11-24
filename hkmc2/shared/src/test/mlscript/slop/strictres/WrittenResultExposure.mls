@@ -1,0 +1,622 @@
+:.
+
+// A written result type exposes the public operations of the class that it names. The values that these
+// operations produce without an annotation of their own escape with them: a later block, or another
+// compilation unit, can obtain such a value and pass it inputs that its defining block never observed.
+
+// The result of a method.
+:e
+private fun stored(x) = x.only
+private class Carrier with
+  fun get() = stored
+fun carrier(): Carrier = new Carrier
+stored({only: 17})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun stored(x) = x.only
+//│ ║        	                        ^^^^^^
+//│ ╟── Cannot resolve member 'only' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+1: 	private fun stored(x) = x.only
+//│ ║        	                   ^
+//│ ╟── This value is returned here.
+//│ ║  l.+3: 	  fun get() = stored
+//│ ║        	              ^^^^^^
+//│ ╟── Member 'get' is accessible here.
+//│ ║  l.+3: 	  fun get() = stored
+//│ ║        	  ^^^^^^^^^
+//│ ╟── 'carrier' is exposed by this compilation unit.
+//│ ║  l.+4: 	fun carrier(): Carrier = new Carrier
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// The named class declares the method, and a private subclass returns the helper from its override.
+:e
+private fun overridden(x) = x.only
+private class Base with
+  open fun get() = (x => 0)
+private class Sub extends Base with
+  override fun get() = overridden
+fun make(): Base = new Sub
+overridden({only: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun overridden(x) = x.only
+//│ ║        	                            ^^^^^^
+//│ ╟── Cannot resolve member 'only' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+1: 	private fun overridden(x) = x.only
+//│ ║        	                       ^
+//│ ╟── This value is returned here.
+//│ ║  l.+5: 	  override fun get() = overridden
+//│ ║        	                       ^^^^^^^^^^
+//│ ╟── Member 'get' overrides the exposed member here.
+//│ ║  l.+5: 	  override fun get() = overridden
+//│ ║        	  ^^^^^^^^^^^^^^^^^^
+//│ ╟── Member 'get' is accessible here.
+//│ ║  l.+3: 	  open fun get() = (x => 0)
+//│ ║        	  ^^^^^^^^^^^^^^
+//│ ╟── 'make' is exposed by this compilation unit.
+//│ ║  l.+6: 	fun make(): Base = new Sub
+//│ ╙──      	^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Only the saved method escapes. Calling it through its base type can return the override's callback.
+:e
+private fun fromOverride(x) = x.only
+private class Producer with
+  open fun get() = (x => 0)
+private class CallbackProducer extends Producer with
+  override fun get() = fromOverride
+private fun methodOf(p: Producer) = p.get
+fun savedGet() = methodOf(new CallbackProducer)
+fromOverride({only: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun fromOverride(x) = x.only
+//│ ║        	                              ^^^^^^
+//│ ╟── Cannot resolve member 'only' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+1: 	private fun fromOverride(x) = x.only
+//│ ║        	                         ^
+//│ ╟── This value is returned here.
+//│ ║  l.+5: 	  override fun get() = fromOverride
+//│ ║        	                       ^^^^^^^^^^^^
+//│ ╟── Member 'get' overrides the exposed member here.
+//│ ║  l.+5: 	  override fun get() = fromOverride
+//│ ║        	  ^^^^^^^^^^^^^^^^^^
+//│ ╟── This value is returned here.
+//│ ║  l.+7: 	fun savedGet() = methodOf(new CallbackProducer)
+//│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── 'savedGet' is exposed by this compilation unit.
+//│ ║  l.+7: 	fun savedGet() = methodOf(new CallbackProducer)
+//│ ╙──      	^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// The value of a field.
+:e
+private fun fieldValue(x) = x.only
+private class FieldCarrier with
+  val f = fieldValue
+fun fieldCarrier(): FieldCarrier = new FieldCarrier
+fieldValue({only: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun fieldValue(x) = x.only
+//│ ║        	                            ^^^^^^
+//│ ╟── Cannot resolve member 'only' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+1: 	private fun fieldValue(x) = x.only
+//│ ║        	                       ^
+//│ ╟── Member 'f' is accessible here.
+//│ ║  l.+3: 	  val f = fieldValue
+//│ ║        	  ^^^^^
+//│ ╟── 'fieldCarrier' is exposed by this compilation unit.
+//│ ║  l.+4: 	fun fieldCarrier(): FieldCarrier = new FieldCarrier
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// The result of a getter.
+:e
+private fun getterResult(x) = x.only
+private class GetterCarrier with
+  fun g = getterResult
+fun getterCarrier(): GetterCarrier = new GetterCarrier
+getterResult({only: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun getterResult(x) = x.only
+//│ ║        	                              ^^^^^^
+//│ ╟── Cannot resolve member 'only' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+1: 	private fun getterResult(x) = x.only
+//│ ║        	                         ^
+//│ ╟── This value is returned here.
+//│ ║  l.+3: 	  fun g = getterResult
+//│ ║        	          ^^^^^^^^^^^^
+//│ ╟── Member 'g' is accessible here.
+//│ ║  l.+3: 	  fun g = getterResult
+//│ ║        	  ^^^^^
+//│ ╟── 'getterCarrier' is exposed by this compilation unit.
+//│ ║  l.+4: 	fun getterCarrier(): GetterCarrier = new GetterCarrier
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// A constructor argument, which the unannotated field of its parameter stores.
+:e
+private fun argument(x) = x.only
+private class ArgumentCarrier(val f)
+fun argumentCarrier(): ArgumentCarrier = ArgumentCarrier(argument)
+argument({only: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun argument(x) = x.only
+//│ ║        	                          ^^^^^^
+//│ ╟── Cannot resolve member 'only' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+1: 	private fun argument(x) = x.only
+//│ ║        	                     ^
+//│ ╟── Member 'f' is accessible here.
+//│ ║  l.+2: 	private class ArgumentCarrier(val f)
+//│ ║        	                              ^^^^^
+//│ ╟── 'argumentCarrier' is exposed by this compilation unit.
+//│ ║  l.+3: 	fun argumentCarrier(): ArgumentCarrier = ArgumentCarrier(argument)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// An inferred result exposes the returned instance itself, and with it the helper that its method returns.
+:e
+private fun storedInferred(x) = x.only
+private class CarrierInferred with
+  fun get() = storedInferred
+fun carrierInferred() = new CarrierInferred
+storedInferred({only: 8})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun storedInferred(x) = x.only
+//│ ║        	                                ^^^^^^
+//│ ╟── Cannot resolve member 'only' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+1: 	private fun storedInferred(x) = x.only
+//│ ║        	                           ^
+//│ ╟── This value is returned here.
+//│ ║  l.+3: 	  fun get() = storedInferred
+//│ ║        	              ^^^^^^^^^^^^^^
+//│ ╟── Member 'get' is accessible here.
+//│ ║  l.+3: 	  fun get() = storedInferred
+//│ ║        	  ^^^^^^^^^
+//│ ╟── This value is returned here.
+//│ ║  l.+4: 	fun carrierInferred() = new CarrierInferred
+//│ ║        	                        ^^^^^^^^^^^^^^^^^^^
+//│ ╟── 'carrierInferred' is exposed by this compilation unit.
+//│ ║  l.+4: 	fun carrierInferred() = new CarrierInferred
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A new implementation can arrive after the named base was exposed.
+private class Library with
+  open fun get() = (x => 0)
+fun library(): Library = new Library
+
+:e
+private fun lateResult(x) = x.only
+private class Late extends Library with
+  override fun get() = lateResult
+lateResult({only: 2})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun lateResult(x) = x.only
+//│ ║        	                            ^^^^^^
+//│ ╟── Cannot resolve member 'only' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+1: 	private fun lateResult(x) = x.only
+//│ ║        	                       ^
+//│ ╟── This value is returned here.
+//│ ║  l.+3: 	  override fun get() = lateResult
+//│ ║        	                       ^^^^^^^^^^
+//│ ╟── Member 'get' overrides the exposed member here.
+//│ ║  l.+3: 	  override fun get() = lateResult
+//│ ║        	  ^^^^^^^^^^^^^^^^^^
+//│ ╟── Member 'get' is accessible here.
+//│ ║  l.XX: 	  open fun get() = (x => 0)
+//│ ║        	  ^^^^^^^^^^^^^^
+//│ ╟── 'library' is exposed by this compilation unit.
+//│ ║  l.XX: 	fun library(): Library = new Library
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Values stored after the field was first exposed are readable too.
+private class Slot(mut val item)
+fun slot(): Slot = new mut Slot(0)
+
+:e
+private fun assigned(x) = x.only
+set slot().item = assigned
+assigned({only: 3})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun assigned(x) = x.only
+//│ ║        	                          ^^^^^^
+//│ ╟── Cannot resolve member 'only' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+1: 	private fun assigned(x) = x.only
+//│ ║        	                     ^
+//│ ╟── Member 'item' is accessible here.
+//│ ║  l.XX: 	private class Slot(mut val item)
+//│ ║        	                       ^^^^^^^^
+//│ ╟── 'slot' is exposed by this compilation unit.
+//│ ║  l.XX: 	fun slot(): Slot = new mut Slot(0)
+//│ ╙──      	^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// A written field on an override bounds what clients can see of its contents.
+:expect 4
+private class Broad with
+  open val field = 0
+private class Inner with
+  fun local(x) = x.only
+private class Narrow extends Broad with
+  override val field: Any = new Inner
+fun broad(): Broad = new Narrow
+new Inner().local({only: 4})
+//│ = 4
+
+
+// A write through an abstract field exposes the callback stored in the concrete object.
+:e
+private fun abstractCallback(x) = x.only
+private abstract class AbstractStore with
+  mut val stored
+private class RealStore extends AbstractStore with
+  override mut val stored = (x => 0)
+private val instance = new mut RealStore
+fun getStore(): AbstractStore = instance
+set getStore().stored = abstractCallback
+abstractCallback({only: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun abstractCallback(x) = x.only
+//│ ║        	                                  ^^^^^^
+//│ ╟── Cannot resolve member 'only' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+1: 	private fun abstractCallback(x) = x.only
+//│ ║        	                             ^
+//│ ╟── Member 'stored' is accessible here.
+//│ ║  l.+3: 	  mut val stored
+//│ ║        	      ^^^^^^^^^^
+//│ ╟── 'getStore' is exposed by this compilation unit.
+//│ ║  l.+7: 	fun getStore(): AbstractStore = instance
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Open member 'stored' is exposed by this compilation unit, so its type must be annotated or inherited from an overridden member
+//│ ║  l.+3: 	  mut val stored
+//│ ║        	      ^^^^^^^^^^
+//│ ╟── 'getStore' is exposed by this compilation unit.
+//│ ║  l.+7: 	fun getStore(): AbstractStore = instance
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ instance = undefined
+
+// External storage has no MLscript initializer either.
+:e
+private fun externalCallback(x) = x.only
+declare class ExternalStore with
+  mut val stored
+declare val externalStore: ExternalStore
+fun getExternal(): ExternalStore = externalStore
+private fun storeCallback() = { set externalStore.stored = externalCallback }
+externalCallback({only: 2})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun externalCallback(x) = x.only
+//│ ║        	                                  ^^^^^^
+//│ ╟── Cannot resolve member 'only' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+1: 	private fun externalCallback(x) = x.only
+//│ ║        	                             ^
+//│ ╟── Member 'stored' is accessible here.
+//│ ║  l.+3: 	  mut val stored
+//│ ║        	      ^^^^^^^^^^
+//│ ╟── 'ExternalStore' is exposed by this compilation unit.
+//│ ║  l.+2: 	declare class ExternalStore with
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Calling get through Declared lets a client pass null to the returned callback.
+:e
+private fun unchecked(x) = x.only
+private class Declared with
+  open fun get(): Any -> Int = (x => 0)
+private class Undeclared extends Declared with
+  override fun get() = unchecked
+fun declared(): Declared = new Undeclared
+unchecked({only: 5})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun unchecked(x) = x.only
+//│ ║        	                           ^^^^^^
+//│ ╟── Value with an empty interface does not contain member 'only'
+//│ ║  l.+3: 	  open fun get(): Any -> Int = (x => 0)
+//│ ║        	                  ^^^
+//│ ╟── Type 'Any' is declared without a member interface.
+//│ ║  in ../../decls/Prelude.mls
+//│ ║  l.XX: 	declare type Any
+//│ ╙──      	             ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// An inherited field type checks later writes as well as the initializer.
+:e
+private fun assigned(x) = x.only
+private class CallbackStore with
+  open mut val callback: Any -> Int = x => 0
+private class LocalStore extends CallbackStore with
+  override mut val callback = x => 1
+private val localStore = new mut LocalStore
+set localStore.callback = assigned
+fun callbacks(): CallbackStore = localStore
+assigned({only: 7})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun assigned(x) = x.only
+//│ ║        	                          ^^^^^^
+//│ ╟── Value with an empty interface does not contain member 'only'
+//│ ║  l.+3: 	  open mut val callback: Any -> Int = x => 0
+//│ ║        	                         ^^^
+//│ ╟── Type 'Any' is declared without a member interface.
+//│ ║  in ../../decls/Prelude.mls
+//│ ║  l.XX: 	declare type Any
+//│ ╙──      	             ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ localStore = LocalStore
+
+// The parent clause determines the callback domain even across an unannotated override.
+private class Keyed(val key: Int)
+private class Source[T] with
+  open fun get(): T -> Int = x => 0
+private class Forward[U] extends Source[U] with
+  open override fun get() = x => 1
+private class KeySource extends Forward[Keyed] with
+  override fun get() = x => x.key
+fun source(): Source[Keyed] = new KeySource
+
+:expect 42
+source().get()(Keyed(42))
+//│ = 42
+
+// Callers of an async override receive the inherited callback inside a promise.
+:e
+open annotations.{ * }
+private fun fulfilled(x) = x.only
+private class AsyncSource with
+  @async open fun get(): Any -> Int = x => 0
+private class AsyncImpl extends AsyncSource with
+  @async override fun get() = fulfilled
+fun asyncSource(): AsyncSource = new AsyncImpl
+fulfilled({only: 2})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	private fun fulfilled(x) = x.only
+//│ ║        	                           ^^^^^^
+//│ ╟── Value with an empty interface does not contain member 'only'
+//│ ║  l.+4: 	  @async open fun get(): Any -> Int = x => 0
+//│ ║        	                         ^^^
+//│ ╟── Type 'Any' is declared without a member interface.
+//│ ║  in ../../decls/Prelude.mls
+//│ ║  l.XX: 	declare type Any
+//│ ╙──      	             ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// The iterator of a generator hands out its values with an empty interface, whatever result the
+// declaration writes, so no client can call the callback that an unannotated generator override returns.
+private fun generated(x) = x.only
+private class GeneratorSource with
+  @generator open fun items(): Any -> Int = x => 0
+private class GeneratorImpl extends GeneratorSource with
+  @generator override fun items() = generated
+fun generatorSource(): GeneratorSource = new GeneratorImpl
+generated({only: 3})
+//│ = 3
+
+:e
+generatorSource().items().next().value(null)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+1: 	generatorSource().items().next().value(null)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Value with an empty interface cannot be called like a function.
+//│ ╙── This type permits values of any type, so no member interface is guaranteed.
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Returning the generator method exposes its iterator. The callback ending its body stays private.
+:expect 42
+private fun finalValue(x) = x.only
+private class Generators with
+  @generator open fun items() = finalValue
+fun itemsMethod() = new Generators().items
+finalValue({only: 42})
+//│ = 42
+
+
+// A saved ordinary method can still return the value supplied to its generic receiver.
+:e
+private class HiddenAction with
+  fun apply(x) = x.only
+private class SourceOf[T](seed: T) with
+  open fun get() = seed
+fun savedMethod() = new SourceOf[HiddenAction](new HiddenAction).get
+new HiddenAction().apply({only: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	  fun apply(x) = x.only
+//│ ║        	                 ^^^^^^
+//│ ╟── Cannot resolve member 'only' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+2: 	  fun apply(x) = x.only
+//│ ║        	            ^
+//│ ╟── Member 'apply' is accessible here.
+//│ ║  l.+2: 	  fun apply(x) = x.only
+//│ ║        	  ^^^^^^^^^^^^
+//│ ╟── This type argument is supplied here.
+//│ ║  l.+5: 	fun savedMethod() = new SourceOf[HiddenAction](new HiddenAction).get
+//│ ║        	                                 ^^^^^^^^^^^^
+//│ ╟── This value is returned here.
+//│ ║  l.+4: 	  open fun get() = seed
+//│ ║        	                   ^^^^
+//│ ╟── This value is returned here.
+//│ ║  l.+5: 	fun savedMethod() = new SourceOf[HiddenAction](new HiddenAction).get
+//│ ║        	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── 'savedMethod' is exposed by this compilation unit.
+//│ ║  l.+5: 	fun savedMethod() = new SourceOf[HiddenAction](new HiddenAction).get
+//│ ╙──      	^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// A separate signature describes both calls. The second arrow types the returned callback.
+:expect 42
+private type FactoryFor[A, B] = A -> B -> Int
+private class Factory with
+  fun get: FactoryFor[Int, Keyed]
+  open fun get(n) = x => x.key
+private class ReaderFactory extends Factory with
+  override fun get(n) = x => x.key + n
+fun factory(): Factory = new ReaderFactory
+factory().get(2)(Keyed(40))
+//│ = 42
+
+// The implementation receives a Keyed, but the callback it returns must accept Any.
+:e
+private class AnyFactory with
+  fun get: FactoryFor[Keyed, Any]
+  open fun get(n) = x => n.key
+private class UnsafeFactory extends AnyFactory with
+  override fun get(n) = x => x.key
+fun anyFactory(): AnyFactory = new UnsafeFactory
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+5: 	  override fun get(n) = x => x.key
+//│ ║        	                             ^^^^^
+//│ ╟── Value with an empty interface does not contain member 'key'
+//│ ║  l.+2: 	  fun get: FactoryFor[Keyed, Any]
+//│ ║        	                             ^^^
+//│ ╟── Type 'Any' is declared without a member interface.
+//│ ║  in ../../decls/Prelude.mls
+//│ ║  l.XX: 	declare type Any
+//│ ╙──      	             ^^^
+
+
+// The async override returns a promise that fulfills with a callback. Clients can pass it null.
+:e
+private fun promisedCallback(x) = x.key
+private class AdoptingSource with
+  @async open fun get(): Any -> Int = x => 0
+private class Adopting extends AdoptingSource with
+  @async override fun get() = Promise.resolve(promisedCallback)
+fun adopting(): AdoptingSource = new Adopting
+promisedCallback(Keyed(2))
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun promisedCallback(x) = x.key
+//│ ║        	                                  ^^^^^
+//│ ╟── Value with an empty interface does not contain member 'key'
+//│ ║  l.+3: 	  @async open fun get(): Any -> Int = x => 0
+//│ ║        	                         ^^^
+//│ ╟── Type 'Any' is declared without a member interface.
+//│ ║  in ../../decls/Prelude.mls
+//│ ║  l.XX: 	declare type Any
+//│ ╙──      	             ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A synchronous override can supply the same fulfillment when the base's annotation names a promise.
+:e
+private fun syncCallback(x) = x.key
+private class PromisedSource with
+  @async open fun get(): Promise[Any -> Int] = Promise.resolve(x => 0)
+private class SyncProducer extends PromisedSource with
+  override fun get() = Promise.resolve(syncCallback)
+fun syncProducer(): PromisedSource = new SyncProducer
+syncCallback(Keyed(2))
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun syncCallback(x) = x.key
+//│ ║        	                              ^^^^^
+//│ ╟── Value with an empty interface does not contain member 'key'
+//│ ║  l.+3: 	  @async open fun get(): Promise[Any -> Int] = Promise.resolve(x => 0)
+//│ ║        	                                 ^^^
+//│ ╟── Type 'Any' is declared without a member interface.
+//│ ║  in ../../decls/Prelude.mls
+//│ ║  l.XX: 	declare type Any
+//│ ╙──      	             ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Calling get through AsyncBase can yield the callback from the deepest override.
+:e
+private fun asyncCallback(x) = x.only
+private class AsyncBase with
+  @async open fun get() = x => 0
+private class AsyncMiddle extends AsyncBase with
+  @async open override fun get() = x => 1
+private class AsyncLeaf extends AsyncMiddle with
+  @async override fun get() = asyncCallback
+fun asyncBase(): AsyncBase = new AsyncLeaf
+asyncCallback({only: 2})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun asyncCallback(x) = x.only
+//│ ║        	                               ^^^^^^
+//│ ╟── Cannot resolve member 'only' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+1: 	private fun asyncCallback(x) = x.only
+//│ ║        	                          ^
+//│ ╟── This value is fulfilled by this promise.
+//│ ║  in ../../decls/Prelude.mls
+//│ ║  l.XX: 	declare class Promise[out A](executor: ((A | Promise[A]) -> (), Any -> ()) -> ()) {
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This value is returned here.
+//│ ║  in WrittenResultExposure.mls:+1
+//│ ║  l.+7: 	  @async override fun get() = asyncCallback
+//│ ║        	                              ^^^^^^^^^^^^^
+//│ ╟── Member 'get' overrides the exposed member here.
+//│ ║  l.+7: 	  @async override fun get() = asyncCallback
+//│ ║        	         ^^^^^^^^^^^^^^^^^^
+//│ ╟── Member 'get' is accessible here.
+//│ ║  l.+3: 	  @async open fun get() = x => 0
+//│ ║        	         ^^^^^^^^^^^^^^
+//│ ╟── 'asyncBase' is exposed by this compilation unit.
+//│ ║  l.+8: 	fun asyncBase(): AsyncBase = new AsyncLeaf
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Calling items through the base exposes the iterator. The override's final callback stays private.
+:expect 7
+private fun iteratorCallback(x) = x.only
+private class IteratorBase with
+  @generator open fun items() = 0
+private class IteratorChild extends IteratorBase with
+  @generator override fun items() = iteratorCallback
+fun iteratorBase(): IteratorBase = new IteratorChild
+iteratorCallback({only: 7})
+//│ = 7
+
+
+// A write through the concrete field changes what a client can read through the exposed base.
+private class Readable with
+  open mut val item = x => 0
+private class Writable extends Readable with
+  override mut val item = x => 1
+private val writable = new mut Writable
+fun readable(): Readable = writable
+//│ writable = Writable
+
+:e
+private fun storedLater(x) = x.only
+set writable.item = storedLater
+storedLater({only: 9})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun storedLater(x) = x.only
+//│ ║        	                             ^^^^^^
+//│ ╟── Cannot resolve member 'only' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+1: 	private fun storedLater(x) = x.only
+//│ ║        	                        ^
+//│ ╟── Member 'item' overrides the exposed member here.
+//│ ║  l.XX: 	  override mut val item = x => 1
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Member 'item' is accessible here.
+//│ ║  l.XX: 	  open mut val item = x => 0
+//│ ║        	  ^^^^^^^^^^^^^^^^^
+//│ ╟── 'readable' is exposed by this compilation unit.
+//│ ║  l.XX: 	fun readable(): Readable = writable
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

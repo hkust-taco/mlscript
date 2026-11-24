@@ -1,6 +1,6 @@
 :.
 #lang(0.3.x)
-open annotations
+open annotations.{ * }
 
 // A generated lambda has a function representation, even when its result is unspecified.
 :noInline
@@ -141,21 +141,21 @@ fun capturedGenerator(value: Int) =
   generate("unused", 2)
 capturedGenerator(40).next().value
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp: Unknown, tmp1: ?, capturedGenerator_generate$generate, capturedGenerator_generate$generate1, capturedGenerator$capturedGenerator;
+//│ let tmp: Unknown, tmp1: ?, capturedGenerator_generate$generate, capturedGenerator$capturedGenerator, capturedGenerator_generate$generate1;
 //│ @private @generator
 //│ define capturedGenerator_generate$generate as fun capturedGenerator_generate$generate⁰(value: Int⁰, n: Int⁰): generator Int⁰ {
 //│   return +⁰(value, n)
+//│ };
+//│ @private
+//│ define capturedGenerator$capturedGenerator as fun capturedGenerator$capturedGenerator⁰(value: Int⁰): Unknown {
+//│   return capturedGenerator_generate$generate⁰(value, 2)
 //│ };
 //│ @private @generator
 //│ define capturedGenerator_generate$generate1 as fun capturedGenerator_generate$generate¹(value: Int⁰, n: Int⁰): generator Int⁰ {
 //│   return +⁰(value, n)
 //│ };
-//│ @private
-//│ define capturedGenerator$capturedGenerator as fun capturedGenerator$capturedGenerator⁰(value: Int⁰): Unknown {
-//│   return capturedGenerator_generate$generate¹(value, 2)
-//│ };
 //│ define capturedGenerator⁰ as fun capturedGenerator¹(value: Int⁰): Unknown {
-//│   return capturedGenerator_generate$generate⁰(value, 2)
+//│   return capturedGenerator_generate$generate¹(value, 2)
 //│ };
 //│ set tmp = capturedGenerator$capturedGenerator⁰(40);
 //│ set tmp1 = tmp.next⁰();
@@ -323,9 +323,9 @@ continuation(42, "done")
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let $item_Item, $item_rest;
 //│ @affine(1) @private
-//│ define $item_Item as fun $item_Item⁰(Item_value: Int⁰)(fv_arg$Item$0$: ?, fv_x: Int⁰, fv_tmp: Int⁰, fv_ignored: Int⁰, fv_result: Str⁰): ? {
+//│ define $item_Item as fun $item_Item⁰(Item_value: Int⁰)(fv_arg$Item$0$: Int⁰, fv_x: Int⁰, fv_tmp: Int⁰, fv_ignored: Int⁰, fv_result: Str⁰): ? {
 //│   set fv_arg$Item$0$ = Item_value;
-//│   set fv_x = (fv_arg$Item$0$ as! Int⁰);
+//│   set fv_x = fv_arg$Item$0$;
 //│   set fv_tmp = fv_x;
 //│   return $item_rest⁰(fv_ignored, fv_tmp, fv_result)
 //│ };
@@ -335,7 +335,7 @@ continuation(42, "done")
 //│   return fv_result
 //│ };
 //│ define continuation⁰ as fun continuation¹(value: Int⁰, result: Str⁰): Str⁰ {
-//│   let ignored: Int⁰, x: Int⁰, arg$Item$0$: ?, tmp: Int⁰, item: Function⁰, Item_value: Int⁰;
+//│   let ignored: Int⁰, x: Int⁰, arg$Item$0$: Int⁰, tmp: Int⁰, item: Function⁰, Item_value: Int⁰;
 //│   set Item_value = value;
 //│   set item = $item_Item⁰(Item_value);
 //│   return (item(arg$Item$0$, x, tmp, ignored, result) as! Str⁰)

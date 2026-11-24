@@ -17,7 +17,7 @@
 if 2 + 2 is {4 then 2, else 3} + 2
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern split (operator application).
 //│ ║  l.+1: 	if 2 + 2 is {4 then 2, else 3} + 2
-//│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	            ^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e

@@ -1,0 +1,11 @@
+:.
+:js
+:effectHandlers
+:lift
+
+// Note: computes the sum of primes strictly less than the input
+
+import "../../mlscript-compile/handlers-bench/handler_sieve.mls"
+handler_sieve.run(5)
+//│ = 5
+

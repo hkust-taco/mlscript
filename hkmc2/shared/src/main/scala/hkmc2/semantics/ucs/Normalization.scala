@@ -39,18 +39,18 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
           these)
   
   extension (lhs: FlatPattern)
-    /** Checks if two patterns are the same. */
-    def =:=(rhs: FlatPattern): Bool = (lhs, rhs) match
+    /** Whether a successful test of `lhs` supplies the test and all field bindings required by `rhs`. */
+    def canReuseFor(rhs: FlatPattern): Bool = (lhs, rhs) match
       case (lhs: FlatPattern.ClassLike, rhs: FlatPattern.ClassLike) =>
         // Constructor terms may carry the same preliminary overload-set symbol
         // while resolution selected different class-like definitions.
-        lhs.symbol is rhs.symbol
+        // Merging also reuses positional field reads. A bare constructor test
+        // has no bindings for a later destructuring pattern on the same value.
+        (lhs.symbol is rhs.symbol) && lhs.arguments.getOrElse(Nil).length >= rhs.arguments.getOrElse(Nil).length
       case (FlatPattern.Lit(l1), FlatPattern.Lit(l2)) => l1 === l2
       case (FlatPattern.Tuple(n1, b1), FlatPattern.Tuple(n2, b2)) => n1 === n2 && b1 === b2
       case (FlatPattern.Record(ls1), FlatPattern.Record(ls2)) =>
-        ls1.lazyZip(ls2).forall:
-          case ((fieldName1, p1), (fieldName2, p2)) =>
-            fieldName1 === fieldName2 && p1 === p2
+        ls1 === ls2
       case (_: FlatPattern.ClassLike, _) | (_: FlatPattern.Lit, _) |
         (_: FlatPattern.Tuple, _) | (_: FlatPattern.Record, _) => false
     /** Checks if `lhs` can be subsumed under `rhs`. */
@@ -60,29 +60,6 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
       case lhs: FlatPattern.ClassLike => lhs.refined = true
       case _ => ()
   
-  extension (lhs: FlatPattern.Record)
-    /** reduces the record pattern `lhs` assuming we have matched `rhs`.
-      * It removes field matches that may now be unnecessary
-      */
-    infix def assuming(rhs: FlatPattern): FlatPattern.Record = rhs match
-      case FlatPattern.Record(rhsEntries) =>
-        val filteredEntries = lhs.entries.filter:
-          (fieldName1, _) => rhsEntries.forall { (fieldName2, _) => !(fieldName1 === fieldName2)}
-        FlatPattern.Record(filteredEntries)
-      case rhs: FlatPattern.ClassLike => rhs.symbol match
-        case cls: ClassSymbol => cls.defn match
-          case S(ClassDef.Parameterized(params = paramList)) =>
-            // Only `val` parameters are accessible as fields, so only those
-            // can subsume a Record entry. This keeps `assuming` consistent
-            // with `compareCasePattern`'s record and class check.
-            val filteredEntries = lhs.entries.filter:
-              (fieldName1, _) => paramList.params.forall:
-                case param: Param => !(param.flags.isVal && fieldName1 === param.sym.id)
-            FlatPattern.Record(filteredEntries)
-          case S(_) | N => lhs
-        case _: ModuleOrObjectSymbol => lhs
-      case _ => lhs
-
   inline def apply(split: Split): Split = normalize(split)(using VarSet())
 
   /**
@@ -197,11 +174,11 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
     * `UseSplit` reference is preserved to maintain join-point sharing.
     *
     * In mode `+` (positive), keeps branches consistent with the assumption:
-    *   - Case 1.1.1: Same pattern (`=:=`) → merge continuation and tail via alias bindings.
+    *   - Case 1.1.1: Same test with the required bindings → merge continuation and tail via alias bindings.
     *   - Case 1.1.2: Branch pattern is more specific (`thatPattern <:< pattern`) → keep as-is,
     *     mark the specializing pattern as refined, and recurse into the tail so remaining
     *     branches on the same scrutinee are simplified with the known assumption.
-    *   - Case 1.1.4: Branch is a record → simplify fields already matched by the assumption.
+    *   - Case 1.1.4: Both patterns are records → reuse field reads with the same bindings.
     *   - Case 1.1.5: Specializing pattern is more specific (`pattern <:< thatPattern`) → keep as-is
     *     (the branch always matches when the assumption holds).
     *   - Case 1.1.6: Patterns are unrelated — if provably disjoint (e.g., different literals,
@@ -234,26 +211,22 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         if scrutinee.sym is thatScrutinee.sym then mode match
           case + =>
             log(dbg"Case 1.1: $scrutinee === $thatScrutinee")
-            if thatPattern =:= pattern then
+            if pattern.canReuseFor(thatPattern) then
               log(dbg"Case 1.1.1: $pattern =:= $thatPattern")
               S(aliasBindings(pattern, thatPattern)(rec(continuation).getOrElse(continuation) ++ rec(tail).getOrElse(tail)))
             else if thatPattern <:< pattern then
               log(dbg"Case 1.1.2: $pattern <:< $thatPattern")
               pattern.markAsRefined
               rec(tail).map(newTail => split.copy(tail = newTail))
-            else thatPattern match
-            case thatPattern: FlatPattern.Record =>
-              log(dbg"Case 1.1.4: $thatPattern is a record")
-              // we can use information if pattern is itself a record, or if it is a constructor with arguments
-              val simplifiedRecord = thatPattern assuming pattern
-              if simplifiedRecord.entries.isEmpty then
-                S(tail)
-              else if simplifiedRecord.entries.length == thatPattern.entries.length then
-                // `assuming` only filters, so equal length means no field was
-                // removed — the split is structurally unchanged.
-                N
-              else
-                S(Split.Cons(Branch(thatScrutinee, simplifiedRecord, continuation), tail))
+            else (thatPattern, pattern) match
+            case (record: FlatPattern.Record, known: FlatPattern.Record) =>
+              // A successful record test also binds its field values. Reuse a read only
+              // when the earlier test initialized the same symbol for that field.
+              val pending = record.entries.filterNot(known.entries.contains)
+              if pending.isEmpty then
+                S(rec(continuation).getOrElse(continuation) ++ rec(tail).getOrElse(tail))
+              else if pending.length == record.entries.length then N
+              else S(Branch(thatScrutinee, FlatPattern.Record(pending), continuation) ~: tail)
             case _ =>
               if pattern <:< thatPattern then
                 // TODO: the warning will be useful when we have inheritance information
@@ -281,7 +254,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
                       S(head.copy(continuation = optCont.getOrElse(continuation)) ~: optTail.getOrElse(tail))
           case - =>
             log(dbg"Case 1.2: $scrutinee === $thatScrutinee")
-            if thatPattern =:= pattern || thatPattern <:< pattern then
+            if pattern.canReuseFor(thatPattern) || thatPattern <:< pattern then
               log(dbg"Case 1.2.1: $pattern =:= (or <:<) $thatPattern")
               S(rec(tail).getOrElse(tail))
             else
@@ -310,6 +283,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
   
   private def aliasBindings(p: FlatPattern, q: FlatPattern): Split => Split = (p, q) match
     case (FlatPattern.ClassLike(_, _, S(ss1), _), FlatPattern.ClassLike(_, _, S(ss2), _)) =>
+      // canReuseFor ensures ss1 provides every position of ss2; the branch needs only that prefix.
       ss1.iterator.zip(ss2.iterator).foldLeft(identity[Split]):
         case (acc, (l, r)) if l._1 === r._1 => acc
         case (acc, (l, r)) => innermost => Split.Let(r._1, l._1.safeRef, acc(innermost))
@@ -326,13 +300,13 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
     case Split.Let(sym, trm, tl) =>
       LoweringCtx.loweringCtx.collectScopedSym(sym)
       term_nonTail(trm): r =>
-        val bound = sym match
+        def bind(bound: Result): Block = Assign(sym, bound, lowerSplit(tl, cont))
+        sym match
           // Pattern compilation declares the types of its temporaries, such as a string's head
           // or a matcher's Boolean result, and binds them to calls of untyped runtime helpers.
           // Such values have the declared representation by construction.
-          case sym: TempSymbol => r.coerceToKnown(sym.erasedType.getOrElse(ErasedType.Unknown), trm.toLoc)
-          case _ => lowering.castTo(r, sym.erasedType, trm.toLoc)
-        Assign(sym, bound, lowerSplit(tl, cont))
+          case sym: TempSymbol => bind(r.coerceToKnown(sym.erasedType.getOrElse(ErasedType.Unknown), trm.toLoc))
+          case _ => lowering.castTo(r, sym.erasedType, trm.toLoc)(bind)
     case Split.Cons(Branch(scrut, pat, tail), restSplit) =>
       subTerm_nonTail(scrut): sr =>
         tl.log(dbg"Binding scrut $scrut to $sr (${summon[LoweringCtx].localVals})")
@@ -345,19 +319,14 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
           case FlatPattern.ClassLike(ctor, symbol, argsOpt, _refined) =>
             for args <- argsOpt; (arg, _) <- args do LoweringCtx.loweringCtx.collectScopedSym(arg)
             /** Make a continuation that creates the match. */
-            def k(ctorSym: ClassLikeSymbol, clsParams: Ls[TermSymbol])(st: Path): Block =
-              val args = argsOpt.getOrElse(Nil)
-              // Normalization should reject cases where the user provides
-              // more sub-patterns than there are actual class parameters.
-              assert(argsOpt.isEmpty || args.length <= clsParams.length, (argsOpt, clsParams))
-              def mkArgs(args: Ls[TermSymbol -> (LocalVarSymbol -> Opt[Loc])])(using LoweringCtx): Case -> Block = args match
-                case Nil =>
-                  Case.Cls(ctorSym, st) -> lowerSplit(tail, cont)
-                case (param, (arg, loc)) :: args =>
-                  val (cse, blk) = mkArgs(args)
+            def k(ctorSym: ClassLikeSymbol, clsParams: Opt[Ls[TermSymbol]])(st: Path): Block =
+              def mkArgs(fields: Ls[TermSymbol], args: Ls[LocalVarSymbol -> Opt[Loc]]): Block = (fields, args) match
+                case (_, Nil) => lowerSplit(tail, cont)
+                case (param :: ps, (arg, loc) :: rest) =>
                   // Positional patterns do not spell the field name. Locate the extraction at the sub-pattern.
-                  (cse, Assign(arg, Select(sr, Tree.Ident(param.id.name))(S(param), loc)(false), blk))
-              mkMatch(mkArgs(clsParams.iterator.zip(args).toList))
+                  Assign(arg, Select(sr, Tree.Ident(param.id.name))(S(param), loc)(false), mkArgs(ps, rest))
+                case (Nil, _ :: _) => lastWords(s"Missing positional field for pattern of ${ctorSym.nme}")
+              mkMatch(Case.Cls(ctorSym, st) -> mkArgs(clsParams.getOrElse(Nil), argsOpt.getOrElse(Nil)))
             symbol match
               case cls: ClassSymbol if ctx.builtins.virtualClasses contains cls =>
                 // [invariant:0] Some classes (e.g., `Int`) from `Prelude` do
@@ -366,13 +335,11 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
                 // In this case the second parameter of `Case.Cls` will not be used.
                 // So we do not elaborate `ctor` when the `cls` is virtual
                 // and use it `Predef.unreachable` here.
-                k(cls, Nil)(unreachableFn)
+                k(cls, N)(unreachableFn)
               case cls: ClassSymbol =>
-                subTerm_nonTail(ctor)(k(cls,
-                  cls.tree.clsParams.headOption.getOrElse(Nil) // FIXME? case when there are only aux parameter lists
-                  ))
+                subTerm_nonTail(ctor)(k(cls, cls.destructuredFields))
               case mod: ModuleOrObjectSymbol =>
-                subTerm_nonTail(ctor)(k(mod, Nil))
+                subTerm_nonTail(ctor)(k(mod, N))
           case FlatPattern.Tuple(len, inf) => mkMatch(Case.Tup(len, inf) -> lowerSplit(tail, cont))
           case FlatPattern.Record(entries) =>
             for (_, s) <- entries do LoweringCtx.loweringCtx.collectScopedSym(s)
@@ -612,16 +579,7 @@ object Normalization:
     case (Lit(Tree.DecLit(_)), ClassLike(symbol = blt.`Num`)) => true
     case (Lit(Tree.BoolLit(_)), ClassLike(symbol = blt.`Bool`)) => true
     case (Record(entries1), Record(entries2)) =>
-      entries1.forall { (fieldName1, _) => entries2.exists { (fieldName2, _) => fieldName1 === fieldName2 } }
-    case (Record(entries), rhs: ClassLike) =>
-      val clsParams = rhs.symbol match
-        case symbol: ClassSymbol => symbol.defn match
-          case S(ClassDef.Parameterized(params = paramList)) => paramList.params
-          case S(_) | N => Nil
-        case _: ModuleOrObjectSymbol => Nil
-      entries.forall { (fieldName, _) => clsParams.exists {
-        case Param(flags = FldFlags(isVal = isVal), sym = sym) => isVal && fieldName === sym.id
-      }}
+      entries2.forall { (required, _) => entries1.exists { (field, _) => field === required } }
     // Check the class hierarchy via extends clauses. This includes virtual
     // classes such as `Int <: Num`, whose relationship is declared in Prelude.
     // `Int31` deliberately does not extend `Num`: converting it to a `Num`
@@ -647,7 +605,8 @@ object Normalization:
     case (_: ClassLike, Lit(_)) => !compareCasePattern(rhs, lhs)
     case (Lit(_), Tuple(_, _)) | (Tuple(_, _), Lit(_)) => true
     case (Record(_), Lit(_)) | (Lit(_), Record(_)) => true
-    case (Record(_), Tuple(_, _)) | (Tuple(_, _), Record(_)) => true
+    // A collection can satisfy a tuple's length test and expose the fields of a record pattern.
+    case (Record(_), Tuple(_, _)) | (Tuple(_, _), Record(_)) => false
     // Under the single-inheritance restriction, two classes where neither is a
     // subclass of the other are provably disjoint. When we add matchable
     // class-like things with multiple inheritance (e.g., interfaces), this check

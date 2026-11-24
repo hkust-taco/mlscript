@@ -6,7 +6,7 @@
 
 
 // Note: Needed for `@tailrec`
-open annotations
+open annotations.{ * }
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
 
@@ -186,7 +186,10 @@ fun test(x: Int): Int = "oops"
 //│ ║  l.+1: 	fun test(x: Int): Int = "oops"
 //│ ╙──      	                        ^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define test⁰ as fun test¹(x: Int⁰): Int⁰ { return "oops" }; end
+//│ define test⁰ as fun test¹(x: Int⁰): Int⁰ {
+//│   throw "This code cannot be run as its compilation yielded an error."
+//│ };
+//│ end
 
 
 // The return coercion is what an annotated result buys. The sum of two `Num`s is a `Num`, so
@@ -239,7 +242,7 @@ class Cell(mut val v: Int) with
 //│     define v² as val v³: Int⁰ = v;
 //│     end
 //│   }
-//│   method put⁰ = fun put¹(x: ?): Unit⁰ {
+//│   method put⁰ = fun put¹(x: Unknown): Unit⁰ {
 //│     set Cell².this.v³ = (x as! Int⁰);
 //│     return runtime⁰.Unit⁰
 //│   }
@@ -249,7 +252,7 @@ class Cell(mut val v: Int) with
 //│   method twice⁰ = fun twice¹(x: Num⁰): Int⁰ {
 //│     return (+⁰(x, x) as! Int⁰)
 //│   }
-//│   method whatever⁰ = fun whatever¹(a: ?): ? { return a }
+//│   method whatever⁰ = fun whatever¹(a: Unknown): Unknown { return a }
 //│ };
 //│ end
 
@@ -257,7 +260,7 @@ class Cell(mut val v: Int) with
 // Record the parameter and result representations of an unannotated variadic function.
 fun rest(a, ...xs) = xs
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define rest⁰ as fun rest¹(a: ?, ...xs: Array⁰): Array⁰ { return xs }; end
+//│ define rest⁰ as fun rest¹(a: Unknown, ...xs: Array⁰): Array⁰ { return xs }; end
 
 
 // Closure capture (`:lift`) preserves the inferred representation of the mutable local `n` in its generated
@@ -272,6 +275,7 @@ fun counter(x: Int) =
 //│ let bump, Capture$scope0;
 //│ define Capture$scope0 as class Capture$scope0¹ {
 //│   constructor Capture$scope0⁰(n$0: Int⁰) {
+//│     @js.plainField
 //│     define n$0⁰ as val n$0¹: Int⁰ = n$0;
 //│     end
 //│   }
@@ -305,6 +309,7 @@ resetCounter(41)
 //│ let reset, Capture$scope0;
 //│ define Capture$scope0 as class Capture$scope0³ {
 //│   constructor Capture$scope0²(x$0: Int⁰) {
+//│     @js.plainField
 //│     define x$0⁰ as val x$0¹: Int⁰ = x$0;
 //│     end
 //│   }
@@ -328,27 +333,9 @@ resetCounter(41)
 // `Int` and `Int32` are both represented as host primitives, so both are *siblings* of `Object` rather than
 // descendants of it: neither direction is a widening or a narrowing, and all four crossings below are
 // rejected. The unannotated result of `f` can retain the `Int32` representation of its final call.
-:ge
 fun useObj(o: Object) = o
 fun useInt(n: Int) = n
 fun useInt32(n: Int32): Int32 = n
-fun f(o: Object, i: Int, x: Int32) =
-  useObj(i)
-  useInt(o)
-  useObj(x)
-  useInt32(o)
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Object'
-//│ ║  l.+5: 	  useObj(i)
-//│ ╙──      	         ^
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Object' at an unrelated type 'Int'
-//│ ║  l.+6: 	  useInt(o)
-//│ ╙──      	         ^
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Object'
-//│ ║  l.+7: 	  useObj(x)
-//│ ╙──      	         ^
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Object' at an unrelated type 'Int32'
-//│ ║  l.+8: 	  useInt32(o)
-//│ ╙──      	           ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define useObj⁰ as fun useObj¹(o: Object⁰): Object⁰ {
 //│   return o
@@ -356,30 +343,48 @@ fun f(o: Object, i: Int, x: Int32) =
 //│ define useInt⁰ as fun useInt¹(n: Int⁰): Int⁰ {
 //│   return n
 //│ };
-//│ define useInt32⁰ as fun useInt32¹(n: Int32): Int32 {
-//│   return n
-//│ };
+//│ define useInt32⁰ as fun useInt32¹(n: Int32): Int32 { return n };
+//│ end
+
+:ge
+fun f(o: Object, i: Int, x: Int32) =
+  useObj(i)
+  useInt(o)
+  useObj(x)
+  useInt32(o)
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Object'
+//│ ║  l.+2: 	  useObj(i)
+//│ ╙──      	         ^
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Object' at an unrelated type 'Int'
+//│ ║  l.+3: 	  useInt(o)
+//│ ╙──      	         ^
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Object'
+//│ ║  l.+4: 	  useObj(x)
+//│ ╙──      	         ^
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Object' at an unrelated type 'Int32'
+//│ ║  l.+5: 	  useInt32(o)
+//│ ╙──      	           ^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define f² as fun f³(o: Object⁰, i: Int⁰, x: Int32): Int32 {
-//│   do useObj¹(i);
-//│   do useInt¹(o);
-//│   do useObj¹(x);
-//│   return useInt32¹(o)
+//│   throw "This code cannot be run as its compilation yielded an error."
 //│ };
 //│ end
 
 
 // Similar to the above test case, but passing `Int32` into `Anything` instead of `Object`.
-:ge
 fun id(x: Anything) = ()
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define id⁰ as fun id¹(x: Unknown): Unit⁰ { return runtime⁰.Unit⁰ }; end
+
+:ge
 fun f(x: Int32) = id(x)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
-//│ ║  l.+2: 	fun f(x: Int32) = id(x)
+//│ ║  l.+1: 	fun f(x: Int32) = id(x)
 //│ ╙──      	                     ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define id⁰ as fun id¹(x: Unknown): Unit⁰ {
-//│   return runtime⁰.Unit⁰
+//│ define f⁴ as fun f⁵(x: Int32): Unit⁰ {
+//│   throw "This code cannot be run as its compilation yielded an error."
 //│ };
-//│ define f⁴ as fun f⁵(x: Int32): Unit⁰ { return id¹(x) };
 //│ end
 
 
@@ -423,7 +428,9 @@ module Encl with
 //│     define Shape² as class Shape³;
 //│     end
 //│   }
-//│   method bad⁰ = fun bad¹(x: Shape³): Shape⁰ { return useShape¹(x) }
+//│   method bad⁰ = fun bad¹(x: Shape³): Shape⁰ {
+//│     throw "This code cannot be run as its compilation yielded an error."
+//│   }
 //│ };
 //│ end
 
@@ -578,21 +585,17 @@ fun mixedThree(x: Int32 | Str | Bool) = 0
 //│ ║  l.+3: 	fun mixedThree(x: Int32 | Str | Bool) = 0
 //│ ╙──      	                  ^^^^^^^^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define mixed⁰ as fun mixed¹(x: ‹incompatible(Int32, Str⁰)›): Int⁰ {
-//│   return 0
-//│ };
-//│ define twoPrims⁰ as fun twoPrims¹(x: ‹incompatible(Int32, Int64)›): Int⁰ {
-//│   return 0
-//│ };
-//│ define mixedThree⁰ as fun mixedThree¹(x: ‹incompatible(Int32, Str⁰)›): Int⁰ { return 0 };
-//│ end
+//│ throw "This code cannot be run as its compilation yielded an error."
 
 
 // The declaration was rejected where its type is written, so passing a value into the slot does not report
 // the error again.
 fun intoMixed(n: Int32) = mixed(n)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define intoMixed⁰ as fun intoMixed¹(n: Int32): Int⁰ { return mixed¹(n) }; end
+//│ define intoMixed⁰ as fun intoMixed¹(n: Int32): Int⁰ {
+//│   throw "This code cannot be run as its compilation yielded an error."
+//│ };
+//│ end
 
 
 // Widening an unrepresentable value into a `Str` or `Object` result does not report the declaration again.
@@ -606,13 +609,7 @@ fun mixedIntoObject(x: Int32 | Str): Object = x
 //│ ║  l.+2: 	fun mixedIntoObject(x: Int32 | Str): Object = x
 //│ ╙──      	                       ^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define outOfMixed⁰ as fun outOfMixed¹(x: ‹incompatible(Int32, Str⁰)›): Str⁰ {
-//│   return x
-//│ };
-//│ define mixedIntoObject⁰ as fun mixedIntoObject¹(x: ‹incompatible(Int32, Str⁰)›): Object⁰ {
-//│   return x
-//│ };
-//│ end
+//│ throw "This code cannot be run as its compilation yielded an error."
 
 
 // Folding `sccF`'s tail call into the merged dispatcher loses its `as Int` coercion, and the loop can exit
@@ -667,13 +664,14 @@ fun sccG(): Num = sccF() + 0.5
 :js
 @tailrec
 fun annotLoop(n: Int): () = annotHelper(n)
-fun annotHelper(n) = if n <= 0 then () else annotLoop(n - 1)
+private fun annotHelper(n) = if n <= 0 then () else annotLoop(n - 1)
 annotHelper(100000)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ @tailrec
 //│ define annotLoop⁰ as fun annotLoop¹(n: Int⁰): Unit⁰ {
 //│   return annotHelper⁰(n)
 //│ };
+//│ @private
 //│ define annotHelper¹ as fun annotHelper⁰(n: Int⁰): Unit⁰ {
 //│   let scrut: ?, tmp: Int⁰;
 //│   set scrut = <=⁰(n, 0);
@@ -716,7 +714,7 @@ annotHelper(100000)
 //│ define annotLoop⁰ as fun annotLoop¹(n: Int⁰): Unit⁰ {
 //│   return annotLoop_annotHelper⁰(0, n)
 //│ };
-//│ @inline
+//│ @inline @private
 //│ define annotHelper¹ as fun annotHelper⁰(n: Int⁰): Unit⁰ {
 //│   return annotLoop_annotHelper⁰(1, n)
 //│ };
@@ -840,7 +838,9 @@ val bad: Str = thunk
 //│ ║  l.+1: 	val bad: Str = thunk
 //│ ╙──      	               ^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp: Function⁰; set tmp = thunk¹(); define bad² as val bad³: Str⁰ = tmp; end
+//│ let tmp: Function⁰;
+//│ set tmp = thunk¹();
+//│ throw "This code cannot be run as its compilation yielded an error."
 
 
 // *No* parameter list must stay distinct from *one empty* one: only the former is auto-invoked, so a bare
@@ -855,8 +855,7 @@ val notCalled: Str = called
 //│ define called⁰ as fun called¹(): Int⁰ {
 //│   return 3
 //│ };
-//│ define notCalled⁰ as val notCalled¹: Str⁰ = called¹;
-//│ end
+//│ throw "This code cannot be run as its compilation yielded an error."
 
 
 // The two forms nonetheless agree on what they are *compiled to*: a source `fun` with no parameter list is
@@ -885,7 +884,10 @@ fun useMember: Int = M.memberGetter
 // would silently take the getter's result type and the cast would be dropped.
 fun callMember: Int = M.memberGetter{as Function}()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define callMember⁰ as fun callMember¹(): Int⁰ { return (M².memberGetter¹() as! Int⁰) }; end
+//│ define callMember⁰ as fun callMember¹(): Int⁰ {
+//│   return ((M².memberGetter¹ as! Function⁰)() as! Int⁰)
+//│ };
+//│ end
 
 
 // An instantiation is typed as its class, so it cannot fill a primitive slot. Were the `Instantiate` type
@@ -899,7 +901,7 @@ fun badInst() = useInt(new Bar("x"))
 //│ define badInst⁰ as fun badInst¹(): Int⁰ {
 //│   let tmp: Bar⁰;
 //│   set tmp = new Bar⁰("x");
-//│   return useInt¹(tmp)
+//│   throw "This code cannot be run as its compilation yielded an error."
 //│ };
 //│ end
 
@@ -956,7 +958,10 @@ fun badFn() = applyF(42)
 //│ ║  l.+1: 	fun badFn() = applyF(42)
 //│ ╙──      	                     ^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define badFn⁰ as fun badFn¹(): Int⁰ { return applyF¹(42) }; end
+//│ define badFn⁰ as fun badFn¹(): Int⁰ {
+//│   throw "This code cannot be run as its compilation yielded an error."
+//│ };
+//│ end
 
 
 // A `Str`-typed helper for the `declare fun` blocks below.
@@ -1024,7 +1029,7 @@ fun badParse() = useStr(parseIt("1", 10))
 //│ define badParse⁰ as fun badParse¹(): Str⁰ {
 //│   let tmp: Int⁰;
 //│   set tmp = globalThis⁰.parseIt⁰("1", 10);
-//│   return useStr¹(tmp)
+//│   throw "This code cannot be run as its compilation yielded an error."
 //│ };
 //│ end
 
@@ -1046,7 +1051,7 @@ fun useGetFn() = useFn(getFn)
 // differently-typed slot as a checked downcast. This is what lets an interop body call a mistyped operator.
 fun viaUntyped(s, radix): Str = @untyped parseIt(s, radix)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define viaUntyped⁰ as fun viaUntyped¹(s: ?, radix: ?): Str⁰ {
+//│ define viaUntyped⁰ as fun viaUntyped¹(s: Unknown, radix: Unknown): Str⁰ {
 //│   let tmp: Unknown;
 //│   set tmp = globalThis⁰.parseIt⁰((s as! Str⁰), (radix as! Int⁰));
 //│   return (tmp as! Str⁰)
@@ -1061,8 +1066,8 @@ fun viaTyped(s, radix): Str = parseIt(s, radix)
 //│ ║  l.+1: 	fun viaTyped(s, radix): Str = parseIt(s, radix)
 //│ ╙──      	                              ^^^^^^^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define viaTyped⁰ as fun viaTyped¹(s: ?, radix: ?): Str⁰ {
-//│   return globalThis⁰.parseIt⁰((s as! Str⁰), (radix as! Int⁰))
+//│ define viaTyped⁰ as fun viaTyped¹(s: Unknown, radix: Unknown): Str⁰ {
+//│   throw "This code cannot be run as its compilation yielded an error."
 //│ };
 //│ end
 
@@ -1150,7 +1155,10 @@ fun refTyped(x: Int): Str = x
 //│ ║  l.+1: 	fun refTyped(x: Int): Str = x
 //│ ╙──      	                            ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define refTyped⁰ as fun refTyped¹(x: Int⁰): Str⁰ { return x }; end
+//│ define refTyped⁰ as fun refTyped¹(x: Int⁰): Str⁰ {
+//│   throw "This code cannot be run as its compilation yielded an error."
+//│ };
+//│ end
 
 
 // A resolved selection is typed off its declaration too, and is likewise disclaimed - the annotation no longer
@@ -1170,7 +1178,10 @@ fun selTyped(): Int = Plain.f
 //│ ║  l.+1: 	fun selTyped(): Int = Plain.f
 //│ ╙──      	                      ^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define selTyped⁰ as fun selTyped¹(): Int⁰ { return Plain².f⁷ }; end
+//│ define selTyped⁰ as fun selTyped¹(): Int⁰ {
+//│   throw "This code cannot be run as its compilation yielded an error."
+//│ };
+//│ end
 
 
 // A lambda is disclaimed too: it reaches `LambdaRewriter` as the binding's RHS and is floated into a
@@ -1236,7 +1247,7 @@ if asWrapper(fortyTwo) is
   [a, b] then "pair"
   else "other"
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let scrut: ?, a: ?, b: ?, element1$: ?, element0$: ?, tmp: Unknown;
+//│ let scrut: ?, a: Unknown, b: Unknown, element1$: ?, element0$: ?, tmp: Unknown;
 //│ set tmp = fortyTwo¹();
 //│ set scrut = asWrapper¹((tmp as!! Wrapper⁰));
 //│ match scrut

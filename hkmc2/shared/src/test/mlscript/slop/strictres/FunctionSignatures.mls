@@ -139,6 +139,33 @@ private fun length(s) = s.length
 length("abc")
 //│ = 3
 
+// A forward type alias can get its entire parameter list from its argument.
+:e
+private fun binary: ForwardSignature[(Int, Int) -> Int]
+private fun binary(x) = x
+type ForwardSignature[A] = A
+//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its separate signature.
+//│ ║  l.+2: 	private fun binary(x) = x
+//│ ║        	                  ^^^
+//│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
+//│ ║  l.+1: 	private fun binary: ForwardSignature[(Int, Int) -> Int]
+//│ ╙──      	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+// The receiver of a type member can also supply the arrow.
+:e
+class Signatures[T] with
+  type Fn = T
+val signatures: Signatures[(Int, Int) -> Int] = new Signatures[(Int, Int) -> Int]
+private fun selected: signatures.Fn
+private fun selected(x) = x
+//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its separate signature.
+//│ ║  l.+5: 	private fun selected(x) = x
+//│ ║        	                    ^^^
+//│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
+//│ ║  l.+4: 	private fun selected: signatures.Fn
+//│ ╙──      	                      ^^^^^^^^^^^^^
+//│ signatures = Signatures
+
 // Check each written curried list, including aliases of later arrows.
 :e
 type Next = (Int?) -> Int

@@ -1,0 +1,13 @@
+// Imported by ForeignOperationOverrides. Its compiler never runs the new resolver's exposure walk.
+#lang(0.2.x)
+
+module ForeignOperationBase with
+  open class Base with
+    open fun inspect(x) = 0
+    open fun rest(...xs) = 0
+    open mut val item = 0
+  open class Typed[T] with
+    open fun use(x: T): Int = 0
+  open class Signed[T] with
+    open fun use: T -> Int
+    open fun use(x) = 0

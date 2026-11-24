@@ -39,7 +39,7 @@ let before = count
 
 // Backslash arguments may explicitly suspend a placeholder-free value.
 :expect 42
-fun invoke(f) = f()
+private fun invoke(f) = f()
 invoke \ (=> 42)
 //│ = 42
 

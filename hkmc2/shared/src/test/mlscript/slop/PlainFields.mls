@@ -3,7 +3,7 @@
 :checkIR
 
 
-open js { plainField }
+open js.{ plainField }
 
 fun isDataField(obj, name) =
   let descriptor = globalThis.Object.getOwnPropertyDescriptor(obj, name)
@@ -29,7 +29,7 @@ class Header(@plainField mut val value: Int, mut val ordinary: Int)
 //│   }
 //│   constructor(value, ordinary) {
 //│     this.value = value;
-//│     this.ordinary = ordinary;
+//│     this.#ordinary = ordinary;
 //│   }
 //│   #ordinary;
 //│   get ordinary() { return this.#ordinary; }
@@ -170,6 +170,7 @@ class PlainChild extends AccessorBase with
 //│ ╟── Inherited member 'value' is defined here
 //│ ║  l.XX: 	  open mut val value = 1
 //│ ╙──      	               ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 class PlainBase with
   @plainField open mut val value = 1
@@ -183,6 +184,7 @@ class AccessorChild extends PlainBase with
 //│ ╟── Inherited member 'value' is defined here
 //│ ║  l.XX: 	  @plainField open mut val value = 1
 //│ ╙──      	                           ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :expect [true, false, 3]
 class PlainOverride extends PlainBase with
@@ -192,6 +194,25 @@ set plainOverride.value += 1
 [isDataField(plainOverride, "value"), hasAccessor(plainOverride, "value"), plainOverride.value]
 //│ = [true, false, 3]
 //│ plainOverride = PlainOverride { value: 3 }
+
+// A write to a plain field through the base type reaches the same property on the subclass.
+:ge
+class PlainSlot with
+  @plainField open mut val item: Any = "initial"
+class PlainStringSlot extends PlainSlot with
+  @plainField override mut val item: Str = "child"
+fun writeInt(slot: PlainSlot) = set slot.item = 42
+let slot = new mut PlainStringSlot
+writeInt(slot)
+slot.item
+//│ ╔══[COMPILATION ERROR] Overriding mutable field 'item' with representation 'Str' must accept writes through the inherited field with representation 'Unknown'
+//│ ║  l.+4: 	  @plainField override mut val item: Str = "child"
+//│ ║        	                               ^^^^
+//│ ╟── The overridden member 'item' is defined here
+//│ ║  l.+2: 	  @plainField open mut val item: Any = "initial"
+//│ ╙──      	                           ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ slot = undefined
 
 // Abstract declarations retain the annotation without an initializer in the IR.
 :expect [true, false, 5]

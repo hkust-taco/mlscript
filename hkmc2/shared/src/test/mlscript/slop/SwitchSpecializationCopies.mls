@@ -5,7 +5,7 @@
 // The first case resets the local after an opaque call. The next case completes
 // normally, so specialization must retain both the assignment and the switch break.
 :sjs
-fun copySwitch(initial, choose, effect) =
+fun copySwitch(initial, choose, effect: () -> Any) =
   let state = initial
   if state is 0 do
     effect()
@@ -19,7 +19,7 @@ fun copySwitch(initial, choose, effect) =
 //│ let copySwitch;
 //│ copySwitch = function copySwitch(initial, choose, effect) {
 //│   let state;
-//│   state = initial /* as! Int */;
+//│   state = initial;
 //│   switch (state) {
 //│     case 0:
 //│       runtime.safeCall(effect());
@@ -81,12 +81,12 @@ fun divergingCopy(initial, choose, next) =
 //│ let divergingCopy;
 //│ divergingCopy = function divergingCopy(initial, choose, next) {
 //│   let state;
-//│   state = initial /* as! Int */;
-//│   if (state === 0) {
+//│   state = initial;
+//│   if (initial === 0) {
 //│     if (choose === true) {
 //│       state = 1;
 //│     } else {
-//│       state = next /* as! Int */;
+//│       state = next;
 //│     }
 //│   }
 //│   if (state === 1) { return "one" }

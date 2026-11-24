@@ -31,8 +31,8 @@ record.apply(42)
 
 // Both wildcard sources arrive after the annotation; the unused signature must still be checked.
 :ge
-open Left
-open Right
+open Left.{ * }
+open Right.{ * }
 fun unused(value: Types.Number) = value
 module Left with
   module Types with
@@ -194,7 +194,7 @@ increment(41)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let increment;
 //│ @private
-//│ define increment as fun increment⁰(_0: Int⁰): ? {
+//│ define increment as fun increment⁰(_0: Unknown): ? {
 //│   return +⁰(_0, 1)
 //│ };
 //│ set increment¹ = increment⁰;
@@ -223,18 +223,29 @@ apply(41) \ _ + 1
 //│ = 42
 
 
-// Overrides are checked against the representations of the members they override, on every target.
-:ge
+// An unannotated result takes the representation of every member of its override family, on every target:
+// calls of `Base.get` can dispatch to its override, which returns a string.
+:expect "str"
 private class Base() with
   open fun get() = new Base()
 private class Derived() extends Base() with
   override fun get() = "str"
 private fun produce(b) = b.get()
 produce(Derived())
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Base' at an unrelated type 'Str'
-//│ ║  l.+5: 	private fun produce(b) = b.get()
-//│ ╙──      	                         ^^^^^^^
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Base'
+//│ = "str"
+
+// Overrides are checked against the representations that the members they override declare, on every target.
+:ge
+private class DeclaredBase() with
+  open fun get(): DeclaredBase = new DeclaredBase()
+private class DeclaredDerived() extends DeclaredBase() with
+  override fun get() = "str"
+private fun produceDeclared(b) = b.get()
+produceDeclared(DeclaredDerived())
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'DeclaredBase' at an unrelated type 'Str'
+//│ ║  l.+5: 	private fun produceDeclared(b) = b.get()
+//│ ╙──      	                                 ^^^^^^^
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'DeclaredBase'
 //│ ║  l.+4: 	  override fun get() = "str"
 //│ ╙──      	                       ^^^^^
-//│ = "str"
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

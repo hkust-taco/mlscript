@@ -2,7 +2,7 @@
 :js
 :checkIR
 
-open annotations
+open annotations.{ * }
 
 // Both ordinary pattern methods and each compiled use copy this transformation.
 // Nested closures, let bindings and pattern aliases must refer to their own copy.
@@ -84,13 +84,24 @@ fun localClass(x) =
 [localClass(1), localClass(2)]
 //│ = [3, 4]
 
-// The erased return signature must name the same cloned class as the parameter.
+// Destructuring a cloned class must read the field belonging to that copy of the class.
+pattern LocalField = x =>
+  data class Box(word: Int32, value: Int)
+  fun unpack(word: Int32, value: Int) = value
+  if Box(unsafe.undefined, x) is Box(word, value) then unpack(word, value) else 0
+
+:expect 42
+if 42 is (@compile LocalField) as value then value else 0
+//│ = 42
+
+// The erased return signature and the ascription must name the same cloned class as the parameter.
 // Copying the signature unchanged compares the fresh Box with the original Box
 // and rejects the valid return from identity.
 pattern LocalIdentity = x =>
   class Box
   fun identity(box: Box): Box = box
-  identity(new Box)
+  fun narrow(box): Box = box as Box
+  identity(narrow(new Box))
   x
 
 :noOpt

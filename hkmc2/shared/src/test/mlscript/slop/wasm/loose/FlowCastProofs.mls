@@ -1,5 +1,4 @@
 :.
-:global
 :flowBasedOpt mono
 :noInline
 
@@ -65,3 +64,171 @@ unknownCast("not a box")
 //│ return unknownCast¹("not a box")
 //│ Wasm result:
 //│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+
+
+// The reusable scheme already contains a constructor that passes the cast. A failing input
+// discovered after instantiation must keep the cast and prevent fusion of that source.
+:flowBasedOpt poly
+:deforest
+:lift
+:re
+:soir
+data class CopiedProofBox(x: Int)
+data class CopiedOtherBox(x: Int, y: Int)
+private fun copiedCast(flag: Bool, input: Any): Int =
+  val value: Any = if flag then CopiedProofBox(1) else input
+  val box: CopiedProofBox = value
+  if box is CopiedProofBox(x) then x else 0
+copiedCast(false, CopiedOtherBox(2, 3))
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp;
+//│ @private
+//│ define copiedCast⁰ as fun copiedCast¹(flag, input) {
+//│   let box, tmp1;
+//│   match flag
+//│     true =>
+//│       set tmp1 = CopiedProofBox⁰(1);
+//│       end
+//│     else
+//│       set tmp1 = input;
+//│       end
+//│   set box = (tmp1 as! CopiedProofBox¹);
+//│   match box
+//│     CopiedProofBox¹ =>
+//│       return box.x⁰
+//│     else
+//│       return 0
+//│   end
+//│ };
+//│ @data
+//│ define CopiedProofBox² as class CopiedProofBox¹ {
+//│   val x¹;
+//│   constructor CopiedProofBox⁰(x) {
+//│     define x¹ as val x⁰ = x;
+//│     end
+//│   }
+//│ };
+//│ @data
+//│ define CopiedOtherBox⁰ as class CopiedOtherBox² {
+//│   val x²;
+//│   val y⁰;
+//│   constructor CopiedOtherBox¹(x, y) {
+//│     define x² as val x³ = x;
+//│     define y⁰ as val y¹ = y;
+//│     end
+//│   }
+//│ };
+//│ set tmp = CopiedOtherBox¹(2, 3);
+//│ return copiedCast¹(false, tmp)
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+
+
+// An unknown producer reaching a copied cast invalidates the proof too.
+:flowBasedOpt poly
+:deforest
+:lift
+:re
+:soir
+data class UnknownProofBox(x: Int)
+private fun copiedUnknownCast(flag: Bool, input: Any): Int =
+  val value: Any = if flag then UnknownProofBox(1) else input
+  val box: UnknownProofBox = value
+  if box is UnknownProofBox(x) then x else 0
+copiedUnknownCast(false, "not a box")
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @private
+//│ define copiedUnknownCast⁰ as fun copiedUnknownCast¹(flag, input) {
+//│   let box, tmp;
+//│   match flag
+//│     true =>
+//│       set tmp = UnknownProofBox⁰(1);
+//│       end
+//│     else
+//│       set tmp = input;
+//│       end
+//│   set box = (tmp as! UnknownProofBox¹);
+//│   match box
+//│     UnknownProofBox¹ =>
+//│       return box.x⁴
+//│     else
+//│       return 0
+//│   end
+//│ };
+//│ @data
+//│ define UnknownProofBox² as class UnknownProofBox¹ {
+//│   val x⁵;
+//│   constructor UnknownProofBox⁰(x) {
+//│     define x⁵ as val x⁴ = x;
+//│     end
+//│   }
+//│ };
+//│ return copiedUnknownCast¹(false, "not a box")
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+
+
+// The successful branch must still pass its cast when the other branch has an
+// incompatible or unknown input. Fusing only the known source would break this path.
+:flowBasedOpt poly
+:deforest
+:lift
+:expect 2
+:soir
+data class SuccessfulProofBox(x: Int)
+data class SuccessfulOtherBox(x: Int, y: Int)
+private fun copiedSuccessfulCast(flag: Bool, input: Any): Int =
+  val value: Any = if flag then SuccessfulProofBox(1) else input
+  val box: SuccessfulProofBox = value
+  if box is SuccessfulProofBox(x) then x else 0
+copiedSuccessfulCast(true, SuccessfulOtherBox(2, 3)) + copiedSuccessfulCast(true, "not a box")
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp, tmp1, tmp2;
+//│ @private
+//│ define copiedSuccessfulCast⁰ as fun copiedSuccessfulCast¹(flag, input) {
+//│   let box, tmp3;
+//│   match flag
+//│     true =>
+//│       set tmp3 = SuccessfulProofBox⁰(1);
+//│       end
+//│     else
+//│       set tmp3 = input;
+//│       end
+//│   set box = (tmp3 as! SuccessfulProofBox¹);
+//│   match box
+//│     SuccessfulProofBox¹ =>
+//│       return box.x⁶
+//│     else
+//│       return 0
+//│   end
+//│ };
+//│ @data
+//│ define SuccessfulProofBox² as class SuccessfulProofBox¹ {
+//│   val x⁷;
+//│   constructor SuccessfulProofBox⁰(x) {
+//│     define x⁷ as val x⁶ = x;
+//│     end
+//│   }
+//│ };
+//│ @data
+//│ define SuccessfulOtherBox⁰ as class SuccessfulOtherBox² {
+//│   val x⁸;
+//│   val y²;
+//│   constructor SuccessfulOtherBox¹(x, y) {
+//│     define x⁸ as val x⁹ = x;
+//│     define y² as val y³ = y;
+//│     end
+//│   }
+//│ };
+//│ set tmp = SuccessfulOtherBox¹(2, 3);
+//│ set tmp1 = copiedSuccessfulCast¹(true, tmp);
+//│ set tmp2 = copiedSuccessfulCast¹(true, "not a box");
+//│ return +⁰(tmp1, tmp2)
+//│ Wasm result:
+//│ = 2

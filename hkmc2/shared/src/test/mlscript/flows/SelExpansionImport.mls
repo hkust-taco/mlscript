@@ -87,10 +87,12 @@ let e = Example.Test(123)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ e = Test(123)
 
-// * TODO: better error! (with location)
+// * TODO: better error!
 :e
 let e = Test(123)
-//│ ═══[COMPILATION ERROR] Cannot use non-term member Example in term position
+//│ ╔══[COMPILATION ERROR] Cannot use non-term member Example in term position
+//│ ║  l.XX: 	open Example
+//│ ╙──      	     ^^^^^^^
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   let e³,
 //│   e³ = ⟨Example⁰.⟩Test⁰(123)‹app³›

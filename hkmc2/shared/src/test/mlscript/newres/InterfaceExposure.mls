@@ -390,15 +390,25 @@ inspectAbstract(TypedHolder(KnownField(4)))
 //│ = 4
 
 // A result annotation does not hide callable methods of a returned private class.
-// FIXME: Follow the declared member interface to its implementation without
-// exposing initializer shapes hidden by the nominal annotation.
-:breakme
 :e
 private class EscapedClass with
   fun inspect(x) = x.a
 fun annotatedInstance(): EscapedClass = new EscapedClass
 new EscapedClass().inspect({a: 1})
-//│ = 1
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	  fun inspect(x) = x.a
+//│ ║        	                   ^^^
+//│ ╟── Cannot resolve member 'a' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+2: 	  fun inspect(x) = x.a
+//│ ║        	              ^
+//│ ╟── Member 'inspect' is accessible here.
+//│ ║  l.+2: 	  fun inspect(x) = x.a
+//│ ║        	  ^^^^^^^^^^^^^^
+//│ ╟── 'annotatedInstance' is exposed by this compilation unit.
+//│ ║  l.+3: 	fun annotatedInstance(): EscapedClass = new EscapedClass
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Spreading an array hides its length, but still exposes the stored functions.
 :e

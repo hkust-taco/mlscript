@@ -11,45 +11,45 @@ a.A#get() + A(2).get()
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $tag@0 i32) (field $parent@1 (ref null $TypeInfoBase)))))
 //│   (type $Object (sub (struct (field $typeinfo@0 (mut (ref $TypeInfoBase))))))
-//│   (type $A (sub $Object (struct (field $typeinfo@0 (mut (ref $TypeInfoBase))) (field $x@1 (mut (ref null i31))))))
+//│   (type $A (sub $Object (struct (field $typeinfo@0 (mut (ref $TypeInfoBase))) (field $x@1 (mut (ref null any))))))
 //│   (type $A_typeinfo (sub $TypeInfoBase (struct (field $tag@0 i32) (field $parent@1 (ref null $TypeInfoBase)))))
-//│   (type $A_init (func (param $this (ref $A)) (param $x (ref null i31)) (result (ref $A))))
-//│   (type $A_ctor (func (param $x (ref null i31)) (result (ref $A))))
-//│   (type $A_get (func (param $this (ref $A)) (result (ref null i31))))
+//│   (type $A_init (func (param $this (ref $A)) (param $x (ref null any)) (result (ref $A))))
+//│   (type $A_ctor (func (param $x (ref null any)) (result (ref $A))))
+//│   (type $A_get (func (param $this (ref $A)) (result (ref null any))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
-//│   (type $entry (func (result (ref null i31))))
+//│   (type $entry (func (result (ref null any))))
 //│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
 //│   (global $A_typeinfo (export "A_typeinfo") (ref $A_typeinfo) (struct.new $A_typeinfo
 //│     (i32.const 1)
 //│     (ref.null $TypeInfoBase)))
 //│   (global $a (export "a") (mut (ref null $A)) (ref.null $A))
-//│   (func $A_init (export "A_init") (type $A_init) (param $this (ref $A)) (param $x (ref null i31)) (result (ref $A))
+//│   (func $A_init (export "A_init") (type $A_init) (param $this (ref $A)) (param $x (ref null any)) (result (ref $A))
 //│     (struct.set $A $x@1
 //│       (local.get $this)
 //│       (local.get $x))
 //│     (return
 //│       (ref.cast (ref $A)
 //│         (local.get $this))))
-//│   (func $A_ctor (export "A_ctor") (type $A_ctor) (param $x (ref null i31)) (result (ref $A))
+//│   (func $A_ctor (export "A_ctor") (type $A_ctor) (param $x (ref null any)) (result (ref $A))
 //│     (local $this (ref $A))
 //│     (local.set $this
 //│       (struct.new $A
 //│         (global.get $A_typeinfo)
-//│         (ref.null i31)))
+//│         (ref.null any)))
 //│     (drop
 //│       (call $A_init
 //│         (local.get $this)
 //│         (local.get $x)))
 //│     (return
 //│       (local.get $this)))
-//│   (func $A_get (export "A_get") (type $A_get) (param $this (ref $A)) (result (ref null i31))
+//│   (func $A_get (export "A_get") (type $A_get) (param $this (ref $A)) (result (ref null any))
 //│     (return
 //│       (struct.get $A $x@1
 //│         (local.get $this))))
-//│   (func $entry (export "entry") (type $entry) (result (ref null i31))
-//│     (local $tmp (ref null i31))
+//│   (func $entry (export "entry") (type $entry) (result (ref null any))
+//│     (local $tmp (ref null any))
 //│     (local $tmp1 (ref null $A))
-//│     (local $tmp2 (ref null i31))
+//│     (local $tmp2 (ref null any))
 //│     (global.set $a
 //│       (call $A_ctor
 //│         (ref.i31
@@ -67,10 +67,9 @@ a.A#get() + A(2).get()
 //│         (ref.cast (ref $A)
 //│           (local.get $tmp1))))
 //│     (return
-//│       (ref.cast (ref null i31)
-//│         (call $plus_impl
-//│           (local.get $tmp)
-//│           (local.get $tmp2)))))
+//│       (call $plus_impl
+//│         (local.get $tmp)
+//│         (local.get $tmp2))))
 //│   (elem $A_init declare func $A_init)
 //│   (elem $A_ctor declare func $A_ctor)
 //│   (elem $A_get declare func $A_get)
@@ -216,29 +215,29 @@ Prim(0).take(n32)
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $tag@0 i32) (field $parent@1 (ref null $TypeInfoBase)))))
 //│   (type $Object (sub (struct (field $typeinfo@0 (mut (ref $TypeInfoBase))))))
-//│   (type $Prim (sub $Object (struct (field $typeinfo@0 (mut (ref $TypeInfoBase))) (field $v@1 (mut (ref null i31))))))
+//│   (type $Prim (sub $Object (struct (field $typeinfo@0 (mut (ref $TypeInfoBase))) (field $v@1 (mut (ref null any))))))
 //│   (type $Prim_typeinfo (sub $TypeInfoBase (struct (field $tag@0 i32) (field $parent@1 (ref null $TypeInfoBase)))))
-//│   (type $Prim_init (func (param $this (ref $Prim)) (param $v (ref null i31)) (result (ref $Prim))))
-//│   (type $Prim_ctor (func (param $v (ref null i31)) (result (ref $Prim))))
+//│   (type $Prim_init (func (param $this (ref $Prim)) (param $v (ref null any)) (result (ref $Prim))))
+//│   (type $Prim_ctor (func (param $v (ref null any)) (result (ref $Prim))))
 //│   (type $Prim_take (func (param $this (ref $Prim)) (param $m i32) (result i32)))
 //│   (type $entry (func (result i32)))
 //│   (global $Prim_typeinfo (export "Prim_typeinfo") (ref $Prim_typeinfo) (struct.new $Prim_typeinfo
 //│     (i32.const 1)
 //│     (ref.null $TypeInfoBase)))
 //│   (global $n32 (export "n32") (mut i32) (i32.const 0))
-//│   (func $Prim_init (export "Prim_init") (type $Prim_init) (param $this (ref $Prim)) (param $v (ref null i31)) (result (ref $Prim))
+//│   (func $Prim_init (export "Prim_init") (type $Prim_init) (param $this (ref $Prim)) (param $v (ref null any)) (result (ref $Prim))
 //│     (struct.set $Prim $v@1
 //│       (local.get $this)
 //│       (local.get $v))
 //│     (return
 //│       (ref.cast (ref $Prim)
 //│         (local.get $this))))
-//│   (func $Prim_ctor (export "Prim_ctor") (type $Prim_ctor) (param $v (ref null i31)) (result (ref $Prim))
+//│   (func $Prim_ctor (export "Prim_ctor") (type $Prim_ctor) (param $v (ref null any)) (result (ref $Prim))
 //│     (local $this (ref $Prim))
 //│     (local.set $this
 //│       (struct.new $Prim
 //│         (global.get $Prim_typeinfo)
-//│         (ref.null i31)))
+//│         (ref.null any)))
 //│     (drop
 //│       (call $Prim_init
 //│         (local.get $this)

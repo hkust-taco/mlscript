@@ -14,8 +14,8 @@ n
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Bool' at an unrelated type 'Int'
 //│ ║  l.+1: 	val n: Int = true && 42
 //│ ╙──      	             ^^^^^^^^^^
-//│ = 42
-//│ n = 42
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ n = undefined
 
 
 :e
@@ -24,5 +24,5 @@ s
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Bool' at an unrelated type 'Str'
 //│ ║  l.+1: 	val s: Str = false || "ok"
 //│ ╙──      	             ^^^^^^^^^^^^^
-//│ = "ok"
-//│ s = "ok"
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ s = undefined
