@@ -762,9 +762,6 @@ final case class FunDefn private(
     val configOverride: Opt[Config],
     val annotations: Ls[Annot],
 ) extends Defn:
-  // A symbol generated in the IR without an erasure adopts the signature of its first definition. Passes can then
-  // give the definition another signature under the same symbol (see `TermSymbol.irErasure`).
-  if !dSym.isErased then dSym.initializeErasure(S(signature.erasure))
   def params: Ls[LoweredParamList] = signature.params
   def copy(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, dSym: TermSymbol,
       signature: FunDefn.Signature, body: Block)(configOverride: Opt[Config], annotations: Ls[Annot]): FunDefn =
@@ -931,7 +928,7 @@ object FunDefn:
   def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[LoweredParamList],
       bodyType: Opt[ErasedValueType], body: Block)(configOverride: Opt[Config], annotations: Ls[Annot])(using State) =
     val signature = Signature.fromParams(params, ErasedResult.fromAnnotations(bodyType, annotations))
-    val tSym = TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme))
+    val tSym = TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme), S(signature.erasure))
     sym.tsym = S(tSym)
     FunDefn(owner, sym, tSym, signature, body)(configOverride, annotations)
 

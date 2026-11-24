@@ -593,11 +593,13 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
         val instId = id.getInstId
         val (body, parent) = restOriginalBodiesAndParentRest(id.withoutInstId)
         val fvs = restFnFvs(id)
-        extractedFun(id.withoutInstId, instId, syms, captureParams(instId, fvs) :: Nil, fvs, body,
+        val fun = extractedFun(id.withoutInstId, instId, syms, captureParams(instId, fvs) :: Nil, fvs, body,
             PrivateModifier :: Nil): rewriter =>
           parent match
           case S(parentId) => rewriter.callRest(parentId.withInstId(instId))(Return(_))
           case N => Return(Value.Lit(Tree.UnitLit(true))(N))
+        fun.dSym.initializeErasure(S(fun.signature.erasure))
+        fun
   end newRestFuns
   
   def otherNewFunDefns: Iterable[FunDefn] =

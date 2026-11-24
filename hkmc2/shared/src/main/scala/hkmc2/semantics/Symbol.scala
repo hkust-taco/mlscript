@@ -450,8 +450,8 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
     with DefinitionSymbol[TermDefinition]
     with NamedSymbol
 :
-  // `null` marks source declarations not yet visited by Erasure; `N` is an initialized, unknown erasure.
-  // Generated MIR symbols initialize the same slot directly, retaining signatures separately from value types.
+  // `null` means uninitialized. `N` is an initialized, unknown erasure.
+  // Generated functions need this slot only for signature reads before `Define` or `ClsLikeDefn` sets `irDefn`.
   private var assignedErasure: Opt[ErasedValueType | ErasedCallableSignature] = null
   def this(k: TermDefKind, owner: Opt[InnerSymbol], id: Tree.Ident,
       erasure: Opt[ErasedValueType | ErasedCallableSignature])(using State) =
