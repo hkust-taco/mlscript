@@ -61,7 +61,7 @@ in
     D then 1
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let scrut, tmp;
-//│ set scrut = Predef⁰.hide⁰(true);
+//│ set scrut = (Predef⁰.hide⁰(true) as!! Bool⁰);
 //│ match scrut
 //│   true =>
 //│     set tmp = C⁰(123);
@@ -95,7 +95,7 @@ in
     E(z) then {print(z), z}
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let scrut, x, y, tmp, arg$D$0$, arg$C$0$;
-//│ set scrut = Predef⁰.hide⁰(true);
+//│ set scrut = (Predef⁰.hide⁰(true) as!! Bool⁰);
 //│ match scrut
 //│   true =>
 //│     set tmp = C⁰(123);

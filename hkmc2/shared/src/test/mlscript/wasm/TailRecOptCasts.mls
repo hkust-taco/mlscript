@@ -138,7 +138,7 @@ wideOf(2)
 //│         set id = 2;
 //│         continue loopLabel
 //│       2 =>
-//│         let scrut: ?, w: Wide⁰, tmp: Int⁰;
+//│         let scrut: Unknown, w: Wide⁰, tmp: Int⁰;
 //│         set scrut = <=⁰(param0, 0);
 //│         match scrut
 //│           true =>

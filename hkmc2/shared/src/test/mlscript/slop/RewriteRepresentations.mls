@@ -102,7 +102,7 @@ delay(42).run()
 pattern Lower = "a"..="z"
 ["q" is Lower, "Q" is Lower]
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let scrut: ?, scrut1: ?, unapplyResult: ?, output: ?, bindings: ?, tmp: Bool⁰, unapplyResult1: ?, output1: ?, bindings1: ?, tmp1: Bool⁰;
+//│ let scrut: Str⁰, scrut1: Str⁰, unapplyResult: ?, output: ?, bindings: ?, tmp: Bool⁰, unapplyResult1: ?, output1: ?, bindings1: ?, tmp1: Bool⁰;
 //│ define Lower⁰ as pattern Lower¹ {
 //│   method unapply⁰ = fun unapply¹(input: ?): ? {
 //│     let isGreaterThanLower: ?, isLessThanUpper: ?;

@@ -118,7 +118,7 @@ nest(2, 0)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ @private
 //│ define nest⁰ as fun nest¹(n: Int⁰, acc: Unknown): Unknown {
-//│   let scrut: ?, tmp: Int⁰, tmp1: Array⁰;
+//│   let scrut: Bool⁰, tmp: Int⁰, tmp1: Array⁰;
 //│   set scrut = Predef⁰.equals⁰(n, 0);
 //│   match scrut
 //│     true =>

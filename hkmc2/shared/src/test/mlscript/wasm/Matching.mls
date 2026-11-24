@@ -98,7 +98,7 @@ if Bar(true) is
 //│     (return
 //│       (local.get $this)))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
-//│     (local $scrut (ref null any))
+//│     (local $scrut (ref null $Bar))
 //│     (local $a (ref null i31))
 //│     (local $arg$Bar$0$ (ref null any))
 //│     (local $currentTypeInfo (ref null any))
@@ -159,8 +159,7 @@ if Bar(true) is
 //│                 (block
 //│                   (local.set $arg$Bar$0$
 //│                     (struct.get $Bar $y@1
-//│                       (ref.cast (ref null $Bar)
-//│                         (local.get $scrut))))
+//│                       (local.get $scrut)))
 //│                   (local.set $a
 //│                     (ref.cast (ref null i31)
 //│                       (local.get $arg$Bar$0$)))

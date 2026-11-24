@@ -11,10 +11,9 @@ import ErasureInputs.{InputSymbol, ResultSlot}
   * auxiliary constructor parameters, and the definitions synthesized for record fields.
   * Keep their enumeration shared so every delayed slot is prepared before erasure reads it.
   *
-  * Variables include the temporaries that elaboration declares with `LetDecl` (currently only the `old` copy
-  * that a backtracking assignment `set x = v in body` saves and restores). They are slots like source
-  * variables: a temporary without a representation would need a conversion from and back to the saved
-  * variable's representation, which is a checked cast, or an error for an unboxed primitive on Wasm.
+  * Variables include the temporaries that hold a split's scrutinee or save the value of `x`
+  * across `set x = v in body`. These slots need the representation of the value they hold,
+  * including when a match or a restored assignment reads an unboxed primitive on Wasm.
   */
 private[hkmc2] final class ErasureDeclarations(root: Statement):
   val statements = mutable.ArrayBuffer.empty[Statement]
@@ -66,15 +65,14 @@ private[hkmc2] final class ErasureDeclarations(root: Statement):
       case Pattern.Guarded(inner, guard) => pattern(inner); visit(guard)
 
   private def split(branches: SimpleSplit): Unit = branches match
-    case SimpleSplit.Cons(SimpleSplit.Head.Let(sym: VarSymbol, _), tail) =>
+    case SimpleSplit.Cons(SimpleSplit.Head.Let(sym, _), tail) =>
       variable(sym)
       split(tail)
     case SimpleSplit.Cons(SimpleSplit.Head.Match(_, pat, consequent), tail) =>
       pattern(pat)
       split(consequent)
       split(tail)
-    case SimpleSplit.Cons(_, tail) => split(tail)
-    case _ => ()
+    case SimpleSplit.Else(_) | SimpleSplit.End => ()
 
   private def visit(statement: Statement): Unit = if visited.add(Identity(statement)) then
     statements += statement

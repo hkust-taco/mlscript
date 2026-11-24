@@ -169,7 +169,7 @@ consume(produce(2))
 //│ };
 //│ @private
 //│ define produce⁰ as fun produce¹(n: Int⁰): Function⁰ {
-//│   let scrut: ?, tmp1: Int⁰;
+//│   let scrut: Bool⁰, tmp1: Int⁰;
 //│   set scrut = Predef⁰.equals⁰(n, 0);
 //│   match scrut
 //│     true =>
@@ -319,7 +319,7 @@ get(H(Box(42), 1), true)
 //│ let tmp: Box², tmp1: H⁰;
 //│ @private
 //│ define get⁰ as fun get¹(h: H⁰, c: Bool⁰): Int⁰ {
-//│   let scrut: ?, v: Int⁰, arg$Box$0$: Int⁰;
+//│   let scrut: Box², v: Int⁰, arg$Box$0$: Int⁰;
 //│   match c
 //│     true =>
 //│       set scrut = h.b⁴;

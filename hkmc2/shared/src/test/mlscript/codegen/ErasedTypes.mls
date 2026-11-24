@@ -673,7 +673,7 @@ annotHelper(100000)
 //│ };
 //│ @private
 //│ define annotHelper¹ as fun annotHelper⁰(n: Int⁰): Unit⁰ {
-//│   let scrut: ?, tmp: Int⁰;
+//│   let scrut: Bool⁰, tmp: Int⁰;
 //│   set scrut = <=⁰(n, 0);
 //│   match scrut
 //│     true =>
@@ -694,7 +694,7 @@ annotHelper(100000)
 //│         set id = 1;
 //│         continue loopLabel
 //│       1 =>
-//│         let scrut: ?, tmp: Int⁰;
+//│         let scrut: Bool⁰, tmp: Int⁰;
 //│         set scrut = <=⁰(param0, 0);
 //│         match scrut
 //│           true =>
@@ -740,7 +740,7 @@ sccHelper(100000)
 //│   return (r as! Int⁰)
 //│ };
 //│ define sccHelper¹ as fun sccHelper⁰(n: Int⁰): Num⁰ {
-//│   let scrut: ?, tmp: Int⁰;
+//│   let scrut: Bool⁰, tmp: Int⁰;
 //│   set scrut = <=⁰(n, 0);
 //│   match scrut
 //│     true =>
@@ -761,7 +761,7 @@ sccHelper(100000)
 //│         set id = 1;
 //│         continue loopLabel
 //│       1 =>
-//│         let scrut: ?, tmp: Int⁰;
+//│         let scrut: Bool⁰, tmp: Int⁰;
 //│         set scrut = <=⁰(param0, 0);
 //│         match scrut
 //│           true =>
@@ -1247,7 +1247,7 @@ if asWrapper(fortyTwo) is
   [a, b] then "pair"
   else "other"
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let scrut: ?, a: Unknown, b: Unknown, element1$: ?, element0$: ?, tmp: Unknown;
+//│ let scrut: Wrapper⁰, a: Unknown, b: Unknown, element1$: ?, element0$: ?, tmp: Unknown;
 //│ set tmp = fortyTwo¹();
 //│ set scrut = asWrapper¹((tmp as!! Wrapper⁰));
 //│ match scrut
@@ -1369,7 +1369,7 @@ fun capturingLoop(n: Int, acc: Str) =
     capturingLoop(n - 1, h())
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define capturingLoop⁰ as fun capturingLoop¹(n: Int⁰, acc: Str⁰): Str⁰ {
-//│   let scrut: ?, g: Function⁰, h: Function⁰, tmp: Int⁰, tmp1: ?;
+//│   let scrut: Bool⁰, g: Function⁰, h: Function⁰, tmp: Int⁰, tmp1: ?;
 //│   set scrut = <=⁰(n, 0);
 //│   match scrut
 //│     true =>
@@ -1391,7 +1391,7 @@ fun capturingLoop(n: Int, acc: Str) =
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define capturingLoop⁰ as fun capturingLoop¹(n: Int⁰, acc: Str⁰): Str⁰ {
 //│   loop loopLabel:
-//│     let scrut: ?, tmp: Int⁰, tmp1: ?, acc1: Str⁰;
+//│     let scrut: Bool⁰, tmp: Int⁰, tmp1: ?, acc1: Str⁰;
 //│     set acc1 = acc;
 //│     set scrut = <=⁰(n, 0);
 //│     match scrut

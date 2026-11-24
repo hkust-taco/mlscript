@@ -104,10 +104,10 @@ modSome(Some(17), 3)
 //│ deforest > 	fields: x⁴.x⁵
 //│ deforest > <<< fusing <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let Some_x: Unknown, fv_scrut: ?, fv_m: Unknown, fv_tmp: Unknown, inlinedVal: Object⁰;
+//│ let Some_x: Unknown, fv_scrut: Bool⁰, fv_m: Unknown, fv_tmp: Unknown, inlinedVal: Object⁰;
 //│ define modSome⁰ as fun modSome¹(x: Unknown, m: Unknown): Object⁰ {
 //│   loop loopLabel:
-//│     let scrut: ?, arg$Some$0$: Unknown, tmp: Unknown, tmp1: Some¹;
+//│     let scrut: Bool⁰, arg$Some$0$: Unknown, tmp: Unknown, tmp1: Some¹;
 //│     match x
 //│       Some¹ =>
 //│         set arg$Some$0$ = x.x⁵;

@@ -252,8 +252,8 @@ sealed abstract class LocalVarSymbol(name: Str)(using State) extends FlowSymbol(
   * - A temp holding a branching term's result is named before those branches are lowered, so
   *   `Normalization.joinTempType` populates it with the join of their representations once they have all
   *   been seen.
-  * - A temp that elaboration declares with `LetDecl` (see `ErasureDeclarations`) is a slot like a source
-  *   variable: `Erasure` populates it with the representation inferred from the values flowing into it.
+  * - For a temp bound by `LetDecl` or `SimpleSplit.Head.Let`, erasure infers the representation
+  *   from the values flowing into the binding (see `ErasureDeclarations`).
   */
 class TempSymbol(val trm: Opt[Term], initErasedType: Opt[ErasedValueType], dbgNme: Str = "tmp")(using State)
     extends LocalVarSymbol(dbgNme):

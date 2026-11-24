@@ -200,7 +200,7 @@ let recursiveIterator = forward()
 //│ };
 //│ @generator
 //│ define recursive$worker as fun recursive$worker⁰(count: Int⁰, result: Int⁰): generator Int⁰ {
-//│   let scrut: ?, tmp3: Int⁰;
+//│   let scrut: Bool⁰, tmp3: Int⁰;
 //│   do yield⁰(count);
 //│   set scrut = >⁰(count, 0);
 //│   match scrut

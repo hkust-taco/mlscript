@@ -352,7 +352,7 @@ arrived(route(true, true, 1))
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let $s_Step, $s_rest, $c_rest, $σ_rest, $d_rest, $a_Away, $a_rest, tmp: Function⁰;
 //│ @affine(1) @private
-//│ define $s_Step as fun $s_Step⁰(Step_x: Int⁰)(fv_arg$Step$0$: Int⁰, fv_x: Int⁰, fv_scrut: ?): Nothing {
+//│ define $s_Step as fun $s_Step⁰(Step_x: Int⁰)(fv_arg$Step$0$: Int⁰, fv_x: Int⁰, fv_scrut: Bool⁰): Nothing {
 //│   set fv_arg$Step$0$ = Step_x;
 //│   set fv_x = fv_arg$Step$0$;
 //│   set fv_scrut = >⁰(fv_x, 0);
@@ -399,7 +399,7 @@ arrived(route(true, true, 1))
 //│ };
 //│ @private
 //│ define route⁰ as fun route¹(c: Bool⁰, d: Bool⁰, n: Int⁰): Function⁰ {
-//│   let x: Int⁰, scrut: ?, arg$Step$0$: Int⁰, s: Function⁰;
+//│   let x: Int⁰, scrut: Bool⁰, arg$Step$0$: Int⁰, s: Function⁰;
 //│   match d
 //│     true =>
 //│       return $a_Away⁰()
