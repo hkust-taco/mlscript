@@ -211,3 +211,39 @@ new Caller().run()
 //│ deforest > 	fields: box⁰.v⁰
 //│ deforest > <<< fusing <<<
 //│ = 42
+
+
+// An indirect call can return either producer's object. Reading its field must use the call's
+// result even when projection would change the result of both producers to an unboxed word.
+declare module Math with
+  declare fun imul(x: Int, y: Int): Int32
+  declare fun abs(x: Int32): Int
+data class Word(bits: Int32)
+
+// FIXME: make() loses its Int32 result after fusion and passes undefined to read.
+:fixme
+:deforest
+:expect 49
+private fun first(): Word = Word(Math.imul(42, 1))
+private fun second(): Word = Word(Math.imul(7, 1))
+private fun read(w: Word): Int = Math.abs(w.bits)
+private fun choose(c: Bool): Int =
+  let make = if c then first else second
+  read(make())
+choose(true) + choose(false)
+//│ deforest > >>> fusing >>>
+//│ deforest > Word⁰(tmp⁰) ->
+//│ deforest > 	select: bits
+//│ deforest > Word⁰(tmp¹) ->
+//│ deforest > 	select: bits
+//│ deforest > Word⁰(tmp⁰) ->
+//│ deforest > 	select: bits
+//│ deforest > Word⁰(tmp¹) ->
+//│ deforest > 	select: bits
+//│ deforest > Word⁰(tmp⁰) ->
+//│ deforest > 	select: bits
+//│ deforest > Word⁰(tmp¹) ->
+//│ deforest > 	select: bits
+//│ deforest > <<< fusing <<<
+//│ ═══[RUNTIME ERROR] Expected: '49', got: 'NaN'
+//│ = NaN
