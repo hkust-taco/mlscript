@@ -193,3 +193,34 @@ fun curriedAdd(x)(a) = x + a
 //│ return (tmp as! Function⁰)(1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 124
+
+// A normally completing try carries the body's unboxed value across cleanup.
+// A return from cleanup bypasses that value.
+:sir
+:siret
+:checkIR
+private fun protectedWord(n: Int32): Int32 = try n finally ()
+private fun cleanupWord(n: Int32): Int32 = try "unused" finally return n
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ @private
+//│ define protectedWord⁰ as fun protectedWord¹(n: Int32): Int32 {
+//│   let tmp: Int32;
+//│   try
+//│     set tmp = n;
+//│     end
+//│   finally
+//│     end;
+//│     return tmp
+//│ };
+//│ @private
+//│ define cleanupWord⁰ as fun cleanupWord¹(n: Int32): Int32 {
+//│   let tmp: Str⁰;
+//│   try
+//│     set tmp = "unused";
+//│     end
+//│   finally
+//│     return n;
+//│     end
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

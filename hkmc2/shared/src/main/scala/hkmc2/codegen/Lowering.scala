@@ -1590,11 +1590,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       
     case Try(sub, finallyDo) =>
       val l = loweringCtx.registerTempSymbol(S(sub), erasedType = N)
-      TryBlock(
-        subTerm_nonTail(sub)(p => Assign(l, p, End())),
-        subTerm_nonTail(finallyDo)(_ => End()),
-        k(l.asSimpleRef)
-      )
+      val body = subTerm_nonTail(sub): p =>
+        l.erasedType = p.erasedType
+        Assign(l, p, End())
+      val cleanup = subTerm_nonTail(finallyDo)(_ => End())
+      TryBlock(body, cleanup, if body.isAbortive || cleanup.isAbortive then End() else k(l.asSimpleRef))
     
     case Quoted(body) => quote(body)(k)
     
