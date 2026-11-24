@@ -56,13 +56,13 @@ fun selected(n: Int, k: Str) =
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let selected$b_Box, selected$b_rest;
 //│ @affine(1) @private
-//│ define selected$b_Box as fun selected$b_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: Int⁰, fv_x: Int⁰, fv_k: Str⁰): ? {
+//│ define selected$b_Box as fun selected$b_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: Int⁰, fv_x: Int⁰, fv_k: Str⁰): Array⁰ {
 //│   set fv_arg$Box$0$ = Box_v;
 //│   set fv_x = fv_arg$Box$0$;
 //│   return [fv_x, fv_k]
 //│ };
 //│ @private
-//│ define selected$b_rest as fun selected$b_rest⁰(): ? {
+//│ define selected$b_rest as fun selected$b_rest⁰(): Unknown {
 //│   return null
 //│ };
 //│ define selected⁰ as fun selected¹(n: Int⁰, k: Str⁰): Array⁰ {
@@ -76,7 +76,8 @@ fun selected(n: Int, k: Str) =
 
 
 // The code following the match becomes a separate continuation function, whose free variables are typed the
-// same way - `fv_k` is a `Str` in both the branch function and the rest function.
+// same way - `fv_k` is a `Str` in both the branch function and the rest function. The continuation
+// returns an array, so the branch that ends by calling it also returns Array.
 fun withRest(n: Int, k: Str) =
   let b = Box(n)
   let r = if b is
@@ -91,14 +92,14 @@ fun withRest(n: Int, k: Str) =
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let withRest$b_Box, withRest$b_rest;
 //│ @affine(1) @private
-//│ define withRest$b_Box as fun withRest$b_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: Int⁰, fv_x: Int⁰, fv_tmp: Int⁰, fv_r: Int⁰, fv_k: Str⁰): ? {
+//│ define withRest$b_Box as fun withRest$b_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: Int⁰, fv_x: Int⁰, fv_tmp: Int⁰, fv_r: Int⁰, fv_k: Str⁰): Array⁰ {
 //│   set fv_arg$Box$0$ = Box_v;
 //│   set fv_x = fv_arg$Box$0$;
 //│   set fv_tmp = fv_x;
 //│   return withRest$b_rest⁰(fv_r, fv_tmp, fv_k)
 //│ };
 //│ @private
-//│ define withRest$b_rest as fun withRest$b_rest⁰(fv_r: Int⁰, fv_tmp: Int⁰, fv_k: Str⁰): ? {
+//│ define withRest$b_rest as fun withRest$b_rest⁰(fv_r: Int⁰, fv_tmp: Int⁰, fv_k: Str⁰): Array⁰ {
 //│   set fv_r = fv_tmp;
 //│   return [fv_r, fv_k]
 //│ };
@@ -125,11 +126,11 @@ fun noFields(n: Int, s: Str) =
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let noFields$p_Pair, noFields$p_rest;
 //│ @affine(1) @private
-//│ define noFields$p_Pair as fun noFields$p_Pair⁰(_a: Int⁰, _b: Str⁰)(): ? {
+//│ define noFields$p_Pair as fun noFields$p_Pair⁰(_a: Int⁰, _b: Str⁰)(): Int⁰ {
 //│   return 1
 //│ };
 //│ @private
-//│ define noFields$p_rest as fun noFields$p_rest⁰(): ? {
+//│ define noFields$p_rest as fun noFields$p_rest⁰(): Unknown {
 //│   return null
 //│ };
 //│ define noFields⁰ as fun noFields¹(n: Int⁰, s: Str⁰): Int⁰ {
@@ -157,13 +158,13 @@ consume(produce(2))
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let $box_Box, $box_rest, tmp: Function⁰;
 //│ @affine(1) @private
-//│ define $box_Box as fun $box_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: Int⁰, fv_value: Int⁰): ? {
+//│ define $box_Box as fun $box_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: Int⁰, fv_value: Int⁰): Int⁰ {
 //│   set fv_arg$Box$0$ = Box_v;
 //│   set fv_value = fv_arg$Box$0$;
 //│   return fv_value
 //│ };
 //│ @private
-//│ define $box_rest as fun $box_rest⁰(): ? {
+//│ define $box_rest as fun $box_rest⁰(): Unknown {
 //│   return null
 //│ };
 //│ @private
@@ -286,11 +287,11 @@ isO(O)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let $x_O, $x_rest, deforest$lam: Function⁰;
 //│ @affine(1) @private
-//│ define $x_O as fun $x_O⁰()(): ? {
+//│ define $x_O as fun $x_O⁰()(): Int⁰ {
 //│   return 1
 //│ };
 //│ @private
-//│ define $x_rest as fun $x_rest⁰(): ? {
+//│ define $x_rest as fun $x_rest⁰(): Unknown {
 //│   return null
 //│ };
 //│ @private
@@ -365,17 +366,17 @@ get(H(Box(42), 1), true)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let tmp: H³, $scrut_Box, $scrut_rest, $c_rest, tmp1: Function⁰, Box_v: Int⁰;
 //│ @affine(1) @private
-//│ define $scrut_Box as fun $scrut_Box⁰(Box_v1: Int⁰)(fv_arg$Box$0$: Int⁰, fv_v: Int⁰): ? {
+//│ define $scrut_Box as fun $scrut_Box⁰(Box_v1: Int⁰)(fv_arg$Box$0$: Int⁰, fv_v: Int⁰): Int⁰ {
 //│   set fv_arg$Box$0$ = Box_v1;
 //│   set fv_v = fv_arg$Box$0$;
 //│   return fv_v
 //│ };
 //│ @private
-//│ define $scrut_rest as fun $scrut_rest⁰(): ? {
+//│ define $scrut_rest as fun $scrut_rest⁰(): Unknown {
 //│   return $c_rest⁰()
 //│ };
 //│ @private
-//│ define $c_rest as fun $c_rest⁰(): ? {
+//│ define $c_rest as fun $c_rest⁰(): Unknown {
 //│   return null
 //│ };
 //│ @private
@@ -433,13 +434,13 @@ get(idpoly(Box(42)))
 //│   return x
 //│ };
 //│ @affine(1) @private
-//│ define get$b_Box as fun get$b_Box⁰(Box_v1: Int⁰)(fv_arg$Box$0$: Int⁰, fv_v: Int⁰): ? {
+//│ define get$b_Box as fun get$b_Box⁰(Box_v1: Int⁰)(fv_arg$Box$0$: Int⁰, fv_v: Int⁰): Int⁰ {
 //│   set fv_arg$Box$0$ = Box_v1;
 //│   set fv_v = fv_arg$Box$0$;
 //│   return fv_v
 //│ };
 //│ @private
-//│ define get$b_rest as fun get$b_rest⁰(): ? {
+//│ define get$b_rest as fun get$b_rest⁰(): Unknown {
 //│   return null
 //│ };
 //│ @private
@@ -494,13 +495,13 @@ get(idpoly(Box(42))) + idpoly(Box(1)).v
 //│   return x
 //│ };
 //│ @affine(1) @private
-//│ define get$b_Box as fun get$b_Box¹(Box_v2: Int⁰)(fv_arg$Box$0$: Int⁰, fv_v: Int⁰): ? {
+//│ define get$b_Box as fun get$b_Box¹(Box_v2: Int⁰)(fv_arg$Box$0$: Int⁰, fv_v: Int⁰): Int⁰ {
 //│   set fv_arg$Box$0$ = Box_v2;
 //│   set fv_v = fv_arg$Box$0$;
 //│   return fv_v
 //│ };
 //│ @private
-//│ define get$b_rest as fun get$b_rest¹(): ? {
+//│ define get$b_rest as fun get$b_rest¹(): Unknown {
 //│   return null
 //│ };
 //│ @private
@@ -566,13 +567,13 @@ get(idTwice(Box(42)))
 //│   return x
 //│ };
 //│ @affine(1) @private
-//│ define get$b_Box as fun get$b_Box²(Box_v1: Int⁰)(fv_arg$Box$0$: Int⁰, fv_v: Int⁰): ? {
+//│ define get$b_Box as fun get$b_Box²(Box_v1: Int⁰)(fv_arg$Box$0$: Int⁰, fv_v: Int⁰): Int⁰ {
 //│   set fv_arg$Box$0$ = Box_v1;
 //│   set fv_v = fv_arg$Box$0$;
 //│   return fv_v
 //│ };
 //│ @private
-//│ define get$b_rest as fun get$b_rest²(): ? {
+//│ define get$b_rest as fun get$b_rest²(): Unknown {
 //│   return null
 //│ };
 //│ @private
@@ -708,23 +709,23 @@ test(false, true)
 //│   return x
 //│ };
 //│ @affine(1) @private
-//│ define test_cons$x_Box as fun test_cons$x_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: Int⁰, fv_v: Int⁰): ? {
+//│ define test_cons$x_Box as fun test_cons$x_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: Int⁰, fv_v: Int⁰): Int⁰ {
 //│   set fv_arg$Box$0$ = Box_v;
 //│   set fv_v = fv_arg$Box$0$;
 //│   return fv_v
 //│ };
 //│ @affine(1) @private
-//│ define test_cons$x_Box1 as fun test_cons$x_Box¹(Box_v: Int⁰)(fv_arg$Box$0$: Int⁰, fv_v: Int⁰): ? {
+//│ define test_cons$x_Box1 as fun test_cons$x_Box¹(Box_v: Int⁰)(fv_arg$Box$0$: Int⁰, fv_v: Int⁰): Int⁰ {
 //│   set fv_arg$Box$0$ = Box_v;
 //│   set fv_v = fv_arg$Box$0$;
 //│   return fv_v
 //│ };
 //│ @private
-//│ define test_cons$x_rest as fun test_cons$x_rest⁰(): ? {
+//│ define test_cons$x_rest as fun test_cons$x_rest⁰(): Unknown {
 //│   return null
 //│ };
 //│ @private
-//│ define test_cons$x_rest1 as fun test_cons$x_rest¹(): ? {
+//│ define test_cons$x_rest1 as fun test_cons$x_rest¹(): Unknown {
 //│   return null
 //│ };
 //│ @private
@@ -911,15 +912,15 @@ f(A, A)
 //│   end
 //│ };
 //│ @affine(1) @private
-//│ define f$b_A as fun f$b_A⁰()(): ? {
+//│ define f$b_A as fun f$b_A⁰()(): Int⁰ {
 //│   return 0
 //│ };
 //│ @private
-//│ define f$b_rest as fun f$b_rest⁰(): ? {
+//│ define f$b_rest as fun f$b_rest⁰(): Unknown {
 //│   return f$a_rest⁰()
 //│ };
 //│ @private
-//│ define f$a_rest as fun f$a_rest⁰(): ? {
+//│ define f$a_rest as fun f$a_rest⁰(): Unknown {
 //│   return null
 //│ };
 //│ @private
@@ -998,19 +999,19 @@ private fun f(a) = if a is A then 0 else 1
 //│   return (a() as! Int⁰)
 //│ };
 //│ @affine(1) @private
-//│ define f$a_A as fun f$a_A⁰()(): ? {
+//│ define f$a_A as fun f$a_A⁰()(): Int⁰ {
 //│   return 0
 //│ };
 //│ @affine(1) @private
-//│ define f$a_A1 as fun f$a_A¹()(): ? {
+//│ define f$a_A1 as fun f$a_A¹()(): Int⁰ {
 //│   return 0
 //│ };
 //│ @private
-//│ define f$a_rest as fun f$a_rest¹(): ? {
+//│ define f$a_rest as fun f$a_rest¹(): Unknown {
 //│   return null
 //│ };
 //│ @private
-//│ define f$a_rest1 as fun f$a_rest²(): ? {
+//│ define f$a_rest1 as fun f$a_rest²(): Unknown {
 //│   return null
 //│ };
 //│ @private

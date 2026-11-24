@@ -23,11 +23,11 @@ wasm.ref.i31(f(wasm.i32.const(42)))
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let tmp: Int32, tmp1: Int32, $b_Empty, $b_rest;
 //│ @affine(1) @private
-//│ define $b_Empty as fun $b_Empty⁰()(fv_n: Int32): ? {
+//│ define $b_Empty as fun $b_Empty⁰()(fv_n: Int32): Int32 {
 //│   return fv_n
 //│ };
 //│ @private
-//│ define $b_rest as fun $b_rest⁰(): ? {
+//│ define $b_rest as fun $b_rest⁰(): Unknown {
 //│   return null
 //│ };
 //│ @private
@@ -343,9 +343,9 @@ instances(true)
 //│ = 3
 
 
-// Projecting the result of makeWord changes its return type from Unboxed to Int32. Its match
-// must still return that word to the caller.
-// FIXME: the extracted branch and the indirect call to it both have an unknown result type.
+// Projecting the result of makeWord changes its return type from Unboxed to Int32.
+// The extracted match branch must return that word to the caller.
+// FIXME: flag has erased type Function, so calling it loses the extracted branch's Int32 result type.
 :fixme
 :deforest mono
 :expect 42
@@ -366,13 +366,13 @@ wasm.ref.i31(readWord(makeWord(wasm.i32.const(42))))
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let tmp: Int32, tmp1: Int32, $flag_Empty, $flag_rest, tmp2: Int32;
 //│ @affine(1) @private
-//│ define $flag_Empty as fun $flag_Empty⁰()(fv_n: Int32): ? {
+//│ define $flag_Empty as fun $flag_Empty⁰()(fv_n: Int32): Int32 {
 //│   let Unboxed_p: Int32;
 //│   set Unboxed_p = fv_n;
 //│   return Unboxed_p
 //│ };
 //│ @private
-//│ define $flag_rest as fun $flag_rest⁰(): ? {
+//│ define $flag_rest as fun $flag_rest⁰(): Unknown {
 //│   return null
 //│ };
 //│ @private

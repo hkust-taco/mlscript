@@ -78,17 +78,17 @@ read(Holder(Box(42), 1), true)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let tmp: Holder³, $scrut_Box, $scrut_rest, $choose_rest, tmp1: Function⁰, Box_value: Int⁰;
 //│ @affine(1) @private
-//│ define $scrut_Box as fun $scrut_Box⁰(Box_value1: Int⁰)(fv_arg$Box$0$: Int⁰, fv_value: Int⁰): ? {
+//│ define $scrut_Box as fun $scrut_Box⁰(Box_value1: Int⁰)(fv_arg$Box$0$: Int⁰, fv_value: Int⁰): Int⁰ {
 //│   set fv_arg$Box$0$ = Box_value1;
 //│   set fv_value = fv_arg$Box$0$;
 //│   return fv_value
 //│ };
 //│ @private
-//│ define $scrut_rest as fun $scrut_rest⁰(): ? {
+//│ define $scrut_rest as fun $scrut_rest⁰(): Unknown {
 //│   return $choose_rest⁰()
 //│ };
 //│ @private
-//│ define $choose_rest as fun $choose_rest⁰(): ? {
+//│ define $choose_rest as fun $choose_rest⁰(): Unknown {
 //│   return null
 //│ };
 //│ @private

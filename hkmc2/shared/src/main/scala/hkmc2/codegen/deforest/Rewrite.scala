@@ -315,19 +315,14 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
       new VarSymbol(Tree.Ident(s"fv_${s.nme}"), erasedType = tpe, mut = s.mut)
     .asParamList
   
-  // Each extracted branch function takes constructor fields in its first parameter list and captured
-  // variables in its second. Initialize its signature before rewriting calls so that applying the
-  // field arguments alone has type Function.
-  private val branchSignatures = branchFunSyms.map: (branchId, syms) =>
-    val signature = FunDefn.Signature.fromParams(
-      branchFunParamFieldSyms(branchId).asParamList :: captureParams(branchId._1.instId, dtorBranchFnFvs(branchId._1)) :: Nil,
-      ErasedResult.Direct(N))
-    syms._2.initializeErasure(S(signature.erasure))
-    branchId -> signature
-  private val restSignatures = restFunSyms.map: (restId, syms) =>
-    val signature = FunDefn.Signature.fromParams(captureParams(restId.getInstId, restFnFvs(restId)) :: Nil, ErasedResult.Direct(N))
-    syms._2.initializeErasure(S(signature.erasure))
-    restId -> signature
+  // Fusion applies only the first parameter list of each branch function. Recursive partial
+  // applications need the arity before the body is rewritten to give the closure type Function.
+  // The rewritten body determines the result of a full application.
+  private val branchParams = branchFunSyms.map: (branchId, syms) =>
+    val params = branchFunParamFieldSyms(branchId).asParamList ::
+      captureParams(branchId._1.instId, dtorBranchFnFvs(branchId._1)) :: Nil
+    syms._2.initializeErasure(S(FunDefn.Signature.fromParams(params, ErasedResult.Direct(N)).erasure))
+    branchId -> params
   
   // Rewrites the program under a specific instantiation id
   // from the polymorphic analysis
@@ -358,8 +353,8 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
           && (signature is fun.signature) && (body is fun.body) then fun
       else FunDefn(owner, sym, dSym, signature, body)(fun.configOverride, annotations)
     
-    // the callee is a closure or an extracted function, whose results are unknown, so like any call to a
-    // function value, the result is cast into the slot that the replaced `return`s wrote
+    // An indirect call through a Function local has no result signature. Coerce its value
+    // to the return type of the enclosing function, whose return this call replaces.
     private def returnCall(call: Result): Block = Return(returnType.retyped.fold(call)(call.coerceTo(_, N)))
     
     // a slot that fusion retypes takes the type the flow gives it
@@ -394,6 +389,9 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     def mkCall(fun: Path, args: Ls[LocalVarSymbol])(k: Result => Block): Block =
       applyArgs(args.map(s => Arg(N, s.asPath))): args2 =>
         k(Call(fun, args2 ne_:: Nil)(CallMetadata.defaultMlsFun, N))
+    
+    def callRest(id: RestFunId)(k: Result => Block): Block =
+      mkCall(newRestFuns(id).force_!.asPath, restFnFvs(id))(k)
     
     override def applyResult(r: Result)(k: Result => Block): Block =
       r match
@@ -537,10 +535,8 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
             if res3 is res then b else Return(res3)
       case Break(label) =>
         val labelRestFunId = label.withInstId(instId)
-        restFunSyms.get(labelRestFunId) match
-        case None => super.applyBlock(b)
-        case Some((bms, tSym)) =>
-          mkCall(bms.asMemberRef(tSym), restFnFvs(labelRestFunId))(returnCall)
+        if restFunSyms.contains(labelRestFunId) then callRest(labelRestFunId)(returnCall)
+        else super.applyBlock(b)
       // copying a definition would need fresh symbols for it; lifting removes the nested ones beforehand
       case Define(defn, _) if refreshSymbolMappingForCopy.isDefined =>
         softAssert(false, s"deforestation copying the definition ${defn.sym.nme}")
@@ -561,51 +557,47 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
   
   def mkRewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[Symbol, Symbol]]) = new Rewriter(instId, refreshSymbolMappingForCopy)
   
+  /** Extracts a block into a function whose last parameter list binds its free variables.
+    * A path that falls through the block continues in `rest`. Both explicit returns and
+    * the continuation contribute their rewritten value types to the function's result.
+    */
+  private def extractedFun(instId: InstantiationId, syms: (BlockMemberSymbol, TermSymbol),
+      params: Ls[LoweredParamList], fvs: Ls[LocalVarSymbol], body: Block, annotations: Ls[Annot])
+      (rest: Rewriter => Block): FunDefn =
+    val captures = params.last.paramSyms
+    assert(fvs.sizeCompare(captures) == 0)
+    val rewriter = mkCopyRewriter(instId, Nil, body, Map.from(fvs.lazyZip(captures)))
+    val rewritten = rewriter.applyBlock(body)
+    val complete = if rewritten.isAbortive then rewritten else Begin(rewritten, rest(rewriter))
+    val result = ErasedResult.Direct(Block.returnType(complete).map(_.canonicalize))
+    val signature = FunDefn.Signature.fromParams(params, result)
+    FunDefn(N, syms._1, syms._2, signature, complete)(N, annotations)
+  
+  // A fallthrough or break resumes after a match or label, so direct calls between these
+  // continuations only go forward. Build each target before typing a return that calls it.
+  private val newRestFuns =
+    restFunSyms.map: (id, syms) =>
+      id -> Lazy:
+        val instId = id.getInstId
+        val (body, parent) = restOriginalBodiesAndParentRest(id.withoutInstId)
+        val fvs = restFnFvs(id)
+        extractedFun(instId, syms, captureParams(instId, fvs) :: Nil, fvs, body, PrivateModifier :: Nil): rewriter =>
+          parent match
+          case S(parentId) => rewriter.callRest(parentId.withInstId(instId))(Return(_))
+          case N => Return(Value.Lit(Tree.UnitLit(true))(N))
+  end newRestFuns
+  
   def otherNewFunDefns: Iterable[FunDefn] =
     
-    // the rewriter of an extracted part (branch body functions and match rest functions),
-    // whose free variables `fvs` become the `fv_` parameters it returns
-    def mkExtractedBodyRewriter(instId: InstantiationId, body: Block, fvs: Ls[LocalVarSymbol],
-        signature: FunDefn.Signature): Rewriter =
-      val fvParams = signature.params.last.paramSyms
-      mkCopyRewriter(instId, Nil, body, Map.from(fvs.iterator.zip(fvParams)))
-  
-    // Functions for fused match branches; each runs one arm and then its rest
     val newBranchFuns =
-      for (branchId@(dtorId, whichBranch), (bms, tSym)) <- branchFunSyms yield
-        val instId = dtorId.getInstId
-        val ogBody = branchOriginalBodies(dtorId.exprId -> whichBranch)
-        val (restFunBms, restFunTSym) = restFunSyms(dtorId)
-        val signature = branchSignatures(branchId)
-        val rewriter = mkExtractedBodyRewriter(instId, ogBody, dtorBranchFnFvs(branchId._1), signature)
-        val actualBody = Begin(
-          rewriter.applyBlock(ogBody),
-          rewriter.mkCall(restFunBms.asMemberRef(restFunTSym), restFnFvs(dtorId))(Return(_)))
-        FunDefn(N, bms, tSym, signature, actualBody)(N, AffineAnnotForBranchFns :: PrivateModifier :: Nil)
+      for (id@(dtorId, whichBranch), syms) <- branchFunSyms yield
+        val body = branchOriginalBodies(dtorId.exprId -> whichBranch)
+        extractedFun(dtorId.instId, syms, branchParams(id), dtorBranchFnFvs(dtorId), body,
+            AffineAnnotForBranchFns :: PrivateModifier :: Nil): rewriter =>
+          rewriter.callRest(dtorId)(Return(_))
     end newBranchFuns
     
-    // Continuation functions for the code after fused matches or labels
-    val newRestFuns =
-      for (restFunId, (bms, tsym)) <- restFunSyms yield
-        val instId = restFunId.getInstId
-        val (ogBody, parent) = restOriginalBodiesAndParentRest(restFunId.withoutInstId)
-        val signature = restSignatures(restFunId)
-        val rewriter = mkExtractedBodyRewriter(instId, ogBody, restFnFvs(restFunId), signature)
-        val transformedOgBody = rewriter.applyBlock(ogBody)
-        val actualBody = parent match
-          case Some(parentRestId) =>
-            val parentRestFunId = parentRestId.withInstId(instId)
-            val (parentFunBms, parentFunTSym) = restFunSyms(parentRestFunId)
-            val parentFunFvs = restFnFvs(parentRestFunId)
-            Begin(
-              transformedOgBody,
-              rewriter.mkCall(parentFunBms.asMemberRef(parentFunTSym), parentFunFvs)(Return(_)))
-          case None =>
-            Begin(transformedOgBody, Return(Value.Lit(Tree.UnitLit(true))(N)))
-        FunDefn(N, bms, tsym, signature, actualBody)(N, PrivateModifier :: Nil)
-    end newRestFuns
-    
-    newBranchFuns ++ newRestFuns
+    newBranchFuns ++ newRestFuns.valuesIterator.map(_.force_!)
     
   end otherNewFunDefns
   

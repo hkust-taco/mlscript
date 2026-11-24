@@ -29,18 +29,18 @@ private fun uncalled(n: Int, c: Bool): Box =
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let $x_Box, $x_rest, $c_rest;
 //│ @affine(1) @private
-//│ define $x_Box as fun $x_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: Int⁰, fv_v: Int⁰, fv_tmp: Int⁰): ? {
+//│ define $x_Box as fun $x_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: Int⁰, fv_v: Int⁰, fv_tmp: Int⁰): Box¹ {
 //│   set fv_arg$Box$0$ = Box_v;
 //│   set fv_v = fv_arg$Box$0$;
 //│   set fv_tmp = +⁰(fv_v, 1);
 //│   return Box⁰(fv_tmp)
 //│ };
 //│ @private
-//│ define $x_rest as fun $x_rest⁰(): ? {
+//│ define $x_rest as fun $x_rest⁰(): Unknown {
 //│   return $c_rest⁰()
 //│ };
 //│ @private
-//│ define $c_rest as fun $c_rest⁰(): ? {
+//│ define $c_rest as fun $c_rest⁰(): Unknown {
 //│   return null
 //│ };
 //│ @private
@@ -78,13 +78,13 @@ Mono.read
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let $scrut_Box, $scrut_rest;
 //│ @affine(1) @private
-//│ define $scrut_Box as fun $scrut_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: Int⁰, fv_v: Int⁰): ? {
+//│ define $scrut_Box as fun $scrut_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: Int⁰, fv_v: Int⁰): Int⁰ {
 //│   set fv_arg$Box$0$ = Box_v;
 //│   set fv_v = fv_arg$Box$0$;
 //│   return fv_v
 //│ };
 //│ @private
-//│ define $scrut_rest as fun $scrut_rest⁰(): ? {
+//│ define $scrut_rest as fun $scrut_rest⁰(): Unknown {
 //│   return null
 //│ };
 //│ define Mono⁰ as class Mono¹
@@ -147,23 +147,23 @@ Poly.read()
 //│   return read$scrut_Box¹(Box_v)
 //│ };
 //│ @affine(1) @private
-//│ define read$scrut_Box as fun read$scrut_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: Int⁰, fv_v: Int⁰): ? {
+//│ define read$scrut_Box as fun read$scrut_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: Int⁰, fv_v: Int⁰): Int⁰ {
 //│   set fv_arg$Box$0$ = Box_v;
 //│   set fv_v = fv_arg$Box$0$;
 //│   return fv_v
 //│ };
 //│ @affine(1) @private
-//│ define read$scrut_Box1 as fun read$scrut_Box¹(Box_v: Int⁰)(fv_arg$Box$0$: Int⁰, fv_v: Int⁰): ? {
+//│ define read$scrut_Box1 as fun read$scrut_Box¹(Box_v: Int⁰)(fv_arg$Box$0$: Int⁰, fv_v: Int⁰): Int⁰ {
 //│   set fv_arg$Box$0$ = Box_v;
 //│   set fv_v = fv_arg$Box$0$;
 //│   return fv_v
 //│ };
 //│ @private
-//│ define read$scrut_rest as fun read$scrut_rest⁰(): ? {
+//│ define read$scrut_rest as fun read$scrut_rest⁰(): Unknown {
 //│   return null
 //│ };
 //│ @private
-//│ define read$scrut_rest1 as fun read$scrut_rest¹(): ? {
+//│ define read$scrut_rest1 as fun read$scrut_rest¹(): Unknown {
 //│   return null
 //│ };
 //│ define Poly⁰ as class Poly¹

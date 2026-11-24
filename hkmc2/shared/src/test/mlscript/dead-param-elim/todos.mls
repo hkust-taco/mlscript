@@ -44,7 +44,7 @@ c(p(true))
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let p$p$worker, inlinedVal;
+//│ let p$p$worker;
 //│ @private @noInline
 //│ define p$p$worker as fun p$p$worker⁰(b, eta$0$0) {
 //│   match b
@@ -73,8 +73,7 @@ c(p(true))
 //│       return 0
 //│   end
 //│ };
-//│ set inlinedVal = p$p$worker⁰(true, 0);
-//│ return (inlinedVal as! Int⁰)
+//│ return p$p$worker⁰(true, 0)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -183,7 +182,7 @@ c(p(true))
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let p$p$worker, inlinedVal;
+//│ let p$p$worker;
 //│ @private @noInline
 //│ define p$p$worker as fun p$p$worker¹(b) {
 //│   match b
@@ -212,7 +211,6 @@ c(p(true))
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
-//│ set inlinedVal = p$p$worker¹(true);
-//│ return (inlinedVal as! Int⁰)
+//│ return p$p$worker¹(true)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1

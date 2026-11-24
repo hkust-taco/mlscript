@@ -56,7 +56,7 @@ nested(20)
 //│ };
 //│ @private @private
 //│ define nested_localMatch$localMatch as fun nested_localMatch$localMatch⁰(n: Int⁰): Int⁰ {
-//│   return (nested_localMatch$box_SchemeBox⁰(n)(undefined, undefined) as! Int⁰)
+//│   return nested_localMatch$box_SchemeBox⁰(n)(undefined, undefined)
 //│ };
 //│ @private @private
 //│ define nested_localField$localField1 as fun nested_localField$localField¹(n: Int⁰): Int⁰ {
@@ -64,18 +64,18 @@ nested(20)
 //│ };
 //│ @private @private
 //│ define nested_localMatch$localMatch1 as fun nested_localMatch$localMatch¹(n: Int⁰): Int⁰ {
-//│   return (nested_localMatch$box_SchemeBox¹(n)(undefined, undefined) as! Int⁰)
+//│   return nested_localMatch$box_SchemeBox¹(n)(undefined, undefined)
 //│ };
 //│ @affine(1) @private
-//│ define nested_localMatch$box_SchemeBox as fun nested_localMatch$box_SchemeBox⁰(SchemeBox_value: Int⁰)(fv_arg$SchemeBox$0$: Int⁰, fv_value: Int⁰): ? {
+//│ define nested_localMatch$box_SchemeBox as fun nested_localMatch$box_SchemeBox⁰(SchemeBox_value: Int⁰)(fv_arg$SchemeBox$0$: Int⁰, fv_value: Int⁰): Int⁰ {
 //│   return SchemeBox_value
 //│ };
 //│ @affine(1) @private
-//│ define localMatch$box_SchemeBox as fun localMatch$box_SchemeBox⁰(SchemeBox_value: Int⁰)(fv_arg$SchemeBox$0$: Int⁰, fv_value: Int⁰): ? {
+//│ define localMatch$box_SchemeBox as fun localMatch$box_SchemeBox⁰(SchemeBox_value: Int⁰)(fv_arg$SchemeBox$0$: Int⁰, fv_value: Int⁰): Int⁰ {
 //│   return SchemeBox_value
 //│ };
 //│ @affine(1) @private
-//│ define nested_localMatch$box_SchemeBox1 as fun nested_localMatch$box_SchemeBox¹(SchemeBox_value: Int⁰)(fv_arg$SchemeBox$0$: Int⁰, fv_value: Int⁰): ? {
+//│ define nested_localMatch$box_SchemeBox1 as fun nested_localMatch$box_SchemeBox¹(SchemeBox_value: Int⁰)(fv_arg$SchemeBox$0$: Int⁰, fv_value: Int⁰): Int⁰ {
 //│   return SchemeBox_value
 //│ };
 //│ @private
@@ -84,7 +84,7 @@ nested(20)
 //│ };
 //│ @private
 //│ define localMatch⁰ as fun localMatch¹(n: Int⁰): Int⁰ {
-//│   return (localMatch$box_SchemeBox⁰(n)(undefined, undefined) as! Int⁰)
+//│   return localMatch$box_SchemeBox⁰(n)(undefined, undefined)
 //│ };
 //│ @private
 //│ define nested⁰ as fun nested¹(n: Int⁰): Int⁰ {
