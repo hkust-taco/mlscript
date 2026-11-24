@@ -223,6 +223,7 @@ checkedFirst(42)
 // Converting a curried definition to function objects keeps its symbol and gives
 // each returned object's call method one of the original parameter lists.
 :ftc
+:checkIR
 :sir
 :siret
 :noInline

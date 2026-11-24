@@ -27,7 +27,12 @@ class FirstClassFunctionTransformer
       syntax.Tree.Ident("Function$")
     )
     val defSym = new BlockMemberSymbol("Function$", Nil, false)
-    val forwarding = OptionalParams.forwarding(params, fixedArity = false)
+    // The wrapper and the wrapped function each bind their own parameters. Refresh the symbols
+    // before building forwarding arguments so each read refers to the wrapper's binding.
+    val bindings = collection.mutable.Map.empty[Symbol, Symbol]
+    new SymbolRefresherWalker(bindings).refreshParamList(params)
+    val wrapperParams = new SymbolMapTransformer(bindings).applyParamList(params)
+    val forwarding = OptionalParams.forwarding(wrapperParams, fixedArity = false)
     val callDef = FunDefn.withFreshSymbol(Some(clsSym), new BlockMemberSymbol("call", Nil, true), forwarding.params :: Nil,
       Return(Call.of(p, forwarding.args :: Nil)(CallMetadata.defaultMlsFun, N)))(N, annotations = Nil)
     ClsLikeDefn(None, clsSym, defSym, None, syntax.Cls, None, Nil,
