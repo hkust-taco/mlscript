@@ -154,6 +154,8 @@ object TrackableFieldSelect:
         case ps :: Nil => ps.restParam.isEmpty &&
           ((ps.params is source.params) || ps.params.corresponds(source.params)(_.sym is _.sym))
         case _ => false
+    // TODO use irDefn here and elsewhere to determine which fields each parameter initializes,
+    // including when passes like lifting change the parameter lists.
     cls.defn.collect:
       case definition: ClassDef.Parameterized if definition.auxParams.isEmpty &&
           cls.irClsLikeDefn.forall(sameParameters(_, definition.params)) => definition.primaryFields
@@ -1426,9 +1428,15 @@ class FlowConstraintsCollector(
         ctor match
         case cls: ClassSymbol =>
           TrackableFieldSelect.constructorFields(cls) match
+          // A zip on mismatched lengths can leave a live constructor argument unconstrained.
+          // TODO: flag unexpected arity mismatches with softTODO, allowing for omitted optional arguments.
           case S(fields) if fields.sizeCompare(argsStrat) === 0 =>
             registerCtor(new Ctor(c.uid, instId)(ctor, fields.lazyZip(argsStrat).map(_ -> _)))
           case _ =>
+            // With no primary parameter list we don't know the class parameter field symbols.
+            // TODO: handle flow through classes with multiple parameter lists.
+            // In both cases, and when the IR parameters or call arity differ from the source list,
+            // constrain all arguments with UnknownCons and give this CtorProducer UnknownProd.
             for a <- argsStrat do cc.constrain(a, UnknownCons)
             UnknownProd
         case _: ModuleOrObjectSymbol => registerCtor(new Ctor(c.uid, instId)(ctor, Nil))
