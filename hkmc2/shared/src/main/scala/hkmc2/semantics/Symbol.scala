@@ -759,11 +759,15 @@ class ClassSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)(using State)
   /** Compute the arity. */
   def arity: Int = tree.paramLists.headOption.fold(0)(_.fields.length)
   
-  /** The fields that the positional sub-patterns of a class pattern such as `C(p, q)` read, in order:
-    * those that the first parameter list of the class defines.
+  /** The fields of the first parameter list in the class header, in positional pattern order.
+    * A class with only auxiliary constructor parameters has no positional pattern fields.
     */
-  def destructuredFields: Ls[TermSymbol] =
-    tree.clsParams.headOption.getOrElse(Nil) // FIXME? case when there are only aux parameter lists
+  lazy val destructuredFields: Ls[TermSymbol] =
+    val cls = defn.getOrElse(lastWords(s"Pattern matching requires the elaborated definition of $nme"))
+    // A cloned class has its own field symbols and erasures. Follow its parameter bindings.
+    cls.paramsOpt.fold(Nil): ps =>
+      ps.params.map: param =>
+        param.fldSym.flatMap(_.asTrm).getOrElse(lastWords(s"Missing field for parameter ${param.sym.nme} of $nme"))
   
   override def subst(using sub: SymbolSubst): ClassSymbol = sub.mapClsSym(this)
 

@@ -143,6 +143,23 @@ type ConcreteFunId = ConcreteId[FunId]
 
 
 object TrackableFieldSelect:
+  /** Fields that this analysis can associate positionally with a single constructor call.
+    * Lifting can change the physical parameters. Use the elaborated field identities only
+    * while the constructor still takes those parameters in their original order.
+    */
+  def constructorFields(cls: ClassSymbol): Opt[Ls[TermSymbol]] =
+    def sameParameters(ir: ClsLikeDefn, source: ParamList): Bool =
+      // ClassParamFlattener stores the physical parameter list in auxParams.
+      ir.paramsOpt.fold(ir.auxParams)(_ :: ir.auxParams) match
+        case ps :: Nil => ps.restParam.isEmpty &&
+          ((ps.params is source.params) || ps.params.corresponds(source.params)(_.sym is _.sym))
+        case _ => false
+    for
+      definition <- cls.defn if definition.auxParams.isEmpty
+      params <- definition.paramsOpt
+      if cls.irClsLikeDefn.forall(sameParameters(_, params))
+    yield cls.destructuredFields
+
   def unapply(s: Select): Opt[Path -> (field: TermSymbol, owner: ClassSymbol)] =
     s.symbol match
     case S(sSym) if sSym.asTrm.exists(_.decl.exists(_.isInstanceOf[Param])) =>
@@ -150,7 +167,7 @@ object TrackableFieldSelect:
       for
         owner <- tSym.owner
         cls <- owner.asCls
-        if cls.tree.clsParams.size === 1
+        if constructorFields(cls).exists(_.contains(tSym))
         // The fields of external classes are not initialized from constructor arguments
         // visible in the IR. For instance, `Array`'s `length` field is also read on tuples,
         // which are not constructed as `Array` instances.
@@ -1410,17 +1427,10 @@ class FlowConstraintsCollector(
           case Arg(_, a) => processResult(a)
         ctor match
         case cls: ClassSymbol =>
-          cls.tree.clsParams.size match
-          case 1 =>
-            val clsParams = cls.tree.clsParams.head // TODO use irDefn here and elsewhere
-            // TODO: properly check the parameter lists, which may change after passes like lifting
-            // softTODO(argsStrat.size === clsParams.size, s"mismatched ctor arg and cls param sizes")
-            registerCtor(new Ctor(c.uid, instId)(ctor, clsParams.zip(argsStrat)))
+          TrackableFieldSelect.constructorFields(cls) match
+          case S(fields) if fields.sizeCompare(argsStrat) === 0 =>
+            registerCtor(new Ctor(c.uid, instId)(ctor, fields.lazyZip(argsStrat).map(_ -> _)))
           case _ =>
-            // - the size of 0 means we don't know the cls param symbols,
-            // so we constrain args with UnknownCons and this CtorProducer gives UnknownProd
-            // - if size > 1, we cannot handle multiple parameter class flow now,
-            //   constrain args with UnknownCons and this CtorProducer gives UnknownProd
             for a <- argsStrat do cc.constrain(a, UnknownCons)
             UnknownProd
         case _: ModuleOrObjectSymbol => registerCtor(new Ctor(c.uid, instId)(ctor, Nil))

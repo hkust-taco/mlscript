@@ -482,9 +482,7 @@ consume()
 //│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'
 
 
-// FIXME: lifting appends a capture argument that is absent from the source class parameter list.
-// That argument remains live through the instance's method, even though it is not a source field.
-:fixme
+// Lifting appends a constructor argument for the captured tuple. Calling get() reads that tuple.
 :flowBasedOpt mono debugDce
 :lift
 :soir
@@ -498,7 +496,6 @@ fun capture() =
   instance.get()
 capture()
 //│ dead-constructor-elim > >>> dead-constructor-elim results >>>
-//│ dead-constructor-elim > eliminable: Tuple(false, [1, 2])
 //│ dead-constructor-elim > <<< dead-constructor-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let Capturing;
@@ -513,11 +510,11 @@ capture()
 //│   }
 //│ };
 //│ define capture⁰ as fun capture¹() {
-//│   let instance;
-//│   set instance = new Capturing¹(0, undefined);
+//│   let captured, instance;
+//│   set captured = [1, 2];
+//│   set instance = new Capturing¹(0, captured);
 //│   return instance.get²()
 //│ };
 //│ return capture¹()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
-//│ ═══[RUNTIME ERROR] Expected: '[1, 2]', got: 'undefined'
+//│ = [1, 2]

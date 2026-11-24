@@ -37,9 +37,7 @@ object SplitCompiler:
       while scrutinees.size <= i do
         val index = scrutinees.size
         val representation = cs match
-          // The legacy resolver defines no field for a parameter that is not a `val`, whose symbol
-          // then has no erasure; patterns cannot destructure such parameters.
-          case cls: ClassSymbol => cls.destructuredFields.lift(index).filter(_.isErased).flatMap(_.erasedType)
+          case cls: ClassSymbol => cls.destructuredFields(index).erasedType
           // The values that a pattern definition extracts come from its untyped `unapply` result.
           case _: PatternSymbol => N
         scrutinees += TempSymbol(N, initErasedType = representation, s"arg$$${cs.nme}$$$index$$").toScrut
