@@ -79,10 +79,8 @@ wasm.ref.i31(project(Unboxed(wasm.i32.const(1))))
 //│ = 1
 
 
-// The unboxed projection also reaches slots that hold references. Typing these slots from the flow
-// leaves them without a common representation, which this valid program then reports as an error.
-// Fusion should keep such a constructor.
-:fixme
+// An unboxed value has no common representation with a reference. Here the projected object also
+// reaches a temporary and a parameter that the other object reaches too, so fusion keeps its constructor.
 :expect 1
 data class Reference(n: Int)
 private fun ignore(x: Any): Int = 0
@@ -92,28 +90,21 @@ private fun mixed(c: Bool): Int =
   if c then wasm.ref.i31(b.p) else ignore(if c then b else o)
 mixed(true)
 //│ deforest > >>> fusing >>>
-//│ deforest > Unboxed⁰(tmp¹) ->
-//│ deforest > 	select: p
 //│ deforest > <<< fusing <<<
-//│ ═══[COMPILATION ERROR] Types 'Int32' and 'Reference' have no common representation
-//│ ═══[COMPILATION ERROR] Types 'Int32' and 'Reference' have no common representation
-//│ ═══[COMPILATION ERROR] Types 'Int32' and 'Reference' have no common representation
-//│ ═══[COMPILATION ERROR] Types 'Int32' and 'Reference' have no common representation
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ @private
-//│ define ignore⁰ as fun ignore¹(x: ‹incompatible(Int32, Reference⁰)›): Int⁰ {
+//│ define ignore⁰ as fun ignore¹(x: Unknown): Int⁰ {
 //│   return 0
 //│ };
 //│ @private
 //│ define mixed⁰ as fun mixed¹(c: Bool⁰): Int⁰ {
-//│   let o: Reference⁰, tmp: Int32, tmp1: ‹incompatible(Int32, Reference⁰)›, b: Int32, Unboxed_p: Int32;
+//│   let b: Unboxed², o: Reference⁰, tmp: Int32, tmp1: Object⁰;
 //│   set tmp = wasm⁰.i32⁰.const⁰(1);
-//│   set Unboxed_p = tmp;
-//│   set b = Unboxed_p;
+//│   set b = Unboxed⁰(tmp);
 //│   set o = Reference¹(2);
 //│   match c
 //│     true =>
-//│       return wasm⁰.ref⁰.i31⁰(b)
+//│       return wasm⁰.ref⁰.i31⁰(b.p¹)
 //│     true =>
 //│       set tmp1 = b;
 //│       return ignore¹(tmp1)
@@ -130,3 +121,223 @@ mixed(true)
 //│ return mixed¹(true)
 //│ Wasm result:
 //│ = 1
+
+
+// The same holds when the other value is of unknown origin, and when the shared slot is a function result.
+:expect 1
+private fun sink(x: Any): Int = 0
+private fun choose(c: Bool, b: Unboxed, o: Any): Any = if c then b else o
+private fun viaResult(c: Bool, o: Any): Int =
+  let b = Unboxed(wasm.i32.const(1))
+  if c then wasm.ref.i31(b.p) else sink(choose(c, b, o))
+viaResult(true, "unknown")
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ @private
+//│ define sink⁰ as fun sink¹(x: Unknown): Int⁰ {
+//│   return 0
+//│ };
+//│ @private
+//│ define choose⁰ as fun choose¹(c: Bool⁰, b: Unboxed², o: Unknown): Unknown {
+//│   match c
+//│     true =>
+//│       return b
+//│     else
+//│       return o
+//│   end
+//│ };
+//│ @private
+//│ define viaResult⁰ as fun viaResult¹(c: Bool⁰, o: Unknown): Int⁰ {
+//│   let b: Unboxed², tmp: Int32, tmp1: Unknown;
+//│   set tmp = wasm⁰.i32⁰.const⁰(1);
+//│   set b = Unboxed⁰(tmp);
+//│   match c
+//│     true =>
+//│       return wasm⁰.ref⁰.i31⁰(b.p¹)
+//│     else
+//│       set tmp1 = choose¹(c, b, o);
+//│       return sink¹(tmp1)
+//│   end
+//│ };
+//│ return viaResult¹(true, "unknown")
+//│ Wasm result:
+//│ = 1
+
+
+// Constructors projected to the same unboxed type can share their slots.
+:expect 2
+private fun same(c: Bool): Int =
+  let b = if c then Unboxed(wasm.i32.const(1)) else Unboxed(wasm.i32.const(2))
+  wasm.ref.i31(b.p)
+same(false)
+//│ deforest > >>> fusing >>>
+//│ deforest > Unboxed⁰(tmp¹) ->
+//│ deforest > 	select: p
+//│ deforest > Unboxed⁰(tmp²) ->
+//│ deforest > 	select: p
+//│ deforest > <<< fusing <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ @private
+//│ define same⁰ as fun same¹(c: Bool⁰): Int⁰ {
+//│   let tmp: Int32, tmp1: Int32, b: Int32, tmp2: Int32;
+//│   match c
+//│     true =>
+//│       let Unboxed_p: Int32;
+//│       set tmp = wasm⁰.i32⁰.const⁰(1);
+//│       set Unboxed_p = tmp;
+//│       set tmp2 = Unboxed_p;
+//│       end
+//│     else
+//│       let Unboxed_p: Int32;
+//│       set tmp1 = wasm⁰.i32⁰.const⁰(2);
+//│       set Unboxed_p = tmp1;
+//│       set tmp2 = Unboxed_p;
+//│       end
+//│   set b = tmp2;
+//│   return wasm⁰.ref⁰.i31⁰(b)
+//│ };
+//│ return same¹(false)
+//│ Wasm result:
+//│ = 2
+
+
+// The constructors that reach a common projection are kept together: the second one shares no slot
+// with a reference, but it cannot be projected while the first one stays an object.
+:expect 3
+private fun discard(x: Any): Int = 0
+private fun read(b: Unboxed): Int = wasm.ref.i31(b.p)
+private fun together(c: Bool): Int =
+  let b = Unboxed(wasm.i32.const(1))
+  let o = Reference(2)
+  let first = if c then read(b) else discard(if c then b else o)
+  first + read(Unboxed(wasm.i32.const(2)))
+together(true)
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ @private
+//│ define discard⁰ as fun discard¹(x: Unknown): Int⁰ {
+//│   return 0
+//│ };
+//│ @private
+//│ define read⁰ as fun read¹(b: Unboxed²): Int⁰ {
+//│   return wasm⁰.ref⁰.i31⁰(b.p¹)
+//│ };
+//│ @private
+//│ define together⁰ as fun together¹(c: Bool⁰): Int⁰ {
+//│   let b: Unboxed², o: Reference⁰, first: Int⁰, tmp: Int32, tmp1: Int⁰, tmp2: Object⁰, tmp3: Int32, tmp4: Unboxed², tmp5: Int⁰;
+//│   set tmp = wasm⁰.i32⁰.const⁰(1);
+//│   set b = Unboxed⁰(tmp);
+//│   set o = Reference¹(2);
+//│   match c
+//│     true =>
+//│       set tmp1 = read¹(b);
+//│       end
+//│     true =>
+//│       set tmp2 = b;
+//│       set tmp1 = discard¹(tmp2);
+//│       end
+//│     else
+//│       set tmp2 = o;
+//│       set tmp1 = discard¹(tmp2);
+//│       end
+//│   set first = tmp1;
+//│   set tmp3 = wasm⁰.i32⁰.const⁰(2);
+//│   set tmp4 = Unboxed⁰(tmp3);
+//│   set tmp5 = read¹(tmp4);
+//│   return +⁰(first, tmp5)
+//│ };
+//│ return together¹(true)
+//│ Wasm result:
+//│ = 3
+
+
+// In poly mode, each instance of a function decides for the values that reach it.
+:deforest
+:expect 3
+private fun skip(x: Any): Int = 0
+private fun get(b: Unboxed): Int = wasm.ref.i31(b.p)
+private fun instances(c: Bool): Int =
+  let b = Unboxed(wasm.i32.const(1))
+  let o = Reference(2)
+  let first = if c then get(b) else skip(if c then b else o)
+  first + get(Unboxed(wasm.i32.const(2)))
+instances(true)
+//│ deforest > >>> fusing >>>
+//│ deforest > Unboxed⁰(tmp³) ->
+//│ deforest > 	select: p
+//│ deforest > Unboxed⁰(tmp³) ->
+//│ deforest > 	select: p
+//│ deforest > <<< fusing <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let instances_get$get, instances$instances, instances_get$get1;
+//│ @private @private
+//│ define instances_get$get as fun instances_get$get⁰(b: Int32): Int⁰ {
+//│   return wasm⁰.ref⁰.i31⁰(b)
+//│ };
+//│ @private @private
+//│ define instances$instances as fun instances$instances⁰(c: Bool⁰): Int⁰ {
+//│   let b: Unboxed², o: Reference⁰, first: Int⁰, tmp: Int32, tmp1: Int⁰, tmp2: Object⁰, tmp3: Int32, tmp4: Int⁰, tmp5: Int32, Unboxed_p: Int32;
+//│   set tmp = wasm⁰.i32⁰.const⁰(1);
+//│   set b = Unboxed⁰(tmp);
+//│   set o = Reference¹(2);
+//│   match c
+//│     true =>
+//│       set tmp1 = get⁰(b);
+//│       end
+//│     true =>
+//│       set tmp2 = b;
+//│       set tmp1 = skip⁰(tmp2);
+//│       end
+//│     else
+//│       set tmp2 = o;
+//│       set tmp1 = skip⁰(tmp2);
+//│       end
+//│   set first = tmp1;
+//│   set tmp3 = wasm⁰.i32⁰.const⁰(2);
+//│   set Unboxed_p = tmp3;
+//│   set tmp5 = Unboxed_p;
+//│   set tmp4 = instances_get$get⁰(tmp5);
+//│   return +⁰(first, tmp4)
+//│ };
+//│ @private @private
+//│ define instances_get$get1 as fun instances_get$get¹(b: Int32): Int⁰ {
+//│   return wasm⁰.ref⁰.i31⁰(b)
+//│ };
+//│ @private
+//│ define skip¹ as fun skip⁰(x: Unknown): Int⁰ {
+//│   return 0
+//│ };
+//│ @private
+//│ define get¹ as fun get⁰(b: Unboxed²): Int⁰ {
+//│   return wasm⁰.ref⁰.i31⁰(b.p¹)
+//│ };
+//│ @private
+//│ define instances⁰ as fun instances¹(c: Bool⁰): Int⁰ {
+//│   let b: Unboxed², o: Reference⁰, first: Int⁰, tmp: Int32, tmp1: Int⁰, tmp2: Object⁰, tmp3: Int32, tmp4: Int⁰, tmp5: Int32, Unboxed_p: Int32;
+//│   set tmp = wasm⁰.i32⁰.const⁰(1);
+//│   set b = Unboxed⁰(tmp);
+//│   set o = Reference¹(2);
+//│   match c
+//│     true =>
+//│       set tmp1 = get⁰(b);
+//│       end
+//│     true =>
+//│       set tmp2 = b;
+//│       set tmp1 = skip⁰(tmp2);
+//│       end
+//│     else
+//│       set tmp2 = o;
+//│       set tmp1 = skip⁰(tmp2);
+//│       end
+//│   set first = tmp1;
+//│   set tmp3 = wasm⁰.i32⁰.const⁰(2);
+//│   set Unboxed_p = tmp3;
+//│   set tmp5 = Unboxed_p;
+//│   set tmp4 = instances_get$get¹(tmp5);
+//│   return +⁰(first, tmp4)
+//│ };
+//│ return instances$instances⁰(true)
+//│ Wasm result:
+//│ = 3

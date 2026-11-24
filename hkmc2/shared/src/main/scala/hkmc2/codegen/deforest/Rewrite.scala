@@ -42,47 +42,11 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     case n: Int => n.toString
 
   
-  private def isFused(p: ProdStrat): Bool = p match
-    case c: Ctor => solver.finalCtorDests.contains(c.concreteId)
-    case _: ProdFun | UnknownProd => false
-    case UnsafeEta => lastWords("effect producer in value flow")
-    case _: StratVar => lastWords("unexpected strat var")
-
-  private def producersOf(values: ProdStrat): Ls[ProdStrat] = values match
-    case v: StratVar => v.lowerBounds.toList
-    case p => p :: Nil
-  
-  // compute the updated erased type of a local variable, a function param or a function return,
-  // using all the concrete producers that flows into that slot
-  private def slotTypeFromFlow(producers: Ls[ProdStrat], declared: Opt[ErasedValueType]): Opt[ErasedValueType] =
-    def go(producers: Ls[ProdStrat], declared: Opt[ErasedValueType], seen: Set[Ctor]): Opt[ErasedValueType] =
-      def producerType(p: ProdStrat): Opt[ErasedValueType] = p match
-        case c: Ctor => solver.finalCtorDests.get(c.concreteId) match
-          case S(_: FinalDestMatch) => S(ErasedType.Function(S(false)))
-          case S(FinalDestSel(_, field)) =>
-            val fieldType =
-              if seen(c) then field.erasedFieldType
-              else go(producersOf(c.args.find(_._1 == field).get._2), field.erasedFieldType, seen + c)
-            S(fieldType.getOrElse(ErasedType.Unknown))
-          case N => S(c.allocatedType)
-        case _: ProdFun => S(ErasedType.Function(S(false)))
-        case UnknownProd => N
-        case UnsafeEta => lastWords("effect producer in value flow")
-        case _: StratVar => lastWords("unexpected strat var")
-      val types = producers.map(producerType)
-      if types.forall(_.isEmpty) then declared
-      else S(ErasedType.Union.mk(types.map(_.orElse(declared).getOrElse(ErasedType.Unknown))))
-    go(producers, declared, Set.empty)
-
-  // N when the existing slot keeps its declaration, as no fused value reaches it
-  private def retypedSlotType(producers: Iterable[ProdStrat], declared: Opt[ErasedValueType]): Opt[ErasedValueType] =
-    if producers.exists(isFused) then slotTypeFromFlow(producers.toList, declared) else N
-
   // A proved cast can disappear when fusion changes its operand's representation.
   // Keep other casts: even a check known to succeed can still narrow a physical anyref
   // slot for Wasm. Unknown/failing casts expose their inputs and therefore prevent fusion.
   private val fusedCasts = constraintSolver.castsWithSrcs.iterator.collect:
-    case c if c.succeeds && c.sources.exists(isFused) => c.concreteId
+    case c if c.succeeds && c.sources.exists(solver.isFused) => c.concreteId
   .toSet
 
   private def getParentLabelOrMatchesAndRestBefore(
@@ -336,15 +300,11 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
   // update the correct new erased type info to the new symbols before rewriting bodies that refer to them.
   // we do this after information like free variables are computed, as those are needed for branch function types
   locally {
-    val ctorsOfBranch = ctorWhichBranch.groupMap(_._2)((id, _) => solver.fusingCtorInfo(id))
     for (branchId, params) <- branchFunParamFieldSyms do
-      val ctors = ctorsOfBranch(branchId)
-      params.zipWithIndex.foreach: (param, index) =>
-        val types = ctors.map: ctor =>
-          val (field, prod) = ctor.args(index)
-          slotTypeFromFlow(producersOf(prod), field.erasedFieldType)
-        param.erasedType = if types.forall(_.isEmpty) then N
-          else S(ErasedType.Union.mk(types.map(_.getOrElse(ErasedType.Unknown))))
+      val types = solver.branchParamTypes(branchId)
+      // a branch function has one parameter for each argument of the constructors it stands for
+      assert(params.sizeCompare(types) == 0, s"${params.size} parameters for the types $types")
+      params.lazyZip(types).foreach(_.erasedType = _)
   }
 
   private def captureParams(instId: InstantiationId, fvs: Ls[LocalVarSymbol]): LoweredParamList =
@@ -449,8 +409,11 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
         def mkCtorFieldSyms(ctorDtorId: CtorDtorId): Ls[TempSymbol] =
           val ctorInfo = solver.fusingCtorInfo(ctorDtorId)
           val clsNme = ctorInfo.ctor.ctorClsName
-          ctorInfo.args.map: (field, prod) =>
-            new TempSymbol(N, initErasedType = slotTypeFromFlow(producersOf(prod), field.erasedFieldType), s"${clsNme}_${field.fieldName}")
+          val types = solver.fusedFieldTypes(ctorDtorId)
+          // the solver types every argument of a fused constructor
+          assert(ctorInfo.args.sizeCompare(types) == 0, s"${ctorInfo.args.size} arguments for the types $types")
+          ctorInfo.args.lazyZip(types).map: (arg, tpe) =>
+            new TempSymbol(N, initErasedType = tpe, s"${clsNme}_${arg._1.fieldName}")
         end mkCtorFieldSyms
         
         def fillFieldSyms(fieldSyms: Ls[TempSymbol], after: Block): Block =
@@ -656,39 +619,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
             else FunDefn(fun.owner, fun.sym, dSym, signature, rewrittenBody)(fun.configOverride, annotations)
           case None => super.applyFunDefn(fun)
   
-  lazy val retypedVariables =
-    val slots = LinkedHashMap.empty[(InstantiationId, ValueSymbol), ErasedValueType]
-    for (sym, instId, v) <- collector.symbolFlows do sym match
-      // The variable of a function definition holds what a reference to it evaluates to: its closure, or
-      // the result of a definition without parameter lists. That result belongs to the definition's
-      // signature, which `rewrittenSignatures` retypes; the definition keeps its symbol.
-      case sym: TermSymbol if pre.res.funSymToFunDefn.contains(sym) => ()
-      case sym: (VarSymbol | TempSymbol | TermSymbol) =>
-        val declared = sym match
-          case sym: LocalVarSymbol => sym.erasedType
-          case sym: TermSymbol => sym.erasedType
-        retypedSlotType(v.lowerBounds, declared).foreach:
-          tpe => slots(instId -> sym) = tpe
-      case _ => ()
-    slots
-  
-  /** The producers of the values that one instance of `fun` returns, where `v` is the variable of the
-    * definition symbol in that instance. A definition without parameter lists returns into `v` itself.
-    * Any other definition binds `v` to the closure of its first parameter list, whose last parameter list
-    * holds the result of the body. `N` when the analysis does not model the definition, as for class
-    * methods, whose variables are opaque.
-    */
-  private def returnedProducers(fun: FunDefn, v: StratVar): Opt[Ls[ProdStrat]] =
-    def isParamList(pf: ProdFun, idx: Int): Bool = pf.exprId match
-      case (sym: TermSymbol, `idx`) => sym is fun.dSym
-      case _ => false
-    def lastParamList(pf: ProdFun, idx: Int): ProdFun =
-      if idx == fun.params.size - 1 then pf else pf.res match
-        case next: ProdFun if isParamList(next, idx + 1) => lastParamList(next, idx + 1)
-        case res => lastWords(s"parameter list ${idx + 1} of ${fun.dSym.nme} has no closure in $res")
-    if fun.params.isEmpty then S(v.lowerBounds.toList)
-    else v.lowerBounds.iterator.collectFirst:
-      case pf: ProdFun if isParamList(pf, 0) => producersOf(lastParamList(pf, 0).res)
+  def retypedVariables = solver.retypedVariables
   
   // A function is retyped if fusion retypes one of its parameters or changes what it returns.
   // Every instance of a function has a copy of the variable of its definition symbol, whether or not
@@ -698,13 +629,12 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
   lazy val rewrittenSignatures: LinkedHashMap[(InstantiationId, TermSymbol), FunDefn.Signature] =
     val res = LinkedHashMap.empty[(InstantiationId, TermSymbol), FunDefn.Signature]
     for
-      case (fun: TermSymbol, instId, v) <- collector.symbolFlows
+      case (fun: TermSymbol, instId, _) <- collector.symbolFlows
       definition <- pre.res.funSymToFunDefn.get(fun)
-      returned <- returnedProducers(definition, v)
     do
       val original = definition.signature
       val params = retypedParams(instId, original.params)
-      val maybeNewReturnType = retypedSlotType(returned, original.result.bodyType)
+      val maybeNewReturnType = solver.retypedResults.get(instId -> fun)
       if maybeNewReturnType.isDefined || (params isnt original.params) then
         val retType = maybeNewReturnType.orElse(original.result.bodyType)
         val result = original.result match
