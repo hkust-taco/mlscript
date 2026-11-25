@@ -1,0 +1,24 @@
+:.
+
+class Parent
+class Child extends Parent
+type Wide = {item: Parent}
+type Narrow = {item: Child}
+
+// Reading either spelling of the intersection already produces a Child.
+:sir
+:siret
+fun wideFirst(r: Wide & Narrow): Child = r.item
+fun narrowFirst(r: Narrow & Wide): Child = r.item
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define wideFirst⁰ as fun wideFirst¹(r: Unknown): Child⁰ {
+//│   return r.item⁰
+//│ };
+//│ define narrowFirst⁰ as fun narrowFirst¹(r: Unknown): Child⁰ { return r.item¹ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// Distinct unboxed representations have no common value. Reading this field in an unreachable
+// function body must not require a conversion from either primitive to Str.
+fun disjoint(r: {item: Int32} & {item: Int64}): Str = r.item
+fun disjointReversed(r: {item: Int64} & {item: Int32}): Str = r.item

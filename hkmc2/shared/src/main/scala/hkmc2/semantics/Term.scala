@@ -708,7 +708,7 @@ object RcdField:
     derived(origin, RecordFieldSymbol.Origin.Copied(origin.tsym), mutableRecord, spread.toLoc)
   /** Create the field that an intersection of record types has for the fields `left` and `right`, which its
     * components declare under the same key. Either component can make the field writable.
-    * The left declaration supplies its runtime representation. */
+    * Its runtime representation satisfies both declarations. */
   def merged(left: RcdField, right: RcdField)(using State): RcdField =
     derived(left, RecordFieldSymbol.Origin.Merged(left.tsym, right.tsym), left.tsym.mutable || right.tsym.mutable,
       left.tsym.toLoc)

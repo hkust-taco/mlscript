@@ -86,6 +86,31 @@ object ErasedType:
         case single :: Nil => single
         case ms => Union(ms)
 
+  /** The representation of a value required to satisfy every member. Resolve nominal ancestry at
+    * canonicalization time, once the IR has class headers for the types appearing in the intersection.
+    */
+  final case class Intersection(members: Ls[ErasedValueType]) extends ErasedValueType:
+    require(members.nonEmpty)
+    type Canonical = CanonicalErasedValueType
+    override def sym(using Ctx, State): NoSymbol = NoSymbol
+    override protected def computeCanonicalize(using Ctx, State): CanonicalErasedValueType =
+      def flatten(tpe: ErasedValueType): Iterator[CanonicalErasedValueType] = tpe match
+        case Intersection(parts) => parts.iterator.flatMap(flatten)
+        case other => Iterator.single(other.canonicalize)
+      val types = members.iterator.flatMap(flatten).distinct.toList
+      types.collectFirst { case error: Incompatible => error }.getOrElse:
+        // With single inheritance an inhabited intersection of known nominal types has a most specific member.
+        types.filter(tpe => types.forall(needsCast(tpe, _).contains(false))) match
+          case bound :: Nil => bound
+          case Nil =>
+            if types.exists(a => types.exists(b => needsCast(a, b).isEmpty)) then Nothing
+            else Unknown // Incomplete class headers can leave the subtype relation undecided.
+          case equivalent =>
+            // Casts ignore resource metadata. Preserve the common class when only this metadata differs.
+            equivalent.collect { case AnyRef(_, sym) => sym }.distinct match
+              case sym :: Nil => AnyRef(N, sym)
+              case _ => Unknown // A cyclic hierarchy has no unique most specific class.
+
   /** The top type of reference types, i.e. any value on JS and `anyref` on Wasm.
     *
     * Reached by an absent annotation (`erasedType_!` folds `N` here), by an alias the IR cannot resolve, and
@@ -271,8 +296,7 @@ object ErasedType:
         l <- eraseSign(lhs)
         r <- eraseSign(rhs)
       yield ErasedType.union(l, r)
-    // * An intersection is never decomposed: narrowing to one member would call for a GLB, which this lattice
-    // * cannot express.
+    // Legacy signature erasure uses the default reference representation for a written intersection.
     case CompType(_, _, false) => S(ErasedType.Unknown)
     case DynTy() => S(ErasedType.Unknown)
     case UnitVal() => S(ErasedType.Unit)
@@ -389,8 +413,8 @@ sealed trait Canonicalizable:
 sealed abstract class ErasedValueType extends Canonicalizable:
   type Canonical <: CanonicalErasedValueType
 
-  /** The symbol denoting this erased type, or `NoSymbol` for [[ErasedType.Union]], [[ErasedType.Unknown]],
-    * [[ErasedType.Nothing]], and [[ErasedType.Incompatible]].
+  /** The symbol denoting this erased type, or `NoSymbol` for [[ErasedType.Union]], [[ErasedType.Intersection]],
+    * [[ErasedType.Unknown]], [[ErasedType.Nothing]], and [[ErasedType.Incompatible]].
     */
   def sym(using Ctx, State): TypeSymbol | NoSymbol
 
@@ -552,7 +576,7 @@ object CanonicalErasedValueType:
           else als.defn.flatMap(_.rhs).flatMap(alternatives(_, seen + als))
         case base => S(base :: Nil)
       // * Resolves the alternatives denoted by the right-hand side of an alias, flattening nested unions.
-      // * Only unions are expanded: an intersection would call for a GLB, which the erased lattice cannot express.
+      // This list represents alternatives joined by lub below. An intersection is not a list of alternatives.
       def alternatives(tpe: Term, seen: Set[TypeSymbol]): Opt[Ls[TypeSymbol]] = tpe match
         case Term.CompType(lhs, rhs, true) =>
           for

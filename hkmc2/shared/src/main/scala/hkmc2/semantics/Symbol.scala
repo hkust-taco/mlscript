@@ -583,11 +583,9 @@ class ClassCtorSymbol(
   * records that a record type describes. `mutable` tells whether the field can be assigned through such a record,
   * and `origin` how the record or the record type comes to have the field.
   *
-  * A field that is not declared has the runtime representation of the field that it derives from. A spread
-  * copies values without converting them, and a value of an intersection can be used at each of its components,
-  * so no separate representation is inferred for such a field: its erasure is that of `representative`.
-  * The values assigned to a copy are therefore also inputs of the representation of the field that it copies
-  * (see NewResolver.writeField).
+  * A spread copies a field without converting its value. The copy shares the original field's representation
+  * and contributes writes to its inference (see NewResolver.writeField). A field shared by intersected record
+  * types must satisfy every declaration, so its erasure is the intersection of their erasures.
   */
 final class RecordFieldSymbol(id: Tree.Ident, val mutable: Bool, val origin: RecordFieldSymbol.Origin)(using State)
     extends TermSymbol(syntax.RecordField, N, id):
@@ -601,19 +599,22 @@ final class RecordFieldSymbol(id: Tree.Ident, val mutable: Bool, val origin: Rec
   def root: RecordFieldSymbol = origin match
     case Origin.Copied(field) => field.root
     case Origin.Declared | _: Origin.Merged => this
-  /** The field whose erasure a derived field has. An intersection keeps the declaration of its left component
-    * for a field that both components declare (see RcdField.merged). */
-  private def representative: Opt[RecordFieldSymbol] = origin match
-    case Origin.Declared => N
-    case Origin.Copied(field) => S(field)
-    case Origin.Merged(left, _) => S(left)
-  override def isErased: Bool = representative.fold(super.isErased)(_.isErased)
+  override def isErased: Bool = origin match
+    case Origin.Declared => super.isErased
+    case Origin.Copied(field) => field.isErased
+    case Origin.Merged(left, right) => left.isErased && right.isErased
+  private def fieldErasure(declared: => Opt[ErasedValueType | ErasedCallableSignature])
+      (read: RecordFieldSymbol => Opt[ErasedValueType]): Opt[ErasedValueType | ErasedCallableSignature] = origin match
+    case Origin.Declared => declared
+    case Origin.Copied(field) => read(field)
+    case Origin.Merged(left, right) =>
+      S(ErasedType.Intersection(read(left).getOrElse(ErasedType.Unknown) :: read(right).getOrElse(ErasedType.Unknown) :: Nil))
   override def sourceErasure(using codegen.Erasure): Opt[ErasedValueType | ErasedCallableSignature] =
-    representative.fold(super.sourceErasure)(_.sourceErasure)
+    fieldErasure(super.sourceErasure)(_.sourceErasedType)
   override def irErasure: Opt[ErasedValueType | ErasedCallableSignature] =
-    representative.fold(super.irErasure)(_.irErasure)
+    fieldErasure(super.irErasure)(_.erasedType)
   override def initializeErasure(value: Opt[ErasedValueType | ErasedCallableSignature]): Unit =
-    assert(representative.isEmpty, s"The derived field '$nme' takes the erasure of the field that it derives from")
+    assert(origin == Origin.Declared, s"The erasure of derived field '$nme' is computed from its declarations")
     super.initializeErasure(value)
 
 object RecordFieldSymbol:
