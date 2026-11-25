@@ -4787,7 +4787,8 @@ class NewResolver:
     * the values that such a type describes receive no input for the field (see `constrainRecord`).
     * These fields are recorded on `lhs`, and lowering rejects the assignment unless it is marked `@unsafe`
     * (see NewResolvableImpl.readOnlyFields). The annotation wraps the elaborated assignment, so it is not
-    * known here.
+    * known here. Without strict resolution, lowering only rejects the assignment if no receiver has the
+    * field mutable, so `lhs` also records whether one does (see NewResolvableImpl.reachesMutableField).
     * A copy such as `{...r}` is not rejected when `r` declares the field `mut`, although only `mut {...r}`
     * permits assignments: both lookups are mutable, and type checking is to tell them apart.
     * Dynamic receivers and computed keys have no static target field: lowering compiles such assignments without
@@ -4799,7 +4800,16 @@ class NewResolver:
     // `transport` takes an assigned value from the assignment into the scope where the selection is evaluated:
     // the selection can be captured by a nested definition, from which the assigned value exits, as for variables.
     def target(lhs: Term, transport: TermShape => TermShape | NoShape)(using ResolutionContext): Unit =
+      // A completed assignment is already lowered. It cannot report the receivers of later activations,
+      // so `reachesMutable` and `readOnly` only record what they find on a reference that is still resolved.
+      def reachesMutable()(using ResolutionContext): Unit = lhs match
+        case host: (NewSel | UnresolvedRef) =>
+          if rctx.canResolve(host) then
+            rctx.recordResolution(host, host.reachesMutableField)(host.reachesMutableField = true)
+        // Lowering assigns a directly referenced definition without consulting the fields of receivers.
+        case _ => ()
       def assign(field: TermSymbol, marks: Ls[Marks])(using ResolutionContext): Unit =
+        reachesMutable()
         // Each receiver path to a field follows the assigned values once per activation of the assignment.
         if rctx.state.fieldAssignments.add((new Identity(lhs), new Identity(rhs), field, marks)) then
           listenTerm(rhs): value =>
@@ -4808,12 +4818,12 @@ class NewResolver:
               case NoShape => ()
       def readOnly(field: RcdField)(using ResolutionContext): Unit = lhs match
         case host: (NewSel | UnresolvedRef) =>
-          // A completed assignment is already lowered. It cannot report the receivers of later activations.
           if rctx.canResolve(host) then
             rctx.recordResolution(host, host.readOnlyFields.contains(field.tsym))(host.readOnlyFields ::= field.tsym)
         case _ => softAssert(false, "Only a selection or an opened name can find a record field")
       def lookup(info: MemberLookup)(using ResolutionContext): Unit =
         resolveFieldWrite(info)(assign, readOnly): input =>
+          reachesMutable()
           if rctx.state.fieldAssignmentTypes.add((new Identity(lhs), new Identity(rhs), input)) then
             listenTerm(rhs): value =>
               transport(value) match

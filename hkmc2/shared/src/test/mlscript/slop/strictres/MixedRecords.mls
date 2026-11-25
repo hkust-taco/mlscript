@@ -183,6 +183,47 @@ overwriteFrozen()
 //│ ╙──      	                ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
+// Strict resolution rejects an assignment if any of the records that reach it leaves the field read-only.
+// The mutable copy below reuses the field of the record that it copies, so the assignment has one target.
+:ge
+private fun bump(record) = set record.count = record.count + 1
+private fun bumpCopy() =
+  let fixed = {count: 0}
+  let copied = mut {...fixed}
+  bump(fixed)
+  bump(copied)
+  [fixed.count, copied.count]
+bumpCopy()
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'count'
+//│ ║  l.+1: 	private fun bump(record) = set record.count = record.count + 1
+//│ ║        	                                     ^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+3: 	  let fixed = {count: 0}
+//│ ╙──      	               ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Records with distinct fields make the selection ambiguous under strict resolution, whichever of them
+// have the field mutable (see ../ReadOnlyRecordFields.mls for this assignment without strict resolution).
+:ge
+private fun bumpEither(record) = set record.count = record.count + 1
+private fun bumpBoth() =
+  let counter = {mut count: 0}
+  let fixed = {count: 0}
+  bumpEither(counter)
+  bumpEither(fixed)
+  [counter.count, fixed.count]
+bumpBoth()
+//│ ╔══[COMPILATION ERROR] This selection of member 'count' is ambiguous, as it has multiple resolved targets
+//│ ║  l.+1: 	private fun bumpEither(record) = set record.count = record.count + 1
+//│ ║        	                                     ^^^^^^^^^^^^
+//│ ╟── target: record field 'count'
+//│ ║  l.+4: 	  let fixed = {count: 0}
+//│ ║        	               ^^^^^
+//│ ╟── target: record field 'count'
+//│ ║  l.+3: 	  let counter = {mut count: 0}
+//│ ╙──      	                     ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
 // Like an assignment to an immutable field of a class, such an assignment can be marked `@unsafe`. It then
 // takes effect on a record that is not frozen. Resolution does not account for the assigned value.
 :expect "changed"
@@ -226,8 +267,22 @@ unsafelyRelabelled.label
 //│ = "changed"
 //│ unsafelyRelabelled = {count: 0, label: "changed"}
 
-// It is accepted through an intersection of record types in which a component makes the field mutable
-// (see ../ReadOnlyRecordFields.mls for unions).
+// A union of record types makes the selection ambiguous under strict resolution, whichever of its components
+// make the field mutable (see ../ReadOnlyRecordFields.mls for this assignment without strict resolution).
+:ge
+private fun writeEither(target: {mut count: Int} | {count: Int}) = set target.count = 1
+//│ ╔══[COMPILATION ERROR] This selection of member 'count' is ambiguous, as it has multiple resolved targets
+//│ ║  l.+1: 	private fun writeEither(target: {mut count: Int} | {count: Int}) = set target.count = 1
+//│ ║        	                                                                       ^^^^^^^^^^^^
+//│ ╟── target: record field 'count'
+//│ ║  l.+1: 	private fun writeEither(target: {mut count: Int} | {count: Int}) = set target.count = 1
+//│ ║        	                                                    ^^^^^
+//│ ╟── target: record field 'count'
+//│ ║  l.+1: 	private fun writeEither(target: {mut count: Int} | {count: Int}) = set target.count = 1
+//│ ╙──      	                                     ^^^^^
+
+// The assignment is accepted through an intersection of record types in which a component makes the field
+// mutable.
 :expect 1
 private fun writeBoth(target: {mut count: Int} & {count: Int, label: Str}) = set target.count = 1
 let both = mut {count: 0, label: "count"}

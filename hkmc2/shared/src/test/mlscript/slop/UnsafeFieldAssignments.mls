@@ -182,7 +182,7 @@ fun parameter(x) = @unsafe set x = 1
 
 #lang(strictResolution: false)
 
-// All known candidates must permit a write, even when lookup is lenient.
+// When lookup is lenient, a write is rejected if no known candidate permits it.
 :ge
 class Other(val value)
 fun ambiguous(a: Public | Other) = set a.value = 1
@@ -193,6 +193,16 @@ fun ambiguous(a: Public | Other) = set a.value = 1
 //│ ║  l.+1: 	class Other(val value)
 //│ ╙──      	                ^^^^^
 
+
+// One candidate that permits the write suffices.
+:expect 1
+class Writable(mut val value)
+fun mixedCandidates(a: Public | Writable) = set a.value = 1
+let writable = new Writable(0)
+mixedCandidates(writable)
+writable.value
+//│ = 1
+//│ writable = Writable(1)
 
 // A dynamic alternative must not hide a known immutable field.
 :ge

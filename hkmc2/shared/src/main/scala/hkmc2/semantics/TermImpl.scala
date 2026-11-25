@@ -129,6 +129,12 @@ trait NewResolvableImpl extends PossiblyErroneous:
     * assignment, and Cloner copies them. No other code writes them.
     */
   var readOnlyFields: Ls[TermSymbol] = Nil
+  /** Whether an assignment to this reference reaches a field of one of its receivers: a mutable field of a
+    * class or of a record, or a field that a record type makes mutable. Without strict resolution, lowering
+    * accepts an assignment that reaches such a field even if other receivers have the field immutable.
+    * Like `readOnlyFields`, NewResolver.assignField sets this and Cloner copies it.
+    */
+  var reachesMutableField: Bool = false
 
 
 trait StatementImpl extends Located, ProductWithExtraInfo, Describable:

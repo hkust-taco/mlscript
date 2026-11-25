@@ -884,16 +884,21 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
 
   private def assignNamedField(prefix: Path, name: Tree.Ident, value: Path, rest: Block,
       keyAccess: Opt[Term], unsafe: Bool)(target: Opt[DefinitionSymbol[?]],
-      candidates: Ls[DefinitionSymbol[?]], readOnlyFields: Ls[TermSymbol])(using LoweringCtx): Block =
+      candidates: Ls[DefinitionSymbol[?]], readOnlyFields: Ls[TermSymbol], reachesMutableField: Bool)
+      (using LoweringCtx): Block =
     // Lenient and dynamic lookup can omit the single IR target while retaining known
-    // candidates. None of those immutable fields may be written without @unsafe.
+    // candidates. The immutable fields among them may not be written without @unsafe.
     // Neither may the record fields that the assignment cannot reach, which resolution
     // collects in `readOnlyFields` (see NewResolvableImpl.readOnlyFields).
     val immutable = target.iterator.++(candidates).collectFirst:
       case sym: TermSymbol if sym.k is syntax.ImmutVal => sym
     .orElse(readOnlyFields.lastOption)
+    // Strict resolution requires every receiver to permit the write. Otherwise, the write is
+    // only rejected if no receiver has the field mutable, like a selection is only rejected
+    // if no receiver has the member. A dynamic receiver does not count as having it mutable.
+    val rejected = strictResolution || !reachesMutableField
     immutable match
-    case S(sym) if !unsafe => cannotAssign(sym, sym, name.toLoc)
+    case S(sym) if !unsafe && rejected => cannotAssign(sym, sym, name.toLoc)
     case _ => namedSelection(prefix, name, target, keyAccess, name.toLoc, false):
       case DynSelect(_, key, kind) => AssignDynField(prefix, key, kind, value, rest)
       case _ => AssignField(prefix, name, value, rest)(target)
@@ -1441,12 +1446,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                 subTerm_nonTail(rhs): r =>
                   castPathTo(r, sym.sourceErasedType, ref.toLoc): value =>
                     assignNamedField(p, memberIdent(ref.id, member), value,
-                      k(unit), ref.keyAccess, unsafe)(S(sym), ref.resolvedTargets, ref.readOnlyFields)
+                      k(unit), ref.keyAccess, unsafe)(S(sym), ref.resolvedTargets, ref.readOnlyFields, ref.reachesMutableField)
             case N if ref.resolvedTargets.forall(_.isInstanceOf[TermSymbol]) =>
               subTerm_nonTail(prefix): p =>
                 subTerm_nonTail(rhs): r =>
                   assignNamedField(p, memberIdent(ref.id, member), r, k(unit), ref.keyAccess, unsafe)(
-                    N, ref.resolvedTargets, ref.readOnlyFields)
+                    N, ref.resolvedTargets, ref.readOnlyFields, ref.reachesMutableField)
             case _ => fail:
               ErrorReport(msg"Assignment requires a term member" -> ref.toLoc :: Nil,
                 source = Diagnostic.Source.Compilation)
@@ -1461,11 +1466,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
               subTerm_nonTail(rhs): r =>
                 castPathTo(r, sym.sourceErasedType, sel.toLoc): value =>
                   assignNamedField(p, name, value, k(unit), sel.keyAccess, unsafe)(
-                    S(sym), sel.resolvedTargets, sel.readOnlyFields)
+                    S(sym), sel.resolvedTargets, sel.readOnlyFields, sel.reachesMutableField)
           case N if sel.resolvedTargets.forall(_.isInstanceOf[TermSymbol]) =>
             subTerm_nonTail(prefix): p =>
               subTerm_nonTail(rhs): r =>
-                assignNamedField(p, name, r, k(unit), sel.keyAccess, unsafe)(N, sel.resolvedTargets, sel.readOnlyFields)
+                assignNamedField(p, name, r, k(unit), sel.keyAccess, unsafe)(
+                  N, sel.resolvedTargets, sel.readOnlyFields, sel.reachesMutableField)
           case _ => fail:
             ErrorReport(msg"Assignment requires a term member" -> sel.toLoc :: Nil,
               source = Diagnostic.Source.Compilation)
@@ -1480,7 +1486,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                 k(unit),
                 N,
                 unsafe,
-              )(resolvedSelectionSymbol, Nil, Nil)
+              )(resolvedSelectionSymbol, Nil, Nil, false)
       case sel @ SynthSel(prefix, nme) =>
         // * See the doc in the `term` case for `SynthSel` for why we fall back to `sel.sym` here
         val sym = resolvedSelectionSymbol match
@@ -1492,7 +1498,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         subTerm(prefix): p =>
           subTerm_nonTail(rhs): r =>
             castPathTo(r, fieldErasedType(sym), sel.toLoc): value =>
-              assignNamedField(p, memberIdent(nme, sel.sym), value, k(unit), N, unsafe)(sym, Nil, Nil)
+              assignNamedField(p, memberIdent(nme, sel.sym), value, k(unit), N, unsafe)(sym, Nil, Nil, false)
       case sel @ DynSel(prefix, fld, ai, _) =>
         subTerm(prefix): p =>
           subTerm_nonTail(fld): f =>
@@ -1509,7 +1515,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                 k(unit),
                 N,
                 unsafe,
-              )(resolvedSelectionSymbol, Nil, Nil)
+              )(resolvedSelectionSymbol, Nil, Nil, false)
       case _ => fail:
         ErrorReport(
           msg"Unexpected left-hand side in assignment (${lhs.describe})" -> lhs.toLoc :: Nil, S(lhs),
