@@ -886,8 +886,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     protected def reqDefnErasedType(s: LiftedSym): Opt[ErasedValueType] = s match
       case t: TermSymbol => t.erasedType
       case m: ModuleOrObjectSymbol => m.erasedType
-      // * Class objects and pattern objects have no known erased representation.
-      case _: (ClassSymbol | PatternSymbol) => N
+      case _: (ClassSymbol | PatternSymbol) => S(ErasedType.Unknown)
   
   /* MIXINS */
   

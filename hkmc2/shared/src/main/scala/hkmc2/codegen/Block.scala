@@ -1255,7 +1255,8 @@ sealed abstract class Result extends Located:
     * can produce a value whose representation is unknown. A bare path to a known getter also has `N`
     * because only the enclosing `Call(path, Nil)` evaluates the getter and carries its result type.
     *
-    * [[erasedType_!]] maps `N` to [[ErasedType.Unknown]], the top reference type. [[ErasedType.Nothing]]
+    * A node known to use the general reference representation supplies `S(ErasedType.Unknown)`.
+    * [[erasedType_!]] also uses this top reference type as the fallback for `N`. [[ErasedType.Nothing]]
     * is an explicit bottom type, as on the `undefined` literal.
     */
   lazy val erasedType: Opt[ErasedValueType] = this match
@@ -1265,16 +1266,14 @@ sealed abstract class Result extends Located:
     case path @ (_: Value.MemberRef | _: Select | _: SuperSelect | _: DynSelect) => path.targetSymbol match
       case S(term: TermSymbol) => term.bareReferenceType
       case S(mod: ModuleOrObjectSymbol) => mod.erasedType
-      // Unresolved members and class objects have no recorded representation.
-      case _ => N
+      // Class objects and pattern singletons have no nominal erased type of their own.
+      case S(_: ClassSymbol | _: PatternSymbol) => S(ErasedType.Unknown)
+      case S(_: TypeAliasSymbol) | N => N
     case Value.This(cls: ClassSymbol) => S(ErasedType.ValueLike(rsc = S(false), cls))
     case Value.This(mod: ModuleOrObjectSymbol) => mod.erasedType
-    case Value.Lit(_: Tree.IntLit) => S(ErasedType.Int)
-    case Value.Lit(_: Tree.DecLit) => S(ErasedType.Num)
-    case Value.Lit(_: Tree.StrLit) => S(ErasedType.Str)
-    case Value.Lit(_: Tree.BoolLit) => S(ErasedType.Bool)
-    case Value.Lit(Tree.UnitLit(false)) => S(ErasedType.Nothing)
-    // * `null` stays untyped; it does not denote a `Unit` value.
+    // A pattern receiver is its singleton. The host supplies the dynamic global receiver.
+    case Value.This(_: PatternSymbol | _: TopLevelSymbol) => S(ErasedType.Unknown)
+    case Value.Lit(lit) => S(ErasedType.ofLiteral(lit))
     // * WORKAROUND (see `semantics.BuiltinOperatorResults`): dynamic arithmetic signatures do not
     // * express operand-dependent results, which resolution approximates from their representations.
     case c @ Call(Value.SimpleRef(op: BuiltinSymbol), args :: Nil) if args.forall(_.spread.isEmpty) =>
@@ -1294,8 +1293,9 @@ sealed abstract class Result extends Located:
       clsSym.map(sym => ErasedType.ValueLike(rsc = S(false), sym))
     // A lazy spread calls Tuple.lazyConcat, which constructs a lazy collection.
     case tuple: Tuple => S(if tuple.hasLazySpread then ErasedType.Unknown else ErasedType.Array)
+    // The whole record has the same reference representation regardless of its fields.
+    case _: Record => S(ErasedType.Unknown)
     case _: Lambda => S(ErasedType.Function(rsc = S(false)))
-    case _ => N
 
   /** `undefined` is an unspecified value of any representation, including unboxed primitives.
     * The Cast smart constructor preserves the literal, whose Nothing type leaves the representation unconstrained.

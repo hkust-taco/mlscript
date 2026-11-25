@@ -59,14 +59,10 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
     case intro: IntroShape => intro.trm match
       case _: Lam => S(ErasedType.Function(S(false)))
       case UnitVal() => S(ErasedType.Unit)
-      case Lit(_: syntax.Tree.IntLit) => S(ErasedType.Int)
-      case Lit(_: syntax.Tree.DecLit) => S(ErasedType.Num)
-      case Lit(_: syntax.Tree.StrLit) => S(ErasedType.Str)
-      case Lit(_: syntax.Tree.BoolLit) => S(ErasedType.Bool)
       // Undefined places no constraint on the slot's representation. An undefined-only
       // slot still receives the ordinary default representation and keeps it across consumers.
       case Lit(syntax.Tree.UnitLit(false)) => N
-      case Lit(syntax.Tree.UnitLit(true)) => S(ErasedType.Unknown)
+      case Lit(lit) => S(ErasedType.ofLiteral(lit))
     case _: CallableTypeShape => S(ErasedType.Function(S(false)))
     case tuple: TupleShape => S(if tuple.collection.isEmpty then ErasedType.Array else ErasedType.Unknown)
     // An intersection describes one value through several interfaces, not alternative values.

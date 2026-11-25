@@ -35,6 +35,16 @@ fun main =
 //│ end
 
 
+// Reading a field directly binds the record literal to a temporary with the record's erased type.
+:js
+:expect null
+{value: null}.value
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let value: Unknown, tmp: Unknown; set value = null; set tmp = { "value": value }; return tmp.value⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = null
+
+
 // Explicit annotations fix the representations of these `val` slots. The temporary holding the array literal
 // also carries the array representation.
 val i: Int = 1

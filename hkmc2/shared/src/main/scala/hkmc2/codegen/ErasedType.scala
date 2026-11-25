@@ -139,6 +139,17 @@ object ErasedType:
   /** The builtin `Int31` reference type. */
   def Int31: ErasedValueType = ErasedType.ValueLike(rsc = S(false), ctx.builtins.Int31)
 
+  /** The runtime representation of a literal. `null` is a reference value. The unspecified value
+    * `undefined` can inhabit any destination representation, including an unboxed primitive.
+    */
+  def ofLiteral(lit: syntax.Literal): ErasedValueType = lit match
+    case _: syntax.Tree.IntLit => Int
+    case _: syntax.Tree.DecLit => Num
+    case _: syntax.Tree.StrLit => Str
+    case _: syntax.Tree.BoolLit => Bool
+    case syntax.Tree.UnitLit(true) => Unknown
+    case syntax.Tree.UnitLit(false) => Nothing
+
   /** The builtin `Function` reference type, used as the value type of a first-class function.
     *
     * - `rsc` is true if this reference is a resource function.
