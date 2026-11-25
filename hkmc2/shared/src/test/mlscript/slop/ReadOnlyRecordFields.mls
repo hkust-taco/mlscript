@@ -61,6 +61,20 @@ bumpFixed({count: 1, label: "one"})
 //│ ╙──      	           ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
+// The writable receiver lets the setter compile. On the other receiver, `mut count` keeps the
+// record unfrozen, so the write replaces `inner` even though resolution still sees its initializer.
+:breakme
+:e
+private fun replaceInner(target) = set target.inner = {b: 2}
+private fun readAfterWrite() =
+  let readOnly = {mut count: 0, inner: {a: 1}}
+  let writable = {mut inner: {a: 1}}
+  replaceInner(writable)
+  replaceInner(readOnly)
+  [readOnly.inner.a]
+readAfterWrite()
+//│ = [undefined]
+
 // A mutable copy reuses the field of the record that it copies. The assignment below thus has a single
 // target, which one of the two records has read-only.
 :ge // TODO: allow?
