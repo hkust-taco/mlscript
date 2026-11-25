@@ -380,7 +380,7 @@ set mutableNested.value = {after: 34}
 //│ ╟── Cannot resolve member 'after' of a value with unknown shape.
 //│ ╟── Field 'value' admits assigned values of unknown shape.
 //│ ║  l.+2: 	let mutableNested = mut {...stableNested}
-//│ ║        	                            ^^^^^^^^^^^^
+//│ ║        	                         ^^^^^^^^^^^^^^^
 //│ ╟── This value is exposed by this compilation unit.
 //│ ║  l.+2: 	let mutableNested = mut {...stableNested}
 //│ ╙──      	                            ^^^^^^^^^^^^

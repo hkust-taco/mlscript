@@ -1311,8 +1311,8 @@ object TupleShape:
 final case class RecordMember(field: RcdField, copiedFrom: Opt[(RecordMember, Marks)]):
   def mutable: Bool = field.tsym.mutable
 
-  def copiedBy(record: Term.Rcd, marks: Marks)(using ResolutionContext): RecordMember =
-    RecordMember(rctx.copiedField(record, field), S((this, marks)))
+  def copiedBy(record: Term.Rcd, spread: RecordShape.Spread)(using ResolutionContext): RecordMember =
+    RecordMember(rctx.copiedField(record, spread.site, field), S((this, spread.marks)))
 
   /** Visit the initializer and each writable field whose values can reach a read of this member.
     * Each path starts at the record that stores that value and ends at the reader. */
@@ -1344,7 +1344,7 @@ final class RecordShape private (val source: Term.Rcd, val elements: Ls[RecordSh
         case _ => unknown(field.field)
       case RecordShape.Unknown(shape) :: _ => Unknown(Uncertainty.RecordOverwrite, shape.fromPublicInterface, shape.provenance)
       case RecordShape.Dynamic(marks) :: _ => Dynamic(marks)
-      case RecordShape.Spread(shape, marks) :: rest =>
+      case (entry @ RecordShape.Spread(shape, marks)) :: rest =>
         def spread(info: MemberLookup): Opt[MemberLookup] = info match
           case All(members) => members.flatMap(spread) match
             case Nil => N
@@ -1353,7 +1353,7 @@ final class RecordShape private (val source: Term.Rcd, val elements: Ls[RecordSh
           case Dynamic(inner) => S(Dynamic(inner ::: marks :: Nil))
           case Unknown(_, fromPublicInterface, provenance) => S(Unknown(Uncertainty.RecordOverwrite, fromPublicInterface, provenance))
           case Missing => N
-          case Found(member: RecordMember, Nil) => S(Found(member.copiedBy(source, marks), Nil))
+          case Found(member: RecordMember, Nil) => S(Found(member.copiedBy(source, entry), Nil))
           case _: Found | _: Declared | _: Typed | Indexed(_, _) | Private(_, _, _) =>
             lastWords("Record lookup must find a field in the spread record's own scope")
         spread(shape.getMember(name)).getOrElse(loop(rest))
@@ -1374,8 +1374,8 @@ final class RecordShape private (val source: Term.Rcd, val elements: Ls[RecordSh
       if visited.add((record, path, bindings)) then record.elements.reverseIterator.foreach:
         case RecordShape.Field(field) if field.key.forall(shadowed.add) =>
           visit(copy(RecordMember(field, N)), receiver, bindings)
-        case RecordShape.Spread(inner, mark) =>
-          fields(inner, member => copy(member.copiedBy(record.source, mark)),
+        case entry @ RecordShape.Spread(inner, mark) =>
+          fields(inner, member => copy(member.copiedBy(record.source, entry)),
             if mark == NoMarks then path else mark :: path, bindings.withOverrides(inner.instances))
         case _ => ()
     fields(this, member => member, receiver, scope.withOverrides(instances))
@@ -1406,7 +1406,7 @@ object RecordShape:
       protected def sameValue(other: ValueKey): Bool = other match
         case that: Field => (field eq that.field)
         case _ => false
-    final case class Spread(shape: RecordShape, marks: Marks) extends Element:
+    final case class Spread(shape: RecordShape, marks: Marks)(val site: RcdSpread) extends Element:
       protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), shape.hashCode, marks.hashCode)
       protected def sameValue(other: ValueKey): Bool = other match
         case that: Spread => shape == that.shape && marks == that.marks

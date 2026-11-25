@@ -25,7 +25,7 @@ fun formatCopy() = publicCopy.value.toFixed(0)
 //│ ╟── Cannot resolve member 'toFixed' of a value with unknown shape.
 //│ ╟── Field 'value' admits assigned values of unknown shape.
 //│ ║  l.+1: 	val publicCopy = mut {...RecordProducers.fields}
-//│ ║        	                         ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── 'publicCopy' is exposed by this compilation unit.
 //│ ║  l.+1: 	val publicCopy = mut {...RecordProducers.fields}
 //│ ╙──      	^^^^^^^^^^^^^^

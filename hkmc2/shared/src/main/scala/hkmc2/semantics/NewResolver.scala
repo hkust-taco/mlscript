@@ -5721,7 +5721,7 @@ class NewResolver:
             val shape = RecordShape(record, reversed.reverse)
             publish(shape)
           case (field: RcdField) :: rest => expand(rest, RecordShape.Field(field) :: reversed)
-          case RcdSpread(term) :: rest =>
+          case (site @ RcdSpread(term)) :: rest =>
             val spreadKey = new Object
             listenTermViews(term): shape =>
               if rctx.state.spreadInputs.getOrElseUpdate(spreadKey, mutable.Set.empty).add(ShapeIdentity.key(shape)) then shape match
@@ -5731,7 +5731,7 @@ class NewResolver:
                   val spread = if shape.containsSpread(shape.source, marks)
                     then RecordShape(shape.source, RecordShape.Unknown(UnknownValueShape.spread(term, shape)) :: Nil)
                     else shape
-                  expand(rest, RecordShape.Spread(spread, marks) :: reversed)
+                  expand(rest, RecordShape.Spread(spread, marks)(site) :: reversed)
                 case Marked(_: DynShape, marks) => expand(rest, RecordShape.Dynamic(marks :: Nil) :: reversed)
                 case _ => expand(rest, RecordShape.Unknown(UnknownValueShape.spread(term, shape)) :: reversed)
           case _ :: rest => expand(rest, reversed)

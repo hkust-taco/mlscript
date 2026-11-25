@@ -324,7 +324,7 @@ final class NewResolverState(val owner: Elaborator.State):
   // intersection of record types has one for two fields that its components declare under the same key
   // (see RecordFieldSymbol). Like named tuple fields, they have stable property identities, shared with
   // consumers through the original graph of the record literal or record type that has them.
-  val copiedFields: Cache[(Rcd, RecordFieldSymbol), RcdField] =
+  val copiedFields: Cache[(Rcd, RcdSpread, RecordFieldSymbol), RcdField] =
     new Cache(_.copiedFields, identity)
   val mergedFields: Cache[(RecordFieldSymbol, RecordFieldSymbol), RcdField] =
     new Cache(_.mergedFields, identity)
@@ -741,8 +741,9 @@ final class ResolutionContext private[semantics] (
     * spreads (see RcdField.copied). The unit that first looks the copy up creates it in its own tables, unless
     * the unit of `record` already has it: a completed unit gets no new symbol.
     */
-  def copiedField(record: Term.Rcd, origin: RcdField): RcdField =
-    canonical(record, _.copiedFields, (record, origin.tsym))(derivedField(origin, RcdField.copied(origin, record)(using owner)))
+  def copiedField(record: Term.Rcd, spread: RcdSpread, origin: RcdField): RcdField =
+    canonical(record, _.copiedFields, (record, spread, origin.tsym)):
+      derivedField(origin, RcdField.copied(origin, record.mut, spread)(using owner))
   /** The field that an intersection has for `left` and `right`, the fields that two of its record types declare
     * under the same key (see RcdField.merged). `source` is the record type that declares `left`.
     */

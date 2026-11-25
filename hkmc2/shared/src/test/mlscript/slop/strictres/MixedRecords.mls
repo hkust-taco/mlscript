@@ -116,22 +116,32 @@ val replacedField = {mut size: 0, ...replacingSource}
 //│ replacedField = {size: undefined}
 //│ replacingSource = {size: undefined}
 
-// The copied field is read-only even when a sibling field remains writable.
+// Each read-only field points to the spread that supplied it, even when a sibling field remains writable.
 :ge
 private fun assignReplacedField() =
   let other = {item: 1}
-  let record = {mut item: 0, ...other, mut count: 0}
+  let record = {mut item: 0, ...other, ...{label: "old"}, mut count: 0}
   set record.count = 1
   set record.item = 2
+  set record.label = "new"
 //│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'item'
 //│ ║  l.+5: 	  set record.item = 2
 //│ ║        	            ^^^^^
-//│ ╟── This record copies the field as read-only:
-//│ ║  l.+3: 	  let record = {mut item: 0, ...other, mut count: 0}
-//│ ║        	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This spread copies the field as read-only:
+//│ ║  l.+3: 	  let record = {mut item: 0, ...other, ...{label: "old"}, mut count: 0}
+//│ ║        	                             ^^^^^^^^
 //│ ╟── The copied field is defined here:
 //│ ║  l.+2: 	  let other = {item: 1}
 //│ ╙──      	               ^^^^
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'label'
+//│ ║  l.+6: 	  set record.label = "new"
+//│ ║        	            ^^^^^^
+//│ ╟── This spread copies the field as read-only:
+//│ ║  l.+3: 	  let record = {mut item: 0, ...other, ...{label: "old"}, mut count: 0}
+//│ ║        	                                       ^^^^^^^^^^^^^^^^^
+//│ ╟── The copied field is defined here:
+//│ ║  l.+3: 	  let record = {mut item: 0, ...other, ...{label: "old"}, mut count: 0}
+//│ ╙──      	                                           ^^^^^
 
 
 // A record type can require a `mut` field next to a read-only one. A class instance supplies both.
@@ -182,9 +192,9 @@ overwriteFrozen()
 //│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'count'
 //│ ║  l.+5: 	  set copied.count = 2
 //│ ║        	            ^^^^^^
-//│ ╟── This record copies the field as read-only:
+//│ ╟── This spread copies the field as read-only:
 //│ ║  l.+3: 	  let copied = {...record}
-//│ ║        	                   ^^^^^^
+//│ ║        	                ^^^^^^^^^
 //│ ╟── The copied field is defined here:
 //│ ║  l.+2: 	  let record = {count: 0}
 //│ ╙──      	                ^^^^^
@@ -249,9 +259,9 @@ set frozen.count = 1
 //│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'count'
 //│ ║  l.+3: 	set frozen.count = 1
 //│ ║        	          ^^^^^^
-//│ ╟── This record copies the field as read-only:
+//│ ╟── This spread copies the field as read-only:
 //│ ║  l.+2: 	let frozen = {...source}
-//│ ║        	                 ^^^^^^
+//│ ║        	              ^^^^^^^^^
 //│ ╟── The copied field is defined here:
 //│ ║  l.+1: 	let source = {mut count: 0}
 //│ ╙──      	                  ^^^^^
@@ -362,9 +372,9 @@ private fun assignNestedCopy() =
 //│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'count'
 //│ ║  l.+4: 	  set nested.count = 1
 //│ ║        	            ^^^^^^
-//│ ╟── This record copies the field as read-only:
+//│ ╟── This spread copies the field as read-only:
 //│ ║  l.+3: 	  let nested = {...mut {...declared}}
-//│ ║        	                           ^^^^^^^^
+//│ ║        	                ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The copied field is defined here:
 //│ ║  l.+2: 	  let declared = {mut count: 0}
 //│ ╙──      	                      ^^^^^

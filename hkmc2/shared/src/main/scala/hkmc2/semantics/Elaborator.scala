@@ -2767,9 +2767,9 @@ extends Importer:
         newCtx.givenIn:
           go(sts, Nil, newAcc)(N)
       
-      case Spread(Keywrd(Keyword.`...`), S(body)) :: sts =>
+      case (spread @ Spread(Keywrd(Keyword.`...`), S(body))) :: sts =>
         reportUnusedAnnotations
-        go(sts, Nil, RcdSpread(term(body, fieldInterpretation)) :: acc)(N)
+        go(sts, Nil, RcdSpread(term(body, fieldInterpretation)).withLocOf(spread) :: acc)(N)
       case InfixApp(key, Keywrd(Keyword.`:`), rhs) :: sts =>
         val (lhs, fieldMut) = key match
           case Modified(Keywrd(Keyword.`mut`), name) => (name, true)

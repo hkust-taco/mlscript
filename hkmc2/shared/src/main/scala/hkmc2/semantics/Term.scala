@@ -701,12 +701,11 @@ object RcdField:
       case tpe => tpe
     make(field, bounds, signature = S(readType), initializer = N, source = true, mut = mut, mutable = mut || mutableRecord,
       symbol = symbol)
-  /** Create the field that a record has for its copy of the field `origin` of a record that it spreads at
-    * `record`. The copy is `mutable` if its record is. Its values are those of `origin`, which resolution reads
-    * through the field's `root`, so its definition has no body. The location of its symbol is that of `record`,
-    * the record literal that determines whether the copy can be assigned. */
-  def copied(origin: RcdField, record: Term.Rcd)(using State): RcdField =
-    derived(origin, RecordFieldSymbol.Origin.Copied(origin.tsym), record.mut, record.toLoc)
+  /** Create the field that `spread` copies from `origin`. Its symbol points to the spread in the
+    * receiving record, whose mutability determines whether the copy can be assigned.
+    * Resolution reads its initial value through the field's `root`, so its definition has no body. */
+  def copied(origin: RcdField, mutableRecord: Bool, spread: RcdSpread)(using State): RcdField =
+    derived(origin, RecordFieldSymbol.Origin.Copied(origin.tsym), mutableRecord, spread.toLoc)
   /** Create the field that an intersection of record types has for the fields `left` and `right`, which its
     * components declare under the same key. Either component can make the field writable.
     * The left declaration supplies its runtime representation. */

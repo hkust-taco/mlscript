@@ -756,10 +756,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case N => Nil
     val definition = diagnostic match
       case field: RecordFieldSymbol => field.origin match
-        // A record's copy of a field that it spreads is located at that record, which decides whether the
-        // copy is mutable (see RcdField.copied). Also show the field that it copies.
+        // The spread explains why this copy is read-only even when the original field is mutable.
         case _: RecordFieldSymbol.Origin.Copied =>
-          (msg"This record copies the field as read-only:" -> field.toLoc) ::
+          (msg"This spread copies the field as read-only:" -> field.toLoc) ::
             (msg"The copied field is defined here:" -> field.root.toLoc) :: Nil
         // The components of an intersection of record types each declare the field.
         case RecordFieldSymbol.Origin.Merged(left, right) => defined(left) ::: defined(right)
