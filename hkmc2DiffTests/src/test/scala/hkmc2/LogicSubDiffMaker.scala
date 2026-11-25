@@ -23,7 +23,7 @@ abstract class LogicSubDiffMaker extends WasmDiffMaker:
         given Scope = Scope.empty(Scope.Cfg.default)
         if typer.isEmpty then
           given Elaborator.Ctx = curCtx
-          given codegen.Erasure = codegen.Erasure(trm)
+          given codegen.Erasure = codegen.Erasure(trm, summon[Raise])
           typer = S(logicsub.Typer())
         given logicsub.InfCtx = infctx
         val ty = typer.get.typePurely(trm)

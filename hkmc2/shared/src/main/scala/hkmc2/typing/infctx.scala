@@ -162,18 +162,18 @@ extends InfCtx(lvl, parent, env, outRegAcc, xbds):
 
 class MatchCtx(
   val prefix: Opt[MatchCtx],
-  val refine: Ls[Ls[Ref -> Type]],
-  val svt: HashMap[Ref, InfVar -> Type]
+  val refine: Ls[Ls[SimpleRef -> Type]],
+  val svt: HashMap[SimpleRef, InfVar -> Type]
 ):
   def end = if prefix.isEmpty then ???
-  def pm(s: Ref, t: => Type, cp: FlatPattern.ClassLike)
+  def pm(s: SimpleRef, t: => Type, cp: FlatPattern.ClassLike)
       (using ctx: InfCtx, scope: Scope, st: Elaborator.State) =
     val sym = cp.constructor.symbol.get.asCls.get
     val params = sym.defn.get.tparams
     val patt = ClassLikeType(sym, params.map(_ => Wildcard.empty), Nil, params.map(_ => false), N) // TODO
     val (sv, st) = svt.get(s) match
       case N =>
-        val vsym = new TempSymbol(S(s), erasedType = N, s.sym.nme)
+        val vsym = new TempSymbol(S(s), N, s.sym.nme)
         val v = InfVar(ctx.lvl, InfVarSymbol(vsym), false)
         svt += s -> (v , t)
         (v, t)
@@ -202,10 +202,10 @@ class MatchCtx(
     val ss = refine.flatMap(_.keys).distinct
     // if refine.length == 1
     HashMap.from(ss.map(s => s.sym -> svt(s)._1))
-  def cond(r: Ls[Ref -> Type]): SubOr =
+  def cond(r: Ls[SimpleRef -> Type]): SubOr =
     val m = r.groupMapReduce(_._1)(_._2)(_&_)
     r.keys.distinct.map(s => SubOr(svt(s)._2, ~m(s))).reduceRight(_.or(_))
-  def pneg: Ls[Ls[Ref -> Type]] =
+  def pneg: Ls[Ls[SimpleRef -> Type]] =
     refine.foldRight(Ls(Nil)): (r, ps) =>
       ps.flatMap(p => r.map((s, t) => (s, ~t) :: p))
 

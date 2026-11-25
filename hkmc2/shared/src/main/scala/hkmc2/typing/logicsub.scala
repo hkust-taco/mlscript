@@ -108,7 +108,7 @@ class Typer(using tl: TL)(using Elaborator.State, Raise, codegen.Erasure, Ctx, C
               case _ => error(msg"Effect cannot be polymorphic." -> ty.toLoc :: Nil)
           PolyFunType(p, typeAndSubstType(ret, pol), e)
         case f @ Forall(tvs, outer, body) =>
-          val outsym = outer.getOrElse(TempSymbol(S(f), erasedType = N, "outer"))
+          val outsym = outer.getOrElse(TempSymbol(S(f), N, "outer"))
           val outVar = freshOuter(outsym)(using ctx)
           val nestCtx = ctx.nestWithOuter(outVar)
           outer.foreach(sym => nestCtx += sym -> outVar)
@@ -162,7 +162,7 @@ class Typer(using tl: TL)(using Elaborator.State, Raise, codegen.Erasure, Ctx, C
         ascribe(lam, sigTy)
         ()
       case N =>
-        val outer = freshOuter(TempSymbol(S(lam), erasedType = N, "outer"))(using ctx)
+        val outer = freshOuter(TempSymbol(S(lam), N, "outer"))(using ctx)
         given InfCtx = ctx.nestWithOuter(outer)
         val funTyV = freshVar(sym)
         ctx += sym -> funTyV // for recursive functions
@@ -196,7 +196,7 @@ class Typer(using tl: TL)(using Elaborator.State, Raise, codegen.Erasure, Ctx, C
 
   private def instantiate(x: PolyType)(using ctx: InfCtx, cctx: CCtx) =
     val PolyType(tvs, outer, xbds, body) = x
-    val env = freshEnv(TempSymbol(N, erasedType = N, "env"))
+    val env = freshEnv(TempSymbol(N, N, "env"))
     val map = (outer.map(_.sym -> env).toList ++ tvs.map(v =>
       val nv = InfVar(ctx.lvl, InfVarSymbol(InstSymbol(v.sym), v.sym.hint), false)
       tl.log(s"instantiate ${v.showDbg} ~> ${nv.showDbg}")
@@ -262,8 +262,8 @@ class Typer(using tl: TL)(using Elaborator.State, Raise, codegen.Erasure, Ctx, C
             Left(ty) :: Right(eff) :: Nil
           case spd: Spd => TODO(s"spread arguments: $spd")
         .partitionMap(x => x)
-      val effVar = freshVar(TempSymbol(S(t), erasedType = N, "eff"))
-      val retVar = freshVar(TempSymbol(S(t), erasedType = N, "app"))
+      val effVar = freshVar(TempSymbol(S(t), N, "eff"))
+      val retVar = freshVar(TempSymbol(S(t), N, "app"))
       constrain(tryMkMono(funTy, t), InfCtx.funTy(argTy.map(tryMkMono(_, t)), retVar, effVar))
       (retVar, argEff.foldLeft[Type](effVar | lhsEff)((res, e) => res | e))
 
@@ -282,9 +282,9 @@ class Typer(using tl: TL)(using Elaborator.State, Raise, codegen.Erasure, Ctx, C
         }
         val fs = targs.map(_ => false) // TODO
         constrain(tryMkMono(ty, t), ClassLikeType(clsSym, targs, Nil, fs, N))
-        require(clsDfn.paramsOpt.forall(_.restParam.isEmpty))
+        require(clsDfn.paramsOpt.forall(_.variadic.isEmpty))
         (clsDfn.paramsOpt.fold(Nil)(_.params).map {
-          case Param(_, sym, sign, _) =>
+          case Param(sym = sym, sign = sign) =>
             if sym.nme === field.name then sign else N
         }.filter(_.isDefined)) match
           case S(res) :: Nil => (typeAndSubstType(res, pol = true)(using map.toMap), eff)
@@ -295,7 +295,7 @@ class Typer(using tl: TL)(using Elaborator.State, Raise, codegen.Erasure, Ctx, C
   private def newobj(cls: Term, args: Ls[Term])(using InfCtx, CCtx, Scope) =
     cls.symbol.flatMap(_.asCls.flatMap(_.defn)) match
     case S(clsDfn: ClassDef.Parameterized) =>
-      require(clsDfn.paramsOpt.forall(_.restParam.isEmpty))
+      require(clsDfn.paramsOpt.forall(_.variadic.isEmpty))
       val argsList = args match
         case Nil => Nil
         case Term.Tup(elems) :: Nil => elems.map:
@@ -318,7 +318,7 @@ class Typer(using tl: TL)(using Elaborator.State, Raise, codegen.Erasure, Ctx, C
             ty
         }
         val effBuff = ListBuffer.empty[Type]
-        require(clsDfn.paramsOpt.forall(_.restParam.isEmpty))
+        require(clsDfn.paramsOpt.forall(_.variadic.isEmpty))
         argsList.iterator.zip(clsDfn.params.params).foreach {
           case (arg, Param(sign = S(sign))) =>
             val (ty, eff) = ascribe(arg, typeAndSubstType(sign, pol = true)(using map.toMap))
@@ -333,7 +333,7 @@ class Typer(using tl: TL)(using Elaborator.State, Raise, codegen.Erasure, Ctx, C
 
   private def typeSplitImpl(split: Split, sign: InfType, eff: Type, pre: MatchCtx)
       (using InfCtx, CCtx, Scope): Unit = split match
-    case Split.Cons(Branch(s: Ref, cp: FlatPattern.ClassLike, cons), alts) =>
+    case Split.Cons(Branch(s: SimpleRef, cp: FlatPattern.ClassLike, cons), alts) =>
       val p = pre.pm(s, tryMkMono(typeCheck(s)._1, s), cp)
       typeSplitImpl(cons, sign, eff, p)
       typeSplitImpl(alts, sign, eff, p.el)
@@ -355,8 +355,8 @@ class Typer(using tl: TL)(using Elaborator.State, Raise, codegen.Erasure, Ctx, C
   private def typeSplit
       (split: Split, sign: Opt[InfType])(using InfCtx, CCtx, Scope)
       : (InfType, Type) =
-    val res = sign.getOrElse(freshVar(new TempSymbol(N, erasedType = N, "res")))
-    val eff = freshVar(new TempSymbol(N, erasedType = N, "eff"))
+    val res = sign.getOrElse(freshVar(new TempSymbol(N, N, "res")))
+    val eff = freshVar(new TempSymbol(N, N, "eff"))
     typeSplitImpl(split, res, eff, MatchCtx.init)
     (res, eff)
 
@@ -446,7 +446,7 @@ class Typer(using tl: TL)(using Elaborator.State, Raise, codegen.Erasure, Ctx, C
         val nestCtx = ctx.nest
         given InfCtx = nestCtx
         val tvs = params.map:
-          case Param(_, sym, sign, _) =>
+          case Param(sym = sym, sign = sign) =>
             val ty = sign.map(s => typeType(s)(using nestCtx)).getOrElse(freshVar(sym))
             nestCtx += sym -> ty
             ty
