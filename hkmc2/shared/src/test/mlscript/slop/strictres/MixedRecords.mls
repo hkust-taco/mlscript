@@ -204,12 +204,16 @@ bumpBoth()
 // A copy of a `mut` field is read-only unless the copy is mutable as a whole. Both copies below reuse the
 // field of their source, and resolution does not tell them apart.
 // TODO: the type checker should reject the assignment to the first copy.
-private fun writeCopies() =
-  let source = {mut count: 0}
-  let frozen = {...source}
-  let unfrozen = mut {...source}
-  set frozen.count = 1
-  set unfrozen.count = 2
+let source = {mut count: 0}
+let frozen = {...source}
+let unfrozen = mut {...source}
+set frozen.count = 1
+set unfrozen.count = 2
+[source.count, frozen.count, unfrozen.count]
+//│ = [0, 0, 2]
+//│ frozen = {count: 0}
+//│ source = {count: 0}
+//│ unfrozen = {count: 2}
 
 // Resolution does not account for an assignment through a record type that requires a `mut` field, when the
 // record declares that field read-only: the selection of `a` below reads a record without that field.
@@ -221,6 +225,15 @@ private fun overwriteThroughType() =
   [record.inner.a]
 overwriteThroughType()
 //│ = [undefined]
+
+// An assignment through a field that a record type declares read-only is not rejected either.
+// TODO: the type checker should reject the assignment.
+private fun relabel(target: {mut count: Int, label: Str}) = set target.label = "changed"
+let labelled = mut {count: 0, label: "count"}
+relabel(labelled)
+labelled.label
+//│ = "changed"
+//│ labelled = {count: 0, label: "changed"}
 
 // Resolution does not account for an assignment through a computed key either, whether the record
 // declares the assigned field `mut` or is mutable as a whole.
