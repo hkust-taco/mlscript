@@ -526,3 +526,48 @@ nested(1)
 //│ return nested¹‹(Int⁰) => Int⁰›(1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
+
+
+// Fusion changes the private method's result from Box to Function. Its caller needs the new
+// result type to use the closure that supplies the matched field.
+:deforest mono
+:sir
+:siret
+:expect 3
+module Methods with
+  private fun make(n: Int): Box = Box(n)
+  fun read(n: Int) = if make(n) is Box(v) then v else 0
+Methods.read(3)
+//│ deforest > >>> fusing >>>
+//│ deforest > Box⁰(n⁴) ->
+//│ deforest > 	match: scrut²
+//│ deforest > 	fields: scrut².v⁰
+//│ deforest > <<< fusing <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let $scrut_Box, $scrut_rest;
+//│ @affine(1) @private
+//│ define $scrut_Box as fun $scrut_Box¹(Box_v: Int⁰)(fv_arg$Box$0$: Int⁰, fv_v: Int⁰): Int⁰ {
+//│   set fv_arg$Box$0$ = Box_v;
+//│   set fv_v = fv_arg$Box$0$;
+//│   return fv_v
+//│ };
+//│ @private
+//│ define $scrut_rest as fun $scrut_rest¹(): Unknown {
+//│   return null
+//│ };
+//│ define Methods⁰ as class Methods¹
+//│ module Methods² {
+//│   method make⁰ = fun make¹(n: Int⁰): Function⁰ {
+//│     let Box_v: Int⁰;
+//│     set Box_v = n;
+//│     return $scrut_Box¹‹(Int⁰) => (Int⁰, Int⁰) => Int⁰›(Box_v)
+//│   }
+//│   method read⁴ = fun read⁵(n: Int⁰): Int⁰ {
+//│     let v: Int⁰, arg$Box$0$: Int⁰, scrut: Function⁰;
+//│     set scrut = Methods².this.make¹‹(Int⁰) => Function⁰›(n);
+//│     return (scrut‹(...Array⁰) => ?›(arg$Box$0$, v) as! Int⁰)
+//│   }
+//│ };
+//│ return Methods².read⁵‹(Int⁰) => Int⁰›(3)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 3
