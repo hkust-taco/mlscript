@@ -898,6 +898,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           "A symbol-keyed selection requires its resolved access path")
         k(Select(prefix, name)(target, loc)(sanitize))
 
+  // * TODO: in the future, store lists of targets in IR Select nodes (rather than an option);
+  // * then, there will be no need to have both parameters `target` and `candidates` here.
   private def assignNamedField(prefix: Path, name: Tree.Ident, value: Path, rest: Block,
       keyAccess: Opt[Term], unsafe: Bool)(target: Opt[DefinitionSymbol[?]],
       candidates: Ls[DefinitionSymbol[?]], dynamic: Bool)(using LoweringCtx): Block =
