@@ -223,8 +223,8 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
   private def typeType(ty: Term)(using ctx: InvalCtx, cctx: CCtx): GeneralType =
     typeAndSubstType(ty, pol = true)(using Map.empty)
   
-  /** Read foreign signatures on demand: the shared prelude also contains declarations
-    * for language features InvalML does not support, which need not be typed until used.
+  /** Computes the type of a declaration from its full signature or its parameter lists and result type.
+    * Foreign declarations from the shared prelude are typed on use because some use features outside InvalML.
     */
   private def declaredType(td: TermDefinition)(using ctx: InvalCtx, cctx: CCtx): GeneralType =
     given InvalCtx = ctx.nextLevel
@@ -682,8 +682,8 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
             goStats(stats)
           case (td1 @ TermDefinition(k = Fun, sign = S(sig), body = None)) :: (td2 @ TermDefinition(k = Fun, body = S(body))) :: stats
             if td1.sym === td2.sym => goStats(td2 :: stats) // * avoid type check signatures twice
-          case (td @ TermDefinition(k = Fun, sign = S(sig), body = None)) :: stats =>
-            ctx += td.sym -> typeType(sig)
+          case (td @ TermDefinition(k = Fun, sign = S(_), body = None)) :: stats =>
+            ctx += td.sym -> declaredType(td)
             goStats(stats)
           case (clsDef: ClassDef) :: stats =>
             typeNames.add(clsDef.sym.nme)

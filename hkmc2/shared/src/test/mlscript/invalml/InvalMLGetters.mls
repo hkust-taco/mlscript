@@ -99,9 +99,9 @@ fun test2() =
 //│     lambda1 = (undefined, function (caseScrut) {
 //│       let tmp, tmp1, tmp2;
 //│       tmp = funny();
-//│       tmp1 = caseScrut - 1;
+//│       tmp1 = caseScrut /* as! Int */ - 1;
 //│       tmp2 = runtime.safeCall(tmp(tmp1));
-//│       return tmp2 + 1
+//│       return tmp2 /* as! Int */ + 1
 //│     });
 //│     return lambda1
 //│   };

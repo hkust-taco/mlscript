@@ -105,7 +105,7 @@ let foo = new Foo(42) in foo.Foo#x
 :sjs
 fun inc(x) = x + 1
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let inc; inc = function inc(x) { return x + 1 };
+//│ let inc; inc = function inc(x) { return x /* as! Int */ + 1 };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -163,14 +163,15 @@ fun pow(x) = case
 //│ pow = function pow(x) {
 //│   let lambda2;
 //│   lambda2 = (undefined, function (caseScrut) {
-//│     let baseCall, tmp, tmp1;
+//│     let arg, baseCall, tmp, tmp1;
 //│     if (caseScrut === 0) {
 //│       return 1
 //│     }
+//│     arg = x /* as! Int */;
 //│     baseCall = pow(x);
-//│     tmp = caseScrut - 1;
+//│     tmp = caseScrut /* as! Int */ - 1;
 //│     tmp1 = runtime.safeCall(baseCall(tmp));
-//│     return x * tmp1;
+//│     return arg * tmp1 /* as! Int */;
 //│   });
 //│   return lambda2
 //│ };
@@ -223,14 +224,15 @@ fun fact = case
 //│ fact = function fact() {
 //│   let lambda2;
 //│   lambda2 = (undefined, function (caseScrut) {
-//│     let tmp, tmp1, tmp2;
+//│     let arg, tmp, tmp1, tmp2;
 //│     if (caseScrut === 0) {
 //│       return 1
 //│     }
+//│     arg = caseScrut /* as! Int */;
 //│     tmp = fact();
-//│     tmp1 = caseScrut - 1;
+//│     tmp1 = caseScrut /* as! Int */ - 1;
 //│     tmp2 = runtime.safeCall(tmp(tmp1));
-//│     return caseScrut * tmp2;
+//│     return arg * tmp2 /* as! Int */;
 //│   });
 //│   return lambda2
 //│ };

@@ -63,6 +63,9 @@ add(0, 0) as Str
 
 :e
 fun errAdd(x: Int) = x + "1"
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.+1: 	fun errAdd(x: Int) = x + "1"
+//│ ╙──      	                         ^^^
 //│ ╔══[COMPILATION ERROR] Type error in string literal with expected type Int
 //│ ║  l.+1: 	fun errAdd(x: Int) = x + "1"
 //│ ║        	                         ^^^
@@ -87,7 +90,7 @@ high(x => x + 1)
 //│ ║  l.+1: 	high(x => x + 1)
 //│ ║        	          ^
 //│ ╙── because: cannot constrain  A  <:  Int
-//│ ╔══[COMPILATION ERROR] Type error in application with expected type A
+//│ ╔══[COMPILATION ERROR] Type error in application of type Int with expected type A
 //│ ║  l.+1: 	high(x => x + 1)
 //│ ║        	          ^^^^^
 //│ ╙── because: cannot constrain  Int  <:  A

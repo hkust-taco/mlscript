@@ -17,30 +17,30 @@ set
   globalThis.Region = Region
   globalThis.Ref = (r, v) => new mut Ref(r, v)
 
-declare fun run: [T] -> CodeBase[out T, out Nothing, out Any] -> T
-declare fun log: Str -> Any
+declare fun run[T](code: CodeBase[out T, out Nothing, out Any]): T
+declare fun log(message: Str): Any
 declare fun error: Nothing
 
-declare fun (+): (Int, Int) -> Int
-declare fun (-): (Int, Int) -> Int
-declare fun (*): (Int, Int) -> Int
-declare fun (/): (Int, Int) -> Num
-declare fun (+.): (Num, Num) -> Num
-declare fun (-.): (Num, Num) -> Num
-declare fun (*.): (Num, Num) -> Num
-declare fun (/.): (Num, Num) -> Num
+declare fun (+)(left: Int, right: Int): Int
+declare fun (-)(left: Int, right: Int): Int
+declare fun (*)(left: Int, right: Int): Int
+declare fun (/)(left: Int, right: Int): Num
+declare fun (+.)(left: Num, right: Num): Num
+declare fun (-.)(left: Num, right: Num): Num
+declare fun (*.)(left: Num, right: Num): Num
+declare fun (/.)(left: Num, right: Num): Num
 
-declare fun (<): (Int, Int) -> Bool
-declare fun (>): (Int, Int) -> Bool
-declare fun (<=): (Int, Int) -> Bool
-declare fun (>=): (Int, Int) -> Bool
-declare fun (==): [T] -> (T, T) -> Bool
-declare fun (!=): [T] -> (T, T) -> Bool
-declare fun (===): [T] -> (T, T) -> Bool
-declare fun (!==): [T] -> (T, T) -> Bool
+declare fun (<)(left: Int, right: Int): Bool
+declare fun (>)(left: Int, right: Int): Bool
+declare fun (<=)(left: Int, right: Int): Bool
+declare fun (>=)(left: Int, right: Int): Bool
+declare fun (==)[T](left: T, right: T): Bool
+declare fun (!=)[T](left: T, right: T): Bool
+declare fun (===)[T](left: T, right: T): Bool
+declare fun (!==)[T](left: T, right: T): Bool
 
-declare fun (&&): (Bool, Bool) -> Bool
-declare fun (||): (Bool, Bool) -> Bool
+declare fun (&&)(left: Bool, right: Bool): Bool
+declare fun (||)(left: Bool, right: Bool): Bool
 
 
-fun print(x) = @untyped globalThis.console.log(x)
+fun print(value) = @untyped globalThis.console.log(value)

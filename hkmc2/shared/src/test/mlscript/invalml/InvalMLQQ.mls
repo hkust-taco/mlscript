@@ -56,7 +56,7 @@ x `=> y `=> x `+ y
 //│ set tmp2 = x;
 //│ set tmp3 = y;
 //│ set arr = [tmp2, tmp3];
-//│ set tmp4 = +⁰‹=> Function⁰›;
+//│ set tmp4 = +⁰;
 //│ set tmp5 = new Term⁰.Tup﹖(arr);
 //│ set arr1 = [tmp, tmp1];
 //│ set tmp6 = new Term⁰.App﹖(tmp4, tmp5);
@@ -105,6 +105,9 @@ run(`1)
 
 :e
 run(1)
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'CodeBase'
+//│ ║  l.+1: 	run(1)
+//│ ╙──      	    ^
 //│ ╔══[COMPILATION ERROR] Type error in integer literal with expected type CodeBase[out 'T, ⊥, ?]
 //│ ║  l.+1: 	run(1)
 //│ ║        	    ^
