@@ -15,10 +15,10 @@ producer.use(sink =>
   1
 )
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.14: 	  sink.put(x => x.value)
+//│ ║  l.+9: 	  sink.put(x => x.value)
 //│ ║        	                ^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'value'
-//│ ║  l.12: 	let producer = (new Producer as Producer[in (Base -> Int) out (Child -> Int)])
+//│ ║  l.+7: 	let producer = (new Producer as Producer[in (Base -> Int) out (Child -> Int)])
 //│ ╙──      	                                             ^^^^
 //│ = 1
 //│ producer = Producer
@@ -36,10 +36,10 @@ let box = Box(Child(2))
 receiver.accept(box)
 box.item.value
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.37: 	box.item.value
+//│ ║  l.+9: 	box.item.value
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'value'
-//│ ║  l.34: 	let receiver = (new Receiver as Receiver[in Child out Base])
+//│ ║  l.+6: 	let receiver = (new Receiver as Receiver[in Child out Base])
 //│ ╙──      	                                                      ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ box = Box(Child(2))
@@ -88,10 +88,10 @@ let box = Box(Child(5))
 receiver.accept([box])
 box.item.value
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.89: 	box.item.value
+//│ ║  l.+9: 	box.item.value
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'value'
-//│ ║  l.86: 	let receiver = (new Receiver as Receiver[in Child out Base])
+//│ ║  l.+6: 	let receiver = (new Receiver as Receiver[in Child out Base])
 //│ ╙──      	                                                      ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ box = Box(Child(5))
@@ -109,11 +109,11 @@ let box = Box(Child(6))
 receiver.accept({item: box})
 box.item.value
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.110: 	box.item.value
-//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.+9: 	box.item.value
+//│ ║        	^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'value'
-//│ ║  l.107: 	let receiver = (new Receiver as Receiver[in Child out Base])
-//│ ╙──       	                                                      ^^^^
+//│ ║  l.+6: 	let receiver = (new Receiver as Receiver[in Child out Base])
+//│ ╙──      	                                                      ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ box = Box(Child(6))
 //│ receiver = Receiver
@@ -132,11 +132,11 @@ producer.use(sink =>
   7
 )
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.131: 	  sink.put(x => x.value)
-//│ ║         	                ^^^^^^^
+//│ ║  l.+9: 	  sink.put(x => x.value)
+//│ ║        	                ^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'value'
-//│ ║  l.129: 	let producer = (new Producer as Producer[in (Base -> Int) out (Child -> Int)])
-//│ ╙──       	                                             ^^^^
+//│ ║  l.+7: 	let producer = (new Producer as Producer[in (Base -> Int) out (Child -> Int)])
+//│ ╙──      	                                             ^^^^
 //│ = 7
 //│ producer = Producer
 
@@ -153,11 +153,11 @@ let box = Box(Child(8))
 receiver.accept(box)
 box.item.value
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.154: 	box.item.value
-//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.+9: 	box.item.value
+//│ ║        	^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'value'
-//│ ║  l.151: 	let receiver = (new Receiver as Receiver[in Child out Base])
-//│ ╙──       	                                                      ^^^^
+//│ ║  l.+6: 	let receiver = (new Receiver as Receiver[in Child out Base])
+//│ ╙──      	                                                      ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ box = Box(Child(8))
 //│ receiver = Receiver

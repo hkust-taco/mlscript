@@ -1,0 +1,17 @@
+:js
+:checkIR
+
+
+// Specializing a disjunction must discard impossible alternatives even when they bind aliases.
+:expect [1, 2, -1]
+pattern Choice = ((1 as x) | (2 as x)) => x
+fun choose(value) = if value is @annotations.compile Choice as result then result else -1
+[choose(1), choose(2), choose(3)]
+//│ = [1, 2, -1]
+
+// The same rule applies when the surrounding branch uses the shared alias directly.
+:expect [1, 2, -1]
+fun alternative(value) =
+  if value is @annotations.compile ((1 as x) | (2 as x)) then x else -1
+[alternative(1), alternative(2), alternative(3)]
+//│ = [1, 2, -1]

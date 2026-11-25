@@ -81,6 +81,7 @@ f.g()(1)
 
 :lift
 class Foo(a) with
+  let =a
   private mut val b = a + 1
   private fun y() = a + b
   val f = x =>
@@ -105,6 +106,7 @@ f.g()(1)
 // * Same, but not lifted:
 
 class Foo(a) with
+  let =a
   private mut val b = a + 1
   private fun y() = a + b
   val f = x =>
@@ -144,7 +146,7 @@ module Pair with
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ const sum$accessorSymbol = globalThis.Symbol("sum");
 //│ const scaled$accessorSymbol = globalThis.Symbol("scaled");
-//│ let Pair1, tmp3, tmp4, p, inlinedVal, p1, inlinedVal1;
+//│ let Pair1, tmp3, tmp4, inlinedVal, inlinedVal1;
 //│ Pair1 = function Pair(fst, snd) {
 //│   return globalThis.Object.freeze(new Pair.class(fst, snd));
 //│ };
@@ -162,11 +164,11 @@ module Pair with
 //│   static #scale(n, k) {
 //│     return n * k
 //│   }
-//│   static sumOf(p2) {
-//│     return p2.#sum
+//│   static sumOf(p) {
+//│     return p.#sum
 //│   }
-//│   static scaledOf(p2, k) {
-//│     return p2.#scaled(k)
+//│   static scaledOf(p, k) {
+//│     return p.#scaled(k)
 //│   }
 //│   #sum;
 //│   get [sum$accessorSymbol]() { return this.#sum; }
@@ -181,11 +183,9 @@ module Pair with
 //│   static [definitionMetadata] = ["class", "Pair", ["fst", "snd"]];
 //│ });
 //│ tmp3 = Pair1(1, 2);
-//│ p = tmp3;
-//│ inlinedVal = p[sum$accessorSymbol];
+//│ inlinedVal = tmp3[sum$accessorSymbol];
 //│ tmp4 = Pair1(1, 2);
-//│ p1 = tmp4;
-//│ inlinedVal1 = p1[scaled$accessorSymbol](10);
+//│ inlinedVal1 = tmp4[scaled$accessorSymbol](10);
 //│ return globalThis.Object.freeze([ inlinedVal, inlinedVal1 ])
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [3, 30]
@@ -205,7 +205,7 @@ module Foo with
 
 // * Inlining refreshes the module and class symbols, which must still share a private namespace.
 
-open annotations { inline, noInline }
+open annotations.{ inline, noInline }
 
 :expect [[1, 2], [3, 4]]
 @inline fun makePair(n) =
@@ -260,14 +260,14 @@ class PrivateOverride extends PublicBase with
 let po = new PrivateOverride
 [po.viaThis, po.pick(true), po.pick(false)]
 //│ ╔══[COMPILATION ERROR] This reference may target a private member, which cannot be selected together with other members
-//│ ║  l.259: 	  fun pick(flag) = (if flag then this else new PublicBase).f
-//│ ║         	                                                          ^^
+//│ ║  l.+6: 	  fun pick(flag) = (if flag then this else new PublicBase).f
+//│ ║        	                                                          ^^
 //│ ╟── private member 'f' declared here
-//│ ║  l.257: 	  private fun f = "B"
-//│ ║         	              ^
+//│ ║  l.+4: 	  private fun f = "B"
+//│ ║        	              ^
 //│ ╟── other target: function 'f'
-//│ ║  l.255: 	  fun f = "A"
-//│ ╙──       	      ^
+//│ ║  l.+2: 	  fun f = "A"
+//│ ╙──      	      ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ po = PrivateOverride
 
@@ -278,7 +278,7 @@ class PublicBase2 with
 class PrivateOverride2 extends PublicBase2 with
   private fun f = "B"
   fun viaThis = this.f
-  fun viaParam(that) = that.f
+  fun viaParam(that: PrivateOverride2) = that.f
 let po2 = new PrivateOverride2
 [po2.viaThis, po2.viaParam(po2)]
 //│ = ["B", "B"]

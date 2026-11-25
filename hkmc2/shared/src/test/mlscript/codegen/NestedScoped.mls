@@ -35,19 +35,19 @@ scope.locally of
 
 
 // :sjs
-scope.locally of (
+scope.locally of {
   let x = 42
   x
-)
+}
 //│ = 42
 
 
 :sir
 // :sjs
-scope.locally of scope.locally of (
+scope.locally of scope.locally of {
   let x = 42
   x
-)
+}
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let x; set x = 42; return x
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -58,7 +58,7 @@ scope.locally of scope.locally of (
 :e
 x
 //│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.59: 	x
+//│ ║  l.+1: 	x
 //│ ╙──      	^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -77,10 +77,10 @@ foo(1)
 :sir
 fun f() =
   if true then
-    scope.locally of (
+    scope.locally of {
       let a = 4
       a + 4
-    )
+    }
   else
     let b = 5
     b + 9
@@ -113,10 +113,10 @@ fun f() =
     let a = 4
     a + 4
   else
-    scope.locally of (
+    scope.locally of {
       let b = 5
       b + 9
-    )
+    }
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f1; f1 = function f() { if (false === true) { return 8 } return 14; };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -131,10 +131,10 @@ fun g(x, y, z) =
     x then 0
     y then 0
     z then
-      scope.locally of (
+      scope.locally of {
         let a = 1
         => _ + a
-      )
+      }
 
 
 
@@ -143,27 +143,27 @@ fun foo(x, y) =
   if not x > z.0 do
     print("rua")
   let m = x + y
-  scope.locally of (
+  scope.locally of {
     let w1 = z.1 + m
     let w2 = z.2 - m
     if w1 == w2 do
       print("ruarua")
-  )
+  }
 
 
 :ge
 scope.locally()
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.155: 	scope.locally()
-//│ ╙──       	^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	scope.locally()
+//│ ╙──      	^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 :ge
 scope.locally of (let x = 1 in x), (let y = 2 in y)
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.163: 	scope.locally of (let x = 1 in x), (let y = 2 in y)
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	scope.locally of (let x = 1 in x), (let y = 2 in y)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -171,29 +171,29 @@ scope.locally of (let x = 1 in x), (let y = 2 in y)
 :ge
 scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.172: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
-//│ ╙──       	                                                 ^
+//│ ║  l.+1: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
+//│ ╙──      	                                                 ^
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.172: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 let z = 114
-scope.locally of (
+scope.locally of {
   let y = 514
   y
-)
+}
 //│ = 514
 //│ z = 114
 
 
 // :sjs
 let z = 2
-scope.locally of (
+scope.locally of {
   let y = () => 1
   y
-)
+}
 //│ = fun y
 //│ z = 2
 
@@ -204,10 +204,10 @@ scope.locally of (
 fun f(x) =
   if x then
     let y = 2
-    scope.locally of (
+    scope.locally of {
       let z = () => 3
       z
-    )
+    }
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f2;
 //│ f2 = function f(x) {
@@ -225,13 +225,13 @@ fun f(x) =
 
 
 :lift
-scope.locally of scope.locally of (
+scope.locally of scope.locally of {
   fun h() =
     fun f() = g()
     fun g() = f()
     4
   3
-)
+}
 //│ = 3
 
 // :sjs

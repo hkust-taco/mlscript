@@ -13,7 +13,7 @@ class SinkHolder[T](val sink: Sink[T])
 fun corrupt: Holder[in Int out (Int | Str)] -> ()
 fun corrupt(holder) = holder.Holder#cell.Cell#put("wrong")
 //│ ╔══[COMPILATION ERROR] Type error in string literal with expected type 'T
-//│ ║  l.14: 	fun corrupt(holder) = holder.Holder#cell.Cell#put("wrong")
+//│ ║  l.+2: 	fun corrupt(holder) = holder.Holder#cell.Cell#put("wrong")
 //│ ║        	                                                  ^^^^^^^
 //│ ╟── because: cannot constrain  Str  <:  'T
 //│ ╟── because: cannot constrain  Str  <:  'T1
@@ -24,7 +24,7 @@ fun corrupt(holder) = holder.Holder#cell.Cell#put("wrong")
 fun corruptInput: (Receiver[in Int out (Int | Str)], Cell[Int]) -> ()
 fun corruptInput(receiver, cell) = receiver.Receiver#accept(cell)
 //│ ╔══[COMPILATION ERROR] Type error in reference with expected type Cell[in 'T out 'T]
-//│ ║  l.25: 	fun corruptInput(receiver, cell) = receiver.Receiver#accept(cell)
+//│ ║  l.+2: 	fun corruptInput(receiver, cell) = receiver.Receiver#accept(cell)
 //│ ║        	                                                            ^^^^
 //│ ╟── because: cannot constrain  Cell[Int]  <:  Cell[in 'T out 'T]
 //│ ╟── because: cannot constrain  'T  <:  Int
@@ -35,7 +35,7 @@ fun corruptInput(receiver, cell) = receiver.Receiver#accept(cell)
 fun corruptSink: SinkHolder[in Int out (Int | Str)] -> ()
 fun corruptSink(holder) = holder.SinkHolder#sink.Sink#put("wrong")
 //│ ╔══[COMPILATION ERROR] Type error in string literal with expected type 'T
-//│ ║  l.36: 	fun corruptSink(holder) = holder.SinkHolder#sink.Sink#put("wrong")
+//│ ║  l.+2: 	fun corruptSink(holder) = holder.SinkHolder#sink.Sink#put("wrong")
 //│ ║        	                                                          ^^^^^^^
 //│ ╟── because: cannot constrain  Str  <:  'T
 //│ ╟── because: cannot constrain  Str  <:  'T1
@@ -70,7 +70,7 @@ fun writeUnion(holder) = holder.UnionHolder#cell.Cell#put("allowed")
 fun corruptUnion: UnionHolder[in Int out (Int | Bool)] -> ()
 fun corruptUnion(holder) = holder.UnionHolder#cell.Cell#put(true)
 //│ ╔══[COMPILATION ERROR] Type error in boolean literal with expected type 'T
-//│ ║  l.71: 	fun corruptUnion(holder) = holder.UnionHolder#cell.Cell#put(true)
+//│ ║  l.+2: 	fun corruptUnion(holder) = holder.UnionHolder#cell.Cell#put(true)
 //│ ║        	                                                            ^^^^
 //│ ╟── because: cannot constrain  Bool  <:  'T
 //│ ╟── because: cannot constrain  Bool  <:  Str ∨ 'T1
@@ -81,13 +81,13 @@ fun corruptUnion(holder) = holder.UnionHolder#cell.Cell#put(true)
 fun corruptIntersection: IntersectionHolder[in Int out Any] -> ()
 fun corruptIntersection(holder) = holder.IntersectionHolder#cell.Cell#put("wrong")
 //│ ╔══[COMPILATION ERROR] Type error in string literal with expected type 'T
-//│ ║  l.82: 	fun corruptIntersection(holder) = holder.IntersectionHolder#cell.Cell#put("wrong")
+//│ ║  l.+2: 	fun corruptIntersection(holder) = holder.IntersectionHolder#cell.Cell#put("wrong")
 //│ ║        	                                                                          ^^^^^^^
 //│ ╟── because: cannot constrain  Str  <:  'T
 //│ ╟── because: cannot constrain  Str  <:  'T1
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ ╔══[COMPILATION ERROR] Type error in string literal with expected type 'T
-//│ ║  l.82: 	fun corruptIntersection(holder) = holder.IntersectionHolder#cell.Cell#put("wrong")
+//│ ║  l.+2: 	fun corruptIntersection(holder) = holder.IntersectionHolder#cell.Cell#put("wrong")
 //│ ║        	                                                                          ^^^^^^^
 //│ ╟── because: cannot constrain  Str  <:  'T
 //│ ╟── because: cannot constrain  Str  <:  Int ∨ 'T1

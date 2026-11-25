@@ -1,12 +1,12 @@
 :.
 :js
 
-open annotations
+open annotations.{ * }
 
 import "../../../mlscript-compile/Stack.mls"
 import "../../../mlscript-compile/Iter.mls"
 
-open Stack
+open Stack.{ * }
 
 fun list(...elements) = elements Iter.toStack()
 
@@ -93,7 +93,7 @@ fun (::) makeObservableCons(x, xs) =
   cons
 //│ doLog = false
 
-fun withLog(f) =
+private fun withLog(f) =
   set doLog = true
   val result = f()
   set doLog = false

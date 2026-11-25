@@ -63,6 +63,7 @@ object Keyword:
   // val `;` = Keyword(";", ascPrec, eqPrec)
   
   val `if` = Keyword("if", N, nextPrec)
+  val `when` = Keyword("when", N, curPrec)
   val `while` = Keyword("while", N, curPrec)
   val `assert` = Keyword("assert", N, curPrec)
   type `assert` = `assert`.type
@@ -74,7 +75,17 @@ object Keyword:
   val whereLhsPrec = nextPrec
   
   val `then` = Keyword("then", thenPrec, eqPrec)
-  val `do` = Keyword("do", thenPrec, eqPrec)
+  
+  // * While `do` can be used infix, as in `if x > 0 do f(x)`, it can also start a statement.
+  // * So, it cannot be used infix on a non-indented newline, otherwise we would mis-parse things like:
+  // *   ```
+  // *   if x >
+  // *     0 then "null"
+  // *     do console.log("non-null")
+  // *     1 then ...
+  // *   ```
+  val `do` = Keyword("do", thenPrec, eqPrec, canStartInfixOnNewLine = false)
+  
   val `drop` = Keyword("drop", thenPrec, eqPrec)
   
   val `else` = Keyword("else", N, eqPrec)
@@ -88,6 +99,7 @@ object Keyword:
   val `yield` = Keyword("yield", N, curPrec)
   val `yield*` = Keyword("yield*", N, curPrec)
   val `import` = Keyword("import", N, curPrec)
+  val `open` = Keyword("open", N, curPrec)
   
   val `fun` = Keyword("fun", N, N)
   // val `val` = Keyword("val", N, N)
@@ -147,7 +159,6 @@ object Keyword:
   val `using` = Keyword("using", N, N)
   val `module` = Keyword("module", N, N)
   val `object` = Keyword("object", N, N)
-  val `open` = Keyword("open", N, curPrec)
   val `type` = Keyword("type", N, N)
   val `forall` = Keyword("forall", N, N)
   val `exists` = Keyword("exists", N, N)
@@ -216,7 +227,7 @@ object Keyword:
   
   type Prefix =
     `do`.type | `drop`.type | `not`.type | `new!`.type | `else`.type | `return`.type | `throw`.type | `yield`.type |
-    `yield*`.type | `import`.type | `|`.type | `&`.type | `=>`.type
+    `yield*`.type | `import`.type | `|`.type | `&`.type | `=>`.type | `when`.type
   
   type Infix =
     `is`.type | `:`.type | `->`.type | `=>`.type | `extends`.type | `restricts`.type | `as`.type |
@@ -229,7 +240,7 @@ object Keyword:
   
   type Ellipsis = `...`.type | `..`.type
   
-  type IfLike = `if`.type | `while`.type
+  type IfLike = `if`.type | `while`.type | `when`.type
   type SplitLike = IfLike | `case`.type
   
   type LetLike = `let`.type | `set`.type

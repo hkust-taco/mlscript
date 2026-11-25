@@ -20,7 +20,7 @@ c(123)
 :e
 new c(123)
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found reference.
-//│ ║  l.21: 	new c(123)
+//│ ║  l.+1: 	new c(123)
 //│ ║        	    ^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ = C(123)
@@ -38,7 +38,7 @@ object D extends Foo.C(123) with
 object D extends Foo.C(123) with
   print(this.x)
 //│ ╔══[COMPILATION ERROR] Object 'D' does not contain member 'x'
-//│ ║  l.39: 	  print(this.x)
+//│ ║  l.+2: 	  print(this.x)
 //│ ╙──      	        ^^^^^^
 //│ > 123
 

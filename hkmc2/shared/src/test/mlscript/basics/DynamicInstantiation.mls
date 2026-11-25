@@ -53,21 +53,21 @@ new! (id(C))
 :re
 new id(C)
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.54: 	new id(C)
+//│ ║  l.+1: 	new id(C)
 //│ ║        	^^^^^^^^^
 //│ ╟── Function 'id' cannot be instantiated with keyword 'new'.
 //│ ║  in ../../mlscript-compile/Predef.mls
-//│ ║  l.19: 	fun id(x) = x
+//│ ║  l.XX: 	fun id(x) = x
 //│ ╙──      	^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 new (id(C))
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.65: 	new (id(C))
+//│ ║  l.+1: 	new (id(C))
 //│ ║        	^^^^^^^^^^^
 //│ ╟── Invalid class expression: application
-//│ ║  l.65: 	new (id(C))
+//│ ║  l.+1: 	new (id(C))
 //│ ╙──      	     ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

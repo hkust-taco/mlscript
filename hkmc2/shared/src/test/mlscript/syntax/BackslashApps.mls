@@ -137,18 +137,22 @@ add3(1)
   \ 3
 //│ = 6
 
-// * Prefix operator applications are not argument lists, so this means `(- x)(2)`, not `-(x, 2)`
+// * Prefix operator applications also accept extra arguments: this means `-(x, 2)`.
 :sjs
 fun test(x) =
   {- x} \ 2
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let test; test = function test(x) { let tmp6; tmp6 = - x; return runtime.safeCall(tmp6(2)) };
+//│ let test; test = function test(x) { return x - 2 };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect 3
+test(5)
+//│ = 3
 
 
 // * The argument of `\` delimits its own placeholders
 
-fun applyTo3(f) = f(3)
+private fun applyTo3(f) = f(3)
 
 :expect 4
 applyTo3 \ _ + 1
@@ -160,7 +164,7 @@ applyTo3 { \ _ + 1 }
 applyTo3 \ { _ + 1 }
 //│ = 4
 
-fun twice(f, x) = f(f(x))
+private fun twice(f, x) = f(f(x))
 
 :expect 12
 twice
@@ -168,7 +172,7 @@ twice
   \ 3
 //│ = 12
 
-fun call2(f, x, y) = f(x, y)
+private fun call2(f, x, y) = f(x, y)
 
 :expect 3
 call2
@@ -191,7 +195,7 @@ twice
 //│ = 12
 
 // * The innermost delimiter wins: here, `_` is bound by `\`, not by `|>`
-fun applyTo(f)(x) = f(x)
+private fun applyTo(f)(x) = f(x)
 
 :expect 6
 3 |> applyTo \ _ * 2
@@ -263,22 +267,22 @@ twice
 :e
 twice(_, 1) <| _ |> _ * 2
 //│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
-//│ ║  l.264: 	twice(_, 1) <| _ |> _ * 2
-//│ ║         	               ^
+//│ ║  l.+1: 	twice(_, 1) <| _ |> _ * 2
+//│ ║        	               ^
 //│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 import "../../mlscript-compile/Stack.mls"
-open Stack
+open Stack.{ * }
 
 :e
 fun findFirst(xs) \ f = ???
 //│ ╔══[COMPILATION ERROR] Expected a valid function definition head; found infix operator '\' instead
-//│ ║  l.276: 	fun findFirst(xs) \ f = ???
-//│ ╙──       	    ^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	fun findFirst(xs) \ f = ???
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^
 
-fun findFirst(xs, f) = if xs is
+fun findFirst(xs, f: Any -> Bool) = if xs is
   Nil then []
   Cons(x, xs') and
     f(x) then [x]
@@ -287,7 +291,7 @@ fun findFirst(xs, f) = if xs is
 :silent
 let nums = 1 :: 2 :: 3 :: 4 :: 5 :: Nil
 
-nums |. findFirst \ _ * 6 is 24
+(nums |. findFirst) \ _ * 6 is 24
 //│ = [4]
 
 nums |> findFirst(_) \ _ * 6 is 24
@@ -324,13 +328,13 @@ tuple(1, 2) \ 3
 tuple(1) \ 2
   \ 3
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.324: 	tuple(1) \ 2
-//│ ║         	           ^
-//│ ║  l.325: 	  \ 3
-//│ ║         	^^^^^
+//│ ║  l.+1: 	tuple(1) \ 2
+//│ ║        	           ^
+//│ ║  l.+2: 	  \ 3
+//│ ║        	^^^^^
 //│ ╟── Integer literal cannot be called like a function.
-//│ ║  l.324: 	tuple(1) \ 2
-//│ ╙──       	           ^
+//│ ║  l.+1: 	tuple(1) \ 2
+//│ ╙──      	           ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 tuple(1) \ 2

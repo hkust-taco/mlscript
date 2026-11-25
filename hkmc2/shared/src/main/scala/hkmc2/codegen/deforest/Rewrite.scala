@@ -12,11 +12,12 @@ import hkmc2.codegen.flowAnalysis.*
 
 
 
-class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbols: Set[LocalVarSymbol])(using Raise)
+class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbols: Set[LocalVarSymbol])(using Raise, Elaborator.Ctx, Config)
   extends PolyInstantiationRewrite(solver.constraintSolver):
   
   type MatchOrLabelId = ResultId | LabelSymbol
-  type BranchId = CtorDtorId -> Opt[CtorCls]
+  /** Identifies the specialized branch function for a match and a constructor. */
+  type BranchId = CtorDtorId -> CtorCls
   type LabelId = LabelSymbol -> InstantiationId
   type RestFunId = CtorDtorId | LabelId
   
@@ -31,17 +32,22 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     matchOrLabelId match
     case l: LabelSymbol => l -> instId
     case scrutId: ResultId => ConcreteId(scrutId, instId)
-  extension (vs: Ls[VarSymbol]) def asParamList: ParamList =
-    ParamList(ParamListFlags.empty, vs.map(Param.simple), N)(N)
+  extension (vs: Ls[VarSymbol]) def asParamList: LoweredParamList =
+    LoweredParamList(ParamListFlags.empty, vs.map(Param.simple), N)(N)
   extension (c: CtorCls) def ctorClsName: String = c match
     case cls: ClassLikeSymbol => cls.nme
     case n: Int => s"tup$n"
   extension (f: SelField) def fieldName: String = f match
     case tSym: TermSymbol => tSym.nme
     case n: Int => n.toString
-  extension (f: SelField) def erasedFieldType: Opt[ErasedValueType] = f match
-    case tSym: TermSymbol => tSym.mapErasedValueType
-    case _: Int => N
+
+  
+  // A proved cast can disappear when fusion changes its operand's representation.
+  // Keep other casts: even a check known to succeed can still narrow a physical anyref
+  // slot for Wasm. Unknown/failing casts expose their inputs and therefore prevent fusion.
+  private val fusedCasts = constraintSolver.castsWithSrcs.iterator.collect:
+    case c if c.succeeds && c.sources.exists(solver.isFused) => c.concreteId
+  .toSet
 
   private def getParentLabelOrMatchesAndRestBefore(
     matchOrLabelId: MatchOrLabelId
@@ -94,7 +100,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
   val restFunSyms = LinkedHashMap.empty[RestFunId, (BlockMemberSymbol, TermSymbol)]
   
   // original bodies of a branch
-  val branchOriginalBodies = MutMap.empty[ResultId -> Opt[CtorCls], Block]
+  val branchOriginalBodies = MutMap.empty[ResultId -> CtorCls, Block]
   // original rest function bodies and their parent matches (if any)
   val restOriginalBodiesAndParentRest = MutMap.empty[MatchOrLabelId, Block -> Opt[MatchOrLabelId]]
   
@@ -115,37 +121,28 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
               val clsNme = selInfo.selectsFrom.ctorClsName
               fieldSym.getOrElseUpdate(
                 selInfo.field,
-                new VarSymbol(
-                  Tree.Ident(s"${clsNme}_${selInfo.field.fieldName}"),
-                  erasedType = selInfo.field.erasedFieldType))
+                new VarSymbol(Tree.Ident(s"${clsNme}_${selInfo.field.fieldName}"), mut = false))
           )
         
         // ctor dest branch function computations
-        val matchBlk = pre.res.matchScrutToMatchBlock(dest._1)
-        val (whichBranch, whichBranchPreBody) =
-          val tmp =
-            val ctorCls = ctorInfo.ctor
-            matchBlk.arms
-              .find: (cse, _) =>
-                cse match
-                case Case.Cls(cls, path) => cls === ctorCls
-                case Case.Tup(len, inf) => len === ctorCls
-                case _ => die
-              .map(b => ctorCls -> b._2)
-          tmp.map(_._1) ->
-          tmp.fold(matchBlk.dflt.get)(_._2)
+        val whichBranch = ctorInfo.ctor
+        val whichBranchPreBody =
+          solver.selectedBranch(ctorInfo.ctor, dest).getOrElse:
+            lastWords("Fusion requires a statically determined match branch")
         val destBranchId: BranchId = dest -> whichBranch
         // identify the dest branchid for a ctor
         ctorWhichBranch(ctor) = destBranchId
         // compute the function symbols for branch funs
+        // Two constructors can select the same default arm but pass different fields to it.
+        // Each constructor therefore needs its own branch function.
         branchFunSyms.getOrElseUpdate(
           destBranchId,
           locally:
-            val branchName = whichBranch.fold("_dflt")(c => s"_${c.ctorClsName}")
+            val branchName = s"_${whichBranch.ctorClsName}"
             val scrutName = dest._1.getReferredSym.nme
             val branchFnNme = s"${dest.instId.mkFunName}$$$scrutName$branchName"
             new BlockMemberSymbol(branchFnNme, Nil, true)
-            -> new TermSymbol(Fun, N, Tree.Ident(branchFnNme), erasedType = N)
+            -> new TermSymbol(Fun, N, Tree.Ident(branchFnNme))
         )
         // compute the function parameters corresponding to ctor fields of branch funs
         branchFunParamFieldSyms.getOrElseUpdate(
@@ -160,7 +157,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
             completeArgs.map: selField =>
               selsInfos.get(selField) match
               case Some(selId) => branchSelSyms(selId)
-              case None => VarSymbol(Tree.Ident(s"_${selField.fieldName}"), erasedType = selField.erasedFieldType)
+              case None => VarSymbol(Tree.Ident(s"_${selField.fieldName}"), mut = false)
         )
         
         val (parents, _) = getParentLabelOrMatchesAndRestBefore(dest.exprId)
@@ -174,7 +171,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
             locally:
               val restFunName = dest.instId.mkFunName + s"$$${nme}_rest"
               new BlockMemberSymbol(restFunName, Nil, true)
-              -> new TermSymbol(Fun, N, Tree.Ident(restFunName), erasedType = N)
+              -> new TermSymbol(Fun, N, Tree.Ident(restFunName))
           )
           val (ps, restBeforeParent) = getParentLabelOrMatchesAndRestBefore(matchOrLabelId)
           restOriginalBodiesAndParentRest.getOrElseUpdate(
@@ -300,20 +297,109 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     allBranchesOfDtor.keysIterator.foreach(fvsForDtor)
   }
 
+  // update the correct new erased type info to the new symbols before rewriting bodies that refer to them.
+  // we do this after information like free variables are computed, as those are needed for branch function types
+  locally {
+    for (branchId, params) <- branchFunParamFieldSyms do
+      val types = solver.branchParamTypes(branchId)
+      // a branch function has one parameter for each argument of the constructors it stands for
+      assert(params.sizeCompare(types) == 0, s"${params.size} parameters for the types $types")
+      params.lazyZip(types).foreach(_.erasedType = _)
+  }
+
+  private def captureParams(instId: InstantiationId, fvs: Ls[LocalVarSymbol]): LoweredParamList =
+    // Parameters replace the extracted body's free variables. Preserve mutability and use the
+    // representation after fusion, so the copied body's reads and assignments remain valid.
+    fvs.map: s =>
+      val tpe = retypedVariables.get(instId -> s).orElse(retypedVariables.get(Nil -> s)).orElse(s.erasedType)
+      new VarSymbol(Tree.Ident(s"fv_${s.nme}"), erasedType = tpe, mut = s.mut)
+    .asParamList
+  
+  // Fusion applies only the first parameter list of each branch function. Recursive partial
+  // applications need the arity before the body is rewritten to give the closure type Function.
+  // The rewritten body determines the result of a full application.
+  private val branchParams = branchFunSyms.map: (branchId, syms) =>
+    val params = branchFunParamFieldSyms(branchId).asParamList ::
+      captureParams(branchId._1.instId, dtorBranchFnFvs(branchId._1)) :: Nil
+    syms._2.initializeErasure(S(FunDefn.Signature.fromParams(params, ErasedResult.Direct(N)).erasure))
+    branchId -> params
+  
   // Rewrites the program under a specific instantiation id
   // from the polymorphic analysis
-  protected class Rewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[LocalVarSymbol, LocalVarSymbol]]) extends InstantiationRewriter(instId, refreshSymbolMappingForCopy):
+  protected class Rewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[Symbol, Symbol]]) extends InstantiationRewriter(instId, refreshSymbolMappingForCopy):
+    
+    // the result slot of the function whose body is being rewritten
+    private type SlotType = (original: Opt[ErasedValueType], retyped: Opt[ErasedValueType])
+    private var returnType: SlotType = (N, N)
+    private def returningInto[A](tpe: SlotType)(rewrite: => A): A =
+      val enclosing = returnType
+      returnType = tpe
+      try rewrite finally returnType = enclosing
+    
+    // rewrites code of the body of `fun`, whose returns write the result slot of `fun` in this instance
+    def returningIntoResultOf[A](fun: FunDefn)(rewrite: => A): A =
+      returningInto(fun.signature.result.bodyType -> signatureAt(instId, fun.dSym).result.bodyType)(rewrite)
     
     def rewriteFunDefn(fun: FunDefn): RewrittenFunDefn =
-      fun.params.mapConserve(applyParamList) -> applyBlock(fun.body)
+      val signature = signatureAt(instId, fun.dSym)
+      val params = signature.params.mapConserve(applyParamList)
+      val signature2 = if params is signature.params then signature else signature.copy(params = params)
+      val body = returningIntoResultOf(fun)(applyBlock(fun.body))
+      (signature2, body, fun.annotations)
+    
+    override def applyFunDefn(fun: FunDefn): FunDefn =
+      val (signature, body, annotations) = rewriteFunDefn(fun)
+      val owner = fun.owner.mapConserve(_.subst)
+      val sym = fun.sym.subst
+      val dSym = fun.dSym.subst
+      if (owner is fun.owner) && (sym is fun.sym) && (dSym is fun.dSym)
+          && (signature is fun.signature) && (body is fun.body) then fun
+      else FunDefn(owner, sym, dSym, signature, body)(fun.configOverride, annotations)
+    
+    // The call replaces returns of the enclosing function, so its value goes into the result slot
+    // of that function. A call through a Function local has no result signature and always needs
+    // the coercion; a call to a continuation needs it when the continuation's result is wider.
+    private def returnCall(call: Result): Block = Return(returnType.retyped.fold(call)(call.coerceTo(_, N)))
+    
+    // a slot that fusion retypes takes the type the flow gives it
+    // the flow analysis proves the value has the slot's type, so the cast should never fail
+    private def intoRetypedSlot(r: Result, slot: SlotType)(k: Result => Block): Block =
+      if slot.retyped == slot.original then k(r)
+      else coerceIntoFlowTypedSlot(r, slot.retyped.getOrElse(ErasedType.Unknown))(k)
+    
+    // as the flow proves that a value reaching a slot typed from the flow has the slot's type, a value whose type is
+    // unrelated to it is never produced (it is read in a dead branch, or is the result of a call that never
+    // returns): its effects are kept, and `undefined` stands in for it
+    private def coerceIntoFlowTypedSlot(r: Result, tpe: ErasedValueType)(k: Result => Block): Block =
+      r.coerceToOr(tpe, N)(k): (_, _) =>
+        Assign.discard(r, k(Value.Lit(Tree.UnitLit(false))(N).coerceTo(tpe, N)))
+    
+    // The signature planned for the definition that a reference to `f` reaches when this rewrite keeps
+    // the reference, ie when the instance it denotes has no copy and remains the original definition.
+    private def signatureInPlace(f: TermSymbol): FunDefn.Signature =
+      signatureAt(if pre.res.rootFunDefns.contains(f) then inPlaceInstId(f) else instId, f)
+    
+    // The result type that fusion gives to a definition without parameter lists which keeps its symbol,
+    // or `N` when that result keeps its type. The rewritten definition only replaces the current one after
+    // every body is rewritten. Until then, a read through the symbol still has the previous result type,
+    // which the coercion into a retyped slot would take for a value of an unrelated type.
+    private def retypedResultInPlace(f: TermSymbol): Opt[ErasedValueType] =
+      pre.res.funSymToFunDefn.get(f).filter(_.params.isEmpty).flatMap: original =>
+        val planned = signatureInPlace(f)
+        if planned is original.signature then N
+        else S(planned.result.callType.getOrElse(ErasedType.Unknown))
     
     // calls `fun` with possibly remapped `args`
     def mkCall(fun: Path, args: Ls[LocalVarSymbol])(k: Result => Block): Block =
       applyArgs(args.map(s => Arg(N, s.asPath))): args2 =>
         k(Call(fun, args2 ne_:: Nil)(CallMetadata.defaultMlsFun, N))
     
+    def callRest(id: RestFunId)(k: Result => Block): Block =
+      mkCall(newRestFuns(id).force_!.asPath, restFnFvs(id))(k)
+    
     override def applyResult(r: Result)(k: Result => Block): Block =
       r match
+      case c: Cast if fusedCasts(c.uid.concreteId) => applyResult(c.value)(k)
       case s@TrackableSelect(from, _, _) =>
         if branchSelSyms.isDefinedAt(s.uid.concreteId) then
           k(branchSelSyms(s.uid.concreteId).subst.asSimpleRef)
@@ -325,9 +411,20 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
         def mkCtorFieldSyms(ctorDtorId: CtorDtorId): Ls[TempSymbol] =
           val ctorInfo = solver.fusingCtorInfo(ctorDtorId)
           val clsNme = ctorInfo.ctor.ctorClsName
-          ctorInfo.args.unzip._1.map: f =>
-            new TempSymbol(N, erasedType = f.erasedFieldType, s"${clsNme}_${f.fieldName}")
+          val types = solver.fusedFieldTypes(ctorDtorId)
+          // the solver types every argument of a fused constructor
+          assert(ctorInfo.args.sizeCompare(types) == 0, s"${ctorInfo.args.size} arguments for the types $types")
+          ctorInfo.args.lazyZip(types).map: (arg, tpe) =>
+            new TempSymbol(N, initErasedType = tpe, s"${clsNme}_${arg._1.fieldName}")
         end mkCtorFieldSyms
+        
+        def fillFieldSyms(fieldSyms: Ls[TempSymbol], after: Block): Block =
+          args.zip(fieldSyms).foldRight(after):
+            case (Arg(N, a) -> fieldSym, rest) =>
+              applyPath(a): fusedField =>
+                coerceIntoFlowTypedSlot(fusedField, fieldSym.erasedType.getOrElse(ErasedType.Unknown)): value =>
+                  Scoped(Set.single(fieldSym), Assign(fieldSym, value, rest))
+            case _ => TODO("spread args are not supported")
         
         solver.finalCtorDests.get(ctor.uid.concreteId) match
         case None => super.applyResult(ctor)(k)
@@ -335,29 +432,65 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
           val ctorInfo = solver.fusingCtorInfo(ctor.uid.concreteId)
           val idx = ctorInfo.args.unzip._1.indexOf(field)
           val fieldSyms = mkCtorFieldSyms(ctor.uid.concreteId)
-          args.zip(fieldSyms).foldRight(k(fieldSyms(idx).asSimpleRef)):
-            case (Arg(N, a) -> s, rest) =>
-              applyPath(a): fusedField =>
-                Scoped(Set.single(s), Assign(s, fusedField, rest))
-            case _ => TODO("spread args are not supported")
+          fillFieldSyms(fieldSyms, k(fieldSyms(idx).asSimpleRef))
         case Some(_: FinalDestMatch) =>
           val fieldSyms = mkCtorFieldSyms(ctor.uid.concreteId)
           val (branchFunBms, branchFunTSym) = branchFunSyms(ctorWhichBranch(ctor.uid.concreteId))
-          args.zip(fieldSyms).foldRight(mkCall(branchFunBms.asMemberRef(branchFunTSym), fieldSyms)(k)):
-            case (Arg(N, a) -> fieldSym, rest) =>
-              applyPath(a): fusedField =>
-                Scoped(Set.single(fieldSym), Assign(fieldSym, fusedField, rest))
-            case _ => TODO("spread args are not supported")
+          fillFieldSyms(fieldSyms, mkCall(branchFunBms.asMemberRef(branchFunTSym), fieldSyms)(k))
+      case c @ Call(FunRef(f, _), _) => super.applyResult(c):
+        case call2 @ Call(fun2 @ FunRef(f2, _), argss2) =>
+          // In-place rewrites keep the definition symbol. Its current IR signature can
+          // already have changed, so compare the saved definition with the planned signature.
+          val original = pre.res.funSymToFunDefn.get(f).map(_.signature.erasure)
+          val rewritten =
+            if (f2 is f) && original.nonEmpty then S(signatureInPlace(f).erasure)
+            else f2.erasedSignature
+          (original, rewritten) match
+            case (S(originalSignature: ErasedFuncSignature), S(rewrittenSignature: ErasedFuncSignature))
+                if originalSignature != rewrittenSignature =>
+              val original = originalSignature.paramLists
+              val retyped = rewrittenSignature.paramLists
+              // Retyping keeps the parameters of a signature, so both signatures have the same
+              // parameter lists, of the same lengths.
+              assert(original.corresponds(retyped)(_.sizeCompare(_) == 0),
+                s"retyping changed the parameter lists of ${f.nme}: $original -> $retyped")
+              val slotss = original.iterator.zip(retyped).map(_.iterator.zip(_))
+              // A partial application leaves the last lists of `slotss` unused. An over-application
+              // passes its remaining argument lists to the function's result, whose parameters this
+              // signature does not describe. An argument list can also be longer than its slots,
+              // when its last arguments go to a rest parameter.
+              val argss3 = argss2.map: args =>
+                slotss.nextOption() match
+                  case S(slots) if args.forall(_.spread.isEmpty) => args.map(_ -> slots.nextOption())
+                  case _ => args.map(_ -> N)
+              applyListOf(argss3, applyListOf(_, (arg, k2) => arg match
+                case (a, S(slot)) => intoRetypedSlot(a.value, slot):
+                  case value: Path => k2(Arg(N, value) -> N)
+                  case value =>
+                    val tmp = TempSymbol(N, value.erasedType, "arg")
+                    Scoped(Set.single(tmp), Assign(tmp, value, k2(Arg(N, tmp.asPath) -> N)))
+                case _ => k2(arg)
+              )(_)): argss4 =>
+                val call = Call(fun2, argss4.map(_.map(_._1)).ne_!)(c.metadata, c.toLoc)
+                // Bodies are rewritten before their definitions publish the new signatures.
+                // Record the planned result on a fresh call so slot coercions cannot cache
+                // the old result type through the retained definition symbol.
+                if (f2 is f) && originalSignature.ret != rewrittenSignature.ret && argss4.sizeCompare(rewrittenSignature.paramLists) == 0 then
+                  k(Cast(call, rewrittenSignature.ret.getOrElse(ErasedType.Unknown), check = false)(c.toLoc))
+                else k(call)
+            case _ => k(call2)
+        case c2 => k(c2)
       case _ => super.applyResult(r)(k)
     
     override def applyPath(p: Path)(k: Path => Block): Block =
       p match
       case PolyFnRef(specializedRef) => k(specializedRef)
+      case c: CastPath if fusedCasts(c.uid.concreteId) => applyPath(c.value)(k)
       case ctor@CtorProducer(_, args, _) if solver.finalCtorDests.isDefinedAt(ctor.uid.concreteId) =>
         assert(args.isEmpty)
         val (branchFunBms, branchFunTSym) = branchFunSyms(ctorWhichBranch(ctor.uid.concreteId))
-        val lambdaSym = new TempSymbol(N, erasedType = N, "deforest$lam")
         mkCall(branchFunBms.asMemberRef(branchFunTSym), Nil): callBranchFun =>
+          val lambdaSym = new TempSymbol(N, initErasedType = callBranchFun.erasedType, "deforest$lam")
           Scoped(
             Set.single(lambdaSym),
             Assign(
@@ -372,6 +505,10 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
           applyPath(from)(k)
         else
           super.applyPath(s)(k)
+      case ref @ FunRef(f, _) => retypedResultInPlace(f) match
+        // Like the result of a call to a function retyped in place, the read records its planned type.
+        case S(tpe) => super.applyPath(ref)(read => k(Cast.path(read, tpe, check = false)(ref.toLoc)))
+        case N => super.applyPath(ref)(k)
       case _ => super.applyPath(p)(k)
     
     // a free block member symbol of an extracted part becomes an `fv_` parameter, which needs a different node
@@ -386,13 +523,24 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
       b match
       case m@Match(scrut, _, _, _) if solver.finalDtorSrcs.isDefinedAt(scrut.uid.concreteId) =>
         applyPath(scrut): newScrut =>
-          mkCall(newScrut, dtorBranchFnFvs(scrut.uid.concreteId))(Return(_))
+          mkCall(newScrut, dtorBranchFnFvs(scrut.uid.concreteId))(returnCall)
+      case Assign(l: LocalVarSymbol, r, rst) =>
+        applyResult(r): r2 =>
+          val l2 = applyAssignLhs(l)
+          val slot = l2 match
+            case l2: LocalVarSymbol => (l.erasedType, l2.erasedType)
+            case NoSymbol => (N, N)
+          intoRetypedSlot(r2, slot): r3 =>
+            val rst2 = applySubBlock(rst)
+            if (l2 is l) && (r3 is r) && (rst2 is rst) then b else Assign(l2, r3, rst2)
+      case Return(res) =>
+        applyResult(res): res2 =>
+          intoRetypedSlot(res2, returnType): res3 =>
+            if res3 is res then b else Return(res3)
       case Break(label) =>
         val labelRestFunId = label.withInstId(instId)
-        restFunSyms.get(labelRestFunId) match
-        case None => super.applyBlock(b)
-        case Some((bms, tSym)) =>
-          mkCall(bms.asMemberRef(tSym), restFnFvs(labelRestFunId))(Return(_))
+        if restFunSyms.contains(labelRestFunId) then callRest(labelRestFunId)(returnCall)
+        else super.applyBlock(b)
       // copying a definition would need fresh symbols for it; lifting removes the nested ones beforehand
       case Define(defn, _) if refreshSymbolMappingForCopy.isDefined =>
         softAssert(false, s"deforestation copying the definition ${defn.sym.nme}")
@@ -411,53 +559,62 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
   // ====== start: implements the abstract members of `PolyInstantiationRewrite` ======
   def solvers: Iterable[FlowAnalysisSolverResult] = solver :: Nil
   
-  def mkRewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[LocalVarSymbol, LocalVarSymbol]]) = new Rewriter(instId, refreshSymbolMappingForCopy)
+  def mkRewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[Symbol, Symbol]]) = new Rewriter(instId, refreshSymbolMappingForCopy)
+  
+  /** Extracts a block into a function whose last parameter list binds its free variables.
+    * A path that falls through the block continues in `rest`. Both explicit returns and
+    * the continuation contribute their rewritten value types to the function's result.
+    *
+    * The block is a part of the code around the match or label `from`. It returns for the function
+    * that contains `from`, so its returns go into the result slot of that function like the returns
+    * that stay there. A returned value whose type is unrelated to a slot typed from the flow is then
+    * dropped as in the function itself (see `coerceIntoFlowTypedSlot`), and does not give the extracted
+    * function a result type that its callers in that function could not coerce.
+    */
+  private def extractedFun(from: MatchOrLabelId, instId: InstantiationId, syms: (BlockMemberSymbol, TermSymbol),
+      params: Ls[LoweredParamList], fvs: Ls[LocalVarSymbol], body: Block, annotations: Ls[Annot])
+      (rest: Rewriter => Block): FunDefn =
+    val captures = params.last.paramSyms
+    assert(fvs.sizeCompare(captures) == 0)
+    val rewriter = mkCopyRewriter(instId, Nil, body, Map.from(fvs.lazyZip(captures)))
+    def extract: Block =
+      val rewritten = rewriter.applyBlock(body)
+      if rewritten.isAbortive then rewritten else Begin(rewritten, rest(rewriter))
+    val complete = solver.enclosingFun(from).fold(extract)(rewriter.returningIntoResultOf(_)(extract))
+    val result = ErasedResult.Direct(Block.returnType(complete).map(_.canonicalize))
+    val signature = FunDefn.Signature.fromParams(params, result)
+    FunDefn(N, syms._1, syms._2, signature, complete)(N, annotations)
+  
+  // A fallthrough or break resumes after a match or label, so direct calls between these
+  // continuations only go forward. Build each target before typing a return that calls it.
+  private val newRestFuns =
+    restFunSyms.map: (id, syms) =>
+      id -> Lazy:
+        val instId = id.getInstId
+        val (body, parent) = restOriginalBodiesAndParentRest(id.withoutInstId)
+        val fvs = restFnFvs(id)
+        val fun = extractedFun(id.withoutInstId, instId, syms, captureParams(instId, fvs) :: Nil, fvs, body,
+            PrivateModifier :: Nil): rewriter =>
+          parent match
+          case S(parentId) => rewriter.callRest(parentId.withInstId(instId))(Return(_))
+          case N => Return(Value.Lit(Tree.UnitLit(true))(N))
+        // * The function needs an erased signature for its uses to be properly typed before IR attachment;
+        // * after the function is stored in a Define node, the latest erasure can be derived from it.
+        fun.dSym.initializeErasure(S(fun.signature.erasure))
+        fun
+  end newRestFuns
   
   def otherNewFunDefns: Iterable[FunDefn] =
     
-    // the rewriter of an extracted part (branch body functions and match rest functions),
-    // whose free variables `fvs` become the `fv_` parameters it returns
-    def mkExtractedBodyRewriter(instId: InstantiationId, body: Block, fvs: Ls[LocalVarSymbol]): (Rewriter, Ls[VarSymbol]) =
-      val fvParams = fvs.map(s => new VarSymbol(Tree.Ident(s"fv_${s.nme}"), erasedType = s.mapErasedValueType))
-      mkCopyRewriter(instId, Nil, body, Map.from(fvs.iterator.zip(fvParams))) -> fvParams
-  
-    // Functions for fused match branches; each runs one arm and then its rest
     val newBranchFuns =
-      for (branchId@(dtorId, whichBranch), (bms, tSym)) <- branchFunSyms yield
-        val instId = dtorId.getInstId
-        val ogBody = branchOriginalBodies(dtorId.exprId -> whichBranch)
-        val (restFunBms, restFunTSym) = restFunSyms(dtorId)
-        val (rewriter, fvParams) = mkExtractedBodyRewriter(instId, ogBody, dtorBranchFnFvs(branchId._1))
-        val actualBody = Begin(
-          rewriter.applyBlock(ogBody),
-          rewriter.mkCall(restFunBms.asMemberRef(restFunTSym), restFnFvs(dtorId))(Return(_)))
-        FunDefn(N, bms, tSym,
-          branchFunParamFieldSyms(branchId).asParamList :: fvParams.asParamList :: Nil,
-          actualBody
-        )(N, annotations = AffineAnnotForBranchFns :: PrivateModifier :: Nil)
+      for (id@(dtorId, whichBranch), syms) <- branchFunSyms yield
+        val body = branchOriginalBodies(dtorId.exprId -> whichBranch)
+        extractedFun(dtorId.exprId, dtorId.instId, syms, branchParams(id), dtorBranchFnFvs(dtorId), body,
+            AffineAnnotForBranchFns :: PrivateModifier :: Nil): rewriter =>
+          rewriter.callRest(dtorId)(Return(_))
     end newBranchFuns
     
-    // Continuation functions for the code after fused matches or labels
-    val newRestFuns =
-      for (restFunId, (bms, tsym)) <- restFunSyms yield
-        val instId = restFunId.getInstId
-        val (ogBody, parent) = restOriginalBodiesAndParentRest(restFunId.withoutInstId)
-        val (rewriter, fvParams) = mkExtractedBodyRewriter(instId, ogBody, restFnFvs(restFunId))
-        val transformedOgBody = rewriter.applyBlock(ogBody)
-        val actualBody = parent match
-          case Some(parentRestId) =>
-            val parentRestFunId = parentRestId.withInstId(instId)
-            val (parentFunBms, parentFunTSym) = restFunSyms(parentRestFunId)
-            val parentFunFvs = restFnFvs(parentRestFunId)
-            Begin(
-              transformedOgBody,
-              rewriter.mkCall(parentFunBms.asMemberRef(parentFunTSym), parentFunFvs)(Return(_)))
-          case None =>
-            Begin(transformedOgBody, Return(Value.Lit(Tree.UnitLit(true))(N)))
-        FunDefn(N, bms, tsym, fvParams.asParamList :: Nil, actualBody)(N, annotations = PrivateModifier :: Nil)
-    end newRestFuns
-    
-    newBranchFuns ++ newRestFuns
+    newBranchFuns ++ newRestFuns.valuesIterator.map(_.force_!)
     
   end otherNewFunDefns
   
@@ -465,10 +622,35 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     new Rewriter(Nil, N):
       override def applyFunDefn(fun: FunDefn): FunDefn =
         rewrittenInPlace.get(fun.dSym) match
-          case Some((params, rewrittenBody)) =>
-            // deforest never changes fun params in place
-            assert(params is fun.params)
-            FunDefn(fun.owner, fun.sym, fun.dSym, params, rewrittenBody)(fun.configOverride, fun.annotations)
+          case Some((signature, rewrittenBody, annotations)) =>
+            val dSym = fun.dSym.subst
+            if (dSym is fun.dSym) && (signature is fun.signature) && (rewrittenBody is fun.body) then fun
+            else FunDefn(fun.owner, fun.sym, dSym, signature, rewrittenBody)(fun.configOverride, annotations)
           case None => super.applyFunDefn(fun)
+  
+  def retypedVariables = solver.retypedVariables
+  
+  // A function is retyped if fusion retypes one of its parameters or changes what it returns.
+  // Every instance of a function has a copy of the variable of its definition symbol, whether or not
+  // the instance is called. Finding the instances through the calls they receive would leave the
+  // signature of an uncalled function behind the retyped values its body returns, and would miss
+  // the definitions without parameter lists, which calls do not reach.
+  lazy val rewrittenSignatures: LinkedHashMap[(InstantiationId, TermSymbol), FunDefn.Signature] =
+    val res = LinkedHashMap.empty[(InstantiationId, TermSymbol), FunDefn.Signature]
+    for
+      case (fun: TermSymbol, instId, _) <- collector.symbolFlows
+      definition <- pre.res.funSymToFunDefn.get(fun)
+    do
+      val original = definition.signature
+      val params = retypedParams(instId, original.params)
+      val maybeNewReturnType = solver.retypedResults.get(instId -> fun)
+      if maybeNewReturnType.isDefined || (params isnt original.params) then
+        val retType = maybeNewReturnType.orElse(original.result.bodyType)
+        val result = original.result match
+          case _: ErasedResult.Direct[?] => ErasedResult.Direct(retType)
+          case _: ErasedResult.Async[?] => ErasedResult.Async(retType)
+          case _: ErasedResult.Generator[?] => ErasedResult.Generator(retType)
+        res(instId -> fun) = FunDefn.Signature.fromParams(params, result)
+    res
   // ====== end: implements the abstract members of `PolyInstantiationRewrite` ======
 end DeforestRewriter

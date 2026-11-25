@@ -1,0 +1,173 @@
+:.
+:!js
+
+import "./ForeignOperationBase.mls" as Library
+
+// A private override must admit calls even when the base unit published no exposure inputs.
+:e
+private class Inspect extends Library.Base with
+  override fun inspect(x) = x.only
+new Inspect().inspect({only: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	  override fun inspect(x) = x.only
+//│ ║        	                            ^^^^^^
+//│ ╟── Cannot resolve member 'only' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  in ForeignOperationBase.mls
+//│ ║  l.XX: 	    open fun inspect(x) = 0
+//│ ║        	                     ^
+//│ ╟── Member 'inspect' is inherited from another compilation unit.
+//│ ║  l.XX: 	    open fun inspect(x) = 0
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^
+
+:e
+private class Rest extends Library.Base with
+  override fun rest(...xs) = xs.0.only
+new Rest().rest({only: 2})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	  override fun rest(...xs) = xs.0.only
+//│ ║        	                             ^^^^^^^^^
+//│ ╟── Cannot resolve member 'only' of a value with unknown shape.
+//│ ╟── Rest parameter 'xs' admits elements of unknown shape.
+//│ ║  in ForeignOperationBase.mls
+//│ ║  l.XX: 	    open fun rest(...xs) = 0
+//│ ║        	                  ^^^^^
+//│ ╟── Member 'rest' is inherited from another compilation unit.
+//│ ║  l.XX: 	    open fun rest(...xs) = 0
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^
+
+// An unannotated inherited field admits external writes.
+:ge
+val i32: Int32 = unsafe.undefined
+private class Store extends Library.Base with
+  override mut val item = i32
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+3: 	  override mut val item = i32
+//│ ║        	                   ^^^^
+//│ ╟── The exposed interface admits values of unknown representation unless a type annotation restricts them.
+//│ ╟── Field 'item' admits assigned values of unknown shape.
+//│ ║  in ForeignOperationBase.mls
+//│ ║  l.XX: 	    open mut val item = 0
+//│ ║        	                 ^^^^
+//│ ╟── Member 'item' is inherited from another compilation unit.
+//│ ║  l.XX: 	    open mut val item = 0
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^
+
+// The inherited domain supplies the receiver even without a local call to the override.
+private class Payload(val key: Int)
+private class Typed extends Library.Typed[Payload] with
+  override fun use(x) = x.key
+
+// A separate signature from a legacy unit supplies the same domain as an inline annotation.
+private class Signed extends Library.Signed[Payload] with
+  override fun use(x) = x.key
+
+import "./InheritedOperationBase.mls" as Inherited
+
+// The exporter omitted both annotations in Middle. The caller's parent clause supplies Payload
+// for Root's type parameter through Middle, for incoming calls and field writes alike.
+private class Leaf extends Inherited.Middle[Payload](Payload(1)) with
+  override fun inspect(x) = x.key
+  override mut val item = Payload(2)
+  fun read() = item.key
+
+// A client can call and write through the overriding declaration itself.
+private class PublicLeaf extends Inherited.Middle[Payload](Payload(1)) with
+  override fun inspect(x) = x.key
+  override mut val item = Payload(2)
+  fun read() = item.key
+fun publicLeaf(): PublicLeaf = new PublicLeaf
+
+// Calls through the imported Root can reach all three private classes. LocalMiddle widens
+// the parameter to Any, which both unannotated overrides inherit.
+:e
+private class LocalMiddle extends Inherited.Root[Payload](Payload(0)) with
+  open override fun inspect(x: Any): Int = 0
+private class LocalChild extends LocalMiddle with
+  open override fun inspect(x): Int = 0
+private class LocalLeaf extends LocalChild with
+  override fun inspect(x) = x.key
+new LocalLeaf().inspect(Payload(1))
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+6: 	  override fun inspect(x) = x.key
+//│ ║        	                            ^^^^^
+//│ ╟── Value with an empty interface does not contain member 'key'
+//│ ║  l.+2: 	  open override fun inspect(x: Any): Int = 0
+//│ ║        	                               ^^^
+//│ ╟── Type 'Any' is declared without a member interface.
+//│ ║  in ../../decls/Prelude.mls
+//│ ║  l.XX: 	declare type Any
+//│ ╙──      	             ^^^
+
+// A result written in another unit bounds the callback that an unannotated override returns or holds.
+:e
+private fun returnedCallback(x) = x.only
+private class Returning extends Inherited.Producer with
+  override fun get() = returnedCallback
+returnedCallback({only: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun returnedCallback(x) = x.only
+//│ ║        	                                  ^^^^^^
+//│ ╟── Value with an empty interface does not contain member 'only'
+//│ ║  in InheritedOperationBase.mls
+//│ ║  l.XX: 	    open fun get(): Any -> Int = x => 0
+//│ ║        	                    ^^^
+//│ ╟── Type 'Any' is declared without a member interface.
+//│ ║  in ../../decls/Prelude.mls
+//│ ║  l.XX: 	declare type Any
+//│ ╙──      	             ^^^
+
+:e
+private fun heldCallback(x) = x.only
+private class Holding extends Inherited.Producer with
+  override val held = heldCallback
+heldCallback({only: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun heldCallback(x) = x.only
+//│ ║        	                              ^^^^^^
+//│ ╟── Value with an empty interface does not contain member 'only'
+//│ ║  in InheritedOperationBase.mls
+//│ ║  l.XX: 	    open val held: Any -> Int = x => 0
+//│ ║        	                   ^^^
+//│ ╟── Type 'Any' is declared without a member interface.
+//│ ║  in ../../decls/Prelude.mls
+//│ ║  l.XX: 	declare type Any
+//│ ╙──      	             ^^^
+
+// The inherited domain also applies when it is too broad for an overriding implementation.
+:e
+private class Wide extends Inherited.Middle[Any](0) with
+  override fun inspect(x) = x.key
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	  override fun inspect(x) = x.key
+//│ ║        	                            ^^^^^
+//│ ╟── Value with an empty interface does not contain member 'key'
+//│ ║  l.+1: 	private class Wide extends Inherited.Middle[Any](0) with
+//│ ║        	                                            ^^^
+//│ ╟── Type 'Any' is declared without a member interface.
+//│ ║  in ../../decls/Prelude.mls
+//│ ║  l.XX: 	declare type Any
+//│ ╙──      	             ^^^
+
+// Written arguments belong to this unit even when the generic class belongs to another.
+:e
+private class LocalPayload with
+  fun inspect(x) = x.only
+fun accept(x: Library.Typed[LocalPayload]) = 0
+new LocalPayload().inspect({only: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	  fun inspect(x) = x.only
+//│ ║        	                   ^^^^^^
+//│ ╟── Cannot resolve member 'only' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+2: 	  fun inspect(x) = x.only
+//│ ║        	              ^
+//│ ╟── Member 'inspect' is accessible here.
+//│ ║  l.+2: 	  fun inspect(x) = x.only
+//│ ║        	  ^^^^^^^^^^^^^^
+//│ ╟── This type argument appears in an exposed annotation.
+//│ ║  l.+3: 	fun accept(x: Library.Typed[LocalPayload]) = 0
+//│ ║        	                            ^^^^^^^^^^^^
+//│ ╟── 'accept' is exposed by this compilation unit.
+//│ ║  l.+3: 	fun accept(x: Library.Typed[LocalPayload]) = 0
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

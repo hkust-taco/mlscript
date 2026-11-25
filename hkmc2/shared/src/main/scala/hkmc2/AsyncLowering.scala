@@ -2,7 +2,6 @@ package hkmc2
 package codegen
 
 import scala.annotation.tailrec
-import scala.collection.mutable
 import scala.util.boundary
 import sourcecode.{ Line, FileName, Name }
 
@@ -16,13 +15,11 @@ import semantics.*
 import semantics.Elaborator.ctx
 import semantics.Elaborator.State
 import hkmc2.Config.EffectHandlers
-import scala.collection.mutable.ArrayBuffer
 
 
 class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
   
-  object Rewriter extends BlockTransformer(SymbolSubst.Id):
-    val collectedFunDefn: ArrayBuffer[FunDefn] = new ArrayBuffer
+  private class Rewriter extends BlockTransformer(SymbolSubst.Id):
     var inAsyncFun: Bool = false
     
     inline def wrapAwait[T](innerAllowAwait: Bool)(inline thunk: => T): T =
@@ -34,49 +31,32 @@ class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
     
     override def applyFunDefn(fun: FunDefn): FunDefn =
       if !fun.async then return wrapAwait(false)(super.applyFunDefn(fun))
-      val outerBms = BlockMemberSymbol(fun.sym.nme, Nil, fun.sym.nameIsMeaningful)
-      val outerParams = fun.params.flatMap: pl =>
-        pl.allParams.map: p =>
-          val v = p.sym
-          val nv = VarSymbol(v.id, erasedType = v.erasedType)
-          (p, p.copy(sym = nv)(p.toLoc))
-      val symMap = outerParams.iterator.map(p => p._1.sym -> p._2.sym).toMap[SimpleSymbol, SimpleSymbol]
-      val thisVar = VarSymbol(Tree.Ident("this"), erasedType = fun.owner.flatMap(_.asThis.erasedValueType))
-      val thisParam = fun.owner.map(_ => Param.simple(thisVar))
-      val outerDsym = TermSymbol(
-        syntax.Fun,
-        N,
-        fun.dSym.id,
-        erasedType = S:
-          ErasedType.FuncRef(
-            rsc = S(false),
-            paramLists = 
-              (thisParam.map(_.sym.erasedType).toList ++ outerParams.map(_._2.sym.erasedType)) :: Nil :: Nil,
-            ret = N,
-          )
-      )
-      val vars = fun.params.flatMap(_.paramSyms)
+      val bodySym = BlockMemberSymbol(fun.sym.nme + "$async", Nil, fun.sym.nameIsMeaningful)
+      val bodyDsym = TermSymbol(syntax.Fun, N, fun.dSym.id)
       val noAsync = fun.annotations.filterNot(_.isInstanceOf[Annot.Async])
-      val transformer = new BlockTransformer(SymbolSubst.Id):
-        override def applySimpleSymbol(sym: SimpleSymbol): SimpleSymbol =
-          symMap.getOrElse(sym, sym)
-        override def applyValue(v: Value)(k: Value => Block): Block = v match
-          case Value.This(sym) if fun.owner.contains(sym) =>
-            k(Value.SimpleRef(thisVar)(v.toLoc))
-          case _ => super.applyValue(v)(k)
-      val newBody = transformer.applyBlock(wrapAwait(true)(applyFunBodyLikeBlock(fun.body)))
-      collectedFunDefn += FunDefn(N, outerBms, outerDsym, PlainParamList((thisParam.iterator ++ outerParams.iterator.map(_._2)).toList)(N) :: PlainParamList(Nil)(N) :: Nil, newBody)(fun.configOverride, noAsync)
-      val callArgs = (fun.owner.iterator.map(s => Arg(N, Value.This(s)(N))) ++ fun.params.iterator.flatMap(_.allParams.iterator.map(p => Arg(N, Value.SimpleRef(p.sym)(N))))).toList
-      val outerCall = Call(Value.MemberRef(outerBms, outerDsym)(N), callArgs ne_:: Nil)(CallMetadata.mlsFunWithEffect, N)
-      val tmp = TempSymbol(N, erasedType = outerCall.erasedValueType, "tmp")
-      val wrapperBody = blockBuilder
-        .assignScoped(tmp, outerCall)
-        .ret(Call(Value.SimpleRef(State.runtimeSymbol)(N).selSN("toJsAsync"), (tmp.asSimpleRef.asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, N))
-      FunDefn(fun.owner, fun.sym, fun.dSym, fun.params, wrapperBody)(fun.configOverride, noAsync)
-    
-    override def applyMainBlock(main: Block): Block =
-      collectedFunDefn.foldRight(super.applyMainBlock(main)): (defn, acc) =>
-        Scoped(Set.single(defn.sym), Define(defn, acc))
+      // Only the wrapper has the source argument lists; their affine annotations
+      // cannot describe the zero-argument thunk.
+      val bodyAnnotations = noAsync.filterNot(_.isInstanceOf[Annot.Affine])
+      val bodySignature = FunDefn.Signature.fromParams(
+        LoweredParamList.plain(Nil)(N) :: Nil,
+        ErasedResult.fromAnnotations(fun.signature.result.bodyType, noAsync))
+      // The thunk stays inside the wrapper, so it shares the wrapper's parameter
+      // bindings and lexical receivers. Handler lowering saved the wrapper's
+      // arguments and receiver for resumption; reentering it creates a new thunk
+      // whose state machine restores the suspended locals.
+      val body = FunDefn(N, bodySym, bodyDsym, bodySignature,
+        wrapAwait(true)(applyFunBodyLikeBlock(fun.body)))(fun.configOverride, bodyAnnotations)
+      // Keep the wrapper's definition symbol so imported and recursive calls see
+      // its current IR signature. The source erasure retains the async body result.
+      val wrapperSignature = FunDefn.Signature.fromParams(fun.params,
+        ErasedResult.fromAnnotations(fun.signature.erasure.ret, noAsync))
+      val wrapped = Call(Value.SimpleRef(State.runtimeSymbol)(N).selSN("toJsAsync"),
+        (body.asPath.asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, N)
+      // The dynamic runtime helper has no result annotation. Reestablish the wrapper's
+      // return representation here so it survives both ordinary returns and inlining.
+      val wrapperBody = Scoped(Set.single(bodySym), Define(body,
+        Return(wrapped.coerceTo(wrapperSignature.result.bodyType.getOrElse(ErasedType.Unknown), fun.dSym.toLoc))))
+      FunDefn(fun.owner, fun.sym, fun.dSym, wrapperSignature, wrapperBody)(fun.configOverride, noAsync)
     
     override def applyPath(p: Path)(k: Path => Block): Block =
       p match
@@ -86,9 +66,8 @@ class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
               msg"Only await inside of async bodies are allowed if effect handlers are not enabled." ->
               p.toLoc :: Nil,
               source = Diagnostic.Source.Compilation))
-          k(State.runtimeSymbol.asSimpleRef.sel(new Tree.Ident("await"), ctx.builtins.handlers.await))
+          k(State.runtimeSymbol.asSimpleRef.sel(ctx.builtins.handlers.await))
         case _ =>
           super.applyPath(p)(k)
   
-  def transform(prog: Program): Program =
-    Rewriter.applyProgram(prog)
+  def transform(prog: Program): Program = new Rewriter().applyProgram(prog)

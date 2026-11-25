@@ -7,8 +7,8 @@ data class Some[out A](value: A)
 :todo
 let Some(x) = Some(42)
 //│ ╔══[COMPILATION ERROR] Unsupported let binding shape
-//│ ║  l.8: 	let Some(x) = Some(42)
-//│ ╙──     	    ^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	let Some(x) = Some(42)
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -20,7 +20,7 @@ let N = None
 :todo
 let (None) = N
 //│ ╔══[COMPILATION ERROR] Unsupported let binding shape
-//│ ║  l.21: 	let (None) = N
+//│ ║  l.+1: 	let (None) = N
 //│ ╙──      	    ^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -30,17 +30,17 @@ data class Foo(a)
 :todo
 let Foo(x) = Foo(1) in print(x)
 //│ ╔══[COMPILATION ERROR] Unsupported let binding shape
-//│ ║  l.31: 	let Foo(x) = Foo(1) in print(x)
+//│ ║  l.+1: 	let Foo(x) = Foo(1) in print(x)
 //│ ╙──      	    ^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.31: 	let Foo(x) = Foo(1) in print(x)
+//│ ║  l.+1: 	let Foo(x) = Foo(1) in print(x)
 //│ ╙──      	                             ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :todo
 let Foo(x) and x > 0 = Foo(1) in print("ok")
 //│ ╔══[COMPILATION ERROR] Unsupported let binding shape
-//│ ║  l.41: 	let Foo(x) and x > 0 = Foo(1) in print("ok")
+//│ ║  l.+1: 	let Foo(x) and x > 0 = Foo(1) in print("ok")
 //│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

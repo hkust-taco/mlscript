@@ -12,23 +12,20 @@ fun generated() = yield 1
 @annotations.async
 fun asynchronous() = 2
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let asynchronous, asynchronous1;
-//│ asynchronous1 = function asynchronous() {
-//│   return () => {
-//│     return 2
-//│   }
-//│ };
+//│ let asynchronous;
 //│ asynchronous = function asynchronous() {
-//│   let tmp;
-//│   tmp = asynchronous1();
-//│   return runtime.toJsAsync(tmp)
+//│   let asynchronous$async;
+//│   asynchronous$async = function asynchronous$async() {
+//│     return 2
+//│   };
+//│   return runtime.toJsAsync(asynchronous$async) /* as! Promise */
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 // Explicit and wildcard opens identify the same built-in annotation symbol.
 :soir
 fun explicitAnnotation(x) =
-  open annotations { noInline }
+  open annotations.{ noInline }
   @noInline
   fun inner(y) = y + 1
   inner(x)
@@ -44,7 +41,7 @@ fun explicitAnnotation(x) =
 
 :soir
 fun wildcardAnnotation(x) =
-  open annotations
+  open annotations.{ * }
   @noInline
   fun inner(y) = y + 1
   inner(x)
@@ -66,7 +63,7 @@ fun shadowed() =
   fun inner(x) = x
   inner(3)
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.65: 	  @noInline
+//│ ║  l.+3: 	  @noInline
 //│ ╙──      	  ^^^^^^^^^
 
 // A known application head is enough; its argument need not have a value shape.
@@ -77,31 +74,30 @@ fun customAnnotation(arg) =
   fun inner() = 4
   inner()
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.76: 	  @Custom(arg)
+//│ ║  l.+3: 	  @Custom(arg)
 //│ ╙──      	  ^^^^^^^^^^^^
 
-// A qualified annotation cannot wait for its receiver's forward definition.
-:e
+// A declared module's member identity is available before its body completes.
+:w
 fun forwardQualified() =
   @Later.noInline
   fun inner(x) = x
   inner(5)
 module Later { object noInline }
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.86: 	  @Later.noInline
-//│ ║        	  ^^^^^^^^^^^^^^^
-//│ ╙── An annotation's main symbol must be uniquely known when the annotation is elaborated.
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.+2: 	  @Later.noInline
+//│ ╙──      	  ^^^^^^^^^^^^^^^
 
 // Nor can an annotation wait for a forward wildcard source or an alias's value.
 :e
 fun forwardWildcard() =
-  open Future
+  open Future.{ * }
   @noInline
   fun inner(x) = x
   inner(6)
 module Future { object noInline }
 //│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
-//│ ║  l.99: 	  @noInline
+//│ ║  l.+3: 	  @noInline
 //│ ║        	  ^^^^^^^^^
 //│ ╙── An annotation's main symbol must be uniquely known when the annotation is elaborated.
 
@@ -112,8 +108,8 @@ fun forwardAlias() =
   inner(7)
 val alias = Later
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.110: 	  @alias.noInline
-//│ ║         	  ^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	  @alias.noInline
+//│ ║        	  ^^^^^^^^^^^^^^^
 //│ ╙── An annotation's main symbol must be uniquely known when the annotation is elaborated.
 //│ alias = class Later { noInline: noInline }
 
@@ -122,26 +118,26 @@ val alias = Later
 module First { object marker }
 module Second { object marker }
 fun ambiguousAnnotation() =
-  open First
-  open Second
+  open First.{ * }
+  open Second.{ * }
   @marker
   fun inner(x) = x
   inner(8)
 //│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
-//│ ║  l.127: 	  @marker
-//│ ║         	  ^^^^^^^
+//│ ║  l.+6: 	  @marker
+//│ ║        	  ^^^^^^^
 //│ ╙── An annotation's main symbol must be uniquely known when the annotation is elaborated.
 
 // A late candidate must not silently invalidate an already recognized annotation.
 :e
 fun lateAmbiguity() =
-  open annotations
-  open Last
+  open annotations.{ * }
+  open Last.{ * }
   @noInline
   fun inner(x) = x
   inner(9)
 module Last { object noInline }
 //│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
-//│ ║  l.140: 	  @noInline
-//│ ║         	  ^^^^^^^^^
+//│ ║  l.+4: 	  @noInline
+//│ ║        	  ^^^^^^^^^
 //│ ╙── An annotation's main symbol must be uniquely known when the annotation is elaborated.

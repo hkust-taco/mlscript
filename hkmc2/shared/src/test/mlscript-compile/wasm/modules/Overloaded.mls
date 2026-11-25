@@ -1,0 +1,9 @@
+#lang(0.3.x)
+#config(target: CompilationTarget.Wasm, inlining: None)
+
+// The function companion and constructor must remain distinct across file imports.
+open class Overloaded {
+  constructor(val value: Int)
+  open fun answer(): Int = value
+}
+fun Overloaded(x: Int): Int = x + 1

@@ -1,0 +1,159 @@
+:.
+
+
+class Empty()
+
+:w
+:expect true
+val makeEmpty = new Empty
+makeEmpty() is Empty
+//│ ╔══[WARNING] This 'new' expression partially applies class 'Empty' instead of constructing an instance.
+//│ ║  l.+1: 	val makeEmpty = new Empty
+//│ ║        	                ^^^^^^^^^
+//│ ╟── Use `new Empty()` to construct an instance, or `=> new Empty()` to create an explicit zero-argument lambda.
+//│ ╟── The constructor accepts an empty argument list.
+//│ ║  l.XX: 	class Empty()
+//│ ╙──      	           ^^
+//│ = true
+//│ makeEmpty = fun
+
+:w
+new Object
+//│ ╔══[WARNING] This 'new' expression partially applies class 'Object' instead of constructing an instance.
+//│ ║  l.+1: 	new Object
+//│ ║        	^^^^^^^^^^
+//│ ╟── Use `new Object()` to construct an instance, or `=> new Object()` to create an explicit zero-argument lambda.
+//│ ╟── The constructor accepts an empty argument list.
+//│ ║  in ../decls/Prelude.mls
+//│ ║  l.XX: 	  constructor(value?)
+//│ ╙──      	              ^^^^^^
+//│ = fun
+
+// All-optional lists also accept an empty argument tuple.
+:w
+class Optional(val value?: Int)
+val makeOptional = new Optional
+//│ ╔══[WARNING] This 'new' expression partially applies class 'Optional' instead of constructing an instance.
+//│ ║  l.+2: 	val makeOptional = new Optional
+//│ ║        	                   ^^^^^^^^^^^^
+//│ ╟── Use `new Optional()` to construct an instance, or `=> new Optional()` to create an explicit zero-argument lambda.
+//│ ╟── The constructor accepts an empty argument list.
+//│ ║  l.+1: 	class Optional(val value?: Int)
+//│ ╙──      	              ^^^^^^^^^^^^^^^^^
+//│ makeOptional = fun
+
+// Forward definitions and generic calls must not repeat the source warning.
+:w
+fun make[A]() = new Forward[A]
+class Forward[A]()
+[make[Int]()() is Forward, make[Str]()() is Forward]
+//│ ╔══[WARNING] This 'new' expression partially applies class 'Forward' instead of constructing an instance.
+//│ ║  l.+1: 	fun make[A]() = new Forward[A]
+//│ ║        	                ^^^^^^^^^^^^^^
+//│ ╟── Use `new Forward[A]()` to construct an instance, or `=> new Forward[A]()` to create an explicit zero-argument lambda.
+//│ ╟── The constructor accepts an empty argument list.
+//│ ║  l.+2: 	class Forward[A]()
+//│ ╙──      	                ^^
+//│ = [true, true]
+
+module Classes { class Empty() }
+val Alias = Classes.Empty
+//│ Alias = fun Empty { class: class Empty }
+
+:w
+new Classes.Empty
+//│ ╔══[WARNING] This 'new' expression partially applies class 'Empty' instead of constructing an instance.
+//│ ║  l.+1: 	new Classes.Empty
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ╟── Use `new Classes.Empty()` to construct an instance, or `=> new Classes.Empty()` to create an explicit zero-argument lambda.
+//│ ╟── The constructor accepts an empty argument list.
+//│ ║  l.XX: 	module Classes { class Empty() }
+//│ ╙──      	                            ^^
+//│ = fun
+
+:w
+new Alias
+//│ ╔══[WARNING] This 'new' expression partially applies class 'Empty' instead of constructing an instance.
+//│ ║  l.+1: 	new Alias
+//│ ║        	^^^^^^^^^
+//│ ╟── Use `new Alias()` to construct an instance, or `=> new Alias()` to create an explicit zero-argument lambda.
+//│ ╟── The constructor accepts an empty argument list.
+//│ ║  l.XX: 	module Classes { class Empty() }
+//│ ╙──      	                            ^^
+//│ = fun
+
+:w
+new mut Empty
+//│ ╔══[WARNING] This 'new' expression partially applies class 'Empty' instead of constructing an instance.
+//│ ║  l.+1: 	new mut Empty
+//│ ║        	^^^^^^^^^^^^^
+//│ ╟── Use `new mut Empty()` to construct an instance, or `=> new mut Empty()` to create an explicit zero-argument lambda.
+//│ ╟── The constructor accepts an empty argument list.
+//│ ║  l.XX: 	class Empty()
+//│ ╙──      	           ^^
+//│ = fun
+
+:w
+class Box[A](val value?: A)
+new Box[Int]
+//│ ╔══[WARNING] This 'new' expression partially applies class 'Box' instead of constructing an instance.
+//│ ║  l.+2: 	new Box[Int]
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── Use `new Box[Int]()` to construct an instance, or `=> new Box[Int]()` to create an explicit zero-argument lambda.
+//│ ╟── The constructor accepts an empty argument list.
+//│ ║  l.+1: 	class Box[A](val value?: A)
+//│ ╙──      	            ^^^^^^^^^^^^^^^
+//│ = fun
+
+// Parameterless classes are constructed; required and multiple lists remain useful partial applications.
+class Parameterless
+class Required(val value)
+class Curried()(val value)
+
+:expect [true, 1, 2]
+val required = new Required
+val curried = new Curried
+[new Parameterless is Parameterless, required(1).value, curried()(2).value]
+//│ = [true, 1, 2]
+//│ curried = fun
+//│ required = fun
+
+// The suggested factory suspends construction until each call.
+:expect [0, 1, 2]
+let count = 0
+class Counted() { set count = count + 1 }
+val factory = => new Counted()
+let before = count
+factory()
+let after = count
+factory()
+[before, after, count]
+//│ = [0, 1, 2]
+//│ after = 1
+//│ before = 0
+//│ count = 2
+//│ factory = fun
+
+:expect [true, true]
+val makeObject = => new Object()
+[new Empty() is Empty, makeObject() is Object]
+//│ = [true, true]
+//│ makeObject = fun
+
+// A refinement constructs a subclass, so it is not a partial constructor value.
+:expect true
+(new Empty() with {}) is Empty
+//│ = true
+
+#lang(strictResolution: false, eagerResolution: false)
+
+:w
+new Empty
+//│ ╔══[WARNING] This 'new' expression partially applies class 'Empty' instead of constructing an instance.
+//│ ║  l.+1: 	new Empty
+//│ ║        	^^^^^^^^^
+//│ ╟── Use `new Empty()` to construct an instance, or `=> new Empty()` to create an explicit zero-argument lambda.
+//│ ╟── The constructor accepts an empty argument list.
+//│ ║  l.XX: 	class Empty()
+//│ ╙──      	           ^^
+//│ = fun

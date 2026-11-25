@@ -1,0 +1,76 @@
+:.
+
+// Exposure reads the unannotated members of an exposed class per declaration: the values that any
+// instance stores or returns count as readable by clients. Each helper below is stored only in an
+// instance that never leaves this unit, and is rejected all the same.
+
+
+// The class is exported, and clients can only read the fields of the instances that they create.
+:e
+class Box(val item)
+private fun stored(x) = x.only
+private fun local() = Box(stored).item({only: 1})
+local()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	private fun stored(x) = x.only
+//│ ║        	                        ^^^^^^
+//│ ╟── Cannot resolve member 'only' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+2: 	private fun stored(x) = x.only
+//│ ║        	                   ^
+//│ ╟── Member 'item' is accessible here.
+//│ ║  l.+1: 	class Box(val item)
+//│ ║        	          ^^^^^^^^
+//│ ╟── 'Box' is exposed by this compilation unit.
+//│ ║  l.+1: 	class Box(val item)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// The same for the result of an unannotated method.
+:e
+class Maker(f) with
+  fun get() = f
+private fun returned(x) = x.only
+private fun localResult() = Maker(returned).get()({only: 2})
+localResult()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+3: 	private fun returned(x) = x.only
+//│ ║        	                          ^^^^^^
+//│ ╟── Cannot resolve member 'only' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+3: 	private fun returned(x) = x.only
+//│ ║        	                     ^
+//│ ╟── This value is returned here.
+//│ ║  l.+2: 	  fun get() = f
+//│ ║        	              ^
+//│ ╟── Member 'get' is accessible here.
+//│ ║  l.+2: 	  fun get() = f
+//│ ║        	  ^^^^^^^^^
+//│ ╟── 'Maker' is exposed by this compilation unit.
+//│ ║  l.+1: 	class Maker(f) with
+//│ ╙──      	^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// The class is private, and a factory with a written result returns another instance.
+:e
+private class Hidden(val item)
+private fun kept(x) = x.only
+fun hidden(): Hidden = Hidden(x => 0)
+private fun localHidden() = Hidden(kept).item({only: 3})
+localHidden()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	private fun kept(x) = x.only
+//│ ║        	                      ^^^^^^
+//│ ╟── Cannot resolve member 'only' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+2: 	private fun kept(x) = x.only
+//│ ║        	                 ^
+//│ ╟── Member 'item' is accessible here.
+//│ ║  l.+1: 	private class Hidden(val item)
+//│ ║        	                     ^^^^^^^^
+//│ ╟── 'hidden' is exposed by this compilation unit.
+//│ ║  l.+3: 	fun hidden(): Hidden = Hidden(x => 0)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

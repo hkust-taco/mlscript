@@ -1,0 +1,54 @@
+:.
+:!js
+
+// The overriding declarations precede the written result.
+:e
+private fun leafCallback(x) = x.only
+private class Leaf extends Middle with
+  override fun get() = leafCallback
+private class Middle extends Root with
+  open override fun get() = x => 0
+private class Root with
+  open fun get(): Any -> Int = x => 1
+fun root(): Root = new Leaf
+leafCallback({only: 42})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun leafCallback(x) = x.only
+//│ ║        	                              ^^^^^^
+//│ ╟── Value with an empty interface does not contain member 'only'
+//│ ║  l.+7: 	  open fun get(): Any -> Int = x => 1
+//│ ║        	                  ^^^
+//│ ╟── Type 'Any' is declared without a member interface.
+//│ ║  in ../../decls/Prelude.mls
+//│ ║  l.XX: 	declare type Any
+//│ ╙──      	             ^^^
+
+// Calls through the leaf declaration inherit the same domain whether its parent was written first or last.
+private class PublicLeaf extends InputMiddle[Payload] with
+  override fun inspect(x) = x.key
+private class InputMiddle[T] extends InputBase[T] with
+  open override fun inspect(x) = 0
+private class InputBase[T] with
+  open fun inspect(x: T): Int = 0
+private class Payload(val key: Int)
+fun publicLeaf(): PublicLeaf = new PublicLeaf
+
+// A private member with the same name has its own call interface.
+:e
+private class Shadow extends InputBase[Payload] with
+  private fun inspect(x) = x.key
+  fun callback() = inspect
+fun escaped() = new Shadow().callback()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	  private fun inspect(x) = x.key
+//│ ║        	                           ^^^^^
+//│ ╟── Cannot resolve member 'key' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+2: 	  private fun inspect(x) = x.key
+//│ ║        	                      ^
+//│ ╟── This value is returned here.
+//│ ║  l.+4: 	fun escaped() = new Shadow().callback()
+//│ ║        	                ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── 'escaped' is exposed by this compilation unit.
+//│ ║  l.+4: 	fun escaped() = new Shadow().callback()
+//│ ╙──      	^^^^^^^^^^^^^

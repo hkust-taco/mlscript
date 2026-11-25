@@ -5,16 +5,16 @@
 import "../../mlscript-compile/Block.mls"
 import "../../mlscript-compile/Option.mls"
 
-open Block
-open Block { Symbol }
-open Option
+open Block.{ * }
+open Block.{ Symbol }
+open Option.{ * }
 
 printCode(FunDefn(Symbol("f"), [[Symbol("x")]], Return(ValueLit(1))))
 //│ > fun f(x) = 1
 
 printCode(ValueLit(true))
 printCode(ValueLit(null))
-printCode(ValueLit(undefined))
+printCode(ValueLit(unsafe.undefined))
 printCode(ValueLit("c"))
 printCode(ValueLit("string"))
 //│ > true
@@ -34,7 +34,7 @@ printCode(DynSelect(ValueSimpleRef(Symbol("p")), ValueSimpleRef(Symbol("field"))
 :silent
 class A(val x)(y)
 class B
-let aSym = ConcreteClassSymbol("A", A, Some([Symbol("x")]), [[Symbol("y")]])
+let aSym = ConcreteClassSymbol("A", A.class, Some([Symbol("x")]), [[Symbol("y")]])
 let bSym = ConcreteClassSymbol("B", B, None, [])
 
 printCode(Call(ValueSimpleRef(Symbol("f")), [Arg(ValueLit(3))]))

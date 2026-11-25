@@ -17,10 +17,18 @@ trait BlockImpl(using Elaborator.State):
     Block(stmts :+ stmt).withLocOf(self.mkLocWith(stmt))
   
   val desugStmts =
+    // Assertions and handlers consume the remaining statements. An absent
+    // continuation returns Unit; it does not spell an empty record literal.
+    def continuation(stmts: Ls[Tree]): Tree =
+      if stmts.isEmpty then Unt() else Block(stmts)
     def desug(stmts: Ls[Tree]): Ls[Tree] =
       stmts match
+      // Expand unscoped groups in the enclosing block so `let` declarations stay
+      // visible to subsequent statements and annotations apply to every entry.
+      case PossiblyAnnotated(anns, LetLike(kw, Block(bindings), N, N)) :: stmts =>
+        desug(bindings.map(b => PossiblyAnnotated(anns, b.asLetLike(kw, N)))) ::: desug(stmts)
       case syntax.Desugared(PossiblyAnnotated(anns, Assert(kw, cond, N, els))) :: stmts =>
-        PossiblyAnnotated(anns, Assert(kw, cond, S(Block(stmts)), els)) :: Nil
+        PossiblyAnnotated(anns, Assert(kw, cond, S(continuation(stmts)), els)) :: Nil
       case syntax.Desugared(PossiblyAnnotated(anns, td: TypeDef)) :: stmts =>
         val ctors = td.withPart.toList.flatMap:
           case Block(sts) => sts.flatMap:
@@ -56,7 +64,7 @@ trait BlockImpl(using Elaborator.State):
             case ps =>
               App(headId, TyTup(ps.map {
                 case m @ Modified(Keywrd(syntax.Keyword.`in`) | Keywrd(syntax.Keyword.`out`), _) => m
-                case t => Tup(Tree.Modified(Keywrd(syntax.Keyword.`in`), t) :: Tree.Modified(Keywrd(syntax.Keyword.`out`), t) :: Nil)
+                case t => InOut(t, t)
               }))
         // Insert type parameters for constructors.
         // e.g. `class Foo[T] with constructor Bar(x: T)` will be desugared to
@@ -93,7 +101,7 @@ trait BlockImpl(using Elaborator.State):
       case stmt :: stmts =>
         stmt.desugared match
         case PossiblyAnnotated(anns, h @ Hndl(body = N)) =>
-          PossiblyAnnotated(anns, h.copy(body = S(Block(stmts)))) :: Nil
+          PossiblyAnnotated(anns, h.copy(body = S(continuation(stmts)))) :: Nil
         case stmt => stmt :: desug(stmts)
       case Nil => Nil
     desug(stmts)

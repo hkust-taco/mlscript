@@ -6,11 +6,11 @@ import "../../mlscript-compile/Shape.mls"
 import "../../mlscript-compile/Option.mls"
 
 class Pair(val left: Int, val right: Str)
-val pair = Block.ConcreteClassSymbol("Pair", Pair, Option.Some([
+val pair = Block.ConcreteClassSymbol("Pair", Pair.class, Option.Some([
   Block.Symbol("left"), Block.Symbol("right")]), [])
 //│ pair = ConcreteClassSymbol(
 //│   _,
-//│   fun Pair { class: class Pair },
+//│   class Pair,
 //│   Some([Symbol("left"), Symbol("right")]),
 //│   []
 //│ )
@@ -30,7 +30,7 @@ Shape.sel(pairShape, Shape.Lit("left")).map((s, ...) => Shape.show(s))
 //│ pairShape = Class(
 //│   ConcreteClassSymbol(
 //│     _,
-//│     fun Pair { class: class Pair },
+//│     class Pair,
 //│     Some([Symbol("left"), Symbol("right")]),
 //│     []
 //│   ),

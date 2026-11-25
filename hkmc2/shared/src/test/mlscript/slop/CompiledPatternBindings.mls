@@ -1,0 +1,39 @@
+:js
+:checkIR
+
+
+data class Box(value)
+data class Pair(left, right)
+
+// Bindings from nested field patterns must reach the successful branch.
+:expect [3, 4]
+fun fields(value) =
+  if value is @annotations.compile (Pair(Box(x), Box(y))) then [x, y] else []
+fields(Pair(Box(3), Box(4)))
+//│ = [3, 4]
+
+// Conjunctions must export the bindings from both patterns.
+:expect [7, 7]
+fun both(value) =
+  if value is @annotations.compile ((Int as x) & (_ as y)) then [x, y] else []
+both(7)
+//│ = [7, 7]
+
+// An alias after a transformation captures its result without repeating the transformation.
+:expect [5, 1]
+let calls = 0
+fun bump(value) =
+  set calls += 1
+  value + 1
+fun transformed(value) =
+  if value is @annotations.compile ((x => bump(x)) as y) then y else -1
+[transformed(4), calls]
+//│ = [5, 1]
+//│ calls = 1
+
+// A continuation condition can use the compiled pattern's bindings too.
+:expect [2, -1]
+fun guarded(value) =
+  if value is @annotations.compile (Int as x) and x > 0 then x else -1
+[guarded(2), guarded(-2)]
+//│ = [2, -1]

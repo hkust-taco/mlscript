@@ -79,51 +79,84 @@ sum2(arr)
 :e
 fun f(..xs) = xs
 //│ ╔══[COMPILATION ERROR] Lazy spread parameters not allowed.
-//│ ║  l.80: 	fun f(..xs) = xs
+//│ ║  l.+1: 	fun f(..xs) = xs
 //│ ╙──      	      ^^^^
 
 :ge
 sum2(..arr)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.86: 	sum2(..arr)
+//│ ║  l.+1: 	sum2(..arr)
 //│ ║        	^^^^^^^^^^^
 //│ ╟── Function literal expected 1 argument, but got 0
-//│ ║  l.47: 	fun sum2 = case
+//│ ║  l.XX: 	fun sum2 = case
 //│ ║        	           ^^^^
-//│ ║  l.48: 	  [] then 0
+//│ ║  l.XX: 	  [] then 0
 //│ ║        	^^^^^^^^^^^^
-//│ ║  l.49: 	  [x, ..xs, y] then x + y + sum2(xs)
+//│ ║  l.XX: 	  [x, ..xs, y] then x + y + sum2(xs)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.86: 	sum2(..arr)
+//│ ║  l.+1: 	sum2(..arr)
 //│ ║        	^^^^^^^^^^^
 //│ ╟── Function literal expected 1 argument, but got 2
-//│ ║  l.47: 	fun sum2 = case
+//│ ║  l.XX: 	fun sum2 = case
 //│ ║        	           ^^^^
-//│ ║  l.48: 	  [] then 0
+//│ ║  l.XX: 	  [] then 0
 //│ ║        	^^^^^^^^^^^^
-//│ ║  l.49: 	  [x, ..xs, y] then x + y + sum2(xs)
+//│ ║  l.XX: 	  [x, ..xs, y] then x + y + sum2(xs)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.86: 	sum2(..arr)
+//│ ║  l.+1: 	sum2(..arr)
 //│ ║        	^^^^^^^^^^^
 //│ ╟── Function literal expected 1 argument, but got 4
-//│ ║  l.47: 	fun sum2 = case
+//│ ║  l.XX: 	fun sum2 = case
 //│ ║        	           ^^^^
-//│ ║  l.48: 	  [] then 0
+//│ ║  l.XX: 	  [] then 0
 //│ ║        	^^^^^^^^^^^^
-//│ ║  l.49: 	  [x, ..xs, y] then x + y + sum2(xs)
+//│ ║  l.XX: 	  [x, ..xs, y] then x + y + sum2(xs)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Lazy spreads are not supported in call arguments
-//│ ║  l.86: 	sum2(..arr)
+//│ ║  l.+1: 	sum2(..arr)
 //│ ╙──      	    ^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 2
+//│ ═══[RUNTIME ERROR] Error: match error
 
 
-fun map2(f) = case
+private fun map2(f) = case
   [] then []
   [x, ..xs, y] then [f(x), ..map2(f)(xs), f(y)]
 
 :expect [10, 8, 6, 4, 2, 2, 4, 6, 8, 10]
 map2(x => x * 2)(arr)
 //│ = [10, 8, 6, 4, 2, 2, 4, 6, 8, 10]
+
+// A lazy spread builds a collection whose slice can keep its lazy representation.
+:sir
+:siret
+:expect [false, true]
+private fun rest(xs) = if xs is [_, ..ys] then ys
+[Array.isArray(rest([0, ..[1, 2]])), Array.isArray(rest([0, ...[1, 2]]))]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Array⁰, tmp1: Unknown, tmp2: Unknown, tmp3: ?, tmp4: Array⁰, tmp5: Array⁰, tmp6: Unknown, tmp7: ?;
+//│ @private
+//│ define rest⁰ as fun rest¹(xs: Unknown): Unknown {
+//│   let ys: Unknown, middleElements: ?, element0$: ?;
+//│   match xs
+//│     Array(1+) =>
+//│       set element0$ = runtime⁰.Tuple⁰.get⁰(xs, 0);
+//│       set middleElements = runtime⁰.Tuple⁰.slice⁰(xs, 1, 0);
+//│       set ys = middleElements;
+//│       return ys
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ set tmp = [1, 2];
+//│ set tmp1 = [0, ...tmp];
+//│ set tmp2 = rest¹(tmp1);
+//│ set tmp3 = globalThis⁰.Array¹.isArray⁰(tmp2);
+//│ set tmp4 = [1, 2];
+//│ set tmp5 = [0, ...tmp4];
+//│ set tmp6 = rest¹(tmp5);
+//│ set tmp7 = globalThis⁰.Array¹.isArray⁰(tmp6);
+//│ return [tmp3, tmp7]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [false, true]

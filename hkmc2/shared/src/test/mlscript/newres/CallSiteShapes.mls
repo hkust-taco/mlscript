@@ -9,25 +9,25 @@ fun identity(value) = value
 fun forwarded(value) = identity(value)
 forwarded(new A).get() + forwarded(new B).get()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.10: 	forwarded(new A).get() + forwarded(new B).get()
+//│ ║  l.+5: 	forwarded(new A).get() + forwarded(new B).get()
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'get' of a value with unknown shape.
 //│ ╟── Parameter 'value' admits values of unknown shape.
-//│ ║  l.9: 	fun forwarded(value) = identity(value)
-//│ ║       	              ^^^^^
+//│ ║  l.+4: 	fun forwarded(value) = identity(value)
+//│ ║        	              ^^^^^
 //│ ╟── 'forwarded' is exposed by this compilation unit.
-//│ ║  l.9: 	fun forwarded(value) = identity(value)
-//│ ╙──     	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+4: 	fun forwarded(value) = identity(value)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.10: 	forwarded(new A).get() + forwarded(new B).get()
+//│ ║  l.+5: 	forwarded(new A).get() + forwarded(new B).get()
 //│ ║        	                         ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'get' of a value with unknown shape.
 //│ ╟── Parameter 'value' admits values of unknown shape.
-//│ ║  l.9: 	fun forwarded(value) = identity(value)
-//│ ║       	              ^^^^^
+//│ ║  l.+4: 	fun forwarded(value) = identity(value)
+//│ ║        	              ^^^^^
 //│ ╟── 'forwarded' is exposed by this compilation unit.
-//│ ║  l.9: 	fun forwarded(value) = identity(value)
-//│ ╙──     	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+4: 	fun forwarded(value) = identity(value)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '40', got: 'undefined'
 
@@ -39,18 +39,18 @@ let id = new Id
 val apply = Id::apply
 apply(id, new A).get() + apply(id, new B).get()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.40: 	apply(id, new A).get() + apply(id, new B).get()
+//│ ║  l.+4: 	apply(id, new A).get() + apply(id, new B).get()
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'get' of a value with unknown shape.
 //│ ╟── The shape of this value is unknown.
-//│ ║  l.39: 	val apply = Id::apply
+//│ ║  l.+3: 	val apply = Id::apply
 //│ ╙──      	              ^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.40: 	apply(id, new A).get() + apply(id, new B).get()
+//│ ║  l.+4: 	apply(id, new A).get() + apply(id, new B).get()
 //│ ║        	                         ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'get' of a value with unknown shape.
 //│ ╟── The shape of this value is unknown.
-//│ ║  l.39: 	val apply = Id::apply
+//│ ║  l.+3: 	val apply = Id::apply
 //│ ╙──      	              ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '40', got: 'undefined'
@@ -63,24 +63,24 @@ apply(id, new A).get() + apply(id, new B).get()
 fun restIdentity(ignored, ...args) = identity(...args)
 restIdentity(0, new A).get() + restIdentity(0, new B).get()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.64: 	restIdentity(0, new A).get() + restIdentity(0, new B).get()
+//│ ║  l.+2: 	restIdentity(0, new A).get() + restIdentity(0, new B).get()
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'get' of a value with unknown shape.
 //│ ╟── Rest parameter 'args' admits elements of unknown shape.
-//│ ║  l.63: 	fun restIdentity(ignored, ...args) = identity(...args)
+//│ ║  l.+1: 	fun restIdentity(ignored, ...args) = identity(...args)
 //│ ║        	                          ^^^^^^^
 //│ ╟── 'restIdentity' is exposed by this compilation unit.
-//│ ║  l.63: 	fun restIdentity(ignored, ...args) = identity(...args)
+//│ ║  l.+1: 	fun restIdentity(ignored, ...args) = identity(...args)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.64: 	restIdentity(0, new A).get() + restIdentity(0, new B).get()
+//│ ║  l.+2: 	restIdentity(0, new A).get() + restIdentity(0, new B).get()
 //│ ║        	                               ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'get' of a value with unknown shape.
 //│ ╟── Rest parameter 'args' admits elements of unknown shape.
-//│ ║  l.63: 	fun restIdentity(ignored, ...args) = identity(...args)
+//│ ║  l.+1: 	fun restIdentity(ignored, ...args) = identity(...args)
 //│ ║        	                          ^^^^^^^
 //│ ╟── 'restIdentity' is exposed by this compilation unit.
-//│ ║  l.63: 	fun restIdentity(ignored, ...args) = identity(...args)
+//│ ║  l.+1: 	fun restIdentity(ignored, ...args) = identity(...args)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '40', got: 'undefined'

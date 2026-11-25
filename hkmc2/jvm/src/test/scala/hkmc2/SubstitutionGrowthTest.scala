@@ -44,30 +44,115 @@ class SubstitutionGrowthTest extends AnyFunSuite:
        |fun use() = f1(Item(1)).value
        |""".stripMargin
 
-  private final case class Measurement(views: Int, largestSubstitution: Int, activations: Int, typeInstances: Int)
+  private final case class Measurement(views: Int, largestSubstitution: Int, activations: Int, typeInstances: Int,
+      typeReferences: Int)
 
   private val cctx = TestFolders.compilerCtx(os.pwd)
-  private given DebugPrinter = new DebugPrinter
-  private val tl = new TraceLogger:
-    override def doTrace: Bool = false
+  private given DebugPrinter = new DebugPrinter()
+  private val tl = TraceLogger.silent
 
-  /** Resolves a generated unit through ordinary elaboration, in a fresh state. */
-  private def measure(name: Str, source: Str): Measurement =
+  private def allocationCounter: com.sun.management.ThreadMXBean =
+    val allocation = java.lang.management.ManagementFactory.getThreadMXBean match
+      case bean: com.sun.management.ThreadMXBean if bean.isThreadAllocatedMemorySupported => bean
+      case _ => cancel("This JVM does not expose thread allocation counters")
+    allocation.setThreadAllocatedMemoryEnabled(true)
+    allocation
+
+  private def sourceFile(name: Str, source: Str): os.Path =
     val dir = os.temp.dir(prefix = "substitution-growth-")
     val file = dir / s"$name.mls"
     os.write(file, source)
-    measure(file)
+    file
 
-  private def measure(file: os.Path): Measurement =
+  /** Resolves a unit through ordinary elaboration and checks the producer's diagnostics. */
+  private def compile(file: os.Path): CompilerCache.Artifact =
     val diagnostics = ArrayBuffer.empty[Diagnostic]
     given Raise = diagnostics += _
     val prelude = cctx.getPrelude(cctx.paths.preludeFile)(using tl, summon[Raise]).ctx
     val artifact = cctx.getElaboratedBlock(file, prelude)(using tl, summon[Raise])
     val errors = diagnostics.collect { case error: ErrorReport => error }
     assert(errors.isEmpty, s"Unexpected errors in ${file.baseName}:\n${errors.map(_.theMsg).mkString("\n")}")
-    val state = artifact.state.newResolverState.context
+    artifact
+
+  private def measure(name: Str, source: Str): Measurement = measure(sourceFile(name, source))
+
+  private def measure(file: os.Path): Measurement =
+    val state = compile(file).state.newResolverState.context
     Measurement(state.allocatedShapeViewCount, state.largestRetainedSubstitution,
-      state.activationContextCount, state.allocatedTypeInstanceCount)
+      state.activationContextCount, state.allocatedTypeInstanceCount, state.state.typeReferences.size)
+
+  // Rotation and transposition generate every permutation. Merely exporting the recursive
+  // record must not build those instantiated interfaces when no field was ever selected.
+  test("exposing a recursive record does not instantiate permutations of its parameters"):
+    def references(width: Int, input: Bool, callback: Bool): Int =
+      val name = s"RingExposure$width"
+      val parameters = (1 to width).map(i => s"T$i").toVector
+      val payloads = (1 to width).map(i => s"Payload$i").toVector
+      def ring(args: Vector[Str]): Str = args.mkString("Ring[", ", ", "]")
+      val rotate = ring(parameters.tail :+ parameters.head)
+      val swap = ring(parameters.updated(0, parameters(1)).updated(1, parameters(0)))
+      val body = if callback then s"() -> [T1, $rotate, $swap]" else s"{value: T1, rotate: $rotate, swap: $swap}"
+      val use = if input then s"fun take(value: ${ring(payloads)}): Int = 0" else s"declare fun root(): ${ring(payloads)}"
+      val source = s"""#lang(0.3.x, strictResolution: true)
+         |module $name with
+         |  ${payloads.map(p => s"private class $p").mkString("\n  ")}
+         |  private type ${ring(parameters)} = $body
+         |  $use
+         |""".stripMargin
+      measure(name, source).typeReferences
+    for (input, callback) <- List((false, false), (true, false), (false, true)) do
+      val counts = (3 to 5).map(references(_, input, callback))
+      withClue(s"input=$input, callback=$callback, retained type references for widths 3, 4, 5: $counts "):
+        counts.indices.foreach(i => assert(counts(i) <= counts.head + 16 * i))
+
+  // Naming an imported class can expose it without introducing a local mutable field.
+  test("naming the classes of other units retains no external writes for their fields"):
+    val library = sourceFile("Cells", """#lang(0.3.x, strictResolution: true)
+       |module Cells with
+       |  class Cell with { mut val item = 0 }
+       |""".stripMargin)
+    val producer = compile(library)
+    val field = new ErasureDeclarations(producer.term).statements.collectFirst {
+      case td: TermDefinition if td.tsym.nme == "item" => td.tsym
+    }.get
+    given owner: ResolutionContext = producer.state.newResolverState.context
+    assert(owner.memberVariable(field).currentShapes.nonEmpty)
+    val client = library / os.up / "Client.mls"
+    os.write(client, """#lang(0.3.x, strictResolution: true)
+       |import "./Cells.mls" as Cells
+       |module Client with
+       |  fun ignore(x: Cells.Cell): Int = 0
+       |""".stripMargin)
+    val consumer = compile(client).state.newResolverState
+    assert(consumer.memberVariables.get(field)(using consumer.context).isEmpty)
+
+  // A diff test cannot distinguish repeated copies of the same external input. Count the
+  // actual candidates kept by the methods and record field of one compiled module.
+  test("repeated exports share the external inputs of declarations and mutable records"):
+    for count <- List(1, 12) do
+      val name = s"RepeatedExports$count"
+      val exports = (1 to count).map: i =>
+        s"fun local$i(): Local = new Local\n  fun partial$i() = new Other().call(1)\n  fun record$i() = shared"
+      val file = sourceFile(name, s"""#lang(0.3.x, strictResolution: true)
+         |module $name with
+         |  private class Local with { open fun use(x) = x }
+         |  private class Other with { open fun call(x)(...ys) = ys }
+         |  private val shared = mut {item: 1}
+         |  ${exports.mkString("\n  ")}
+         |""".stripMargin)
+      val artifact = compile(file)
+      given state: ResolutionContext = artifact.state.newResolverState.context
+      val declarations = new ErasureDeclarations(artifact.term).statements
+      val inputs = declarations.collect:
+        case td: TermDefinition if td.tsym.nme == "use" || td.tsym.nme == "call" =>
+          val param = td.params.last.allParams.head
+          param.sym.currentShapes.iterator.collect:
+            case Marked(input: (UnknownValueShape | TupleShape), _) => input
+          .toSet
+      assert(inputs.size == 2 && inputs.forall(_.size == 1))
+      val field = declarations.collectFirst:
+        case field: RcdField if field.sym.nme == "item" => field.tsym
+      assert(state.memberVariable(field.get).currentShapes.size == 1)
 
   // The value passed along each chain is produced outside every generic scope,
   // so no view of it should retain more than the one binding of the scope
@@ -87,14 +172,39 @@ class SubstitutionGrowthTest extends AnyFunSuite:
 
   // Constructor patterns synthesize omitted type arguments in the pattern's
   // lexical scope. Missing that scope made recursive FingerTreeList patterns
-  // retain unrelated callers' binders, allocating over 15000 views instead of
-  // about 1400. Allow headroom while checking graph size independently of the
-  // machine-dependent timeout; the .mls tests cover observable behavior.
+  // retain unrelated callers' binders, allocating over 15000 views. The generic
+  // IterableBase signatures add views at the tree's constructor-pattern sites;
+  // skipping wildcard field reads keeps the current fixture near 3200 views.
+  // Check allocations independently of machine-dependent timeouts; the .mls
+  // tests cover observable behavior.
   test("FingerTreeList constructor-pattern inference stays bounded"):
     val m = measure(TestFolders.compileTestDir(os.pwd) / "FingerTreeList.mls")
     withClue(s"FingerTreeList inference: $m"):
       assert(m.largestSubstitution <= 4)
-      assert(m.views < 3000)
+      assert(m.views < 3500)
+
+  // A constructor test still refines the input when every field is a wildcard,
+  // but it needs none of those fields' values. Reading each ignored field used
+  // to allocate a view per field and construction site. Keep the cost bounded
+  // by the number of constructions as the number of ignored fields grows.
+  test("wildcard constructor fields do not allocate substitution views"):
+    val callSites = 10
+    for width <- List(2, 6, 10, 14) do
+      val fields = (1 to width).map(i => s"val field$i: A").mkString(", ")
+      val wildcards = List.fill(width)("_").mkString(", ")
+      val arguments = List.fill(width)("Item(42)").mkString(", ")
+      val calls = List.fill(callSites)(s"discard(new Box[Item]($arguments))").mkString(", ")
+      val m = measure(s"IgnoredFields_$width",
+        s"""#lang(0.3.x)
+           |
+           |class Item(val value: Int)
+           |class Box[A]($fields)
+           |private fun discard(box) = if box is Box($wildcards) then 1 else 0
+           |fun use() = [$calls]
+           |""".stripMargin)
+      withClue(s"$width ignored fields at $callSites construction sites: $m"):
+        assert(m.largestSubstitution <= 1)
+        assert(m.views <= 2 * callSites)
 
   // The branching chain above, passing a promise produced outside every generic
   // scope. Its views are projected onto the support of its payload, which is
@@ -124,19 +234,38 @@ class SubstitutionGrowthTest extends AnyFunSuite:
         assert(m.views <= 2 * k + 4)
         assert(m.activations <= 2 * k + 4)
 
+  // Each spread observes both branches of a recursive iterable producer. The
+  // element hosts must join those flows instead of enumerating their product.
+  // Diff tests check the resulting members; only this test observes graph size.
+  test("recursive iterable spreads keep inference growth bounded"):
+    for k <- List(2, 6, 10, 14) do
+      val spreads = List.fill(k)("...xs").mkString(", ")
+      val m = measure(s"Iterable_$k",
+        s"""#lang(0.3.x)
+           |
+           |class Item(val value: Int)
+           |private fun forward[A](xs: Iterable[A] | Array[A], n: Int): Iterable[A] | Array[A] =
+           |  if n == 0 then xs else forward([$spreads], n - 1)
+           |fun use(xs: Iterable[Item]) = [...forward(xs, 2)].map(x => x.value)
+           |""".stripMargin)
+      withClue(s"recursive iterable with $k spreads: $m"):
+        assert(m.largestSubstitution <= 4)
+        assert(m.views <= 80 * k + 300)
+        assert(m.activations <= 20 * k + 100)
+        assert(m.typeInstances <= 8 * k + 20)
+
   /** Shapes and instances for the substitution laws below. */
   private class Harness:
     given owner: Elaborator.State = new Elaborator.State
     given state: ResolutionContext = owner.newResolverState.context
     given Raise = diagnostic => fail(diagnostic.theMsg)
-    given trace: TraceLogger = new TraceLogger:
-      override def doTrace: Boolean = false
+    given trace: TraceLogger = TraceLogger.silent
     given Config = Config.default(TestFolders.mainTestDir(os.pwd))
     given CompilerCtx = CompilerCtx.fresh(io.FileSystem.default, TestFolders.compilerPaths(os.pwd), summon[Config])
     val resolver = Elaborator(trace, TestFolders.mainTestDir(os.pwd), Elaborator.Ctx.empty)
     val scheme = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
     def binder(name: Str): VarSymbol =
-      val symbol = VarSymbol(Tree.Ident(name))
+      val symbol = VarSymbol(Tree.Ident(name), mut = false)
       symbol.decl = S(TyParam(FldFlags.empty, N, symbol)(N))
       symbol
     def instance(binder: VarSymbol): TypeParameterInstance = instanceAt(binder, Set.empty)
@@ -146,7 +275,7 @@ class SubstitutionGrowthTest extends AnyFunSuite:
     /** The type denoted by a binder or instance reference. */
     def typeOf(symbol: VarSymbol): DeclaredType =
       val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
-      resolution.publish(TypeShape.Parameter(symbol, symbol.inferenceHost))
+      resolution.publish(rctx.typeParameter(symbol))
       DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)(N)
     def instanceOf(tpe: DeclaredType): InstanceShape = resolver.instanceShape(tpe)
     def instancesOf(shape: TermShape): Map[VarSymbol, TypeParameterInstance] = shape match
@@ -162,6 +291,122 @@ class SubstitutionGrowthTest extends AnyFunSuite:
       val source = Term.Tup(Fld(FldFlags.empty, Term.UnitVal(), N) :: Nil)(Tree.DummyTup)
       state.recordLexicalBinders(source, binders)
       TupleShape(source, TupleShape.Field(Fld(FldFlags.empty, Term.UnitVal(), N), Nil) :: Nil)(resolver)
+
+  // Diff tests cannot distinguish a shared dependency DAG from a traversal of
+  // all its paths. Each combination below has two views of the same child, while
+  // its captured instance requires B even before a bound mentioning B arrives.
+  test("synthesized dependency queries do not expand shared interpretation paths"):
+    val allocation = allocationCounter
+    val h = new Harness
+    import h.given
+    val (a, b, unused) = (h.binder("A"), h.binder("B"), h.binder("Unused"))
+    val a1 = h.instanceAt(a, Set.single(b))
+    val b1 = h.instance(b)
+    val extra = h.instance(unused)
+    val leaf = h.typeOf(a).instantiate(TypeSubstitution(a1 :: Nil))
+    for depth <- 8 :: 16 :: Nil do
+      val root = (1 to depth).foldLeft(leaf): (child, _) =>
+        val shape = TypeShape.Combined(TypeFormula.atom(child).union(TypeFormula.atom(child.withPolarity(false))))
+        DeclaredType.synthesized(child.resolution, shape)
+      val input = root.instantiate(TypeSubstitution(b1 :: extra :: Nil))
+      val expected = root.instantiate(TypeSubstitution(b1 :: Nil))
+      val repetitions = 100
+      def project(): Unit =
+        var index = 0
+        while index < repetitions do
+          assert(h.resolver.projectType(input) == expected)
+          index += 1
+      project()
+      val before = allocation.getCurrentThreadAllocatedBytes
+      project()
+      val bytes = allocation.getCurrentThreadAllocatedBytes - before
+      assert(bytes <= repetitions * 2048L, s"Depth $depth dependency queries allocated $bytes bytes")
+
+  // The view count can stay linear while dependency queries traverse every path
+  // through shared argument endpoints. Measure allocations for ordinary programs,
+  // including first-time source analysis, independently of that view counter.
+  test("nested type arguments allocate by graph size rather than binding paths"):
+    val allocation = allocationCounter
+    for nominal <- false :: true :: Nil; bounded <- false :: true :: Nil do
+      val declaration = if nominal then "class Wrap[A](val value: A)" else "type Wrap[A] = [A]"
+      val selection = if nominal then ".value" else ".0"
+      def source(depth: Int): Str =
+        val aliases = if bounded then (1 to depth).map: index =>
+          val child = if index == 1 then "A" else s"Layer${index - 1}[A]"
+          s"type Layer$index[A] = Wrap[in $child out $child]"
+        else Nil
+        val nested = if bounded then s"Layer$depth[A]"
+          else (1 to depth).foldLeft("A")((child, _) => s"Wrap[$child]")
+        s"""#lang(0.3.x)
+          |$declaration
+          |${aliases.mkString("\n")}
+          |private fun nest[A](value: $nested): $nested = value
+          |fun read[A](value: $nested): A = nest[A](value)${selection * depth}
+          |""".stripMargin
+      // Load the prelude and warm up the elaborator outside the measurements.
+      measure("NestedArgumentsWarmup", source(4))
+      for depth <- (if bounded then 8 :: 12 :: 16 :: Nil else 8 :: 16 :: 24 :: Nil) do
+        val before = allocation.getCurrentThreadAllocatedBytes
+        measure(s"NestedArguments$depth", source(depth))
+        val bytes = allocation.getCurrentThreadAllocatedBytes - before
+        // Named alias chains also repeat regularity and normalization work for
+        // their shorter suffixes. Allow that polynomial cost here; the graph
+        // tests below enforce linear allocation for each dependency query.
+        val budget = if bounded then (depth + 1L) * (depth + 1L) * (depth + 1L) * 16384L
+          else depth * 1024L * 1024L
+        assert(bytes <= budget,
+          s"nominal=$nominal, bounded=$bounded, depth=$depth allocated $bytes bytes")
+
+  // Both endpoints can be identical, or distinct references to shared bindings.
+  // Cold queries also traverse source dependencies; warm queries still need the
+  // support of the retained binding DAG. Neither traversal may expand its paths.
+  test("binding support shares cold and warm traversal work"):
+    val allocation = allocationCounter
+    for distinct <- false :: true :: Nil; depth <- 8 :: 16 :: 32 :: Nil do
+      val h = new Harness
+      import h.given
+      val (a, b, unused) = (h.binder("A"), h.binder("B"), h.binder("Unused"))
+      val a1 = h.instanceAt(a, Set.single(b))
+      val b1 = h.instance(b)
+      val extra = h.instance(unused)
+      val leaf = h.typeOf(a).instantiate(TypeSubstitution(a1 :: Nil))
+      val tuple = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+      tuple.publish(TypeShape.Tuple(TypeShape.TupleField(h.typeOf(a).resolution, spread = false) :: Nil))
+      val root = (1 to depth).foldLeft(leaf): (child, _) =>
+        val output = if distinct then child.withPolarity(false) else child
+        DeclaredType(tuple, Map(a -> TypeArgument(child, output)), TypeSubstitution.empty, true)(N)
+      val wrapped = DeclaredType.synthesized(tuple, TypeShape.Contextual(ContextualType(root, Nil)))
+      for tpe <- wrapped :: root :: Nil do
+        val input = tpe.instantiate(TypeSubstitution(b1 :: extra :: Nil))
+        val expected = tpe.instantiate(TypeSubstitution(b1 :: Nil))
+        // Check the cold query before repeating it with source summaries cached.
+        for repetitions <- 1 :: 10 :: Nil do
+          val before = allocation.getCurrentThreadAllocatedBytes
+          (1 to repetitions).foreach(_ => assert(h.resolver.projectType(input) == expected))
+          val bytes = allocation.getCurrentThreadAllocatedBytes - before
+          assert(bytes <= repetitions * (depth + 1) * 16384L,
+            s"distinct=$distinct, depth=$depth, repetitions=$repetitions allocated $bytes bytes")
+
+  test("binding support retains distinct endpoint captures and discovers late bounds"):
+    val h = new Harness
+    import h.given
+    val (a, b, c, unused) = (h.binder("A"), h.binder("B"), h.binder("C"), h.binder("Unused"))
+    val first = h.instanceAt(a, Set.single(b))
+    val second = h.instanceAt(a, Set.single(c))
+    val (b1, c1, extra) = (h.instance(b), h.instance(c), h.instance(unused))
+    val source = h.typeOf(a)
+    val input = source.instantiate(TypeSubstitution(first :: Nil))
+    val output = source.instantiate(TypeSubstitution(second :: Nil))
+    val pending = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val late = DeclaredType(pending, Map(a -> TypeArgument(input, output)), TypeSubstitution.empty, true)(N)
+    val instances = TypeSubstitution(b1 :: c1 :: extra :: Nil)
+    val original = late.instantiate(instances)
+    assert(h.resolver.projectType(original) == original)
+    pending.publish(TypeShape.Tuple(TypeShape.TupleField(source.resolution, spread = false) :: Nil))
+    val expected = late.instantiate(TypeSubstitution(b1 :: c1 :: Nil))
+    assert(h.resolver.projectType(original) == expected)
+    val wrapped = DeclaredType.synthesized(pending, TypeShape.Contextual(ContextualType(late, Nil)))
+    assert(h.resolver.projectType(wrapped.instantiate(instances)) == wrapped.instantiate(TypeSubstitution(b1 :: c1 :: Nil)))
 
   test("a substitution that a value cannot observe allocates no view"):
     val h = new Harness
@@ -295,6 +540,125 @@ class SubstitutionGrowthTest extends AnyFunSuite:
     h.resolver.publishParameter(b1, value)
     assert(seen.toList == List(value))
 
+  // Applying variance must not traverse the selected endpoint, even when it
+  // lies behind nested contextual references. This checks
+  // allocation independently of depth; diff tests cover namespaces and witnesses.
+  test("applying variance allocates independently of contextual argument depth"):
+    val allocation = allocationCounter
+    for depth <- 8 :: 32 :: Nil do
+      val h = new Harness
+      import h.given
+      val leaf = h.typeOf(h.binder("A"))
+      val root = (1 to depth).foldLeft(leaf): (child, _) =>
+        DeclaredType.synthesized(child.resolution, TypeShape.Contextual(ContextualType(child, Nil)))
+      val inputs = Vector.tabulate(4)(_ => TypeArgument.invariant(root.withPolarity(false).withPolarity(true)))
+      for positive <- false :: true :: Nil do
+        val parameter = TyParam(FldFlags.empty, S(positive), h.binder("T"))(N)
+        val expected = h.resolver.argumentType(TypeArgument.invariant(root), parameter, root.resolution.source)
+        inputs.foreach(input => assert(h.resolver.argumentType(input, parameter, root.resolution.source) == expected))
+        val repetitions = 1000
+        val before = allocation.getCurrentThreadAllocatedBytes
+        var result = expected
+        var index = 0
+        while index < repetitions do
+          result = h.resolver.argumentType(inputs(index % inputs.size), parameter, root.resolution.source)
+          index += 1
+        val bytes = allocation.getCurrentThreadAllocatedBytes - before
+        assert(result == expected)
+        assert(bytes <= repetitions * 512L, s"Variance at depth $depth allocated $bytes bytes")
+
+  // Retain every returned view, so semantic key equality alone cannot hide a
+  // fresh per-use wrapper or scope path on each hit of the transport cache.
+  test("transported observations share views and scope paths across cache hits"):
+    val h = new Harness
+    import h.given
+    val source = h.typeOf(h.binder("A")).resolution
+    val boundary = ResolutionBoundary(TermSymbol(syntax.Fun, N, Tree.Ident("scope")))
+    val site = S(FlowSymbol.app())
+    val views = scala.collection.mutable.Set.empty[Identity[DeclaredType]]
+    val paths = scala.collection.mutable.Set.empty[Identity[Ls[Marks]]]
+    for index <- 0 until 1000 do
+      val plain = DeclaredType(source, Map.empty, TypeSubstitution.empty, true)(N)
+      val path = EntryMark(boundary, site, NoMarks) :: Nil
+      views += new Identity(h.resolver.transportType(plain, path))
+      val witnessed = plain.withOrigin(S(TypeInterfaceReason.Unrestricted(Term.UnitVal())))
+      h.resolver.transportType(witnessed, path).shapes.foreach:
+        case TypeShape.Contextual(reference) => paths += new Identity(reference.marks)
+        case _ => fail("Expected a transported type")
+    assert(views.size == 1)
+    assert(paths.size == 1)
+
+  test("transport interning projects irrelevant instances while retaining late dependencies"):
+    val h = new Harness
+    import h.given
+    val (a, b, c, unused) = (h.binder("A"), h.binder("B"), h.binder("C"), h.binder("Unused"))
+    val a1 = h.instanceAt(a, Set.single(b))
+    val b1 = h.instanceAt(b, Set.single(c))
+    val c1 = h.instance(c)
+    val captured = h.typeOf(a).instantiate(TypeSubstitution(a1 :: Nil))
+    val relevant = TypeSubstitution(List(b1, c1))
+    val boundary = ResolutionBoundary(TermSymbol(syntax.Fun, N, Tree.Ident("scope")))
+    val path = EntryMark(boundary, S(FlowSymbol.app()), NoMarks)
+    // Interning must also project the retained source graph: the first caller's
+    // irrelevant instances must not survive behind the shared transport node.
+    val irrelevant = (1 to 100).iterator.map(i => h.instance(h.binder(s"Unused$i"))).toList
+    val initial = relevant.withOverrides(TypeSubstitution(irrelevant))
+    val canonical = h.resolver.transportType(captured.instantiate(initial), path :: Nil)
+    val retainedSizes = canonical.resolution.currentShapes.collect:
+      case TypeShape.Contextual(reference) => reference.tpe.instances.size
+    assert(retainedSizes.nonEmpty && retainedSizes.forall(_ <= 3))
+    // Only Unused varies. Keeping it in the transport key would allocate one
+    // contextual reference per ambient activation before instanceShape projects it.
+    (1 to 100).foreach: _ =>
+      val incoming = relevant.withOverrides(TypeSubstitution(List(h.instance(a), h.instance(unused))))
+      val moved = h.resolver.transportType(captured.instantiate(incoming), path :: Nil)
+      assert(moved.resolution eq canonical.resolution)
+    val seen = ArrayBuffer.empty[TermShape]
+    h.resolver.listenInstanceViews(h.instanceOf(canonical))(seen += _)
+    assert(seen.isEmpty)
+    h.resolver.publishParameter(a1, h.instanceOf(h.typeOf(b)))
+    h.resolver.publishParameter(b1, h.instanceOf(h.typeOf(c)))
+    val value = DynShape()
+    h.resolver.publishParameter(c1, value)
+    assert(seen.toList.map(ShapeIdentity.key(_)) == List(ShapeIdentity.key(Marked(value, path))))
+
+    // A forward source has no fixed support yet. Its two environments must
+    // remain distinct and both must receive the target when it becomes known.
+    val forward = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val pending = DeclaredType(forward, Map.empty, TypeSubstitution.empty, true)(N)
+    val instances = List(h.instance(a), h.instance(a))
+    val observations = instances.map: instance =>
+      val moved = h.resolver.transportType(pending.instantiate(TypeSubstitution(instance :: Nil)), path :: Nil)
+      val seen = ArrayBuffer.empty[TermShape]
+      h.resolver.listenInstanceViews(h.instanceOf(moved))(seen += _)
+      seen
+    assert(observations.forall(_.isEmpty))
+    forward.publish(rctx.typeParameter(a))
+    instances.lazyZip(observations).foreach: (instance, seen) =>
+      val late = DynShape()
+      h.resolver.publishParameter(instance, late)
+      assert(seen.toList.map(ShapeIdentity.key(_)) == List(ShapeIdentity.key(Marked(late, path))))
+    assert(observations.forall(_.size == 1))
+
+  test("an independent union arm shares its view cache across ambient substitutions"):
+    val h = new Harness
+    import h.given
+    val a = h.binder("A")
+    val unit = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    unit.publish(TypeShape.Unit)
+    val union = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    union.publish(TypeShape.Union(h.typeOf(a).resolution, unit))
+    val tpe = h.resolver.declaredType(union, Map.empty)
+    def observe(): Unit =
+      val seen = ArrayBuffer.empty[TermShape]
+      h.resolver.listenInstanceViews(h.instanceOf(tpe.instantiate(TypeSubstitution(h.instance(a) :: Nil))))(seen += _)
+      assert(seen.size == 1)
+    observe()
+    val listeners = unit.inferenceHost.listeners.size
+    assert(listeners > 0)
+    (1 to 100).foreach(_ => observe())
+    assert(unit.inferenceHost.listeners.size == listeners)
+
   // A generic type use that omits arguments reads holes whose bounds are
   // written at the use, so its scope counts. Whether a use applies arguments is
   // recorded when the application is interpreted, not discovered by the
@@ -306,7 +670,7 @@ class SubstitutionGrowthTest extends AnyFunSuite:
       val symbol = TypeAliasSymbol(Tree.Ident("Identity"))
       val member = BlockMemberSymbol("Identity", Nil)
       val body = h.typeOf(formal)
-      symbol.defn = S(TypeDef(symbol, member, List(TyParam(FldFlags.empty, N, formal)(N)), S(body.resolution.source), N, Nil)(N, N))
+      symbol.defn = S(TypeDef(N, symbol, member, List(TyParam(FldFlags.empty, N, formal)(N)), S(body.resolution.source), N, Nil)(N, N))
       // The use is written where B is in scope.
       val use = Term.UnitVal()
       h.state.recordLexicalBinders(use, Set(b))
@@ -314,7 +678,7 @@ class SubstitutionGrowthTest extends AnyFunSuite:
       val reference = new TypeResolution(use, _ => fail("Unexpected type error"))
       reference.publish(TypeShape.Alias(symbol, S(body.resolution)))
       val application = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
-      application.publish(TypeShape.Applied(reference, List(h.typeOf(h.binder("C")).resolution)))
+      application.publish(TypeShape.Applied(reference, List(TypeArgumentResolution.Type(h.typeOf(h.binder("C")).resolution))))
       (DeclaredType(reference, Map.empty, TypeSubstitution.empty, true)(N), DeclaredType(application, Map.empty, TypeSubstitution.empty, true)(N), b)
     def observe(h: Harness, tpe: DeclaredType, b: VarSymbol): Map[VarSymbol, TypeParameterInstance] =
       import h.given

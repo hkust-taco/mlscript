@@ -5,28 +5,28 @@
 fun foo(x){f} =
   f(x)
 //│ ╔══[COMPILATION ERROR] Name not found: f
-//│ ║  l.6: 	  f(x)
-//│ ╙──     	  ^
+//│ ║  l.+2: 	  f(x)
+//│ ╙──      	  ^
 
 foo(1){x => x}
 //│ ╔══[COMPILATION ERROR] Unsupported refinement in this position.
-//│ ║  l.11: 	foo(1){x => x}
+//│ ║  l.+1: 	foo(1){x => x}
 //│ ╙──      	^^^^^^^^^^^^^^
 
 foo(1)
   x => x
 //│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (infix operator '=>').
-//│ ║  l.17: 	  x => x
+//│ ║  l.+2: 	  x => x
 //│ ╙──      	  ^^^^^^
 
 foo(1) { x => x }
 //│ ╔══[COMPILATION ERROR] Unsupported refinement in this position.
-//│ ║  l.22: 	foo(1) { x => x }
+//│ ║  l.+1: 	foo(1) { x => x }
 //│ ╙──      	^^^^^^^^^^^^^^^^^
 
 foo(1) with x => x
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'with' here
-//│ ║  l.27: 	foo(1) with x => x
+//│ ║  l.+1: 	foo(1) with x => x
 //│ ╙──      	^^^^^^^^^^^^^^^^^^
 
 

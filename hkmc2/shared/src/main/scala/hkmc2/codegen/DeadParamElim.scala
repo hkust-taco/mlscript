@@ -90,6 +90,7 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver, traceLogge
         case c: ConsFun => (c, idx),
       (consFun, idx) => consFun.srcs.collect:
         case p: ProdFun => (p, idx),
+      _ => Nil,
       prodRoots,
       consRoots,
     )
@@ -115,13 +116,13 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver, traceLogge
       case None => eliminableCallSiteArgsById(consFun.concreteId) = eliminable.toSet
       case S(existing) => assert(existing.toList.sorted === eliminable)
   
-  if tl.doTrace then
+  if tl.isTracing then
     given ShowCfg = ShowCfg.internal
 
     assert(eliminableCallSiteArgsById.nonEmpty === eliminableParamsById.nonEmpty)
     tl.log(">>> dead-param-elim results >>>")
     for (id, elim) <- eliminableParamsById do
-      tl.log(s"${id.showConcreteFunId} -> eliminable: {${elim.toSeq.sorted.mkString(", ")}}")
+      tl.log(dbg"${id.showConcreteFunId} -> eliminable: {${elim.toSeq.sorted.mkString(", ")}}")
     tl.log("<<< dead-param-elim results <<<")
   end if
 end DeadParamElimSolver
@@ -133,6 +134,7 @@ object DeadParamElim:
     tl: TL,
     raise: Raise,
     eState: Elaborator.State,
+    eCtx: Elaborator.Ctx,
     symbolPrinter: SymbolPrinter,
   ): Program = cfg.flowBasedOpt.fold(p):
     FlowAnalysisBasedRewrite.rewriteWith(p, _, eta = false, dce = false)

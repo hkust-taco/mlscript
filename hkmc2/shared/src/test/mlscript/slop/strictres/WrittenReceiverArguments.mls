@@ -1,0 +1,145 @@
+:.
+
+// A call through a written class type supplies its arguments to the unannotated parameters of
+// every implementation that it can reach, whether or not the member has overrides.
+
+private class Item(val n: Int)
+
+
+// The member is final and has no override.
+:e
+private class FinalReader with
+  fun read(x) = x.only
+private fun readFinal(p: FinalReader) = p.read(null)
+new FinalReader().read({only: 7})
+readFinal(new FinalReader)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	  fun read(x) = x.only
+//│ ║        	                ^^^^^^
+//│ ╟── Null literal does not contain member 'only'
+//│ ║  l.+3: 	private fun readFinal(p: FinalReader) = p.read(null)
+//│ ╙──      	                                               ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// The written subclass type reaches the inherited implementation.
+:e
+private class InheritedReader with
+  fun read(x) = x.only
+private class InheritingReader extends InheritedReader
+private fun readInherited(p: InheritingReader) = p.read(null)
+new InheritingReader().read({only: 7})
+readInherited(new InheritingReader)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	  fun read(x) = x.only
+//│ ║        	                ^^^^^^
+//│ ╟── Null literal does not contain member 'only'
+//│ ║  l.+4: 	private fun readInherited(p: InheritingReader) = p.read(null)
+//│ ╙──      	                                                        ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// An abstract member supplies its argument to the implementation in a subclass.
+:e
+private abstract class Area with
+  fun area(scale)
+private class Square(val side: Int) extends Area with
+  fun area(scale) = side * scale.factor
+private fun totalArea(p: Area) = p.area(null)
+Square(2).area({factor: 3})
+totalArea(Square(2))
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+4: 	  fun area(scale) = side * scale.factor
+//│ ║        	                           ^^^^^^^^^^^^
+//│ ╟── Null literal does not contain member 'factor'
+//│ ║  l.+5: 	private fun totalArea(p: Area) = p.area(null)
+//│ ╙──      	                                        ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// A rest parameter receives the arguments as a tuple.
+:e
+private fun firstOnly(t) = t.0.only
+private class RestReader with
+  fun all(...xs) = firstOnly(xs)
+private fun readRest(p: RestReader) = p.all(null)
+firstOnly([{only: 1}])
+readRest(new RestReader)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun firstOnly(t) = t.0.only
+//│ ║        	                           ^^^^^^^^
+//│ ╟── Null literal does not contain member 'only'
+//│ ║  l.+4: 	private fun readRest(p: RestReader) = p.all(null)
+//│ ╙──      	                                            ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// The second parameter list receives its argument after the first application.
+:e
+private class CurriedItems with
+  fun add(a)(b) = a.n + b.n
+private fun addFirst(p: CurriedItems) = p.add(Item(1))
+new CurriedItems().add(Item(1))(Item(2))
+addFirst(new CurriedItems)(null)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	  fun add(a)(b) = a.n + b.n
+//│ ║        	                        ^^^
+//│ ╟── Null literal does not contain member 'n'
+//│ ║  l.+5: 	addFirst(new CurriedItems)(null)
+//│ ╙──      	                           ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// A method selected through the written type can be called later.
+:e
+private class SelectedReader with
+  fun read(x) = x.only
+private fun readerOf(p: SelectedReader) = p.read
+new SelectedReader().read({only: 1})
+readerOf(new SelectedReader)(null)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	  fun read(x) = x.only
+//│ ║        	                ^^^^^^
+//│ ╟── Null literal does not contain member 'only'
+//│ ║  l.+5: 	readerOf(new SelectedReader)(null)
+//│ ╙──      	                             ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// The written receiver binds T to Item only in the signature of `app`. Its argument reaches the
+// implementation without that binding, so the callback reads `v` at the opaque type T.
+:e // TODO: allow?
+private class Box[T](val v: T) with
+  fun app(f) = f(v)
+private fun incremented(b: Box[Item]) = b.app(x => x.n + 1)
+incremented(Box(Item(3)))
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+3: 	private fun incremented(b: Box[Item]) = b.app(x => x.n + 1)
+//│ ║        	                                                   ^^^
+//│ ╟── Cannot resolve member 'n' of a value with unknown shape.
+//│ ║  l.+1: 	private class Box[T](val v: T) with
+//│ ║        	                            ^
+//│ ╟── Type parameter 'T' does not specify a member interface.
+//│ ║  l.+1: 	private class Box[T](val v: T) with
+//│ ╙──      	                  ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// A handler implements the members of its effect class, so an effect call through the written
+// effect type reaches the handler's implementation with its argument.
+// TODO: Supply the effect call's argument to the handler's `question` parameter.
+:effectHandlers
+:lift
+:breakme
+:e
+private abstract class Ask with
+  fun ask(question)
+private fun onlyOf(q) = q.only
+private fun perform(effect: Ask) = effect.ask(null)
+onlyOf({only: 1})
+handle effect = Ask with
+  fun ask(question)(resume) = resume(onlyOf(question))
+perform(effect)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of null (reading 'only')
+
+

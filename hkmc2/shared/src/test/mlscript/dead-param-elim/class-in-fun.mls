@@ -43,6 +43,7 @@ f(1, 2).get()
 :js
 :lift
 private fun foo(y) =
+  let =y
   class M with
     fun bar() = set y = 2
   new M().bar()

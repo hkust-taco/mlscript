@@ -1,0 +1,6 @@
+#lang(0.3.x)
+
+#config(target: CompilationTarget.Wasm)
+
+open class Base() with
+  open fun answer(x: Any): Any = x + 1

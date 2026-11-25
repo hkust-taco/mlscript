@@ -60,24 +60,24 @@ let evaluated = [a: tick("a", 1), tick("b", 2), (tick("c", "c")): 3,
 fun one(fields: {a: Int}) = fields.a
 one(1, a: 2)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.61: 	one(1, a: 2)
+//│ ║  l.+2: 	one(1, a: 2)
 //│ ║        	^^^^^^^^^^^^
 //│ ╟── Function 'one' expected 1 argument, but got 2
-//│ ║  l.60: 	fun one(fields: {a: Int}) = fields.a
+//│ ║  l.+1: 	fun one(fields: {a: Int}) = fields.a
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 let key = "a"
 [a: {answer: 1}, (key): {other: 2}].0.a.answer
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.71: 	[a: {answer: 1}, (key): {other: 2}].0.a.answer
+//│ ║  l.+2: 	[a: {answer: 1}, (key): {other: 2}].0.a.answer
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'a' across a computed key or unknown record spread.
 //│ ╟── This computed key can overwrite the selected member.
-//│ ║  l.71: 	[a: {answer: 1}, (key): {other: 2}].0.a.answer
+//│ ║  l.+2: 	[a: {answer: 1}, (key): {other: 2}].0.a.answer
 //│ ╙──      	                  ^^^
 //│ ╔══[COMPILATION ERROR] This selection of member 'answer' has no resolved target
-//│ ║  l.71: 	[a: {answer: 1}, (key): {other: 2}].0.a.answer
+//│ ║  l.+2: 	[a: {answer: 1}, (key): {other: 2}].0.a.answer
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ key = "a"

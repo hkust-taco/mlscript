@@ -46,10 +46,10 @@ private fun f1(flag, value) = if flag then g1(f2(flag, value)) else h1(f2(flag, 
 private fun choose(flag) = if flag then Item(5) else Other(6)
 f1(true, choose(true)).value
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.47: 	f1(true, choose(true)).value
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+10: 	f1(true, choose(true)).value
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'Other' does not contain member 'value'
-//│ ║  l.46: 	private fun choose(flag) = if flag then Item(5) else Other(6)
+//│ ║  l.+9: 	private fun choose(flag) = if flag then Item(5) else Other(6)
 //│ ╙──      	                                                     ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -155,11 +155,11 @@ private fun f1[A](value) = f2(value)
 private fun f2[B](value) = value
 f1(Item(27)).missing
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.156: 	f1(Item(27)).missing
-//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+4: 	f1(Item(27)).missing
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'Item' does not contain member 'missing'
-//│ ║  l.156: 	f1(Item(27)).missing
-//│ ╙──       	   ^^^^^^^^
+//│ ║  l.+4: 	f1(Item(27)).missing
+//│ ╙──      	   ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // An annotated interface still restricts a value passing through unused binders.
@@ -171,11 +171,11 @@ private fun f1[A](value: Base): Base = f2(value)
 private fun f2[B](value: Base): Base = value
 f1(Item(28)).extra
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.172: 	f1(Item(28)).extra
-//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ║  l.+6: 	f1(Item(28)).extra
+//│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'extra'
-//│ ║  l.170: 	private fun f1[A](value: Base): Base = f2(value)
-//│ ╙──       	                                ^^^^
+//│ ║  l.+4: 	private fun f1[A](value: Base): Base = f2(value)
+//│ ╙──      	                                ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Imported generic definitions carry the metadata their exporting unit recorded.

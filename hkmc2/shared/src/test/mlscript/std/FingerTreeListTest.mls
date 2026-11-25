@@ -4,7 +4,7 @@
 import "../../mlscript-compile/FingerTreeList.mls"
 import "../../mlscript-compile/LazyFingerTree.mls"
 
-open FingerTreeList
+open FingerTreeList.{ * }
 
 let xs = FingerTreeList.mk(1,2,3)
 //│ xs = [1, 2, 3]
@@ -102,14 +102,14 @@ if xs is
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let element0$;
 //│ if (runtime.Tuple.isArrayLike(xs2) && xs2.length >= 1) {
-//│   let xs3, inlinedVal38, tmp16;
+//│   let xs3, inlinedVal27, tmp16;
 //│   element0$ = runtime.Tuple.get(xs2, 0);
 //│   xs3 = xs2;
 //│   tmp16 = xs3.length - 0;
-//│   inlinedVal38 = runtime.safeCall(xs3.slice(1, tmp16));
+//│   inlinedVal27 = runtime.safeCall(xs3.slice(1, tmp16));
 //│   return globalThis.Object.freeze([
 //│     element0$,
-//│     inlinedVal38
+//│     inlinedVal27
 //│   ])
 //│ }
 //│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
@@ -181,6 +181,7 @@ LazyFingerTree.equals(zs1, zs)
 LazyFingerTree.equals(zs2, zs)
 //│ = true
 
+:expect true
 (if FingerTreeList.mk(1,2,3) is
   [a, ...ls, b] then ls) |> FingerTreeList.isFingerTree
 //│ = true
@@ -189,8 +190,18 @@ LazyFingerTree.equals(zs2, zs)
 zs.at(0)
 //│ = 1
 
+// The JavaScript backend calls at(0), but checked indexing currently requires an array.
+:e
 :expect 1
 zs.[0]
+//│ ╔══[COMPILATION ERROR] Resolution error in array index
+//│ ║  l.+1: 	zs.[0]
+//│ ║        	^^^^^
+//│ ╟── Value of type 'FingerTree' does not support checked array indexing.
+//│ ║  in ../../mlscript-compile/FingerTreeList.mls
+//│ ║  l.XX: 	fun (++) concat[T](ft1: FingerTree[T] | Array[T], ft2: FingerTree[T] | Array[T]): FingerTree[T] =
+//│ ║        	                                                                                  ^^^^^^^^^^^^^
+//│ ╙── Use '![...]' for a dynamic access.
 //│ = 1
 
 

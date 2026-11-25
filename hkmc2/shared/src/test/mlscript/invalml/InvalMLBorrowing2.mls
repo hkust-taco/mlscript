@@ -28,15 +28,15 @@ letreg of r =>
     read(r)
   write(r)
 //│ ╔══[COMPILATION ERROR] Type error in block
-//│ ║  l.24: 	letreg of r =>
+//│ ║  l.+1: 	letreg of r =>
 //│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.25: 	  read(r)
+//│ ║  l.+2: 	  read(r)
 //│ ║        	^^^^^^^^^
-//│ ║  l.26: 	  borrow(r) of () =>
+//│ ║  l.+3: 	  borrow(r) of () =>
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.27: 	    write(r)
+//│ ║  l.+4: 	    write(r)
 //│ ║        	^^^^^^^^^^^^
-//│ ║  l.28: 	... (more lines omitted) ...
+//│ ║  l.+5: 	... (more lines omitted) ...
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'E  <:  ⊥
 //│ ╟── because: cannot constrain  'Rg  <:  ⊥
@@ -62,15 +62,15 @@ letreg of r =>
     read(r)
   write(r)
 //│ ╔══[COMPILATION ERROR] Type error in block
-//│ ║  l.58: 	letreg of r =>
+//│ ║  l.+1: 	letreg of r =>
 //│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.59: 	  read(r)
+//│ ║  l.+2: 	  read(r)
 //│ ║        	^^^^^^^^^
-//│ ║  l.60: 	  borrow(r) of () =>
+//│ ║  l.+3: 	  borrow(r) of () =>
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.61: 	    write(r)
+//│ ║  l.+4: 	    write(r)
 //│ ║        	^^^^^^^^^^^^
-//│ ║  l.62: 	... (more lines omitted) ...
+//│ ║  l.+5: 	... (more lines omitted) ...
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'E  <:  ⊥
 //│ ╟── because: cannot constrain  'Rg  <:  ⊥

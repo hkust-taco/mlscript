@@ -5,34 +5,34 @@
 :e
 constructor()
 //│ ╔══[COMPILATION ERROR] 'constructor(...)' declarations are only allowed in class bodies
-//│ ║  l.6: 	constructor()
-//│ ╙──     	^^^^^^^^^^^^^
+//│ ║  l.+1: 	constructor()
+//│ ╙──      	^^^^^^^^^^^^^
 
 :e
 constructor(x, y)
 //│ ╔══[COMPILATION ERROR] 'constructor(...)' declarations are only allowed in class bodies
-//│ ║  l.12: 	constructor(x, y)
+//│ ║  l.+1: 	constructor(x, y)
 //│ ╙──      	^^^^^^^^^^^^^^^^^
 
 :e
 fun main() =
   constructor(x, y)
 //│ ╔══[COMPILATION ERROR] 'constructor(...)' declarations are only allowed in class bodies
-//│ ║  l.19: 	  constructor(x, y)
+//│ ║  l.+2: 	  constructor(x, y)
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^
 
 :e
 object A with
   constructor(x, y)
 //│ ╔══[COMPILATION ERROR] 'constructor(...)' declarations are only allowed in class bodies
-//│ ║  l.26: 	  constructor(x, y)
+//│ ║  l.+2: 	  constructor(x, y)
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^
 
 :e
 module A with
   constructor(x, y)
 //│ ╔══[COMPILATION ERROR] 'constructor(...)' declarations are only allowed in class bodies
-//│ ║  l.33: 	  constructor(x, y)
+//│ ║  l.+2: 	  constructor(x, y)
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^
 
 // * Ok, but useless; could raise a warning

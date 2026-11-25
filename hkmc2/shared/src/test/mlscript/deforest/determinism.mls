@@ -19,7 +19,7 @@ if B(1,2,3,4,5) is
 //│ deforest > 	fields: scrut⁰.e⁰
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let scrut, e, a, b, c, d, arg$B$0$, arg$B$1$, arg$B$2$, arg$B$3$, arg$B$4$, $scrut_B, $scrut_rest, B_a, B_b, B_c, B_d, B_e;
+//│ let e, a, b, c, d, arg$B$0$, arg$B$1$, arg$B$2$, arg$B$3$, arg$B$4$, $scrut_B, $scrut_rest, scrut, B_a, B_b, B_c, B_d, B_e;
 //│ @affine(1) @private
 //│ define $scrut_B as fun $scrut_B⁰(B_a1, B_b1, B_c1, B_d1, B_e1)() {
 //│   set arg$B$0$ = B_a1;
@@ -27,11 +27,11 @@ if B(1,2,3,4,5) is
 //│   set arg$B$2$ = B_c1;
 //│   set arg$B$3$ = B_d1;
 //│   set arg$B$4$ = B_e1;
-//│   set e = arg$B$4$;
-//│   set d = arg$B$3$;
-//│   set c = arg$B$2$;
-//│   set b = arg$B$1$;
-//│   set a = arg$B$0$;
+//│   set e = (arg$B$4$ as! Int⁰);
+//│   set d = (arg$B$3$ as! Int⁰);
+//│   set c = (arg$B$2$ as! Int⁰);
+//│   set b = (arg$B$1$ as! Int⁰);
+//│   set a = (arg$B$0$ as! Int⁰);
 //│   return 0
 //│ };
 //│ @private
@@ -75,11 +75,11 @@ c2 of A(A(A(A(A(A(1))))))
 //│ deforest > 	fields: arg$A$0$⁴.a¹
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, c2$c2, c2$x_A, c2$x_rest, c2$arg$A$0$_A, c2$arg$A$0$_rest, c2$arg$A$0$_A1, c2$arg$A$0$_rest1, c2$arg$A$0$_A2, c2$arg$A$0$_rest2, c2$arg$A$0$_A3, c2$arg$A$0$_rest3, c2$arg$A$0$_A4, c2$arg$A$0$_rest4, A_a, A_a1, A_a2, A_a3, A_a4, A_a5;
+//│ let c2$x_A, c2$x_rest, c2$arg$A$0$_A, c2$arg$A$0$_rest, c2$arg$A$0$_A1, c2$arg$A$0$_rest1, c2$arg$A$0$_A2, c2$arg$A$0$_rest2, c2$arg$A$0$_A3, c2$arg$A$0$_rest3, c2$arg$A$0$_A4, c2$arg$A$0$_rest4, c2$c2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, A_a, A_a1, A_a2, A_a3, A_a4, A_a5;
 //│ @private
 //│ define c2$c2 as fun c2$c2⁰(x) {
 //│   let a, arg$A$0$, arg$A$0$1, arg$A$0$2, arg$A$0$3, arg$A$0$4, arg$A$0$5;
-//│   return x(arg$A$0$, arg$A$0$1, arg$A$0$2, arg$A$0$3, arg$A$0$4, arg$A$0$5, a)
+//│   return x(arg$A$0$1, arg$A$0$2, arg$A$0$3, arg$A$0$4, arg$A$0$5, arg$A$0$, a)
 //│ };
 //│ @affine(1) @private
 //│ define c2$x_A as fun c2$x_A⁰(A_a6)(fv_arg$A$0$, fv_arg$A$0$1, fv_arg$A$0$2, fv_arg$A$0$3, fv_arg$A$0$4, fv_arg$A$0$5, fv_a) {
@@ -178,8 +178,8 @@ c2 of A(A(A(A(A(A(1))))))
 //│   end
 //│ };
 //│ set A_a = 1;
-//│ set tmp = c2$arg$A$0$_A⁴(A_a);
-//│ set A_a1 = tmp;
+//│ set tmp5 = c2$arg$A$0$_A⁴(A_a);
+//│ set A_a1 = tmp5;
 //│ set tmp1 = c2$arg$A$0$_A³(A_a1);
 //│ set A_a2 = tmp1;
 //│ set tmp2 = c2$arg$A$0$_A²(A_a2);
@@ -188,7 +188,7 @@ c2 of A(A(A(A(A(A(1))))))
 //│ set A_a4 = tmp3;
 //│ set tmp4 = c2$arg$A$0$_A⁰(A_a4);
 //│ set A_a5 = tmp4;
-//│ set tmp5 = c2$x_A⁰(A_a5);
-//│ return c2$c2⁰(tmp5)
+//│ set tmp = c2$x_A⁰(A_a5);
+//│ return c2$c2⁰(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1

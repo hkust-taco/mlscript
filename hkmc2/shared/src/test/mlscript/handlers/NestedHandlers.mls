@@ -1,3 +1,4 @@
+:.
 :js
 :effectHandlers
 :lift
@@ -9,7 +10,7 @@ let id = 0
 abstract class MaybeStop with
   fun f(x: Bool): ()
 
-fun handleEffects(g) =
+private fun handleEffects(g) =
   handle h1 = MaybeStop with
     fun f(x)(k) =
       if x then
@@ -35,7 +36,7 @@ fun handleEffects(g) =
   g(h1, h2)
 
 
-fun f(h1, h2) =
+private fun f(h1, h2) =
   h1.f(false)
   h2.f(false)
   h1.f(false)
@@ -58,7 +59,7 @@ handleEffects(f)
 //│ = false
 
 
-fun f(h1, h2) =
+private fun f(h1, h2) =
   h1.f(false)
   h2.f(false)
   h1.f(false)
@@ -75,7 +76,7 @@ handleEffects(f)
 //│ > h1 end 7
 
 
-fun f(h1, h2) =
+private fun f(h1, h2) =
   h1.f(false)
   h2.f(false)
   h1.f(true)
@@ -91,13 +92,13 @@ handleEffects(f)
 
 abstract class Eff with
   fun perform(): ()
-data class Box(n)
+data class Box(mut val n)
 let box = new mut Box(0)
 //│ box = Box(0)
 
 
 :expect 5120
-fun f(h, box, n) =
+private fun f(h, box, n) =
   if n <= 1 then
     h.perform()
   else

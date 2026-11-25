@@ -1,9 +1,9 @@
 :.
 :js
 
-open annotations
+open annotations.{ * }
 
-fun check(pred, what) = Array.from(length: 10).forEach of (_, i, _) =>
+private fun check(pred, what) = Array.from(length: 10).forEach of (_, i, _) =>
   let n = i.toString()
   print of n, (if pred(n) then "is" else "is not"), what
 
@@ -139,8 +139,8 @@ pattern Word = Letter ~ (Word | "")
 :e
 fun isWord(x) = x is @compile Word
 //│ ╔══[COMPILATION ERROR] String concatenation is not supported in pattern compilation.
-//│ ║  l.121: 	pattern Word = Letter ~ (Word | "")
-//│ ╙──       	               ^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	pattern Word = Letter ~ (Word | "")
+//│ ╙──      	               ^^^^^^^^^^^^^^^^^^^
 
 // Unsupported patterns are equivalent to `Never`.
 isWord of "pattern"

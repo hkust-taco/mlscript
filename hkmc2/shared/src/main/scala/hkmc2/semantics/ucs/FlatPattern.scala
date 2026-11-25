@@ -37,12 +37,7 @@ enum FlatPattern extends AutoLocated:
   
   case Record(entries: List[(Ident -> LocalVarSymbol)])
   
-  def mkClone(using State, codegen.Erasure): FlatPattern = this match
-    case Lit(literal) => Lit(literal)
-    case pattern @ ClassLike(constructor, symbol, arguments, refined) =>
-      ClassLike(constructor.mkClone, symbol, arguments, refined)(Tree.Dummy)
-    case Tuple(size, inf) => Tuple(size, inf)
-    case Record(entries) => Record(entries)
+  def mkClone(using State, codegen.Erasure): FlatPattern = Cloner(SymbolSubst.Id).flatPattern(this)
   
   def subTerms: Vector[Term] = this match
     case p: ClassLike => Vector(p.constructor)
@@ -74,9 +69,8 @@ enum FlatPattern extends AutoLocated:
     case ClassLike(ctor, symbol, args, rfd) =>
       def showCtor(ctor: Term): Str = ctor match
         // This prints the symbol name without `refNum` and "member:" prefix.
-        case Term.Ref(sym: BlockMemberSymbol) => sym.nme
-        // This prints the symbol without `refNum`.
-        case Term.Ref(sym) => sym.toString
+        case ref: AnyRef_ => ref.sym.nme
+        case Term.NewSel(p, i, N) => s"${showCtor(p)}.${i.name}"
         case Term.Sel(p, i) => s"${showCtor(p)}.${i.name}"
         case Term.SynthSel(p, i) => s"${showCtor(p)}.${i.name}"
         case _ => ctor.showDbg

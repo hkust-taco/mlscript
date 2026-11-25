@@ -7,8 +7,8 @@
 :e
 42 as [A] -> Str
 //│ ╔══[COMPILATION ERROR] Type error in integer literal with expected type Str
-//│ ║  l.8: 	42 as [A] -> Str
-//│ ║       	^^
+//│ ║  l.+1: 	42 as [A] -> Str
+//│ ║        	^^
 //│ ╙── because: cannot constrain  Int  <:  Str
 //│ Type: Str
 
@@ -21,11 +21,11 @@ id
 :e
 (x => x + 1) as [A] -> A -> A
 //│ ╔══[COMPILATION ERROR] Type error in reference with expected type Int
-//│ ║  l.22: 	(x => x + 1) as [A] -> A -> A
+//│ ║  l.+1: 	(x => x + 1) as [A] -> A -> A
 //│ ║        	      ^
 //│ ╙── because: cannot constrain  A  <:  Int
 //│ ╔══[COMPILATION ERROR] Type error in application with expected type A
-//│ ║  l.22: 	(x => x + 1) as [A] -> A -> A
+//│ ║  l.+1: 	(x => x + 1) as [A] -> A -> A
 //│ ║        	      ^^^^^
 //│ ╙── because: cannot constrain  Int  <:  A
 //│ Type: ['A] -> ('A) ->{⊥} 'A
@@ -144,7 +144,7 @@ gen(42)
 fun cnt: Some[out [A] -> A -> A] -> Int
 fun cnt(x) = 42
 //│ ╔══[COMPILATION ERROR] General type is not allowed here.
-//│ ║  l.144: 	fun cnt: Some[out [A] -> A -> A] -> Int
-//│ ╙──       	                         ^^^^^^
+//│ ║  l.+1: 	fun cnt: Some[out [A] -> A -> A] -> Int
+//│ ╙──      	                         ^^^^^^
 
 

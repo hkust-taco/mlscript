@@ -8,11 +8,11 @@
 fun test(x) =
   [this.a, x]
 //│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope
-//│ ║  l.9: 	  [this.a, x]
-//│ ╙──     	   ^^^^
+//│ ║  l.+2: 	  [this.a, x]
+//│ ╙──      	   ^^^^
 //│ ╔══[COMPILATION ERROR] This selection of member 'a' has no resolved target
-//│ ║  l.9: 	  [this.a, x]
-//│ ╙──     	   ^^^^^^
+//│ ║  l.+2: 	  [this.a, x]
+//│ ╙──      	   ^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let test;
 //│ test = function test(x) { throw "This code cannot be run as its compilation yielded an error." };

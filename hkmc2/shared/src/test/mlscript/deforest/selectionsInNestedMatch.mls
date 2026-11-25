@@ -46,11 +46,11 @@ fun c(x, y) = if x is
       A then x.AA#x
 c(AA(2), A)
 //│ deforest > >>> fusing >>>
-//│ deforest > A⁰ ->
-//│ deforest > 	match: y⁰
 //│ deforest > AA⁰(2) ->
 //│ deforest > 	match: x²
 //│ deforest > 	fields: x².x¹
+//│ deforest > A⁰ ->
+//│ deforest > 	match: y⁰
 //│ deforest > <<< fusing <<<
 //│ = 2
 
@@ -64,11 +64,11 @@ fun c(x, y) = if x is
 fun p() = AA(2)
 c(p(), A)
 //│ deforest > >>> fusing >>>
-//│ deforest > A⁰ ->
-//│ deforest > 	match: y¹
 //│ deforest > AA⁰(2) ->
 //│ deforest > 	match: x³
 //│ deforest > 	fields: x³.x¹
+//│ deforest > A⁰ ->
+//│ deforest > 	match: y¹
 //│ deforest > <<< fusing <<<
 //│ = 2
 
@@ -84,11 +84,11 @@ fun c(x, y) = if x is
 fun p() = AA(2)
 c(p(), A)
 //│ deforest > >>> fusing >>>
-//│ deforest > A⁰ ->
-//│ deforest > 	match: y²
 //│ deforest > AA⁰(2) ->
 //│ deforest > 	match: x⁴
 //│ deforest > 	fields: x⁴.x¹
+//│ deforest > A⁰ ->
+//│ deforest > 	match: y²
 //│ deforest > <<< fusing <<<
 //│ = 3
 

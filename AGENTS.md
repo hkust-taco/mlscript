@@ -22,7 +22,11 @@ Note that this only affects the main compilation tests;
 there is also `cntest` for nofib compilation tests, `catest` for application compilation tests,
 and `cwtest` for WASM compilation tests.
 
-Before finishing your work, run `hkmc2AllTests/test` to make sure the codebase compiles and all tests succeed.
+Before finishing work with retained code or test changes, run `hkmc2AllTests/test`
+to make sure the codebase compiles and all tests succeed;
+this covers `ctest`, so no need to run `ctest` separately.
+Full validation is not required for read-only investigations, documentation-only edits,
+and temporary experiments whose changes have all been reverted.
 
 After you are done fixing all the problems and all the tests pass,
 *you need to commit the resulting golden test output changes*.
@@ -30,10 +34,28 @@ Any commit that does not include the latest changes to test outputs will fail th
 
 Please also read the files in `.github/skills/hkmc2-difftests`.
 
-Use `.mls` diff tests for compiler behavior. Do not add Scala tests that duplicate
+Use `*.mls` diff tests for compiler behavior. Do not add Scala tests that duplicate
 that coverage or merely pin internal representation or assertion details. Reserve
 unit tests for properties diff tests cannot reliably observe, such as concurrency,
 cache isolation, bounded graph growth, or algebraic laws; state the extra coverage.
+
+Worksheets are diff-test infrastructure. Keep compiler behavior and complexity driven by ordinary
+compilation units. When a limitation only affects a later worksheet block, adjust the test or
+document the limitation in the fixture. Avoid adding compiler state or recovery logic solely for diff-tests.
+
+Before adding new diff tests, make sure they are not already covered by existing tests.
+All new diff-test files you create should go into `hkmc2/shared/src/test/mlscript/slop/`
+unless there is a good reason to put them elsewhere.
+
+The legacy resolver (the `0.2.x` language, used whenever new resolution is disabled,
+including diff tests that do not import their directory's `.mls` configuration with `:.`)
+will be sunset soon. Do not spend effort fixing, extending, or adding tests for behavior
+specific to it; keep its existing tests passing and focus on new-resolution behavior.
+
+Always commit the changes for each completed self-contained task after its required
+validation passes, without waiting for a separate commit request. Include all code,
+documentation, and golden-output changes belonging to the task, and leave unrelated
+changes out of the commit.
 
 When you create a commit, author it under your (the agent's) own identity,
 not under the user's identity.
@@ -43,6 +65,12 @@ Do not change repository-local or global Git identity configuration.
 
 
 ## Design Philosophy
+
+**Confirm language-design decisions before implementing them.** Propose changes
+to source syntax, language semantics, or public library contracts and obtain the
+user's confirmation unless that specific design is already explicitly approved.
+Authorization to fix compiler behavior does not by itself authorize introducing
+annotations, changing member naming or dispatch rules, or extending public APIs.
 
 You are working on an industry-strength compiler codebase.
 Although its test suite is extensive, tests alone are not enough to determine the quality of a change;
@@ -74,25 +102,73 @@ exactly where the mutable state is supposed to be defined and used.
 
 Never use default arguments in core business logic.
 Default arguments should be reserved for user-facing APIs.
+Do NOT encode default arguments through overloading to skirt this rule.
 
 Keep it DRY: if you find yourself copying and pasting code,
 consider refactoring it into a reusable function or class.
 The goal of minimizing code duplication is to improve maintainability:
 the logic for handling cases that ought to be similar should be centralized.
 
+Long positional patterns containing `_, _, _, ...` are a code smell.
+Use named field patterns when matching a few fields of a case class or extractor,
+and preserve named patterns when refactoring the representation they match.
+
+
+## Comments and Documentation
+
 **Document your code**:
-Use comments to explain the intent behind complex logic,
+Doc comments (`/** ... */`) explain a definition's purpose and contract to its users.
+Start with a high-level, self-contained account of what the definition does and why it is needed.
+Describe relevant inputs, results, and limitations without requiring readers to inspect the
+implementation or know its callers. A description of shared implementation machinery or
+interactions between callers does not substitute for explaining the definition itself.
+
+Implementation comments (`// ...` or ordinary `/* ... */`) explain non-obvious choices,
+invariants, and failure modes next to the code they concern. Put implementation details and
+design rationale there, rather than turning a doc comment into a design note.
+
+Use implementation comments to explain the intent behind complex logic,
 especially if it is not immediately clear from the code itself.
-When appropriate, explain the history of what led to the current implementation,
+When appropriate, explain **in a self-contained way** the history
+of what led to the current implementation,
 especially if it involves non-obvious decisions/trade-offs
 or if alternative approaches were considered and rejected.
 
-Comments must be understandable from the current code alone, without the conversation,
-commit history, or an earlier version of the implementation. Explain the concrete
-invariant, behavior, or failure being prevented. Name the relevant data and operations;
-avoid vague claims about where a "lifecycle" or "responsibility" belongs. If history
-or a rejected alternative matters, include enough context to explain the tradeoff
-after commits are squashed.
+Comments must be understandable from the current code and behavior alone.
+Assume no access to the discussions, commit history, or earlier versions of the implementation.
+Telltale sign to watch out for: words such as “still” and “now” when they (wrongly) assume
+the reader will know a previous state of the codebase.
+Consider that the commits of a given branch will likely be squashed and the detailed history lost.
+If history or a rejected alternative matters, include enough context to explain the tradeoff.
+
+Explain the concrete invariant, behavior, and failures being prevented.
+Name the relevant data and operations; avoid vague claims about where a "lifecycle" or "responsibility" belongs.
+
+Do NOT include comments that simply describe what the code is doing
+without adding any additional insight, or comments that talk about
+parts of the system that are not directly related to the code being commented on.
+
+Avoid passive tense, words like "actually", "just", etc.,
+avoid needlessly contrasting presently irrelevant things with expressions like "instead of",
+and use clear language and terminology.
+
+
+## Performance Gotchas
+
+Be careful not to materialize intermediate collections needlessly:
+instead of `someCollection.toList.map(...).filter(...)` or `someList.map(...).filter(...)`,
+use, eg, `someCollection.iterator.map(...).filter(...).toList`.
+When repeated concatenation with potentially long prefixes is required,
+prefer a `Vector` over a `List`. Generally avoid introducing new uses of `Seq`.
+
+Prefer `Set.single(1)` and `1 :: Nil` instead of the variadic constructors,
+ie, instead of `Set(1)` and `List(1)`,
+as the latter may allocate an array for the arguments.
+
+Use `lazyZip` instead of `zip`, and always make sure that either
+(1) zipped collections have the same length; or
+(2) dropping elements from the longer one is the intended behavior,
+in which case this should be explained clearly in a comment.
 
 
 ## User-Facing Diagnostics

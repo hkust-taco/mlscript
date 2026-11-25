@@ -4,8 +4,8 @@
 import "../../../mlscript-compile/Stack.mls"
 import "../../../mlscript-compile/Option.mls"
 
-open Stack
-open Option
+open Stack.{ * }
+open Option.{ * }
 
 data class Pair[A, B](x: A, y: B)
 

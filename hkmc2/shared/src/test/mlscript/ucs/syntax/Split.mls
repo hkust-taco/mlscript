@@ -104,8 +104,8 @@ if
   is
     A then "A"
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'is' keyword instead
-//│ ║  l.104: 	  is
-//│ ╙──       	  ^^
+//│ ║  l.+3: 	  is
+//│ ╙──      	  ^^
 //│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ IfLike:
 //│   kw = Keywrd of keyword 'if'

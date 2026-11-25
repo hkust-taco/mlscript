@@ -1,0 +1,26 @@
+:.
+:js
+
+
+// Import under an alias so an escaped receiver cannot accidentally resolve to
+// a global with the module's generated name. Both enclosing modules and the
+// instance receiver must remain available to the async body after suspension.
+import "../../mlscript-compile/AsyncLibrary.mls" as Library
+
+:await
+:expect 42
+new Library.Nested.Reader(1).read()
+//│ = 42
+
+:await
+:expect 43
+set Library.offset = 2
+new Library.Nested.Reader(1).read()
+//│ = 43
+
+// Source-level lifting preserves shared storage used by nested async calls.
+:await
+:expect 42
+Library.nested(40)
+//│ = 42
+

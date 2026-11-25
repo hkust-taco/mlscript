@@ -7,8 +7,8 @@ module M with
 :e
 M."foo"(1)
 //│ ╔══[COMPILATION ERROR] Unexpected moduleful reference of type M.
-//│ ║  l.8: 	M."foo"(1)
-//│ ╙──     	^
+//│ ║  l.+1: 	M."foo"(1)
+//│ ╙──      	^
 //│ = 2
 
 
@@ -21,10 +21,10 @@ M."foo"(1)
 fun foo(): module M =
   let m = M in m
 //│ ╔══[COMPILATION ERROR] Unexpected moduleful reference of type M.
-//│ ║  l.22: 	  let m = M in m
+//│ ║  l.+2: 	  let m = M in m
 //│ ╙──      	          ^
 //│ ╔══[COMPILATION ERROR] Expected a module; found non-moduleful block.
-//│ ║  l.22: 	  let m = M in m
+//│ ║  l.+2: 	  let m = M in m
 //│ ║        	          ^^^^^^
 //│ ╙── Function marked as returning a 'module' but not returning a module.
 
@@ -42,7 +42,7 @@ class Bar(val x)
 :e
 let bar = Bar in new bar(1)
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found reference.
-//│ ║  l.43: 	let bar = Bar in new bar(1)
+//│ ║  l.+1: 	let bar = Bar in new bar(1)
 //│ ║        	                     ^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ = Bar(1)

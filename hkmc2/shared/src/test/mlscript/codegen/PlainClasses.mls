@@ -54,11 +54,11 @@ Foo
 :re
 Foo()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.55: 	Foo()
+//│ ║  l.+1: 	Foo()
 //│ ║        	^^^^^
 //│ ╟── Class 'Foo' must be instantiated with 'new'.
-//│ ║  l.8: 	class Foo
-//│ ╙──     	^^^^^^^^^
+//│ ║  l.XX: 	class Foo
+//│ ╙──      	^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ throw "This code cannot be run as its compilation yielded an error."
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -263,11 +263,11 @@ class Foo with
   val x = 2
 //│ ╔══[COMPILATION ERROR] Multiple definitions of symbol 'x'
 //│ ╟── defined here
-//│ ║  l.262: 	  val x = 1
-//│ ║         	  ^^^^^^^^^
+//│ ║  l.+2: 	  val x = 1
+//│ ║        	  ^^^^^^^^^
 //│ ╟── defined here
-//│ ║  l.263: 	  val x = 2
-//│ ╙──       	  ^^^^^^^^^
+//│ ║  l.+3: 	  val x = 2
+//│ ╙──      	  ^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo14;
 //│ (class Foo13 {
@@ -288,11 +288,11 @@ class Foo with
   val x = 1
   let x = 2
 //│ ╔══[COMPILATION ERROR] Name 'x' is already used
-//│ ║  l.289: 	  let x = 2
-//│ ║         	      ^^^^^
+//│ ║  l.+3: 	  let x = 2
+//│ ║        	      ^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.288: 	  val x = 1
-//│ ╙──       	  ^^^^^^^^^
+//│ ║  l.+2: 	  val x = 1
+//│ ╙──      	  ^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo16;
 //│ (class Foo15 {
@@ -317,8 +317,8 @@ class Foo with
 :e
 class Foo with val x = 1
 //│ ╔══[COMPILATION ERROR] Illegal body of class definition (should be a block; found term definition).
-//│ ║  l.318: 	class Foo with val x = 1
-//│ ╙──       	               ^^^^^^^^^
+//│ ║  l.+1: 	class Foo with val x = 1
+//│ ╙──      	               ^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo18;
 //│ (class Foo17 {

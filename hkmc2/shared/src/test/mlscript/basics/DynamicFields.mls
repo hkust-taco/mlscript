@@ -52,13 +52,29 @@ foo.("y")
 :re
 foo.(0)
 
+:e
 :re
 foo.[0]
+//│ ╔══[COMPILATION ERROR] Resolution error in array index
+//│ ║  l.+1: 	foo.[0]
+//│ ║        	^^^^^^
+//│ ╟── Instance of class 'Foo' does not support checked array indexing.
+//│ ║  l.XX: 	let foo = Foo(123)
+//│ ║        	          ^^^^^^^^
+//│ ╙── Use '![...]' for a dynamic access.
 //│ ═══[RUNTIME ERROR] TypeError: foo.at is not a function
 
 // * Array indexing syntax is only for numeric indices – this should throw
+:e
 :re
 foo.["x"]
+//│ ╔══[COMPILATION ERROR] Resolution error in array index
+//│ ║  l.+1: 	foo.["x"]
+//│ ║        	^^^^^^^^
+//│ ╟── Instance of class 'Foo' does not support checked array indexing.
+//│ ║  l.XX: 	let foo = Foo(123)
+//│ ║        	          ^^^^^^^^
+//│ ╙── Use '![...]' for a dynamic access.
 //│ ═══[RUNTIME ERROR] TypeError: foo.at is not a function
 
 
@@ -72,4 +88,12 @@ DynCtor().dynField
 new DynCtor().dynField
 //│ = 42
 
+
+// * A literal receiver is parenthesized: `-1["toFixed"]` would parse as `-(1["toFixed"])`.
+:sjs
+(-1).("toFixed")(1)
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ return runtime.safeCall((-1)["toFixed"](1))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = "-1.0"
 

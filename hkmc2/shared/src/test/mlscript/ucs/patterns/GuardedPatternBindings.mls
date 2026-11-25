@@ -5,11 +5,11 @@
 :w
 pattern PlainPair = [x, y]
 //│ ╔══[WARNING] Unused pattern binding: x.
-//│ ║  l.6: 	pattern PlainPair = [x, y]
-//│ ╙──     	                     ^
+//│ ║  l.+1: 	pattern PlainPair = [x, y]
+//│ ╙──      	                     ^
 //│ ╔══[WARNING] Unused pattern binding: y.
-//│ ║  l.6: 	pattern PlainPair = [x, y]
-//│ ╙──     	                        ^
+//│ ║  l.+1: 	pattern PlainPair = [x, y]
+//│ ╙──      	                        ^
 
 
 // Regression test: variables used in `where` guards should not produce
@@ -26,38 +26,38 @@ pattern Symmetry =
 
 // We should check the free variables in `where` guards.
 :w
-pattern PairSum = [x, y] where (let x = true, let y = x, y)
+pattern PairSum = [x, y] where {let x = true, let y = x, y}
 // We should check the free variables in `where` guards.
 //│ ╔══[WARNING] Unused pattern binding: x.
-//│ ║  l.29: 	pattern PairSum = [x, y] where (let x = true, let y = x, y)
+//│ ║  l.+1: 	pattern PairSum = [x, y] where {let x = true, let y = x, y}
 //│ ╙──      	                   ^
 //│ ╔══[WARNING] Unused pattern binding: y.
-//│ ║  l.29: 	pattern PairSum = [x, y] where (let x = true, let y = x, y)
+//│ ║  l.+1: 	pattern PairSum = [x, y] where {let x = true, let y = x, y}
 //│ ╙──      	                      ^
 
 :w
 pattern PairSum = [x, y] where (if x is [y] then y)
 //│ ╔══[WARNING] Unused pattern binding: y.
-//│ ║  l.39: 	pattern PairSum = [x, y] where (if x is [y] then y)
+//│ ║  l.+1: 	pattern PairSum = [x, y] where (if x is [y] then y)
 //│ ╙──      	                      ^
 
 :w
-pattern PairSum = [x, y] where (class C(y) with { fun test = y }, C(x).test)
+pattern PairSum = [x, y] where {class C(y) with { fun test = y }, C(x).test}
 //│ ╔══[WARNING] Unused pattern binding: y.
-//│ ║  l.45: 	pattern PairSum = [x, y] where (class C(y) with { fun test = y }, C(x).test)
+//│ ║  l.+1: 	pattern PairSum = [x, y] where {class C(y) with { fun test = y }, C(x).test}
 //│ ╙──      	                      ^
 
 :w
-pattern PairSum = [x, y] where (fun y = 1, print(y), x)
+pattern PairSum = [x, y] where {fun y = 1, print(y), x}
 //│ ╔══[WARNING] Unused pattern binding: y.
-//│ ║  l.51: 	pattern PairSum = [x, y] where (fun y = 1, print(y), x)
+//│ ║  l.+1: 	pattern PairSum = [x, y] where {fun y = 1, print(y), x}
 //│ ╙──      	                      ^
 
 // Forward reference to `y` should not be counted as a free variable
 :w
-pattern PairSum = [x, y] where (print(y), fun y = 1, x)
+pattern PairSum = [x, y] where {print(y), fun y = 1, x}
 //│ ╔══[WARNING] Unused pattern binding: y.
-//│ ║  l.58: 	pattern PairSum = [x, y] where (print(y), fun y = 1, x)
+//│ ║  l.+1: 	pattern PairSum = [x, y] where {print(y), fun y = 1, x}
 //│ ╙──      	                      ^
 
 

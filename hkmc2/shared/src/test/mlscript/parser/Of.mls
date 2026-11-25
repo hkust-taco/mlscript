@@ -65,10 +65,10 @@ f of
 log
 of 1
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'of' keyword instead
-//│ ║  l.66: 	of 1
+//│ ║  l.+2: 	of 1
 //│ ╙──      	^^
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.66: 	of 1
+//│ ║  l.+2: 	of 1
 //│ ╙──      	   ^
 //│ Parsed:
 //│ 	Ident(log)
@@ -78,12 +78,12 @@ of 1
 print of 
 123
 //│ ╔══[WARNING] This literal should be indented
-//│ ║  l.79: 	123
+//│ ║  l.+2: 	123
 //│ ║        	^^^
 //│ ╟── since it is a continuation of the new line here
-//│ ║  l.78: 	print of 
+//│ ║  l.+1: 	print of 
 //│ ║        	         ^
-//│ ║  l.79: 	123
+//│ ║  l.+2: 	123
 //│ ╙──
 //│ Parsed:
 //│ 	App(Ident(print),Tup(List(IntLit(123))))
@@ -93,12 +93,12 @@ print of
 1
 2
 //│ ╔══[WARNING] This literal should be indented
-//│ ║  l.93: 	1
+//│ ║  l.+2: 	1
 //│ ║        	^
 //│ ╟── since it is a continuation of the new line here
-//│ ║  l.92: 	print of 
+//│ ║  l.+1: 	print of 
 //│ ║        	         ^
-//│ ║  l.93: 	1
+//│ ║  l.+2: 	1
 //│ ╙──
 //│ Parsed:
 //│ 	App(Ident(print),Tup(List(IntLit(1))))

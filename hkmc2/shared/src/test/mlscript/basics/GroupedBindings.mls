@@ -1,0 +1,231 @@
+:js
+
+// The `in` body sees every binding, in declaration order.
+:expect 3
+let
+  x = 1
+  y = 2
+in x + y
+//│ = 3
+
+:expect 6
+let
+  x = 1
+  y = x + 1
+in
+  let z = x + y
+  z * 2
+//│ = 6
+
+// Grouped declarations without `in` remain visible in the enclosing block.
+:expect 3
+let
+  groupedX = 1
+  groupedY = groupedX + 1
+groupedX + groupedY
+//│ = 3
+//│ groupedX = 1
+//│ groupedY = 2
+
+// A scoped group shadows outer bindings without changing them.
+:expect [3, 10]
+let shadowed = 10
+let inner = let { shadowed = 1, y = shadowed + 1 } in shadowed + y
+[inner, shadowed]
+//│ = [3, 10]
+//│ inner = 3
+//│ shadowed = 10
+
+// Groups also work in function bodies and argument positions.
+:expect 5
+let f(n) = let { x = n, y = x + 1 } in x + y
+f(2)
+//│ = 5
+//│ f = fun f
+
+:expect 7
+(n => n)(let { x = 3, y = 4 } in x + y)
+//│ = 7
+
+// Per-binding `in` clauses are unsupported by ordinary block parsing.
+:pe
+:e
+:re
+let
+  x = 1 in print(x)
+  y = 2
+in y
+//│ ╔══[PARSE ERROR] Unexpected 'in' keyword here
+//│ ║  l.+2: 	  x = 1 in print(x)
+//│ ╙──      	        ^^
+//│ ╔══[COMPILATION ERROR] Name not found: y
+//│ ║  l.+4: 	in y
+//│ ╙──      	   ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Initializer blocks and function bindings use the ordinary binding grammar.
+:expect 6
+let
+  x =
+    let n = 2
+    n + 1
+  twice(n) = n * 2
+in twice(x)
+//│ = 6
+
+// `set` groups update all targets in order and restore them after an `in` body.
+let sx = 1
+let sy = 2
+//│ sx = 1
+//│ sy = 2
+
+:sr
+:soir
+:expect [33, 1, 2]
+let result = set
+  sx = 10
+  sy = sx + 13
+in sx + sy
+[result, sx, sy]
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   let result⁰,
+//│   result⁰ = {
+//│     let old⁰,
+//│     old⁰ = sx⁰,
+//│     try {
+//│       sx⁰ := 10,
+//│       {
+//│         let old¹,
+//│         old¹ = sy⁰,
+//│         try {
+//│           sy⁰ := +(sx⁰, 13)‹app⁰›,
+//│           +(sx⁰, sy⁰)‹app¹›
+//│         } finally sy⁰ := old¹
+//│       }
+//│     } finally sx⁰ := old⁰
+//│   },
+//│   [ result⁰, sx⁰, sy⁰ ]
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let old, old1, tmp, tmp1;
+//│ set old = sx⁰;
+//│ try
+//│   set sx⁰ = 10;
+//│   set old1 = sy⁰;
+//│   try
+//│     set sy⁰ = 23;
+//│     set tmp1 = 33;
+//│     end
+//│   finally
+//│     set sy⁰ = old1;
+//│     end;
+//│     set tmp = tmp1;
+//│   end
+//│ finally
+//│   set sx⁰ = old;
+//│   end;
+//│   set result⁰ = tmp;
+//│ return [tmp, old, sy⁰]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [33, 1, 2]
+//│ result = 33
+
+:expect [5, 6]
+set
+  sx = 5
+  sy = sx + 1
+[sx, sy]
+//│ = [5, 6]
+
+// Compound assignments also restore in reverse order, including repeated targets.
+:expect [16, 5]
+let result = set { sx += 3, sx *= 2 } in sx
+[result, sx]
+//│ = [16, 5]
+//│ result = 16
+
+:expect [13, 5, 6]
+let result = set
+  sx = 6
+  sy = 7
+in
+  sx + sy
+[result, sx, sy]
+//│ = [13, 5, 6]
+//│ result = 13
+
+:e
+let
+  hidden = 1
+in print(hidden)
+hidden
+//│ ╔══[COMPILATION ERROR] Name not found: hidden
+//│ ║  l.+4: 	hidden
+//│ ╙──      	^^^^^^
+//│ > 1
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+let
+  invalid = later
+  later = 1
+in invalid
+//│ ╔══[COMPILATION ERROR] Name not found: later
+//│ ║  l.+2: 	  invalid = later
+//│ ╙──      	            ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Per-binding bodies without an outer `in` are also unsupported.
+:pe
+let nested = let
+  x = 1 in x
+nested
+//│ ╔══[PARSE ERROR] Unexpected 'in' keyword here
+//│ ║  l.+2: 	  x = 1 in x
+//│ ╙──      	        ^^
+//│ nested = ()
+
+:expect 3
+let { declaredX, declaredY }
+declaredX = 1
+declaredY = 2
+declaredX + declaredY
+//│ = 3
+//│ declaredX = 1
+//│ declaredY = 2
+
+// Regression previously tracked in backlog/ForLLM.mls.
+:expect 1
+let
+  x = 1
+in x
+//│ = 1
+
+// Empty groups are no-ops and still evaluate the enclosing body.
+:expect 3
+let {} in 3
+//│ = 3
+
+:expect 4
+set {} in 4
+//│ = 4
+
+// An indented `in` is an entry in the block, not the group's continuation.
+:e
+let
+  x = 1
+  in x
+//│ ╔══[COMPILATION ERROR] Unsupported let binding shape
+//│ ║  l.+3: 	  in x
+//│ ╙──      	     ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ x = 1
+
+// A compound binding reads the preceding binding of the same name.
+let
+  x = 1
+  x += 1
+//│ x = 2
+
+:expect 2
+x
+//│ = 2

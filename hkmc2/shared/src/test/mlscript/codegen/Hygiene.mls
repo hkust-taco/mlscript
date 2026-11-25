@@ -59,10 +59,10 @@ val Test = "oops"
 :re
 Test.foo()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.60: 	Test.foo()
+//│ ║  l.+1: 	Test.foo()
 //│ ║        	^^^^^^^^
 //│ ╟── String literal does not contain member 'foo'
-//│ ║  l.52: 	val Test = "oops"
+//│ ║  l.XX: 	val Test = "oops"
 //│ ╙──      	           ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -86,10 +86,10 @@ module Test with
   val x = 1
   let x = 2
 //│ ╔══[COMPILATION ERROR] Name 'x' is already used
-//│ ║  l.87: 	  let x = 2
+//│ ║  l.+3: 	  let x = 2
 //│ ║        	      ^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.86: 	  val x = 1
+//│ ║  l.+2: 	  val x = 1
 //│ ╙──      	  ^^^^^^^^^
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let Test4;
@@ -193,25 +193,51 @@ module Whoops with
     val w: module Whoops = this
     fun g() = f()
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'module Whoops' at an unrelated type 'module Whoops.Whoops'
-//│ ║  l.190: 	  val v: module Whoops = this
-//│ ╙──       	                         ^^^^
+//│ ║  l.+2: 	  val v: module Whoops = this
+//│ ╙──      	                         ^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let Whoops2;
+//│ let Whoops1;
 //│ (class Whoops {
 //│   static {
-//│     Whoops2 = this
+//│     Whoops1 = this
 //│   }
 //│   static {
-//│     Whoops.v = Whoops;
-//│     (class Whoops1 {
+//│     throw "This code cannot be run as its compilation yielded an error.";
+//│   }
+//│   static f() {
+//│     return "Hello"
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Whoops"];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Use a successfully compiled module for the runtime hygiene checks.
+:sjs
+module Whoops with
+  val v = this
+  fun f() = "Hello"
+  module Whoops with
+    val w: module Whoops = this
+    fun g() = f()
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let Whoops4;
+//│ (class Whoops2 {
+//│   static {
+//│     Whoops4 = this
+//│   }
+//│   static {
+//│     Whoops2.v = Whoops2;
+//│     (class Whoops3 {
 //│       static {
-//│         Whoops.Whoops = this
+//│         Whoops2.Whoops = this
 //│       }
 //│       static {
-//│         Whoops1.w = Whoops1;
+//│         Whoops3.w = Whoops3;
 //│       }
 //│       static g() {
-//│         return Whoops.f()
+//│         return Whoops2.f()
 //│       }
 //│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "Whoops"];
@@ -238,8 +264,8 @@ Whoops.Whoops.g()
 :e
 Runtime
 //│ ╔══[COMPILATION ERROR] Name not found: Runtime
-//│ ║  l.239: 	Runtime
-//│ ╙──       	^^^^^^^
+//│ ║  l.+1: 	Runtime
+//│ ╙──      	^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

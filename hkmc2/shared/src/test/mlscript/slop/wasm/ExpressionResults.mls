@@ -1,0 +1,31 @@
+:.
+:noInline
+
+// Exhaustive loop branches repeat or return; they never supply a Unit result.
+:expect 42
+private fun loop(flag: Bool): Int32 =
+  let =flag
+  while flag
+    then set flag = false
+    else return wasm.i32.const(42)
+loop(true)
+//│ Wasm result:
+//│ = 42
+
+// An exhaustive returning split makes the differently represented tail unreachable.
+:expect 42
+private fun early(): Int32 =
+  if true then return wasm.i32.const(42)
+  "unreachable"
+early()
+//│ Wasm result:
+//│ = 42
+
+// Ordered wildcard branches exclude later alternatives from both result resolution and lowering.
+:expect 42
+private fun wildcard(value: Int): Int32 =
+  if value is _ then return wasm.i32.const(42)
+  "unreachable"
+wildcard(0)
+//│ Wasm result:
+//│ = 42

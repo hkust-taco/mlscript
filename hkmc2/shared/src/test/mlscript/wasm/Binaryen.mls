@@ -48,16 +48,16 @@ let mod = new! binaryen.Module()
 mod.setFeatures(binaryen.Features.All)
 let fooTb = new! binaryen.TypeBuilder(1)
 fooTb.setStructType of 0, tuple of
-    (
+    {
       "type": binaryen.i32
       packedType: binaryen.notPacked
       mutable: false
-    )
-    (
+    }
+    {
       "type": binaryen.i31ref
       packedType: binaryen.notPacked
       mutable: false
-    )
+    }
 let foo = fooTb.buildAndDispose().0
 mod.addFunction of
   "main"

@@ -1,7 +1,7 @@
 :.
 :js
 
-open annotations { noInline }
+open annotations.{ noInline }
 
 // A computed parent does not have a fixed nominal symbol in the lowered IR.
 // Its subclass and companion must still share their private-name container.
@@ -12,10 +12,10 @@ class Base with
 
 :expect [11, 7]
 let parent = computedParent()
-class Child extends parent with
+private class Child extends parent with
   let x = 3
   fun getX = x
-module Child with
+private module Child with
   let x = 4
   fun sum(child) = child.getX + x
 [new Child().value, Child.sum(new Child)]

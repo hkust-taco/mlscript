@@ -31,7 +31,7 @@ wasm.i64.const(9223372036854775807)
 :ge
 wasm.i64.const(9223372036854775808)
 //│ ╔══[COMPILATION ERROR] Immediate #1 of wasm intrinsic 'i64.const' is outside the signed 64-bit range
-//│ ║  l.32: 	wasm.i64.const(9223372036854775808)
+//│ ║  l.+1: 	wasm.i64.const(9223372036854775808)
 //│ ╙──      	               ^^^^^^^^^^^^^^^^^^^
 
 
@@ -97,13 +97,10 @@ wasm.i64.eqz(wasm.i64.const(0))
 :ge
 wasm.i64.add(wasm.i32.const(1), wasm.i32.const(2))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Int64'
-//│ ║  l.98: 	wasm.i64.add(wasm.i32.const(1), wasm.i32.const(2))
+//│ ║  l.+1: 	wasm.i64.add(wasm.i32.const(1), wasm.i32.const(2))
 //│ ╙──      	             ^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Int64'
-//│ ║  l.98: 	wasm.i64.add(wasm.i32.const(1), wasm.i32.const(2))
-//│ ╙──      	                                ^^^^^^^^^^^^^^^^^
-//│ ═══[COMPILATION ERROR] Operand #1 of wasm intrinsic 'i64.add' must be of type 'Int64'
-//│ ═══[COMPILATION ERROR] Operand #2 of wasm intrinsic 'i64.add' must be of type 'Int64'
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // `Float64` lowers to `f64`, whose immediate is written as a decimal literal.
@@ -188,19 +185,18 @@ val x: Float32 = wasm.f32.const(1.5)
 x
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $TypeInfoBase (sub (struct (field $tag@0 i32) (field $parent@1 (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $typeinfo@0 (mut (ref $TypeInfoBase))))))
 //│   (type $entry (func (result f32)))
 //│   (global $x (export "x") (mut f32) (f32.const 0.0))
 //│   (func $entry (export "entry") (type $entry) (result f32)
 //│     (local $tmp f32)
-//│     (block (result f32)
-//│       (local.set $tmp
-//│         (f32.const 1.5))
-//│       (global.set $x
-//│         (local.get $tmp))
-//│       (return
-//│         (global.get $x))))
+//│     (local.set $tmp
+//│       (f32.const 1.5))
+//│     (global.set $x
+//│       (local.get $tmp))
+//│     (return
+//│       (global.get $x)))
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 1.5
@@ -210,37 +206,34 @@ x
 :ge
 wasm.f32.const(1.0e39)
 //│ ╔══[COMPILATION ERROR] Immediate #1 of wasm intrinsic 'f32.const' is outside the f32 range
-//│ ║  l.211: 	wasm.f32.const(1.0e39)
-//│ ╙──       	               ^^^^^^
+//│ ║  l.+1: 	wasm.f32.const(1.0e39)
+//│ ╙──      	               ^^^^^^
 
 
 // ...and one no float can hold is out of both.
 :ge
 wasm.f64.const(1.0e400)
 //│ ╔══[COMPILATION ERROR] Immediate #1 of wasm intrinsic 'f64.const' is outside the f64 range
-//│ ║  l.219: 	wasm.f64.const(1.0e400)
-//│ ╙──       	               ^^^^^^^
+//│ ║  l.+1: 	wasm.f64.const(1.0e400)
+//│ ╙──      	               ^^^^^^^
 
 
 // Immediates must be written as literals for floats as much as for integers.
 :ge
 fun constOf(x: Num): Float64 = wasm.f64.const(x)
 //│ ╔══[COMPILATION ERROR] Wasm intrinsic 'f64.const' expects a numeric literal immediate
-//│ ║  l.227: 	fun constOf(x: Num): Float64 = wasm.f64.const(x)
-//│ ╙──       	                                              ^
+//│ ║  l.+1: 	fun constOf(x: Num): Float64 = wasm.f64.const(x)
+//│ ╙──      	                                              ^
 
 
 // `Float32` and `Float64` are as distinct as the two integer types are.
 :ge
 wasm.f64.add(wasm.f32.const(1.5), wasm.f32.const(2.25))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Float32' at an unrelated type 'Float64'
-//│ ║  l.235: 	wasm.f64.add(wasm.f32.const(1.5), wasm.f32.const(2.25))
-//│ ╙──       	             ^^^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Float32' at an unrelated type 'Float64'
-//│ ║  l.235: 	wasm.f64.add(wasm.f32.const(1.5), wasm.f32.const(2.25))
-//│ ╙──       	                                  ^^^^^^^^^^^^^^^^^^^^
-//│ ═══[COMPILATION ERROR] Operand #1 of wasm intrinsic 'f64.add' must be of type 'Float64'
-//│ ═══[COMPILATION ERROR] Operand #2 of wasm intrinsic 'f64.add' must be of type 'Float64'
+//│ ║  l.+1: 	wasm.f64.add(wasm.f32.const(1.5), wasm.f32.const(2.25))
+//│ ╙──      	             ^^^^^^^^^^^^^^^^^^^
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // A class field of unboxed type is stored unboxed too, and its `struct.new_default` slot is zeroed with a
@@ -250,64 +243,60 @@ class Boxed(val i: Int64, val f: Float64)
 wasm.f64.add(Boxed(wasm.i64.const(1), wasm.f64.const(1.5)).f, wasm.f64.const(0.25))
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
-//│   (type $Boxed (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $i (mut i64)) (field $f (mut f64)))))
-//│   (type $Boxed_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $TypeInfoBase (sub (struct (field $tag@0 i32) (field $parent@1 (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $typeinfo@0 (mut (ref $TypeInfoBase))))))
+//│   (type $Boxed (sub $Object (struct (field $typeinfo@0 (mut (ref $TypeInfoBase))) (field $i@1 (mut i64)) (field $f@2 (mut f64)))))
+//│   (type $Boxed_typeinfo (sub $TypeInfoBase (struct (field $tag@0 i32) (field $parent@1 (ref null $TypeInfoBase)))))
 //│   (type $Boxed_init (func (param $this (ref $Boxed)) (param $i i64) (param $f f64) (result (ref $Boxed))))
 //│   (type $Boxed_ctor (func (param $i i64) (param $f f64) (result (ref $Boxed))))
 //│   (type $entry (func (result f64)))
 //│   (global $Boxed_typeinfo (export "Boxed_typeinfo") (ref $Boxed_typeinfo) (struct.new $Boxed_typeinfo
 //│     (i32.const 1)
 //│     (ref.null $TypeInfoBase)))
-//│   (func $Boxed_init (type $Boxed_init) (param $this (ref $Boxed)) (param $i i64) (param $f f64) (result (ref $Boxed))
-//│     (block (result (ref $Boxed))
-//│       (struct.set $Boxed $i
-//│         (local.get $this)
-//│         (local.get $i))
-//│       (struct.set $Boxed $f
-//│         (local.get $this)
-//│         (local.get $f))
-//│       (return
-//│         (ref.cast (ref $Boxed)
-//│           (local.get $this)))))
-//│   (func $Boxed_ctor (export "Boxed") (type $Boxed_ctor) (param $i i64) (param $f f64) (result (ref $Boxed))
-//│     (local $this (ref $Boxed))
-//│     (block (result (ref $Boxed))
-//│       (local.set $this
-//│         (struct.new $Boxed
-//│           (global.get $Boxed_typeinfo)
-//│           (i64.const 0)
-//│           (f64.const 0.0)))
-//│       (drop
-//│         (call $Boxed_init
-//│           (local.get $this)
-//│           (local.get $i)
-//│           (local.get $f)))
-//│       (return
+//│   (func $Boxed_init (export "Boxed_init") (type $Boxed_init) (param $this (ref $Boxed)) (param $i i64) (param $f f64) (result (ref $Boxed))
+//│     (struct.set $Boxed $i@1
+//│       (local.get $this)
+//│       (local.get $i))
+//│     (struct.set $Boxed $f@2
+//│       (local.get $this)
+//│       (local.get $f))
+//│     (return
+//│       (ref.cast (ref $Boxed)
 //│         (local.get $this))))
+//│   (func $Boxed_ctor (export "Boxed_ctor") (type $Boxed_ctor) (param $i i64) (param $f f64) (result (ref $Boxed))
+//│     (local $this (ref $Boxed))
+//│     (local.set $this
+//│       (struct.new $Boxed
+//│         (global.get $Boxed_typeinfo)
+//│         (i64.const 0)
+//│         (f64.const 0.0)))
+//│     (drop
+//│       (call $Boxed_init
+//│         (local.get $this)
+//│         (local.get $i)
+//│         (local.get $f)))
+//│     (return
+//│       (local.get $this)))
 //│   (func $entry (export "entry") (type $entry) (result f64)
 //│     (local $tmp i64)
 //│     (local $tmp1 f64)
-//│     (local $tmp2 (ref null any))
+//│     (local $tmp2 (ref null $Boxed))
 //│     (local $tmp3 f64)
-//│     (block (result f64)
-//│       (local.set $tmp
-//│         (i64.const 1))
-//│       (local.set $tmp1
-//│         (f64.const 1.5))
-//│       (local.set $tmp2
-//│         (call $Boxed_ctor
-//│           (local.get $tmp)
-//│           (local.get $tmp1)))
-//│       (local.set $tmp3
-//│         (f64.const 0.25))
-//│       (return
-//│         (f64.add
-//│           (struct.get $Boxed $f
-//│             (ref.cast (ref $Boxed)
-//│               (local.get $tmp2)))
-//│           (local.get $tmp3)))))
+//│     (local.set $tmp
+//│       (i64.const 1))
+//│     (local.set $tmp1
+//│       (f64.const 1.5))
+//│     (local.set $tmp2
+//│       (call $Boxed_ctor
+//│         (local.get $tmp)
+//│         (local.get $tmp1)))
+//│     (local.set $tmp3
+//│       (f64.const 0.25))
+//│     (return
+//│       (f64.add
+//│         (struct.get $Boxed $f@2
+//│           (local.get $tmp2))
+//│         (local.get $tmp3))))
 //│   (elem $Boxed_init declare func $Boxed_init)
 //│   (elem $Boxed_ctor declare func $Boxed_ctor)
 //│   (elem $entry declare func $entry))

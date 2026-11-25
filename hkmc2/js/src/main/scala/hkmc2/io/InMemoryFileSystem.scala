@@ -7,16 +7,21 @@ import scala.scalajs.js.annotation.JSExportTopLevel
 
 /**
  * In-memory file system for testing and web compiler. Stores files as a map
- * from normalized path strings to content strings.
+ * from normalized path strings to buffers, so repeated appends do not copy the whole file.
  */
 class InMemoryFileSystem(initialFiles: Map[String, String]) extends FileSystem:
-  private val files: MutMap[String, (Int, String)] = MutMap.from:
-    initialFiles.map { case (k, v) => (Path(k).toString, (0, v)) }
+  private val files: MutMap[String, (Int, StringBuilder)] = MutMap.from:
+    initialFiles.map { case (k, v) => (Path(k).toString, (0, new StringBuilder(v))) }
   
   def read(path: Path): String = read(path.toString)
   
   def write(path: Path, content: String): Unit =
     write(path.toString, content)
+  
+  def append(path: Path, content: String): Unit =
+    files.updateWith(path.toString):
+      case Some((ts, buffer)) => Some((ts + 1, buffer.append(content)))
+      case None => Some((0, new StringBuilder(content)))
   
   def exists(path: Path): Bool = files.contains(path.toString)
   
@@ -28,20 +33,20 @@ class InMemoryFileSystem(initialFiles: Map[String, String]) extends FileSystem:
   @JSExport("write")
   def write(path: Str, content: Str): Unit =
     files.updateWith(Path(path).toString):
-      case Some((ts, _)) => Some((ts + 1, content))
-      case None => Some((0, content))
+      case Some((ts, _)) => Some((ts + 1, new StringBuilder(content)))
+      case None => Some((0, new StringBuilder(content)))
   
   @JSExport("read")
   def read(path: Str): Str =
     val normalizedPath = Path(path)
     files.getOrElse(normalizedPath.toString,
-      throw new FileSystem.FileNotFoundException(normalizedPath))._2
+      throw new FileSystem.FileNotFoundException(normalizedPath))._2.result()
   
   @JSExport("list")
-  def list: js.Array[Str] = allFiles.keys.toJSArray
+  def list: js.Array[Str] = files.keys.toJSArray
   
   /** Get all files (for debugging) */
-  def allFiles: Map[String, String] = files.view.mapValues(_._2).toMap
+  def allFiles: Map[String, String] = files.view.mapValues(_._2.result()).toMap
 
 object InMemoryFileSystem:
   /** Create an empty in-memory file system. */

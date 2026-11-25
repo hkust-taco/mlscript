@@ -8,11 +8,11 @@ import "../../StrOps.mls"
 import "./Keywords.mls"
 import "./Token.mls"
 
-open Predef { fold, mkStr }
-open Stack
-open Option { Some, None }
-open Token { LiteralKind, BracketKind }
-open Keywords { opPrec, INT_MAX }
+open Predef.{ fold, mkStr }
+open Stack.{ * }
+open Option.{ Some, None }
+open Token.{ LiteralKind, BracketKind }
+open Keywords.{ opPrec, INT_MAX }
 
 //  _____
 // |_   _| __ ___  ___
@@ -33,7 +33,7 @@ module Tree with
     
     type DefineKind = Let | Type | Exception | Directive
   
-  open DefineKind
+  open DefineKind.{ * }
   
   data
     class
@@ -110,7 +110,7 @@ module Tree with
           "match " + go(scrutinee) + " with "
         branches Iter.fromStack() Iter.mapping(go) Iter.joined(" | ")
       // Function application for binary operators.
-      App(Ident(op, true), lhs :: rhs :: Nil) then
+      App(Ident(op, true), Tuple(lhs :: rhs :: Nil)) then
         if opPrec(op) is [leftPrec, rightPrec] then fold(+) of
           par of go(lhs), prec(lhs, false) < leftPrec
           " ", op, " "

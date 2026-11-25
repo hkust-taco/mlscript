@@ -67,6 +67,7 @@ fun foo() =
 // * The post-loop state must merge the zero-iteration value with values from loop-back edges.
 :soir
 fun loopBackPost(flag) =
+  let =flag
   let x = 1
   while flag do
     set x = 2
@@ -74,13 +75,14 @@ fun loopBackPost(flag) =
   x
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define loopBackPost⁰ as fun loopBackPost¹(flag) {
-//│   let x;
+//│   let flag1, x;
+//│   set flag1 = flag;
 //│   set x = 1;
 //│   loop lbl:
-//│     match flag
+//│     match flag1
 //│       true =>
 //│         set x = 2;
-//│         set flag = false;
+//│         set flag1 = false;
 //│         continue lbl
 //│       else
 //│         end
@@ -99,6 +101,7 @@ print(loopBackPost(true))
 // * The `else` branch sees assignments that reached the next iteration.
 :soir
 fun loopElseReturn(flag) =
+  let =flag
   let x = 1
   while flag
     then
@@ -107,13 +110,14 @@ fun loopElseReturn(flag) =
     else return x
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define loopElseReturn⁰ as fun loopElseReturn¹(flag) {
-//│   let x;
+//│   let flag1, x;
+//│   set flag1 = flag;
 //│   set x = 1;
 //│   loop lbl:
-//│     match flag
+//│     match flag1
 //│       true =>
 //│         set x = 2;
-//│         set flag = false;
+//│         set flag1 = false;
 //│         continue lbl
 //│       else
 //│         return x

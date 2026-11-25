@@ -1,0 +1,57 @@
+:.
+:js
+
+pattern Prefix(pattern P) = P ~ ""
+
+// Prefix matching must reject non-strings before reading their length or
+// calling string helpers, including through anonymous pattern arguments.
+fun matches(x) = [
+  x is "a" ~ "",
+  x is ("a"..="z") ~ "",
+  x is Str ~ "",
+  x is _ ~ "",
+  x is Prefix("a"..="z")
+]
+
+:expect [true, true, true, true, true]
+matches("a")
+//│ = [true, true, true, true, true]
+
+:expect [false, false, false, true, false]
+matches("")
+//│ = [false, false, false, true, false]
+
+:expect [false, false, false, false, false]
+matches(null)
+//│ = [false, false, false, false, false]
+
+:expect [false, false, false, false, false]
+matches(1)
+//│ = [false, false, false, false, false]
+
+:expect [false, false, false, false, false]
+matches([])
+//│ = [false, false, false, false, false]
+
+:expect [false, false, false, false, false]
+matches({length: 1})
+//│ = [false, false, false, false, false]
+
+// Both string-prefix methods and concatenated outputs must survive the
+// generated pattern-argument record and MatchSuccess/MatchFailure paths.
+fun output(x) =
+  if x is Prefix(("a"..="z") ~ ("a"..="z")) as result then result else null
+
+:expect ["ab", null, null]
+[output("ab"), output(null), output(1)]
+//│ = ["ab", null, null]
+
+// A rejected string pattern must still try a non-string alternative.
+fun fallback(x) = if x is
+  ("a"..="z") ~ "" then "letter"
+  Int then "number"
+  else "other"
+
+:expect ["letter", "number", "other"]
+[fallback("a"), fallback(1), fallback(null)]
+//│ = ["letter", "number", "other"]

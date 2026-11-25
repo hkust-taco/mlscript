@@ -1,0 +1,8 @@
+#lang(0.3.x, strictResolution: true)
+#config(effectHandlers: Some(EffectHandlers()), liftDefns: Some(LiftDefns))
+
+module NonLocalReturnLibrary with
+  fun result[A](value: A) =
+    let escape = => return [value]
+    escape()
+    throw 0

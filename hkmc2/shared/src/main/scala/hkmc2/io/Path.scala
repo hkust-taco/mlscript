@@ -45,6 +45,11 @@ object Path:
   /** Create path from string - delegates to platform-specific implementation */
   def apply(str: String): Path = PathFactory.fromString(str)
   
+  /** Resolve a path written in source code, such as an import path or a debug output file:
+    * an absolute path is used as is, and any other path is relative to `base`. */
+  def resolve(base: Path, str: String): Path =
+    if str.startsWith("/") then Path(str) else base / RelPath(str)
+  
   /** Platform-specific path separator */
   def separator: String = PathFactory.separator
 

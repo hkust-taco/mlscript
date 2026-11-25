@@ -1,0 +1,5 @@
+#lang(0.3.x)
+
+#config(target: CompilationTarget.Wasm)
+
+fun UnitValue() = ()

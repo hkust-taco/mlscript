@@ -3,7 +3,7 @@
 
 import "../../../mlscript-compile/Stack.mls"
 
-open Stack
+open Stack.{ * }
 
 
 abstract class Q
@@ -97,3 +97,8 @@ if C(1) is ({:a} & C) then a
 
 if C(1) is (C & {:a}) then a
 //│ = 1
+
+// A constructor test can precede the first read of a positional field.
+:expect 7
+if C(7) is (C & C(value)) then value
+//│ = 7

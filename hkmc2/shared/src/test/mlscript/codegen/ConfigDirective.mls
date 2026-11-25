@@ -128,7 +128,6 @@ fun foo(x) = { x.call(), print(42) }
 #config(effectHandlers: Some(EffectHandlers()))
 handle h = Object with {}
 print(h)
-//│
 //│ > Handler$h$
 
 
@@ -145,7 +144,6 @@ foo(h)
 
 print(42)
 #config(liftDefns: None)
-//│
 //│ > 42
 
 

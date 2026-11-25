@@ -13,7 +13,7 @@ let rcd =
 :e
 (...rcd)
 //│ ╔══[COMPILATION ERROR] Illegal position for '...' spread operator.
-//│ ║  l.14: 	(...rcd)
+//│ ║  l.+1: 	(...rcd)
 //│ ╙──      	 ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -24,7 +24,7 @@ c: 123
 
 let rcd =
   a: 0
-  ...(c: 2, d: 3)
+  ...{c: 2, d: 3}
   b: 1
 //│ rcd = {a: 0, c: 2, d: 3, b: 1}
 

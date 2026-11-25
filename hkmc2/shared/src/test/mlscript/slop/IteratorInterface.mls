@@ -1,0 +1,30 @@
+:.
+#lang(0.3.x, strictResolution: true)
+
+// Classes and records implement the iterator protocol without a shared runtime parent.
+// The interface retains its element type when a consumer reads the next result.
+:noInline
+:checkIR
+:expect [42, 3, true]
+class CounterIterator with
+  fun next(): {value: Int, done: Bool} = {value: 42, done: true}
+fun nextInt(iterator: Iterator[Int]): Int = iterator.next().value
+fun nextLength(iterator: Iterator[Str]): Int = iterator.next().value.length
+fun finished(iterator: Iterator[Any]): Bool = iterator.next().done
+@annotations.generator fun generated(): Int = 42
+[
+  nextInt(new CounterIterator),
+  nextLength({next: () => ({value: "abc", done: true})}),
+  finished(generated())
+]
+//│ = [42, 3, true]
+
+// A declared element interface still rejects operations unavailable on that element.
+:e
+fun invalid(iterator: Iterator[Int]) = iterator.next().value.length
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	fun invalid(iterator: Iterator[Int]) = iterator.next().value.length
+//│ ║        	                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Value of type 'Int' does not contain member 'length'
+//│ ║  l.+1: 	fun invalid(iterator: Iterator[Int]) = iterator.next().value.length
+//│ ╙──      	                               ^^^

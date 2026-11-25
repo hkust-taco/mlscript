@@ -2,9 +2,12 @@
 
 import "./NofibPrelude.mls"
 import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Predef.mls"
-open NofibPrelude
+open NofibPrelude.{ * }
 
 module lambda with ...
+
+// The port uses Haskell strings, represented by linked lists of characters.
+type String = List[Char]
 
 
 

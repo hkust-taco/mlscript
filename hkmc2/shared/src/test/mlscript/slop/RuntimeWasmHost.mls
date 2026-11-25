@@ -1,0 +1,67 @@
+:.
+:js
+:silent
+
+import "../../mlscript-compile/RuntimeWasm.mls"
+import "../../mlscript-compile/Runtime.mls"
+import "../../mlscript-compile/wasm/modules/NoDefault.mjs"
+
+// These are the raw host operations passed by generated ES-module stubs. The
+// boxed native call deliberately avoids MLscript's foreign undefined-to-Unit conversion.
+let native = globalThis.eval("({ apply: (fn, receiver, args) => ({ value: Reflect.apply(fn, receiver, args) }) })")
+let instance = RuntimeWasm.compileWat("""
+  (module
+    (tag $error (export "error") (param externref))
+    (func (export "empty"))
+    (func (export "identity") (param externref) (result externref) (local.get 0))
+    (func (export "raise") (param externref) (throw $error (local.get 0)))
+    (global $counter (export "counter") (mut i32) (i32.const 0))
+    (func (export "increment") (result i32)
+      (global.set $counter (i32.add (global.get $counter) (i32.const 1)))
+      (global.get $counter)))
+""", {}, "host boundary test")
+let exports = instance.exports
+
+// An entry-only file keeps its absent default export, and raw calls preserve
+// undefined both as a void result and as an explicitly supplied reference.
+:expect [true, true, true]
+[NoDefault === unsafe.undefined,
+ native.apply(RuntimeWasm.("invoke"), RuntimeWasm, [native, exports.error, exports.empty, []]).("value") === unsafe.undefined,
+ native.apply(RuntimeWasm.("invoke"), RuntimeWasm, [native, exports.error, exports.identity, [unsafe.undefined]]).("value") === unsafe.undefined]
+
+fun catches(action: () -> dyn, expected: dyn): Bool = Runtime.try_catch of
+  () =>
+    action()
+    false
+  error => error === expected
+
+:expect [true, true, true]
+[catches(() => RuntimeWasm.invoke(native, exports.error, exports.raise, [unsafe.undefined]), unsafe.undefined),
+ catches(() => RuntimeWasm.invoke(native, exports.error, exports.raise, [null]), null),
+ catches(() => RuntimeWasm.invoke(native, exports.error, exports.raise, [42]), 42)]
+
+// Exceptions belonging to another tag, and ordinary host errors, pass through unchanged.
+:expect [true, true]
+let foreign = new! globalThis.WebAssembly.Exception(exports.error, [42])
+let otherTag = new! globalThis.WebAssembly.Tag({parameters: ["externref"]})
+let ordinary = Error("host failure")
+[catches(() => RuntimeWasm.invoke(native, otherTag, () => throw foreign, []), foreign),
+ catches(() => RuntimeWasm.invoke(native, exports.error, () => throw ordinary, []), ordinary)]
+
+// Namespace fields stay live while callable members remain ordinary enumerable
+// properties. Each facade gets a fresh object rather than mutating shared Unit.
+:expect [true, 0, ["count", "increment"]]
+let descriptor = {kind: "namespace", members: [
+  {name: "count", getter: true, value: {kind: "global", name: "counter"}},
+  {name: "increment", getter: false, value: {kind: "function", name: "increment", optionalParams: [], constructor: null}}
+]}
+let first = RuntimeWasm.facade(exports, exports.error, descriptor, native)
+let second = RuntimeWasm.facade(exports, exports.error, descriptor, native)
+[first !== second, first.count, Object.entries(first).map(pair => pair.[0])]
+
+:expect 1
+first.increment()
+
+:expect [1, 1]
+[first.count, second.count]
+

@@ -12,7 +12,7 @@ let x in
   print(x)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let x, scrut;
-//│ set scrut = Predef⁰.hide⁰(false);
+//│ set scrut = (Predef⁰.hide⁰(false) as!! Bool⁰);
 //│ match scrut
 //│   true =>
 //│     set x = 1;
@@ -32,14 +32,16 @@ let x in
   print("don't inline cont.")
   print(x)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ do Predef⁰.hide⁰(false); do Predef⁰.print⁰("don't inline cont."); return Predef⁰.print⁰(1)
+//│ do (Predef⁰.hide⁰(false) as!! Bool⁰);
+//│ do Predef⁰.print⁰("don't inline cont.");
+//│ return Predef⁰.print⁰(1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > don't inline cont.
 //│ > 1
 
 
 :soir
-let x = undefined in
+let x = unsafe.undefined in
   if hide(false) do
     x = 1
   print("don't inline cont.")
@@ -47,7 +49,7 @@ let x = undefined in
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let x, scrut;
 //│ set x = undefined;
-//│ set scrut = Predef⁰.hide⁰(false);
+//│ set scrut = (Predef⁰.hide⁰(false) as!! Bool⁰);
 //│ match scrut
 //│   true =>
 //│     set x = 1;

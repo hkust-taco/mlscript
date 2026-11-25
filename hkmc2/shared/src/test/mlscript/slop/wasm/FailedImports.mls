@@ -1,0 +1,36 @@
+:.
+
+#lang(0.3.x)
+//│ Wasm result:
+//│ = {}
+
+
+// * A block that imports a file whose module cannot be compiled is not compiled either, and says so at the import.
+// * The backend does not memoize the failure, so every import reports it again.
+:ge
+import "./FailedImportFixture.mls"
+//│ ╔══[COMPILATION ERROR] First-class module values are not supported by the WASM backend
+//│ ║  l.XX: 	fun FailedImportFixture() = M
+//│ ╙──      	                            ^
+//│ ╔══[COMPILATION ERROR] Cannot compile this module: the imported file `FailedImportFixture.mls` could not be compiled due to an error
+//│ ║  l.+1: 	import "./FailedImportFixture.mls"
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:ge
+import "./FailedImportFixture.mls"
+//│ ╔══[COMPILATION ERROR] First-class module values are not supported by the WASM backend
+//│ ║  l.XX: 	fun FailedImportFixture() = M
+//│ ╙──      	                            ^
+//│ ╔══[COMPILATION ERROR] Cannot compile this module: the imported file `FailedImportFixture.mls` could not be compiled due to an error
+//│ ║  l.+1: 	import "./FailedImportFixture.mls"
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+// * File compilation and worksheet compilation share the backend's import validation.
+// * An unsupported host import reports one cause, followed by the importing block's failure.
+:ge
+import "./HostImportFixture.mls"
+//│ ═══[COMPILATION ERROR] Import of symbol `node:fs` not implemented yet
+//│ ╔══[COMPILATION ERROR] Cannot compile this module: the imported file `HostImportFixture.mls` could not be compiled due to an error
+//│ ║  l.+1: 	import "./HostImportFixture.mls"
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+

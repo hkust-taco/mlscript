@@ -31,6 +31,13 @@ class CompilerCtx(
       * symbols they define — must not depend on which of them is compiled or imported first. */
     val rootConfig: Config,
 ):
+  private val outputHandler: DebugOutputHandler = importing match
+    case S((_, parent)) => parent.outputHandler
+    case N => DebugOutputHandler(fs, println)
+
+  private abstract class PhaseTraceLogger(context: DebugContext)(using DebugPrinter)
+      extends TraceLogger(context, outputHandler, indentWhenDisabled = true, prefix = ""):
+    protected final def forceTrace(scope: Opt[Str]): Bool = false
   
   def allFilesBeingImported: Ls[io.Path] =
     importing match
@@ -51,6 +58,11 @@ class CompilerCtx(
   
   private def derive(newFile: io.Path, recorder: CompilerCtx.DependencyRecorder): CompilerCtx =
     CompilerCtx(S(newFile, this), beingCompiled + newFile, fs, cache, S(recorder), paths, rootConfig)
+
+  /** Record explicit source imports separately from internal runtime/cache dependencies.
+    * Keep the artifact itself: its symbols, rather than a second path lookup, own the import. */
+  private[hkmc2] def recordSourceImport(sym: ImportSymbol, path: io.Path, artifact: Artifact, loc: Opt[Loc]): Unit =
+    dependencyRecorder.foreach(_.sourceImports += SourceImport(sym, path, artifact, loc))
   
   /** Elaborate (and, when compiler paths are set, lower) a compilation unit, caching the result.
     *
@@ -58,17 +70,26 @@ class CompilerCtx(
     * elaboration must depend only on the unit itself, or importers would keep invalidating each
     * other's cached artifact — and a single worksheet could then observe symbols from two different
     * elaborations of the same file (say, `State.tupleSymbol` from one and the symbols reached
-    * through an `import` statement from another), which is silently inconsistent. */
+    * through an `import` statement from another), which is silently inconsistent.
+    *
+    * The given `Raise` receives the diagnostics of the artifacts that the request builds. A request
+    * made while building an importer reports them to the `Raise` of the outermost request instead:
+    * the importer's `Raise` notes whether the importer has errors, and must not count those of the
+    * artifacts it imports (see [[Artifact.hasErrors]]). A request that reuses a cached artifact
+    * reports nothing. */
   def getElaboratedBlock
         (file: io.Path, prelude: Ctx)
         (using TL, Raise)
         : Artifact =
     
     val lastMod = fs.getLastChangedTimestamp(file)
+    val report = dependencyRecorder.fold(summon[Raise])(_.report)
     
     def mk =
-      val dependencies = new CompilerCtx.DependencyRecorder
+      given reporter: Diagnostic.Reporter = new Diagnostic.Reporter(report)
+      val dependencies = new CompilerCtx.DependencyRecorder(report)
       val modulePath = (file.up / io.RelPath(file.baseName + ".mjs")).toString
+      val debug = new DebugContext
       val state = new Elaborator.State
       given Elaborator.State = state
 
@@ -81,20 +102,27 @@ class CompilerCtx(
           includeZero = true,
         ))
       )
-      val backendTL = new TraceLogger:
-        override def doTrace: Bool = false
+      val backendTL = TraceLogger.silent
 
       val parse =
         given CompilerCtx = this
-        ParserSetup(file)
+        ParserSetup(file, outputHandler)
+      val parsed = parse.resultBlk
+      val phaseConfig = Config.elaborationConfig(parsed, file.up)
+      debug.configure(phaseConfig.debug)
+      val etl = new PhaseTraceLogger(debug):
+        protected def phaseEnabled(config: Config.Debug): Bool = config.elaboration
+      val ltl = new PhaseTraceLogger(debug):
+        protected def phaseEnabled(config: Config.Debug): Bool = config.lowering
+      val dtl = new PhaseTraceLogger(debug):
+        protected def phaseEnabled(config: Config.Debug): Bool = config.optimizations
+
       given Elaborator.Ctx = prelude
       val artifactCtx = derive(parse.origin.fileName, dependencies)
-      val parsed = parse.resultBlk
-      val elaborationConfig = Config.elaborationConfig(parsed)
       val elab =
         given CompilerCtx = artifactCtx
-        given Config = elaborationConfig
-        Elaborator(tl, file.up, prelude)
+        given Config = phaseConfig
+        Elaborator(etl, file.up, prelude)
 
       val nme = file.baseName
       val exportedSymbol = parsed.definedSymbols.find(_._1 === nme).map(_._2)
@@ -110,12 +138,18 @@ class CompilerCtx(
       // The runtime itself supplies these symbols once its own body is elaborated.
       if !isRuntime then
         state.initRuntimeSymbolsFromFile(paths.runtimeSourceFile, prelude)(
-          using tl, summon[Raise], artifactCtx)
-      val (blk0, _) = elaborationConfig.givenIn(elab.importFrom(parsed, exportedSymbol.toList))
+          using etl, summon[Raise], artifactCtx)
+      val (blk0, _) = phaseConfig.givenIn(elab.importFrom(parsed, exportedSymbol.toList))
       if isRuntime then
         state.initRuntimeSymbolsFromBlock(blk0)
 
       val artifactConfig = Config.extractConfigFromStats(blk0)
+      def display(title: Str, contents: Str, out: Config.DebugOutput): Unit =
+        outputHandler.emit(out, s"${title}\n${contents}")
+      DebugOutputHandler.showElaboratedTree(blk0, artifactConfig)(display)
+      DebugOutputHandler.showElaboratedTerm(blk0, artifactConfig, 100)(display)(using
+        Scope.empty(Scope.Cfg.default.copy(escapeChars = false, useSuperscripts = true, includeZero = true)),
+        summon[Raise])
       if !artifactConfig.language.useNewResolution then artifactConfig.givenIn:
         given Elaborator.State = state
         val resolver = Resolver(backendTL)
@@ -151,12 +185,30 @@ class CompilerCtx(
       // and only fully-transformed definitions are valid to splice into another unit.
       def optimize(lowered: codegen.Program): codegen.Program =
         given Config = artifactConfig
-        val printer = (p: codegen.Program) => p.showAsTree // TODO: proper printing like in diff-tests
+        given ShowCfg = ShowCfg(
+          showErasedTypes = false,
+          showExpansionMappings = false,
+          showFlowSymbols = true,
+          debug = false,
+        )
+        val irPrintingScp = Scope.empty(Scope.Cfg.default.copy(
+          escapeChars = false,
+          useSuperscripts = false,
+          includeZero = false,
+        ))
+        val blockPrinter = codegen.Printer()
+        val printer = (p: codegen.Program) =>
+          blockPrinter.worksheet(p)(using irPrintingScp).mkString(100)
         val pipeline = new codegen.CompilationPipeline:
           override def extraSymbolsToPreserveFrom(prog: codegen.Program): Set[codegen.ScopedSymbol] =
             collectCompilationUnitSymbols(prog)
-        backendTL.givenIn:
-          pipeline.run(lowered, printer, exportedSymbol.toSet, backendTL)
+          override def preOptimizeHook(prog: codegen.Program): Unit =
+            DebugOutputHandler.showLoweredTree(prog)(display)
+            DebugOutputHandler.showIR(prog, false, blockPrinter, 100)(display)(using artifactConfig, irPrintingScp)
+        val optimized = ltl.givenIn:
+          pipeline.run(lowered, printer, exportedSymbol.toSet, dtl)
+        DebugOutputHandler.showIR(optimized, true, blockPrinter, 100)(display)(using artifactConfig, irPrintingScp)
+        optimized
 
       // Every compilation unit is lowered, so that its symbols carry the IR definitions an
       // importer's inliner may splice in — and so that the importer never has to lower it itself,
@@ -164,15 +216,16 @@ class CompilerCtx(
       val ir =
         artifactConfig.givenIn:
           given Elaborator.State = state
-          given codegen.Erasure = codegen.Erasure(blk)(using artifactConfig, prelude, state)
-          val low = backendTL.givenIn:
-            new codegen.Lowering()(using artifactConfig, backendTL, summon[Raise], state, prelude, summon[SymbolPrinter])
+          given codegen.Erasure = codegen.Erasure(blk, summon[Raise])(using artifactConfig, prelude, state)
+          val low = ltl.givenIn:
+            new codegen.Lowering()(using artifactConfig, ltl, summon[Raise], state, prelude, summon[SymbolPrinter])
           optimize(low.program(blk, Set.empty))
 
       state.publishCompilationUnitAbi:
         CompilationUnitAbi:
           CompilerCtx.allocateModulePrivateExportNames(ir)(using state, summon[Raise])
-      Artifact(parsed, blk0, ir, artifactConfig, prelude, state, compilationUnit, rootConfig, dependencies.result, lastMod)
+      Artifact(parsed, blk0, ir, artifactConfig, prelude, state, compilationUnit, rootConfig,
+        dependencies.result, dependencies.sourceImports.toList, reporter.hasErrors, lastMod)
     
     val artifact = cache.upsert(file)(
       isCurrent = (cachedFile, art) =>
@@ -214,24 +267,29 @@ class CompilerCtx(
           s"Cached prelude for $file was elaborated under a different root configuration")
         art.lastChangedTimestamp >= lastMod,
       create =
+        val debug = new DebugContext
         val state = new Elaborator.State
         given Elaborator.State = state
         given Config = rootConfig
         given CompilerCtx = this
-        val parse = ParserSetup(file)
-        val elaborationConfig = Config.elaborationConfig(parse.resultBlk)
+        given DebugPrinter = new DebugPrinter(S(state))
+        val parse = ParserSetup(file, outputHandler)
+        val elaborationConfig = Config.elaborationConfig(parse.resultBlk, file.up)
+        debug.configure(elaborationConfig.debug)
+        val etl = new PhaseTraceLogger(debug):
+          protected def phaseEnabled(config: Config.Debug): Bool = config.elaboration
         // The prelude defines the builtins consulted during its own resolution.
         // Seed lookup with the block's original symbols, as block elaboration does,
         // so those lookups share the declarations that are being elaborated.
-        val initCtx = State.init.nestLocal("prelude").withMembers(parse.resultBlk.definedSymbols)
+        val initCtx = State.init.nestLocal("prelude", isTopLevel = true).withMembers(parse.resultBlk.definedSymbols)
         val elab =
           given Config = elaborationConfig
-          Elaborator(tl, file.up, initCtx)
+          Elaborator(etl, file.up, initCtx)
         val (blk, ctx) = elaborationConfig.givenIn(elab.importFrom(parse.resultBlk, Nil)(using initCtx))
         // Prelude declarations have no executable program, but their signatures and nominal hierarchy
         // must be erased before any compilation unit can use them.
         given Ctx = ctx
-        elaborationConfig.givenIn(codegen.Erasure(blk))
+        elaborationConfig.givenIn(codegen.Erasure(blk, summon[Raise]))
         PreludeArtifact(parse.resultBlk, blk, ctx, state, rootConfig, lastMod),
     )
   
@@ -262,7 +320,10 @@ object CompilerCtx:
   def fresh(fs: io.FileSystem, paths: MLsCompiler.Paths, rootConfig: Config): CompilerCtx =
     CompilerCtx(N, Set.empty, fs, new PlatformCompilerCache, N, paths, rootConfig)
 
-  private[hkmc2] final class DependencyRecorder:
+  /** @param report The `Raise` of the outermost request, to which the artifacts requested while
+    *   building the recorder's artifact report their diagnostics. */
+  private[hkmc2] final class DependencyRecorder(val report: Raise):
+    val sourceImports = collection.mutable.ArrayBuffer.empty[SourceImport]
     // Keep the timestamp in the set element rather than mapping paths to timestamps. If a source
     // changes while one artifact is being built and two branches observe different versions, both
     // versions remain in the snapshot; the older one then makes the artifact immediately stale.
@@ -313,8 +374,35 @@ object CompilerCache:
     val compilationUnit: Elaborator.CompilationUnit,
     val rootConfig: Config,
     val dependencies: Set[SourceDependency],
+    val sourceImports: Ls[SourceImport],
+    /** Whether building this artifact reported an error, not counting the errors of the artifacts
+      * it imports. The Wasm backend compiles only artifacts without errors whose imports it
+      * compiles too: the IR of an artifact with errors may be incomplete. */
+    val hasErrors: Bool,
     val lastChangedTimestamp: Long,
-  )
+  ):
+    // Wasm importers need the backend interface, including symbols allocated during code generation.
+    // Retain the module and its interface on the artifact so repeated requests share those identities
+    // and avoid rebuilding shared dependencies. JS import names already live in the cached frontend
+    // artifact, so importers do not need the generated JS.
+    // Request dependencies before entering this artifact's lock.
+    private var cachedWasm: Opt[codegen.wasm.text.CompiledWasmFile] = N
+    def materialize(outputs: Ls[(io.Path, Str)])(using cctx: CompilerCtx): Unit = synchronized:
+      outputs.foreach: (path, content) =>
+        if !cctx.fs.exists(path) || cctx.fs.read(path) =/= content then cctx.fs.write(path, content)
+
+    /** The Wasm module of this artifact, built by `build` on the first request that builds it. A
+      * failed build returns `None`, which is not memoized, so that the next request reports its
+      * errors again. The artifact of the runtime unit holds the Wasm runtime module, which defines
+      * the `Unit` object of that unit (see `WasmCompiler.runtime`). The runtime unit compiles to
+      * JavaScript, and no Wasm file can import it, so it has no Wasm module of its own. */
+    def compiledWasm(build: => Opt[codegen.wasm.text.CompiledWasmFile]): Opt[codegen.wasm.text.CompiledWasmFile] =
+      synchronized:
+        if cachedWasm.isEmpty then cachedWasm = build
+        cachedWasm
+
+  /** @param loc The location of the import statement in the importing unit. */
+  final case class SourceImport(sym: ImportSymbol, path: io.Path, artifact: Artifact, loc: Opt[Loc])
 
   /** The version of one transitive source dependency observed while building an artifact. */
   final case class SourceDependency(path: io.Path, lastChangedTimestamp: Long)

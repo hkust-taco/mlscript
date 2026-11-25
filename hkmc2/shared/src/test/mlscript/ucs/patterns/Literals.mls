@@ -3,7 +3,7 @@
 
 import "../../../mlscript-compile/Option.mls"
 
-open Option
+open Option.{ * }
 
 data class Pair[A, B](x: A, y: B)
 
@@ -78,7 +78,7 @@ fun dual_patterns(x, y) =
 :fixme // TODO
 () is ()
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern (unit).
-//│ ║  l.79: 	() is ()
+//│ ║  l.+1: 	() is ()
 //│ ╙──      	      ^^
 //│ = true
 

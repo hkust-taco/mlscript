@@ -2,13 +2,13 @@
 
 import "../../mlscript-compile/Runtime.mls"
 
-open Runtime { MatchSuccess, MatchFailure }
+open Runtime.{ MatchSuccess, MatchFailure }
 
 
-MatchSuccess(0, new Object)
+MatchSuccess(0, new Object())
 //│ = MatchSuccess(0, {})
 
-if MatchSuccess(0, new Object) is MatchSuccess(x, _) then x
+if MatchSuccess(0, new Object()) is MatchSuccess(x, _) then x
 //│ = 0
 
 MatchFailure("oops")
@@ -22,7 +22,7 @@ data class MatchSuccess(x)
 MatchSuccess(0)
 //│ = MatchSuccess(0)
 
-open annotations { compile }
+open annotations.{ compile }
 
 pattern Cross = "X"
 
@@ -63,7 +63,7 @@ fun isCompiledCross(x) = x is @compile Cross
 //│     end
 //│   };
 //│   set matcher__Cross$ = lambda⁰;
-//│   set matchSuccess = matcher__Cross$(x);
+//│   set matchSuccess = (matcher__Cross$(x) as!! Bool⁰);
 //│   match matchSuccess
 //│     true =>
 //│       return true

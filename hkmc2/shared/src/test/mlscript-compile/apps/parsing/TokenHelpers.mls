@@ -4,14 +4,15 @@ import "./Token.mls"
 import "../../Stack.mls"
 import "../../Predef.mls"
 
-open Stack
-open Predef { mkStr }
+open Stack.{ * }
+open Predef.{ mkStr }
 
 type StackT[A] = Stack.Cons[A] | Stack.Nil
 
 module TokenHelpers with ...
 
 fun display(tokens: StackT[Token.Token], limit: Int): Str =
+  let =tokens
   let
     i = 0
     values = mut []

@@ -6,6 +6,9 @@ module GenericLibrary with
   class Methods with
     fun identity[A](x: A): A = x
     fun inferred[A](x: A) = x
+  class Parent[A](val item: A)
+  class Child[A](item: A) extends Parent[A](item) with
+    fun retain(...xs) = xs.reduce((acc, other) => acc, this)
   val known = identity(Known(3))
   val mapped = [Known(4)].map((item, ...) => Known(5))
   fun inferred[A](x: A) = x

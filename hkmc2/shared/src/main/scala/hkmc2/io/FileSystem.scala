@@ -18,6 +18,9 @@ trait FileSystem:
   /** Write string to file, overwriting if exists. */
   def write(path: Path, content: String): Unit
   
+  /** Append string to file, creating it if missing. */
+  def append(path: Path, content: String): Unit
+  
   /** Check if a file exists at the given path. */
   def exists(path: Path): Bool
   

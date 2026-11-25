@@ -25,7 +25,7 @@ arr Iter.joined("")
 :e
 [1, 2, 3] |. Iter.mapping(_ + 1)
 //│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
-//│ ║  l.26: 	[1, 2, 3] |. Iter.mapping(_ + 1)
+//│ ║  l.+1: 	[1, 2, 3] |. Iter.mapping(_ + 1)
 //│ ║        	                          ^
 //│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -33,10 +33,10 @@ arr Iter.joined("")
 arr |. Iter.mapping(=> _ + "!") |. Iter.toArray()
 //│ = ["0!", "1!", "2!", "3!"]
 
-(arr |. Iter.mapping \ _ + "!") |. Iter.toArray()
+((arr |. Iter.mapping) \ _ + "!") |. Iter.toArray()
 //│ = ["0!", "1!", "2!", "3!"]
 
-arr |. Iter.mapping { \ _ + "!" } |. Iter.toArray()
+(arr |. Iter.mapping) { \ _ + "!" } |. Iter.toArray()
 //│ = ["0!", "1!", "2!", "3!"]
 
 arr |> Iter.mapping(_, => _ + "!") |> Iter.toArray
@@ -95,7 +95,30 @@ mkStr of
 //│ 
 //│ = "01"
 
-fun xs = [1, 2, 3] Iter.mapping(=> _ + "!" !> print)
+let xs = [1, 2, 3] Iter.mapping(=> _ + "!" !> print)
+//│ xs = IterableImpl(_)
+
+// Note: spreads can be effectful!
+[...xs]
+//│ > 1!
+//│ > 2!
+//│ > 3!
+//│ = ["1!", "2!", "3!"]
+
+tuple of ...xs
+//│ > 1!
+//│ > 2!
+//│ > 3!
+//│ = ["1!", "2!", "3!"]
+
+// * [todo:effectful-spreads]
+// FIXME: doesn't even lower to anything!
+:sir
+[...xs]
+()
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ return runtime⁰.Unit⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 xs
 //│ = IterableImpl(_)

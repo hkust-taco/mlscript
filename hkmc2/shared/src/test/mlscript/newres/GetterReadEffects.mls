@@ -85,17 +85,17 @@ fun test() =
   box.value
   calls
 test()
-//│ ╔══[COMPILATION ERROR] Overriding member 'value' must preserve whether the member is a field, getter, or method
-//│ ║  l.81: 	    fun value: Int =
+//│ ╔══[COMPILATION ERROR] Overriding member 'value' is a function, but the member it overrides is a value
+//│ ║  l.+6: 	    fun value: Int =
 //│ ║        	    ^^^^^^^^^^^^^^^^
-//│ ║  l.82: 	      set calls += 1
+//│ ║  l.+7: 	      set calls += 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.83: 	      42
+//│ ║  l.+8: 	      42
 //│ ║        	^^^^^^^^
 //│ ╟── Inherited member 'value' is defined here
-//│ ║  l.79: 	    val value: Int
+//│ ║  l.+4: 	    val value: Int
 //│ ╙──      	        ^^^^^
-//│ = 0
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // An abstract getter interface preserves effects when dispatching to its child.
 :expect 1

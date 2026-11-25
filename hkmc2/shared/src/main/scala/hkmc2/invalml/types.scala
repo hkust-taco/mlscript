@@ -325,7 +325,7 @@ case class PolyType(tvs: Ls[InfVar], outer: Opt[InfVar], body: GeneralType) exte
     // * `outer` is already skolemized when it is declared
     val map = tvs.map(v =>
       val sk = InfVar(lvl, nextUid, new VarState(), true)(v.sym, v.hint)
-      tl.log(s"skolemize ${v.showDbg} ~> ${sk.showDbg}")
+      tl.log(dbg"skolemize ${v.showDbg} ~> ${sk.showDbg}")
       v.uid -> sk
     ).toMap
     substAndGetBody(using map)
@@ -333,7 +333,7 @@ case class PolyType(tvs: Ls[InfVar], outer: Opt[InfVar], body: GeneralType) exte
   def instantiate(nextUid: => Uid[InfVar], env: InfVar, lvl: Int)(tl: TL)(using State): GeneralType =
     val map = (outer.map(_.uid -> env).toList ++ tvs.map(v =>
       val nv = InfVar(lvl, nextUid, new VarState(), false)(new InstSymbol(v.sym), v.hint)
-      tl.log(s"instantiate ${v.showDbg} ~> ${nv.showDbg}")
+      tl.log(dbg"instantiate ${v.showDbg} ~> ${nv.showDbg}")
       v.uid -> nv
     )).toMap
     substAndGetBody(using map)

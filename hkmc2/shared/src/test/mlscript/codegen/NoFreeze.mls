@@ -59,7 +59,7 @@ let foo = new Foo(1)
 //│ foo = Foo(1)
 
 
-set foo.x = 42
+@unsafe set foo.x = 42
 
 :expect 42
 foo.x
@@ -70,7 +70,7 @@ import "../../mlscript-compile/NoFreeze.mls"
 let foo = NoFreeze.foo()
 //│ foo = Foo(0)
 
-set foo.x = 42
+@unsafe set foo.x = 42
 
 :expect 42
 foo.x

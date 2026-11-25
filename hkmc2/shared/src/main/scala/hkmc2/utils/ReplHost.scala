@@ -52,7 +52,7 @@ class ReplHost(rootPath: Str)(using TL):
       case Some(syntaxErrorLine) =>
         val message = syntaxErrorLine.substring(ReplHost.syntaxErrorHead.length)
         ReplHost.Error(true, message, reply.take(reply.indexOf(syntaxErrorLine)).trim())
-    tl.log(s"REPL> Collected:\n${res}")
+    tl.log(dbg"REPL> Collected:\n${res}")
     res
 
   private def consumeStderr(): String =
@@ -83,7 +83,7 @@ class ReplHost(rootPath: Str)(using TL):
           ReplHost.Error(false, reply.substring(begin + 1, end), reply.takeWhile(_ != 0x200b).trim())
         else reply
       case error: ReplHost.Error => error
-    tl.log(s"REPL> Parsed:\n${parsed}")
+    tl.log(dbg"REPL> Parsed:\n${parsed}")
     parsed
   
   /**
@@ -92,7 +92,7 @@ class ReplHost(rootPath: Str)(using TL):
     * @param code the code to execute
     */
   private def send(code: Str): Unit =
-    tl.log(s"REPL> Sending: ${code}")
+    tl.log(dbg"REPL> Sending: ${code}")
     stdin.write(if code.endsWith("\n") then code else code + "\n")
     stdin.flush()
   

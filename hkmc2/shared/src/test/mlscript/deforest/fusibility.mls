@@ -87,7 +87,7 @@ c(AA(7))
 
 
 // `y` shows up in two arms
-fun affine_branched(x, y, cons_y) = if x is
+private fun affine_branched(x, y, cons_y) = if x is
   AA(_) then cons_y(y)
   BB(_) then cons_y(y)
   else 0
@@ -97,12 +97,12 @@ affine_branched(AA(0), AA(1), (y) => if y is AA(x) then x + 2)
 //│ deforest > cap_ub_(term:lambda,0)_for_lambda⁰
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> fusing >>>
-//│ deforest > AA⁰(1) ->
-//│ deforest > 	match: y⁰
-//│ deforest > 	fields: y⁰.x⁰
 //│ deforest > AA⁰(0) ->
 //│ deforest > 	match: x²
 //│ deforest > 	fields: x².x⁰
+//│ deforest > AA⁰(1) ->
+//│ deforest > 	match: y⁰
+//│ deforest > 	fields: y⁰.x⁰
 //│ deforest > <<< fusing <<<
 //│ = 3
 
@@ -121,7 +121,7 @@ let p = AA(10) in
 
 
 fun c(p) = if p is AA(v) then v
-fun apply(f, x) = f(x) + f(x)
+private fun apply(f, x) = f(x) + f(x)
 apply(c, AA(3))
 //│ deforest > >>> non-affine syms >>>
 //│ deforest > c_for_c⁰
@@ -203,7 +203,7 @@ let p = AA(AA(AA(10))) in
 
 fun c1(p) = if p is Many(_) then 3
 fun c2(p) = if p is Many(Once(v)) then v
-fun apply(f, g, p) = f(p) + g(p)
+private fun apply(f, g, p) = f(p) + g(p)
 apply(c1, c2, Many(Once(10)))
 //│ deforest > >>> non-affine syms >>>
 //│ deforest > cap_ub_(term:apply,0)_for_apply⁰
@@ -222,7 +222,7 @@ apply(c1, c2, Many(Once(10)))
 // nested ctors can differ: outer is one-shot but inner is consumed twice,
 // so outer fuses and inner doesn't
 fun nest_prod(x) = AA(BB(x))
-fun nest_consume(f, p) = if p is AA(i) then f(i) + f(i)
+private fun nest_consume(f, p) = if p is AA(i) then f(i) + f(i)
 fun nest_pickB(p) = if p is BB(b) then b + 1
 nest_consume(nest_pickB, nest_prod(10))
 //│ deforest > >>> non-affine syms >>>
@@ -661,7 +661,7 @@ c(mk(7))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 16
 
-fun callTwice(f) = f() + f()
+private fun callTwice(f) = f() + f()
 //│ deforest > >>> non-affine syms >>>
 //│ deforest > cap_ub_(term:callTwice,0)_for_callTwice⁰
 //│ deforest > f_for_callTwice⁰

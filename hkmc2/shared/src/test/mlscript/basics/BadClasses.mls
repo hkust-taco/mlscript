@@ -6,8 +6,8 @@ class C { print("hi") }
 :w
 class C { 1 }
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.7: 	class C { 1 }
-//│ ╙──     	          ^
+//│ ║  l.+1: 	class C { 1 }
+//│ ╙──      	          ^
 
 class C { }
 
@@ -21,26 +21,26 @@ class C {
 class C { val a = 1 } with
   val b = 2
 //│ ╔══[COMPILATION ERROR] Multiple type definition bodies are not supported.
-//│ ║  l.22: 	  val b = 2
+//│ ║  l.+2: 	  val b = 2
 //│ ╙──      	  ^^^^^^^^^
 
 :e
 class C { val a = 1 } { val b = 2 }
 //│ ╔══[COMPILATION ERROR] Multiple type definition bodies are not supported.
-//│ ║  l.28: 	class C { val a = 1 } { val b = 2 }
+//│ ║  l.+1: 	class C { val a = 1 } { val b = 2 }
 //│ ╙──      	                      ^^^^^^^^^^^^^
 
 :e
 class C { val a = 1 } { val b = 2 } { val c = 2 }
 //│ ╔══[COMPILATION ERROR] Multiple type definition bodies are not supported.
-//│ ║  l.34: 	class C { val a = 1 } { val b = 2 } { val c = 2 }
+//│ ║  l.+1: 	class C { val a = 1 } { val b = 2 } { val c = 2 }
 //│ ╙──      	                      ^^^^^^^^^^^^^
 
 :e
 class C { val a = 1 } { val b = 2 } with
   val c = 2
 //│ ╔══[COMPILATION ERROR] Multiple type definition bodies are not supported.
-//│ ║  l.40: 	class C { val a = 1 } { val b = 2 } with
+//│ ║  l.+1: 	class C { val a = 1 } { val b = 2 } with
 //│ ╙──      	                      ^^^^^^^^^^^^^
 
 
@@ -49,21 +49,21 @@ class C { val a = 1 } { val b = 2 } with
 :w
 class Foo with { 1 }
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.50: 	class Foo with { 1 }
+//│ ║  l.+1: 	class Foo with { 1 }
 //│ ╙──      	                 ^
 
 :w
 class Foo with
   1
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.57: 	  1
+//│ ║  l.+2: 	  1
 //│ ╙──      	  ^
 
 
 :e
 class Foo(42)
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found integer literal
-//│ ║  l.64: 	class Foo(42)
+//│ ║  l.+1: 	class Foo(42)
 //│ ╙──      	          ^^
 
 

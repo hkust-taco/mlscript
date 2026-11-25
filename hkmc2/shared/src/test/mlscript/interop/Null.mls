@@ -2,10 +2,10 @@
 :js
 
 
-null == undefined
+null == unsafe.undefined
 //│ = false
 
-null === undefined
+null === unsafe.undefined
 //│ = false
 
 null === null
@@ -14,7 +14,7 @@ null === null
 console.log(null is null)
 //│ > true
 
-Object.create(null).("toString") is undefined
+Object.create(null).("toString") is unsafe.undefined
 //│ = true
 
 

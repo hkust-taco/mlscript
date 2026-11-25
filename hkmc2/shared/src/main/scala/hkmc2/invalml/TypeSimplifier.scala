@@ -5,6 +5,7 @@ import scala.collection.immutable.{SortedMap, SortedSet}
 import scala.util.boundary, boundary.break
 import scala.util.chaining._
 
+import hkmc2.dbg
 import hkmc2.utils.*, shorthands.*
 import hkmc2.utils.*
 
@@ -29,7 +30,7 @@ class TypeSimplifier(tl: TraceLogger):
         tv.state.upperBounds = tv.state.upperBounds.map(goType)
       tv
     def goType(ty: Type): Type =
-    trace[Type](s"simplifyStructure(${ty.showDbg})", r => s"= ${r.showDbg}"):
+    trace[Type](dbg"simplifyStructure(${ty.showDbg})", r => s"= ${r.showDbg}"):
       ty match
       case tv: InfVar => goTV(tv)
       case _ =>
@@ -75,19 +76,19 @@ class TypeSimplifier(tl: TraceLogger):
       }
       
       override def apply(pol: Bool)(ty: GeneralType): Unit = boundary:
-        trace(s"Analyse[${printPol(pol)}] ${ty.showDbg}  [${curPath.reverseIterator.mkString(" ~> ")}]"):
+        trace(dbg"Analyse[${printPol(pol)}] ${ty.showDbg}  [${curPath.reverseIterator.map(_.showDbg).mkString(" ~> ")}]"):
           ty match
             case ty if ty.lvl <= lvl =>
-              log(s"Level is < $lvl")
+              log(dbg"Level is < $lvl")
             case tv: IV if { occsNum(tv) = occsNum.getOrElse(tv, 0) + 1; false } =>
             case tv: IV =>
-              if varSubst.contains(tv) then break(log(s"Already subst'd")) // * If the IV was set to be substituted, it means it's been found recursive and we don't need to traverse it again
+              if varSubst.contains(tv) then break(log(dbg"Already subst'd")) // * If the IV was set to be substituted, it means it's been found recursive and we don't need to traverse it again
               var continue = true
               // if (!traversedTVs.contains(tv)) {
               if curPath.exists(_ is tv) then // TODO opt
                 traversedTVs += tv
                 val recPrefix = curPath.takeWhile(_ isnt tv)
-                log(s"UNIFYING ${tv.showDbg} with ${recPrefix.mkString(", ")}")
+                log(dbg"UNIFYING ${tv.showDbg} with ${recPrefix.map(_.showDbg).mkString(", ")}")
                 recPrefix.foreach: tv2 =>
                   if tv2 isnt tv then
                     traversedTVs += tv2
@@ -102,9 +103,9 @@ class TypeSimplifier(tl: TraceLogger):
                       else if tvRepr.lvl > lvl && !varSubst.contains(tvRepr) then varSubst += tvRepr -> tv
                 continue = false
               // TODO else??
-              if traversedTVs.contains(tv) then log(s"Now already traversed ${tv.showDbg}")
+              if traversedTVs.contains(tv) then log(dbg"Now already traversed ${tv.showDbg}")
               else if pastPathsSet.contains(tv) then
-                log(s"REC ${tv.showDbg}")
+                log(dbg"REC ${tv.showDbg}")
                 recVars += tv
                 continue = false
               if continue then
@@ -155,7 +156,7 @@ class TypeSimplifier(tl: TraceLogger):
               pastPathsSet --= oldPath
               ()
     
-    trace(s"Simplifying type ${ty.showDbg}"):
+    trace(dbg"Simplifying type ${ty.showDbg}"):
       Analysis(pol)(ty)
     
     log("Unif-pre: " + Analysis.varSubst)
@@ -172,15 +173,15 @@ class TypeSimplifier(tl: TraceLogger):
     val traversed: MutSet[IV] = MutSet.empty
     val transformed: MutMap[IV, Type] = MutMap.empty
     
-    def subst(ty: GeneralType): GeneralType = trace[GeneralType](s"subst(${ty.showDbg})", r => s"= ${r.showDbg}"):
+    def subst(ty: GeneralType): GeneralType = trace[GeneralType](dbg"subst(${ty.showDbg})", r => s"= ${r.showDbg}"):
       ty match
         case ty if ty.lvl <= lvl => ty // TODO NOPE
         case _tv: IV =>
           val tv = Analysis.getRepr(_tv)
-          log(s"Repr: ${tv.showDbg}")
+          log(dbg"Repr: ${tv.showDbg}")
           transformed.getOrElseUpdate(tv, {
             if Analysis.recVars.contains(tv) then
-              log(s"It's recursive!")
+              log(dbg"It's recursive!")
               transformed += tv -> tv
             else transformed += tv ->
               // TypeBounds(TopType, BotType)(noProv) // TODO improve? creates lots of junk...

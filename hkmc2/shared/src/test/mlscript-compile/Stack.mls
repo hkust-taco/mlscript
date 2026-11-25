@@ -32,6 +32,7 @@ fun toArray(xs) =
   xs reverse() toReverseArray()
 
 fun toReverseArray(xs) =
+  let =xs
   let
     arr = mut []
     i = 0
@@ -47,7 +48,7 @@ fun zip(...xss) =
       h2 :: t2 then go(h2 :: heads, t2 :: tails)(t)
       Nil then go(heads, tails)(t)
     Nil and heads is
-      Nil then (assert tails is Nil, Nil) // * TODO: improve syntax (parens are currently needed)
+      Nil then { assert tails is Nil, Nil }
       else heads toArray() :: go(Nil, Nil) of tails reverse()
   go(Nil, Nil) of fromArray(xss)
 
@@ -63,7 +64,7 @@ fun (:::) concat(xs, ys) = if
         rest = tail' // the remaining of `xs`
       while rest is head :: tail do
         let next = new mut ::(head, ys)
-        set current.tail = next
+        @unsafe set current.tail = next
         Object.freeze(current)
         set
           current = next

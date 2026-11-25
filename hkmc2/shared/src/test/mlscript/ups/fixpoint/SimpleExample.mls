@@ -1,7 +1,7 @@
 :.
 :js
 
-open annotations { compile }
+open annotations.{ compile }
 
 
 data class Lit(val value: Int) with
@@ -43,14 +43,14 @@ pattern Steps = @compile (Step as Steps | _)
 //│                   set tmp2 = { ...bindings, ...bindings1 };
 //│                   set a = tmp2.a﹖;
 //│                   set b = tmp2.b﹖;
-//│                   set c = +⁰(a, b);
+//│                   set c = (+⁰(a, b) as! Int⁰);
 //│                   set tmp3 = +⁰("reduce ", a);
 //│                   set tmp4 = +⁰(tmp3, " + ");
 //│                   set tmp5 = +⁰(tmp4, b);
 //│                   set tmp6 = +⁰(tmp5, " = ");
 //│                   set tmp7 = +⁰(tmp6, c);
 //│                   do Predef⁰.print⁰(tmp7);
-//│                   set inlinedVal1 = Lit⁰((c as! Int⁰));
+//│                   set inlinedVal1 = Lit⁰(c);
 //│                   return new runtime⁰.MatchSuccess⁰(inlinedVal1, null)
 //│                 else
 //│                   return new runtime⁰.MatchFailure⁰("topmost")
@@ -259,35 +259,30 @@ pattern Steps = @compile (Step as Steps | _)
 //│   }
 //│   method unapplyStringPrefix⁰ = fun unapplyStringPrefix¹(input) {
 //│     let output, remaining, unapplyResult, output1, unapplyResult1, outputPair, tmp, tmp1, tmp2;
-//│     set unapplyResult1 = Step⁰.unapplyStringPrefix﹖(input);
-//│     match unapplyResult1
-//│       MatchSuccess⁰ =>
-//│         set outputPair = unapplyResult1.output⁰;
-//│         set output = runtime⁰.Tuple⁰.get⁰(outputPair, 0);
-//│         set remaining = runtime⁰.Tuple⁰.get⁰(outputPair, 1);
-//│         set unapplyResult = Steps¹.unapply﹖(output);
-//│         match unapplyResult
+//│     match input
+//│       Str⁰ =>
+//│         set unapplyResult1 = Step⁰.unapplyStringPrefix﹖(input);
+//│         match unapplyResult1
 //│           MatchSuccess⁰ =>
-//│             set output1 = unapplyResult.output⁰;
-//│             set tmp = [output1, remaining];
-//│             return new runtime⁰.MatchSuccess⁰(tmp, null)
-//│           else
-//│             match input
-//│               Str⁰ =>
+//│             set outputPair = unapplyResult1.output⁰;
+//│             set output = runtime⁰.Tuple⁰.get⁰(outputPair, 0);
+//│             set remaining = runtime⁰.Tuple⁰.get⁰(outputPair, 1);
+//│             set unapplyResult = Steps¹.unapply﹖(output);
+//│             match unapplyResult
+//│               MatchSuccess⁰ =>
+//│                 set output1 = unapplyResult.output⁰;
+//│                 set tmp = [output1, remaining];
+//│                 return new runtime⁰.MatchSuccess⁰(tmp, null)
+//│               else
 //│                 set tmp1 = [input, ""];
 //│                 return new runtime⁰.MatchSuccess⁰(tmp1, null)
-//│               else
-//│                 return new runtime⁰.MatchFailure⁰(null)
 //│             end
-//│         end
-//│       else
-//│         match input
-//│           Str⁰ =>
+//│           else
 //│             set tmp2 = [input, ""];
 //│             return new runtime⁰.MatchSuccess⁰(tmp2, null)
-//│           else
-//│             return new runtime⁰.MatchFailure⁰(null)
 //│         end
+//│       else
+//│         return new runtime⁰.MatchFailure⁰(null)
 //│     end
 //│   }
 //│ };

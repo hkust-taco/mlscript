@@ -1,0 +1,67 @@
+:.
+
+// A member val holds one record per instance, module, or object. A write through any reference
+// to that record is visible to the later reads of the val.
+
+private class Item(val n: Int)
+private class Other(val other: Int)
+
+
+:e
+private class RecordOwner(p) with
+  val record = mut {item: p}
+private val owner = RecordOwner(Item(1))
+private val alias = owner.record
+set alias.item = null
+owner.record.item.n
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+6: 	owner.record.item.n
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ╟── Null literal does not contain member 'n'
+//│ ║  l.+5: 	set alias.item = null
+//│ ╙──      	                 ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ alias = {item: null}
+//│ owner = RecordOwner(_)
+
+
+:e
+private class ClearedOwner(p) with
+  val record = mut {item: p}
+private fun clearRecord(o) = set o.record.item = null
+private val cleared = ClearedOwner(Item(1))
+clearRecord(cleared)
+cleared.record.item.n
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+6: 	cleared.record.item.n
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Null literal does not contain member 'n'
+//│ ║  l.+3: 	private fun clearRecord(o) = set o.record.item = null
+//│ ╙──      	                                                 ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ cleared = ClearedOwner(_)
+
+
+:e
+private module Records with
+  val record = mut {item: Item(1)}
+private fun clearModuleRecord() = set Records.record.item = null
+clearModuleRecord()
+Records.record.item.n
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+5: 	Records.record.item.n
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Null literal does not contain member 'n'
+//│ ║  l.+3: 	private fun clearModuleRecord() = set Records.record.item = null
+//│ ╙──      	                                                            ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Each instance keeps its own record.
+:expect [1, 2]
+private class Separate(p) with
+  val record = {item: p}
+[Separate(Item(1)).record.item.n, Separate(Other(2)).record.item.other]
+//│ = [1, 2]
+
+

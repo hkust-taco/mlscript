@@ -3,7 +3,7 @@
 module SealedClasses with
   class Closed { fun value() = 1 }
   open class Open { fun value() = 2 }
-  abstract class Abstract { fun value() }
+  abstract class Abstract { fun value(): Int }
   // Sealing restricts direct subclasses; a local subclass may itself be open.
   open class OpenChild extends Closed
   class ClosedChild extends Open

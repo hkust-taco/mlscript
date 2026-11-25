@@ -1,9 +1,10 @@
+:.
 :js
 :effectHandlers
 :lift
 
 
-fun foo(f) =
+private fun foo(f) =
   let y = 1
   fun bar() =
     f()
@@ -17,7 +18,7 @@ fun foo(f) =
 :expect 3
 handle h = Object with
   fun f()(k) = k(())
-foo(() => h.f())
+foo(() => h.'f())
 //│ = 3
 
 fun foo() =

@@ -7,22 +7,22 @@ module Foo
 :pe
 module Foo with
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
-//│ ║  l.8: 	module Foo with
-//│ ╙──     	               ^
+//│ ║  l.+1: 	module Foo with
+//│ ╙──      	               ^
 
 :e
 module Foo with val x = 1
 //│ ╔══[COMPILATION ERROR] Illegal body of module definition (should be a block; found term definition).
-//│ ║  l.14: 	module Foo with val x = 1
+//│ ║  l.+1: 	module Foo with val x = 1
 //│ ╙──      	                ^^^^^^^^^
 
 :e
 Foo.x
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.20: 	Foo.x
+//│ ║  l.+1: 	Foo.x
 //│ ║        	^^^^^
 //│ ╟── Module 'Foo' does not contain member 'x'
-//│ ║  l.14: 	module Foo with val x = 1
+//│ ║  l.XX: 	module Foo with val x = 1
 //│ ╙──      	^^^^^^^^^^
 
 module Foo with

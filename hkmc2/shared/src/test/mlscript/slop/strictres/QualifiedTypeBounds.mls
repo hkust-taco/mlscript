@@ -1,0 +1,119 @@
+:.
+
+class Animal(val name: Str)
+class Dog(val tag: Int) extends Animal("dog")
+class Family[T](val pet: T) with
+  type Element = T
+  type Handler = T -> Int
+val family: Family[in Dog out Animal] = Family[Animal](Animal("cat"))
+//│ family = Family(Animal("cat"))
+
+// A separate signature can receive a callback returning the family's actual pet.
+:e
+fun tagOf: (() -> family.Element) -> Int
+fun tagOf(next) = next().tag
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	fun tagOf(next) = next().tag
+//│ ║        	                  ^^^^^^^^^^
+//│ ╟── Value of type 'Animal' does not contain member 'tag'
+//│ ║  l.XX: 	val family: Family[in Dog out Animal] = Family[Animal](Animal("cat"))
+//│ ╙──      	                              ^^^^^^
+
+:expect "cat"
+fun nameOf: (() -> family.Element) -> Str
+fun nameOf(next) = next().name
+nameOf(() => family.pet)
+//│ = "cat"
+
+// Moving the arrow inside the selected alias still gives its implementation an Animal.
+:e
+val handler: family.Handler = pet => pet.tag
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	val handler: family.Handler = pet => pet.tag
+//│ ║        	                                     ^^^^^^^
+//│ ╟── Value of type 'Animal' does not contain member 'tag'
+//│ ║  l.XX: 	val family: Family[in Dog out Animal] = Family[Animal](Animal("cat"))
+//│ ╙──      	                              ^^^^^^
+//│ handler = fun
+
+// A callback supplied as the family's element must accept an Animal, even though a
+// callback read from this family only promises to accept a Dog.
+:e
+val functions: Family[in (Animal -> Int) out (Dog -> Int)] = Family[Animal -> Int](x => 0)
+fun accept(f: functions.Element): () = ()
+accept(pet => pet.tag)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+3: 	accept(pet => pet.tag)
+//│ ║        	              ^^^^^^^
+//│ ╟── Value of type 'Animal' does not contain member 'tag'
+//│ ║  l.+1: 	val functions: Family[in (Animal -> Int) out (Dog -> Int)] = Family[Animal -> Int](x => 0)
+//│ ╙──      	                          ^^^^^^
+//│ functions = Family(fun)
+
+// Writing the family's element as a function's whole signature must check the same callback.
+:e
+fun separate: functions.Element
+fun separate(pet) = pet.tag
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	fun separate(pet) = pet.tag
+//│ ║        	                    ^^^^^^^
+//│ ╟── Value of type 'Animal' does not contain member 'tag'
+//│ ║  l.XX: 	val functions: Family[in (Animal -> Int) out (Dog -> Int)] = Family[Animal -> Int](x => 0)
+//│ ╙──      	                          ^^^^^^
+
+// A returned closure must also meet the signature's input bound.
+:e
+val makers: Family[in (() -> (Animal -> Int)) out (() -> (Dog -> Int))] = Family[() -> (Animal -> Int)](() => pet => 0)
+fun maker: makers.Element
+fun maker() = pet => pet.tag
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+3: 	fun maker() = pet => pet.tag
+//│ ║        	                     ^^^^^^^
+//│ ╟── Value of type 'Animal' does not contain member 'tag'
+//│ ║  l.+1: 	val makers: Family[in (() -> (Animal -> Int)) out (() -> (Dog -> Int))] = Family[() -> (Animal -> Int)](() => pet => 0)
+//│ ╙──      	                              ^^^^^^
+//│ makers = Family(fun)
+
+// A caller can rely on the output bound of the written signature.
+:e
+val pets: Family[in (() -> Dog) out (() -> Animal)] = Family[() -> Dog](() => Dog(1))
+fun make: pets.Element
+fun make() = Dog(1)
+make().tag
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+4: 	make().tag
+//│ ║        	^^^^^^^^^^
+//│ ╟── Value of type 'Animal' does not contain member 'tag'
+//│ ║  l.+1: 	val pets: Family[in (() -> Dog) out (() -> Animal)] = Family[() -> Dog](() => Dog(1))
+//│ ╙──      	                                           ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ pets = Family(fun)
+
+// The same selection in a generic signature keeps the type supplied by each call.
+:expect [1, "cat"]
+private fun petOf[T](f: Family[out T]): f.Element = f.pet
+[petOf[Dog](Family[Dog](Dog(1))).tag, petOf[Animal](family).name]
+//│ = [1, "cat"]
+
+// The exported handler mentions Hidden through its receiver's input bound.
+:e
+private class Hidden with
+  fun use(x) = x.member
+private val hidden: Family[in Hidden out Any] = Family[Any](0)
+fun handlerForHidden(): hidden.Handler = x => 1
+new Hidden().use({member: 3})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	  fun use(x) = x.member
+//│ ║        	               ^^^^^^^^
+//│ ╟── Cannot resolve member 'member' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+2: 	  fun use(x) = x.member
+//│ ║        	          ^
+//│ ╟── Member 'use' is accessible here.
+//│ ║  l.+2: 	  fun use(x) = x.member
+//│ ║        	  ^^^^^^^^^^
+//│ ╟── 'handlerForHidden' is exposed by this compilation unit.
+//│ ║  l.+4: 	fun handlerForHidden(): hidden.Handler = x => 1
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ hidden = undefined

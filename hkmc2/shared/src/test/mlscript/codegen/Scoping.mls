@@ -3,6 +3,7 @@
 
 :expect 4
 fun f(y) =
+  let =y
   let x = 0
   class A() with
     fun g() =

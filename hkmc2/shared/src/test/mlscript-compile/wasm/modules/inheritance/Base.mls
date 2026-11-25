@@ -1,0 +1,7 @@
+#lang(0.3.x)
+
+#config(target: CompilationTarget.Wasm, inlining: None)
+
+open class Base(val baseValue) with
+  open fun answer(x: Any): Any = baseValue + x
+  fun baseField() = baseValue

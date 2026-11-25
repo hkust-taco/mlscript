@@ -1,0 +1,150 @@
+:.
+
+import "../../mlscript-compile/Iter.mls"
+import "../../mlscript-compile/FingerTreeList.mls"
+import "../../mlscript-compile/LazyArray.mls"
+import "../../mlscript-compile/LazyFingerTree.mls"
+import "../../mlscript-compile/FingerTreeList_StressTest.mls"
+
+fun iterable[A](xs: Array[A]): Iter.IterableImpl[A] = Iter.IterableImpl(() => xs.iterator())
+
+// Exercise optional bounds through the base interface and each concrete override.
+fun slices(xs: Iter.IterableBase[Int]): Bool = JSON.stringify([
+  [...xs.slice()]
+  [...xs.slice(1)]
+  [...xs.slice(null, 2)]
+  [...xs.slice(-2)]
+  [...xs.slice(0, 0)]
+]) == "[[1,2,3],[2,3],[1,2],[2,3],[]]"
+
+:expect [true, true, true, true, true, true, true]
+[
+  slices(iterable([1, 2, 3]))
+  slices(FingerTreeList.mk(1, 2, 3))
+  slices(FingerTreeList_StressTest.mk(1, 2, 3))
+  slices(LazyArray.mk(1, 2, 3))
+  slices(LazyArray.concat([1], [2, 3]))
+  slices(LazyFingerTree.mk(1, 2, 3))
+  slices(LazyFingerTree.concat([1], [2, 3]))
+]
+//│ = [true, true, true, true, true, true, true]
+
+// Empty and multiple argument lists must work through virtual concat calls too.
+fun concats(xs: Iter.IterableBase[Int]): Bool =
+  JSON.stringify([[...xs.concat()], [...xs.concat([4], [5, 6])]]) == "[[1,2,3],[1,2,3,4,5,6]]"
+
+:expect [true, true, true, true, true, true, true]
+[
+  concats(iterable([1, 2, 3]))
+  concats(FingerTreeList.mk(1, 2, 3))
+  concats(FingerTreeList_StressTest.mk(1, 2, 3))
+  concats(LazyArray.mk(1, 2, 3))
+  concats(LazyArray.concat([1], [2, 3]))
+  concats(LazyFingerTree.mk(1, 2, 3))
+  concats(LazyFingerTree.concat([1], [2, 3]))
+]
+//│ = [true, true, true, true, true, true, true]
+
+// Optional native defaults differ from passing null, especially for lastIndexOf.
+:expect "[\"1,2,1\",\"121\",2,0,true,false,1,[1,1,2],[2,1,1],[1],[1,9,1]]"
+private fun defaults(xs: Iter.IterableBase[Int]) = [
+  xs.join(), xs.join("")
+  xs.lastIndexOf(1), xs.lastIndexOf(1, 0)
+  xs.includes(2), xs.includes(2, 2), xs.indexOf(2)
+  xs.toSorted(), xs.toSorted((x, y) => y - x)
+  xs.toSpliced(1), xs.toSpliced(1, 1, 9)
+]
+JSON.stringify(defaults(iterable([1, 2, 1])))
+//│ = "[\"1,2,1\",\"121\",2,0,true,false,1,[1,1,2],[2,1,1],[1],[1,9,1]]"
+
+// Callback contracts allow unused index/array arguments and preserve result types.
+:expect "[[4,4,4],[2,3],2,1,3,2,true,true,6,-6,[1,-1,2,-2,3,-3],[0,1],0,1]"
+private fun callbacks(xs: Iter.IterableBase[Int]) = [
+  xs.map((x, i, a) => x + a.length - i)
+  xs.filter(x => x > 1)
+  xs.find(x => x > 1), xs.findIndex(x => x > 1)
+  xs.findLast(x => x > 1), xs.findLastIndex(x => x > 1)
+  xs.every(x => x > 0), xs.some(x => x == 2)
+  xs.reduce((acc, x) => acc + x, 0), xs.reduceRight((acc, x) => acc - x, 0)
+  xs.flatMap(x => [x, -x])
+  xs.entries().next().value, xs.keys().next().value, xs.values().next().value
+]
+JSON.stringify(callbacks(iterable([1, 2, 3])))
+//│ = "[[4,4,4],[2,3],2,1,3,2,true,true,6,-6,[1,-1,2,-2,3,-3],[0,1],0,1]"
+
+:expect [2, 3]
+iterable([1, 2]).map(x => x + 1, {unused: true})
+//│ = [2, 3]
+
+:expect [1, 2, 3]
+iterable([[1], [2, 3]]).flat()
+//│ = [1, 2, 3]
+
+:expect "1,2,3"
+iterable([1, 2, 3]).toLocaleString()
+//│ = "1,2,3"
+
+// Method values retain optional parameter layouts.
+:expect [1, 2, 3]
+let slice = iterable([1, 2, 3]).slice
+[...slice()]
+//│ = [1, 2, 3]
+//│ slice = fun slice
+
+class Item(val value: Str)
+
+:expect true
+private fun names(xs: Iter.IterableBase[Item]): Array[Str] = xs.map(x => x.value)
+JSON.stringify([
+  names(iterable([Item("first"), Item("second")]))
+  names(FingerTreeList.mk(Item("first"), Item("second")))
+  names(LazyArray.mk(Item("first"), Item("second")))
+  names(LazyFingerTree.mk(Item("first"), Item("second")))
+]) == "[[\"first\",\"second\"],[\"first\",\"second\"],[\"first\",\"second\"],[\"first\",\"second\"]]"
+//│ = true
+
+// TODO: toArray currently freezes its fresh copy, so the mutating wrappers fail.
+:fixme
+:expect [2, 3]
+iterable([1, 2, 3]).splice(1)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot delete property '2' of [object Array]
+//│ ═══[RUNTIME ERROR] Expected: '[2, 3]', got: 'undefined'
+
+:fixme
+:expect [9, 9, 9]
+iterable([1, 2, 3]).fill(9)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot assign to read only property '0' of object '[object Array]'
+//│ ═══[RUNTIME ERROR] Expected: '[9, 9, 9]', got: 'undefined'
+
+:e
+private fun extraBound(xs: Iter.IterableBase[Int]) = xs.slice(0, 1, 2)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+1: 	private fun extraBound(xs: Iter.IterableBase[Int]) = xs.slice(0, 1, 2)
+//│ ║        	                                                     ^^^^^^^^^^^^^^^^^
+//│ ╟── Function 'slice' expected 0 to 2 arguments, but got 3
+//│ ║  in ../../mlscript-compile/Iter.mls
+//│ ║  l.XX: 	  open fun slice(start?: Int, end?: Int): Iterable[A] =
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+private fun missingPredicate(xs: Iter.IterableBase[Int]) = xs.filter()
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+1: 	private fun missingPredicate(xs: Iter.IterableBase[Int]) = xs.filter()
+//│ ║        	                                                           ^^^^^^^^^^^
+//│ ╟── Function 'filter' expected 1 to 2 arguments, but got 0
+//│ ║  in ../../mlscript-compile/Iter.mls
+//│ ║  l.XX: 	  fun filter(f: (A, drop Int, drop Array[A]) -> Bool, thisArg?): Array[A] =
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+private fun extraCallbackParameter(xs: Iter.IterableBase[Int]) = xs.map((x, i, a, extra) => x)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+1: 	private fun extraCallbackParameter(xs: Iter.IterableBase[Int]) = xs.map((x, i, a, extra) => x)
+//│ ║        	                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.+1: 	private fun extraCallbackParameter(xs: Iter.IterableBase[Int]) = xs.map((x, i, a, extra) => x)
+//│ ║        	                                                                        ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  in ../../mlscript-compile/Iter.mls
+//│ ║  l.XX: 	  fun map[B](f: (A, drop Int, drop Array[A]) -> B, thisArg?): Array[B] =
+//│ ╙──      	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

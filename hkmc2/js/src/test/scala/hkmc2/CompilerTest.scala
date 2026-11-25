@@ -51,6 +51,24 @@ class CompilerTest extends AnyFunSuite:
 
     assert(fs.readCount(inputPath) == 1,
       "The first compilation should parse the source once and the second should reuse its artifact")
+
+  test("WASM artifacts use the virtual filesystem and invalidate with their dependencies"):
+    val fs = new CountingFileSystem(loadStandardLibrary())
+    given CompilerCtx = CompilerCtx.fresh(fs, paths, Config.default(io.Path("/")))
+    val compiler = MLsCompiler(_ => diagnostic => fail(diagnostic.toString))
+    val a = Path("/A.mls")
+    val b = Path("/B.mls")
+    fs.write(a, "#lang(0.3.x)\n#config(target: Wasm)\nfun A() = 41")
+    fs.write(b, "#lang(0.3.x)\n#config(target: Wasm)\nimport \"./A.mls\"\nfun B() = A()")
+    compiler.compileModule(b)
+    val before = fs.read(Path("/B.wat"))
+    compiler.compileModule(a)
+    assert(fs.readCount(a) == 1 && fs.readCount(b) == 1)
+    assert(fs.exists(Path("/std/RuntimeWasm.wat")))
+    fs.write(a, "#lang(0.3.x)\n#config(target: Wasm)\nfun A() = 42")
+    compiler.compileModule(b)
+    assert(fs.readCount(a) == 2 && fs.readCount(b) == 2)
+    assert(fs.read(Path("/B.wat")) != before, "Inlined dependency changes must regenerate the importer")
   
   test("compiler can compile a simple program"):
     val (fs, compiler) = createCompiler()
@@ -71,14 +89,14 @@ class CompilerTest extends AnyFunSuite:
                   |    else findFirst(xs', f)
                   |
                   |let nums = 1 :: 2 :: 3 :: 4 :: 5 :: Nil
-                  |let result = nums |. findFirst \ _ * 6 is 24
+                  |let result = (nums |. findFirst) \ _ * 6 is 24
                   |""".stripMargin
     val inputPath = "/findFirstTest.mls"
     val outputPath = "/findFirstTest.mjs"
     
     fs.write(inputPath, code)
     
-    val diagnostics = compiler.compile(inputPath)
+    val diagnostics = compiler.compile(inputPath).diagnostics
     
     val hasErrors = diagnostics.exists: perFile =>
       val fileDiagnostics = perFile.diagnostics.asInstanceOf[scala.scalajs.js.Array[scala.scalajs.js.Dynamic]]
@@ -91,6 +109,17 @@ class CompilerTest extends AnyFunSuite:
     val output = fs.read(outputPath)
     assert(output.contains("findFirst"), "Output should contain the findFirst function")
   
+  // Diff tests run the compiler on the JVM. This checks lowering stack usage under Scala.js,
+  // where retaining the continuation frames of earlier declarations exhausts the JS stack.
+  test("compiler lowers large module initializers without overflowing the JavaScript stack"):
+    val (fs, compiler) = createCompiler()
+    val fields = (0 until 80).map(i => s"val field$i = {value: $i}").mkString("\n")
+    fs.write("/Large.mls", s"#lang(0.3.x)\n\nmodule Large with ...\n$fields\n")
+
+    val result = compiler.compile("/Large.mls")
+    assert(result.compiled && result.diagnostics.isEmpty, js.JSON.stringify(result))
+    assert(fs.exists(Path("/Large.mjs")), "Compilation should produce the module")
+
   test("compiler can compile two files that import each other"):
     val (fs, compiler) = createCompiler()
     
@@ -252,8 +281,7 @@ class CompilerTest extends AnyFunSuite:
     compiler.compile("/B.mls")
 
     given DebugPrinter = new DebugPrinter
-    given TL = new TraceLogger:
-      override def doTrace = false
+    given TL = TraceLogger.silent
     given Raise = diagnostic => fail(diagnostic.toString)
     val prelude = cctx.getPrelude(paths.preludeFile).ctx
     val artifact = cctx.getElaboratedBlock(Path("/A.mls"), prelude)
@@ -275,8 +303,7 @@ class CompilerTest extends AnyFunSuite:
     val fs = new InMemoryFileSystem(loadStandardLibrary())
     given cctx: CompilerCtx = CompilerCtx.fresh(fs, paths, Config.default(io.Path("/")))
     given DebugPrinter = new DebugPrinter
-    given TL = new TraceLogger:
-      override def doTrace = false
+    given TL = TraceLogger.silent
     given Raise = diagnostic => fail(diagnostic.toString)
     val prelude = cctx.getPrelude(paths.preludeFile).ctx
     val map = prelude.builtins.Array.defn.get.body.members("map").asTrm.get.defn.get
@@ -316,8 +343,7 @@ class CompilerTest extends AnyFunSuite:
     val fs = new InMemoryFileSystem(loadStandardLibrary())
     given cctx: CompilerCtx = CompilerCtx.fresh(fs, paths, Config.default(io.Path("/")))
     given DebugPrinter = new DebugPrinter
-    given TL = new TraceLogger:
-      override def doTrace = false
+    given TL = TraceLogger.silent
     given Raise = diagnostic => fail(diagnostic.toString)
     fs.write("/Generic.mls", """#lang(0.3.x, strictResolution: true)
                                  |module Generic with
@@ -353,8 +379,7 @@ class CompilerTest extends AnyFunSuite:
     val fs = new InMemoryFileSystem(loadStandardLibrary())
     given cctx: CompilerCtx = CompilerCtx.fresh(fs, paths, Config.default(io.Path("/")))
     given DebugPrinter = new DebugPrinter
-    given TL = new TraceLogger:
-      override def doTrace = false
+    given TL = TraceLogger.silent
     given Raise = diagnostic => fail(diagnostic.toString)
     fs.write("/Types.mls", """#lang(0.3.x, strictResolution: true)
                                |module Types with
@@ -391,8 +416,7 @@ class CompilerTest extends AnyFunSuite:
     val fs = new InMemoryFileSystem(loadStandardLibrary())
     given cctx: CompilerCtx = CompilerCtx.fresh(fs, paths, Config.default(io.Path("/")))
     given DebugPrinter = new DebugPrinter
-    given TL = new TraceLogger:
-      override def doTrace = false
+    given TL = TraceLogger.silent
     given Raise = diagnostic => fail(diagnostic.toString)
     val prelude = cctx.getPrelude(paths.preludeFile).ctx
     val parameter = prelude.builtins.Array.defn.get.tparams.head.sym
@@ -425,8 +449,7 @@ class CompilerTest extends AnyFunSuite:
     val fs = new InMemoryFileSystem(loadStandardLibrary())
     given cctx: CompilerCtx = CompilerCtx.fresh(fs, paths, Config.default(io.Path("/")))
     given DebugPrinter = new DebugPrinter
-    given TL = new TraceLogger:
-      override def doTrace = false
+    given TL = TraceLogger.silent
     val errors = scala.collection.mutable.ArrayBuffer.empty[Diagnostic]
     given Raise = errors += _
     fs.write("/Unsafe.mls", """#lang(0.3.x, strictResolution: false)
@@ -443,7 +466,7 @@ class CompilerTest extends AnyFunSuite:
     
     fs.write("/test.mls", """fun f(x) = x + y""") // `y` is not defined.
     
-    val diagnostics = compiler.compile("/test.mls")
+    val diagnostics = compiler.compile("/test.mls").diagnostics
     
     assert(diagnostics.length is 1, "Should report diagnostics for only one file")
     
@@ -452,3 +475,67 @@ class CompilerTest extends AnyFunSuite:
       fileDiagnostics.exists(_.kind is "error")
     
     assert(hasErrors, "Compilation should report errors")
+
+  test("compiler says whether it wrote a WASM module whose cached errors it does not report again"):
+    val (fs, compiler) = createCompiler()
+    fs.write("/Broken.mls", "#lang(0.3.x)\n#config(target: Wasm)\nfun Broken() = missing")
+    val first = compiler.compile("/Broken.mls")
+    assert(!first.compiled && first.diagnostics.nonEmpty, js.JSON.stringify(first))
+    val failureLoader = fs.read(Path("/Broken.mjs"))
+    fs.write("/Broken.mjs", "export default () => 42;")
+    // The second request reuses the artifact that the first one built and reported the errors of.
+    val second = compiler.compile("/Broken.mls")
+    assert(!second.compiled && second.diagnostics.isEmpty, js.JSON.stringify(second))
+    assert(fs.read(Path("/Broken.mjs")) == failureLoader, "A cached failure must replace an existing loader")
+    assert(!fs.exists(Path("/Broken.wat")), "A WASM module with errors must not produce WAT")
+
+  test("WASM runtime errors replace existing loaders on fresh and cached requests"):
+    // Diff tests cannot replace the shared runtime source between requests or observe cached failure results
+    // and output replacement. The virtual filesystem also gives source edits deterministic cache versions.
+    val (fs, compiler) = createCompiler()
+    val runtime = fs.read(paths.runtimeSourceFile)
+    val brokenRuntime = runtime + "\nfun brokenRuntime() = missing\n"
+    val watOutputs = Vector(Path("/std/RuntimeWasm.wat"), Path("/Main.wat"))
+    fs.write("/Main.mls", "#lang(0.3.x)\n#config(target: Wasm)\nfun Main() = ()")
+    fs.write(paths.runtimeSourceFile, brokenRuntime)
+
+    def checkFailure(): Unit =
+      val first = compiler.compile("/Main.mls")
+      assert(!first.compiled && first.diagnostics.nonEmpty, js.JSON.stringify(first))
+      val cached = compiler.compile("/Main.mls")
+      assert(!cached.compiled && cached.diagnostics.isEmpty, js.JSON.stringify(cached))
+
+    checkFailure()
+    assert(watOutputs.forall(path => !fs.exists(path)),
+      "An erroneous runtime must block runtime and module WAT emission")
+    val failureLoader = fs.read(Path("/Main.mjs"))
+    assert(!fs.exists(Path("/std/RuntimeWasm.mjs")), "A runtime error must not create the host library")
+
+    // Fixing the runtime must invalidate both its failed artifact and the module that depends on it.
+    fs.write(paths.runtimeSourceFile, runtime)
+    val repaired = compiler.compile("/Main.mls")
+    assert(repaired.compiled && repaired.diagnostics.isEmpty, js.JSON.stringify(repaired))
+    assert(fs.read(Path("/Main.mjs")) != failureLoader, "A successful compilation must replace the diagnostic loader")
+    val existingWat = watOutputs.map(path => path -> fs.read(path))
+
+    fs.write(paths.runtimeSourceFile, brokenRuntime)
+    checkFailure()
+    assert(fs.read(Path("/Main.mjs")) == failureLoader, "A failed rebuild must replace the previous successful loader")
+    existingWat.foreach: (path, content) =>
+      assert(fs.read(path) == content, s"A failed compilation must preserve existing WAT at $path")
+
+  test("WASM failure loaders preserve the reserved host runtime path"):
+    // A real filesystem diff test cannot replace the host library source without affecting other tests.
+    val (fs, compiler) = createCompiler()
+    val source = "/std/RuntimeWasm.mls"
+    val loader = Path("/std/RuntimeWasm.mjs")
+    fs.write(source, "#lang(0.3.x)\n#config(target: Wasm)\nfun RuntimeWasm() = 42")
+    val first = compiler.compile(source)
+    assert(!first.compiled && first.diagnostics.nonEmpty, js.JSON.stringify(first))
+    assert(!fs.exists(loader), "A failed WASM source must not create the reserved runtime loader")
+
+    val hostLibrary = "export default {};"
+    fs.write(loader, hostLibrary)
+    val second = compiler.compile(source)
+    assert(!second.compiled && second.diagnostics.nonEmpty, js.JSON.stringify(second))
+    assert(fs.read(loader) == hostLibrary, "A failed WASM source must not overwrite the host library")

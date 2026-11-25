@@ -120,11 +120,11 @@ countDown(5)
 // A nested scope gets its own binding, which can escape in a closure.
 fun nested(seed) =
   val x = seed
-  let read = scope.locally of (
+  let read = scope.locally of {
     val x = 20
     fun get() = x
     get
-  )
+  }
   x + read()
 
 :expect 42

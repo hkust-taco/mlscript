@@ -8,7 +8,7 @@ import "../../../mlscript-compile/apps/parsing/Keywords.mls"
 import "../../../mlscript-compile/apps/parsing/Rules.mls"
 import "../../../mlscript-compile/apps/parsing/Test.mls"
 
-open Keywords { opPrec, opPrecOpt }
+open Keywords.{ opPrec, opPrecOpt }
 
 Keywords.maxKeywordPrec
 //│ = 11

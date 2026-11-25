@@ -11,7 +11,7 @@ f(2, 3)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let f;
 //│ f = function f(x, y) {
-//│   runtime.checkArgs("f", 2, true, arguments.length);
+//│   runtime.checkArgs("f", 2, arguments.length);
 //│   return x + y
 //│ };
 //│ block$res2 = 5;
@@ -25,7 +25,7 @@ f(2, 3)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let f1, f2;
 //│ f2 = function f(x, y) {
-//│   runtime.checkArgs("f", 2, true, arguments.length);
+//│   runtime.checkArgs("f", 2, arguments.length);
 //│   return x + y
 //│ };
 //│ f1 = f2;
@@ -36,11 +36,11 @@ f(2, 3)
 
 :re
 unchecked(f)(2)
-//│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
+//│ ═══[RUNTIME ERROR] Error: Function 'f' expected at least 2 arguments but got 1
 
-:re
+// * Extra arguments are ignored, as in JavaScript
 unchecked(f)(2, 3, 4)
-//│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 3
+//│ = 5
 
 
 :ssjs
@@ -60,7 +60,7 @@ unchecked(f)(2)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ block$res7 = runtime.safeCall(f1(2));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
+//│ ═══[RUNTIME ERROR] Error: Function 'f' expected at least 2 arguments but got 1
 
 
 :ssjs
@@ -70,7 +70,7 @@ unchecked(f)(3)(4)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let f3;
 //│ f3 = function f(x) {
-//│   runtime.checkArgs("f", 1, true, arguments.length);
+//│   runtime.checkArgs("f", 1, arguments.length);
 //│   return (y, z) => {
 //│     let tmp;
 //│     tmp = x + y;
@@ -92,7 +92,7 @@ let f = (x, y) => x + y in unchecked(f)(2)
 :re
 let f = (x, y) => x + y
 unchecked(f)(2)
-//│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
+//│ ═══[RUNTIME ERROR] Error: Function 'f' expected at least 2 arguments but got 1
 //│ f = fun f
 
 
@@ -109,7 +109,7 @@ unchecked(Cls(1, 2)).f(3)
 data class Cls(x, y) with
   fun f(z, p) = x + y + z + p
 unchecked(Cls(1, 2)).f(3)
-//│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
+//│ ═══[RUNTIME ERROR] Error: Function 'f' expected at least 2 arguments but got 1
 
 
 :ssjs
@@ -133,7 +133,7 @@ unchecked(Cls(1, 2)).f(3, 4)(5)
 //│   }
 //│   get f$__checkNotMethod() { runtime.deboundMethod("f", "Cls"); }
 //│   f(z, p) {
-//│     runtime.checkArgs("f", 2, true, arguments.length);
+//│     runtime.checkArgs("f", 2, arguments.length);
 //│     return (q, s) => {
 //│       let tmp3, tmp4, tmp5, tmp6;
 //│       tmp3 = this.x + this.y;

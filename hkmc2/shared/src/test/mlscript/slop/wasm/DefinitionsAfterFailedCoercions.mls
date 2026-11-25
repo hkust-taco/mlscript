@@ -1,0 +1,73 @@
+:.
+open wasm.{ i32 }
+open i32.{ const }
+//│ Wasm result:
+//│ = {}
+
+
+// Without an error, a hoisted function can construct a class defined after it.
+:expect 1
+fun useFine() = Fine(const(1)).value
+class Fine(val value: Int32)
+useFine()
+//│ Wasm result:
+//│ = 1
+
+
+// A failed coercion lowers to the compilation error at its site, and lowering drops the statements
+// that follow it in the same block, including the definition of `Later`. The hoisted `useLater`
+// still refers to `Later`.
+// FIXME: the backend then rejects that reference, so the program does not run until its failed site.
+// The last two diagnostics are about valid code.
+:ge
+fun useLater() = Later(const(1)).value
+private val broken: Int32 = "wrong"
+class Later(val value: Int32)
+useLater()
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int32'
+//│ ║  l.+2: 	private val broken: Int32 = "wrong"
+//│ ╙──      	                            ^^^^^^^
+//│ ╔══[COMPILATION ERROR] Expected static function reference in Call(...) expression
+//│ ║  l.+1: 	fun useLater() = Later(const(1)).value
+//│ ╙──      	                 ^^^^^
+//│ ╔══[COMPILATION ERROR] Selecting member 'value' of 'Later' is not supported by the WebAssembly backend
+//│ ║  l.+1: 	fun useLater() = Later(const(1)).value
+//│ ╙──      	                 ^^^^^^^^^^^^^^^^^^^^^
+
+// FIXME: the same holds when the failed coercion is an argument of a call.
+:ge
+fun takes32(x: Int32) = x
+fun useLaterArg() = LaterArg(const(2)).value
+takes32("wrong")
+class LaterArg(val value: Int32)
+useLaterArg()
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int32'
+//│ ║  l.+3: 	takes32("wrong")
+//│ ╙──      	        ^^^^^^^
+//│ ╔══[COMPILATION ERROR] Expected static function reference in Call(...) expression
+//│ ║  l.+2: 	fun useLaterArg() = LaterArg(const(2)).value
+//│ ╙──      	                    ^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Selecting member 'value' of 'LaterArg' is not supported by the WebAssembly backend
+//│ ║  l.+2: 	fun useLaterArg() = LaterArg(const(2)).value
+//│ ╙──      	                    ^^^^^^^^^^^^^^^^^^^^^^^^
+
+// FIXME: other erroneous terms that lower to the compilation error drop the following definitions in the same way.
+:e
+fun useLaterSel() = LaterSel(const(3)).value
+private val brokenSel = LaterSel(const(3)).missing
+class LaterSel(val value: Int32)
+useLaterSel()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	private val brokenSel = LaterSel(const(3)).missing
+//│ ║        	                        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'LaterSel' does not contain member 'missing'
+//│ ║  l.+2: 	private val brokenSel = LaterSel(const(3)).missing
+//│ ╙──      	                        ^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Expected static function reference in Call(...) expression
+//│ ║  l.+1: 	fun useLaterSel() = LaterSel(const(3)).value
+//│ ╙──      	                    ^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Selecting member 'value' of 'LaterSel' is not supported by the WebAssembly backend
+//│ ║  l.+1: 	fun useLaterSel() = LaterSel(const(3)).value
+//│ ╙──      	                    ^^^^^^^^^^^^^^^^^^^^^^^^
+
+

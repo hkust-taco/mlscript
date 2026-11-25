@@ -54,12 +54,16 @@ abstract class CompileTestRunnerBase(
         val wrap: (=> Unit) => Unit = body => this.synchronized(body)
         val report = ReportFormatter(System.out.println, mainTestDir, colorize = true, wrap = Some(wrap))
         val compiler = MLsCompiler(mkRaise = report.mkRaise)
-        compiler.compileModule(file)
+        val compiled = compiler.compileModule(file)
         
-        if report.badLines.nonEmpty then
-          fail(s"Unexpected diagnostic at: " +
-            report.badLines.distinct.sorted
-              .map("\n\t"+relativeName+"."+file.ext+":"+_).mkString(", "))
+        if report.hasDiagnostics then
+          val locations = report.badLines.distinct.sorted
+            .map("\n\t"+relativeName+"."+file.ext+":"+_)
+          fail(if locations.isEmpty then s"Unexpected diagnostic in: $relativeName.${file.ext}"
+            else "Unexpected diagnostic at: " + locations.mkString(", "))
+        // A test whose file another test imported reuses its artifact, and does not report its errors again.
+        if !compiled then
+          fail(s"Not compiled: $relativeName.${file.ext}, whose errors were reported when another test built it")
   }
 
 end CompileTestRunnerBase

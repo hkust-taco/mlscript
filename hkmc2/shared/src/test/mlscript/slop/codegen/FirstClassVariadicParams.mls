@@ -1,0 +1,56 @@
+:js
+:ftc
+#lang(0.2.x)
+
+
+// The first-class wrapper forwards to a body that extracts optional and trailing parameters.
+:noInline
+:expect [[1, null, [], 2], [1, 2, [3, 4], 5]]
+fun collect(x, y?, ...xs, last) = [x, y, xs, last]
+let f = collect
+[f(1, 2), f(1, 2, 3, 4, 5)]
+//│ = [[1, null, [], 2], [1, 2, [3, 4], 5]]
+//│ f = class anonymous
+
+
+// A foreign declaration has no IR definition from which to obtain lowered parameters.
+// Forward the original arguments: the native function interprets its second argument as the radix,
+// including when the source signature would assign that argument to the trailing parameter.
+declare fun parseInt(s, radix?, ...ignored, last)
+
+:noInline
+:expect [3, 9]
+let parse = parseInt
+[parse("11", 2), parse("11", 8, 99, 10)]
+//│ = [3, 9]
+//│ parse = class anonymous
+
+
+// A generated wrapper must leave optional native arguments unnormalized.
+declare fun encodeURI(value?)
+
+:noInline
+:expect ["undefined", "undefined", "null", "abc"]
+let encode = encodeURI
+[encode(), encode(unsafe.undefined), encode(null), encode("abc")]
+//│ = ["undefined", "undefined", "null", "abc"]
+//│ encode = class anonymous
+
+// Forwarding a rest parameter must still start after every fixed slot.
+declare fun encodeURIComponent(value?, ...ignored)
+
+:noInline
+:expect ["undefined", "undefined", "a%20b"]
+let encodeComponent = encodeURIComponent
+[encodeComponent(), encodeComponent(unsafe.undefined, 1), encodeComponent("a b", 2, 3)]
+//│ = ["undefined", "undefined", "a%20b"]
+//│ encodeComponent = class anonymous
+
+
+:noInline
+:expect [[null, []], [null, [2]], [1, [2, 3]]]
+fun fixedAndRest(x?, ...xs) = [x, xs]
+let forwardRest = fixedAndRest
+[forwardRest(), forwardRest(unsafe.undefined, 2), forwardRest(1, 2, 3)]
+//│ = [[null, []], [null, [2]], [1, [2, 3]]]
+//│ forwardRest = class anonymous

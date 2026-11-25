@@ -1,0 +1,22 @@
+:.
+:js
+
+#config(inlining: None, liftDefns: Some(LiftDefns), flowBasedOpt: Some(FlowBasedOpt(logEffects: true, mono: true)))
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+// * Match failure is UnsafeEta without aggressive mode.
+:noAggressive
+fun node(x) = if x is 0 then 42
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function node⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+// * Match failure is safe with aggressive mode.
+:aggressive
+fun node(x) = if x is 0 then 42
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function node⁰#0 @ <root> -> Pure
+//│ flow-analysis > <<< effect-analysis results <<<

@@ -11,7 +11,7 @@
 
 
 fun
-  loud(x) = print(x); x
+  loud(x: Any) = print(x); x
   loudTrue = loud(true)
   loudFalse = loud(false)
 

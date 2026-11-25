@@ -29,7 +29,7 @@ fun g() =
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
 //│   } else {
-//│     pc = runtime.resumePc;
+//│     pc = runtime.resumePc /* as! Int */;
 //│     runtime.resumePc = -1;
 //│   }
 //│   main: while (true) {
@@ -39,10 +39,11 @@ fun g() =
 //│         if (runtime.curEffect === null) {
 //│           pc = 3;
 //│         } else {
-//│           return runtime.unwind(g, 3, "SavedVars.mls:18:8", null, null, 1, 0, 0)
+//│           runtime.unwind(g, 3, "SavedVars.mls:18:8", null, null, 1, 0, 0);
+//│           return runtime.Unit
 //│         }
 //│       case 3:
-//│         scrut = runtime.resumeValue;
+//│         scrut = runtime.resumeValue /* as! Bool */;
 //│         if (scrut === true) {
 //│           let inlinedVal;
 //│           inlinedVal = runtime.Unit;
@@ -51,13 +52,14 @@ fun g() =
 //│             pc = 2;
 //│             continue main
 //│           }
-//│           return runtime.unwind(g, 2, "SavedVars.mls:19:7", null, null, 1, 0, 0);
+//│           runtime.unwind(g, 2, "SavedVars.mls:19:7", null, null, 1, 0, 0);
+//│           return runtime.Unit;
 //│         }
 //│         tmp = 2;
 //│         pc = 1;
 //│         continue main;
 //│       case 2:
-//│         runtime.resumeValue;
+//│         runtime.resumeValue /* as! Runtime.Unit */;
 //│         tmp = 1;
 //│         pc = 1;
 //│         if (1 === 1) { return 1 }

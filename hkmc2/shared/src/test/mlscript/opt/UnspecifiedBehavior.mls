@@ -17,7 +17,7 @@ else
 hide of hide of hide of hide of hide of x // big expression so it's not folded into the `else`
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let scrut, tmp, tmp1, tmp2, tmp3;
-//│ set scrut = Predef⁰.hide⁰(false);
+//│ set scrut = (Predef⁰.hide⁰(false) as!! Bool⁰);
 //│ match scrut
 //│   true =>
 //│     end
@@ -44,7 +44,7 @@ else
 x // folded into the `else`; no longer observe the value `2`
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let scrut;
-//│ set scrut = Predef⁰.hide⁰(false);
+//│ set scrut = (Predef⁰.hide⁰(false) as!! Bool⁰);
 //│ match scrut
 //│   true =>
 //│     return 2
@@ -59,10 +59,10 @@ x // folded into the `else`; no longer observe the value `2`
 // * Reading an uninitialized top-level variable yields undefined.
 // :dopt
 :soir
-scope.locally of (
+scope.locally of {
   let x
   print(x)
-)
+}
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ return Predef⁰.print⁰(undefined)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

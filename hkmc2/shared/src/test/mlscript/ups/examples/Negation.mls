@@ -12,12 +12,12 @@ pattern NonZero = ~0
 -1 is NonZero
 //│ = true
 
-pattern HomogeneousCoordinate = ((:x, :y, w: ~0 as w)) => (x: x / w, y: y / w)
+pattern HomogeneousCoordinate = ((:x, :y, w: ~0 as w)) => ({x: x / w, y: y / w})
 
-(x: 0, y: 0, w: 0) is HomogeneousCoordinate
+({x: 0, y: 0, w: 0}) is HomogeneousCoordinate
 //│ = false
 
-(x: 0, y: 0, w: 1) is HomogeneousCoordinate
+({x: 0, y: 0, w: 1}) is HomogeneousCoordinate
 //│ = true
 
 fun flatten(xyw) = if xyw is HomogeneousCoordinate as xy then xy

@@ -7,7 +7,7 @@ fun query(selector: Str) = document.querySelector(selector).classList.contains("
 fun register(name: Str, ctor: dyn) = customElements.define(name, ctor)
 class Element extends HTMLElement with
   fun render(text: Str) = {
-    set this.textContent = text
+    @unsafe set this.textContent = text
     this.appendChild(document.createElement("span"))
     this.attachShadow({mode: "open"})
     set this.shadowRoot.innerHTML = text

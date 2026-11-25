@@ -23,13 +23,13 @@ let lsit = [2, 1] in
 //│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(lsit⁰, 1)
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let lsit, useless, a, b, element1$, element0$, tmp, $lsit_tup2, $lsit_rest, tup2_0, tup2_1;
+//│ let useless, a, b, element1$, element0$, tmp, $lsit_tup2, $lsit_rest, lsit, tup2_0, tup2_1;
 //│ @affine(1) @private
 //│ define $lsit_tup2 as fun $lsit_tup2⁰(tup2_01, tup2_11)() {
 //│   set element0$ = tup2_01;
 //│   set element1$ = tup2_11;
-//│   set b = element1$;
-//│   set a = element0$;
+//│   set b = (element1$ as! Int⁰);
+//│   set a = (element0$ as! Int⁰);
 //│   set tmp = 0;
 //│   set useless = tmp;
 //│   return runtime⁰.Unit⁰
@@ -72,7 +72,7 @@ f(p())
 //│ deforest > 	fields: arg$X$0$⁰.b⁰
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp, p$p, f$f, f$x_X, f$x_rest, f$arg$X$0$_Y, f$arg$X$0$_rest;
+//│ let f$x_X, f$x_rest, f$arg$X$0$_Y, f$arg$X$0$_rest, p$p, tmp, f$f;
 //│ @private
 //│ define p$p as fun p$p⁰() {
 //│   let tmp1, Y_b, X_a;
@@ -83,7 +83,7 @@ f(p())
 //│ };
 //│ @private
 //│ define f$f as fun f$f⁰(x) {
-//│   let y, arg$X$0$, arg$Y$0$;
+//│   let y, arg$Y$0$, arg$X$0$;
 //│   return x(arg$X$0$, arg$Y$0$, y)
 //│ };
 //│ @affine(1) @private
@@ -175,9 +175,6 @@ fun c(x, d) = if x is
   X(a) then c(X(a), d)
 () => c(X(3), 2)
 //│ deforest > >>> fusing >>>
-//│ deforest > X⁰(a²) ->
-//│ deforest > 	match: x⁴
-//│ deforest > 	fields: x⁴.a⁰
 //│ deforest > X⁰(3) ->
 //│ deforest > 	match: x⁴
 //│ deforest > 	fields: x⁴.a⁰
@@ -185,6 +182,9 @@ fun c(x, d) = if x is
 //│ deforest > 	match: x⁴
 //│ deforest > 	fields: x⁴.a⁰
 //│ deforest > X⁰(3) ->
+//│ deforest > 	match: x⁴
+//│ deforest > 	fields: x⁴.a⁰
+//│ deforest > X⁰(a²) ->
 //│ deforest > 	match: x⁴
 //│ deforest > 	fields: x⁴.a⁰
 //│ deforest > <<< fusing <<<
@@ -216,13 +216,13 @@ if [1, 2] is
 //│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(scrut⁰, 1)
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let scrut, a, b, element1$, element0$, $scrut_tup2, $scrut_rest, tup2_0, tup2_1;
+//│ let a, b, element1$, element0$, $scrut_tup2, $scrut_rest, scrut, tup2_0, tup2_1;
 //│ @affine(1) @private
 //│ define $scrut_tup2 as fun $scrut_tup2⁰(tup2_01, tup2_11)() {
 //│   set element0$ = tup2_01;
 //│   set element1$ = tup2_11;
-//│   set b = element1$;
-//│   set a = element0$;
+//│   set b = (element1$ as! Int⁰);
+//│   set a = (element0$ as! Int⁰);
 //│   return +⁰(a, b)
 //│ };
 //│ @private
@@ -301,10 +301,10 @@ fun f(x) = if x is
   A(x) then 2
 f(A(2)) + f(A(3))
 //│ deforest > >>> fusing >>>
-//│ deforest > A⁰(3) ->
+//│ deforest > A⁰(2) ->
 //│ deforest > 	match: x¹⁰
 //│ deforest > 	fields: x¹⁰.x⁸
-//│ deforest > A⁰(2) ->
+//│ deforest > A⁰(3) ->
 //│ deforest > 	match: x¹⁰
 //│ deforest > 	fields: x¹⁰.x⁸
 //│ deforest > <<< fusing <<<
