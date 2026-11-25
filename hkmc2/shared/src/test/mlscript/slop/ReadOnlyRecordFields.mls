@@ -1,0 +1,35 @@
+:.
+
+// Without strict resolution too, an assignment to a record field that is not mutable is an error
+// (see strictres/MixedRecords.mls).
+
+:e
+let fixed = {count: 0, label: "count"}
+set fixed.count = 1
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	set fixed.count = 1
+//│ ║        	    ^^^^^^^^^^^
+//│ ╟── Record field 'count' is not mutable
+//│ ║  l.+1: 	let fixed = {count: 0, label: "count"}
+//│ ╙──      	             ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ fixed = {count: 0, label: "count"}
+
+:e
+let mixed = {mut count: 0, label: "count"}
+set mixed.label = "changed"
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	set mixed.label = "changed"
+//│ ║        	    ^^^^^^^^^^^
+//│ ╟── Record field 'label' is not mutable
+//│ ║  l.+1: 	let mixed = {mut count: 0, label: "count"}
+//│ ╙──      	                           ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ mixed = {count: 0, label: "count"}
+
+:expect 1
+let counter = {mut count: 0, label: "count"}
+set counter.count = 1
+counter.count
+//│ = 1
+//│ counter = {count: 1, label: "count"}

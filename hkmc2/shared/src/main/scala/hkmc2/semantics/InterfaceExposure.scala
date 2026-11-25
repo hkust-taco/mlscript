@@ -246,7 +246,9 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
     if rctx.state.isOwnedSym(field.tsym) && resolver.writtenSignature(field).isEmpty then
       val resolver = this.resolver
       val unknown = InterfaceExposure.fieldInput(field.tsym, source(field.bsym), path)
-      resolver.resolveFieldWrite(target)((field, marks) => resolver.writeField(field, unknown, marks))(
+      resolver.resolveFieldWrite(target)((field, marks) => resolver.writeField(field, unknown, marks),
+        // `RecordShape.foreachReadableField` only reports a field as assignable with a mutable lookup.
+        _ => lastWords("A record field that clients can assign must have a mutable lookup"))(
         resolver.exposeTypeHoles(_, unknown))
 
   /** Expose the types that an application supplies for a formal parameter. A wildcard can

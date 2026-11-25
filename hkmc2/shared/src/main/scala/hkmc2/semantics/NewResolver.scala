@@ -2519,7 +2519,9 @@ class NewResolver:
     * (see RcdField) through it, so the actual value's assignable field receives them, just like the
     * parameters of an actual callback receive values of their declared types (see `constrainFunction`).
     * Assignments through the immutable fields of record types are assumed not to happen: type checking will
-    * reject them. Writes through structural interfaces need not contribute their individual values to
+    * reject them. It will also reject an actual record that supplies a field that is not mutable where the
+    * record type requires a `mutable` one: no input reaches such a field here.
+    * Writes through structural interfaces need not contribute their individual values to
     * concrete fields, but still constrain assigned callbacks against the input type (see `assignField`).
     */
   private def constrainRecord(fields: Ls[(RcdField, TypeArgument, Bool)],
@@ -2536,7 +2538,7 @@ class NewResolver:
           listenMemberValue(lookup, flow, field.rhs, TypeSubstitution.empty, () => ())(receive)
           if mutable then resolveFieldWrite(lookup)((target, inner) =>
             listenTypeInstances(expected.input)(writeField(target, _, inner))
-          ): input =>
+          , _ => ()): input =>
             listenTypeInstances(expected.input)(inferTypeArguments(input, _, marks, site))
 
   /** Read a member using the same declaration and scope rules for ordinary
@@ -4104,14 +4106,20 @@ class NewResolver:
         msg"Cannot resolve member '$name' of a value with unknown shape."
       case MemberLookup.Uncertainty.RecordOverwrite =>
         msg"Cannot resolve member '$name' across a computed key or unknown record spread."
-    host match
-      case sel: NewSel =>
-        rctx.resolutionProblem(sel, config.language.eagerResolution || fromPublicInterface):
-          provenance.diagnostic(message, N)
-      case _ if !rctx.hasError(host) =>
-        rctx.markError(host)
-        resolError(host, provenance.diagnostic(message, N))
-      case _ => ()
+    memberProblem(host, config.language.eagerResolution || fromPublicInterface)(provenance.diagnostic(message, N))
+
+  /** Report a problem with a member that `host` selects on one of its receivers. A selection collects the
+    * `messages` of all its receivers into one error, which is reported once its block is resolved, and only
+    * if `eager` or if no receiver supplies a target (see `ResolutionContext.resolutionProblem`). Other
+    * references report their first problem immediately.
+    */
+  private def memberProblem(host: NewResolvable, eager: Bool)(messages: => Ls[(Message, Opt[Loc])])
+      (using ResolutionContext): Unit = host match
+    case sel: NewSel => rctx.resolutionProblem(sel, eager)(messages)
+    case _ if !rctx.hasError(host) =>
+      rctx.markError(host)
+      resolError(host, messages)
+    case _ => ()
 
   /** A name without an explicit binding is looked up in the wildcard opens visible where it is
     * written, in `scope`. Like for imports in Scala, wildcard opens do not provide the members
@@ -4774,6 +4782,11 @@ class NewResolver:
     * `newSel` and `unresolvedRef` resolve selections. For each possible receiver, check the assigned value against
     * the field's written type or supply it to the field for inference (see `resolveFieldWrite`). The source
     * `scope` of `lhs` determines the private members it can select.
+    * Reject the assignment if a receiver is a record through which the field is not mutable (see RecordMember).
+    * Such a lookup only reads the field's initializer, so resolution would miss the assigned value, while a
+    * record that declares other fields `mut` is not frozen and performs the assignment at run time.
+    * A copy such as `{...r}` is not rejected when `r` declares the field `mut`, although only `mut {...r}`
+    * permits assignments: both lookups are mutable, and type checking is to tell them apart.
     * Dynamic receivers and computed keys have no static target field: lowering compiles such assignments without
     * converting their values to the representation of a field, which only the JavaScript backend supports, as all
     * its values share one representation. A record type's field belongs to the type rather than to the values it
@@ -4790,8 +4803,12 @@ class NewResolver:
             transport(value) match
               case value: TermShape => writeField(field, value, marks)
               case NoShape => ()
+      def readOnly(field: RcdField)(using ResolutionContext): Unit = lhs match
+        case host: (NewSel | UnresolvedRef) =>
+          memberProblem(host, eager = true)(msg"Record field '${field.sym.nme}' is not mutable" -> field.toLoc :: Nil)
+        case _ => softAssert(false, "Only a selection or an opened name can find a record field")
       def lookup(info: MemberLookup)(using ResolutionContext): Unit =
-        resolveFieldWrite(info)(assign): input =>
+        resolveFieldWrite(info)(assign, readOnly): input =>
           if rctx.state.fieldAssignmentTypes.add((new Identity(lhs), new Identity(rhs), input)) then
             listenTerm(rhs): value =>
               transport(value) match
@@ -4856,10 +4873,12 @@ class NewResolver:
     * receives the field and its lookup path. For a written nominal or structural type, `check`
     * receives the field's input type at this receiver. If `Middle[T]` inherits the type of
     * `Slot[T].item: T`, a write through `Middle[Int]` checks against `Int`.
+    * `readOnly` receives each record field reached by a lookup that is not mutable (see RecordMember).
+    * The write is not an input of such a field.
     */
   private[semantics] def resolveFieldWrite(info: MemberLookup)
-      (assign: (TermSymbol, Ls[Marks]) => ResolutionContext ?=> Unit)(check: ShapeListener[DeclaredType])
-      (using ResolutionContext): Unit =
+      (assign: (TermSymbol, Ls[Marks]) => ResolutionContext ?=> Unit, readOnly: RcdField => ResolutionContext ?=> Unit)
+      (check: ShapeListener[DeclaredType])(using ResolutionContext): Unit =
     val caller = rctx
     def memberField(member: BlockMemberSymbol, bindings: Opt[Map[VarSymbol, TypeArgument]], marks: Ls[Marks],
         instances: TypeSubstitution)(using ResolutionContext): Unit =
@@ -4879,7 +4898,7 @@ class NewResolver:
       case MemberLookup.Declared(member = member, bindings = bindings, marks = marks) =>
         memberField(member, S(bindings), marks, instances)
       case MemberLookup.Found(RecordMember(field, mutable), marks) =>
-        if mutable then assign(field.tsym, marks)
+        if mutable then assign(field.tsym, marks) else readOnly(field)
       case MemberLookup.Found(member: BlockMemberSymbol, marks) =>
         memberField(member, N, marks, instances)
       case _ => ()

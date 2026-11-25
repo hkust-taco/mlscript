@@ -116,6 +116,19 @@ val replacedField = {mut size: 0, ...replacingSource}
 //│ replacedField = {size: undefined}
 //│ replacingSource = {size: undefined}
 
+// An assignment to the replaced field is rejected for the same reason.
+:e
+private fun assignReplacedField() =
+  let other = {item: 1}
+  let record = {mut item: 0, ...other}
+  set record.item = 2
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+4: 	  set record.item = 2
+//│ ║        	      ^^^^^^^^^^^
+//│ ╟── Record field 'item' is not mutable
+//│ ║  l.+2: 	  let other = {item: 1}
+//│ ╙──      	               ^^^^
+
 
 // A record type can require a `mut` field next to a read-only one. A class instance supplies both.
 :expect ["cursor", 42]
@@ -130,19 +143,76 @@ resetCursor()
 //│ = ["cursor", 42]
 
 
-// The object allocated for a record with both kinds of fields is not frozen, so an assignment to one of its
-// read-only fields takes effect. Resolution does not account for the assigned value: the selection of `a`
-// below resolves to the field of the initializer, and reads a record without that field.
-:breakme
+// The object allocated for a record with both kinds of fields is not frozen, and resolution only reads the
+// initializer of a read-only field. An assignment to such a field is rejected, as otherwise the selection of
+// `a` below would resolve to the field of the initializer and read a record without that field.
 :e
 private fun overwriteReadOnly() =
   let record = {mut count: 0, inner: {a: 1}}
   set record.inner = {b: 2}
   [record.inner.a]
 overwriteReadOnly()
-//│ = [undefined]
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+3: 	  set record.inner = {b: 2}
+//│ ║        	      ^^^^^^^^^^^^
+//│ ╟── Record field 'inner' is not mutable
+//│ ║  l.+2: 	  let record = {mut count: 0, inner: {a: 1}}
+//│ ╙──      	                              ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-// The same happens when a record type requires a `mut` field that the record declares read-only.
+// So is an assignment to a field of a record without `mut` fields, or of a copy of such a record.
+:e
+private fun overwriteFrozen() =
+  let record = {count: 0}
+  let copied = {...record}
+  set record.count = 1
+  set copied.count = 2
+  [record.count, copied.count]
+overwriteFrozen()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+4: 	  set record.count = 1
+//│ ║        	      ^^^^^^^^^^^^
+//│ ╟── Record field 'count' is not mutable
+//│ ║  l.+2: 	  let record = {count: 0}
+//│ ╙──      	                ^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+5: 	  set copied.count = 2
+//│ ║        	      ^^^^^^^^^^^^
+//│ ╟── Record field 'count' is not mutable
+//│ ║  l.+2: 	  let record = {count: 0}
+//│ ╙──      	                ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// An assignment is rejected if any of the records that reach it declares the field read-only.
+:e
+private fun bump(record) = set record.count = record.count + 1
+private fun bumpBoth() =
+  let counter = {mut count: 0}
+  let fixed = {count: 0}
+  bump(counter)
+  bump(fixed)
+  [counter.count, fixed.count]
+bumpBoth()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun bump(record) = set record.count = record.count + 1
+//│ ║        	                               ^^^^^^^^^^^^
+//│ ╟── Record field 'count' is not mutable
+//│ ║  l.+4: 	  let fixed = {count: 0}
+//│ ╙──      	               ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A copy of a `mut` field is read-only unless the copy is mutable as a whole. Both copies below reuse the
+// field of their source, and resolution does not tell them apart.
+// TODO: the type checker should reject the assignment to the first copy.
+private fun writeCopies() =
+  let source = {mut count: 0}
+  let frozen = {...source}
+  let unfrozen = mut {...source}
+  set frozen.count = 1
+  set unfrozen.count = 2
+
+// Resolution does not account for an assignment through a record type that requires a `mut` field, when the
+// record declares that field read-only: the selection of `a` below reads a record without that field.
 // TODO: the type checker should reject the call.
 private fun store(target: {mut inner: {b: Int}}) = set target.inner = {b: 2}
 private fun overwriteThroughType() =

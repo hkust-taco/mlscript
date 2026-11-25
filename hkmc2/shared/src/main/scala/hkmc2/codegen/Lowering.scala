@@ -301,8 +301,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             subTerm_nonTail(rhs): r =>
               // JavaScript can only freeze an object as a whole, so one `mut` field makes the allocated
               // record mutable. Its other fields are then assignable at run time, while resolution reads
-              // them as their initializers (see RecordMember). No check rejects such assignments:
-              // see `overwriteReadOnly` in slop/strictres/MixedRecords.mls.
+              // them as their initializers (see RecordMember). Resolution rejects the assignments that
+              // select such a field of the record (see NewResolver.assignField). Those that reach it
+              // through a record type or a computed key remain: see slop/strictres/MixedRecords.mls.
               continueBlock(stats, L((mut || field.mut, RcdArg(S(l), r) :: flds, loc)))
       case (decl @ LetDecl(sym, annotations)) :: stats =>
         reportAnnotations(decl, annotations)
