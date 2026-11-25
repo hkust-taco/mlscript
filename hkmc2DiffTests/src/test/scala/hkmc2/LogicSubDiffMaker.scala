@@ -27,9 +27,6 @@ abstract class LogicSubDiffMaker extends WasmDiffMaker:
           typer = S(logicsub.Typer())
         given logicsub.InfCtx = infctx
         val ty = typer.get.typePurely(trm)
-        output(s"Type: ${ty.show}")
-        ty match
-          case x: logicsub.InfVar =>
-            output(s"  >: ${infctx.lbs(x.sym).foldLeft(logicsub.Bot:logicsub.Type)(_|_).toBasic.show}")
-          case _ =>
+        val printer = logicsub.PrettyPrinter(output(_))
+        printer.print(ty)
 

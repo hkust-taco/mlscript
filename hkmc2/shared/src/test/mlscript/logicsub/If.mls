@@ -15,19 +15,26 @@ fun f(x) = if x is
   Int then 0
   Bool then x
 f
-//│ Type: [outer] -> ['x] ->{out 'eff} out 'res
+//│ Type: [outer] -> ('x) ->{out 'eff} out 'res
+
+f(ib) as (Int | Bool)
+//│ Type: Int ∨ Bool
+
+f(f(ib)) as (Int | Bool)
+//│ Type: Int ∨ Bool
 
 // FIXME
-// f(ib) as (Int | Bool)
-
-// f(f(ib)) as Int | Bool
-// f(f(ib))
+f(f(ib))
+//│ Type: 'app
+//│ Where:
+//│   0 <: 'app
 
 // FIXME
 // :e
 f(si)
 //│ Type: 'app
-//│   >: ⊥
+//│ Where:
+//│   0 <: 'app
 
 
 // order-dependent (expected)
@@ -37,22 +44,20 @@ fun f(x, y) = if
   y is Str then ""
 f(1, "")
 //│ Type: 'app
-//│   >: ⊥
 
 f(1, sib)
 //│ Type: 'app
-//│   >: ⊥
 
 fun f(x, y) = if
   y is Str then ""
   x is Int then 1
 f(1, "")
 //│ Type: 'app
-//│   >: ⊥
 
 f(1, sib)
 //│ Type: 'app
-//│   >: ⊥
+//│ Where:
+//│   "" <: 'app
 
 // FIXME
 // fun foorec(x, y, r) = if
@@ -77,19 +82,21 @@ fun increv(x) = if x is
   else
     rev(x)
 increv
-//│ Type: [outer] -> ['x] ->{out 'eff} out 'res
+//│ Type: [outer] -> ('x) ->{out 'eff} out 'res
 
 fun increv'(x) = if x is
   Int then x + 1
   Str then rev(x)
 increv'
-//│ Type: [outer] -> ['x] ->{out 'eff} out 'res
+//│ Type: [outer] -> ('x) ->{out 'eff} out 'res
 
 // FIXME
 // :e
 increv(sib)
 //│ Type: 'app
-//│   >: ⊥
+//│ Where:
+//│   Str <: 'app
+//│   Int <: 'app
 
 // FIXME
 // :e
@@ -97,10 +104,15 @@ increv(sib)
 
 increv(si)
 //│ Type: 'app
-//│   >: ⊥
+//│ Where:
+//│   Str <: 'app
+//│   Int <: 'app
 
-// FIXME
-// increv'(si)
+increv'(si)
+//│ Type: 'app
+//│ Where:
+//│   Str <: 'app
+//│   Int <: 'app
 
 fun f(x, y) = if
   x is Int and y is Int then 1
@@ -119,7 +131,16 @@ fun f(x) = if
   else
     neg(x)
 f
-//│ Type: [outer] -> ['x] ->{out 'eff} out 'res
+//│ Type: [outer] -> ('x) ->{out 'eff} out 'res
+
+fun x:Int
+x
+//│ Type: Int
+
+f(x)
+//│ Type: 'app
+//│ Where:
+//│   Bool <: 'app
 
 // f(sib)
 
@@ -130,16 +151,19 @@ fun f(x, y) = if
   else
     neg(x)
 f
-//│ Type: [outer] -> ['x, 'y] ->{out 'eff} out 'res
+//│ Type: [outer] -> ('x, 'y) ->{out 'eff} out 'res
 
 f(ib, sib)
 //│ Type: 'app
-//│   >: ⊥
+//│ Where:
+//│   Bool <: 'app
 
 // :ns
 f(ib, ib)
 //│ Type: 'app
-//│   >: 1
+//│ Where:
+//│   Bool <: 'app
+//│   1 <: 'app
 
 // :todo
 // f(ib, ib)
@@ -148,8 +172,9 @@ fun f(x, y) = if
   x is Int then 1
   y is Int then neg(x)
 f
-//│ Type: [outer] -> ['x, 'y] ->{out 'eff} out 'res
+//│ Type: [outer] -> ('x, 'y) ->{out 'eff} out 'res
 
 f(ib, 1)
 //│ Type: 'app
-//│   >: ⊥
+//│ Where:
+//│   1 <: 'app

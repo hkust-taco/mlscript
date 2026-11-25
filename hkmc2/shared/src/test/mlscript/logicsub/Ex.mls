@@ -17,7 +17,6 @@ fun add(x,y) = addImpl(x,y)
 // FIXME
 add(1, 2)
 //│ Type: 'app
-//│   >: ⊥
 
 // add("a", "b")
 
@@ -27,7 +26,6 @@ fun test(a,b,c,d) = add(a,add(b,add(c,d)))
 // FIXME
 test(0, 1, 2, 3)
 //│ Type: 'app
-//│   >: ⊥
 
 // test("A", "B", "C", "D")
 
@@ -55,7 +53,9 @@ fun selfAdd3: (Int -> Int) & (Str -> Str)
 fun selfAdd3(x) = selfAdd1(x)
 selfAdd3(intstr)
 //│ Type: 'app
-//│   >: Int ∨ Str
+//│ Where:
+//│   Int <: 'app
+//│   Str <: 'app
 
 // fun selfAdd4:  (Int | Str) -> (Int | Str)
 // fun selfAdd4(x) = selfAdd1(x)
@@ -106,7 +106,7 @@ fun negImpl(x) = if x is
   Tru then fls
   Fls then tru
 negImpl
-//│ Type: [outer] -> ['x] ->{out 'eff} out 'res
+//│ Type: [outer] -> ('x) ->{out 'eff} out 'res
 
 fun negate: (Tru -> Fls) & (Fls -> Tru)
 fun negate(x) = negImpl(x)
@@ -154,19 +154,23 @@ fun cons(x,y) = new Cons(x,y)
 
 all2(nil)
 //│ Type: 'app
-//│   >: ⊥
+//│ Where:
+//│   Tru <: 'app
 
 all2(cons(tru, nil))
 //│ Type: 'app
-//│   >: ⊥
+//│ Where:
+//│   Tru <: 'app
 
 all2(cons(tru, cons(tru, nil)))
 //│ Type: 'app
-//│   >: ⊥
+//│ Where:
+//│   Tru <: 'app
 
 all2(cons(tru, cons(fls, nil)))
 //│ Type: 'app
-//│   >: ⊥
+//│ Where:
+//│   Tru <: 'app
 
 fun test: Tru -> Tru
 fun test(x) = all2(cons(tru, cons(x, nil)))
@@ -211,4 +215,4 @@ fun headOption(x) = if x is
 //│ Type: undefined
 
 headOption
-//│ Type: [outer] -> ['x] ->{out 'eff} out 'res
+//│ Type: [outer] -> ('x) ->{out 'eff} out 'res

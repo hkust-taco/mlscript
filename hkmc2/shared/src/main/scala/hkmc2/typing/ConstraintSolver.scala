@@ -55,7 +55,7 @@ object ConstraintSolver:
           case (t, true) => t.posPart
         val d = (x.refinement.values ++ da).toList
         if d.isEmpty then cctx.err
-        else ctx.constrain(d.map(K(_, Bot)).reduce(_.or(_)))
+        else ctx.constrain(d.map(SubOr(_, Bot)).reduce(_.or(_)))
       case Conj(NF.Inter(x :: Nil), NF.Union(y :: Nil), N,N,_,_) =>
         val da = x.args.iterator.zip(x.congr).collect:
           case (t, true) => t.posPart
@@ -65,14 +65,14 @@ object ConstraintSolver:
         val sp = ctx.asSubcls(x,y.sym)
         if sp.isEmpty || !yrm.keySet.subsetOf(xrm.keySet) then
           if d.isEmpty then cctx.err
-          else ctx.constrain(d.map(K(_, Bot)).reduce(_.or(_)))
+          else ctx.constrain(d.map(SubOr(_, Bot)).reduce(_.or(_)))
         else
           val x = sp.get
           val u = x.args.zip(y.args).flatMap(ctx.subArg)
           val w = y.refinement.map:
-            case (a,b) => K(xrm(a), b)
+            case (a,b) => SubOr(xrm(a), b)
           val ds = x.refinement.filterNot(f => yrm.contains(f._1)).map:
-            case (_,t) => K(t,Bot)
+            case (_,t) => SubOr(t,Bot)
           (u++w).foreach: k =>
             ctx.constrain((ds ++ Ls(k)).reduce(_.or(_)))
       case Conj(NF.Inter(xs @ (x :: _)), NF.Union(y :: Nil), N,N,_,_) =>
@@ -81,11 +81,11 @@ object ConstraintSolver:
           val u = xs.map(_.args(k).negPart.discriminator)
           val w = u.reduce[Type](_|_)
           val in = y.args(k)
-          ctx.constrain(K(in.negPart, w))
+          ctx.constrain(SubOr(in.negPart, w))
           u.lazyZip(xs).foreach: (p, c) =>
-            val d = K(in.negPart, ~p)
+            val d = SubOr(in.negPart, ~p)
             val r = y.copy(args = y.args.updated(k, Wildcard(p & in.negPart, in.posPart)))
-            val s = K(c, r)
+            val s = SubOr(c, r)
             ctx.constrain(d.or(s))
         else cctx.err
       case Conj(k @ NF.Inter(x :: _), NF.Union(ys @ (_ :: _)), N,N,ws,zs) =>

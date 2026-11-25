@@ -56,7 +56,7 @@ object Wildcard:
   def out(ty: Type) = Wildcard(Bot, ty)
   def empty = Wildcard(Bot, Top)
 
-case class PolyType(tvs: Ls[InfVar], outer: Opt[InfVar], xbds: Ls[K], body: InfType) extends InfType:
+case class PolyType(tvs: Ls[InfVar], outer: Opt[InfVar], xbds: Ls[SubOr], body: InfType) extends InfType:
   lazy val lvl = (body :: tvs).map(_.lvl).max
   def show(using Scope, InfCtx, Raise) =
     given Scope = scope.nest
@@ -90,8 +90,8 @@ sealed abstract class Type extends InfType with TypeArg:
     case ClassLikeType(f, args, _,_,_) if f === summon[InfCtx].prim.fnSym =>
       val fargs :: ret :: eff :: Nil = args.runtimeChecked
       val ClassLikeType(_,_,r,_,_) = fargs.negPart.runtimeChecked
-      val a = s"[${r.values.map(_.show).mkString(", ")}]"
-      if eff === Bot then
+      val a = s"(${r.values.map(_.show).mkString(", ")})"
+      if eff.posPart.toBasic === Bot then
         s"$a -> ${ret.show}"
       else
         s"$a ->{${eff.show}} ${ret.show}"

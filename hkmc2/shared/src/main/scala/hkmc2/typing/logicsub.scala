@@ -151,7 +151,7 @@ class Typer(using tl: TL)(using Elaborator.State, Raise, codegen.Erasure, Ctx, C
     ty
 
   private def constrain(x: Type, y: Type)(using ctx: InfCtx, cctx: CCtx): Unit =
-    ctx.constrain(K(x,y,N)) // TODO
+    ctx.constrain(SubOr(x,y,N)) // TODO
 
   private def fundef(sym: Symbol, lam: Term, sig: Opt[Term])
       (using ctx: InfCtx, cctx: CCtx, scope: Scope) = lam match
@@ -184,8 +184,8 @@ class Typer(using tl: TL)(using Elaborator.State, Raise, codegen.Erasure, Ctx, C
   private def substMono(map: Map[InfVarSymbol, InfVar])(x: Type): Type =
     Subst(map)(true)(x)
 
-  private def substMono(map: Map[InfVarSymbol, InfVar])(x: K): K = x match
-    case K(x, y, cs) => K(substMono(map)(x), substMono(map)(y), cs.map(_.map(substMono(map))))
+  private def substMono(map: Map[InfVarSymbol, InfVar])(x: SubOr): SubOr = x match
+    case SubOr(x, y, cs) => SubOr(substMono(map)(x), substMono(map)(y), cs.map(_.map(substMono(map))))
 
   private def subst(map: Map[InfVarSymbol, InfVar])(x: InfType): InfType =
     x match

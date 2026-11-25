@@ -4,25 +4,25 @@ package logicsub
 
 import hkmc2.utils.*, shorthands.*
 
-// class TypeTraverser:
-//   def apply(pol: Bool)(ty: Type): Unit = ty.toBasic match
-//     case Union(x, y) => 
-//       apply(pol)(x)
-//       apply(pol)(y)
-//     case Inter(x, y) =>
-//       apply(pol)(x)
-//       apply(pol)(y)
-//     case Neg(ty) => apply(!pol)(ty)
-//     case ClassLikeType(name, targs, refine) =>
-//       targs.foreach:
-//         case Wildcard(in, out) =>
-//           apply(!pol)(in)
-//           apply(pol)(out)
-//         case ty: Type =>
-//           apply(pol)(ty)
-//           apply(!pol)(ty)
-//       refine.values.foreach(apply(pol))
-//     case _ =>
+class TypeTraverser:
+  def apply(pol: Bool)(ty: Type): Unit = ty.toBasic match
+    case Union(x, y) => 
+      apply(pol)(x)
+      apply(pol)(y)
+    case Inter(x, y) =>
+      apply(pol)(x)
+      apply(pol)(y)
+    case Neg(ty) => apply(!pol)(ty)
+    case ClassLikeType(name, targs, refine, _, _) =>
+      targs.foreach:
+        case Wildcard(in, out) =>
+          apply(!pol)(in)
+          apply(pol)(out)
+        case ty: Type =>
+          apply(pol)(ty)
+          apply(!pol)(ty)
+      refine.values.foreach(apply(pol))
+    case _ =>
 
 class TypeMap:
   def applyArg(pol: Bool)(t: TypeArg): TypeArg =
