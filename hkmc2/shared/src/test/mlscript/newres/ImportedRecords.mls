@@ -14,3 +14,26 @@ let importedFields = {...RecordProducers.fields}
 importedFields.value
 //│ = 36
 //│ importedFields = {value: 36}
+
+// Clients can overwrite the field of an exported mutable copy, even when its initializer comes from an import.
+:e
+val publicCopy = mut {...RecordProducers.fields}
+fun formatCopy() = publicCopy.value.toFixed(0)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	fun formatCopy() = publicCopy.value.toFixed(0)
+//│ ║        	                   ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'toFixed' of a value with unknown shape.
+//│ ╟── Field 'value' admits assigned values of unknown shape.
+//│ ║  l.+1: 	val publicCopy = mut {...RecordProducers.fields}
+//│ ║        	                         ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── 'publicCopy' is exposed by this compilation unit.
+//│ ║  l.+1: 	val publicCopy = mut {...RecordProducers.fields}
+//│ ╙──      	^^^^^^^^^^^^^^
+//│ publicCopy = {value: 36}
+
+// A client cannot write the private copy or change the imported record by writing the public copy.
+:expect ["36", "36"]
+private val privateCopy = mut {...RecordProducers.fields}
+[privateCopy.value.toFixed(0), RecordProducers.fields.value.toFixed(0)]
+//│ = ["36", "36"]
+//│ privateCopy = {value: 36}

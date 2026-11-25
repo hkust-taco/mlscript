@@ -350,7 +350,7 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
         watch((field.tsym, context, bindings))(resolver.listenMemberValue(lookup,
           rctx.fieldProjectionSite(member.root.sym), field.rhs, bindings, () => ())): value =>
           emit(value, path.via(msg"This value is stored in this record field." -> field.toLoc))
-        if member.mutable then exposeWrite(member.root, lookup.instantiate(bindings), path)
+        if member.mutable then field.tsym.defn.foreach(exposeWrite(_, lookup.instantiate(bindings), path))
       case base: BaseShape => exposeClassInterface(base.defn)
       case callable: CallableTypeShape =>
         callable.declaration.filter(origin => rctx.state.isOwnedSym(origin.definition.tsym)).foreach: origin =>
