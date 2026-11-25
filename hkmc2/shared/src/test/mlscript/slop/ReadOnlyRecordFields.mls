@@ -3,25 +3,25 @@
 // Without strict resolution too, an assignment to a record field that is not mutable is an error
 // (see strictres/MixedRecords.mls).
 
-:e
+:ge
 let fixed = {count: 0, label: "count"}
 set fixed.count = 1
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'count'
 //│ ║  l.+2: 	set fixed.count = 1
-//│ ║        	    ^^^^^^^^^^^
-//│ ╟── Record field 'count' is not mutable
+//│ ║        	         ^^^^^^
+//│ ╟── Defined here:
 //│ ║  l.+1: 	let fixed = {count: 0, label: "count"}
 //│ ╙──      	             ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ fixed = {count: 0, label: "count"}
 
-:e
+:ge
 let mixed = {mut count: 0, label: "count"}
 set mixed.label = "changed"
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'label'
 //│ ║  l.+2: 	set mixed.label = "changed"
-//│ ║        	    ^^^^^^^^^^^
-//│ ╟── Record field 'label' is not mutable
+//│ ║        	         ^^^^^^
+//│ ╟── Defined here:
 //│ ║  l.+1: 	let mixed = {mut count: 0, label: "count"}
 //│ ╙──      	                           ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -33,3 +33,32 @@ set counter.count = 1
 counter.count
 //│ = 1
 //│ counter = {count: 1, label: "count"}
+
+// An assignment is rejected if any of the records that reach it declares the field read-only.
+// Strict resolution rejects such a selection as ambiguous before this check applies.
+:ge
+private fun bump(record) = set record.count = record.count + 1
+let bumped = {mut count: 0}
+let unchanged = {count: 0}
+bump(bumped)
+bump(unchanged)
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'count'
+//│ ║  l.+1: 	private fun bump(record) = set record.count = record.count + 1
+//│ ║        	                                     ^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+3: 	let unchanged = {count: 0}
+//│ ╙──      	                 ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ bumped = {count: 0}
+//│ unchanged = {count: 0}
+
+// Likewise, an assignment through a union of record types is rejected if one of its components does not
+// make the field mutable.
+:ge
+private fun writeEither(target: {mut count: Int} | {count: Int}) = set target.count = 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'count'
+//│ ║  l.+1: 	private fun writeEither(target: {mut count: Int} | {count: Int}) = set target.count = 1
+//│ ║        	                                                                             ^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	private fun writeEither(target: {mut count: Int} | {count: Int}) = set target.count = 1
+//│ ╙──      	                                                    ^^^^^

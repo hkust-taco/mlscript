@@ -213,16 +213,16 @@ replaceInner()
 //│ = [2, "count"]
 
 // A mixed record's read-only field rejects an assignment.
-:e
+:ge
 private fun overwriteLabel() =
   let record = {mut count: 0, label: "count"}
   set record.label = "changed"
   record.label
 overwriteLabel()
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'label'
 //│ ║  l.+3: 	  set record.label = "changed"
-//│ ║        	      ^^^^^^^^^^^^
-//│ ╟── Record field 'label' is not mutable
+//│ ║        	            ^^^^^^
+//│ ╟── Defined here:
 //│ ║  l.+2: 	  let record = {mut count: 0, label: "count"}
 //│ ╙──      	                              ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

@@ -4109,20 +4109,14 @@ class NewResolver:
         msg"Cannot resolve member '$name' of a value with unknown shape."
       case MemberLookup.Uncertainty.RecordOverwrite =>
         msg"Cannot resolve member '$name' across a computed key or unknown record spread."
-    memberProblem(host, config.language.eagerResolution || fromPublicInterface)(provenance.diagnostic(message, N))
-
-  /** Report a problem with a member that `host` selects on one of its receivers. A selection collects the
-    * `messages` of all its receivers into one error, which is reported once its block is resolved, and only
-    * if `eager` or if no receiver supplies a target (see `ResolutionContext.resolutionProblem`). Other
-    * references report their first problem immediately.
-    */
-  private def memberProblem(host: NewResolvable, eager: Bool)(messages: => Ls[(Message, Opt[Loc])])
-      (using ResolutionContext): Unit = host match
-    case sel: NewSel => rctx.resolutionProblem(sel, eager)(messages)
-    case _ if !rctx.hasError(host) =>
-      rctx.markError(host)
-      resolError(host, messages)
-    case _ => ()
+    host match
+      case sel: NewSel =>
+        rctx.resolutionProblem(sel, config.language.eagerResolution || fromPublicInterface):
+          provenance.diagnostic(message, N)
+      case _ if !rctx.hasError(host) =>
+        rctx.markError(host)
+        resolError(host, provenance.diagnostic(message, N))
+      case _ => ()
 
   /** A name without an explicit binding is looked up in the wildcard opens visible where it is
     * written, in `scope`. Like for imports in Scala, wildcard opens do not provide the members
@@ -4786,11 +4780,14 @@ class NewResolver:
     * `newSel` and `unresolvedRef` resolve selections. For each possible receiver, check the assigned value against
     * the field's written type or supply it to the field for inference (see `resolveFieldWrite`). The source
     * `scope` of `lhs` determines the private members it can select.
-    * Reject the assignment if a receiver is a record through which the field is not mutable (see RecordMember).
-    * Such a lookup only reads the field's initializer, so resolution would miss the assigned value, while a
-    * record that declares other fields `mut` is not frozen and performs the assignment at run time.
-    * Likewise, reject it if a receiver has a record type that does not make the field mutable: the values that
-    * such a type describes receive no input for the field (see `constrainRecord`).
+    * The assignment does not reach the field of a record through which the field is not mutable (see
+    * RecordMember). Such a lookup only reads the field's initializer, so resolution would miss the assigned
+    * value, while a record that declares other fields `mut` is not frozen and performs the assignment at run
+    * time. Neither does the assignment reach the field of a record type that does not make the field mutable:
+    * the values that such a type describes receive no input for the field (see `constrainRecord`).
+    * These fields are recorded on `lhs`, and lowering rejects the assignment unless it is marked `@unsafe`
+    * (see NewResolvableImpl.readOnlyFields). The annotation wraps the elaborated assignment, so it is not
+    * known here.
     * A copy such as `{...r}` is not rejected when `r` declares the field `mut`, although only `mut {...r}`
     * permits assignments: both lookups are mutable, and type checking is to tell them apart.
     * Dynamic receivers and computed keys have no static target field: lowering compiles such assignments without
@@ -4811,7 +4808,9 @@ class NewResolver:
               case NoShape => ()
       def readOnly(field: RcdField)(using ResolutionContext): Unit = lhs match
         case host: (NewSel | UnresolvedRef) =>
-          memberProblem(host, eager = true)(msg"Record field '${field.sym.nme}' is not mutable" -> field.toLoc :: Nil)
+          // A completed assignment is already lowered. It cannot report the receivers of later activations.
+          if rctx.canResolve(host) then
+            rctx.recordResolution(host, host.readOnlyFields.contains(field.tsym))(host.readOnlyFields ::= field.tsym)
         case _ => softAssert(false, "Only a selection or an opened name can find a record field")
       def lookup(info: MemberLookup)(using ResolutionContext): Unit =
         resolveFieldWrite(info)(assign, readOnly): input =>

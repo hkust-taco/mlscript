@@ -896,7 +896,8 @@ fields. A copied field does not keep the `mut` of its source: it is mutable only
 destination is `mut {...}`.
 
 The compiler rejects an assignment that selects a field of a record through which the field is
-not mutable, or a field that a record type does not make mutable. It does not yet reject every
+not mutable, or a field that a record type does not make mutable. As for the `val` fields of
+classes, `@unsafe set` permits such an assignment. The compiler does not yet reject every
 assignment to a read-only field: a copy `{...r}` accepts assignments to the fields that `r`
 declares `mut`, a record with a read-only field is accepted where a record type requires that
 field to be mutable, and an assignment through a computed key is not checked against the record

@@ -122,6 +122,13 @@ trait NewResolvableImpl extends PossiblyErroneous:
   // The implicit property-key expression, resolved in this use site's scope at
   // block completion. Lowering must not reuse the annotation's lexical environment.
   var keyAccess: Opt[Term] = N
+  /** The record fields that an assignment to this reference cannot reach: resolution found them through a
+    * lookup that is not mutable (see RecordMember), or in a record type that does not make them mutable.
+    * Resolution does not follow such an assignment, so lowering rejects it unless it is marked `@unsafe`
+    * (see Lowering.assignNamedField). NewResolver.assignField adds these fields while it resolves the
+    * assignment, and Cloner copies them. No other code writes them.
+    */
+  var readOnlyFields: Ls[TermSymbol] = Nil
 
 
 trait StatementImpl extends Located, ProductWithExtraInfo, Describable:

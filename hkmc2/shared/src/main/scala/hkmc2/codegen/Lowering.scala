@@ -301,9 +301,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             subTerm_nonTail(rhs): r =>
               // JavaScript can only freeze an object as a whole, so one `mut` field makes the allocated
               // record mutable. Its other fields are then assignable at run time, while resolution reads
-              // them as their initializers (see RecordMember). Resolution rejects the assignments that
-              // select such a field of the record (see NewResolver.assignField). Those that reach it
-              // through a record type or a computed key remain: see slop/strictres/MixedRecords.mls.
+              // them as their initializers (see RecordMember). `assignNamedField` rejects the
+              // assignments that select such a field of the record. Those that reach it through a
+              // record type making the field mutable, or through a computed key, remain: see
+              // slop/strictres/MixedRecords.mls.
               continueBlock(stats, L((mut || field.mut, RcdArg(S(l), r) :: flds, loc)))
       case (decl @ LetDecl(sym, annotations)) :: stats =>
         reportAnnotations(decl, annotations)
@@ -758,7 +759,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
               case sym: BlockMemberSymbol => sym.describe
               case sym: LocalVarSymbol if sym.decl.exists(_.isInstanceOf[Param]) => "immutable parameter"
               // Constructor fields retain their Param declaration, but writes target the field.
-              case sym: TermSymbol if sym.k is syntax.ImmutVal => "immutable field"
+              case sym: TermSymbol if (sym.k is syntax.ImmutVal) || (sym.k is syntax.RecordField) => "immutable field"
               case sym: TermSymbol if (sym.k is syntax.ParamBind) || sym.decl.exists(_.isInstanceOf[Param]) => "immutable parameter"
               case sym => "symbol"
             } '${diagnostic.nme}'") -> loco
@@ -883,11 +884,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
 
   private def assignNamedField(prefix: Path, name: Tree.Ident, value: Path, rest: Block,
       keyAccess: Opt[Term], unsafe: Bool)(target: Opt[DefinitionSymbol[?]],
-      candidates: Ls[DefinitionSymbol[?]])(using LoweringCtx): Block =
+      candidates: Ls[DefinitionSymbol[?]], readOnlyFields: Ls[TermSymbol])(using LoweringCtx): Block =
     // Lenient and dynamic lookup can omit the single IR target while retaining known
     // candidates. None of those immutable fields may be written without @unsafe.
+    // Neither may the record fields that the assignment cannot reach, which resolution
+    // collects in `readOnlyFields` (see NewResolvableImpl.readOnlyFields).
     val immutable = target.iterator.++(candidates).collectFirst:
       case sym: TermSymbol if sym.k is syntax.ImmutVal => sym
+    .orElse(readOnlyFields.lastOption)
     immutable match
     case S(sym) if !unsafe => cannotAssign(sym, sym, name.toLoc)
     case _ => namedSelection(prefix, name, target, keyAccess, name.toLoc, false):
@@ -1437,11 +1441,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                 subTerm_nonTail(rhs): r =>
                   castPathTo(r, sym.sourceErasedType, ref.toLoc): value =>
                     assignNamedField(p, memberIdent(ref.id, member), value,
-                      k(unit), ref.keyAccess, unsafe)(S(sym), ref.resolvedTargets)
+                      k(unit), ref.keyAccess, unsafe)(S(sym), ref.resolvedTargets, ref.readOnlyFields)
             case N if ref.resolvedTargets.forall(_.isInstanceOf[TermSymbol]) =>
               subTerm_nonTail(prefix): p =>
                 subTerm_nonTail(rhs): r =>
-                  assignNamedField(p, memberIdent(ref.id, member), r, k(unit), ref.keyAccess, unsafe)(N, ref.resolvedTargets)
+                  assignNamedField(p, memberIdent(ref.id, member), r, k(unit), ref.keyAccess, unsafe)(
+                    N, ref.resolvedTargets, ref.readOnlyFields)
             case _ => fail:
               ErrorReport(msg"Assignment requires a term member" -> ref.toLoc :: Nil,
                 source = Diagnostic.Source.Compilation)
@@ -1455,11 +1460,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             subTerm_nonTail(prefix): p =>
               subTerm_nonTail(rhs): r =>
                 castPathTo(r, sym.sourceErasedType, sel.toLoc): value =>
-                  assignNamedField(p, name, value, k(unit), sel.keyAccess, unsafe)(S(sym), sel.resolvedTargets)
+                  assignNamedField(p, name, value, k(unit), sel.keyAccess, unsafe)(
+                    S(sym), sel.resolvedTargets, sel.readOnlyFields)
           case N if sel.resolvedTargets.forall(_.isInstanceOf[TermSymbol]) =>
             subTerm_nonTail(prefix): p =>
               subTerm_nonTail(rhs): r =>
-                assignNamedField(p, name, r, k(unit), sel.keyAccess, unsafe)(N, sel.resolvedTargets)
+                assignNamedField(p, name, r, k(unit), sel.keyAccess, unsafe)(N, sel.resolvedTargets, sel.readOnlyFields)
           case _ => fail:
             ErrorReport(msg"Assignment requires a term member" -> sel.toLoc :: Nil,
               source = Diagnostic.Source.Compilation)
@@ -1474,7 +1480,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                 k(unit),
                 N,
                 unsafe,
-              )(resolvedSelectionSymbol, Nil)
+              )(resolvedSelectionSymbol, Nil, Nil)
       case sel @ SynthSel(prefix, nme) =>
         // * See the doc in the `term` case for `SynthSel` for why we fall back to `sel.sym` here
         val sym = resolvedSelectionSymbol match
@@ -1486,7 +1492,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         subTerm(prefix): p =>
           subTerm_nonTail(rhs): r =>
             castPathTo(r, fieldErasedType(sym), sel.toLoc): value =>
-              assignNamedField(p, memberIdent(nme, sel.sym), value, k(unit), N, unsafe)(sym, Nil)
+              assignNamedField(p, memberIdent(nme, sel.sym), value, k(unit), N, unsafe)(sym, Nil, Nil)
       case sel @ DynSel(prefix, fld, ai, _) =>
         subTerm(prefix): p =>
           subTerm_nonTail(fld): f =>
@@ -1503,7 +1509,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                 k(unit),
                 N,
                 unsafe,
-              )(resolvedSelectionSymbol, Nil)
+              )(resolvedSelectionSymbol, Nil, Nil)
       case _ => fail:
         ErrorReport(
           msg"Unexpected left-hand side in assignment (${lhs.describe})" -> lhs.toLoc :: Nil, S(lhs),

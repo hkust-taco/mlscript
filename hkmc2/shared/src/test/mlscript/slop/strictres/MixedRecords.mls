@@ -117,15 +117,15 @@ val replacedField = {mut size: 0, ...replacingSource}
 //│ replacingSource = {size: undefined}
 
 // An assignment to the replaced field is rejected for the same reason.
-:e
+:ge
 private fun assignReplacedField() =
   let other = {item: 1}
   let record = {mut item: 0, ...other}
   set record.item = 2
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'item'
 //│ ║  l.+4: 	  set record.item = 2
-//│ ║        	      ^^^^^^^^^^^
-//│ ╟── Record field 'item' is not mutable
+//│ ║        	            ^^^^^
+//│ ╟── Defined here:
 //│ ║  l.+2: 	  let other = {item: 1}
 //│ ╙──      	               ^^^^
 
@@ -146,22 +146,22 @@ resetCursor()
 // The object allocated for a record with both kinds of fields is not frozen, and resolution only reads the
 // initializer of a read-only field. An assignment to such a field is rejected, as otherwise the selection of
 // `a` below would resolve to the field of the initializer and read a record without that field.
-:e
+:ge
 private fun overwriteReadOnly() =
   let record = {mut count: 0, inner: {a: 1}}
   set record.inner = {b: 2}
   [record.inner.a]
 overwriteReadOnly()
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'inner'
 //│ ║  l.+3: 	  set record.inner = {b: 2}
-//│ ║        	      ^^^^^^^^^^^^
-//│ ╟── Record field 'inner' is not mutable
+//│ ║        	            ^^^^^^
+//│ ╟── Defined here:
 //│ ║  l.+2: 	  let record = {mut count: 0, inner: {a: 1}}
 //│ ╙──      	                              ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // So is an assignment to a field of a record without `mut` fields, or of a copy of such a record.
-:e
+:ge
 private fun overwriteFrozen() =
   let record = {count: 0}
   let copied = {...record}
@@ -169,37 +169,28 @@ private fun overwriteFrozen() =
   set copied.count = 2
   [record.count, copied.count]
 overwriteFrozen()
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'count'
 //│ ║  l.+4: 	  set record.count = 1
-//│ ║        	      ^^^^^^^^^^^^
-//│ ╟── Record field 'count' is not mutable
+//│ ║        	            ^^^^^^
+//│ ╟── Defined here:
 //│ ║  l.+2: 	  let record = {count: 0}
 //│ ╙──      	                ^^^^^
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'count'
 //│ ║  l.+5: 	  set copied.count = 2
-//│ ║        	      ^^^^^^^^^^^^
-//│ ╟── Record field 'count' is not mutable
+//│ ║        	            ^^^^^^
+//│ ╟── Defined here:
 //│ ║  l.+2: 	  let record = {count: 0}
 //│ ╙──      	                ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-// An assignment is rejected if any of the records that reach it declares the field read-only.
-:e
-private fun bump(record) = set record.count = record.count + 1
-private fun bumpBoth() =
-  let counter = {mut count: 0}
-  let fixed = {count: 0}
-  bump(counter)
-  bump(fixed)
-  [counter.count, fixed.count]
-bumpBoth()
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.+1: 	private fun bump(record) = set record.count = record.count + 1
-//│ ║        	                               ^^^^^^^^^^^^
-//│ ╟── Record field 'count' is not mutable
-//│ ║  l.+4: 	  let fixed = {count: 0}
-//│ ╙──      	               ^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+// Like an assignment to an immutable field of a class, such an assignment can be marked `@unsafe`. It then
+// takes effect on a record that is not frozen. Resolution does not account for the assigned value.
+:expect "changed"
+let relabelled = {mut count: 0, label: "count"}
+@unsafe set relabelled.label = "changed"
+relabelled.label
+//│ = "changed"
+//│ relabelled = {count: 0, label: "changed"}
 
 // A copy of a `mut` field is read-only unless the copy is mutable as a whole. Both copies below reuse the
 // field of their source, and resolution does not tell them apart.
@@ -217,26 +208,26 @@ set unfrozen.count = 2
 
 // An assignment through a field that a record type does not make mutable is rejected as well: the records
 // that the type describes receive no input for that field.
-:e
+:ge
 private fun relabel(target: {mut count: Int, label: Str}) = set target.label = "changed"
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'label'
 //│ ║  l.+1: 	private fun relabel(target: {mut count: Int, label: Str}) = set target.label = "changed"
-//│ ║        	                                                                ^^^^^^^^^^^^
-//│ ╟── Record field 'label' is not mutable
+//│ ║        	                                                                      ^^^^^^
+//│ ╟── Defined here:
 //│ ║  l.+1: 	private fun relabel(target: {mut count: Int, label: Str}) = set target.label = "changed"
-//│ ╙──      	                                             ^^^^^^^^^^
+//│ ╙──      	                                             ^^^^^
 
-// It is rejected through any component of a union of record types, and accepted through an intersection
-// in which a component makes the field mutable.
-:e
-private fun writeEither(target: {mut count: Int} | {count: Int}) = set target.count = 1
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.+1: 	private fun writeEither(target: {mut count: Int} | {count: Int}) = set target.count = 1
-//│ ║        	                                                                       ^^^^^^^^^^^^
-//│ ╟── Record field 'count' is not mutable
-//│ ║  l.+1: 	private fun writeEither(target: {mut count: Int} | {count: Int}) = set target.count = 1
-//│ ╙──      	                                                    ^^^^^^^^^^
+// It can be marked `@unsafe` too.
+:expect "changed"
+private fun relabelUnsafely(target: {mut count: Int, label: Str}) = @unsafe set target.label = "changed"
+let unsafelyRelabelled = mut {count: 0, label: "count"}
+relabelUnsafely(unsafelyRelabelled)
+unsafelyRelabelled.label
+//│ = "changed"
+//│ unsafelyRelabelled = {count: 0, label: "changed"}
 
+// It is accepted through an intersection of record types in which a component makes the field mutable
+// (see ../ReadOnlyRecordFields.mls for unions).
 :expect 1
 private fun writeBoth(target: {mut count: Int} & {count: Int, label: Str}) = set target.count = 1
 let both = mut {count: 0, label: "count"}
