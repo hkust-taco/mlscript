@@ -268,6 +268,61 @@ set unfrozen.count = 2
 //│ original = {count: 0}
 //│ unfrozen = {count: 2}
 
+// An assignment to a copy is no input of the record that it copies. The selection of `a` below resolves,
+// although the copy then holds a record without that field.
+:expect 1
+private fun separateFromSource() =
+  let declared = {mut item: {a: 1}}
+  let copied = mut {...declared}
+  set copied.item = {b: 2}
+  declared.item.a
+separateFromSource()
+//│ = 1
+
+// Neither is it an input of the other copies of that record.
+:expect 1
+private fun separateCopies() =
+  let fixed = {item: {a: 1}}
+  let first = mut {...fixed}
+  let second = mut {...fixed}
+  set first.item = {b: 2}
+  second.item.a
+separateCopies()
+//│ = 1
+
+// A copy holds what the field that it copies held when the copy was made. A read of the copy thus also
+// returns the values assigned to that field.
+:e
+private fun copyAfterAssignment() =
+  let declared = {mut item: {a: 1}}
+  set declared.item = {b: 2}
+  let copied = {...declared}
+  copied.item.a
+copyAfterAssignment()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+5: 	  copied.item.a
+//│ ║        	  ^^^^^^^^^^^^^
+//│ ╟── Record literal does not contain member 'a'
+//│ ║  l.+3: 	  set declared.item = {b: 2}
+//│ ╙──      	                       ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A spread does not convert the values that it copies, so a copy has the representation of the field that it
+// copies. That representation includes the values assigned to the copy.
+:ge
+private fun assignOtherRepresentation() =
+  let fixed = {count: input}
+  let copied = mut {...fixed}
+  set copied.count = "many"
+  copied.count
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
+//│ ║  l.+1: 	private fun assignOtherRepresentation() =
+//│ ╙──      	            ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
+//│ ║  l.+2: 	  let fixed = {count: input}
+//│ ╙──      	               ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
 // A copy of a copy is a field of its own too. The error shows the record whose copy is assigned and the
 // field that the copies come from.
 :ge

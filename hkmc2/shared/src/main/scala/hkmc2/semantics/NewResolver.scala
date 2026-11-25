@@ -85,10 +85,24 @@ class NewResolver:
       // the field's representation does not include: lowering converts their values to that representation.
       if isAssignableField(td) then listenMemberVariable(td.tsym)(publish)
 
+  /** Supply the values assigned to `copy`, a record's copy of a field, to the representation of the declared
+    * field that it comes from. A spread does not convert the values that it copies, so a copy has the
+    * representation of that field (see RecordFieldSymbol), which must then hold what the copy holds.
+    * This does nothing for a field that is no copy, or if this compilation unit does not infer the representation
+    * of the declared field: lowering then converts the assigned values to it, as it does for assignments from
+    * other compilation units (see `observeErasureDefinition`).
+    */
+  private def observeCopiedField(copy: RecordFieldSymbol)(using caller: ResolutionContext): Unit =
+    if (copy.root isnt copy) && rctx.state.observedCopies.add(copy) then
+      // Each reader of the representation applies its own bindings, like `memberResultSlot`.
+      given ResolutionContext = caller.withInstances(TypeSubstitution.empty)
+      copy.root.defn.flatMap(observeErasureDefinition).foreach: representation =>
+        listenMemberVariable(copy)(shape => listenInstanceViews(shape)(representation.publish))
+
   /** Whether assignments can replace the value of the field that `td` defines: a mutable field (`mut val`,
-    * including a mutable constructor parameter) or a record field. Even a field that its record has immutable
-    * receives assigned values, through a mutable copy of the record (`mut {...r}`): the values of a copy are
-    * those of the field that it copies (see RecordMember).
+    * including a mutable constructor parameter) or a record field. A record field that is not mutable gets no
+    * assigned value (see `resolveFieldWrite`), but its representation gets those assigned to its mutable copies
+    * (see `observeCopiedField`).
     */
   private def isAssignableField(td: TermDefinition): Bool =
     (td.k is syntax.MutVal) || (td.k is syntax.RecordField)
@@ -2562,9 +2576,9 @@ class NewResolver:
       fromBMS(member.valueSymbol, flow, inner, read, source, _ => (), false)(using rctx.withInstances(instances))
       // Like other reads of record members (see `publishMember`).
       member match
-        case member: RecordMember if member.readsAssignments =>
-          listenAssignedValues(member.root.tsym, flow, inner)(read)(using rctx.withInstances(instances))
-        case _ => ()
+        case member: RecordMember => member.assignedFields.foreach: field =>
+          listenAssignedValues(field, flow, inner)(read)(using rctx.withInstances(instances))
+        case _: BlockMemberSymbol => ()
     case MemberLookup.Declared(member, bound, inner, annotation) =>
       listenDeclaredMember(member, bound, flow, source, annotation, _ => (), receiver = false, inner, N): value =>
         transportShape(instantiateShape(value, instances), inner) match
@@ -4081,16 +4095,15 @@ class NewResolver:
         val root = member.root
         if root.tsym is member.field.tsym then definition(member.field.sym)
         else
-          // A record's copy of a field is the target of the selection, and it holds the values of its root
-          // (see RecordMember). Publishing the root's symbol would make the root the target instead
-          // (see `recordValueTarget`), so read the root's values here, like `listenMemberValue`.
+          // A record's copy of a field is the target of the selection, and it first holds the initial value of
+          // its root (see RecordMember). Publishing the root's symbol would make the root the target instead
+          // (see `recordValueTarget`), so read the root's value here, like `listenMemberValue`.
           val copy = member.field.tsym
           rctx.recordResolution(host, host.resolvedTargets.contains(copy))(host.resolvedTargets ::= copy)
           fromBMS(root.sym, flow, marks, publish, host, _ => (), false)(using rctx.withInstances(instances))
-        // A read also returns the values assigned to the root (see `writeField`) if the member can observe
-        // them, like a read of a mutable class field (see `fromBMSAt`). The root's own definition cannot know
-        // this, as an assignment through a mutable copy is an input of an immutable root too.
-        if member.readsAssignments then listenAssignedValues(root.tsym, flow, marks)(publish)
+        // A read also returns the values assigned to the member, and to the fields that it copies
+        // (see `writeField`), like a read of a mutable class field (see `fromBMSAt`).
+        member.assignedFields.foreach(field => listenAssignedValues(field, flow, marks)(publish))
 
   private def publishDeclared(host: NewResolvable & ShapeHost, member: BlockMemberSymbol, flow: FlowSymbol,
       bindings: Map[VarSymbol, TypeArgument], marks: Ls[Marks], annotation: Opt[Term],
@@ -4906,8 +4919,9 @@ class NewResolver:
       case MemberLookup.Declared(member = member, bindings = bindings, marks = marks) =>
         memberField(member, S(bindings), marks, instances)
       case MemberLookup.Found(member: RecordMember, marks) =>
-        // The values of a copy are those of its root, which an assignment through the copy supplies.
-        if member.mutable then assign(member.root.tsym, marks)
+        if member.mutable then
+          observeCopiedField(member.field.tsym)
+          assign(member.field.tsym, marks)
       case MemberLookup.Found(member: BlockMemberSymbol, marks) =>
         memberField(member, N, marks, instances)
       case _ => ()

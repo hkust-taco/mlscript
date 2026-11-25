@@ -346,7 +346,7 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
       case record: RecordShape => record.foreachReadableField(marks, instances): (member, context, bindings) =>
         val field = member.field
         val lookup = MemberLookup.Found(member, context)
-        // The values of a copy are those of its root, which also receives what clients assign to the copy.
+        // A copy takes its initial value and its representation from its root, the field that clients see declared.
         watch((field.tsym, context, bindings))(resolver.listenMemberValue(lookup,
           rctx.fieldProjectionSite(member.root.sym), field.rhs, bindings, () => ())): value =>
           emit(value, path.via(msg"This value is stored in this record field." -> field.toLoc))

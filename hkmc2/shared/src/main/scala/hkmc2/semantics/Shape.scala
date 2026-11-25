@@ -558,7 +558,7 @@ extension (member: BlockMemberSymbol | RecordMember)
   def memberSymbol: BlockMemberSymbol = member match
     case symbol: BlockMemberSymbol => symbol
     case member: RecordMember => member.field.sym
-  /** The member whose definition supplies the values of this one: itself, except for the copy of a record field. */
+  /** The member whose definition supplies the initial value of this one: itself, except for the copy of a record field. */
   def valueSymbol: BlockMemberSymbol = member match
     case symbol: BlockMemberSymbol => symbol
     case member: RecordMember => member.root.sym
@@ -1307,15 +1307,16 @@ object TupleShape:
 /** A record field found by member lookup: a field that the record declares, or the record's own copy of a field
   * of a record that it spreads (see RecordFieldSymbol). The field identifies the member and tells whether an
   * assignment can reach it through this record.
-  * The values of a copy are those of its `root`, the declared field that it comes from: the initializer of
-  * that field, and the values assigned to it if the member `readsAssignments`. An assignment through a mutable
-  * copy is thus an input of the root, which a read through an immutable record does not observe. This keeps a
-  * copy in the representation of its origin, which a spread requires (see RecordFieldSymbol).
+  * A copy holds what the field that it copies held when the copy was made, and then what is assigned to the
+  * copy itself. Its values are thus the initializer of its `root`, the declared field that it comes from, and
+  * the values assigned to its `assignedFields`. An assignment to a copy is no input of the record that it
+  * copies, nor of the other copies of that record.
   */
 final case class RecordMember(field: RcdField):
   def mutable: Bool = field.tsym.mutable
-  def readsAssignments: Bool = field.tsym.readsAssignments
-  /** The definition of the declared field that supplies the values of this member. */
+  /** The fields whose assigned values a read of this member can return (see RecordFieldSymbol.assignedFields). */
+  def assignedFields: Ls[RecordFieldSymbol] = field.tsym.assignedFields
+  /** The definition of the declared field that supplies the initial value of this member. */
   def root: TermDefinition = field.tsym.root.defn.getOrElse(lastWords(s"Record field '${field.sym.nme}' has no definition"))
 
 /** Keep spread candidates and their contexts rather than flattening away their
@@ -1349,7 +1350,7 @@ final class RecordShape private (val source: Term.Rcd, val elements: Ls[RecordSh
           case Unknown(_, fromPublicInterface, provenance) => S(Unknown(Uncertainty.RecordOverwrite, fromPublicInterface, provenance))
           case Missing => N
           case Found(member: RecordMember, inner) =>
-            // This record has its own copy of the field. The path still leads from the field's root.
+            // This record has its own copy of the field. The path still leads from the scope of the field's root.
             S(Found(RecordMember(rctx.copiedField(source, member.field)), inner ::: marks :: Nil))
           case Found(_: BlockMemberSymbol, _) | _: Declared | _: Typed | Indexed(_, _) | Private(_, _, _) =>
             // Record spreads recursively look up RecordShapes, which only create RecordMembers.

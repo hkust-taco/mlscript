@@ -238,8 +238,8 @@ private fun replaceBoth() =
 replaceBoth()
 //│ = [2, "changed"]
 
-// Assigning through a mutable copy of a record assigns the fields of the copied record,
-// so the representations of those fields include the values assigned to them through the copy.
+// A mutable copy of a record has fields of its own, which can be assigned. A spread does not convert the values
+// that it copies, so the representations of the copied fields include the values assigned to their copies.
 :expect "many"
 private fun copy() =
   let source = {count: 0}
