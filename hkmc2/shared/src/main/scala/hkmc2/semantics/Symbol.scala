@@ -515,8 +515,11 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
       // retains visibility, including after a method is copied by the inliner.
       (isLetOrParamBinding || visibility.exists(_ is Visibility.Private))
   
-  /** The erased type obtained by reading this term in the current IR. Reading a getter produces its
-    * call result. Reading a function with parameter lists produces a first-class `Function`.
+  /** The erased type of what a reference to this term evaluates to in the current IR (see [[irErasure]]).
+    * Reading a getter produces its call result.
+    *
+    * A definition with an [[erasedSignature]] evaluates to a closure the compiler builds, i.e. a first-class
+    * `Function`. The signature describes calls to the definition.
     */
   def erasedType: Opt[ErasedValueType] = TermSymbol.referenceType(irErasure)
   def sourceErasedType(using codegen.Erasure): Opt[ErasedValueType] = TermSymbol.referenceType(sourceErasure)

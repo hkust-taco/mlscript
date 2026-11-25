@@ -1263,11 +1263,17 @@ sealed abstract class Result extends Located:
     case Value.SimpleRef(sym) => sym match
       case l: LocalVarSymbol => l.erasedType
       case sym: BuiltinSymbol => S(sym.erasedType)
+    // `SimpleRef` covers locals and builtins. A `val` or `fun` is a block member, so its unqualified
+    // references use `MemberRef`. Its declared type lives on the associated `TermSymbol`. A resolved
+    // selection such as `this.field` uses the same symbol to find the field's type.
     case path @ (_: Value.MemberRef | _: Select | _: SuperSelect | _: DynSelect) => path.targetSymbol match
       case S(term: TermSymbol) => term.bareReferenceType
       case S(mod: ModuleOrObjectSymbol) => mod.erasedType
-      // Class objects and pattern singletons have no nominal erased type of their own.
+      // A reference to a class denotes the class object (a `Class`). Class objects and pattern
+      // singletons have no nominal erased type of their own.
       case S(_: ClassSymbol | _: PatternSymbol) => S(ErasedType.Unknown)
+      // Only an ill-formed program can refer to a type alias as a value. An unresolved
+      // selection (dynamic field access) has no member declaration to supply a type.
       case S(_: TypeAliasSymbol) | N => N
     case Value.This(cls: ClassSymbol) => S(ErasedType.ValueLike(rsc = S(false), cls))
     case Value.This(mod: ModuleOrObjectSymbol) => mod.erasedType
