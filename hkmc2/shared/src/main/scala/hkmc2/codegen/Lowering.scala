@@ -88,6 +88,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   
   val newResolution: Bool = config.language.useNewResolution
   val strictResolution: Bool = config.language.strictResolution
+  val eagerResolution: Bool = config.language.eagerResolution
   
   /** Whether a reference cannot be compiled: either an error was reported for it, or it targets a definition
     * marked as erroneous, such as one of the definitions of a name rejected by Elaborator.
@@ -884,21 +885,20 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
 
   private def assignNamedField(prefix: Path, name: Tree.Ident, value: Path, rest: Block,
       keyAccess: Opt[Term], unsafe: Bool)(target: Opt[DefinitionSymbol[?]],
-      candidates: Ls[DefinitionSymbol[?]], readOnlyFields: Ls[TermSymbol], reachesMutableField: Bool)
+      candidates: Ls[DefinitionSymbol[?]], readOnlyFields: Ls[TermSymbol], dynamic: Bool)
       (using LoweringCtx): Block =
-    // Lenient and dynamic lookup can omit the single IR target while retaining known
-    // candidates. The immutable fields among them may not be written without @unsafe.
-    // Neither may the record fields that the assignment cannot reach, which resolution
-    // collects in `readOnlyFields` (see NewResolvableImpl.readOnlyFields).
-    val immutable = target.iterator.++(candidates).collectFirst:
-      case sym: TermSymbol if sym.k is syntax.ImmutVal => sym
-    .orElse(readOnlyFields.lastOption)
-    // Strict resolution requires every receiver to permit the write. Otherwise, the write is
-    // only rejected if no receiver has the field mutable, like a selection is only rejected
-    // if no receiver has the member. A dynamic receiver does not count as having it mutable.
-    val rejected = strictResolution || !reachesMutableField
+    // Lenient and dynamic lookup can omit the single IR target while retaining known candidates.
+    // A candidate does not permit the write if it is an immutable field of a class, or a record
+    // field that the assignment cannot reach (see NewResolvableImpl.readOnlyFields).
+    def targets = target.iterator.++(candidates).collect:
+      case sym: TermSymbol => sym
+    val immutable = targets.find(_.k is syntax.ImmutVal).orElse(readOnlyFields.lastOption)
+    // Eager resolution requires every candidate to permit the write. Otherwise one that does
+    // suffices, as does a `dynamic` receiver, like a selection that only some receivers resolve.
+    def permitted = dynamic || targets.exists: sym =>
+      ((sym.k is syntax.MutVal) || (sym.k is syntax.RecordField)) && !readOnlyFields.contains(sym)
     immutable match
-    case S(sym) if !unsafe && rejected => cannotAssign(sym, sym, name.toLoc)
+    case S(sym) if !unsafe && (eagerResolution || !permitted) => cannotAssign(sym, sym, name.toLoc)
     case _ => namedSelection(prefix, name, target, keyAccess, name.toLoc, false):
       case DynSelect(_, key, kind) => AssignDynField(prefix, key, kind, value, rest)
       case _ => AssignField(prefix, name, value, rest)(target)
@@ -1446,12 +1446,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                 subTerm_nonTail(rhs): r =>
                   castPathTo(r, sym.sourceErasedType, ref.toLoc): value =>
                     assignNamedField(p, memberIdent(ref.id, member), value,
-                      k(unit), ref.keyAccess, unsafe)(S(sym), ref.resolvedTargets, ref.readOnlyFields, ref.reachesMutableField)
+                      k(unit), ref.keyAccess, unsafe)(
+                      S(sym), ref.resolvedTargets, ref.readOnlyFields, ref.dynamicPrefixes.nonEmpty)
             case N if ref.resolvedTargets.forall(_.isInstanceOf[TermSymbol]) =>
               subTerm_nonTail(prefix): p =>
                 subTerm_nonTail(rhs): r =>
                   assignNamedField(p, memberIdent(ref.id, member), r, k(unit), ref.keyAccess, unsafe)(
-                    N, ref.resolvedTargets, ref.readOnlyFields, ref.reachesMutableField)
+                    N, ref.resolvedTargets, ref.readOnlyFields, ref.dynamicPrefixes.nonEmpty)
             case _ => fail:
               ErrorReport(msg"Assignment requires a term member" -> ref.toLoc :: Nil,
                 source = Diagnostic.Source.Compilation)
@@ -1466,12 +1467,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
               subTerm_nonTail(rhs): r =>
                 castPathTo(r, sym.sourceErasedType, sel.toLoc): value =>
                   assignNamedField(p, name, value, k(unit), sel.keyAccess, unsafe)(
-                    S(sym), sel.resolvedTargets, sel.readOnlyFields, sel.reachesMutableField)
+                    S(sym), sel.resolvedTargets, sel.readOnlyFields, sel.hasDynamicTarget)
           case N if sel.resolvedTargets.forall(_.isInstanceOf[TermSymbol]) =>
             subTerm_nonTail(prefix): p =>
               subTerm_nonTail(rhs): r =>
                 assignNamedField(p, name, r, k(unit), sel.keyAccess, unsafe)(
-                  N, sel.resolvedTargets, sel.readOnlyFields, sel.reachesMutableField)
+                  N, sel.resolvedTargets, sel.readOnlyFields, sel.hasDynamicTarget)
           case _ => fail:
             ErrorReport(msg"Assignment requires a term member" -> sel.toLoc :: Nil,
               source = Diagnostic.Source.Compilation)

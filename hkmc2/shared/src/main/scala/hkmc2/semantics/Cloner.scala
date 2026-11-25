@@ -487,7 +487,6 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
       copy.resolvedTargets = source.resolvedTargets.map(_.subst)
       copy.keyAccess = source.keyAccess.map(_.cloned)
       copy.readOnlyFields = source.readOnlyFields.map(_.subst)
-      copy.reachesMutableField = source.reachesMutableField
       copy.isErroneous = source.isErroneous
       copy
     // Keep class qualifiers typed as selections while sharing all clone metadata copying.

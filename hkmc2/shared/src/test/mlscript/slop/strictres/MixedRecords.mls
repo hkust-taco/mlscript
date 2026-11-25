@@ -183,7 +183,7 @@ overwriteFrozen()
 //│ ╙──      	                ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-// Strict resolution rejects an assignment if any of the records that reach it leaves the field read-only.
+// Eager resolution rejects an assignment if any of the records that reach it leaves the field read-only.
 // The mutable copy below reuses the field of the record that it copies, so the assignment has one target.
 :ge
 private fun bump(record) = set record.count = record.count + 1
