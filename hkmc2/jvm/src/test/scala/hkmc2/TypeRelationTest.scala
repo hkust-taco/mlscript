@@ -381,7 +381,7 @@ class TypeRelationTest extends AnyFunSuite:
       val fields = ArrayBuffer.empty[TermShape]
       returned.listen: value =>
         value.getMember("value") match
-          case MemberLookup.Typed(_, tpe, marks) =>
+          case MemberLookup.Typed(tpe = tpe, marks = marks) =>
             h.resolver.listenInstanceViews(h.resolver.instanceShape(h.resolver.transportType(tpe.output, marks)))(fields += _)
           case _ => fail("Expected a declared record field")
       assert(fields.isEmpty)

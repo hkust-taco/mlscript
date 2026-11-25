@@ -267,7 +267,7 @@ class SelectedAlias extends HeldBase {
 
 // Reading and assigning through a structural alias use the same symbol property.
 :expect 59
-type Cell = {@jsSymbol(Keys.first) value: Int}
+type Cell = mut {@jsSymbol(Keys.first) value: Int}
 private fun update(cell: Cell) =
   set cell.value = 59
   cell.value
@@ -316,7 +316,7 @@ moduleKey(62).fetch()
 @noInline
 private fun localCell(value) =
   @fresh val cellKey = Symbol("cell")
-  type Cell = {@jsSymbol(cellKey) value: Int}
+  type Cell = mut {@jsSymbol(cellKey) value: Int}
   val cell: Cell = mut {(cellKey): value}
   cell
 

@@ -463,7 +463,8 @@ enum MemberLookup:
   // type arguments; they never authorize reading an implementation's value flow.
   case Declared(member: BlockMemberSymbol, bindings: Map[VarSymbol, TypeArgument], marks: Ls[Marks], annotation: Opt[Term])
   // A structural field already has its lexical bindings and intersection applied.
-  case Typed(field: RcdField, tpe: TypeArgument, marks: Ls[Marks])
+  // It is `mutable` if its record type lets values be assigned to it (see RecordTypeShape).
+  case Typed(field: RcdField, tpe: TypeArgument, mutable: Bool, marks: Ls[Marks])
   // A preceding spread can place several different fields at the same index.
   case Indexed(fields: Ls[TupleShape.Fixed], marks: Ls[Marks])
   case Dynamic(marks: Ls[Marks])
@@ -480,7 +481,7 @@ enum MemberLookup:
     case Private(own, owner, inherited) => Private(own.withMarks(marks), owner, inherited.withMarks(marks))
     case Found(member, inner) => Found(member, inner ::: marks)
     case Declared(member, bindings, inner, annotation) => Declared(member, bindings, inner ::: marks, annotation)
-    case Typed(field, tpe, inner) => Typed(field, tpe, inner ::: marks)
+    case typed: Typed => typed.copy(marks = typed.marks ::: marks)
     case Indexed(fields, inner) => Indexed(fields, inner ::: marks)
     case Dynamic(inner) => Dynamic(inner ::: marks)
     case _ => this
@@ -687,7 +688,7 @@ final class RecordTypeShape(val fields: Map[MemberKey, TypeArgument], val mutabl
     val keys = Option.when(fields.contains(name))(name).toList ::: (name match
       case name: Str => aliases.getOrElse(name, Set.empty).toList.sortBy(_.name)
       case _ => Nil)
-    MemberLookup.all(keys.map(key => MemberLookup.Typed(declarations(key), fields(key), Nil)))
+    MemberLookup.all(keys.map(key => MemberLookup.Typed(declarations(key), fields(key), mutable(key), Nil)))
 
 /** A conjunction exposes members supplied by any component, including mixtures of nominal and
   * structural interfaces. For example, `Iterator[T] & Iterable[T]` supplies `next`
@@ -1342,7 +1343,7 @@ final class RecordShape private (val source: Term.Rcd, val elements: Ls[RecordSh
           case Missing => N
           case Found(member: RecordMember, inner) =>
             S(Found(member.copy(mutable = member.mutable || source.mut), inner ::: marks :: Nil))
-          case Found(_: BlockMemberSymbol, _) | _: Declared | Typed(_, _, _) | Indexed(_, _) | Private(_, _, _) =>
+          case Found(_: BlockMemberSymbol, _) | _: Declared | _: Typed | Indexed(_, _) | Private(_, _, _) =>
             // Record spreads recursively look up RecordShapes, which only create RecordMembers.
             lastWords("Record lookup returned a nominal member")
         spread(shape.getMember(name)).getOrElse(loop(rest))

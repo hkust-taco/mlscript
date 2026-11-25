@@ -896,12 +896,14 @@ fields. A copied field does not keep the `mut` of its source: it is mutable only
 destination is `mut {...}`.
 
 The compiler rejects an assignment that selects a field of a record through which the field is
-not mutable. It does not yet reject every assignment to a read-only field: a copy `{...r}` accepts
-assignments to the fields that `r` declares `mut`, and an assignment through a record type or a
-computed key is not checked against the record that it reaches. The JavaScript backend freezes
-a record without mutable fields, and allocates a record with both kinds of fields as an unfrozen
-object. An unchecked assignment to a read-only field of the latter takes effect at run time,
-although resolution does not account for the assigned value.
+not mutable, or a field that a record type does not make mutable. It does not yet reject every
+assignment to a read-only field: a copy `{...r}` accepts assignments to the fields that `r`
+declares `mut`, a record with a read-only field is accepted where a record type requires that
+field to be mutable, and an assignment through a computed key is not checked against the record
+that it reaches. The JavaScript backend freezes a record without mutable fields, and allocates a
+record with both kinds of fields as an unfrozen object. An unchecked assignment to a read-only
+field of the latter takes effect at run time, although resolution does not account for the
+assigned value.
 
 `{}` denotes an empty record in expression and type positions. It is distinct
 from Unit, written `()`. Empty statement bodies such as `do {}` still return Unit.

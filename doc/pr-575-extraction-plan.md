@@ -33,12 +33,14 @@ pieces now appear in the upstream merge record and in #35.
 | E34 — allow individual record fields to be mutable | [Upstream #632](https://github.com/hkust-taco/mlscript/pull/632) is open from `codex/pr575-per-field-mutability` into `hkmc2`. It adds per-field `mut` to record literals and types, including spread copies and cloned patterns. #575 already supplied the explicit field bounds from the closed [#625](https://github.com/hkust-taco/mlscript/pull/625). |
 
 Resolution rejects an assignment that selects a record field through which it
-is not mutable, such as the write to `label` in `{mut count: 0, label: "count"}`.
+is not mutable, such as the write to `label` in `{mut count: 0, label: "count"}`,
+or a field that a record type does not make mutable.
 E34 leaves the remaining enforcement of read-only record fields to the type
 checker. `slop/strictres/MixedRecords.mls` records the assignments that are still
-accepted: through a frozen copy of a `mut` field, a record type, or a computed
-key. The full `hkmc2AllTests/test` suite passed all 1,401 tests on the E34
-implementation commit `e1ef51bd6`.
+accepted: through a frozen copy of a `mut` field, through a record type that
+requires a `mut` field of a record that declares it read-only, or through a
+computed key. The full `hkmc2AllTests/test` suite passed all 1,401 tests on the
+E34 implementation commit `e1ef51bd6`.
 
 ### Related follow-ups
 

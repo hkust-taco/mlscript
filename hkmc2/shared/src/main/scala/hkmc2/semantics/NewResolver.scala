@@ -2518,9 +2518,12 @@ class NewResolver:
     * The values that a record type describes can be assigned values of the input types of its `mutable` fields
     * (see RcdField) through it, so the actual value's assignable field receives them, just like the
     * parameters of an actual callback receive values of their declared types (see `constrainFunction`).
-    * Assignments through the immutable fields of record types are assumed not to happen: type checking will
-    * reject them. It will also reject an actual record that supplies a field that is not mutable where the
-    * record type requires a `mutable` one: no input reaches such a field here.
+    * Its other fields receive no input: `assignField` rejects the assignments through them.
+    * An actual record can supply a field that is not mutable where the record type requires a `mutable` one.
+    * No input reaches such a field, and this is not reported here: an expected union constrains the actual
+    * value against each of its components, so `{x: 1}` reaches the component `{mut x: Int}` of
+    * `{mut x: Int} | {x: Int}` although it is a valid value of the union. Type checking is to reject the
+    * actual records that satisfy no component.
     * Writes through structural interfaces need not contribute their individual values to
     * concrete fields, but still constrain assigned callbacks against the input type (see `assignField`).
     */
@@ -2563,7 +2566,7 @@ class NewResolver:
         transportShape(instantiateShape(value, instances), inner) match
           case value: TermShape => receive(value)
           case NoShape => ()
-    case MemberLookup.Typed(_, tpe, inner) =>
+    case MemberLookup.Typed(tpe = tpe, marks = inner) =>
       receive(instanceShape(transportType(instantiateType(tpe.output, instances), inner)))
     case MemberLookup.Dynamic(inner) => DynShape().exit(inner) match
       case value: TermShape => receive(value)
@@ -4173,7 +4176,7 @@ class NewResolver:
           record(member.memberSymbol)(publishMember(ref, member, ref.resSym, marks, instances))
         case MemberLookup.Declared(member, bindings, marks, annotation) =>
           record(member)(publishDeclared(ref, member, ref.resSym, bindings, marks, annotation, instances))
-        case MemberLookup.Typed(field, tpe, marks) =>
+        case MemberLookup.Typed(field = field, tpe = tpe, marks = marks) =>
           record(field.sym)(publishTyped(ref, field, tpe.output, marks, instances))
         case MemberLookup.Indexed(_, _) if rctx.canResolve(ref) =>
           resolError(ref, msg"Tuple elements must be selected by index." -> ref.toLoc :: Nil)
@@ -4593,7 +4596,8 @@ class NewResolver:
       case MemberLookup.Declared(member, bindings, marks, annotation) if rctx.canResolve(sel) || sel.resolvedMembers.contains(member) =>
         rctx.recordResolution(sel, sel.resolvedMembers.contains(member))(sel.resolvedMembers ::= member)
         publishDeclared(sel, member, sel.resSym, bindings, marks, annotation, instances)
-      case MemberLookup.Typed(field, tpe, marks) if rctx.canResolve(sel) || sel.resolvedMembers.contains(field.sym) =>
+      case MemberLookup.Typed(field = field, tpe = tpe, marks = marks)
+      if rctx.canResolve(sel) || sel.resolvedMembers.contains(field.sym) =>
         rctx.recordResolution(sel, sel.resolvedMembers.contains(field.sym))(sel.resolvedMembers ::= field.sym)
         publishTyped(sel, field, tpe.output, marks, instances)
       case MemberLookup.Indexed(fields, marks) if rctx.canResolve(sel) || sel.tupleIndex == sel.id.name.toIntOption =>
@@ -4785,6 +4789,8 @@ class NewResolver:
     * Reject the assignment if a receiver is a record through which the field is not mutable (see RecordMember).
     * Such a lookup only reads the field's initializer, so resolution would miss the assigned value, while a
     * record that declares other fields `mut` is not frozen and performs the assignment at run time.
+    * Likewise, reject it if a receiver has a record type that does not make the field mutable: the values that
+    * such a type describes receive no input for the field (see `constrainRecord`).
     * A copy such as `{...r}` is not rejected when `r` declares the field `mut`, although only `mut {...r}`
     * permits assignments: both lookups are mutable, and type checking is to tell them apart.
     * Dynamic receivers and computed keys have no static target field: lowering compiles such assignments without
@@ -4873,8 +4879,9 @@ class NewResolver:
     * receives the field and its lookup path. For a written nominal or structural type, `check`
     * receives the field's input type at this receiver. If `Middle[T]` inherits the type of
     * `Slot[T].item: T`, a write through `Middle[Int]` checks against `Int`.
-    * `readOnly` receives each record field reached by a lookup that is not mutable (see RecordMember).
-    * The write is not an input of such a field.
+    * `readOnly` receives each record field that the write cannot reach: the field of a record literal found
+    * by a lookup that is not mutable (see RecordMember), and the field that a record type declares without
+    * making it mutable. The write is not an input of such a field.
     */
   private[semantics] def resolveFieldWrite(info: MemberLookup)
       (assign: (TermSymbol, Ls[Marks]) => ResolutionContext ?=> Unit, readOnly: RcdField => ResolutionContext ?=> Unit)
@@ -4893,8 +4900,8 @@ class NewResolver:
     def follow(info: MemberLookup, instances: TypeSubstitution)(using ResolutionContext): Unit = info match
       case MemberLookup.All(members) => members.foreach(follow(_, instances))
       case MemberLookup.Contextual(source, substitution) => follow(source, instances.withOverrides(substitution))
-      case MemberLookup.Typed(_, tpe, marks) =>
-        check(transportType(instantiateType(tpe.input, instances), marks))
+      case MemberLookup.Typed(field, tpe, mutable, marks) =>
+        if mutable then check(transportType(instantiateType(tpe.input, instances), marks)) else readOnly(field)
       case MemberLookup.Declared(member = member, bindings = bindings, marks = marks) =>
         memberField(member, S(bindings), marks, instances)
       case MemberLookup.Found(RecordMember(field, mutable), marks) =>
