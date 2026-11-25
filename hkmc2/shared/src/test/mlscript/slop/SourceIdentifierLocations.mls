@@ -63,7 +63,10 @@ if Box(42) is Box(x) then x else 0
 //│               name = Ident loc[none] of "value"
 //│             rest = Assign: \
 //│             lhs = x⁰
-//│             rhs = SimpleRef loc[none] of tmp:arg$Box$0$⁰
+//│             rhs = CastPath loc[none]:
+//│               value = SimpleRef loc[none] of tmp:arg$Box$0$⁰
+//│               target = ValueLike(?)
+//│               check = true
 //│             rest = Return of SimpleRef loc[1:27-1:28] of x⁰
 //│       dflt = S of Return of Lit loc[1:34-1:35] of IntLit loc[1:34-1:35] of 0
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

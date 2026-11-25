@@ -114,9 +114,9 @@ object ShapeIdentity:
       case view: NominalInstanceView => ValueKey.hash(System.identityHashCode(view.defn), ValueKey.mapHash(view.bindings)(System.identityHashCode, _.hashCode), parentHash(view.parent))
       case view: CallableTypeShape => ValueKey.hash(System.identityHashCode(view.source), view.paramLists.hashCode,
         view.result.hashCode, view.scheme.hashCode, view.supplied.hashCode,
-        view.declaration.fold(0)(System.identityHashCode), view.wrappedResult.hashCode)
+        view.declaration.hashCode, view.wrappedResult.hashCode)
       case view: RecordTypeShape => ValueKey.hash(
-        ValueKey.mapHash(view.fields)(_.hashCode, _.hashCode), view.aliases.hashCode)
+        ValueKey.mapHash(view.fields)(_.hashCode, _.hashCode), view.mutable.hashCode, view.aliases.hashCode)
       case view: IntersectionView => view.values.map(_.comparison).hashCode
       case view: SpecializedShape => ValueKey.hash(view.declaration.comparison.hashCode,
         view.arguments.hashCode, view.instances.hashCode)
@@ -142,10 +142,10 @@ object ShapeIdentity:
         case a: CallableTypeShape => that.shape match
           case b: CallableTypeShape => (a.source eq b.source) && a.paramLists == b.paramLists && a.result == b.result &&
             a.scheme == b.scheme && a.supplied == b.supplied &&
-            a.declaration.fold(b.declaration.isEmpty)(x => b.declaration.exists(_ eq x)) && a.wrappedResult == b.wrappedResult
+            a.declaration == b.declaration && a.wrappedResult == b.wrappedResult
           case _ => false
         case a: RecordTypeShape => that.shape match
-          case b: RecordTypeShape => a.fields == b.fields && a.aliases == b.aliases
+          case b: RecordTypeShape => a.fields == b.fields && a.mutable == b.mutable && a.aliases == b.aliases
           case _ => false
         case a: IntersectionView => that.shape match
           case b: IntersectionView => a.values.map(_.comparison) == b.values.map(_.comparison)
@@ -461,9 +461,9 @@ enum MemberLookup:
   case Found(member: BlockMemberSymbol | RecordMember, marks: Ls[Marks])
   // Declared members expose signatures only. Their marks transport dependent
   // type arguments; they never authorize reading an implementation's value flow.
-  case Declared(member: BlockMemberSymbol, bindings: Map[VarSymbol, TypeArgument], marks: Ls[Marks], annotation: Opt[Term], positive: Bool)
+  case Declared(member: BlockMemberSymbol, bindings: Map[VarSymbol, TypeArgument], marks: Ls[Marks], annotation: Opt[Term])
   // A structural field already has its lexical bindings and intersection applied.
-  case Typed(field: RcdField, tpe: DeclaredType, marks: Ls[Marks])
+  case Typed(field: RcdField, tpe: TypeArgument, marks: Ls[Marks])
   // A preceding spread can place several different fields at the same index.
   case Indexed(fields: Ls[TupleShape.Fixed], marks: Ls[Marks])
   case Dynamic(marks: Ls[Marks])
@@ -479,7 +479,7 @@ enum MemberLookup:
     case Contextual(source, instances) => Contextual(source.withMarks(marks), instances)
     case Private(own, owner, inherited) => Private(own.withMarks(marks), owner, inherited.withMarks(marks))
     case Found(member, inner) => Found(member, inner ::: marks)
-    case Declared(member, bindings, inner, annotation, positive) => Declared(member, bindings, inner ::: marks, annotation, positive)
+    case Declared(member, bindings, inner, annotation) => Declared(member, bindings, inner ::: marks, annotation)
     case Typed(field, tpe, inner) => Typed(field, tpe, inner ::: marks)
     case Indexed(fields, inner) => Indexed(fields, inner ::: marks)
     case Dynamic(inner) => Dynamic(inner ::: marks)
@@ -490,7 +490,7 @@ enum MemberLookup:
     case All(members) => All(members.map(_.withAnnotation(annotation)))
     case Contextual(source, instances) => Contextual(source.withAnnotation(annotation), instances)
     case Private(own, owner, inherited) => Private(own.withAnnotation(annotation), owner, inherited.withAnnotation(annotation))
-    case Declared(member, bindings, marks, _, positive) => Declared(member, bindings, marks, annotation, positive)
+    case Declared(member, bindings, marks, _) => Declared(member, bindings, marks, annotation)
     case _ => this
 
   def instantiate(instances: TypeSubstitution): MemberLookup =
@@ -498,6 +498,17 @@ enum MemberLookup:
       case Contextual(source, previous) => Contextual(source, instances.withOverrides(previous))
       case Missing | Unknown(_, _, _) | Dynamic(_) => this
       case _ => Contextual(this, instances)
+
+  /** Visit the class member declarations selected by a visible lookup. The scope path, instance
+    * substitution, and any arguments from a nominal receiver interpret the declaration at its use.
+    */
+  def foreachClassMember(instances: TypeSubstitution)
+      (visit: (BlockMemberSymbol, Ls[Marks], TypeSubstitution, Opt[Map[VarSymbol, TypeArgument]]) => Unit): Unit = this match
+    case All(options) => options.foreach(_.foreachClassMember(instances)(visit))
+    case Contextual(source, substitution) => source.foreachClassMember(instances.withOverrides(substitution))(visit)
+    case Found(member: BlockMemberSymbol, marks) => visit(member, marks, instances, N)
+    case Declared(member = member, bindings = bindings, marks = marks) => visit(member, marks, instances, S(bindings))
+    case _ => ()
 
   /** The members found by this lookup when it is performed by code that can access the private members of the
     * class-like definitions satisfying `canAccess` (see SrcScope.canAccessPrivatesOf). Inaccessible private members
@@ -643,7 +654,7 @@ extends SymShape(source.sym, source.resSym, source.markss)
   * type, and constructor interpretations of the same overload set.
   */
 final class DeclaredSymShape(symbol: BlockMemberSymbol, site: FlowSymbol, marks: Ls[Marks],
-    val bindings: Map[VarSymbol, TypeArgument], val annotation: Opt[Term], val positive: Bool) extends CoreSymShape(symbol, site, marks)
+    val bindings: Map[VarSymbol, TypeArgument], val annotation: Opt[Term]) extends CoreSymShape(symbol, site, marks)
 
 
 // TODO: make it not a TermShape?
@@ -660,8 +671,12 @@ class BaseShape(val defn: ClassLikeDef, val ext: Opt[TermShape]) extends CoreHea
   * Field types are deferred references, including for recursive intersections.
   * Source declarations are witnesses for diagnostics and property selection, not
   * part of semantic equality: a merged field may have several such witnesses.
+  * Each field retains its read (output) and write (input) types separately: substitution can
+  * select different bounds for them, even when both were written as the same type variable.
+  * Immutable fields have Nothing as their input. Fields of a mutable record type are
+  * part of the interface: values constrained by it admit their inputs as writes.
   */
-final class RecordTypeShape(val fields: Map[MemberKey, DeclaredType], val aliases: Map[Str, Set[SymbolKey]])(
+final class RecordTypeShape(val fields: Map[MemberKey, TypeArgument], val mutable: Set[MemberKey], val aliases: Map[Str, Set[SymbolKey]])(
     val source: Term.Rcd, val declarations: Map[MemberKey, RcdField]) extends CoreHeadShape:
   def describe: Str = "record type"
   override def toString: Str = s"RecordTypeShape($fields)"
@@ -674,8 +689,8 @@ final class RecordTypeShape(val fields: Map[MemberKey, DeclaredType], val aliase
       case _ => Nil)
     MemberLookup.all(keys.map(key => MemberLookup.Typed(declarations(key), fields(key), Nil)))
 
-/** A conjunction exposes members supplied by any component. Keep nominal and
-  * structural interfaces together: `Iterator[T] & Iterable[T]` supplies `next`
+/** A conjunction exposes members supplied by any component, including mixtures of nominal and
+  * structural interfaces. For example, `Iterator[T] & Iterable[T]` supplies `next`
   * and the iteration method on the same value. Constraint inspection still
   * visits the components separately, retaining every input and output flow.
   */
@@ -836,8 +851,23 @@ final case class WrappedResult(annotation: Annot.Async | Annot.Generator, remain
     case _ => false
   require(remainingLists > 0)
 
-/** Calls through annotations expose only the declared result. Argument shapes
-  * constrain type parameters in the interface; they do not recover its implementation.
+/** The source operation behind a declared callable and the parameter lists a caller can
+  * still supply. A partial application retains a suffix of the original declaration's lists.
+  * `instances` binds the method's type parameters at the call that instantiated it.
+  * Later argument lists use those same bindings for inherited parameter types.
+  */
+final case class CallableDeclaration(definition: TermDefinition, remaining: Ls[ParamList], instances: TypeSubstitution) extends ValueKey:
+  protected val valueHash: Int = ValueKey.hash(System.identityHashCode(definition), System.identityHashCode(remaining), instances.hashCode)
+  protected def sameValue(other: ValueKey): Bool = other match
+    case that: CallableDeclaration => (definition is that.definition) && (remaining is that.remaining) && instances == that.instances
+    case _ => false
+  def afterApplication: Opt[CallableDeclaration] = remaining match
+    case _ :: (tail: NELs[ParamList]) => S(copy(remaining = tail))
+    case _ => N
+
+/** A call through a written type returns the result specified by the signature.
+  * Arguments constrain its type parameters. A source method also receives argument
+  * shapes for parameters whose annotations it omits.
   * `scheme` retains binders that are still available for instantiation; capture
   * substitution leaves those binders alone. `instantiateCallable` consumes the
   * scheme by substituting its references and clearing it, so stored values and
@@ -846,10 +876,10 @@ final case class WrappedResult(annotation: Annot.Async | Annot.Generator, remain
   */
 final case class CallableTypeShape(source: Term, paramLists: NELs[DeclaredParams],
     result: Opt[DeclaredType], scheme: Opt[TypeScheme], supplied: Opt[Ls[TypeArgument]],
-    declaration: Opt[TermDefinition], wrappedResult: Opt[WrappedResult]) extends CoreHeadShape:
+    declaration: Opt[CallableDeclaration], wrappedResult: Opt[WrappedResult]) extends CoreHeadShape:
   def tparams: Ls[DeclaredTypeParameter] = scheme.toList.flatMap(_.parameters)
-  def describe: Str = declaration.fold("function with a declared signature")(d => s"function '${d.bsym.nme}'")
-  def toLoc: Opt[Loc] = declaration.fold(source.toLoc)(_.headerLoc)
+  def describe: Str = declaration.fold("function with a declared signature")(d => s"function '${d.definition.bsym.nme}'")
+  def toLoc: Opt[Loc] = declaration.fold(source.toLoc)(_.definition.headerLoc)
   protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup = MemberLookup.Missing
 
 /** Why observing a type did not expose a member interface. Keep this evidence
@@ -869,7 +899,7 @@ enum TypeInterfaceReason:
   def provenance: ShapeProvenance =
     val result = ShapeProvenance(this match
       case MissingOutput(source) =>
-        (msg"This type argument specifies only an input bound." -> source.toLoc) ::
+        (msg"Only an input bound appears here." -> source.toLoc) ::
           (msg"Values read through it have no output bound more specific than 'Any'." -> N) :: Nil
       case ContravariantParameter(parameter, source) =>
         (msg"This type argument supplies only an input bound for '${parameter.sym.nme}'." -> source.toLoc) ::
@@ -999,11 +1029,15 @@ class RefinedShape(val base: TermShape, val refinements: Ls[Str -> Term]) extend
 /** A tuple candidate selects a value shape for each spread. Ordinary fields stay
   * lazy. Recursive spreads can have unknown length; retain the known fields around
   * them instead of discarding either those fields or the unresolved possibilities.
+  * A lazy literal carries its runtime collection interface. Eager layouts use the builtin Array interface.
   */
 final class TupleShape private (val source: Term, val elements: Ls[TupleShape.Element],
-    val instances: TypeSubstitution)(resolver: NewResolver) extends CoreHeadShape:
+    val instances: TypeSubstitution, val collection: Opt[TermShape])(resolver: NewResolver) extends CoreHeadShape:
+  /** The runtime collection supplies non-positional members and determines nominal class membership. */
+  def runtimeParent(using ResolutionContext): TermShape =
+    collection.fold[TermShape](arrayParent)(resolver.instantiateShape(_, instances))
   def arrayParent(using ResolutionContext): NominalInstanceView = resolver.tupleArrayParent(this)
-  override def isInstanceOfClass(cls: ClassLikeDef)(using ResolutionContext): Bool = arrayParent.isInstanceOfClass(cls)
+  override def isInstanceOfClass(cls: ClassLikeDef)(using ResolutionContext): Bool = runtimeParent.isInstanceOfClass(cls)
   private lazy val sourceSegments: Ls[TupleShape.Segment] = elements.flatMap:
     case segment: TupleShape.Segment => segment :: Nil
     case TupleShape.Rest(_, segments) => segments
@@ -1049,10 +1083,10 @@ final class TupleShape private (val source: Term, val elements: Ls[TupleShape.El
       loop(segments, index, false) match
         case Nil => MemberLookup.Missing
         case fields => MemberLookup.Indexed(fields, Nil)
-    case _ => arrayParent.getMember(name)
+    case _ => runtimeParent.getMember(name)
   override def getMemberThrough(name: MemberKey, receiver: Marks)(using ResolutionContext): MemberLookup = MemberKey.index(name) match
     case S(index) if index >= 0 => super.getMemberThrough(name, receiver)
-    case _ => arrayParent.getMemberThrough(name, receiver)
+    case _ => runtimeParent.getMemberThrough(name, receiver)
 
 /** Values whose members and call results are deliberately checked only at runtime.
   * Unlike UnknownValueShape, this authorizes dynamic operations; it is introduced
@@ -1163,8 +1197,14 @@ object TupleShape:
     * interning and create a distinct inference candidate for the same tuple.
     */
   def apply(source: Term, elements: Ls[Element])(resolver: NewResolver)(using state: ResolutionContext): TupleShape =
-    state.canonicalTuple((source, elements, TypeSubstitution.empty)):
-      new TupleShape(source, elements, TypeSubstitution.empty)(resolver)
+    state.canonicalTuple((source, elements, TypeSubstitution.empty, N)):
+      new TupleShape(source, elements, TypeSubstitution.empty, N)(resolver)
+  /** A lazy tuple has the positions of its concatenated operands and the interface of the runtime collection. */
+  def lazyLiteral(source: Term, layout: TupleShape, marks: Marks, receiver: TermShape)(resolver: NewResolver)
+      (using state: ResolutionContext): TupleShape =
+    val fields = Spread(layout, marks) :: Nil
+    state.canonicalTuple((source, fields, TypeSubstitution.empty, S(receiver))):
+      new TupleShape(source, fields, TypeSubstitution.empty, S(receiver))(resolver)
   /** The view of `tuple` through the complete effective substitution `instances`,
     * canonical like the tuple itself: one identity per source, element list, and
     * substitution, whichever sequence of substitutions produced the view. Copying
@@ -1172,8 +1212,8 @@ object TupleShape:
     * NewResolver.instantiateShape composes the substitution before calling this. */
   def view(tuple: TupleShape, instances: TypeSubstitution)(resolver: NewResolver)
       (using state: ResolutionContext): TupleShape =
-    state.canonicalTuple((tuple.source, tuple.elements, instances)):
-      new TupleShape(tuple.source, tuple.elements, instances)(resolver)
+    state.canonicalTuple((tuple.source, tuple.elements, instances, tuple.collection)):
+      new TupleShape(tuple.source, tuple.elements, instances, tuple.collection)(resolver)
   sealed abstract class Element extends ValueKey
   sealed abstract class Segment extends Element:
     /** The deferred value of one element, independently of the segment's length. */
@@ -1262,8 +1302,9 @@ object TupleShape:
 
 /** A field found by record member lookup. Spreading r into `mut {...r}` reuses
   * its field symbols, but writes can change the copied values even if r is immutable.
-  * Store mutability on this lookup result: the mutable copy's initializer no longer
-  * determines its value shape, while reads from an immutable r can still use it.
+  * Store mutability on this lookup result: reads through the mutable copy also return
+  * the values assigned to the field, while reads from an immutable r can only return its
+  * initializer. A copy reads the values that its source holds when the copy is made.
   */
 final case class RecordMember(field: RcdField, mutable: Bool)
 
@@ -1299,11 +1340,30 @@ final class RecordShape private (val source: Term.Rcd, val elements: Ls[RecordSh
           case Missing => N
           case Found(member: RecordMember, inner) =>
             S(Found(member.copy(mutable = member.mutable || source.mut), inner ::: marks :: Nil))
-          case Found(_: BlockMemberSymbol, _) | Declared(_, _, _, _, _) | Typed(_, _, _) | Indexed(_, _) | Private(_, _, _) =>
+          case Found(_: BlockMemberSymbol, _) | _: Declared | Typed(_, _, _) | Indexed(_, _) | Private(_, _, _) =>
             // Record spreads recursively look up RecordShapes, which only create RecordMembers.
             lastWords("Record lookup returned a nominal member")
         spread(shape.getMember(name)).getOrElse(loop(rest))
     loop(elements.reverse).instantiate(instances)
+
+  /** Visit the fields a client can read from this record, with the same mutability, scope path,
+    * and type arguments as a selection. A computed key can leave any earlier field visible.
+    */
+  def foreachReadableField(marks: Ls[Marks], scope: TypeSubstitution)
+      (visit: (RecordMember, Ls[Marks], TypeSubstitution) => Unit): Unit =
+    val shadowed = scala.collection.mutable.Set.empty[MemberKey]
+    val visited = scala.collection.mutable.Set.empty[(RecordShape, Bool, Ls[Marks], TypeSubstitution)]
+    def fields(record: RecordShape, mutableRead: Bool, path: Ls[Marks], bindings: TypeSubstitution): Unit =
+      // A repeated spread in the same context can only repeat fields or keys already visited.
+      if visited.add((record, mutableRead, path, bindings)) then record.elements.reverseIterator.foreach:
+        case RecordShape.Field(field) if field.key.forall(shadowed.add) =>
+          visit(RecordMember(field, mutableRead), path, bindings)
+        case RecordShape.Spread(inner, mark) =>
+          fields(inner, mutableRead || inner.source.mut, if mark == NoMarks then path else mark :: path,
+            bindings.withOverrides(inner.instances))
+        case _ => ()
+    fields(this, source.mut, marks.filterNot(_ == NoMarks), scope.withOverrides(instances))
+
   def containsSpread(record: Term.Rcd, marks: Marks): Bool = elements.exists:
     case RecordShape.Spread(shape, inner) =>
       ((shape.source is record) && inner == marks) || shape.containsSpread(record, marks)

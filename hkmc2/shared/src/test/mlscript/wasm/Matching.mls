@@ -98,7 +98,8 @@ if Bar(true) is
 //│     (return
 //│       (local.get $this)))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
-//│     (local $scrut (ref null any))
+//│     (local $scrut (ref null $Bar))
+//│     (local $a (ref null i31))
 //│     (local $arg$Bar$0$ (ref null any))
 //│     (local $currentTypeInfo (ref null any))
 //│     (local $targetTypeInfo (ref null any))
@@ -158,14 +159,16 @@ if Bar(true) is
 //│                 (block
 //│                   (local.set $arg$Bar$0$
 //│                     (struct.get $Bar $y@1
-//│                       (ref.cast (ref null $Bar)
-//│                         (local.get $scrut))))
+//│                       (local.get $scrut)))
+//│                   (local.set $a
+//│                     (ref.cast (ref null i31)
+//│                       (local.get $arg$Bar$0$)))
 //│                   (block $match1
 //│                     (if
 //│                       (i32.eq
 //│                         (i31.get_s
 //│                           (ref.cast (ref null i31)
-//│                             (local.get $arg$Bar$0$)))
+//│                             (local.get $a)))
 //│                         (i32.const 1))
 //│                       (then
 //│                         (block $arm1
@@ -264,11 +267,11 @@ getXor(Foo(42))
 // * Note: when implemented, the resolution pass will reject matches on `Unknown`, removing this runtime type confusion
 :sir
 :siret
-fun isInt(v) = if v is Int then 1 else 0
-fun isBool(v) = if v is Bool then 1 else 0
+fun isInt(v: Any) = if v is Int then 1 else 0
+fun isBool(v: Any) = if v is Bool then 1 else 0
 isInt(1)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define isInt⁰ as fun isInt¹(v: ?): ? {
+//│ define isInt⁰ as fun isInt¹(v: Unknown): Int⁰ {
 //│   match v
 //│     Int⁰ =>
 //│       return 1
@@ -276,7 +279,7 @@ isInt(1)
 //│       return 0
 //│   end
 //│ };
-//│ define isBool⁰ as fun isBool¹(v: ?): ? {
+//│ define isBool⁰ as fun isBool¹(v: Unknown): Int⁰ {
 //│   match v
 //│     Bool⁰ =>
 //│       return 1
@@ -284,7 +287,7 @@ isInt(1)
 //│       return 0
 //│   end
 //│ };
-//│ return isInt¹‹(?) => ?›(1)
+//│ return isInt¹‹(Unknown) => Int⁰›(1)
 //│ Wasm result:
 //│ = 1
 
@@ -306,7 +309,7 @@ isBool(1)
 // `Object` needs no `typeinfo`: as the root of the reference hierarchy it is decided by representation alone.
 // Both halves of the split count - a class instance is a `$Object` struct, a tuple is a Wasm array.
 class Foo(val x)
-fun isObj(v) = if v is Object then 1 else 0
+fun isObj(v: Any) = if v is Object then 1 else 0
 isObj(Foo(1))
 //│ Wasm result:
 //│ = 1
@@ -324,7 +327,7 @@ isObj("hi")
 //│ = 0
 
 // Tuples are the only values lowered to Wasm arrays, so `Array` is exactly the array test.
-fun isArr(v) = if v is Array then 1 else 0
+fun isArr(v: Any) = if v is Array then 1 else 0
 isArr([1, 2])
 //│ Wasm result:
 //│ = 1
@@ -348,3 +351,11 @@ fun isNever(v) = if v is Never then 1 else 0
 isNever(1)
 //│ Wasm result:
 //│ = 0
+
+// Taking the length of a non-array or null would trap before the fallback.
+:noInline
+:expect 1
+fun emptyTuple(value: Any) = if value is [] then 1 else 0
+emptyTuple([]) + emptyTuple([1]) + emptyTuple(Foo(1)) + emptyTuple(1) + emptyTuple(null)
+//│ Wasm result:
+//│ = 1

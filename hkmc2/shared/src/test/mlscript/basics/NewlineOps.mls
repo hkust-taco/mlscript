@@ -103,6 +103,8 @@ let r = id(id)(10)
 //│ = -1
 //│ r = 10
 
+#lang(useNewResolution: false)
+
 :pt
 let r = id(10)
 !(r)
@@ -120,6 +122,8 @@ let r = id(10)
 //│     Ident of "r"
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ r = 10
+
+#lang(useNewResolution: true)
 
 
 

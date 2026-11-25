@@ -3,10 +3,10 @@
 :effectHandlers
 :lift
 
-abstract class Generator with
+private abstract class Generator with
   fun produce(result): ()
 
-fun permutations_impl(gen, l1, l2) =
+private fun permutations_impl(gen, l1, l2) =
   if l2 is
     [f, ...t] do
       handle genWithPrefix = Generator with
@@ -19,7 +19,7 @@ fun permutations_impl(gen, l1, l2) =
       permutations_impl(gen, l1, t)
     [] and l1 is [] do
       gen.produce(mut [])
-fun permutations(gen, l) =
+private fun permutations(gen, l) =
   permutations_impl(gen, mut [], l)
 
 let res = mut []
@@ -55,7 +55,7 @@ in permutations(gen, [1, 2, 3, 4])
 //│   [4, 3, 2, 1]
 //│ ]
 
-fun permutations_foreach(l, f) =
+private fun permutations_foreach(l, f) =
   handle gen = Generator with
     fun produce(result)(resume) =
       f(result)
@@ -70,7 +70,7 @@ permutations_foreach([1, 2, 3], print)
 //│ > [3, 2, 1]
 
 
-fun permutations_impl(gen, l1, l2) =
+private fun permutations_impl(gen, l1, l2) =
   if l2 is
     [f, ...t] do
       handle genWithPrefix = Generator with
@@ -83,7 +83,7 @@ fun permutations_impl(gen, l1, l2) =
       permutations_impl(gen, l1, t)
     [] and l1 is [] do
       gen.produce([])
-fun permutations(gen, l) =
+private fun permutations(gen, l) =
   permutations_impl(gen, mut [], l)
 
 let res = mut []

@@ -593,17 +593,22 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         val p = Param(FldFlags.empty.copy(isVal = true), varSym, N, Modulefulness.none, Nil)(varSym.toLoc)
         varSym.decl = S(p) // * Currently this is only accessed to create the class' toString method
         
+        // * The fields of a capture object are ordinary properties, and the capture class declares no
+        // * public fields. The annotation records this on each field: JavaScript otherwise stores
+        // * a public mutable field in a private field behind accessors that its class declares.
         val vd = ValDefn(
           tSym,
           fldSym,
           varSym.asSimpleRef
-        )(N, Nil)
+        )(N, Annot.PlainField()(N) :: Nil)
         
         (sym -> varSym, p, vd)
     
+    val ctorSym = ClassCtorSymbol(syntax.Fun, N, clsSym)
+    ctorSym.initializeErasure(N)
     val defn = ClsLikeDefn(
       None, clsSym, BlockMemberSymbol(nme, Nil),
-      S(ClassCtorSymbol(syntax.Fun, N, clsSym)),
+      S(ctorSym),
       syntax.Cls,
       N,
       LoweredParamList.plain(sortedVars.iterator.map(_.param).toList)(N) :: Nil, None, Nil, Nil,
@@ -1124,11 +1129,13 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         case a @ Annot.Affine(n) => Annot.Affine(n + 1)(a.toLoc)
         case a if !a.isInstanceOf[Annot.Generator] && !a.isInstanceOf[Annot.Async] => a
       
+      val signature = FunDefn.Signature.fromParams(newPlists, ErasedResult.Direct(call.erasedType))
+      auxDsym.initializeErasure(S(signature.erasure))
       FunDefn(
         N,
         auxSym,
         auxDsym,
-        FunDefn.Signature.fromParams(newPlists, ErasedResult.Direct(call.erasedType)),
+        signature,
         bod
       )(N, if fun.noInline then annotations else Annot.Inline()(N) :: annotations)
     
@@ -1254,7 +1261,9 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       val inst = Instantiate(false, ref, argsList)(InstantiateMetadata.empty, N)
       val bod = Return(inst)
       
-      FunDefn(N, flattenedSym, flattenedDSym, FunDefn.Signature.fromParams(allParamLists, ErasedResult.Direct(inst.erasedType)), bod)(N, Nil)
+      val signature = FunDefn.Signature.fromParams(allParamLists, ErasedResult.Direct(inst.erasedType))
+      flattenedDSym.initializeErasure(S(signature.erasure))
+      FunDefn(N, flattenedSym, flattenedDSym, signature, bod)(N, Nil)
     
     private val flat = Lazy[Defn](mkFlattenedDefn)
     

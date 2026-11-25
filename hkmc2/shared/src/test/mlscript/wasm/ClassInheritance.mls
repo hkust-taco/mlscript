@@ -44,7 +44,7 @@ c.Parent#x + (c is Parent)
 //│   (global $Child_typeinfo (export "Child_typeinfo") (ref $Child_typeinfo) (struct.new $Child_typeinfo
 //│     (i32.const 2)
 //│     (global.get $Parent_typeinfo)))
-//│   (global $c (export "c") (mut (ref null any)) (ref.null any))
+//│   (global $c (export "c") (mut (ref null $Child)) (ref.null $Child))
 //│   (func $Parent_init (export "Parent_init") (type $Parent_init) (param $this (ref $Parent)) (param $x (ref null any)) (result (ref $Parent))
 //│     (struct.set $Parent $x@1
 //│       (local.get $this)
@@ -149,16 +149,14 @@ c.Parent#x + (c is Parent)
 //│               (block $arm
 //│                 (return
 //│                   (call $plus_impl
-//│                     (struct.get $Parent $x@1
-//│                       (ref.cast (ref null $Parent)
-//│                         (global.get $c)))
+//│                     (struct.get $Child $x@1
+//│                       (global.get $c))
 //│                     (ref.i31
 //│                       (i32.const 1)))))))))
 //│       (return
 //│         (call $plus_impl
-//│           (struct.get $Parent $x@1
-//│             (ref.cast (ref null $Parent)
-//│               (global.get $c)))
+//│           (struct.get $Child $x@1
+//│             (global.get $c))
 //│           (ref.i31
 //│             (i32.const 0)))))
 //│     (unreachable))
@@ -261,9 +259,8 @@ class B extends A
 //│ ╔══[COMPILATION ERROR] Inheritance cycle involving 'A'
 //│ ║  l.+1: 	class A extends B
 //│ ╙──      	^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Inheritance cycles are not supported.
-//│ ║  l.+1: 	class A extends B
-//│ ╙──      	^^^^^^^^^^^^^^^^^
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // Forward references resolve because class identities are allocated before any layout is built, and

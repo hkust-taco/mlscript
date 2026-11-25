@@ -336,7 +336,7 @@ f()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define f²⁴ as fun f²⁵() {
 //│   let scrut;
-//│   set scrut = Predef⁰.hide⁰(false);
+//│   set scrut = (Predef⁰.hide⁰(false) as!! Bool⁰);
 //│   match scrut
 //│     true =>
 //│       do f²⁵();

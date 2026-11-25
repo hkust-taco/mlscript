@@ -11,7 +11,7 @@ class ReceiverOwner(val value: Int) with
       @annotations.inline
       fun read() = value + extra
       @annotations.inline
-      fun after(f) =
+      fun after(f: () -> Any) =
         f()
         value + extra
     @annotations.inline
@@ -223,7 +223,7 @@ changeLocal()
 
 // A mutable member makes the whole path unstable, even under a stable module.
 module SwitchingReceiver with
-  mut val current = firstOwner
+  mut val current: ReceiverOwner = firstOwner
 fun switchField() = set SwitchingReceiver.current = secondOwner
 
 :soir

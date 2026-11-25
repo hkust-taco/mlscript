@@ -44,7 +44,8 @@ class SubstitutionGrowthTest extends AnyFunSuite:
        |fun use() = f1(Item(1)).value
        |""".stripMargin
 
-  private final case class Measurement(views: Int, largestSubstitution: Int, activations: Int, typeInstances: Int)
+  private final case class Measurement(views: Int, largestSubstitution: Int, activations: Int, typeInstances: Int,
+      typeReferences: Int)
 
   private val cctx = TestFolders.compilerCtx(os.pwd)
   private given DebugPrinter = new DebugPrinter()
@@ -57,23 +58,101 @@ class SubstitutionGrowthTest extends AnyFunSuite:
     allocation.setThreadAllocatedMemoryEnabled(true)
     allocation
 
-  /** Resolves a generated unit through ordinary elaboration, in a fresh state. */
-  private def measure(name: Str, source: Str): Measurement =
+  private def sourceFile(name: Str, source: Str): os.Path =
     val dir = os.temp.dir(prefix = "substitution-growth-")
     val file = dir / s"$name.mls"
     os.write(file, source)
-    measure(file)
+    file
 
-  private def measure(file: os.Path): Measurement =
+  /** Resolves a unit through ordinary elaboration and checks the producer's diagnostics. */
+  private def compile(file: os.Path): CompilerCache.Artifact =
     val diagnostics = ArrayBuffer.empty[Diagnostic]
     given Raise = diagnostics += _
     val prelude = cctx.getPrelude(cctx.paths.preludeFile)(using tl, summon[Raise]).ctx
     val artifact = cctx.getElaboratedBlock(file, prelude)(using tl, summon[Raise])
     val errors = diagnostics.collect { case error: ErrorReport => error }
     assert(errors.isEmpty, s"Unexpected errors in ${file.baseName}:\n${errors.map(_.theMsg).mkString("\n")}")
-    val state = artifact.state.newResolverState.context
+    artifact
+
+  private def measure(name: Str, source: Str): Measurement = measure(sourceFile(name, source))
+
+  private def measure(file: os.Path): Measurement =
+    val state = compile(file).state.newResolverState.context
     Measurement(state.allocatedShapeViewCount, state.largestRetainedSubstitution,
-      state.activationContextCount, state.allocatedTypeInstanceCount)
+      state.activationContextCount, state.allocatedTypeInstanceCount, state.state.typeReferences.size)
+
+  // Rotation and transposition generate every permutation. Merely exporting the recursive
+  // record must not build those instantiated interfaces when no field was ever selected.
+  test("exposing a recursive record does not instantiate permutations of its parameters"):
+    def references(width: Int, input: Bool, callback: Bool): Int =
+      val name = s"RingExposure$width"
+      val parameters = (1 to width).map(i => s"T$i").toVector
+      val payloads = (1 to width).map(i => s"Payload$i").toVector
+      def ring(args: Vector[Str]): Str = args.mkString("Ring[", ", ", "]")
+      val rotate = ring(parameters.tail :+ parameters.head)
+      val swap = ring(parameters.updated(0, parameters(1)).updated(1, parameters(0)))
+      val body = if callback then s"() -> [T1, $rotate, $swap]" else s"{value: T1, rotate: $rotate, swap: $swap}"
+      val use = if input then s"fun take(value: ${ring(payloads)}): Int = 0" else s"declare fun root(): ${ring(payloads)}"
+      val source = s"""#lang(0.3.x, strictResolution: true)
+         |module $name with
+         |  ${payloads.map(p => s"private class $p").mkString("\n  ")}
+         |  private type ${ring(parameters)} = $body
+         |  $use
+         |""".stripMargin
+      measure(name, source).typeReferences
+    for (input, callback) <- List((false, false), (true, false), (false, true)) do
+      val counts = (3 to 5).map(references(_, input, callback))
+      withClue(s"input=$input, callback=$callback, retained type references for widths 3, 4, 5: $counts "):
+        counts.indices.foreach(i => assert(counts(i) <= counts.head + 16 * i))
+
+  // Naming an imported class can expose it without introducing a local mutable field.
+  test("naming the classes of other units retains no external writes for their fields"):
+    val library = sourceFile("Cells", """#lang(0.3.x, strictResolution: true)
+       |module Cells with
+       |  class Cell with { mut val item = 0 }
+       |""".stripMargin)
+    val producer = compile(library)
+    val field = new ErasureDeclarations(producer.term).statements.collectFirst {
+      case td: TermDefinition if td.tsym.nme == "item" => td.tsym
+    }.get
+    given owner: ResolutionContext = producer.state.newResolverState.context
+    assert(owner.memberVariable(field).currentShapes.nonEmpty)
+    val client = library / os.up / "Client.mls"
+    os.write(client, """#lang(0.3.x, strictResolution: true)
+       |import "./Cells.mls" as Cells
+       |module Client with
+       |  fun ignore(x: Cells.Cell): Int = 0
+       |""".stripMargin)
+    val consumer = compile(client).state.newResolverState
+    assert(consumer.memberVariables.get(field)(using consumer.context).isEmpty)
+
+  // A diff test cannot distinguish repeated copies of the same external input. Count the
+  // actual candidates kept by the methods and record field of one compiled module.
+  test("repeated exports share the external inputs of declarations and mutable records"):
+    for count <- List(1, 12) do
+      val name = s"RepeatedExports$count"
+      val exports = (1 to count).map: i =>
+        s"fun local$i(): Local = new Local\n  fun partial$i() = new Other().call(1)\n  fun record$i() = shared"
+      val file = sourceFile(name, s"""#lang(0.3.x, strictResolution: true)
+         |module $name with
+         |  private class Local with { open fun use(x) = x }
+         |  private class Other with { open fun call(x)(...ys) = ys }
+         |  private val shared = mut {item: 1}
+         |  ${exports.mkString("\n  ")}
+         |""".stripMargin)
+      val artifact = compile(file)
+      given state: ResolutionContext = artifact.state.newResolverState.context
+      val declarations = new ErasureDeclarations(artifact.term).statements
+      val inputs = declarations.collect:
+        case td: TermDefinition if td.tsym.nme == "use" || td.tsym.nme == "call" =>
+          val param = td.params.last.allParams.head
+          param.sym.currentShapes.iterator.collect:
+            case Marked(input: (UnknownValueShape | TupleShape), _) => input
+          .toSet
+      assert(inputs.size == 2 && inputs.forall(_.size == 1))
+      val field = declarations.collectFirst:
+        case field: RcdField if field.sym.nme == "item" => field.tsym
+      assert(state.memberVariable(field.get).currentShapes.size == 1)
 
   // The value passed along each chain is produced outside every generic scope,
   // so no view of it should retain more than the one binding of the scope

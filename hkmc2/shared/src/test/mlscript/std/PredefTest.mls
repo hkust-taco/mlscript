@@ -209,7 +209,7 @@ foldr(+)()
 
 
 // An alternative implementation of foldr
-fun foldr(f)(first, ...rest: Array) =
+private fun foldr(f)(first, ...rest: Array) =
   let len = rest.length
   if len == 0 then first else...
   let
@@ -307,7 +307,7 @@ x == y
 // data classes are equal from arguments
 
 :silent
-data class A(a, b, c)
+data class A(a: Any, b, c)
 module M with
   data class A(a, b, c)
 let x = A(1, 2, 3)

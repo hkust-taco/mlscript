@@ -148,7 +148,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       language = Config.Language.default,
       baseDir = wd,
       sanityChecks = Opt.when(noSanityCheck.isUnset)(SanityChecks(light = true, checkUnreachable = true)),
-      checkCasts = !noCheckCasts.isSet,
+      checkCasts = Config.default.checkCasts && !noCheckCasts.isSet,
       effectHandlers = Opt.when(effectHandlers.isSet)(EffectHandlers(
         debug = effectHandlers.get.contains("debug"),
         stackSafety = stackSafe.get.flatMap:

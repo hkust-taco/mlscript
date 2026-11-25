@@ -134,9 +134,17 @@ class DeadConstructorElimSolver(val constraintSolver: FlowConstraintSolver, trac
     
     val allCtorStrats = collector.allRealCtors.filter(_.instantiationId.isDefined)
     
+    // A cast reads the representation of its operand. When the flow analysis proves that every value
+    // reaching a cast passes it, the cast adds nothing to the `dests` of these values (see `CastConsumer`).
+    // A constructor that only reaches such a cast then has no `dests`, yet the program needs its instance:
+    // the cast would fail on the unspecified value that replaces an eliminated constructor.
+    val castCtors = constraintSolver.castsWithSrcs.iterator.flatMap(_.sources.iterator).collect:
+      case c: Ctor => c
+    .toSet
+    
     val liveCtorConcreteIds = allCtorStrats.iterator
       .filter: c =>
-        c.dests.exists:
+        castCtors(c) || c.dests.exists:
           case NonAffine | Accumulator => false
           case UnknownCons => true
           case _: FieldSel | _: Dtor => true
@@ -165,6 +173,7 @@ object DeadConstructorElim:
     tl: TL,
     raise: Raise,
     eState: Elaborator.State,
+    eCtx: Elaborator.Ctx,
     symbolPrinter: SymbolPrinter,
   ): Program = cfg.flowBasedOpt.fold(p):
     FlowAnalysisBasedRewrite.rewriteWith(p, _, eta = false, dpe = false)

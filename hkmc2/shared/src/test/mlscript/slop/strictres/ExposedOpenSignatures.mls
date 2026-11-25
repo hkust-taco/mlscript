@@ -15,6 +15,7 @@ open class Base() with
 //│ ╟── Parameter 'x' has no type annotation
 //│ ║  l.+2: 	  open fun scale(x, y: Int) = x * y
 //│ ╙──      	                 ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Abstract members and open fields are overridable too.
 :e
@@ -33,6 +34,7 @@ abstract class Shape() with
 //│ ╟── 'Shape' is exposed by this compilation unit.
 //│ ║  l.+1: 	abstract class Shape() with
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A separate full signature types the written parameters.
 open class Signed() with
@@ -47,6 +49,35 @@ open class Inheriting() extends Typed() with
 Inheriting().scale(2, 3)
 //│ = 5
 
+// Both callbacks can return an Animal. Reading their results in the override
+// must use that bound, even though the callbacks enter through a parameter or a field write.
+:e
+class Animal
+class Dog(val tag: Int) extends Animal
+class Family[T] with
+  type Element = T
+val family: Family[in Dog out Animal] = new Family[Animal]
+open class Reader with
+  open fun tagOf(next: () -> family.Element): Int = 0
+  open mut val nextPet: () -> family.Element = () => Dog(1)
+class DogReader extends Reader with
+  override fun tagOf(next) = next().tag
+  override mut val nextPet = () => Dog(2)
+  fun currentTag() = nextPet().tag
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+12: 	  fun currentTag() = nextPet().tag
+//│ ║         	                     ^^^^^^^^^^^^^
+//│ ╟── Value of type 'Animal' does not contain member 'tag'
+//│ ║  l.+5: 	val family: Family[in Dog out Animal] = new Family[Animal]
+//│ ╙──      	                              ^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+10: 	  override fun tagOf(next) = next().tag
+//│ ║         	                             ^^^^^^^^^^
+//│ ╟── Value of type 'Animal' does not contain member 'tag'
+//│ ║  l.+5: 	val family: Family[in Dog out Animal] = new Family[Animal]
+//│ ╙──      	                              ^^^^^^
+//│ family = Family
+
 // A parameter that corresponds to no inherited parameter inherits no type.
 :e
 open class Extended() extends Typed() with
@@ -60,6 +91,7 @@ open class Extended() extends Typed() with
 //│ ╟── Parameter 'factor' has no type annotation
 //│ ║  l.+2: 	  open override fun scale(x, y, factor?) = x * y
 //│ ╙──      	                                ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Only `open` and `abstract` classes can be extended by other compilation units.
 class Sealed() with
@@ -74,6 +106,22 @@ private open class LocalBase() with
   open fun scale(x) = x * 2
 LocalBase().scale(2)
 //│ = 4
+
+// A factory's written result exposes the private class's open method.
+:e
+private open class Service() with
+  open fun run(value) = value
+fun service(): Service = Service()
+//│ ╔══[COMPILATION ERROR] Open member 'run' is exposed by this compilation unit, so its result type and the types of its parameters must be annotated or inherited from an overridden member
+//│ ║  l.+2: 	  open fun run(value) = value
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^
+//│ ╟── 'service' is exposed by this compilation unit.
+//│ ║  l.+3: 	fun service(): Service = Service()
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Parameter 'value' has no type annotation
+//│ ║  l.+2: 	  open fun run(value) = value
+//│ ╙──      	               ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 fun localClasses() =
   open class Inner() with
@@ -94,6 +142,7 @@ open object OpenConstant with
 //│ ╟── 'OpenConstant' is exposed by this compilation unit.
 //│ ║  l.+1: 	open object OpenConstant with
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 object Constant with
   open fun get() = 1

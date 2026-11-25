@@ -10,7 +10,7 @@ open Option.{ * }
 open StrOps.{ * }
 open StrOps.{ concat2, ~ }
 
-fun (|>) pipe(x, f) = f(x)
+private fun (|>) pipe(x, f) = f(x)
 
 fun (::) cons(head, tail) = Cons(head, tail)
 
@@ -61,7 +61,7 @@ reverse(1 :: 2 :: 3 :: Nil) |> showList
 // |_|  \___/|_|\__,_|_____\___|_|  \__|
 //
 
-fun foldLeft(f)(z) =
+fun foldLeft[A, B](f: (B, A) -> B)(z: B) =
   fun aux(acc, xs) =
     if xs is
       Nil then acc
@@ -118,7 +118,7 @@ reverse'(1 :: 2 :: 3 :: Nil) |> showList
 // |_|  \___/|_|\__,_|_| \_\_|\__, |_| |_|\__|
 //                            |___/
 
-fun foldRight(f)(z) =
+fun foldRight[A, B](f: (A, B) -> B)(z: B) =
   fun aux(acc, xs) =
     if xs is
       Nil then acc

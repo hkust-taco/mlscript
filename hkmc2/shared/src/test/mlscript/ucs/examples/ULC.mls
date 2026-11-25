@@ -305,7 +305,7 @@ String of stepByValue of App(Abs(Var("x"), Var("x")), Abs(Var("y"), Var("y")))
 // |_____|  \_/  \__,_||_| \__,_| \__,_| \__||_| \___/ |_| |_|
 //
 
-fun eval(step) =
+fun eval(step: Any -> Any) =
   fun aux(t) =
     if step(t) is result and result is
       Stepped(_, t') then aux(t')

@@ -16,28 +16,28 @@ fun negative(x) = -x
 fun add(x, y) = x + y
 [equal(1, 1), negate(false), kind(1), negative(42), add(1, 2), add("a", "b")]
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp: Bool⁰, tmp1: Bool⁰, tmp2: Str⁰, tmp3: ?, tmp4: ?, tmp5: ?;
-//│ define equal⁰ as fun equal¹(x: ?, y: ?): Bool⁰ {
+//│ let tmp: Bool⁰, tmp1: Bool⁰, tmp2: Str⁰, tmp3: Unknown, tmp4: Unknown, tmp5: Unknown;
+//│ define equal⁰ as fun equal¹(x: Unknown, y: Unknown): Bool⁰ {
 //│   return ===⁰‹(?, ?) => Bool⁰›(x, y)
 //│ };
-//│ define negate⁰ as fun negate¹(x: ?): Bool⁰ {
+//│ define negate⁰ as fun negate¹(x: Unknown): Bool⁰ {
 //│   return !⁰‹(?) => Bool⁰›(x)
 //│ };
-//│ define kind⁰ as fun kind¹(x: ?): Str⁰ {
+//│ define kind⁰ as fun kind¹(x: Unknown): Str⁰ {
 //│   return typeof⁰‹(?) => Str⁰›(x)
 //│ };
-//│ define negative⁰ as fun negative¹(x: ?): ? {
+//│ define negative⁰ as fun negative¹(x: Unknown): Unknown {
 //│   return -⁰‹(?) => ?›(x)
 //│ };
-//│ define add⁰ as fun add¹(x: ?, y: ?): ? {
+//│ define add⁰ as fun add¹(x: Unknown, y: Unknown): Unknown {
 //│   return +⁰‹(?, ?) => ?›(x, y)
 //│ };
-//│ set tmp = equal¹‹(?, ?) => Bool⁰›(1, 1);
-//│ set tmp1 = negate¹‹(?) => Bool⁰›(false);
-//│ set tmp2 = kind¹‹(?) => Str⁰›(1);
-//│ set tmp3 = negative¹‹(?) => ?›(42);
-//│ set tmp4 = add¹‹(?, ?) => ?›(1, 2);
-//│ set tmp5 = add¹‹(?, ?) => ?›("a", "b");
+//│ set tmp = equal¹‹(Unknown, Unknown) => Bool⁰›(1, 1);
+//│ set tmp1 = negate¹‹(Unknown) => Bool⁰›(false);
+//│ set tmp2 = kind¹‹(Unknown) => Str⁰›(1);
+//│ set tmp3 = negative¹‹(Unknown) => Unknown›(42);
+//│ set tmp4 = add¹‹(Unknown, Unknown) => Unknown›(1, 2);
+//│ set tmp5 = add¹‹(Unknown, Unknown) => Unknown›("a", "b");
 //│ return [tmp, tmp1, tmp2, tmp3, tmp4, tmp5]
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [true, true, "number", -42, 3, "ab"]

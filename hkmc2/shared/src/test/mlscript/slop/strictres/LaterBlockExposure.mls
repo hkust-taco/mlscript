@@ -1,0 +1,183 @@
+:.
+
+// Worksheet blocks are checked one after the other, while a compilation unit is checked as a whole.
+// The cases below concern only worksheets: a value reaches a slot in a block that follows the one
+// that exposed the slot.
+
+fun invoke(f: Any -> Int) = f(null)
+
+
+// The result of an unannotated method of a named class.
+let returned = x => 0
+private class Returning with
+  fun get() = returned
+fun returning(): Returning = new Returning
+//│ returned = fun returned
+
+:e
+private fun lateResult(x) = x.only
+set returned = lateResult
+lateResult({only: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun lateResult(x) = x.only
+//│ ║        	                            ^^^^^^
+//│ ╟── Cannot resolve member 'only' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+1: 	private fun lateResult(x) = x.only
+//│ ║        	                       ^
+//│ ╟── This value is returned here.
+//│ ║  l.XX: 	  fun get() = returned
+//│ ║        	              ^^^^^^^^
+//│ ╟── Member 'get' is accessible here.
+//│ ║  l.XX: 	  fun get() = returned
+//│ ║        	  ^^^^^^^^^
+//│ ╟── 'returning' is exposed by this compilation unit.
+//│ ║  l.XX: 	fun returning(): Returning = new Returning
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Known worksheet limitation: a written result's omitted type argument is observed only while
+// its block is checked. The following call can reach the helper with a null argument.
+class Cell[T](val item: T)
+let cell = Cell(x => 0)
+fun readCell(): Cell = cell
+//│ cell = Cell(fun)
+
+:breakme
+:e
+private fun lateArgument(x) = x.only
+set cell = Cell(lateArgument)
+lateArgument({only: 1})
+//│ = 1
+
+:fixme
+invoke(readCell().item)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of null (reading 'only')
+
+
+// Naming CellReader again checks the omitted argument of its method's written result.
+let memberCell = Cell(x => 0)
+private class CellReader with
+  fun get(): Cell = memberCell
+fun cellReader(): CellReader = new CellReader
+//│ memberCell = Cell(fun)
+
+:e
+private fun lateMemberArgument(x) = x.only
+set memberCell = Cell(lateMemberArgument)
+lateMemberArgument({only: 1})
+fun cellReaderAgain(): CellReader = new CellReader
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun lateMemberArgument(x) = x.only
+//│ ║        	                                    ^^^^^^
+//│ ╟── Cannot resolve member 'only' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+1: 	private fun lateMemberArgument(x) = x.only
+//│ ║        	                               ^
+//│ ╟── Type argument 'T' is inferred here.
+//│ ║  l.XX: 	  fun get(): Cell = memberCell
+//│ ║        	             ^^^^
+//│ ╟── Member 'get' is accessible here.
+//│ ║  l.XX: 	  fun get(): Cell = memberCell
+//│ ║        	  ^^^^^^^^^^^^^^^
+//│ ╟── 'cellReaderAgain' is exposed by this compilation unit.
+//│ ║  l.+4: 	fun cellReaderAgain(): CellReader = new CellReader
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// A later write changes what callers receive from an already exported function.
+private class Store(mut val f)
+private val store = Store(x => 0)
+fun current() = store.f
+//│ store = Store(fun)
+
+:e
+private fun lateField(x) = x.only
+set store.f = lateField
+lateField({only: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun lateField(x) = x.only
+//│ ║        	                           ^^^^^^
+//│ ╟── Cannot resolve member 'only' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+1: 	private fun lateField(x) = x.only
+//│ ║        	                      ^
+//│ ╟── This value is returned here.
+//│ ║  l.XX: 	fun current() = store.f
+//│ ║        	                ^^^^^^^
+//│ ╟── 'current' is exposed by this compilation unit.
+//│ ║  l.XX: 	fun current() = store.f
+//│ ╙──      	^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Written in one block, each of these cases is rejected.
+:e
+let wholeCell = Cell(x => 0)
+fun readWholeCell(): Cell = wholeCell
+private fun wholeArgument(x) = x.only
+set wholeCell = Cell(wholeArgument)
+wholeArgument({only: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+3: 	private fun wholeArgument(x) = x.only
+//│ ║        	                               ^^^^^^
+//│ ╟── Cannot resolve member 'only' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+3: 	private fun wholeArgument(x) = x.only
+//│ ║        	                          ^
+//│ ╟── Type argument 'T' is inferred here.
+//│ ║  l.+2: 	fun readWholeCell(): Cell = wholeCell
+//│ ║        	                     ^^^^
+//│ ╟── 'readWholeCell' is exposed by this compilation unit.
+//│ ║  l.+2: 	fun readWholeCell(): Cell = wholeCell
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ wholeCell = Cell(fun wholeArgument)
+
+:e
+let wholeMemberCell = Cell(x => 0)
+private class WholeCellReader with
+  fun get(): Cell = wholeMemberCell
+fun wholeCellReader(): WholeCellReader = new WholeCellReader
+private fun wholeMemberArgument(x) = x.only
+set wholeMemberCell = Cell(wholeMemberArgument)
+wholeMemberArgument({only: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+5: 	private fun wholeMemberArgument(x) = x.only
+//│ ║        	                                     ^^^^^^
+//│ ╟── Cannot resolve member 'only' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+5: 	private fun wholeMemberArgument(x) = x.only
+//│ ║        	                                ^
+//│ ╟── Member 'item' is accessible here.
+//│ ║  l.XX: 	class Cell[T](val item: T)
+//│ ║        	              ^^^^^^^^^^^
+//│ ╟── This value is exposed by this compilation unit.
+//│ ║  l.+1: 	let wholeMemberCell = Cell(x => 0)
+//│ ╙──      	                      ^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ wholeMemberCell = Cell(fun wholeMemberArgument)
+
+:e
+private class WholeStore(mut val f)
+private val wholeStore = WholeStore(x => 0)
+fun wholeCurrent() = wholeStore.f
+private fun wholeField(x) = x.only
+set wholeStore.f = wholeField
+wholeField({only: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+4: 	private fun wholeField(x) = x.only
+//│ ║        	                            ^^^^^^
+//│ ╟── Cannot resolve member 'only' of a value with unknown shape.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+4: 	private fun wholeField(x) = x.only
+//│ ║        	                       ^
+//│ ╟── This value is returned here.
+//│ ║  l.+3: 	fun wholeCurrent() = wholeStore.f
+//│ ║        	                     ^^^^^^^^^^^^
+//│ ╟── 'wholeCurrent' is exposed by this compilation unit.
+//│ ║  l.+3: 	fun wholeCurrent() = wholeStore.f
+//│ ╙──      	^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ wholeStore = WholeStore(fun wholeField)

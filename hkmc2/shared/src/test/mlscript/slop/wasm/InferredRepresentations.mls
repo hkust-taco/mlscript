@@ -1,0 +1,34 @@
+:.
+#lang(strictResolution: true)
+#lang(eagerResolution: true)
+open wasm.{ i32 }
+open i32.{ const }
+//│ Wasm result:
+//│ = {}
+
+
+// A subclass instance stores an inherited field with the unboxed representation inferred
+// for the parent's parameter, and a read through the subclass returns that representation.
+:noInline
+:expect 42
+private class Base(val v)
+private class Derived(w) extends Base(w)
+private fun read(d) = d.v
+read(Derived(const(42)))
+//│ Wasm result:
+//│ = 42
+
+
+// A member and its override that both return unboxed integers share that result representation
+// through virtual dispatch, without any annotation.
+:noInline
+:expect 42
+private class Shape() with
+  open fun area() = const(1)
+private class Square() extends Shape() with
+  override fun area() = const(42)
+private fun measure(s) = s.area()
+private fun pick(flag) = if flag then Square() else Shape()
+measure(pick(true))
+//│ Wasm result:
+//│ = 42

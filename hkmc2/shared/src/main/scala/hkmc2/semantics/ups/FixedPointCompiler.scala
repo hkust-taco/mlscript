@@ -762,7 +762,7 @@ class FixedPointCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, 
       matchers.iterator.flatMap((_, stepImpls, postMatcherOpt) =>
         stepImpls.iterator ++ postMatcherOpt.iterator.flatMap(_._2)
       ).flatMap: (symbol, params, body) =>
-        Iterator(LetDecl(symbol, Nil)(N), DefineVar(symbol, Term.Lam(params, body))(N))
+        Iterator(LetDecl(symbol, Nil)(N), DefineVar(symbol, Term.erasedLambda(params, body, N))(N))
     val prelude =
       (matcherDefinitions ++ Iterator(
         LetDecl(phaseSymbol, Nil)(N), DefineVar(phaseSymbol, int(0))(N),
@@ -968,7 +968,7 @@ class FixedPointCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, 
     val matcherDefinitions =
       (redexImpls.iterator ++ compiledSides.iterator.flatMap(_._2._2) ++ postMatcherOpt.iterator.flatMap(_._2))
         .flatMap: (symbol, params, body) =>
-          Iterator(LetDecl(symbol, Nil)(N), DefineVar(symbol, Term.Lam(params, body))(N))
+          Iterator(LetDecl(symbol, Nil)(N), DefineVar(symbol, Term.erasedLambda(params, body, N))(N))
     val prelude =
       (matcherDefinitions ++ Iterator(
         LetDecl(modeSymbol, Nil)(N), DefineVar(modeSymbol, int(ModeFind))(N),

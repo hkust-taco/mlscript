@@ -20,9 +20,9 @@ let r = region x in x.ref 42
 !(r)
 //│ ╔══[COMPILATION ERROR] Type error in block
 //│ ║  l.+1: 	let r = region x in x.ref 42
-//│ ║        	                    ^^^^^^^^
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.+2: 	!(r)
-//│ ║        	^^^
+//│ ║        	^^^^
 //│ ╟── because: cannot constrain  'reg ∨ 'eff  <:  ⊥
 //│ ╟── because: cannot constrain  'reg  <:  ⊥
 //│ ╟── because: cannot constrain  'reg1  <:  ⊥
@@ -38,7 +38,7 @@ mkRef
 let t = region x in x in t.ref 42
 //│ ╔══[COMPILATION ERROR] Type error in block
 //│ ║  l.+1: 	let t = region x in x in t.ref 42
-//│ ║        	                    ^^^^^^^^^^^^^
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'reg ∨ 'eff  <:  ⊥
 //│ ╟── because: cannot constrain  'reg  <:  ⊥
 //│ ╟── because: cannot constrain  'x  <:  ⊥
@@ -55,8 +55,10 @@ let t = region x in
   x.ref 42
 in t := 0
 //│ ╔══[COMPILATION ERROR] Type error in block
+//│ ║  l.+1: 	let t = region x in
+//│ ║        	        ^^^^^^^^^^^
 //│ ║  l.+2: 	  x.ref 42
-//│ ║        	  ^^^^^^^^
+//│ ║        	^^^^^^^^^^
 //│ ║  l.+3: 	in t := 0
 //│ ║        	^^^^^^^^^
 //│ ╟── because: cannot constrain  'reg ∨ 'eff  <:  ⊥
@@ -76,10 +78,12 @@ let t = region x in
   x.ref 42
 in !(t)
 //│ ╔══[COMPILATION ERROR] Type error in block
+//│ ║  l.+1: 	let t = region x in
+//│ ║        	        ^^^^^^^^^^^
 //│ ║  l.+2: 	  x.ref 42
-//│ ║        	  ^^^^^^^^
+//│ ║        	^^^^^^^^^^
 //│ ║  l.+3: 	in !(t)
-//│ ║        	^^^^^^
+//│ ║        	^^^^^^^
 //│ ╟── because: cannot constrain  'reg ∨ 'eff  <:  ⊥
 //│ ╟── because: cannot constrain  'reg  <:  ⊥
 //│ ╟── because: cannot constrain  'reg1  <:  ⊥
@@ -117,8 +121,10 @@ let t =
     y => x.ref y
 in t(42)
 //│ ╔══[COMPILATION ERROR] Type error in block
+//│ ║  l.+2: 	  region x in
+//│ ║        	  ^^^^^^^^^^^
 //│ ║  l.+3: 	    y => x.ref y
-//│ ║        	    ^^^^^^^^^^^^
+//│ ║        	^^^^^^^^^^^^^^^^
 //│ ║  l.+4: 	in t(42)
 //│ ║        	^^^^^^^^
 //│ ╟── because: cannot constrain  'reg ∨ 'eff  <:  ⊥

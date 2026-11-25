@@ -32,7 +32,7 @@ fun foo(x) =
 //│ x = A
 
 :expect 1
-fun foo(k, x) =
+private fun foo(k, x) =
   if x === 0 do k(A)
   k of
     if x > 0

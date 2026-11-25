@@ -24,7 +24,7 @@ fun length(l) =
     Nil then 0
     Cons(_, t) then 1 + length(t)
 
-fun permutations_impl(gen, l1, l2) =
+fun permutations_impl(gen: Generator, l1, l2) =
   if l2 is
     Nil and
       l1 is Nil then gen.produce(Nil)

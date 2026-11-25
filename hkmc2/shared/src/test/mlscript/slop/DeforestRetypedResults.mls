@@ -1,0 +1,528 @@
+:.
+:lift
+:noInline
+:checkIR
+
+// Fusion can change what a function returns. The signature of every instance of the function
+// then has to follow, including instances that no call reaches and definitions without parameter lists.
+
+data class Box(v: Int)
+
+
+// In mono mode, nothing marks the result of an uncalled private function as escaping. The constructor
+// that one path matches and the other returns is fused, so the result type admits its closure.
+:deforest mono
+:sir
+:siret
+:expect 42
+private fun uncalled(n: Int, c: Bool): Box =
+  let x = Box(n)
+  if c then
+    if x is Box(v) then Box(v + 1) else Box(0)
+  else x
+42
+//│ deforest > >>> fusing >>>
+//│ deforest > Box⁰(n⁰) ->
+//│ deforest > 	match: x⁰
+//│ deforest > 	fields: x⁰.v⁰
+//│ deforest > <<< fusing <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let $x_Box, $x_rest, $c_rest;
+//│ @affine(1) @private
+//│ define $x_Box as fun $x_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: Int⁰, fv_v: Int⁰, fv_tmp: Int⁰): Box¹ {
+//│   set fv_arg$Box$0$ = Box_v;
+//│   set fv_v = fv_arg$Box$0$;
+//│   set fv_tmp = +⁰‹(?, ?) => ?›(fv_v, 1);
+//│   return Box⁰‹(Int⁰) => Box¹›(fv_tmp)
+//│ };
+//│ @private
+//│ define $x_rest as fun $x_rest⁰(): Unknown {
+//│   return $c_rest⁰‹() => Unknown›()
+//│ };
+//│ @private
+//│ define $c_rest as fun $c_rest⁰(): Unknown {
+//│   return null
+//│ };
+//│ @private
+//│ define uncalled⁰ as fun uncalled¹(n: Int⁰, c: Bool⁰): Object⁰ {
+//│   let v: Int⁰, arg$Box$0$: Int⁰, tmp: Int⁰, x: Function⁰, Box_v: Int⁰;
+//│   set Box_v = n;
+//│   set x = $x_Box⁰‹(Int⁰) => (Int⁰, Int⁰, Int⁰) => Box¹›(Box_v);
+//│   match c
+//│     true =>
+//│       return (x‹(...Array⁰) => ?›(arg$Box$0$, v, tmp) as! Object⁰)
+//│     else
+//│       return x
+//│   end
+//│ };
+//│ return 42
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+
+// A definition without parameter lists returns into the variable of its own symbol. Its result is
+// retyped like that of any other function, and a read through the retained symbol takes the new type.
+:deforest mono
+:sir
+:siret
+:expect 1
+module Mono with
+  private fun boxed = Box(1)
+  fun read = if boxed is Box(v) then v else 0
+Mono.read
+//│ deforest > >>> fusing >>>
+//│ deforest > Box⁰(1) ->
+//│ deforest > 	match: scrut⁰
+//│ deforest > 	fields: scrut⁰.v⁰
+//│ deforest > <<< fusing <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let $scrut_Box, $scrut_rest;
+//│ @affine(1) @private
+//│ define $scrut_Box as fun $scrut_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: Int⁰, fv_v: Int⁰): Int⁰ {
+//│   set fv_arg$Box$0$ = Box_v;
+//│   set fv_v = fv_arg$Box$0$;
+//│   return fv_v
+//│ };
+//│ @private
+//│ define $scrut_rest as fun $scrut_rest⁰(): Unknown {
+//│   return null
+//│ };
+//│ define Mono⁰ as class Mono¹
+//│ module Mono² {
+//│   method boxed⁰ = fun boxed¹: Function⁰ {
+//│     let Box_v: Int⁰;
+//│     set Box_v = 1;
+//│     return $scrut_Box⁰‹(Int⁰) => (Int⁰, Int⁰) => Int⁰›(Box_v)
+//│   }
+//│   method read⁰ = fun read¹: Int⁰ {
+//│     let v: Int⁰, arg$Box$0$: Int⁰, scrut: Function⁰;
+//│     set scrut = Mono².this.boxed¹‹=> Function⁰›;
+//│     return (scrut‹(...Array⁰) => ?›(arg$Box$0$, v) as! Int⁰)
+//│   }
+//│ };
+//│ return Mono².read¹‹=> Int⁰›
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1
+
+
+// In poly mode, the instance that returns a closure is a copy whose signature has that result, and the
+// read of the copy has it too. Taking the read for a value of the previous type would drop it as unreachable.
+// FIXME: the JavaScript backend rejects the top-level copy of a definition without parameter lists.
+// That failure predates the retyping of fused values.
+:fixme
+:deforest
+:sir
+:siret
+:expect 1
+module Poly with
+  private fun boxed = Box(1)
+  fun read() = if boxed is Box(v) then v else 0
+Poly.read()
+//│ deforest > >>> fusing >>>
+//│ deforest > Box⁰(1) ->
+//│ deforest > 	match: scrut¹
+//│ deforest > 	fields: scrut¹.v⁰
+//│ deforest > Box⁰(1) ->
+//│ deforest > 	match: scrut¹
+//│ deforest > 	fields: scrut¹.v⁰
+//│ deforest > <<< fusing <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let read$scrut_Box, read$scrut_rest, read$scrut_Box1, read$scrut_rest1, read_boxed$boxed, read$read, read_boxed$boxed1;
+//│ @private @private
+//│ define read_boxed$boxed as fun read_boxed$boxed⁰: Function⁰ {
+//│   let Box_v: Int⁰;
+//│   set Box_v = 1;
+//│   return read$scrut_Box⁰‹(Int⁰) => (Int⁰, Int⁰) => Int⁰›(Box_v)
+//│ };
+//│ @private
+//│ define read$read as fun read$read⁰(): Int⁰ {
+//│   let v: Int⁰, arg$Box$0$: Int⁰, scrut: Function⁰;
+//│   set scrut = read_boxed$boxed⁰‹=> Function⁰›;
+//│   return (scrut‹(...Array⁰) => ?›(arg$Box$0$, v) as! Int⁰)
+//│ };
+//│ @private @private
+//│ define read_boxed$boxed1 as fun read_boxed$boxed¹: Function⁰ {
+//│   let Box_v: Int⁰;
+//│   set Box_v = 1;
+//│   return read$scrut_Box¹‹(Int⁰) => (Int⁰, Int⁰) => Int⁰›(Box_v)
+//│ };
+//│ @affine(1) @private
+//│ define read$scrut_Box as fun read$scrut_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: Int⁰, fv_v: Int⁰): Int⁰ {
+//│   set fv_arg$Box$0$ = Box_v;
+//│   set fv_v = fv_arg$Box$0$;
+//│   return fv_v
+//│ };
+//│ @affine(1) @private
+//│ define read$scrut_Box1 as fun read$scrut_Box¹(Box_v: Int⁰)(fv_arg$Box$0$: Int⁰, fv_v: Int⁰): Int⁰ {
+//│   set fv_arg$Box$0$ = Box_v;
+//│   set fv_v = fv_arg$Box$0$;
+//│   return fv_v
+//│ };
+//│ @private
+//│ define read$scrut_rest as fun read$scrut_rest⁰(): Unknown {
+//│   return null
+//│ };
+//│ @private
+//│ define read$scrut_rest1 as fun read$scrut_rest¹(): Unknown {
+//│   return null
+//│ };
+//│ define Poly⁰ as class Poly¹
+//│ module Poly² {
+//│   method boxed² = fun boxed³: Box¹ {
+//│     return Box⁰‹(Int⁰) => Box¹›(1)
+//│   }
+//│   method read² = fun read³(): Int⁰ {
+//│     let v: Int⁰, arg$Box$0$: Int⁰, scrut: Function⁰;
+//│     set scrut = read_boxed$boxed¹‹=> Function⁰›;
+//│     return (scrut‹(...Array⁰) => ?›(arg$Box$0$, v) as! Int⁰)
+//│   }
+//│ };
+//│ return read$read⁰‹() => Int⁰›()
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: cannot generate function with no parameter list
+
+
+// A partial application coerces the arguments of the parameter lists that it applies.
+:deforest mono
+:expect 3
+private fun curried(b: Box)(n: Int): Int = if b is Box(v) then v + n else n
+private fun partial() =
+  let g = curried(Box(1))
+  g(2)
+partial()
+//│ deforest > >>> fusing >>>
+//│ deforest > Box⁰(1) ->
+//│ deforest > 	match: b⁰
+//│ deforest > 	fields: b⁰.v⁰
+//│ deforest > <<< fusing <<<
+//│ = 3
+
+
+// A method is rewritten in place at the root, and its calls reach functions retyped there.
+:deforest mono
+:expect 42
+private fun produce(n: Int): Box = if n == 0 then Box(42) else produce(n - 1)
+private fun consume(box: Box): Int = if box is Box(value) then value
+class Caller with
+  fun run() = consume(produce(2))
+new Caller().run()
+//│ deforest > >>> fusing >>>
+//│ deforest > Box⁰(42) ->
+//│ deforest > 	match: box⁰
+//│ deforest > 	fields: box⁰.v⁰
+//│ deforest > <<< fusing <<<
+//│ = 42
+
+
+// An indirect call can return either producer's object. Reading its field must use the call's
+// result even when projection would change the result of both producers to an unboxed word.
+declare module Math with
+  declare fun imul(x: Int, y: Int): Int32
+  declare fun abs(x: Int32): Int
+data class Word(bits: Int32)
+
+// FIXME: make() loses its Int32 result after fusion and passes undefined to read.
+:fixme
+:deforest
+:expect 49
+private fun first(): Word = Word(Math.imul(42, 1))
+private fun second(): Word = Word(Math.imul(7, 1))
+private fun read(w: Word): Int = Math.abs(w.bits)
+private fun choose(c: Bool): Int =
+  let make = if c then first else second
+  read(make())
+choose(true) + choose(false)
+//│ deforest > >>> fusing >>>
+//│ deforest > Word⁰(tmp⁰) ->
+//│ deforest > 	select: bits
+//│ deforest > Word⁰(tmp¹) ->
+//│ deforest > 	select: bits
+//│ deforest > Word⁰(tmp⁰) ->
+//│ deforest > 	select: bits
+//│ deforest > Word⁰(tmp¹) ->
+//│ deforest > 	select: bits
+//│ deforest > Word⁰(tmp⁰) ->
+//│ deforest > 	select: bits
+//│ deforest > Word⁰(tmp¹) ->
+//│ deforest > 	select: bits
+//│ deforest > <<< fusing <<<
+//│ ═══[RUNTIME ERROR] Expected: '49', got: 'NaN'
+//│ = NaN
+
+
+// In the other direction, a projected word reaches both readers as the argument of a call through a
+// function value. Such a call passes its arguments unchanged, so each reader receives the unboxed word.
+:deforest
+:expect 49
+private fun readA(w: Word): Int = Math.abs(w.bits)
+private fun readB(w: Word): Int = Math.abs(w.bits) + 7
+private fun pass(c: Bool): Int =
+  let reader = if c then readA else readB
+  reader(Word(Math.imul(21, 1)))
+pass(true) + pass(false)
+//│ deforest > >>> fusing >>>
+//│ deforest > Word⁰(tmp²) ->
+//│ deforest > 	select: bits
+//│ deforest > Word⁰(tmp²) ->
+//│ deforest > 	select: bits
+//│ deforest > Word⁰(tmp²) ->
+//│ deforest > 	select: bits
+//│ deforest > <<< fusing <<<
+//│ = 49
+
+
+// In mono mode the readers are retyped in place: their parameter becomes an Int32.
+:deforest mono
+:sir
+:siret
+:expect 49
+private fun readC(w: Word): Int = Math.abs(w.bits)
+private fun readD(w: Word): Int = Math.abs(w.bits) + 7
+private fun passMono(c: Bool): Int =
+  let reader = if c then readC else readD
+  reader(Word(Math.imul(21, 1)))
+passMono(true) + passMono(false)
+//│ deforest > >>> fusing >>>
+//│ deforest > Word⁰(tmp³) ->
+//│ deforest > 	select: bits
+//│ deforest > <<< fusing <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Int⁰, tmp1: Int⁰;
+//│ @private
+//│ define readC⁰ as fun readC¹(w: Int32): Int⁰ {
+//│   return globalThis⁰.Math⁰.abs⁰‹(Int32) => Int⁰›(w)
+//│ };
+//│ @private
+//│ define readD⁰ as fun readD¹(w: Int32): Int⁰ {
+//│   let tmp2: Int⁰;
+//│   set tmp2 = globalThis⁰.Math⁰.abs⁰‹(Int32) => Int⁰›(w);
+//│   return +⁰‹(?, ?) => ?›(tmp2, 7)
+//│ };
+//│ @private
+//│ define passMono⁰ as fun passMono¹(c: Bool⁰): Int⁰ {
+//│   let reader: Function⁰, tmp2: Function⁰, tmp3: Int32, tmp4: Int32, Word_bits: Int32;
+//│   match c
+//│     true =>
+//│       set tmp2 = readC¹;
+//│       end
+//│     else
+//│       set tmp2 = readD¹;
+//│       end
+//│   set reader = tmp2;
+//│   set tmp3 = globalThis⁰.Math⁰.imul⁰‹(Int⁰, Int⁰) => Int32›(21, 1);
+//│   set Word_bits = tmp3;
+//│   set tmp4 = Word_bits;
+//│   return (reader‹(...Array⁰) => ?›(tmp4) as! Int⁰)
+//│ };
+//│ set tmp = passMono¹‹(Bool⁰) => Int⁰›(true);
+//│ set tmp1 = passMono¹‹(Bool⁰) => Int⁰›(false);
+//│ return +⁰‹(?, ?) => ?›(tmp, tmp1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 49
+
+
+// A continuation extracted from a function returns for that function. Here fusion turns the result of
+// `route` into a closure, while the join continuation `σ` only returns the result of a call that never
+// returns, of the unrelated type `Away`. The continuation drops that value as `route` itself does, so
+// the calls to the continuation in `route` have a result that fits the closure type.
+:deforest mono
+:patMatConsequentSharingThreshold 1
+:sir
+:siret
+:expect 0
+object Away
+data class Step(x: Int)
+private fun stop(): Away = throw Error("stop")
+private fun halt(): Away = throw Error("halt")
+private fun route(c, d, n) =
+  if d then Away
+  else
+    let s = Step(n)
+    if
+      c and s is Step(x) and x > 0 then halt()
+      else stop()
+private fun arrived(a) = if a is Away then 0 else 1
+arrived(route(true, true, 1))
+//│ deforest > >>> fusing >>>
+//│ deforest > Step⁰(n¹) ->
+//│ deforest > 	match: s⁰
+//│ deforest > 	fields: s⁰.x¹
+//│ deforest > Away⁰ ->
+//│ deforest > 	match: a⁰
+//│ deforest > <<< fusing <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let $s_Step, $s_rest, $c_rest, $σ_rest, $d_rest, $a_Away, $a_rest, tmp: Function⁰;
+//│ @affine(1) @private
+//│ define $s_Step as fun $s_Step⁰(Step_x: Int⁰)(fv_arg$Step$0$: Int⁰, fv_x: Int⁰, fv_scrut: Bool⁰): Nothing {
+//│   set fv_arg$Step$0$ = Step_x;
+//│   set fv_x = fv_arg$Step$0$;
+//│   set fv_scrut = >⁰‹(?, ?) => Bool⁰›(fv_x, 0);
+//│   match fv_scrut
+//│     true =>
+//│       do halt⁰‹() => Away⁰›();
+//│       return undefined
+//│     else
+//│       return $σ_rest⁰‹() => Nothing›()
+//│   end
+//│ };
+//│ @affine(1) @private
+//│ define $a_Away as fun $a_Away⁰()(): Int⁰ {
+//│   return 0
+//│ };
+//│ @private
+//│ define $s_rest as fun $s_rest⁰(): Nothing {
+//│   return $c_rest¹‹() => Nothing›()
+//│ };
+//│ @private
+//│ define $c_rest as fun $c_rest¹(): Nothing {
+//│   return $σ_rest⁰‹() => Nothing›()
+//│ };
+//│ @private
+//│ define $σ_rest as fun $σ_rest⁰(): Nothing {
+//│   do stop⁰‹() => Away⁰›();
+//│   return undefined
+//│ };
+//│ @private
+//│ define $d_rest as fun $d_rest⁰(): Unknown {
+//│   return null
+//│ };
+//│ @private
+//│ define $a_rest as fun $a_rest⁰(): Unknown {
+//│   return null
+//│ };
+//│ @private
+//│ define stop¹ as fun stop⁰(): Away⁰ {
+//│   throw globalThis⁰.Error⁰‹(Unknown, Unknown) => Error¹›("stop")
+//│ };
+//│ @private
+//│ define halt¹ as fun halt⁰(): Away⁰ {
+//│   throw globalThis⁰.Error⁰‹(Unknown, Unknown) => Error¹›("halt")
+//│ };
+//│ @private
+//│ define route⁰ as fun route¹(c: Bool⁰, d: Bool⁰, n: Int⁰): Function⁰ {
+//│   let x: Int⁰, scrut: Bool⁰, arg$Step$0$: Int⁰, s: Function⁰;
+//│   match d
+//│     true =>
+//│       return $a_Away⁰‹() => () => Int⁰›()
+//│     else
+//│       let Step_x: Int⁰;
+//│       set Step_x = n;
+//│       set s = $s_Step⁰‹(Int⁰) => (Int⁰, Int⁰, Bool⁰) => Nothing›(Step_x);
+//│       block σ:
+//│         match c
+//│           true =>
+//│             return (s‹(...Array⁰) => ?›(arg$Step$0$, x, scrut) as! Function⁰)
+//│           else
+//│             return $σ_rest⁰‹() => Nothing›()
+//│         end
+//│       do stop⁰‹() => Away⁰›();
+//│       return undefined
+//│   end
+//│ };
+//│ @private
+//│ define arrived⁰ as fun arrived¹(a: Function⁰): Int⁰ {
+//│   return (a‹(...Array⁰) => ?›() as! Int⁰)
+//│ };
+//│ define Away¹ as object Away⁰;
+//│ @data
+//│ define Step¹ as class Step² {
+//│   val x²: Int⁰;
+//│   constructor Step⁰(x: Int⁰) {
+//│     define x² as val x¹: Int⁰ = x;
+//│     end
+//│   }
+//│ };
+//│ set tmp = route¹‹(Bool⁰, Bool⁰, Int⁰) => Function⁰›(true, true, 1);
+//│ return arrived¹‹(Function⁰) => Int⁰›(tmp)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 0
+
+
+// In poly mode, the instance of `route` that returns a closure and the original one each call
+// their own continuations.
+:deforest
+:patMatConsequentSharingThreshold 1
+:expect 0
+object AwayP
+data class StepP(x: Int)
+private fun stopP(): AwayP = throw Error("stop")
+private fun haltP(): AwayP = throw Error("halt")
+private fun routeP(c, d, n) =
+  if d then AwayP
+  else
+    let s = StepP(n)
+    if
+      c and s is StepP(x) and x > 0 then haltP()
+      else stopP()
+private fun arrivedP(a) = if a is AwayP then 0 else 1
+arrivedP(routeP(true, true, 1))
+//│ deforest > >>> fusing >>>
+//│ deforest > StepP⁰(n²) ->
+//│ deforest > 	match: s¹
+//│ deforest > 	fields: s¹.x³
+//│ deforest > StepP⁰(n²) ->
+//│ deforest > 	match: s¹
+//│ deforest > 	fields: s¹.x³
+//│ deforest > AwayP⁰ ->
+//│ deforest > 	match: a¹
+//│ deforest > <<< fusing <<<
+//│ = 0
+
+
+// A match fused inside the branch of another one returns for the same function. The call that replaces
+// it in the extracted branch is coerced to the result of `nested`, which gives the branch function
+// that result type.
+:deforest mono
+:sir
+:siret
+:expect 2
+private fun nested(n: Int): Int =
+  let a = Box(n)
+  if a is Box(x) then
+    let b = Box(x + 1)
+    if b is Box(y) then y else 0
+  else 0
+nested(1)
+//│ deforest > >>> fusing >>>
+//│ deforest > Box⁰(n³) ->
+//│ deforest > 	match: a²
+//│ deforest > 	fields: a².v⁰
+//│ deforest > Box⁰(tmp⁴) ->
+//│ deforest > 	match: b¹
+//│ deforest > 	fields: b¹.v⁰
+//│ deforest > <<< fusing <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let $a_Box, $a_rest, $b_Box, $b_rest;
+//│ @affine(1) @private
+//│ define $a_Box as fun $a_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: Int⁰, fv_x: Int⁰, fv_tmp: Int⁰, fv_b: Function⁰, fv_arg$Box$0$1: Int⁰, fv_y: Int⁰): Int⁰ {
+//│   let Box_v1: Int⁰;
+//│   set fv_arg$Box$0$ = Box_v;
+//│   set fv_x = fv_arg$Box$0$;
+//│   set fv_tmp = +⁰‹(?, ?) => ?›(fv_x, 1);
+//│   set Box_v1 = fv_tmp;
+//│   set fv_b = $b_Box⁰‹(Int⁰) => (Int⁰, Int⁰) => Int⁰›(Box_v1);
+//│   return (fv_b‹(...Array⁰) => ?›(fv_arg$Box$0$1, fv_y) as! Int⁰)
+//│ };
+//│ @affine(1) @private
+//│ define $b_Box as fun $b_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: Int⁰, fv_y: Int⁰): Int⁰ {
+//│   set fv_arg$Box$0$ = Box_v;
+//│   set fv_y = fv_arg$Box$0$;
+//│   return fv_y
+//│ };
+//│ @private
+//│ define $a_rest as fun $a_rest¹(): Unknown {
+//│   return null
+//│ };
+//│ @private
+//│ define $b_rest as fun $b_rest⁰(): Unknown {
+//│   return $a_rest¹‹() => Unknown›()
+//│ };
+//│ @private
+//│ define nested⁰ as fun nested¹(n: Int⁰): Int⁰ {
+//│   let x: Int⁰, y: Int⁰, arg$Box$0$: Int⁰, tmp: Int⁰, arg$Box$0$1: Int⁰, a: Function⁰, b: Function⁰, Box_v: Int⁰;
+//│   set Box_v = n;
+//│   set a = $a_Box⁰‹(Int⁰) => (Int⁰, Int⁰, Int⁰, Function⁰, Int⁰, Int⁰) => Int⁰›(Box_v);
+//│   return (a‹(...Array⁰) => ?›(arg$Box$0$, x, tmp, b, arg$Box$0$1, y) as! Int⁰)
+//│ };
+//│ return nested¹‹(Int⁰) => Int⁰›(1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 2

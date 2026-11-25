@@ -116,7 +116,9 @@ f().foo()
 //│ let Bad, Good, tmp, Capture$scope0;
 //│ define Capture$scope0 as class Capture$scope0¹ {
 //│   constructor Capture$scope0⁰(z$0, w$1) {
+//│     @js.plainField
 //│     define w$1⁰ as val w$1¹ = w$1;
+//│     @js.plainField
 //│     define z$0⁰ as val z$0¹ = z$0;
 //│     end
 //│   }
@@ -439,6 +441,7 @@ fun f(x, y, z) =
 //│ let C, D, Capture$scope0;
 //│ define Capture$scope0 as class Capture$scope0³ {
 //│   constructor Capture$scope0²(y$0) {
+//│     @js.plainField
 //│     define y$0⁰ as val y$0¹ = y$0;
 //│     end
 //│   }
@@ -527,6 +530,7 @@ fun f(x, y, z) =
 //│ let C, Capture$scope0;
 //│ define Capture$scope0 as class Capture$scope0⁵ {
 //│   constructor Capture$scope0⁴(y$0) {
+//│     @js.plainField
 //│     define y$0² as val y$0³ = y$0;
 //│     end
 //│   }

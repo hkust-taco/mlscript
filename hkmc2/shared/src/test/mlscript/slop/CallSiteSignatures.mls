@@ -15,7 +15,7 @@ apply(n => n.toString(), 42)
 //│ define apply⁰ as fun apply¹(f: Function⁰, x: Unknown): Str⁰ {
 //│   return f‹(Int⁰) => Str⁰›((x as! Int⁰))
 //│ };
-//│ define lambda as fun lambda⁰(n: ?): ? {
+//│ define lambda as fun lambda⁰(n: Int⁰): Str⁰ {
 //│   return n.toString⁰‹(...Array⁰) => Str⁰›()
 //│ };
 //│ return apply¹‹(Function⁰, Unknown) => Str⁰›(lambda⁰, 42)
@@ -36,10 +36,10 @@ applyCurried(a => b => a + b)
 //│   set callPrefix = f‹(Int⁰) => Function⁰›(1);
 //│   return callPrefix‹(Int⁰) => Int⁰›(2)
 //│ };
-//│ define lambda as fun lambda²(a: ?): ? {
+//│ define lambda as fun lambda²(a: Int⁰): Function⁰ {
 //│   let lambda1;
 //│   @private
-//│   define lambda1 as fun lambda¹(b: ?): ? {
+//│   define lambda1 as fun lambda¹(b: Int⁰): Int⁰ {
 //│     return +⁰‹(?, ?) => ?›(a, b)
 //│   };
 //│   return lambda¹
@@ -60,7 +60,7 @@ adder(1)(2)
 //│ define adder⁰ as fun adder¹(a: Int⁰): Function⁰ {
 //│   let lambda;
 //│   @private
-//│   define lambda as fun lambda³(b: ?): ? {
+//│   define lambda as fun lambda³(b: Int⁰): Int⁰ {
 //│     return +⁰‹(?, ?) => ?›(a, b)
 //│   };
 //│   return lambda³
@@ -75,24 +75,25 @@ adder(1)(2)
 :sir
 :siret
 :expect 3
-fun applyDynamic(f) = f(1)(2)
+private fun applyDynamic(f) = f(1)(2)
 applyDynamic(a => b => a + b)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let lambda;
-//│ define applyDynamic⁰ as fun applyDynamic¹(f: ?): ? {
+//│ @private
+//│ define applyDynamic⁰ as fun applyDynamic¹(f: Function⁰): Int⁰ {
 //│   let callPrefix: ?;
 //│   set callPrefix = f‹(...Array⁰) => ?›(1);
-//│   return callPrefix‹(...Array⁰) => ?›(2)
+//│   return (callPrefix‹(...Array⁰) => ?›(2) as! Int⁰)
 //│ };
-//│ define lambda as fun lambda⁵(a: ?): ? {
+//│ define lambda as fun lambda⁵(a: Int⁰): Function⁰ {
 //│   let lambda1;
 //│   @private
-//│   define lambda1 as fun lambda⁴(b: ?): ? {
+//│   define lambda1 as fun lambda⁴(b: Int⁰): Int⁰ {
 //│     return +⁰‹(?, ?) => ?›(a, b)
 //│   };
 //│   return lambda⁴
 //│ };
-//│ return applyDynamic¹‹(?) => ?›(lambda⁵)
+//│ return applyDynamic¹‹(Function⁰) => Int⁰›(lambda⁵)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
 
@@ -105,7 +106,7 @@ fun count(first: Int, ...rest) = rest.length + 1
 fun applyVariadic(f: (Int, ...Int) -> Int): Int = f(1, 2, 3)
 applyVariadic(count)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define count⁰ as fun count¹(first: Int⁰, ...rest: Array⁰): ? {
+//│ define count⁰ as fun count¹(first: Int⁰, ...rest: Array⁰): Int⁰ {
 //│   return +⁰‹(?, ?) => ?›(rest.length⁰, 1)
 //│ };
 //│ define applyVariadic⁰ as fun applyVariadic¹(f: Function⁰): Int⁰ {
@@ -137,6 +138,34 @@ box.value
 //│ box = Box
 
 
+// A foreign constructor's call and its instantiation can return different representations.
+:sir
+:siret
+:checkIR
+:expect ["string", "object"]
+declare class Date()
+private fun callDate() = Date()
+private fun newDate() = new Date()
+[typeof(callDate()), typeof(newDate())]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Unknown, tmp1: Str⁰, tmp2: Date⁰, tmp3: Str⁰;
+//│ @private
+//│ define callDate⁰ as fun callDate¹(): Unknown {
+//│   return globalThis⁰.Date¹‹() => ?›()
+//│ };
+//│ @private
+//│ define newDate⁰ as fun newDate¹(): Date⁰ {
+//│   return new globalThis⁰.Date⁰()
+//│ };
+//│ set tmp = callDate¹‹() => Unknown›();
+//│ set tmp1 = typeof⁰‹(?) => Str⁰›(tmp);
+//│ set tmp2 = newDate¹‹() => Date⁰›();
+//│ set tmp3 = typeof⁰‹(?) => Str⁰›(tmp2);
+//│ return [tmp1, tmp3]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = ["string", "object"]
+
+
 // A call with arguments of a getter's selection applies the getter's result, as described by its declared type.
 :sir
 :siret
@@ -150,7 +179,7 @@ adder.add(41)
 //│   method add⁰ = fun add¹: Function⁰ {
 //│     let lambda;
 //│     @private
-//│     define lambda as fun lambda⁶(x: ?): ? {
+//│     define lambda as fun lambda⁶(x: Int⁰): Int⁰ {
 //│       return +⁰‹(?, ?) => ?›(x, 1)
 //│     };
 //│     return lambda⁶
@@ -171,11 +200,11 @@ fun readDynamic(r: dyn) = r.value
 readDynamic(value: 42)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let rcd: ?;
-//│ define readDynamic⁰ as fun readDynamic¹(r: Unknown): ? {
+//│ define readDynamic⁰ as fun readDynamic¹(r: Unknown): Unknown {
 //│   return r.value﹖‹=> ?›
 //│ };
 //│ set rcd = { "value": 42 };
-//│ return readDynamic¹‹(Unknown) => ?›(rcd)
+//│ return readDynamic¹‹(Unknown) => Unknown›(rcd)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 

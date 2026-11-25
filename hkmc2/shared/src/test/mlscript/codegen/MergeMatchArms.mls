@@ -91,14 +91,15 @@ let x = if a is
   B then 2
   C then 3
   else
-    let tmp = 3
+    let t = 3
     if a is
       D then
         if a is
-         A then 1 + tmp
-         B then 2 + tmp
+          A then 1 + t
+          B then 2 + t
       E then 5
     print("done")
+    t
 print(x)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let x, tmp;
@@ -112,9 +113,11 @@ print(x)
 //│   if (a instanceof A1.class) {} else if (a instanceof B1.class) {} else {
 //│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
-//│   tmp = Predef.print("done");
+//│   Predef.print("done");
+//│   tmp = 3;
 //│ } else if (a instanceof E1.class) {
-//│   tmp = Predef.print("done");
+//│   Predef.print("done");
+//│   tmp = 3;
 //│ } else {
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│ }

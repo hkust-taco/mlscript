@@ -100,17 +100,16 @@ let xs = FingerTreeList.mk(1, 2, 3)
 if xs is
   [a, ...ls] then [a, ls]
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let middleElements, element0$;
+//│ let element0$;
 //│ if (runtime.Tuple.isArrayLike(xs2) && xs2.length >= 1) {
 //│   let xs3, inlinedVal27, tmp21;
 //│   element0$ = runtime.Tuple.get(xs2, 0);
 //│   xs3 = xs2;
 //│   tmp21 = xs3.length - 0;
 //│   inlinedVal27 = runtime.safeCall(xs3.slice(1, tmp21));
-//│   middleElements = inlinedVal27 /* as!! Array */;
 //│   return globalThis.Object.freeze([
 //│     element0$,
-//│     middleElements
+//│     inlinedVal27
 //│   ])
 //│ }
 //│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
@@ -147,7 +146,7 @@ fun popByIndex(start, end, acc, lft: Indexable) =
 //│       return acc
 //│     }
 //│     tmp21 = start + 1;
-//│     tmp22 = runtime.safeCall(lft.at(start));
+//│     tmp22 = runtime.safeCall(lft.at(start /* as! Int */));
 //│     tmp23 = globalThis.Object.freeze([
 //│       ...acc,
 //│       tmp22
@@ -182,6 +181,7 @@ LazyFingerTree.equals(zs1, zs)
 LazyFingerTree.equals(zs2, zs)
 //│ = true
 
+:expect true
 (if FingerTreeList.mk(1,2,3) is
   [a, ...ls, b] then ls) |> FingerTreeList.isFingerTree
 //│ = true
@@ -190,8 +190,18 @@ LazyFingerTree.equals(zs2, zs)
 zs.at(0)
 //│ = 1
 
+// The JavaScript backend calls at(0), but checked indexing currently requires an array.
+:e
 :expect 1
 zs.[0]
+//│ ╔══[COMPILATION ERROR] Resolution error in array index
+//│ ║  l.+1: 	zs.[0]
+//│ ║        	^^^^^
+//│ ╟── Value of type 'FingerTree' does not support checked array indexing.
+//│ ║  in ../../mlscript-compile/FingerTreeList.mls
+//│ ║  l.XX: 	fun (++) concat[T](ft1: FingerTree[T] | Array[T], ft2: FingerTree[T] | Array[T]): FingerTree[T] =
+//│ ║        	                                                                                  ^^^^^^^^^^^^^
+//│ ╙── Use '![...]' for a dynamic access.
 //│ = 1
 
 

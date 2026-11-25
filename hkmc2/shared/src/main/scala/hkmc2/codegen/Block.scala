@@ -55,6 +55,15 @@ by any binding form, such as Scoped, Label, Define. (This is currently not compl
 This means that processes that duplicate binding forms within a program (eg, inlining)
 must refresh the corresponding symbols – see SymbolRefresher for this purpose.
 
+Invariant: the IR requires casts for uses of a value whose known erased type is not a subtype
+of the erased type expected by each use.
+This might not yet be fully enforced, but it is a goal of the IR to make this invariant hold.
+
+Some (but not yet all) of the invariants of the IR are checked by the `BlockChecker`, which is OFF by default.
+It is healthy to run all the tests with the `BlockChecker` ON from time to time.
+`whenValidatingIR` is another place that checks the IR on construction,
+also disabled by default for performance reasons.
+
 */
 
 
@@ -613,7 +622,7 @@ object HandleBlock:
         val sym = BlockMemberSymbol(cls.nme + handler.sym.nme, Nil, true)
         val fDef = FunDefn.withFreshSymbol(
           N, sym, LoweredParamList.plain(Param.simple(handler.resumeSym) :: Nil)(N) :: Nil,
-          handler.body
+          N, handler.body
           )(N, annotations = Nil)
         val rSym = TempSymbol(N, initErasedType = N, "suspendRes")
         Scoped(Set(sym, rSym), Define(
@@ -623,7 +632,7 @@ object HandleBlock:
       S(cls),
       handler.sym,
       handler.params,
-      body
+      N, body
     )(N, annotations = Nil)
 
   private def create(
@@ -638,7 +647,7 @@ object HandleBlock:
   )(using Config, Elaborator.State, Elaborator.Ctx) =
     val sym = new BlockMemberSymbol("handleBlock$", Nil, false)
 
-    val bodyDefn = FunDefn.withFreshSymbol(N, sym, LoweredParamList.plain(Nil)(N) :: Nil, body)(N, annotations = Nil)
+    val bodyDefn = FunDefn.withFreshSymbol(N, sym, LoweredParamList.plain(Nil)(N) :: Nil, N, body)(N, annotations = Nil)
     
     val handlerMtds = handlers.map(createHandlerMtd(cls))
 
@@ -756,9 +765,6 @@ final case class FunDefn private(
     val configOverride: Opt[Config],
     val annotations: Ls[Annot],
 ) extends Defn:
-  // A symbol generated in the IR without an erasure adopts the signature of its first definition. Passes can then
-  // give the definition another signature under the same symbol (see `TermSymbol.irErasure`).
-  if !dSym.isErased then dSym.initializeErasure(S(signature.erasure))
   def params: Ls[LoweredParamList] = signature.params
   def copy(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, dSym: TermSymbol,
       signature: FunDefn.Signature, body: Block)(configOverride: Opt[Config], annotations: Ls[Annot]): FunDefn =
@@ -929,9 +935,10 @@ object FunDefn:
   def unapply(fun: FunDefn): Some[(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, dSym: TermSymbol, params: Ls[LoweredParamList], body: Block)] =
     Some((fun.owner, fun.sym, fun.dSym, fun.params, fun.body))
   
-  def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[LoweredParamList], body: Block)(configOverride: Opt[Config], annotations: Ls[Annot])(using State) =
-    val signature = Signature.fromParams(params, ErasedResult.fromAnnotations(N, annotations))
-    val tSym = TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme))
+  def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[LoweredParamList],
+      bodyType: Opt[ErasedValueType], body: Block)(configOverride: Opt[Config], annotations: Ls[Annot])(using State) =
+    val signature = Signature.fromParams(params, ErasedResult.fromAnnotations(bodyType, annotations))
+    val tSym = TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme), S(signature.erasure))
     sym.tsym = S(tSym)
     FunDefn(owner, sym, tSym, signature, body)(configOverride, annotations)
 
@@ -1289,8 +1296,8 @@ sealed abstract class Result extends Located:
         case ctor: ClassCtorSymbol => S(ctor.associatedCls)
         case sym => sym.asCls
       clsSym.map(sym => ErasedType.ValueLike(rsc = S(false), sym))
-    // * A tuple literal is typed as `Array` at runtime.
-    case Tuple(_, _) => S(ErasedType.Array)
+    // A lazy spread calls Tuple.lazyConcat, which constructs a lazy collection.
+    case tuple: Tuple => S(if tuple.hasLazySpread then ErasedType.Unknown else ErasedType.Array)
     case _: Lambda => S(ErasedType.Function(rsc = S(false)))
     case _ => N
 
@@ -1309,12 +1316,37 @@ sealed abstract class Result extends Located:
   /** Coerces this result to `expected`, yielding it unchanged when no coercion is required.
     *
     * Narrowing to an unrelated type is reported as an error, and this result is yielded unchanged.
+    * The slot that receives it then holds a value of another representation, so a caller that can
+    * replace the code using the value should call [[tryCoerceTo]].
     *
     * Like [[ascribeTo]], this records [[Config.checkCasts]] on the cast when lowering introduces it.
     * [[coerceToKnown]] builds unchecked casts for values whose representation the compiler knows.
     */
   def coerceTo(expected: ErasedValueType, loc: Opt[Loc])(using Ctx, State, Raise, Config): Result =
-    if needsCastTo(expected, reportUnrelated(loc)) then Cast.refined(this, expected, config.checkCasts)(loc) else this
+    tryCoerceTo(expected, loc).getOrElse(this)
+  
+  /** This result coerced to `expected`: the result itself when no coercion is required, and a cast of it
+    * otherwise. No coercion exists to an unrelated type: this method then reports an error and yields `N`.
+    */
+  def tryCoerceTo(expected: ErasedValueType, loc: Opt[Loc])(using Ctx, State, Raise, Config): Opt[Result] =
+    castRequirementTo(expected, reportUnrelated(loc)).map: needed =>
+      if needed then Cast.refined(this, expected, config.checkCasts)(loc) else this
+  
+  /** Coerces this result to `expected` and passes it to `coerced`. When the representations
+    * are unrelated, calls `unrelated` so the caller can replace an unreachable use of the value.
+    * Unrepresentable unions still report an error and pass the unchanged result to `coerced`.
+    */
+  def coerceToOr[R](expected: ErasedValueType, loc: Opt[Loc])(coerced: Result => R)
+      (unrelated: (CanonicalErasedValueType, CanonicalErasedValueType) => R)(using Ctx, State, Raise, Config): R =
+    val actual = erasedType_!.canonicalize
+    val declared = expected.canonicalize
+    ErasedType.needsCast(actual, declared) match
+      case S(false) => coerced(this)
+      case S(true) => coerced(Cast.refined(this, expected, config.checkCasts)(loc))
+      case N if actual.isInstanceOf[ErasedType.Incompatible] || declared.isInstanceOf[ErasedType.Incompatible] =>
+        reportUnrelated(loc)(actual, declared)
+        coerced(this)
+      case N => unrelated(actual, declared)
   
   /** Lowers an explicit `as` to its erased target. A source ascription can request a runtime check
     * between disjoint reference types. If the target has no representation or requires an unboxed
@@ -1347,13 +1379,17 @@ sealed abstract class Result extends Located:
     * the canonical types of an unrelated pair, and this result is used unchanged. */
   protected def needsCastTo(expected: ErasedValueType,
       onUnrelated: (CanonicalErasedValueType, CanonicalErasedValueType) => Unit)(using Ctx, State): Bool =
+    castRequirementTo(expected, onUnrelated).getOrElse(false)
+  
+  /** Whether coercing this result to `expected` needs a cast, or `N` when the two types are unrelated.
+    * `onUnrelated` then reports the canonical types of the unrelated pair. */
+  protected def castRequirementTo(expected: ErasedValueType,
+      onUnrelated: (CanonicalErasedValueType, CanonicalErasedValueType) => Unit)(using Ctx, State): Opt[Bool] =
     val actual = erasedType_!.canonicalize
     val declared = expected.canonicalize
-    ErasedType.needsCast(actual, declared) match
-      case S(needed) => needed
-      case N =>
-        onUnrelated(actual, declared)
-        false
+    val need = ErasedType.needsCast(actual, declared)
+    if need.isEmpty then onUnrelated(actual, declared)
+    need
   
   protected def reportUnrelated(loc: Opt[Loc])(using Ctx, State, Raise)
       (actual: CanonicalErasedValueType, declared: CanonicalErasedValueType): Unit =
@@ -1484,13 +1520,12 @@ object Call:
   
   /** The signature published by the definition or builtin that `fun` refers to, if any.
     *
-    * A definition whose erasure has not been initialized yet publishes nothing: this happens when a rewrite builds a
-    * call to a fresh symbol before building its definition, which initializes the erasure.
+    * A forward call to a generated symbol can precede both its assigned erasure and its IR definition.
     */
   def publishedSignature(fun: Path): Opt[ErasedCallableSignature] = fun match
     case Value.SimpleRef(bs: BuiltinSymbol) => bs.erasedSignature
     case _ => fun.targetSymbol match
-      case S(ts: TermSymbol) if ts.isErased => ts.irErasure.collect:
+      case S(ts: TermSymbol) if ts.isErased || ts.irFunDefn.isDefined => ts.irErasure.collect:
         case sig: ErasedCallableSignature => sig
       case _ => N
   
@@ -1702,12 +1737,14 @@ object Cast:
       case _ if fits(value.erasedType_!, target) => value
       case _ => new CastPath(value, target, check)(toLoc)
 
-case class Lambda(params: LoweredParamList, body: Block)(val annot: Ls[Annot], val toLoc: Opt[Loc]) extends Result:
-  def withLoc(loc: Opt[Loc]): Lambda = if loc == toLoc then this else copy()(annot, loc)
+/** An anonymous function. Its body returns values of `bodyType`. The lambda itself has representation `Function`. */
+case class Lambda(params: LoweredParamList, body: Block)(val bodyType: Opt[ErasedValueType], val annot: Ls[Annot], val toLoc: Opt[Loc]) extends Result:
+  def withLoc(loc: Opt[Loc]): Lambda = if loc == toLoc then this else copy()(bodyType, annot, loc)
   lazy val affine: Bool = annot.exists(_.isInstanceOf[Annot.Affine])
 
 
 case class Tuple(mut: Bool, elems: Ls[Arg])(val toLoc: Opt[Loc]) extends Result:
+  def hasLazySpread: Bool = elems.exists(_.spread.contains(SpreadKind.Lazy))
   def withLoc(loc: Opt[Loc]): Tuple = if loc == toLoc then this else copy()(loc)
 
 case class Record(mut: Bool, elems: Ls[RcdArg])(val toLoc: Opt[Loc]) extends Result:
@@ -1739,7 +1776,11 @@ sealed abstract class Path extends TrivialResult:
     case _ => false
   /** Coerces this path like [[Result.coerceTo]]; a cast of a path is itself a path. */
   override def coerceTo(expected: ErasedValueType, loc: Opt[Loc])(using Ctx, State, Raise, Config): Path =
-    if needsCastTo(expected, reportUnrelated(loc)) then Cast.refinedPath(this, expected, config.checkCasts)(loc) else this
+    tryCoerceTo(expected, loc).getOrElse(this)
+  /** Coerces this path like [[Result.tryCoerceTo]]; a cast of a path is itself a path. */
+  override def tryCoerceTo(expected: ErasedValueType, loc: Opt[Loc])(using Ctx, State, Raise, Config): Opt[Path] =
+    castRequirementTo(expected, reportUnrelated(loc)).map: needed =>
+      if needed then Cast.refinedPath(this, expected, config.checkCasts)(loc) else this
   /** Coerces this path like [[Result.coerceToKnown]]; a cast of a path is itself a path. */
   override def coerceToKnown(expected: ErasedValueType, loc: Opt[Loc])(using Ctx, State, Raise): Path =
     if needsCastTo(expected, reportUnknown(loc)) then Cast.path(this, expected, check = false)(loc) else this

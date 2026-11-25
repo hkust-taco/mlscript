@@ -90,7 +90,7 @@ class BufferableTransform()(using State, Raise):
                 S(companionSym), 
                 BlockMemberSymbol("ctor", Nil, false), 
                 cls.paramsOpt.toList ::: cls.auxParams,
-                Begin(cls.preCtor, cls.ctor),
+                N, Begin(cls.preCtor, cls.ctor),
               )(N, annotations = Nil), true)
             val transformedMethods = cls.methods.map(transformFunDefn(_, false))
             val transformedKeys = cls.methods.zip(transformedMethods).flatMap: (before, after) =>

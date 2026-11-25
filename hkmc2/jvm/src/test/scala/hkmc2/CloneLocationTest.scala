@@ -17,7 +17,7 @@ class CloneLocationTest extends AnyFunSuite:
     given Elaborator.Ctx = Elaborator.Ctx.empty
     given Config = Config.default(TestFolders.mainTestDir(os.pwd))
     given Raise = diagnostic => fail(diagnostic.theMsg)
-    given Erasure = Erasure(Term.UnitVal())
+    given Erasure = Erasure(Term.UnitVal(), summon[Raise])
     val origin = Origin(TestFolders.mainTestDir(os.pwd) / "CloneLocation.mls", 0, new FastParseHelpers("42"))
     val leaf = Term.Lit(new Tree.IntLit(42).withLoc(0, 2, origin))
     val cached = Term.Neg(leaf).withLoc(0, 2, origin)

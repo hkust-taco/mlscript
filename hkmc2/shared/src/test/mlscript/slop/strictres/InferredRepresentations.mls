@@ -1,0 +1,369 @@
+:.
+
+
+// A function value called with arguments of several representations has parameters of the unknown one,
+// whether the calls go through a parameter or through local bindings.
+:noInline
+:sir
+:siret
+:expect [[1, "s"], [1, "s"]]
+private fun ident(x) = x
+private fun applyBoth(f) = [f(1), f("s")]
+private fun viaBindings() =
+  let f = x => x
+  let g = f
+  [g(1), g("s")]
+[applyBoth(ident), viaBindings()]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Array⁰, tmp1: Array⁰;
+//│ @private
+//│ define ident⁰ as fun ident¹(x: Unknown): Unknown {
+//│   return x
+//│ };
+//│ @private
+//│ define applyBoth⁰ as fun applyBoth¹(f: Function⁰): Array⁰ {
+//│   let tmp2: ?, tmp3: ?;
+//│   set tmp2 = f‹(...Array⁰) => ?›(1);
+//│   set tmp3 = f‹(...Array⁰) => ?›("s");
+//│   return [tmp2, tmp3]
+//│ };
+//│ @private
+//│ define viaBindings⁰ as fun viaBindings¹(): Array⁰ {
+//│   let f: Function⁰, g: Function⁰, tmp2: ?, tmp3: ?, f1;
+//│   @private
+//│   define f1 as fun f⁰(x: Unknown): Unknown {
+//│     return x
+//│   };
+//│   set f = f⁰;
+//│   set g = f;
+//│   set tmp2 = g‹(...Array⁰) => ?›(1);
+//│   set tmp3 = g‹(...Array⁰) => ?›("s");
+//│   return [tmp2, tmp3]
+//│ };
+//│ set tmp = applyBoth¹‹(Function⁰) => Array⁰›(ident¹);
+//│ set tmp1 = viaBindings¹‹() => Array⁰›();
+//│ return [tmp, tmp1]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [[1, "s"], [1, "s"]]
+
+
+// Spread arguments give each parameter the representation of the corresponding tuple field.
+:noInline
+:sir
+:siret
+:expect 1
+private fun three(a, b, c) = a
+private fun spread() =
+  let args = [1, "two", true]
+  three(...args)
+spread()
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ @private
+//│ define three⁰ as fun three¹(a: Int⁰, b: Str⁰, c: Bool⁰): Int⁰ {
+//│   return a
+//│ };
+//│ @private
+//│ define spread⁰ as fun spread¹(): Int⁰ {
+//│   let args: Array⁰;
+//│   set args = [1, "two", true];
+//│   return three¹‹(Int⁰, Str⁰, Bool⁰) => Int⁰›(...args)
+//│ };
+//│ return spread¹‹() => Int⁰›()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1
+
+
+// Short-circuiting operators return either their right operand or a Boolean, so their results join both.
+:noInline
+:sir
+:siret
+:expect [1, "s"]
+private fun conj(a, b) = a && b
+private fun disj(a, b) = a || b
+[conj(true, 1), disj(false, "s")]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Unknown, tmp1: Unknown;
+//│ @private
+//│ define conj⁰ as fun conj¹(a: Bool⁰, b: Int⁰): Unknown {
+//│   match a
+//│     true =>
+//│       return b
+//│     else
+//│       return false
+//│   end
+//│ };
+//│ @private
+//│ define disj⁰ as fun disj¹(a: Bool⁰, b: Str⁰): Unknown {
+//│   match a
+//│     false =>
+//│       return b
+//│     else
+//│       return true
+//│   end
+//│ };
+//│ set tmp = conj¹‹(Bool⁰, Int⁰) => Unknown›(true, 1);
+//│ set tmp1 = disj¹‹(Bool⁰, Str⁰) => Unknown›(false, "s");
+//│ return [tmp, tmp1]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [1, "s"]
+
+
+// Recursive calls contribute to a parameter like other calls: `acc` receives an integer and then arrays.
+:noInline
+:sir
+:siret
+:expect [[0]]
+private fun nest(n, acc) = if n == 0 then acc else nest(n - 1, [acc])
+nest(2, 0)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ @private
+//│ define nest⁰ as fun nest¹(n: Int⁰, acc: Unknown): Unknown {
+//│   let scrut: Bool⁰, tmp: Int⁰, tmp1: Array⁰;
+//│   set scrut = Predef⁰.equals⁰‹(Unknown, Unknown) => Bool⁰›(n, 0);
+//│   match scrut
+//│     true =>
+//│       return acc
+//│     else
+//│       set tmp = -⁰‹(?, ?) => ?›(n, 1);
+//│       set tmp1 = [acc];
+//│       return nest¹‹(Int⁰, Unknown) => Unknown›(tmp, tmp1)
+//│   end
+//│ };
+//│ return nest¹‹(Int⁰, Unknown) => Unknown›(2, 0)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [[0]]
+
+
+// Reading an element of an immutable tuple observes that element's values. Lowering does not track
+// the representations of elements, so the read is narrowed to the inferred result with a cast.
+:noInline
+:sir
+:siret
+:expect 1
+private class Item(val v)
+private fun first(xs) = xs.[0]
+first([Item(1)]).v
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Item⁰, tmp1: Array⁰, tmp2: Item⁰;
+//│ @private
+//│ define first⁰ as fun first¹(xs: Array⁰): Item⁰ {
+//│   return (xs.0 as! Item⁰)
+//│ };
+//│ @private
+//│ define Item¹ as class Item⁰ {
+//│   val v⁰: Int⁰;
+//│   constructor Item²(v: Int⁰) {
+//│     define v⁰ as val v¹: Int⁰ = v;
+//│     end
+//│   }
+//│ };
+//│ set tmp = Item²‹(Int⁰) => Item⁰›(1);
+//│ set tmp1 = [tmp];
+//│ set tmp2 = first¹‹(Array⁰) => Item⁰›(tmp1);
+//│ return tmp2.v¹
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1
+
+
+// The elements of a mutable array can be replaced, through an assignment or a mutating method,
+// so reading one yields a value of the unknown representation.
+:noInline
+:sir
+:siret
+:expect ["s", "s"]
+private class Entry(val v)
+private fun headOfAssigned(xs) = xs.[0]
+private fun headOfShifted(xs) = xs.[0]
+private fun mutate() =
+  let assigned = mut [Entry(1)]
+  set assigned.[0] = "s"
+  let shifted = mut [Entry(1)]
+  shifted.unshift("s")
+  [headOfAssigned(assigned), headOfShifted(shifted)]
+mutate()
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ @private
+//│ define headOfAssigned⁰ as fun headOfAssigned¹(xs: Array⁰): Unknown {
+//│   return xs.0
+//│ };
+//│ @private
+//│ define headOfShifted⁰ as fun headOfShifted¹(xs: Array⁰): Unknown {
+//│   return xs.0
+//│ };
+//│ @private
+//│ define mutate⁰ as fun mutate¹(): Array⁰ {
+//│   let assigned: Array⁰, shifted: Array⁰, tmp: Entry⁰, tmp1: Entry⁰, tmp2: Unknown, tmp3: Unknown;
+//│   set tmp = Entry¹‹(Int⁰) => Entry⁰›(1);
+//│   set assigned = mut [tmp];
+//│   set assigned.0 = "s";
+//│   set tmp1 = Entry¹‹(Int⁰) => Entry⁰›(1);
+//│   set shifted = mut [tmp1];
+//│   do shifted.unshift⁰‹(...Array⁰) => Int⁰›("s");
+//│   set tmp2 = headOfAssigned¹‹(Array⁰) => Unknown›(assigned);
+//│   set tmp3 = headOfShifted¹‹(Array⁰) => Unknown›(shifted);
+//│   return [tmp2, tmp3]
+//│ };
+//│ @private
+//│ define Entry² as class Entry⁰ {
+//│   val v²: Int⁰;
+//│   constructor Entry¹(v: Int⁰) {
+//│     define v² as val v³: Int⁰ = v;
+//│     end
+//│   }
+//│ };
+//│ return mutate¹‹() => Array⁰›()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = ["s", "s"]
+
+
+// A member `let` holds its initializer and the values that methods assign to it.
+:sir
+:siret
+:expect ["s", "s"]
+private class Memo() with
+  let cache = 0
+  fun put(x) =
+    set cache = x
+    cache
+private module Store with
+  let slot = 0
+  fun put(x) =
+    set slot = x
+    slot
+[Memo().put("s"), Store.put("s")]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Memo⁰, tmp1: Unknown, tmp2: Unknown;
+//│ @private
+//│ define Memo¹ as class Memo⁰ {
+//│   private val cache⁰: Unknown;
+//│   constructor Memo²() {
+//│     set Memo⁰.this.cache⁰ = 0;
+//│     end
+//│   }
+//│   method put⁰ = fun put¹(x: Str⁰): Unknown {
+//│     set Memo⁰.this.cache⁰ = x;
+//│     return Memo⁰.this.cache⁰
+//│   }
+//│ };
+//│ @private
+//│ define Store⁰ as class Store¹
+//│ module Store² {
+//│   private val slot⁰: Unknown;
+//│   constructor {
+//│     set Store².this.slot⁰ = 0;
+//│     end
+//│   }
+//│   method put² = fun put³(x: Str⁰): Unknown {
+//│     set Store².this.slot⁰ = x;
+//│     return Store².this.slot⁰
+//│   }
+//│ };
+//│ set tmp = Memo²‹() => Memo⁰›();
+//│ set tmp1 = tmp.put¹‹(Str⁰) => Unknown›("s");
+//│ set tmp2 = Store².put³‹(Str⁰) => Unknown›("s");
+//│ return [tmp1, tmp2]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = ["s", "s"]
+
+
+// A backtracking assignment of a field saves the field's value in a temporary and restores it afterwards.
+:noInline
+:sir
+:siret
+:expect ["deep", 0]
+private class Config(mut val depth)
+private fun deeper(c) =
+  let inner = set c.depth = "deep" in c.depth
+  [inner, c.depth]
+deeper(Config(0))
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Config⁰;
+//│ @private
+//│ define deeper⁰ as fun deeper¹(c: Config⁰): Array⁰ {
+//│   let inner: Unknown, old: Unknown, tmp1: Unknown;
+//│   set old = c.depth⁰;
+//│   try
+//│     set c.depth⁰ = "deep";
+//│     set tmp1 = c.depth⁰;
+//│     end
+//│   finally
+//│     set c.depth⁰ = old;
+//│     end;
+//│     set inner = tmp1;
+//│   return [inner, c.depth⁰]
+//│ };
+//│ @private
+//│ define Config¹ as class Config⁰ {
+//│   val depth¹: Unknown;
+//│   constructor Config²(depth: Int⁰) {
+//│     define depth¹ as val depth⁰: Unknown = depth;
+//│     end
+//│   }
+//│ };
+//│ set tmp = Config²‹(Int⁰) => Config⁰›(0);
+//│ return deeper¹‹(Config⁰) => Array⁰›(tmp)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = ["deep", 0]
+
+
+// Other compilation units can call a private function stored in an exposed tuple with any argument.
+:noInline
+:sir
+:siret
+private fun stored(x) = x
+stored(1)
+val table = [stored]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Array⁰;
+//│ @private
+//│ define stored⁰ as fun stored¹(x: Unknown): Unknown {
+//│   return x
+//│ };
+//│ do stored¹‹(Unknown) => Unknown›(1);
+//│ set tmp = [stored¹];
+//│ define table⁰ as val table¹: Array⁰ = tmp;
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ table = [fun stored]
+
+
+// Resolution does not follow values through dynamic code: a private function passed to a dynamic callee
+// keeps the representations inferred from its other calls, although that callee can pass it other values.
+// The JavaScript backend erases representations, so the call below still runs with a string.
+:noInline
+:sir
+:siret
+:expect "other"
+private fun callback(x) = if x is Int then "int" else "other"
+callback(1)
+let dynamic = globalThis.eval("(f => f('str'))")
+dynamic(callback)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ @private
+//│ define callback⁰ as fun callback¹(x: Int⁰): Str⁰ {
+//│   match x
+//│     Int⁰ =>
+//│       return "int"
+//│     else
+//│       return "other"
+//│   end
+//│ };
+//│ do callback¹‹(Int⁰) => Str⁰›(1);
+//│ set dynamic⁰ = globalThis⁰.eval﹖‹(...Array⁰) => ?›("(f => f('str'))");
+//│ return dynamic⁰‹(...Array⁰) => ?›(callback¹)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = "other"
+//│ dynamic = fun
+
+
+// A variable without observed values in its own block keeps the unknown representation,
+// so later worksheet blocks can assign values of any representation to it.
+let pending
+//│ pending = undefined
+
+set pending = 1
+
+:expect "s"
+set pending = "s"
+pending
+//│ = "s"

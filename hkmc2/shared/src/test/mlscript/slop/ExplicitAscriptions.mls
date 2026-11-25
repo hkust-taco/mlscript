@@ -40,7 +40,7 @@ fun roundTrip(s: Str) = (s as Int) as Str
 :sir
 class Base
 class Child extends Base
-fun narrowCall(f): Child = f() as Base
+fun narrowCall(f: () -> Any): Child = f() as Base
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define narrowCall⁰ as fun narrowCall¹(f) {
 //│   return (f() as! Child⁰)

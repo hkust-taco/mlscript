@@ -4,6 +4,16 @@ package semantics
 import hkmc2.utils.*, shorthands.*
 import codegen.Erasure
 
+/** The interface needed from a type. Member lookup combines the fields of an intersection.
+  * Comparing a provided value with a required type visits each component separately.
+  * A captured argument describes what a value can provide by its output bound and what
+  * an implementation must supply by its input bound.
+  */
+private[semantics] enum TypeView:
+  case Members, Provided, Required
+
+  def bound(argument: TypeArgument): DeclaredType = if this == Required then argument.input else argument.output
+
 /** A proper type interpretation, separate from both type arguments and value shapes.
   * Compound types retain links to their operands so forward aliases need not be expanded eagerly.
   */
@@ -51,20 +61,20 @@ object TypeShape:
     protected def sameValue(other: ValueKey): Bool = other match
       case that: Tuple => fields == that.fields
       case _ => false
-  final case class Record(source: Term.Rcd, fields: Ls[(RcdField, TypeResolution)]) extends TypeShape:
+  final case class Record(source: Term.Rcd, fields: Ls[(RcdField, TypeArgumentResolution)]) extends TypeShape:
     protected val valueHash: Int =
       var hash = ValueKey.hash(ValueKey.tag(this), System.identityHashCode(source))
       var rest = fields
       while rest.nonEmpty do
         val field = rest.head
-        hash = ValueKey.hash(hash, System.identityHashCode(field._1), System.identityHashCode(field._2))
+        hash = ValueKey.hash(hash, System.identityHashCode(field._1), field._2.hashCode)
         rest = rest.tail
       hash
     protected def sameValue(other: ValueKey): Bool = other match
       case that: Record if source eq that.source =>
         var left = fields
         var right = that.fields
-        while left.nonEmpty && right.nonEmpty && (left.head._1 eq right.head._1) && (left.head._2 eq right.head._2) do
+        while left.nonEmpty && right.nonEmpty && (left.head._1 eq right.head._1) && left.head._2 == right.head._2 do
           left = left.tail
           right = right.tail
         left.isEmpty && right.isEmpty
@@ -102,6 +112,14 @@ object TypeShape:
       System.identityHashCode(host), System.identityHashCode(arguments))
     protected def sameValue(other: ValueKey): Bool = other match
       case that: Parameter => symbol == that.symbol && host == that.host && arguments == that.arguments
+      case _ => false
+  // A qualified type member can refer to a receiver parameter whose exact type
+  // is unknown. Its two bounds describe that one type independently of where the
+  // member appears, including inside another function's parameter type.
+  final case class CapturedArgument(argument: TypeArgument) extends TypeShape:
+    protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), argument.hashCode)
+    protected def sameValue(other: ValueKey): Bool = other match
+      case that: CapturedArgument => argument == that.argument
       case _ => false
   // An omitted argument owns one source inference node. It is not a quantified
   // binder and is never instantiated at a call site; marks distinguish its flows.
@@ -225,7 +243,7 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
           param.upper.foreach(_.validate(visited))
         body.validate(visited)
       case Tuple(fields) => fields.foreach(_.tpe.validate(visited))
-      case Record(_, fields) => fields.foreach(_._2.validate(visited))
+      case Record(_, fields) => fields.foreach((_, field) => field.foreachType(_.validate(visited)))
       case Union(left, right) => left.validate(visited); right.validate(visited)
       case Intersection(left, right) => left.validate(visited); right.validate(visited)
       case Negation(base) => base.validate(visited)
@@ -279,6 +297,8 @@ final class DeclaredType private (private[semantics] val reference: DeclaredType
         val left = previous.orderedAtoms
         val right = current.orderedAtoms
         if left.size == right.size && left.lazyZip(right).forall(_.sameUse(_)) then canonical else shape
+      case (TypeShape.CapturedArgument(previous), TypeShape.CapturedArgument(current)) =>
+        if previous.input.sameUse(current.input) && previous.output.sameUse(current.output) then canonical else shape
       case _ => lastWords("Only synthesized type nodes have a per-use interpretation")
     if shared is canonical then this else new DeclaredType(reference, bindings)(origin, namespaces, S(shared))
   private[semantics] def withNamespaces(plan: TypeNamespaces)(using ResolutionContext): DeclaredType =
@@ -460,8 +480,8 @@ final class ContextualType(val tpe: DeclaredType, val marks: Ls[Marks]) extends 
     case that: ContextualType => tpe == that.tpe && marks == that.marks
     case _ => false
 
-/** Source arguments have their own category: a wildcard is valid only in an argument slot.
-  * Its bounds are proper types and may still await forward resolution.
+/** A type argument or mutable record field can specify a proper type or separate input and
+  * output bounds. Each written type retains its own resolution, including forward references.
   */
 enum TypeArgumentResolution:
   case Type(resolution: TypeResolution)
@@ -475,7 +495,7 @@ enum TypeArgumentResolution:
     case Type(resolution) => f(resolution)
     case Wildcard(_, input, output) => input.foreach(f); output.foreach(f)
 
-/** An unqualified argument is interpreted separately in the two polarities;
+/** An unqualified argument or mutable field is interpreted separately in the two polarities;
   * these parts coincide only when substitution gives the same type in both.
   * Missing wildcard parts are Nothing on input and Any on output, never holes.
   */
@@ -484,6 +504,9 @@ final class TypeArgument(val input: DeclaredType, val output: DeclaredType) exte
     * remain proper type references; their later resolution cannot change this choice.
     */
   def at(positive: Bool): DeclaredType = if positive then output else input
+  def foreachBound(visit: DeclaredType => Unit): Unit =
+    visit(input)
+    if output isnt input then visit(output)
   def map(f: DeclaredType => DeclaredType): TypeArgument =
     val in = f(input)
     val out = if input is output then in else f(output)

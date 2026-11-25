@@ -2,6 +2,7 @@
 :js
 :lift
 :flowBasedOpt debugEta
+:noCheckCasts
 
 
 // each function value produced by `f(a)` is one-shot, so `g` can take `b` directly
@@ -63,7 +64,7 @@ h(1)(2)
 :expect 15
 @affine(1) fun f(a)(b) = a + b
 fun h(a)(b) = a * b
-fun g(k, x) = k(x)
+private fun g(k, x) = k(x)
 g(f, 1)(2) + g(h, 3)(4)
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
@@ -76,8 +77,9 @@ g(f, 1)(2) + g(h, 3)(4)
 //│ define h² as fun h³(a)(b) {
 //│   return *⁰(a, b)
 //│ };
+//│ @private
 //│ define g⁴ as fun g⁵(k, x) {
-//│   return k(x)
+//│   return (k(x) as!! Function⁰)
 //│ };
 //│ set baseCall = g⁵(f⁵, 1);
 //│ set tmp = baseCall(2);
@@ -95,18 +97,18 @@ g(f, 1)(2) + g(h, 3)(4)
 :expect 15
 @affine(1) fun f(a)(b) = a + b
 fun h(a)(b) = a * b
-fun g(k, x) = k(x)
+private fun g(k, x) = k(x)
 g(f, 1)(2) + g(h, 3)(4)
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > g⁶#0 @ g⁷: [2, 1]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let tmp, baseCall, tmp1, g$g;
-//│ @private
+//│ @private @private
 //│ define g$g as fun g$g⁰(k, x)(eta$0$0) {
-//│   let callPrefix;
-//│   set callPrefix = k(x);
-//│   return callPrefix(eta$0$0)
+//│   let eta$res;
+//│   set eta$res = (k(x) as!! Function⁰);
+//│   return eta$res(eta$0$0)
 //│ };
 //│ @affine(1)
 //│ define f⁶ as fun f⁷(a)(b) {
@@ -115,8 +117,9 @@ g(f, 1)(2) + g(h, 3)(4)
 //│ define h⁴ as fun h⁵(a)(b) {
 //│   return *⁰(a, b)
 //│ };
+//│ @private
 //│ define g⁶ as fun g⁷(k, x) {
-//│   return k(x)
+//│   return (k(x) as!! Function⁰)
 //│ };
 //│ set tmp = g$g⁰(f⁷, 1)(2);
 //│ set baseCall = g⁷(h⁵, 3);
@@ -277,7 +280,9 @@ app(returnRest2(0))
 //│   return rest2¹()(...eta$0$rest)
 //│ };
 //│ @private
-//│ define app⁰ as fun app¹(f) { return f(2, 3) };
+//│ define app⁰ as fun app¹(f) {
+//│   return (f(2, 3) as!! Array⁰)
+//│ };
 //│ set tmp = returnRest2¹();
 //│ return app¹(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -314,7 +319,7 @@ node()()
 :expect 13
 @affine(1) fun k1(a)(b) = a + b
 fun k2(a)(b) = a * b
-fun f(k, x) =
+private fun f(k, x) =
   fun g(y) =
     if y > 1 do print("g")
     k(y)
@@ -330,9 +335,9 @@ f(k1, 1) + f(k2, 5)
 //│   match scrut
 //│     true =>
 //│       do Predef⁰.print⁰("g");
-//│       return k(y)
+//│       return (k(y) as!! Function⁰)
 //│     else
-//│       return k(y)
+//│       return (k(y) as!! Function⁰)
 //│   end
 //│ };
 //│ @affine(1)
@@ -342,6 +347,7 @@ f(k1, 1) + f(k2, 5)
 //│ define k2⁰ as fun k2¹(a)(b) {
 //│   return *⁰(a, b)
 //│ };
+//│ @private
 //│ define f⁸ as fun f⁹(k, x) {
 //│   let h;
 //│   set h = g⁸(k, x);
@@ -365,7 +371,7 @@ f(k1, 1) + f(k2, 5)
 :expect 13
 @affine(1) fun k1(a)(b) = a + b
 fun k2(a)(b) = a * b
-fun f(k, x) =
+private fun f(k, x) =
   fun a(y) = b(y)
   fun b(y) = k(y)
   let h = a(x)
@@ -377,21 +383,21 @@ f(k1, 1) + f(k2, 5)
 //│ define f_a$a as fun f_a$a⁰(k, y)(eta$0$0) {
 //│   return f_a_b$b⁰(k, y)(eta$0$0)
 //│ };
-//│ @private
+//│ @private @private
 //│ define f$f as fun f$f⁰(k, x) {
 //│   return f_a$a⁰(k, x)(2)
 //│ };
 //│ @private
 //│ define f_a_b$b as fun f_a_b$b⁰(k, y)(eta$0$0) {
-//│   let callPrefix;
-//│   set callPrefix = k(y);
-//│   return callPrefix(eta$0$0)
+//│   let eta$res;
+//│   set eta$res = (k(y) as!! Function⁰);
+//│   return eta$res(eta$0$0)
 //│ };
 //│ define a as fun a⁰(k, y) {
 //│   return b⁰(k, y)
 //│ };
 //│ define b as fun b⁰(k, y) {
-//│   return k(y)
+//│   return (k(y) as!! Function⁰)
 //│ };
 //│ @affine(1)
 //│ define k1² as fun k1³(a1)(b1) {
@@ -400,6 +406,7 @@ f(k1, 1) + f(k2, 5)
 //│ define k2² as fun k2³(a1)(b1) {
 //│   return *⁰(a1, b1)
 //│ };
+//│ @private
 //│ define f¹⁰ as fun f¹¹(k, x) {
 //│   let h;
 //│   set h = a⁰(k, x);
@@ -420,7 +427,7 @@ f(k1, 1) + f(k2, 5)
 :expect 13
 @affine(1) fun k1(a)(b) = a + b
 fun k2(a)(b) = a * b
-fun f(k, x) =
+private fun f(k, x) =
   fun get(o: C) = if o is C then o.x
   fun g(y) = k(y)
   class C(val x)
@@ -432,11 +439,11 @@ f(k1, 1) + f(k2, 5)
 //│ let g, get, tmp, tmp1, f_g$g, f$f;
 //│ @private
 //│ define f_g$g as fun f_g$g⁰(k, y)(eta$0$0) {
-//│   let callPrefix;
-//│   set callPrefix = k(y);
-//│   return callPrefix(eta$0$0)
+//│   let eta$res;
+//│   set eta$res = (k(y) as!! Function⁰);
+//│   return eta$res(eta$0$0)
 //│ };
-//│ @private
+//│ @private @private
 //│ define f$f as fun f$f¹(k, x) {
 //│   let C, tmp2, tmp3;
 //│   define C as class C¹ {
@@ -459,7 +466,7 @@ f(k1, 1) + f(k2, 5)
 //│   end
 //│ };
 //│ define g as fun g⁹(k, y) {
-//│   return k(y)
+//│   return (k(y) as!! Function⁰)
 //│ };
 //│ @affine(1)
 //│ define k1⁴ as fun k1⁵(a)(b) {
@@ -468,6 +475,7 @@ f(k1, 1) + f(k2, 5)
 //│ define k2⁴ as fun k2⁵(a)(b) {
 //│   return *⁰(a, b)
 //│ };
+//│ @private
 //│ define f¹² as fun f¹³(k, x) {
 //│   let C, h, tmp2, tmp3;
 //│   define C as class C² {
@@ -489,3 +497,28 @@ f(k1, 1) + f(k2, 5)
 //│ = 13
 
 
+// the params eta expansion appends take the types of the params they stand for, and the result is what the targets
+// return: `g(x: Int)(eta$0$0: Int): Int` passes `eta$0$0` to `b: Int` without a cast
+:soir
+:siret
+:noInline
+:expect 3
+@affine(1) fun f(a: Int)(b: Int) = a + b
+fun g(x) = f(x)
+g(1)(2)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let g$g;
+//│ @private
+//│ define g$g as fun g$g¹(x: Unknown)(eta$0$0: Int⁰): Int⁰ {
+//│   return f¹⁴‹(Int⁰) => (Int⁰) => Int⁰›((x as!! Int⁰))(eta$0$0)
+//│ };
+//│ @affine(1)
+//│ define f¹⁵ as fun f¹⁴(a: Int⁰)(b: Int⁰): Int⁰ {
+//│   return +⁰‹(?, ?) => ?›(a, b)
+//│ };
+//│ define g¹⁰ as fun g¹¹(x: Unknown)(eta$0$0: Int⁰): Int⁰ {
+//│   return f¹⁴‹(Int⁰) => (Int⁰) => Int⁰›((x as!! Int⁰))(eta$0$0)
+//│ };
+//│ return g$g¹‹(Unknown) => (Int⁰) => Int⁰›(1)(2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 3

@@ -26,13 +26,13 @@ fun f() =
 //│     let saveOffset;
 //│     pc = runtime.resumePc /* as! Int */;
 //│     saveOffset = runtime.resumeIdx /* as! Int */;
-//│     tmp = runtime.resumeArr.at(saveOffset);
+//│     tmp = runtime.resumeArr.at(saveOffset) /* as! Int */;
 //│     runtime.resumePc = -1;
 //│   }
 //│   main: while (true) {
 //│     switch (pc) {
 //│       case 7:
-//│         tmp = runtime.resumeValue;
+//│         tmp = runtime.resumeValue /* as! Int */;
 //│         runtime.resumeValue = 0;
 //│         if (runtime.curEffect === null) {
 //│           pc = 6;
@@ -41,7 +41,7 @@ fun f() =
 //│           return runtime.Unit
 //│         }
 //│       case 6:
-//│         runtime.resumeValue;
+//│         runtime.resumeValue /* as! Int */;
 //│         pc = 5;
 //│       case 5:
 //│         runtime.resumeValue = 0;
@@ -52,7 +52,7 @@ fun f() =
 //│           return runtime.Unit
 //│         }
 //│       case 4:
-//│         runtime.resumeValue;
+//│         runtime.resumeValue /* as! Int */;
 //│         runtime.resumeValue = 0;
 //│         if (runtime.curEffect === null) {
 //│           pc = 3;
@@ -61,7 +61,7 @@ fun f() =
 //│           return runtime.Unit
 //│         }
 //│       case 3:
-//│         runtime.resumeValue;
+//│         runtime.resumeValue /* as! Int */;
 //│         runtime.resumeValue = 0;
 //│         if (runtime.curEffect === null) {
 //│           pc = 2;
@@ -70,7 +70,7 @@ fun f() =
 //│           return runtime.Unit
 //│         }
 //│       case 2:
-//│         runtime.resumeValue;
+//│         runtime.resumeValue /* as! Int */;
 //│         runtime.resumeValue = 0;
 //│         if (runtime.curEffect === null) {
 //│           pc = 1;
@@ -79,7 +79,7 @@ fun f() =
 //│           return runtime.Unit
 //│         }
 //│       case 1:
-//│         return runtime.resumeValue;
+//│         return runtime.resumeValue /* as! Int */;
 //│       case 0:
 //│         if (0 === 0) {
 //│           runtime.resumeValue = 0;

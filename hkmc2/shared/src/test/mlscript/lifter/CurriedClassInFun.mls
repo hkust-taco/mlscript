@@ -37,6 +37,7 @@ fun f(x) =
 //│ let A, Capture$scope0, A$;
 //│ define Capture$scope0 as class Capture$scope0¹ {
 //│   constructor Capture$scope0⁰(x$0) {
+//│     @js.plainField
 //│     define x$0⁰ as val x$0¹ = x$0;
 //│     end
 //│   }

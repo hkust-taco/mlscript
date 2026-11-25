@@ -62,7 +62,7 @@ let countdown = makeCountdown(42)
 //│ };
 //│ define countdown as fun countdown⁰(result: Int⁰, remaining: Int⁰): Int⁰ {
 //│   loop loopLabel:
-//│     let scrut: ?, tmp2: Int⁰;
+//│     let scrut: Bool⁰, tmp2: Int⁰;
 //│     set scrut = Predef⁰.equals⁰‹(Unknown, Unknown) => Bool⁰›(remaining, 0);
 //│     match scrut
 //│       true =>
@@ -153,7 +153,7 @@ private fun backward(unused: Str, count: Int, value: Int): Int =
 //│ };
 //│ @private @private
 //│ define forward$backward as fun forward$backward⁰(count: Int⁰, value: Int⁰): Int⁰ {
-//│   let scrut: ?, tmp2: Int⁰;
+//│   let scrut: Bool⁰, tmp2: Int⁰;
 //│   set scrut = Predef⁰.equals⁰‹(Unknown, Unknown) => Bool⁰›(count, 0);
 //│   match scrut
 //│     true =>
@@ -169,7 +169,7 @@ private fun backward(unused: Str, count: Int, value: Int): Int =
 //│ };
 //│ @private @private
 //│ define backward$backward as fun backward$backward⁰(count: Int⁰, value: Int⁰): Int⁰ {
-//│   let scrut: ?, tmp2: Int⁰;
+//│   let scrut: Bool⁰, tmp2: Int⁰;
 //│   set scrut = Predef⁰.equals⁰‹(Unknown, Unknown) => Bool⁰›(count, 0);
 //│   match scrut
 //│     true =>
@@ -181,7 +181,7 @@ private fun backward(unused: Str, count: Int, value: Int): Int =
 //│ };
 //│ @private @private
 //│ define forward$backward1 as fun forward$backward¹(count: Int⁰, value: Int⁰): Int⁰ {
-//│   let scrut: ?, tmp2: Int⁰;
+//│   let scrut: Bool⁰, tmp2: Int⁰;
 //│   set scrut = Predef⁰.equals⁰‹(Unknown, Unknown) => Bool⁰›(count, 0);
 //│   match scrut
 //│     true =>
@@ -201,7 +201,7 @@ private fun backward(unused: Str, count: Int, value: Int): Int =
 //│ };
 //│ @private
 //│ define backward¹ as fun backward⁰(unused: Str⁰, count: Int⁰, value: Int⁰): Int⁰ {
-//│   let scrut: ?, tmp2: Int⁰;
+//│   let scrut: Bool⁰, tmp2: Int⁰;
 //│   set scrut = Predef⁰.equals⁰‹(Unknown, Unknown) => Bool⁰›(count, 0);
 //│   match scrut
 //│     true =>
@@ -240,7 +240,7 @@ let lifted = capturedVariadic(30)
 //│ };
 //│ define sum as fun sum⁰(base: Int⁰, first: Int⁰, ...args: Array⁰)(extra: Int⁰): Int⁰ {
 //│   let optional: Unknown, middle: Array⁰, last: Int⁰, tmp2: Int⁰, tmp3: Unknown, tmp4: Unknown, tmp5: Unknown, tmp6: Unknown;
-//│   do runtime⁰.checkVariadicArgs⁰‹(Str⁰, Int⁰, Int⁰, Array⁰) => ?›("sum", 2, 1, args);
+//│   do runtime⁰.checkVariadicArgs⁰‹(Str⁰, Int⁰, Int⁰, Array⁰) => Unit⁰›("sum", 2, 1, args);
 //│   match args
 //│     Array(2+) =>
 //│       set optional = args.0;
@@ -263,10 +263,10 @@ let lifted = capturedVariadic(30)
 //│   set tmp6 = +⁰‹(?, ?) => ?›(tmp5, last);
 //│   return (+⁰‹(?, ?) => ?›(tmp6, extra) as! Int⁰)
 //│ };
-//│ define capturedVariadic⁰ as fun capturedVariadic¹(base: Int⁰): ? {
+//│ define capturedVariadic⁰ as fun capturedVariadic¹(base: Int⁰): Function⁰ {
 //│   return sum$⁰‹(Int⁰) => (Int⁰, ...Array⁰) => Function⁰›(base)
 //│ };
-//│ set lifted⁰ = capturedVariadic¹‹(Int⁰) => ?›(30);
+//│ set lifted⁰ = capturedVariadic¹‹(Int⁰) => Function⁰›(30);
 //│ set callPrefix = lifted⁰‹(...Array⁰) => ?›(1, 9);
 //│ set tmp = callPrefix‹(...Array⁰) => ?›(2);
 //│ set callPrefix1 = lifted⁰‹(...Array⁰) => ?›(1, 2, 0, 9);

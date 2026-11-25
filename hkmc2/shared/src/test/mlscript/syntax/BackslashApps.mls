@@ -152,7 +152,7 @@ test(5)
 
 // * The argument of `\` delimits its own placeholders
 
-fun applyTo3(f) = f(3)
+private fun applyTo3(f) = f(3)
 
 :expect 4
 applyTo3 \ _ + 1
@@ -164,7 +164,7 @@ applyTo3 { \ _ + 1 }
 applyTo3 \ { _ + 1 }
 //│ = 4
 
-fun twice(f, x) = f(f(x))
+private fun twice(f, x) = f(f(x))
 
 :expect 12
 twice
@@ -172,7 +172,7 @@ twice
   \ 3
 //│ = 12
 
-fun call2(f, x, y) = f(x, y)
+private fun call2(f, x, y) = f(x, y)
 
 :expect 3
 call2
@@ -195,7 +195,7 @@ twice
 //│ = 12
 
 // * The innermost delimiter wins: here, `_` is bound by `\`, not by `|>`
-fun applyTo(f)(x) = f(x)
+private fun applyTo(f)(x) = f(x)
 
 :expect 6
 3 |> applyTo \ _ * 2
@@ -282,7 +282,7 @@ fun findFirst(xs) \ f = ???
 //│ ║  l.+1: 	fun findFirst(xs) \ f = ???
 //│ ╙──      	    ^^^^^^^^^^^^^^^^^
 
-fun findFirst(xs, f) = if xs is
+fun findFirst(xs, f: Any -> Bool) = if xs is
   Nil then []
   Cons(x, xs') and
     f(x) then [x]

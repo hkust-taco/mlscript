@@ -39,6 +39,10 @@ that coverage or merely pin internal representation or assertion details. Reserv
 unit tests for properties diff tests cannot reliably observe, such as concurrency,
 cache isolation, bounded graph growth, or algebraic laws; state the extra coverage.
 
+Worksheets are diff-test infrastructure. Keep compiler behavior and complexity driven by ordinary
+compilation units. When a limitation only affects a later worksheet block, adjust the test or
+document the limitation in the fixture. Avoid adding compiler state or recovery logic solely for diff-tests.
+
 Before adding new diff tests, make sure they are not already covered by existing tests.
 All new diff-test files you create should go into `hkmc2/shared/src/test/mlscript/slop/`
 unless there is a good reason to put them elsewhere.
@@ -130,12 +134,15 @@ of what led to the current implementation,
 especially if it involves non-obvious decisions/trade-offs
 or if alternative approaches were considered and rejected.
 
-Comments must be understandable from the current code alone. Assume no access to the discussions,
-commit history, or earlier versions of the implementation. Explain the concrete
-invariant, behavior, and failures being prevented. Name the relevant data and operations;
-avoid vague claims about where a "lifecycle" or "responsibility" belongs. If history
-or a rejected alternative matters, include enough context to explain the tradeoff
-after commits are squashed.
+Comments must be understandable from the current code and behavior alone.
+Assume no access to the discussions, commit history, or earlier versions of the implementation.
+Telltale sign to watch out for: words such as “still” and “now” when they (wrongly) assume
+the reader will know a previous state of the codebase.
+Consider that the commits of a given branch will likely be squashed and the detailed history lost.
+If history or a rejected alternative matters, include enough context to explain the tradeoff.
+
+Explain the concrete invariant, behavior, and failures being prevented.
+Name the relevant data and operations; avoid vague claims about where a "lifecycle" or "responsibility" belongs.
 
 Do NOT include comments that simply describe what the code is doing
 without adding any additional insight, or comments that talk about

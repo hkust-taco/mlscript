@@ -1,0 +1,12 @@
+#lang(0.3.x, strictResolution: true)
+
+module InheritedOperationBase with
+  open class Root[T](seed: T) with
+    open fun inspect(x: T): Int = 0
+    open mut val item: T = seed
+  open class Middle[U](seed: U) extends Root[U](seed) with
+    open override fun inspect(x) = 0
+    open override mut val item = seed
+  open class Producer with
+    open fun get(): Any -> Int = x => 0
+    open val held: Any -> Int = x => 0

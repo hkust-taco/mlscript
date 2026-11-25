@@ -118,7 +118,7 @@ lscomp1(zip(enumFromTo(1, 3), enumFromTo(2, 4)))
 fun append(xs, ys) = if xs is
   h :: t then h :: append(t, ys)
   Nil then ys
-fun concatMap(f, ls) = if ls is
+private fun concatMap(f, ls) = if ls is
   h :: t then append(f(h), concatMap(f, t))
   Nil then Nil
 fun f1(a1) = if a1 is

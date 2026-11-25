@@ -159,9 +159,9 @@ hole([{value: 9}])
 //│ ║  l.+1: 	fun hole(xs: Array) = xs.0.value
 //│ ║        	                      ^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
-//│ ╟── Parameter 'xs' admits values of unknown shape.
+//│ ╟── Type argument 'T' is omitted here and admits values of unknown shape.
 //│ ║  l.+1: 	fun hole(xs: Array) = xs.0.value
-//│ ║        	         ^^^^^^^^^
+//│ ║        	             ^^^^^
 //│ ╟── 'hole' is exposed by this compilation unit.
 //│ ║  l.+1: 	fun hole(xs: Array) = xs.0.value
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^

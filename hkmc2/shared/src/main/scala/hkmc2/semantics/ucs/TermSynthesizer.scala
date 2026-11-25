@@ -110,7 +110,7 @@ trait TermSynthesizer(using State):
     Split.Let(s, term, inner(s))
 
   protected final def plainTest(cond: Term, dbgName: Str = "cond")(inner: => Split): Split =
-    val s = TempSymbol(N, initErasedType = N, dbgName)
+    val s = TempSymbol(N, initErasedType = S(codegen.ErasedType.Bool), dbgName)
     Split.Let(s, cond, Branch(s.safeRef, inner) ~: Split.End)
 
   protected final def makeBindings(fields: Ls[RcdField | RcdSpread]): Term =

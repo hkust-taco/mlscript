@@ -246,11 +246,14 @@ sealed abstract class LocalVarSymbol(name: Str)(using State) extends FlowSymbol(
   def mut: Bool
   def subst(using s: SymbolSubst): LocalVarSymbol
 
-/** A temporary variable introduced by lowering.
+/** A temporary variable introduced by elaboration or lowering.
   *
-  * An initially unknown `erasedType` may be refined once: a temp holding a branching term's result is named before
-  * those branches are lowered, so `Normalization` populates it with the join of their representations once they have
-  * all been seen. `Normalization.joinTempType` is its only write site.
+  * An initially unknown `erasedType` may be refined once, in two places:
+  * - A temp holding a branching term's result is named before those branches are lowered, so
+  *   `Normalization.joinTempType` populates it with the join of their representations once they have all
+  *   been seen.
+  * - For a temp bound by `LetDecl` or `SimpleSplit.Head.Let`, erasure infers the representation
+  *   from the values flowing into the binding (see `ErasureDeclarations`).
   */
 class TempSymbol(val trm: Opt[Term], initErasedType: Opt[ErasedValueType], dbgNme: Str = "tmp")(using State)
     extends LocalVarSymbol(dbgNme):
@@ -447,8 +450,8 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
     with DefinitionSymbol[TermDefinition]
     with NamedSymbol
 :
-  // `null` marks source declarations not yet visited by Erasure; `N` is an initialized, unknown erasure.
-  // Generated MIR symbols initialize the same slot directly, retaining signatures separately from value types.
+  // `null` means uninitialized. `N` is an initialized, unknown erasure.
+  // Generated functions need this slot only for signature reads before `Define` or `ClsLikeDefn` sets `irDefn`.
   private var assignedErasure: Opt[ErasedValueType | ErasedCallableSignature] = null
   def this(k: TermDefKind, owner: Opt[InnerSymbol], id: Tree.Ident,
       erasure: Opt[ErasedValueType | ErasedCallableSignature])(using State) =
@@ -567,7 +570,7 @@ class ClassCtorSymbol(
   override val k: syntax.Fun.type,
   override val owner: Opt[InnerSymbol],
   val associatedCls: ClassSymbol,
-)(using State) extends TermSymbol(k, owner, associatedCls.id, N):
+)(using State) extends TermSymbol(k, owner, associatedCls.id):
   // Constructor functions occupy the class binding, not a private method slot.
   // MemberStorage determines that binding's runtime privacy from the class and module.
   // Their source accessibility is checked through the class and its constructor modifiers.
@@ -649,6 +652,10 @@ sealed trait DefinitionSymbol[Defn <: Definition] extends MemberSymbol:
   
   private var _defn: Opt[Defn] = N
   def defn: Opt[Defn] = _defn
+  /** Deliver the definition once its body has been elaborated, including to an observer of a forward reference. */
+  private[semantics] def whenDefined(f: Defn => Unit): Unit = _defn match
+    case S(defn) => f(defn)
+    case N => defnListeners += f
   def defn_=(d: S[Defn]): Unit =
     require(_defn.isEmpty, s"Cannot reassign defn of ${this} from ${_defn} to ${d}")
     _defn = d
@@ -670,8 +677,7 @@ sealed trait DefinitionSymbol[Defn <: Definition] extends MemberSymbol:
   
   def visibility: Opt[Visibility] = irDefn.fold(defn.map(_.visibility))(_.visibility |> some)
   
-  // TODO: rm
-  private[semantics] var defnListeners: Buffer[Defn => Unit] = Buffer.empty
+  private var defnListeners: Buffer[Defn => Unit] = Buffer.empty
   
   // * Although the IR is immutable,
   // * we consider that a given symbol is *owned* by the IR Defn node that defines it.
@@ -752,6 +758,15 @@ class ClassSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)(using State)
   override def prefix: Str = "class:"
   /** Compute the arity. */
   def arity: Int = tree.paramLists.headOption.fold(0)(_.fields.length)
+  
+  /** The fields of the first parameter list in the class header, in positional pattern order.
+    * `class C` has no primary list (`N`), even with auxiliary constructor parameters.
+    * `class C()` has an empty primary list (`S(Nil)`).
+    */
+  lazy val destructuredFields: Opt[Ls[TermSymbol]] =
+    defn.getOrElse(lastWords(s"Pattern matching requires the elaborated definition of $nme")) match
+      case cls: ClassDef.Parameterized => S(cls.primaryFields)
+      case _: ClassDef.Plain => N
   
   override def subst(using sub: SymbolSubst): ClassSymbol = sub.mapClsSym(this)
 

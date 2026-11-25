@@ -54,8 +54,8 @@ case Int then 0
 //│             paramLists = Ls of
 //│               ErasedParamList:
 //│                 params = Ls of
-//│                   N
-//│             result = Direct of N
+//│                   S of Unknown
+//│             result = Direct of S of ValueLike(?)
 //│         body = Match:
 //│           scrut = SimpleRef of caseScrut⁰
 //│           arms = Ls of

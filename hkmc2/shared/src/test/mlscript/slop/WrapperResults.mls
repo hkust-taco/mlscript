@@ -52,7 +52,7 @@ private class GeneratorChild() extends GeneratorBase() with
   override fun generate(value: Any) = value
 GeneratorChild().generate("payload").next()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp: ?, tmp1: Unknown;
+//│ let tmp: GeneratorChild⁰, tmp1: Unknown;
 //│ @private
 //│ define GeneratorBase⁰ as class GeneratorBase² {
 //│   constructor GeneratorBase¹
@@ -61,15 +61,15 @@ GeneratorChild().generate("payload").next()
 //│   }
 //│ };
 //│ @private
-//│ define GeneratorChild⁰ as class GeneratorChild² extends GeneratorBase² {
-//│   constructor GeneratorChild¹
-//│   method generate² = fun generate³(value: Unknown): generator ? {
+//│ define GeneratorChild¹ as class GeneratorChild⁰ extends GeneratorBase² {
+//│   constructor GeneratorChild²
+//│   method generate² = fun generate³(value: Unknown): generator Unknown {
 //│     return value
 //│   }
 //│ };
-//│ set tmp = GeneratorChild¹‹() => ?›();
-//│ set tmp1 = tmp.generate³‹(Unknown) => generator ?›("payload");
-//│ return tmp1.next⁰‹(...Array⁰) => ?›()
+//│ set tmp = GeneratorChild²‹() => GeneratorChild⁰›();
+//│ set tmp1 = tmp.generate³‹(Unknown) => generator Unknown›("payload");
+//│ return tmp1.next⁰‹() => Unknown›()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = {value: "payload", done: true}
 
@@ -84,13 +84,13 @@ fun curried: Int -> Int -> Int
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let curried$worker;
 //│ @inline
-//│ define curried⁰ as fun curried¹(x: ?)(y: ?): Unknown {
-//│   return curried$worker⁰‹(?, ?) => generator Int⁰›(x, y)
+//│ define curried⁰ as fun curried¹(x: Int⁰)(y: Int⁰): Unknown {
+//│   return curried$worker⁰‹(Int⁰, Int⁰) => generator Int⁰›(x, y)
 //│ };
 //│ @generator
-//│ define curried$worker as fun curried$worker⁰(x: ?, y: ?): generator Int⁰ {
+//│ define curried$worker as fun curried$worker⁰(x: Int⁰, y: Int⁰): generator Int⁰ {
 //│   do yield⁰‹(?) => ?›(x);
-//│   return (y as! Int⁰)
+//│   return y
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -108,9 +108,9 @@ curried(20).next()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+1: 	curried(20).next()
 //│ ║        	^^^^^^^^^^^^^^^^
-//│ ╟── Function with a declared signature does not contain member 'next'
-//│ ║  l.XX: 	fun curried: Int -> Int -> Int
-//│ ╙──      	                    ^^^^^^^^^^
+//│ ╟── Function 'curried' does not contain member 'next'
+//│ ║  l.XX: 	@generator fun curried(x)(y) =
+//│ ╙──      	           ^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A nominal method interface hides its body but still describes the returned iterator.
@@ -191,7 +191,7 @@ Promise.all([results.wrapped, results.direct, results.ordinary()])
 let recursiveIterator = forward()
 [recursiveIterator.next(), recursiveIterator.next(), recursiveIterator.next()]
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp: ?, tmp1: ?, tmp2: ?, recursive$worker;
+//│ let tmp: Unknown, tmp1: Unknown, tmp2: Unknown, recursive$worker;
 //│ @noInline
 //│ define forward⁰ as fun forward¹(): Unknown {
 //│   return recursive$worker⁰‹(Int⁰, Int⁰) => generator Int⁰›(1, 42)
@@ -202,7 +202,7 @@ let recursiveIterator = forward()
 //│ };
 //│ @generator
 //│ define recursive$worker as fun recursive$worker⁰(count: Int⁰, result: Int⁰): generator Int⁰ {
-//│   let scrut: ?, tmp3: Int⁰;
+//│   let scrut: Bool⁰, tmp3: Int⁰;
 //│   do yield⁰‹(?) => ?›(count);
 //│   set scrut = >⁰‹(?, ?) => Bool⁰›(count, 0);
 //│   match scrut
@@ -217,9 +217,9 @@ let recursiveIterator = forward()
 //│   end
 //│ };
 //│ set recursiveIterator⁰ = forward¹‹() => Unknown›();
-//│ set tmp = recursiveIterator⁰.next⁰‹(...Array⁰) => ?›();
-//│ set tmp1 = recursiveIterator⁰.next⁰‹(...Array⁰) => ?›();
-//│ set tmp2 = recursiveIterator⁰.next⁰‹(...Array⁰) => ?›();
+//│ set tmp = recursiveIterator⁰.next⁰‹() => Unknown›();
+//│ set tmp1 = recursiveIterator⁰.next⁰‹() => Unknown›();
+//│ set tmp2 = recursiveIterator⁰.next⁰‹() => Unknown›();
 //│ return [tmp, tmp1, tmp2]
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [{value: 1, done: false}, {value: 0, done: false}, {value: 42, done: true}]

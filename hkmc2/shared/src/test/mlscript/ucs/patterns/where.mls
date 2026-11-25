@@ -112,9 +112,16 @@ fun get(p, m) = if p is
 //│ ╔══[COMPILATION ERROR] Name not found: w
 //│ ║  l.+2: 	  Pair(k, v) where m.get(k) is w then v === w
 //│ ╙──      	                                            ^
-//│ ╔══[COMPILATION ERROR] This selection of member 'get' has no resolved target
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+2: 	  Pair(k, v) where m.get(k) is w then v === w
-//│ ╙──      	                   ^^^^^
+//│ ║        	                   ^^^^^
+//│ ╟── Cannot resolve member 'get' of a value with unknown shape.
+//│ ╟── Parameter 'm' admits values of unknown shape.
+//│ ║  l.+1: 	fun get(p, m) = if p is
+//│ ║        	           ^
+//│ ╟── 'get' is exposed by this compilation unit.
+//│ ║  l.+1: 	fun get(p, m) = if p is
+//│ ╙──      	^^^^^^^^^^^^^
 
 :fixme // TODO?
 fun get(p, m) =

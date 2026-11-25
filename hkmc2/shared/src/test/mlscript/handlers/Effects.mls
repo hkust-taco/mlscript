@@ -40,7 +40,7 @@ h.perform("k")
 //│ = "k"
 
 :expect "hi"
-fun foo(e) = e.perform("hi")
+private fun foo(e) = e.perform("hi")
 handle h = Effect with
   fun perform(arg)(k) =
     print(arg)
@@ -193,16 +193,14 @@ fun f() = case [...x, y, z] then x
 //│ do runtime⁰.resetEffects﹖();
 //│ @private
 //│ define lambda as fun lambda⁰(caseScrut) {
-//│   let middleElements;
 //│   match caseScrut
 //│     Array(2+) =>
 //│       let inlinedVal, tmp;
 //│       set tmp = -⁰(caseScrut.length⁰, 2);
 //│       set inlinedVal = caseScrut.slice⁰(0, tmp);
-//│       set middleElements = (inlinedVal as!! Array⁰);
 //│       do runtime⁰.Tuple⁰.get⁰(caseScrut, -2);
 //│       do runtime⁰.Tuple⁰.get⁰(caseScrut, -1);
-//│       return middleElements
+//│       return inlinedVal
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
@@ -236,7 +234,7 @@ else
 //│ = 3
 
 :expect "Hello World!"
-fun foo(h) =
+private fun foo(h) =
   print("Entering foo")
   let result = h.perform("Hello")
   h.perform("?")
@@ -263,18 +261,18 @@ result
 //│ = "Hello World!"
 
 :expect "Hello World!"
-fun foo(h) =
+private fun foo(h) =
   print("Entering foo")
   let result = h.perform("Hello")
   h.perform("Oops!")
   print("Exiting foo")
   result
-fun bar(h) =
+private fun bar(h) =
   print("Entering bar")
   let result = foo(h) + " World"
   print("Exiting bar")
   result
-fun foobar(h) =
+private fun foobar(h) =
   print("Entering foobar")
   let result = bar(h) + "!"
   print("Exiting foobar")
@@ -311,7 +309,7 @@ if true do
   print(f())
 //│ > 3
 
-module A with
+private module A with
   data abstract class Effect(x) with
     fun test() = x
     fun perform()
@@ -321,14 +319,14 @@ handle h = A.Effect(3) with
 h.perform()
 //│ = 0
 
-fun f(perform) =
+private fun f(perform) =
   handle h = Effect with
     fun perform(arg)(k) = arg
   perform()
 f(() => 3)
 //│ = 3
 
-abstract class Cell with
+private abstract class Cell with
   fun getVal(): Int
   fun setVal(Int): ()
 
@@ -350,7 +348,7 @@ abstract class Eff with
   fun get(): Int
 
 :expect 120
-fun fact(e, factvalue) = 
+private fun fact(e, factvalue) =
   if factvalue != 0 then
     factvalue * fact(e, factvalue-1)
   else e.get()
@@ -408,7 +406,7 @@ abstract class Eff with
   fun perform(): ()
 
 :expect 2
-fun foo(h) =
+private fun foo(h) =
   h.perform()
   if true then
     fun g() = 2
@@ -422,7 +420,7 @@ foo(h)
 //│ = 2
 
 :expect 3
-fun foo(h) =
+private fun foo(h) =
   h.perform()
   if false then
     fun g() = 2
@@ -436,7 +434,7 @@ foo(h)
 //│ = 3
 
 :expect 123
-fun foo(h) =
+private fun foo(h) =
   h.perform()
   fun A() = 1
   let a = if true then
@@ -463,7 +461,7 @@ foo(h)
 
 :fixme
 :expect 123
-fun foo(h) =
+private fun foo(h) =
   h.perform()
   fun A() = 1
   let a = if true then

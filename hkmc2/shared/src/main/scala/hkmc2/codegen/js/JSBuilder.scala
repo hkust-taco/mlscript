@@ -89,6 +89,25 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       case S(privates) => doc".#${privates.allocateOrGetName(stored)}"
       case N => doc"[${scope.lookup_!(getPrivateAccessorSymbol(stored), loc)}]"
 
+  /** Whether a member field is stored in a private JavaScript field of its class and read and written
+    * through a generated getter and setter: each public mutable field is, unless its definition is
+    * marked `@js.plainField`, which makes it an ordinary property. A field's initializer and its
+    * class's accessor declarations both consult this property of the field, so they agree.
+    */
+  private def hasBackingField(field: TermSymbol): Bool =
+    (field.k is MutVal) && field.owner.isDefined && !field.isPrivate && !field.annotations.getOrElse(
+      lastWords(s"Missing definition for mutable field '${field.nme}'")).exists(_.isInstanceOf[Annot.PlainField])
+
+  /** The private JavaScript field that stores `field` (see `hasBackingField`), selected from the
+    * receiver `owner`. JavaScript resolves private names lexically, so the selection is valid only
+    * in code emitted inside the class that declares the field, which is where the field's
+    * initializer and accessors are emitted.
+    */
+  private def backingField(owner: InnerSymbol, field: TermSymbol)(using Raise, Scope): Document =
+    val names = privateScopeIn(owner, scope.inScopeClasses).getOrElse:
+      lastWords(s"Backing field '${field.nme}' accessed outside its declaring class")
+    doc"${result(owner.asThis)}.#${names.allocateOrGetName(field)}"
+
   private def withPrivateAccessorDecls(doc: Document)(using Raise, Scope): Document =
     val accessors = (
       privateAccessorSymbols.iterator.toList.sortBy(_._1.uid).map: (ts, sym) =>
@@ -269,9 +288,9 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     paramLists match
     case Nil => body
     case params :: Nil =>
-      Return(Lambda(params, body)(if generator then Annot.Generator()(N) :: Nil else Nil, N))
+      Return(Lambda(params, body)(N, if generator then Annot.Generator()(N) :: Nil else Nil, N))
     case params :: rest =>
-      Return(Lambda(params, curriedFunctionBody(rest, body, generator))(Nil, N))
+      Return(Lambda(params, curriedFunctionBody(rest, body, generator))(S(ErasedType.Function(S(false))), Nil, N))
 
   /** Looks through the casts that a JS program does not materialize. */
   @tailrec
@@ -413,10 +432,9 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       val inner = doc"new $calls"
       if mut then inner else doc"$freeze(${inner})"
     case Tuple(mut, es) if es.isEmpty => if mut then "[]" else doc"$freeze([])"
-    case Tuple(mut, es) =>
+    case tuple @ Tuple(mut, es) =>
       val inner =
-        val lazyConcat = es.exists(!_.spread.fold(true)(_.isEager))
-        if lazyConcat
+        if tuple.hasLazySpread
         then doc"$runtimeVar.Tuple.lazyConcat(${es.map(argument).mkDocument(doc", ")})"
         else bracketed("[", "]", insertBreak = true):
           es.map(argument).mkDocument(doc", # ")
@@ -535,6 +553,9 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         tsym.owner match
         case N =>
           doc"${scope.lookup_!(sym, sym.toLoc)} = ${result(p)};${returningTerm(rst, endSemi)}"
+        case S(owner) if hasBackingField(tsym) =>
+          // A virtual setter could reach a subclass whose private fields JavaScript installs only after super().
+          doc"${backingField(owner, tsym)} = ${result(p)};${returningTerm(rst, endSemi)}"
         case S(owner) =>
           val thisDoc = mkThis(owner)
           val nme = sym.nme
@@ -630,18 +651,8 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             def mkPrivs(pubFlds: Ls[BlockMemberSymbol -> TermSymbol], privFlds: Ls[TermSymbol],
                   methods: Ls[FunDefn], ctor: Block,
                   mtdPrefix: Str, owner: InnerSymbol)(using Scope): Document =
-              def isPlainField(sym: TermSymbol): Bool =
-                // Refreshed symbols carry annotations on their current IR definition.
-                // Declared fields without initializers retain their source definition.
-                val annotations = sym.annotations
-                softAssert(annotations.nonEmpty, s"Missing definition for mutable field '${sym.nme}'")
-                annotations.exists(_.exists(_.isInstanceOf[Annot.PlainField]))
-              // * Note: the non-mut-val parts of `pubFlds` are not used because in JS, fields are not declared
-              val mutPubFields =
-                pubFlds.collect:
-                  case (_, sym) if (sym.k is MutVal) && !isPlainField(sym) =>
-                    sym -> TermSymbol(
-                      syntax.LetBind, S(owner), Tree.Ident(sym.nme), erasure = sym.erasedType)
+              // * Note: the other parts of `pubFlds` are not used because in JS, fields are not declared
+              val accessorFields = pubFlds.collect { case (_, sym) if hasBackingField(sym) => sym }
               // Explicit function companions already declare their private method slots.
               // Other nested class bindings need fields declared in this receiver's class.
               val classFields = collection.mutable.ListBuffer.empty[DefinitionSymbol[?]]
@@ -654,19 +665,19 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                       // softAssert(!classFields.contains(stored), s"Duplicate private class field '${stored.nme}'")
                       classFields += stored
                   case _ => super.applyDefn(defn)
-              val allPrivFlds = privFlds ++ mutPubFields.map(_._2) ++ classFields.toList
-              val privDecls = allPrivFlds.map: fld =>
+              val allPrivFlds = privFlds.iterator.++(accessorFields).++(classFields).toArray
+              val privDecls = allPrivFlds.iterator.map: fld =>
                 doc" # $mtdPrefix#${isym.privatesScope.allocateOrGetName(fld)};"
               def privateOwnerQual(sym: DefinitionSymbol[?]) =
                 val owner = MemberStorage.privateOwner(sym).getOrElse(lastWords(s"Expected private member $sym"))
                 result(owner.asThis)
-              val accessors = mutPubFields.flatMap: (valSym, letSym) =>
-                doc" # ${mtdPrefix}get ${escapeField(valSym.name, "")
-                  }() { return ${privateOwnerQual(letSym) }${selectPrivateField(letSym, letSym.toLoc).get}; }"
-                :: doc" # ${mtdPrefix}set ${escapeField(valSym.name, "")
-                  }(value) { ${privateOwnerQual(letSym)}${selectPrivateField(letSym, letSym.toLoc).get} = value; }"
+              val accessors = accessorFields.iterator.flatMap: field =>
+                val name = escapeField(field.name, "")
+                val storage = backingField(owner, field)
+                doc" # ${mtdPrefix}get $name() { return $storage; }"
+                :: doc" # ${mtdPrefix}set $name(value) { $storage = value; }"
                 :: Nil
-              val privateAccessors = allPrivFlds.filter(privateAccessorSymbols.contains).flatMap: fld =>
+              val privateAccessors = allPrivFlds.iterator.filter(privateAccessorSymbols.contains).flatMap: fld =>
                 doc" # ${mtdPrefix}get [${scope.lookup_!(getPrivateAccessorSymbol(fld), fld.toLoc)}]() { return ${
                     privateOwnerQual(fld)
                   }${
@@ -678,7 +689,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                     selectPrivateField(fld, fld.toLoc).get
                   } = value; }"
                 :: Nil
-              val privateMethodAccessors = methods.filter(td =>
+              val privateMethodAccessors = methods.iterator.filter(td =>
                 td.dSym.isPrivate && privateAccessorSymbols.contains(td.dSym)
               ).flatMap: td =>
                 doc" # ${mtdPrefix}get [${scope.lookup_!(getPrivateAccessorSymbol(td.dSym), td.dSym.toLoc)}]() { return ${
@@ -686,7 +697,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                   }${
                     selectPrivateField(td.dSym, td.dSym.toLoc).get
                   }; }" :: Nil
-              (privDecls ::: accessors ::: privateAccessors ::: privateMethodAccessors).mkDocument(doc"")
+              (privDecls ++ accessors ++ privateAccessors ++ privateMethodAccessors).mkDocument(doc"")
             
             val modDoc = modo match
               case N => doc""

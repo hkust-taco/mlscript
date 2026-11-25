@@ -268,9 +268,9 @@ class FlowAnalysisBasedRewrite(
         withEtaArgss(etaParams.map(_.args)):
           applyFunBodyLikeBlock(lam.body)
       val wrappedBody = etaParams.map(_.params).foldRight(body2): (params, body) =>
-        Return(Lambda(params, body)(Nil, N))
+        Return(Lambda(params, body)(Block.returnType(body), Nil, N))
       if (params2 is lam.params) && (wrappedBody is lam.body) then lam
-      else Lambda(params2, wrappedBody)(lam.annot, lam.toLoc)
+      else Lambda(params2, wrappedBody)(lam.bodyType, lam.annot, lam.toLoc)
     
   end Rewriter
   
@@ -292,6 +292,8 @@ class FlowAnalysisBasedRewrite(
           case N => super.applyFunDefn(fun)
   
   def otherNewFunDefns: Iterable[FunDefn] = Nil
+  
+  def retypedVariables: LinkedHashMap[(InstantiationId, ValueSymbol), ErasedValueType] = LinkedHashMap.empty
   
   private case class FunctionRewrite(signature: FunDefn.Signature, removed: Set[VarSymbol], etaCount: Int)
   
@@ -324,8 +326,8 @@ class FlowAnalysisBasedRewrite(
       res(instId -> fun) = FunctionRewrite(signature, removed, etaParams.size)
     res
   
-  lazy val rewrittenSignatures: Map[(InstantiationId, TermSymbol), FunDefn.Signature] =
-    collection.immutable.ListMap.from(functionRewrites.iterator.map((id, rewrite) => id -> rewrite.signature))
+  lazy val rewrittenSignatures: LinkedHashMap[(InstantiationId, TermSymbol), FunDefn.Signature] =
+    functionRewrites.map((id, rewrite) => id -> rewrite.signature)
   // ====== end: implements the abstract members of `PolyInstantiationRewrite` ======
   
 end FlowAnalysisBasedRewrite
@@ -339,6 +341,7 @@ object FlowAnalysisBasedRewrite:
     tl: TL,
     raise: Raise,
     eState: Elaborator.State,
+    eCtx: Elaborator.Ctx,
     symbolPrinter: SymbolPrinter,
   ): Program = cfg.flowBasedOpt.fold(p)(rewriteWith(p, _))
   
@@ -354,6 +357,7 @@ object FlowAnalysisBasedRewrite:
     tl: TL,
     raise: Raise,
     eState: Elaborator.State,
+    eCtx: Elaborator.Ctx,
     symbolPrinter: SymbolPrinter,
   ): Program =
     def mkTl(prefix: Str, debug: Bool) =

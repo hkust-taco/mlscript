@@ -5,7 +5,7 @@ package deforest
 import utils.*
 import hkmc2.utils.*, shorthands.*
 import semantics.*
-import scala.collection.mutable.{Set as MutSet, Map as MutMap, LinkedHashMap}
+import scala.collection.mutable.{Set as MutSet, Map as MutMap, LinkedHashMap, LinkedHashSet, Buffer}
 import hkmc2.codegen.flowAnalysis.*
 import hkmc2.utils.Scope
 
@@ -77,6 +77,21 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Con
   val fusingCtorInfo = MutMap.empty[CtorDtorId, Ctor]
   val fusingDtorInfo = MutMap.empty[CtorDtorId, ConcreteCtorConsumer]
 
+  // Fusion replaces a constructor with a closure or with the value of one of its fields, so each slot that
+  // such a value reaches takes the types of what now flows into it. The maps below hold these types for the
+  // final set of fused constructors. A slot that no fused value reaches keeps its declared type and has no
+  // entry in the first two maps.
+
+  /** The types of the variables, parameters and stored values that fused values reach, in each instance. */
+  val retypedVariables = LinkedHashMap.empty[(InstantiationId, ValueSymbol), ErasedValueType]
+  /** The types of the function results that fused values reach, in each instance of the function. */
+  val retypedResults = LinkedHashMap.empty[(InstantiationId, TermSymbol), ErasedValueType]
+  /** The types of the values that each fused constructor receives, in the order of its arguments. */
+  val fusedFieldTypes = MutMap.empty[CtorDtorId, Ls[Opt[ErasedValueType]]]
+  /** The types of the values that a fused match receives from all the constructors of one class, in the
+    * order of their arguments. The key pairs the match with the class. */
+  val branchParamTypes = MutMap.empty[(CtorDtorId, CtorCls), Ls[Opt[ErasedValueType]]]
+
   def hasWorkToDo: Bool = finalCtorDests.nonEmpty || finalDtorSrcs.nonEmpty
 
   def polyInstIds: Iterator[InstantiationId] = finalCtorDests.iterator.flatMap:
@@ -84,6 +99,141 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Con
       (dtors + ctor).toList.sortBy(_.exprId.uid).map(_.instId)
     case (ctor, FinalDestMatch(dtor, _)) =>
       ctor.instId :: dtor.instId :: Nil
+
+  /** The function whose body directly contains the match or label `id`. `N` when `id` lies outside of
+    * every function body, as in the top-level block or in a constructor.
+    */
+  def enclosingFun(id: ResultId | LabelSymbol): Opt[FunDefn] =
+    val ctx = id match
+      case label: LabelSymbol => preAnalyzer.res.labelSymToCtxOfLabel(label)
+      case scrut: ResultId => preAnalyzer.res.matchScrutToCtxOfMatch(scrut)
+    ctx.iterator.collectFirst:
+      case preAnalyzer.InCtx.Fn(fun) => S(fun)
+      case _: (preAnalyzer.InCtx.Lam | preAnalyzer.InCtx.TopLvl | preAnalyzer.InCtx.Mod | preAnalyzer.InCtx.ModCtor
+        | preAnalyzer.InCtx.Cls | preAnalyzer.InCtx.ClsPreCtor | preAnalyzer.InCtx.ClsCtor) => N
+    .flatten
+
+  /** Whether fusion replaces the values that `p` produces. */
+  def isFused(p: ProdStrat): Bool = p match
+    case c: Ctor => finalCtorDests.contains(c.concreteId)
+    case _: ProdFun | UnknownProd => false
+    case UnsafeEta => lastWords("effect producer in value flow")
+    case _: StratVar => lastWords("unexpected strat var")
+
+  private def producersOf(values: ProdStrat): Ls[ProdStrat] = values match
+    case v: StratVar => v.lowerBounds.toList
+    case p => p :: Nil
+
+  // The type of the values that `p` produces once the fused constructors are replaced, or `N` for unknown
+  // values, which have the declared type of the slot they reach. `seen` holds the constructors whose
+  // projected field is being typed: one that reaches its own field takes the field's declared type there.
+  private def producedType(p: ProdStrat, seen: Set[Ctor]): Opt[ErasedValueType] = p match
+    case c: Ctor => finalCtorDests.get(c.concreteId) match
+      case S(_: FinalDestMatch) => S(ErasedType.Function(S(false)))
+      case S(FinalDestSel(_, field)) =>
+        val fieldType =
+          if seen(c) then field.erasedFieldType
+          else slotTypeFromFlow(producersOf(c.args.find(_._1 == field).get._2), field.erasedFieldType, seen + c)
+        S(fieldType.getOrElse(ErasedType.Unknown))
+      case N => S(c.allocatedType)
+    case _: ProdFun => S(ErasedType.Function(S(false)))
+    case UnknownProd => N
+    case UnsafeEta => lastWords("effect producer in value flow")
+    case _: StratVar => lastWords("unexpected strat var")
+
+  // compute the updated erased type of a local variable, a function param or a function return,
+  // using all the concrete producers that flows into that slot
+  private def slotTypeFromFlow(producers: Ls[ProdStrat], declared: Opt[ErasedValueType], seen: Set[Ctor]): Opt[ErasedValueType] =
+    val types = producers.map(producedType(_, seen))
+    if types.forall(_.isEmpty) then declared
+    else S(ErasedType.Union.mk(types.map(_.orElse(declared).getOrElse(ErasedType.Unknown))))
+
+  // N when the existing slot keeps its declaration, as no fused value reaches it
+  private def retypedSlotType(producers: Iterable[ProdStrat], declared: Opt[ErasedValueType]): Opt[ErasedValueType] =
+    if producers.exists(isFused) then slotTypeFromFlow(producers.toList, declared, Set.empty) else N
+
+  /** The producers of the values that one instance of `fun` returns, where `v` is the variable of the
+    * definition symbol in that instance. A definition without parameter lists returns into `v` itself.
+    * Any other definition binds `v` to the closure of its first parameter list, whose last parameter list
+    * holds the result of the body. `N` when the analysis does not model the definition, as for class
+    * methods, whose variables are opaque.
+    */
+  private def returnedProducers(fun: FunDefn, v: StratVar): Opt[Ls[ProdStrat]] =
+    def isParamList(pf: ProdFun, idx: Int): Bool = pf.exprId match
+      case (sym: TermSymbol, `idx`) => sym is fun.dSym
+      case _ => false
+    def lastParamList(pf: ProdFun, idx: Int): ProdFun =
+      if idx == fun.params.size - 1 then pf else pf.res match
+        case next: ProdFun if isParamList(next, idx + 1) => lastParamList(next, idx + 1)
+        case res => lastWords(s"parameter list ${idx + 1} of ${fun.dSym.nme} has no closure in $res")
+    if fun.params.isEmpty then S(v.lowerBounds.toList)
+    else v.lowerBounds.iterator.collectFirst:
+      case pf: ProdFun if isParamList(pf, 0) => producersOf(lastParamList(pf, 0).res)
+
+  // Whether fusion replaces `c` with a value that is not a reference: the value of an unboxed field.
+  private def projectsUnboxedValue(c: Ctor): Bool = finalCtorDests.get(c.concreteId) match
+    case S(_: FinalDestSel) => producedType(c, Set.empty).exists: tpe =>
+      tpe.canonicalize match
+        case _: ErasedType.Primitive | _: ErasedType.Incompatible => true
+        case _ => false
+    case _ => false
+
+  /** Types the slots that fused values reach, for the current set of fused constructors, and returns the
+    * fused constructors that leave one of these slots without a representation.
+    *
+    * Projecting a field replaces an object with the value of that field, which is unboxed when the field is.
+    * An unboxed value shares no representation with a reference or with an unboxed value of another type,
+    * so it can only reach slots that hold nothing else. When such a slot also receives another value, like
+    * an object that stays allocated or a value of unknown origin, the projected constructor is returned:
+    * it has to stay an object, which every reference slot can hold.
+    */
+  private def typeSlots(): collection.Set[Ctor] =
+    retypedVariables.clear()
+    retypedResults.clear()
+    fusedFieldTypes.clear()
+    branchParamTypes.clear()
+    val unrepresentable = LinkedHashSet.empty[Ctor]
+    def check(tpe: Opt[ErasedValueType], producers: => IterableOnce[ProdStrat]): Unit =
+      if tpe.exists(_.canonicalize.isInstanceOf[ErasedType.Incompatible]) then
+        unrepresentable ++= producers.iterator.collect:
+          case c: Ctor if projectsUnboxedValue(c) => c
+    val definitions = preAnalyzer.res.funSymToFunDefn
+    for (sym, instId, v) <- constraintSolver.collector.symbolFlows do sym match
+      // The variable of a function definition holds what a reference to it evaluates to: its closure, or
+      // the result of a definition without parameter lists. That result belongs to the function's signature.
+      case fun: TermSymbol if definitions.contains(fun) =>
+        val definition = definitions(fun)
+        for returned <- returnedProducers(definition, v) do
+          val tpe = retypedSlotType(returned, definition.signature.result.bodyType)
+          tpe.foreach(tpe => retypedResults(instId -> fun) = tpe)
+          check(tpe, returned)
+      case sym: (VarSymbol | TempSymbol | TermSymbol) =>
+        val declared = sym match
+          case sym: LocalVarSymbol => sym.erasedType
+          case sym: TermSymbol => sym.erasedType
+        val tpe = retypedSlotType(v.lowerBounds, declared)
+        tpe.foreach(tpe => retypedVariables(instId -> sym) = tpe)
+        check(tpe, v.lowerBounds)
+      case _ => ()
+    for (id, ctor) <- fusingCtorInfo do
+      fusedFieldTypes(id) = ctor.args.map: (field, prod) =>
+        val producers = producersOf(prod)
+        val tpe = slotTypeFromFlow(producers, field.erasedFieldType, Set.empty)
+        check(tpe, producers)
+        tpe
+    val branches = LinkedHashMap.empty[(CtorDtorId, CtorCls), Buffer[Ctor]]
+    for case (id, FinalDestMatch(dtor, _)) <- finalCtorDests do
+      val ctor = fusingCtorInfo(id)
+      branches.getOrElseUpdate(dtor -> ctor.ctor, Buffer.empty) += ctor
+    for (branch, ctors) <- branches do
+      branchParamTypes(branch) = ctors.head.args.indices.iterator.map: index =>
+        val types = ctors.map(ctor => fusedFieldTypes(ctor.concreteId)(index))
+        val tpe = if types.forall(_.isEmpty) then N
+          else S(ErasedType.Union.mk(types.map(_.getOrElse(ErasedType.Unknown))))
+        check(tpe, ctors.iterator.flatMap(ctor => producersOf(ctor.args(index)._2)))
+        tpe
+      .toList
+    unrepresentable
 
   locally {
     // TODO: improve this code – inefficient (useless intermediate sets) and nondeterministic (set `head` access)
@@ -123,18 +273,17 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Con
           else N
     end mergeDests
 
-    val prodRoots =
-      for
-        ctor <- constraintSolver.ctorsWithDests
-        if mergeDests(ctor, ctor.dests.toSet).isEmpty
-      yield ctor
+    val (prodRoots, candidates) = constraintSolver.ctorsWithDests.partitionMap: ctor =>
+      mergeDests(ctor, ctor.dests.toSet) match
+        case S(dest) => Right(ctor -> dest)
+        case N => Left(ctor)
     val consRoots =
       for
         dtor <- constraintSolver.consumersWithSrcs
         if dtor.srcs.contains(UnknownProd)
       yield dtor
 
-    val unconsumed = constraintSolver.collector.allRealCtors.iterator.filter: ctor =>
+    def unconsumed = constraintSolver.collector.allRealCtors.iterator.filter: ctor =>
       ctor.instantiationId.isDefined && ctor.dests.isEmpty
 
     // constructors stored in `c`'s field that must stay unfused when `c` is unfused,
@@ -155,32 +304,52 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Con
             tpe.canonicalize).contains(false)
       yield stored
 
-    val result = FlowWebComputation[Ctor, ConcreteCtorConsumer](
-      p => p.dests.collect:
-        case c: ConcreteCtorConsumer => c,
-      c => c.srcs.collect:
-        case p: Ctor => p,
-      storedCtorsKeptUnfused,
-      prodRoots.iterator ++ unconsumed,
-      consRoots,
-    )
-    val toRemoveCtor = result.markedProducers
-    val toRemoveDtor = result.markedConsumers
+    // fuses every constructor that the flow lets fusion replace, except those of `kept`
+    def fuse(kept: collection.Set[Ctor]): Unit =
+      finalCtorDests.clear()
+      finalDtorSrcs.clear()
+      fusingCtorInfo.clear()
+      fusingDtorInfo.clear()
+      val result = FlowWebComputation[Ctor, ConcreteCtorConsumer](
+        p => p.dests.collect:
+          case c: ConcreteCtorConsumer => c,
+        c => c.srcs.collect:
+          case p: Ctor => p,
+        storedCtorsKeptUnfused,
+        prodRoots.iterator ++ unconsumed ++ kept,
+        consRoots,
+      )
+      val toRemoveCtor = result.markedProducers
+      val toRemoveDtor = result.markedConsumers
 
-    for
-      ctor <- constraintSolver.ctorsWithDests
-      if !toRemoveCtor(ctor)
-    do
-      finalCtorDests(ctor.concreteId) = mergeDests(ctor, ctor.dests.toSet).get
-      fusingCtorInfo(ctor.concreteId) = ctor
-    for
-      dtor <- constraintSolver.consumersWithSrcs
-      if !toRemoveDtor(dtor)
-    do
-      finalDtorSrcs(dtor.concreteId) =
-        // srcs are always Ctors after constraint solving
-        dtor.srcs.iterator.map(_.asInstanceOf[Ctor].concreteId).toSet
-      fusingDtorInfo(dtor.concreteId) = dtor
+      for
+        (ctor, dest) <- candidates
+        if !toRemoveCtor(ctor)
+      do
+        finalCtorDests(ctor.concreteId) = dest
+        fusingCtorInfo(ctor.concreteId) = ctor
+      for
+        dtor <- constraintSolver.consumersWithSrcs
+        if !toRemoveDtor(dtor)
+      do
+        finalDtorSrcs(dtor.concreteId) =
+          // srcs are always Ctors after constraint solving
+          dtor.srcs.iterator.map(_.asInstanceOf[Ctor].concreteId).toSet
+        fusingDtorInfo(dtor.concreteId) = dtor
+
+    // Whether a fused constructor leaves a slot without a representation only shows once the slots are
+    // typed for a whole set of fused constructors (see `typeSlots`). Keeping such a constructor can also
+    // keep others, as the constructors that reach a common consumer fuse together, and the slots these
+    // reach change types in turn. So fuse and type again until every slot has a representation.
+    // Each round keeps at least one more constructor, which bounds their number.
+    val kept = MutSet.empty[Ctor]
+    fuse(kept)
+    var unrepresentable: collection.Set[Ctor] = if finalCtorDests.isEmpty then Set.empty else typeSlots()
+    while unrepresentable.nonEmpty do
+      assert(unrepresentable.forall(isFused), "only a fused constructor can change the type of a slot")
+      kept ++= unrepresentable
+      fuse(kept)
+      unrepresentable = typeSlots()
   }
 
   tl.log(">>> fusing >>>")

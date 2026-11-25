@@ -73,7 +73,7 @@ class WorkerWrapper
     val workerSym = new BlockMemberSymbol(s"${fun.sym.nme}$$worker", Nil, nameIsMeaningful = true)
     val workerBody = rewriteParams(body, paramMapping)
     val workerSignature = FunDefn.Signature.fromParams(workerParams :: Nil, fun.signature.result)
-    val workerDSym = TermSymbol(syntax.Fun, N, syntax.Tree.Ident(workerSym.nme))
+    val workerDSym = TermSymbol(syntax.Fun, N, syntax.Tree.Ident(workerSym.nme), S(workerSignature.erasure))
     workerSym.tsym = S(workerDSym)
     val worker = FunDefn(
       N,

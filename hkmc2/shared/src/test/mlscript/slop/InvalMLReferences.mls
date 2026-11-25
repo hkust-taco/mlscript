@@ -1,0 +1,41 @@
+:.
+:!js
+
+:e
+region r in 1
+//│ ╔══[COMPILATION ERROR] InvalML region and reference operations require legacy resolution.
+//│ ║  l.+1: 	region r in 1
+//│ ╙──      	^^^^^^^^^^^^^
+
+:e
+region 1 in 1
+//│ ╔══[COMPILATION ERROR] InvalML region and reference operations require legacy resolution.
+//│ ║  l.+1: 	region 1 in 1
+//│ ╙──      	^^^^^^^^^^^^^
+
+:e
+fun allocate(r) = r.ref 1
+//│ ╔══[COMPILATION ERROR] InvalML region and reference operations require legacy resolution.
+//│ ║  l.+1: 	fun allocate(r) = r.ref 1
+//│ ╙──      	                  ^^^^^^^
+
+:e
+private fun read(r) = !(r)
+//│ ╔══[COMPILATION ERROR] InvalML region and reference operations require legacy resolution.
+//│ ║  l.+1: 	private fun read(r) = !(r)
+//│ ╙──      	                      ^^^^
+
+:e
+fun write(r) = r := 1
+//│ ╔══[COMPILATION ERROR] InvalML region and reference operations require legacy resolution.
+//│ ║  l.+1: 	fun write(r) = r := 1
+//│ ╙──      	               ^^^^^^
+
+import "../../../test-fixtures/LegacyReference.mls"
+
+:e
+val result = LegacyReference.read({value: 1})
+//│ ╔══[COMPILATION ERROR] Resolution error in dereference
+//│ ║  l.XX: 	  fun read(r) = !(r)
+//│ ║        	                ^^^^
+//│ ╙── Cannot infer the result of a legacy InvalML region or reference operation.

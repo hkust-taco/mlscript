@@ -27,15 +27,16 @@ counter
 //│   (type $TypeInfoBase (sub (struct (field $tag@0 i32) (field $parent@1 (ref null $TypeInfoBase)))))
 //│   (type $Object (sub (struct (field $typeinfo@0 (mut (ref $TypeInfoBase))))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
-//│   (type $entry (func (result (ref null any))))
+//│   (type $entry (func (result (ref null i31))))
 //│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
-//│   (import "repl0" "counter" (global $counter (mut (ref null any))))
-//│   (import "repl0" "step" (global $step (mut (ref null any))))
-//│   (func $entry (export "entry") (type $entry) (result (ref null any))
+//│   (import "repl0" "counter" (global $counter (mut (ref null i31))))
+//│   (import "repl0" "step" (global $step (mut (ref null i31))))
+//│   (func $entry (export "entry") (type $entry) (result (ref null i31))
 //│     (return
-//│       (call $plus_impl
-//│         (global.get $counter)
-//│         (global.get $step))))
+//│       (ref.cast (ref null i31)
+//│         (call $plus_impl
+//│           (global.get $counter)
+//│           (global.get $step)))))
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 3
@@ -128,7 +129,18 @@ narrowedBox
 // The imported type must also enforce the cast, rather than just avoiding a missing-type diagnostic.
 :noInline
 :re
-fun rejectNonBox(x): CastBox = x
+fun rejectNonBox(x: Any): CastBox = x
 rejectNonBox(42)
 //│ Wasm result:
 //│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+
+
+// An inferred session global of primitive type is stored unboxed as well.
+let inferred = wasm.i32.const(123)
+//│ Wasm result:
+//│ = {}
+
+:expect 123
+inferred
+//│ Wasm result:
+//│ = 123
