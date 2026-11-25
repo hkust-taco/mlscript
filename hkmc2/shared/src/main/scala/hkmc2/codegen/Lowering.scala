@@ -759,7 +759,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         // A record's copy of a field that it spreads is located at that record, which decides whether the
         // copy is mutable (see RcdField.copied). Also show the field that it copies.
         case _: RecordFieldSymbol.Origin.Copied =>
-          (msg"This record is not mutable, and neither is its copy of the field:" -> field.toLoc) ::
+          (msg"This record copies the field as read-only:" -> field.toLoc) ::
             (msg"The copied field is defined here:" -> field.root.toLoc) :: Nil
         // The components of an intersection of record types each declare the field.
         case RecordFieldSymbol.Origin.Merged(left, right) => defined(left) ::: defined(right)
