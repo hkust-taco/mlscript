@@ -346,9 +346,8 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
       case record: RecordShape => record.foreachReadableField(marks, instances): (member, context, bindings) =>
         val field = member.field
         val lookup = MemberLookup.Found(member, context)
-        // A copy takes its initial value and its representation from its root, the field that clients see declared.
-        watch((field.tsym, context, bindings))(resolver.listenMemberValue(lookup,
-          rctx.fieldProjectionSite(member.root.sym), field.rhs, bindings, () => ())): value =>
+        watch((member, context, bindings))(resolver.listenMemberValue(lookup,
+          rctx.fieldProjectionSite(field.sym), field.rhs, bindings, () => ())): value =>
           emit(value, path.via(msg"This value is stored in this record field." -> field.toLoc))
         if member.mutable then field.tsym.defn.foreach(exposeWrite(_, lookup.instantiate(bindings), path))
       case base: BaseShape => exposeClassInterface(base.defn)

@@ -290,6 +290,34 @@ private fun separateCopies() =
 separateCopies()
 //│ = 1
 
+// Separate calls allocate separate copies, even when they spread the same argument.
+:expect 4
+private fun duplicate(record) = mut {...record}
+private fun writeOneCopy() =
+  let source = {item: {a: 4}}
+  let first = duplicate(source)
+  let second = duplicate(source)
+  set first.item = {b: 5}
+  second.item.a
+writeOneCopy()
+//│ = 4
+
+// A later spread of the assigned copy can read the new value.
+:e
+private fun readAssignedCopy() =
+  let source = {item: {a: 4}}
+  let first = mut {...source}
+  set first.item = {b: 5}
+  duplicate(first).item.a
+readAssignedCopy()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+5: 	  duplicate(first).item.a
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Record literal does not contain member 'a'
+//│ ║  l.+4: 	  set first.item = {b: 5}
+//│ ╙──      	                    ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
 // A copy holds what the field that it copies held when the copy was made. A read of the copy thus also
 // returns the values assigned to that field.
 :e

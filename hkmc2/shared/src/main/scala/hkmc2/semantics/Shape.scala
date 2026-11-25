@@ -558,10 +558,6 @@ extension (member: BlockMemberSymbol | RecordMember)
   def memberSymbol: BlockMemberSymbol = member match
     case symbol: BlockMemberSymbol => symbol
     case member: RecordMember => member.field.sym
-  /** The member whose definition supplies the initial value of this one: itself, except for the copy of a record field. */
-  def valueSymbol: BlockMemberSymbol = member match
-    case symbol: BlockMemberSymbol => symbol
-    case member: RecordMember => member.root.sym
 
 class ErrShape(val err: ErrorReport) extends CoreHeadShape:
   override def isSelfContained: Bool = true
@@ -988,7 +984,7 @@ class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends CoreHeadS
         state.recordLexicalBinders(term, binders)
         term
       def field(name: Str, value: Term): (Str, RecordMember) =
-        name -> RecordMember(RcdField(Term.Lit(syntax.Tree.StrLit(name)), value))
+        name -> RecordMember(RcdField(Term.Lit(syntax.Tree.StrLit(name)), value), N)
       def withBuffer(body: Term): Term =
         val params = PlainParamList(List("buffer", "index").map: name =>
           Param.simple(VarSymbol(new syntax.Tree.Ident(name), erasedType = N, mut = false)))(cls.toLoc)
@@ -1308,16 +1304,24 @@ object TupleShape:
   * of a record that it spreads (see RecordFieldSymbol). The field identifies the member and tells whether an
   * assignment can reach it through this record.
   * A copy holds what the field that it copies held when the copy was made, and then what is assigned to the
-  * copy itself. Its values are thus the initializer of its `root`, the declared field that it comes from, and
-  * the values assigned to its `assignedFields`. An assignment to a copy is no input of the record that it
+  * copy itself. Its values are thus the initializer of the declared field that it comes from, and the
+  * assignments along the chain of copies. An assignment to a copy is no input of the record that it
   * copies, nor of the other copies of that record.
   */
-final case class RecordMember(field: RcdField):
+final case class RecordMember(field: RcdField, copiedFrom: Opt[(RecordMember, Marks)]):
   def mutable: Bool = field.tsym.mutable
-  /** The fields whose assigned values a read of this member can return (see RecordFieldSymbol.assignedFields). */
-  def assignedFields: Ls[RecordFieldSymbol] = field.tsym.assignedFields
-  /** The definition of the declared field that supplies the initial value of this member. */
-  def root: TermDefinition = field.tsym.root.defn.getOrElse(lastWords(s"Record field '${field.sym.nme}' has no definition"))
+
+  def copiedBy(record: Term.Rcd, marks: Marks)(using ResolutionContext): RecordMember =
+    RecordMember(rctx.copiedField(record, field), S((this, marks)))
+
+  /** Visit the initializer and each writable field whose values can reach a read of this member.
+    * Each path starts at the record that stores that value and ends at the reader. */
+  def readSources(path: Ls[Marks])(initial: (BlockMemberSymbol, Ls[Marks]) => Unit,
+      assigned: (RecordFieldSymbol, Ls[Marks]) => Unit): Unit =
+    copiedFrom match
+      case N => initial(field.sym, path)
+      case S((origin, mark)) => origin.readSources(if mark == NoMarks then path else mark :: path)(initial, assigned)
+    if mutable then assigned(field.tsym, path)
 
 /** Keep spread candidates and their contexts rather than flattening away their
   * provenance. Lookup follows runtime's last-write-wins order. Unknown entries
@@ -1336,7 +1340,7 @@ final class RecordShape private (val source: Term.Rcd, val elements: Ls[RecordSh
       case Nil => Missing
       case RecordShape.Field(field) :: rest => field.key match
         case S(key) =>
-          if key == name then Found(RecordMember(field), Nil) else loop(rest)
+          if key == name then Found(RecordMember(field, N), Nil) else loop(rest)
         case _ => unknown(field.field)
       case RecordShape.Unknown(shape) :: _ => Unknown(Uncertainty.RecordOverwrite, shape.fromPublicInterface, shape.provenance)
       case RecordShape.Dynamic(marks) :: _ => Dynamic(marks)
@@ -1349,12 +1353,9 @@ final class RecordShape private (val source: Term.Rcd, val elements: Ls[RecordSh
           case Dynamic(inner) => S(Dynamic(inner ::: marks :: Nil))
           case Unknown(_, fromPublicInterface, provenance) => S(Unknown(Uncertainty.RecordOverwrite, fromPublicInterface, provenance))
           case Missing => N
-          case Found(member: RecordMember, inner) =>
-            // This record has its own copy of the field. The path still leads from the scope of the field's root.
-            S(Found(RecordMember(rctx.copiedField(source, member.field)), inner ::: marks :: Nil))
-          case Found(_: BlockMemberSymbol, _) | _: Declared | _: Typed | Indexed(_, _) | Private(_, _, _) =>
-            // Record spreads recursively look up RecordShapes, which only create RecordMembers.
-            lastWords("Record lookup returned a nominal member")
+          case Found(member: RecordMember, Nil) => S(Found(member.copiedBy(source, marks), Nil))
+          case _: Found | _: Declared | _: Typed | Indexed(_, _) | Private(_, _, _) =>
+            lastWords("Record lookup must find a field in the spread record's own scope")
         spread(shape.getMember(name)).getOrElse(loop(rest))
     loop(elements.reverse).instantiate(instances)
 
@@ -1366,17 +1367,18 @@ final class RecordShape private (val source: Term.Rcd, val elements: Ls[RecordSh
       (visit: (RecordMember, Ls[Marks], TypeSubstitution) => Unit)(using ResolutionContext): Unit =
     val shadowed = scala.collection.mutable.Set.empty[MemberKey]
     val visited = scala.collection.mutable.Set.empty[(RecordShape, Ls[Marks], TypeSubstitution)]
-    // `copy` gives the field that this record has for a field of `record`, through the spreads that lead to it.
-    def fields(record: RecordShape, copy: RcdField => RcdField, path: Ls[Marks], bindings: TypeSubstitution): Unit =
+    val receiver = marks.filterNot(_ == NoMarks)
+    // `copy` follows the spreads back to the record that escapes, retaining the scope of each copy.
+    def fields(record: RecordShape, copy: RecordMember => RecordMember, path: Ls[Marks], bindings: TypeSubstitution): Unit =
       // A repeated spread in the same context can only repeat fields or keys already visited.
       if visited.add((record, path, bindings)) then record.elements.reverseIterator.foreach:
         case RecordShape.Field(field) if field.key.forall(shadowed.add) =>
-          visit(RecordMember(copy(field)), path, bindings)
+          visit(copy(RecordMember(field, N)), receiver, bindings)
         case RecordShape.Spread(inner, mark) =>
-          fields(inner, field => copy(rctx.copiedField(record.source, field)),
+          fields(inner, member => copy(member.copiedBy(record.source, mark)),
             if mark == NoMarks then path else mark :: path, bindings.withOverrides(inner.instances))
         case _ => ()
-    fields(this, field => field, marks.filterNot(_ == NoMarks), scope.withOverrides(instances))
+    fields(this, member => member, receiver, scope.withOverrides(instances))
 
   def containsSpread(record: Term.Rcd, marks: Marks): Bool = elements.exists:
     case RecordShape.Spread(shape, inner) =>

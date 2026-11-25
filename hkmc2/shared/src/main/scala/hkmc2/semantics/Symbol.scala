@@ -601,13 +601,6 @@ final class RecordFieldSymbol(id: Tree.Ident, val mutable: Bool, val origin: Rec
   def root: RecordFieldSymbol = origin match
     case Origin.Copied(field) => field.root
     case Origin.Declared | _: Origin.Merged => this
-  /** The fields whose assigned values a read of this field can return: the field itself if it is mutable, and
-    * those of the field that it copies, which could be assigned before the copy was made. */
-  def assignedFields: Ls[RecordFieldSymbol] =
-    val copied = origin match
-      case Origin.Copied(field) => field.assignedFields
-      case Origin.Declared | _: Origin.Merged => Nil
-    if mutable then this :: copied else copied
   /** The field whose erasure a derived field has. An intersection keeps the declaration of its left component
     * for a field that both components declare (see RcdField.merged). */
   private def representative: Opt[RecordFieldSymbol] = origin match

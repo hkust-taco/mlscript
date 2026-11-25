@@ -2573,12 +2573,12 @@ class NewResolver:
     case MemberLookup.Contextual(nested, substitution) => listenMemberValue(nested, flow, source, instances.withOverrides(substitution), unresolved)(receive)
     case MemberLookup.Found(member, inner) =>
       def read(value: TermShape)(using ResolutionContext): Unit = receive(instantiateShape(value, instances))
-      fromBMS(member.valueSymbol, flow, inner, read, source, _ => (), false)(using rctx.withInstances(instances))
-      // Like other reads of record members (see `publishMember`).
+      def initial(sym: BlockMemberSymbol, path: Ls[Marks]): Unit =
+        fromBMS(sym, flow, path, read, source, _ => (), false)(using rctx.withInstances(instances))
       member match
-        case member: RecordMember => member.assignedFields.foreach: field =>
-          listenAssignedValues(field, flow, inner)(read)(using rctx.withInstances(instances))
-        case _: BlockMemberSymbol => ()
+        case member: RecordMember => member.readSources(inner)(initial, (field, path) =>
+          listenAssignedValues(field, flow, path)(read)(using rctx.withInstances(instances)))
+        case sym: BlockMemberSymbol => initial(sym, inner)
     case MemberLookup.Declared(member, bound, inner, annotation) =>
       listenDeclaredMember(member, bound, flow, source, annotation, _ => (), receiver = false, inner, N): value =>
         transportShape(instantiateShape(value, instances), inner) match
@@ -4092,18 +4092,15 @@ class NewResolver:
     member match
       case member: BlockMemberSymbol => definition(member)
       case member: RecordMember =>
-        val root = member.root
-        if root.tsym is member.field.tsym then definition(member.field.sym)
-        else
-          // A record's copy of a field is the target of the selection, and it first holds the initial value of
-          // its root (see RecordMember). Publishing the root's symbol would make the root the target instead
-          // (see `recordValueTarget`), so read the root's value here, like `listenMemberValue`.
+        if member.copiedFrom.nonEmpty then
+          // The copy is the selection target. Publishing the initializer's symbol here would select the
+          // source field as well (see `recordValueTarget`).
           val copy = member.field.tsym
           rctx.recordResolution(host, host.resolvedTargets.contains(copy))(host.resolvedTargets ::= copy)
-          fromBMS(root.sym, flow, marks, publish, host, _ => (), false)(using rctx.withInstances(instances))
-        // A read also returns the values assigned to the member, and to the fields that it copies
-        // (see `writeField`), like a read of a mutable class field (see `fromBMSAt`).
-        member.assignedFields.foreach(field => listenAssignedValues(field, flow, marks)(publish))
+        def initial(sym: BlockMemberSymbol, path: Ls[Marks]): Unit =
+          if sym is member.field.sym then definition(sym)
+          else fromBMS(sym, flow, path, publish, host, _ => (), false)(using rctx.withInstances(instances))
+        member.readSources(marks)(initial, (field, path) => listenAssignedValues(field, flow, path)(publish))
 
   private def publishDeclared(host: NewResolvable & ShapeHost, member: BlockMemberSymbol, flow: FlowSymbol,
       bindings: Map[VarSymbol, TypeArgument], marks: Ls[Marks], annotation: Opt[Term],
