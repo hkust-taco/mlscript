@@ -286,7 +286,7 @@ class InfVarSymbol(val origin: Symbol | Term, val hint: Str = "")(using State) e
     case x: Symbol => x.nme ++ hint
     case x: Term => hint
   override def toLoc: Option[Loc] = origin.toLoc
-  def subst(using sub: SymbolSubst): InfVarSymbol = ???
+  def subst(using s: SymbolSubst): InfVarSymbol = s.mapInfVarSym(this)
 
 /** A named binding. When mut is false, its value is fixed after initialization;
   * imports and lowered immutable vals use this to retain stability through IR rewrites.

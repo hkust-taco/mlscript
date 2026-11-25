@@ -27,13 +27,13 @@ class InfVarState:
   var upperBounds: Ls[Type -> Opt[Ls[SubOr]]] = Nil
 
 trait KCtx(using val prim: PrimCtx):
-  def subArg(x: TypeArg, y: TypeArg) =
+  def subArg(x: TypeArg, y: TypeArg): Ls[SubOr] =
     SubOr(x.posPart,y.posPart) :: SubOr(y.negPart,x.negPart) :: Nil
   def constrain(c: SubOr)(using CCtx, TL, Raise) = c match
     case SubOr(x,y,N) => ConstraintSolver.constrain(x,y)(using this)
     case SubOr(x,y,S(Nil)) =>
     case SubOr(x,y,S(cs)) => ConstraintSolver.constrain(x,y)(using SuffixCtx(cs, this))
-  def asSubcls(x: ClassLikeType, y: ClsTag) =
+  def asSubcls(x: ClassLikeType, y: ClsTag): Opt[ClassLikeType] =
     if x.sym === y then S(x)
     else x.sym match
       case LitSymbol(_: IntLit) if prim.intSym === y => S(ClassLikeType(y, Nil, Nil, Nil, N))
@@ -59,10 +59,10 @@ class InfCtx(
     val cfg: Config
 ) extends KCtx:
   def +=(p: Symbol -> InfType) = env += p
-  def get(sym: Symbol): Option[InfType] = env.get(sym) `orElse` parent.dlof(_.get(sym))(None)
-  def nest = InfCtx(lvl, Some(this), HashMap.empty, outRegAcc, xbds)
-  def nestWithOuter(outer: InfVar) = InfCtx(lvl + 1, Some(this), HashMap.empty, outRegAcc | outer, ListBuffer.empty)
-  def nextLevel = InfCtx(lvl + 1, Some(this), HashMap.empty, outRegAcc, ListBuffer.empty)
+  def get(sym: Symbol): Opt[InfType] = env.get(sym) `orElse` parent.dlof(_.get(sym))(None)
+  def nest: InfCtx = InfCtx(lvl, Some(this), HashMap.empty, outRegAcc, xbds)
+  def nestWithOuter(outer: InfVar): InfCtx = InfCtx(lvl + 1, Some(this), HashMap.empty, outRegAcc | outer, ListBuffer.empty)
+  def nextLevel: InfCtx = InfCtx(lvl + 1, Some(this), HashMap.empty, outRegAcc, ListBuffer.empty)
 
   def addub(s: InfVar, ub: Type, cs: Opt[Ls[SubOr]] = N)(using CCtx, TL, Raise) =
     val k = SubOr(s, ub, cs)
@@ -91,43 +91,43 @@ class InfCtx(
        )
      ))
   // TODO
-  def ubs(s: InfVarSymbol) = varSt.getOrElseUpdate(s, new InfVarState).upperBounds.map(_._1)
-  def lbs(s: InfVarSymbol) = varSt.getOrElseUpdate(s, new InfVarState).lowerBounds
+  def ubs(s: InfVarSymbol): Ls[Type] = varSt.getOrElseUpdate(s, new InfVarState).upperBounds.map(_._1)
+  def lbs(s: InfVarSymbol): Ls[Type] = varSt.getOrElseUpdate(s, new InfVarState).lowerBounds
   // def withPrefix(x: Type, y: Type) = ???
-  def thenCtx(env: HashMap[Symbol, InfType], prefix: Ls[SubOr]) =
+  def thenCtx(env: HashMap[Symbol, InfType], prefix: Ls[SubOr]): ThenCtx =
     ThenCtx(lvl, S(this), env, outRegAcc, xbds, prefix)
 
 class PrimCtx(using st: Elaborator.State, ctx: Elaborator.Ctx, cfg: Config):
-  val objSym = ctx.get("Object").get.symbol.get.asTpe.get
-  val intSym = ctx.get("Int").get.symbol.get.asTpe.get
-  val strSym = ctx.get("Str").get.symbol.get.asTpe.get
-  val boolSym = ctx.get("Bool").get.symbol.get.asTpe.get
-  val errSym = ctx.get("Error").get.symbol.get.asTpe.get
-  val fnSym = ctx.get("Function").get.symbol.get.asTpe.get
-  val arrSym = ctx.get("Array").get.symbol.get.asTpe.get
-  def litSym(x: syntax.Literal) = LitSymbol(x)
+  val objSym: ClsTag = ctx.get("Object").get.symbol.get.asTpe.get
+  val intSym: ClsTag = ctx.get("Int").get.symbol.get.asTpe.get
+  val strSym: ClsTag = ctx.get("Str").get.symbol.get.asTpe.get
+  val boolSym: ClsTag = ctx.get("Bool").get.symbol.get.asTpe.get
+  val errSym: ClsTag = ctx.get("Error").get.symbol.get.asTpe.get
+  val fnSym: ClsTag = ctx.get("Function").get.symbol.get.asTpe.get
+  val arrSym: ClsTag = ctx.get("Array").get.symbol.get.asTpe.get
+  def litSym(x: syntax.Literal): ClsTag = LitSymbol(x)
 
 object InfCtx:
-  def init(using st: Elaborator.State, ctx: Elaborator.Ctx, tl: TL, cfg: Config) =
+  def init(using st: Elaborator.State, ctx: Elaborator.Ctx, tl: TL, cfg: Config): InfCtx =
     given PrimCtx = new PrimCtx
     InfCtx(1, N, HashMap.empty, Bot, ListBuffer.empty)(using HashMap.empty)
-  def mkTag(s: ClsTag) = ClassLikeType(s, Nil, Nil, Nil, N)
-  def litTy(lit: Literal)(using ctx: InfCtx) = mkTag(ctx.prim.litSym(lit))
-  def objTy(using ctx: InfCtx) = mkTag(ctx.prim.objSym)
-  def funTy(args: Ls[Type], ret: Type, eff: Type)(using ctx: InfCtx) =
+  def mkTag(s: ClsTag): ClassLikeType = ClassLikeType(s, Nil, Nil, Nil, N)
+  def litTy(lit: Literal)(using ctx: InfCtx): ClassLikeType = mkTag(ctx.prim.litSym(lit))
+  def objTy(using ctx: InfCtx): ClassLikeType = mkTag(ctx.prim.objSym)
+  def funTy(args: Ls[Type], ret: Type, eff: Type)(using ctx: InfCtx): ClassLikeType =
     val u = tupTy(args)
     val w = Ls(Wildcard.in(u), Wildcard.out(ret), Wildcard.out(eff))
     val i = Ls(true, false, false)
     ClassLikeType(ctx.prim.fnSym, w, Nil, i, S(0))
   // def arrayTy(elem: Type)(using ctx: InfCtx) = ClassLikeType(ctx.prim.arrSym, Ls(elem), Nil, Nil)
-  def tupTy(e: Ls[Type])(using ctx: InfCtx) =
+  def tupTy(e: Ls[Type])(using ctx: InfCtx): ClassLikeType =
     // val refine = (Tree.Ident("size"): Tree.Ident, litTy(IntLit(e.length))) :: e.zipWithIndex.map:
     //   case (elemTy, idx) => (Tree.Ident(idx.toString): Tree.Ident, elemTy)
     // ClassLikeType(ctx.prim.arrSym, Ls(e.foldLeft[Type](Bot)(_ | _)), refine, Ls(true), N)
     val refine = e.zipWithIndex.map:
       case (elemTy, idx) => (Tree.Ident(idx.toString): Tree.Ident, elemTy)
     ClassLikeType(ctx.prim.arrSym, Nil, refine, Nil, N)
-  def refinedObj(r: Ls[Tree.Ident -> Type])(using ctx: InfCtx) =
+  def refinedObj(r: Ls[Tree.Ident -> Type])(using ctx: InfCtx): ClassLikeType =
     ClassLikeType(ctx.prim.objSym, Nil, r, Nil, N)
 
 class SuffixCtx(val suffix: Ls[SubOr], val cont: KCtx)(using PrimCtx) extends KCtx:
@@ -146,10 +146,10 @@ class ThenCtx(
   xbds: ListBuffer[SubOr], prefix: Ls[SubOr]
 )(using HashMap[InfVarSymbol, InfVarState], PrimCtx, Ctx, Config)
 extends InfCtx(lvl, parent, env, outRegAcc, xbds):
-  override def nest = ThenCtx(lvl, Some(this), HashMap.empty, outRegAcc, xbds, prefix)
-  override def nestWithOuter(outer: InfVar) =
+  override def nest: ThenCtx = ThenCtx(lvl, Some(this), HashMap.empty, outRegAcc, xbds, prefix)
+  override def nestWithOuter(outer: InfVar): ThenCtx =
     ThenCtx(lvl + 1, Some(this), HashMap.empty, outRegAcc | outer, ListBuffer.empty, prefix)
-  override def nextLevel =
+  override def nextLevel: ThenCtx =
     ThenCtx(lvl + 1, Some(this), HashMap.empty, outRegAcc, ListBuffer.empty, prefix)
   // override def addub(s: InfVar, ub: Type, cs: Opt[Ls[SubOr]] = N)(using CCtx, TL, Raise) =
   //   cont.addub(s,ub,cs)
@@ -165,9 +165,9 @@ class MatchCtx(
   val refine: Ls[Ls[SimpleRef -> Type]],
   val svt: HashMap[SimpleRef, InfVar -> Type]
 ):
-  def end = if prefix.isEmpty then ???
+  def endif: Unit = if prefix.isEmpty then ???
   def pm(s: SimpleRef, t: => Type, cp: FlatPattern.ClassLike)
-      (using ctx: InfCtx, scope: Scope, st: Elaborator.State) =
+      (using ctx: InfCtx, scope: Scope, st: Elaborator.State): MatchCtx =
     val sym = cp.constructor.symbol.get.asCls.get
     val params = sym.defn.get.tparams
     val patt = ClassLikeType(sym, params.map(_ => Wildcard.empty), Nil, params.map(_ => false), N) // TODO
@@ -180,7 +180,7 @@ class MatchCtx(
       case S(v, t) => (v, t)
     val nr = refine.map(s -> patt :: _)
     MatchCtx(S(this), nr, svt)
-  def el = MatchCtx(prefix.get.prefix, pneg, svt)
+  def el: MatchCtx = MatchCtx(prefix.get.prefix, pneg, svt)
   def thenCtx(using ctx: InfCtx)(using CCtx, TL, Raise): InfCtx =
     val c = prefix match
       case N => ctx

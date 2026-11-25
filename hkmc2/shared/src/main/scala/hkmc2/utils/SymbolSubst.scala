@@ -20,6 +20,7 @@ class SymbolSubst:
   def mapErrorSym(s: ErrorSymbol): ErrorSymbol = s
   def mapLabelSym(s: LabelSymbol): LabelSymbol = s
   def mapSplitSym(s: SplitSymbol): SplitSymbol = s
+  def mapInfVarSym(s: InfVarSymbol): InfVarSymbol = s
 
 object SymbolSubst:
   object Id extends SymbolSubst

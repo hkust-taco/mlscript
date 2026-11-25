@@ -237,6 +237,7 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
         case s: SplitSymbol => s.subst
         case s: InstSymbol => s.subst
         case s: TermSymbol => s.subst
+        case s: InfVarSymbol => s.subst
       DefineVar(copy, term(rhs))(source.toLoc)
     case sc: SetConfig => sc
 
