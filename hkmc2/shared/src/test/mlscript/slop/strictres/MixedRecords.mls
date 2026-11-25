@@ -125,7 +125,10 @@ private fun assignReplacedField() =
 //│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'item'
 //│ ║  l.+4: 	  set record.item = 2
 //│ ║        	            ^^^^^
-//│ ╟── Defined here:
+//│ ╟── This record is not mutable, and neither is its copy of the field:
+//│ ║  l.+3: 	  let record = {mut item: 0, ...other}
+//│ ║        	                    ^^^^^^^^^^^^^^^^^
+//│ ╟── The copied field is defined here:
 //│ ║  l.+2: 	  let other = {item: 1}
 //│ ╙──      	               ^^^^
 
@@ -178,7 +181,10 @@ overwriteFrozen()
 //│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'count'
 //│ ║  l.+5: 	  set copied.count = 2
 //│ ║        	            ^^^^^^
-//│ ╟── Defined here:
+//│ ╟── This record is not mutable, and neither is its copy of the field:
+//│ ║  l.+3: 	  let copied = {...record}
+//│ ║        	                   ^^^^^^
+//│ ╟── The copied field is defined here:
 //│ ║  l.+2: 	  let record = {count: 0}
 //│ ╙──      	                ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -233,19 +239,65 @@ relabelled.label
 //│ = "changed"
 //│ relabelled = {count: 0, label: "changed"}
 
-// A copy of a `mut` field is read-only unless the copy is mutable as a whole. Both copies below reuse the
-// field of their source, and resolution does not tell them apart.
-// TODO: the type checker should reject the assignment to the first copy.
+// A record has a field of its own for each field that it copies. A copy of a `mut` field is read-only unless
+// the copying record is mutable as a whole, so the first assignment below is rejected.
+:ge
 let source = {mut count: 0}
 let frozen = {...source}
-let unfrozen = mut {...source}
 set frozen.count = 1
-set unfrozen.count = 2
-[source.count, frozen.count, unfrozen.count]
-//│ = [0, 0, 2]
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'count'
+//│ ║  l.+3: 	set frozen.count = 1
+//│ ║        	          ^^^^^^
+//│ ╟── This record is not mutable, and neither is its copy of the field:
+//│ ║  l.+2: 	let frozen = {...source}
+//│ ║        	                 ^^^^^^
+//│ ╟── The copied field is defined here:
+//│ ║  l.+1: 	let source = {mut count: 0}
+//│ ╙──      	                  ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ frozen = {count: 0}
 //│ source = {count: 0}
+
+// An assignment to the copy of a mutable record does not change the record that it copies.
+:expect [0, 2]
+let original = {mut count: 0}
+let unfrozen = mut {...original}
+set unfrozen.count = 2
+[original.count, unfrozen.count]
+//│ = [0, 2]
+//│ original = {count: 0}
 //│ unfrozen = {count: 2}
+
+// A copy of a copy is a field of its own too. The error shows the record whose copy is assigned and the
+// field that the copies come from.
+:ge
+private fun assignNestedCopy() =
+  let declared = {mut count: 0}
+  let nested = {...mut {...declared}}
+  set nested.count = 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'count'
+//│ ║  l.+4: 	  set nested.count = 1
+//│ ║        	            ^^^^^^
+//│ ╟── This record is not mutable, and neither is its copy of the field:
+//│ ║  l.+3: 	  let nested = {...mut {...declared}}
+//│ ║        	                           ^^^^^^^^
+//│ ╟── The copied field is defined here:
+//│ ║  l.+2: 	  let declared = {mut count: 0}
+//│ ╙──      	                      ^^^^^
+
+// A record and its copy have the same member, so a selection that both reach has one target under strict
+// resolution, and an assignment that both permit is accepted.
+:expect [2, 1]
+private fun count(record) = record.count
+private fun bumpMutable(record) = set record.count = record.count + 1
+private fun sameMember() =
+  let declared = {mut count: 0}
+  let copied = mut {...declared, label: "copy"}
+  bumpMutable(declared)
+  bumpMutable(copied)
+  [count(declared) + count(copied), declared.count]
+sameMember()
+//│ = [2, 1]
 
 // An assignment through a field that a record type does not make mutable is rejected as well: the records
 // that the type describes receive no input for that field.
@@ -290,6 +342,29 @@ writeBoth(both)
 both.count
 //│ = 1
 //│ both = {count: 1, label: "count"}
+
+// The intersection has a field of its own for the two that its components declare, whichever of them makes
+// it mutable.
+:expect 2
+private fun writeBothReversed(target: {count: Int, label: Str} & {mut count: Int}) = set target.count = 2
+let reversed = mut {count: 0, label: "count"}
+writeBothReversed(reversed)
+reversed.count
+//│ = 2
+//│ reversed = {count: 2, label: "count"}
+
+// It is immutable if none of them does.
+:ge
+private fun writeNone(target: {count: Int, label: Str} & {count: Int}) = set target.count = 3
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'count'
+//│ ║  l.+1: 	private fun writeNone(target: {count: Int, label: Str} & {count: Int}) = set target.count = 3
+//│ ║        	                                                                                   ^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	private fun writeNone(target: {count: Int, label: Str} & {count: Int}) = set target.count = 3
+//│ ║        	                               ^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	private fun writeNone(target: {count: Int, label: Str} & {count: Int}) = set target.count = 3
+//│ ╙──      	                                                          ^^^^^
 
 // A record type that requires a `mut` field is not checked against the records that reach it. A union
 // constrains a record against each of its components, and the record below is a valid value of the union.

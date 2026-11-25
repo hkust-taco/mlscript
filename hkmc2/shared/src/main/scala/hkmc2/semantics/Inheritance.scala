@@ -55,6 +55,11 @@ object Inheritance:
       val seen = mutable.Set.empty[DefinitionSymbol[?]]
       def visit(current: DefinitionSymbol[?]): Unit = if seen.add(current) then
         current.overriddenMembers.foreach(visit)
+        // A record field that resolution derives from others is the same member as its origins: a record
+        // and its copy, or an intersection and its components, share them (see RecordFieldSymbol).
+        current match
+          case field: RecordFieldSymbol => field.origins.foreach(visit)
+          case _ => ()
       visit(sym)
       seen.toSet
     targets.distinct match

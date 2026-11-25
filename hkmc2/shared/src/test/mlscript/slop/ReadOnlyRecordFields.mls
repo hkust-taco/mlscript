@@ -75,22 +75,16 @@ private fun readAfterWrite() =
 readAfterWrite()
 //│ = [undefined]
 
-// A mutable copy reuses the field of the record that it copies. The assignment below thus has a single
-// target, which one of the two records has read-only.
-:ge // TODO: allow?
+// A mutable copy has a field of its own, so it permits the assignment that the record it copies ignores.
+:expect [0, 1]
 private fun bumpCopies(record) = set record.count = record.count + 1
 let original = {count: 0}
 let copied = mut {...original}
 bumpCopies(original)
 bumpCopies(copied)
-//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'count'
-//│ ║  l.+1: 	private fun bumpCopies(record) = set record.count = record.count + 1
-//│ ║        	                                           ^^^^^^
-//│ ╟── Defined here:
-//│ ║  l.+2: 	let original = {count: 0}
-//│ ╙──      	                ^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ copied = {count: 0}
+[original.count, copied.count]
+//│ = [0, 1]
+//│ copied = {count: 1}
 //│ original = {count: 0}
 
 // The components of a union of record types follow the same rule.

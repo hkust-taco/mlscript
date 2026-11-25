@@ -579,6 +579,59 @@ class ClassCtorSymbol(
   override def mayRaiseEffects(using Config) =
     super.mayRaiseEffects || config.checkInstantiateEffect
 
+/** The definition symbol of a record field: a property of the records that a record literal creates, or of the
+  * records that a record type describes. `mutable` tells whether the field can be assigned through such a record,
+  * and `origin` how the record or the record type comes to have the field.
+  *
+  * A field that is not declared has the runtime representation of the field that it derives from. A spread
+  * copies values without converting them, and a value of an intersection can be used at each of its components,
+  * so no separate representation is inferred for such a field: its erasure is that of `representative`.
+  */
+final class RecordFieldSymbol(id: Tree.Ident, val mutable: Bool, val origin: RecordFieldSymbol.Origin)(using State)
+    extends TermSymbol(syntax.RecordField, N, id):
+  import RecordFieldSymbol.Origin
+  /** The fields that this one derives from, if resolution created it. */
+  def origins: Ls[RecordFieldSymbol] = origin match
+    case Origin.Declared => Nil
+    case Origin.Copied(field) => field :: Nil
+    case Origin.Merged(left, right) => left :: right :: Nil
+  /** The declared field whose values a copy holds, and the field itself if it is no copy. */
+  def root: RecordFieldSymbol = origin match
+    case Origin.Copied(field) => field.root
+    case Origin.Declared | _: Origin.Merged => this
+  /** Whether a read of this field can return a value that was assigned to its `root`: the field is mutable, or
+    * it copies a field that could be assigned before the copy was made. */
+  def readsAssignments: Bool = mutable || (origin match
+    case Origin.Copied(field) => field.readsAssignments
+    case Origin.Declared | _: Origin.Merged => false)
+  /** The field whose erasure a derived field has. An intersection keeps the declaration of its left component
+    * for a field that both components declare (see RcdField.merged). */
+  private def representative: Opt[RecordFieldSymbol] = origin match
+    case Origin.Declared => N
+    case Origin.Copied(field) => S(field)
+    case Origin.Merged(left, _) => S(left)
+  override def isErased: Bool = representative.fold(super.isErased)(_.isErased)
+  override def sourceErasure(using codegen.Erasure): Opt[ErasedValueType | ErasedCallableSignature] =
+    representative.fold(super.sourceErasure)(_.sourceErasure)
+  override def irErasure: Opt[ErasedValueType | ErasedCallableSignature] =
+    representative.fold(super.irErasure)(_.irErasure)
+  override def initializeErasure(value: Opt[ErasedValueType | ErasedCallableSignature]): Unit =
+    assert(representative.isEmpty, s"The derived field '$nme' takes the erasure of the field that it derives from")
+    super.initializeErasure(value)
+
+object RecordFieldSymbol:
+  /** How a record or a record type comes to have a field. */
+  enum Origin:
+    /** A record literal or a record type declares the field. */
+    case Declared
+    /** A record that spreads another one has the field as its own copy of `field`, which the other record has.
+      * `mut {...r}` can thus assign a field that `r` has immutable, and `{...r}` cannot assign a field that `r`
+      * has mutable. */
+    case Copied(field: RecordFieldSymbol)
+    /** An intersection of record types has the field for `left` and `right`, which its components declare
+      * under the same key. It is mutable if one of them is. */
+    case Merged(left: RecordFieldSymbol, right: RecordFieldSymbol)
+
 
 sealed trait CtorSymbol extends Symbol:
   def nme: Str

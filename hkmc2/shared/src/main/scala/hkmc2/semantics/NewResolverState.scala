@@ -316,6 +316,14 @@ final class NewResolverState(val owner: Elaborator.State):
   // through the tuple's original graph rather than allocated per spread candidate.
   val namedTupleRecords: Cache[Tup | CtxTup, Rcd] =
     new Cache(_.namedTupleRecords, identity)
+  // A record has a field of its own for each field that it copies from a record that it spreads, and an
+  // intersection of record types has one for two fields that its components declare under the same key
+  // (see RecordFieldSymbol). Like named tuple fields, they have stable property identities, shared with
+  // consumers through the original graph of the record literal or record type that has them.
+  val copiedFields: Cache[(Rcd, RecordFieldSymbol), RcdField] =
+    new Cache(_.copiedFields, identity)
+  val mergedFields: Cache[(RecordFieldSymbol, RecordFieldSymbol), RcdField] =
+    new Cache(_.mergedFields, identity)
   val aggregateProducers: Seen[Tup | CtxTup | Rcd] =
     new Seen(_.aggregateProducers)
   // Whether a binder is supplied is fixed by its authoritative syntactic site.
@@ -725,6 +733,21 @@ final class ResolutionContext private[semantics] (
     canonical(key._1, _.tupleShapes, key)(shapeView(key._3)(make))
   def canonicalRecord(key: (Term.Rcd, Ls[RecordShape.Element], TypeSubstitution))(make: => RecordShape): RecordShape =
     canonical(key._1, _.recordShapes, key)(shapeView(key._3)(make))
+  /** The field that the record literal `record` has for its copy of `origin`, a field of a record that it
+    * spreads (see RcdField.copied). The unit that first looks the copy up creates it in its own tables, unless
+    * the unit of `record` already has it: a completed unit gets no new symbol.
+    */
+  def copiedField(record: Term.Rcd, origin: RcdField): RcdField =
+    canonical(record, _.copiedFields, (record, origin.tsym))(derivedField(origin, RcdField.copied(origin, record)(using owner)))
+  /** The field that an intersection has for `left` and `right`, the fields that two of its record types declare
+    * under the same key (see RcdField.merged). `source` is the record type that declares `left`.
+    */
+  def mergedField(source: Term.Rcd, left: RcdField, right: RcdField): RcdField =
+    canonical(source, _.mergedFields, (left.tsym, right.tsym))(derivedField(left, RcdField.merged(left, right)(using owner)))
+  // A derived field is read where the field that it takes its declaration from is written.
+  private def derivedField(model: RcdField, field: RcdField): RcdField =
+    definitionBindersOf(model.tsym).foreach(state.lexicalTypeBinders.update(field.tsym, _)(using state.context))
+    field
   def canonicalInstance(tpe: DeclaredType)(make: => InstanceShape): InstanceShape =
     canonical(tpe.resolution, _.instanceShapes, tpe)(shapeView(tpe.instances)(make))
   def spreadFlow(spread: Term)(make: => IterationFlow): IterationFlow =
