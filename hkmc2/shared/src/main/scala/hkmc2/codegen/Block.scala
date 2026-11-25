@@ -33,6 +33,12 @@ BufferableTransform and ReflectionInstrumenter temporarily wrap constructor bloc
 function-processing code. These wrappers do not appear as executable functions; any emitted function
 must satisfy the explicit-return invariant.
 
+Every evaluated selection of a known getter is the callee of a `Call`. A standalone getter read uses
+`Call(path, Nil)` with the getter's signature. If the source immediately applies the returned function,
+the call can take argument lists directly on the selection. This preserves the receiver as JavaScript's
+`this`, and the call carries the signature of the returned function. A `Case.Cls` for a virtual class
+holds `runtime.unreachable` as its class path. Backends use the class symbol and never read that getter.
+
 While the IR is mostly immutable, for easier manipulation and to enable some optimizations,
 we do assume that each DefinitionSymbol coming from the source program is "owned" by at most one IR definition;
 this is implemented by making the `Define` and `ClsLikeDefn` constructors

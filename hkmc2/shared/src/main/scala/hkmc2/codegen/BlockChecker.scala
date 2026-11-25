@@ -9,7 +9,7 @@ import hkmc2.utils.*
 import hkmc2.Message.MessageContext
 
 import semantics.*
-import semantics.Elaborator.State
+import semantics.Elaborator.{Ctx, State}
 
 
 /** Checks the invariants of the IR:
@@ -18,8 +18,9 @@ import semantics.Elaborator.State
   *    through its symbol (see `TermSymbol.irErasure`), and cross-unit inlining reads its body; a pass that builds a
   *    definition and then discards it leaves `irDefn` pointing at the discarded one;
   *  - a call of a known definition uses its current signature, including after a rewrite that keeps its symbol.
+  *  - a path that reads a known getter occurs only as the callee of a call.
   */
-class BlockChecker()(using DebugPrinter, State, Raise) extends BlockTraverser:
+class BlockChecker()(using DebugPrinter, State, Raise, Ctx) extends BlockTraverser:
   
   val definedSyms = MutSet.empty[ScopedSymbol]
   
@@ -39,11 +40,23 @@ class BlockChecker()(using DebugPrinter, State, Raise) extends BlockTraverser:
     case _ => ()
     super.applyBlock(b)
   
-  override def applyResult(r: Result): Unit =
-    r match
-      case c: Call => c.checkTargetSignature()
-      case _ => ()
-    super.applyResult(r)
+  override def applyResult(r: Result): Unit = r match
+    case c: Call =>
+      c.checkTargetSignature()
+      // A getter is valid here. Its receiver, key and arguments are ordinary value positions.
+      super.applyPath(c.fun)
+      c.argss.foreach(_.foreach(applyArg))
+    case _ => super.applyResult(r)
+
+  override def applyPath(p: Path): Unit =
+    assert(!Call.publishedSignature(p).exists(_.isInstanceOf[ErasedGetterSignature]),
+      "Reading a known getter requires a Call")
+    super.applyPath(p)
+
+  override def applyCase(cse: Case): Unit = cse match
+    // Primitive type tests never evaluate their placeholder class path.
+    case Case.Cls(cls: ClassSymbol, _) if Elaborator.ctx.builtins.virtualClasses(cls) => cls.traverse
+    case _ => super.applyCase(cse)
   
   override def applyParamList(pl: LoweredParamList): Unit =
     pl.paramSyms.foreach(checkSymbol(_, pl))

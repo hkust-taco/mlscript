@@ -379,16 +379,6 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     private def signatureInPlace(f: TermSymbol): FunDefn.Signature =
       signatureAt(if pre.res.rootFunDefns.contains(f) then inPlaceInstId(f) else instId, f)
     
-    // The result type that fusion gives to a definition without parameter lists which keeps its symbol,
-    // or `N` when that result keeps its type. The rewritten definition only replaces the current one after
-    // every body is rewritten. Until then, a read through the symbol still has the previous result type,
-    // which the coercion into a retyped slot would take for a value of an unrelated type.
-    private def retypedResultInPlace(f: TermSymbol): Opt[ErasedValueType] =
-      pre.res.funSymToFunDefn.get(f).filter(_.params.isEmpty).flatMap: original =>
-        val planned = signatureInPlace(f)
-        if planned is original.signature then N
-        else S(planned.result.callType.getOrElse(ErasedType.Unknown))
-    
     // calls `fun` with possibly remapped `args`
     def mkCall(fun: Path, args: Ls[LocalVarSymbol])(k: Result => Block): Block =
       applyArgs(args.map(s => Arg(N, s.asPath))): args2 =>
@@ -440,15 +430,13 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
       case c @ Call(fun @ FunRef(f, _), argss) if pre.res.funSymToFunDefn.get(f).exists(_.params.isEmpty) =>
         // The selection names the getter and carries its receiver. Retype the read itself so the
         // signature describes its new result. Calls with arguments apply the value the getter returns.
-        def withGetter(path: Path): Block = applyArgss(argss): args =>
-          val sig = if argss.nonEmpty then c.signature
-            else if path.targetSymbol.contains(f) then signatureInPlace(f).erasure
-            else Call.signatureOf(path, 0)
-          k(if (path is fun) && (args is argss) && (sig is c.signature) then c
-            else c.copy(path, args)(sig, c.metadata, c.toLoc))
-        fun match
-          case PolyFnRef(copy) => withGetter(copy)
-          case _ => super.applyPath(fun)(withGetter)
+        applyPath(fun): path =>
+          applyArgss(argss): args =>
+            val sig = if argss.nonEmpty then c.signature
+              else if path.targetSymbol.contains(f) then signatureInPlace(f).erasure
+              else Call.signatureOf(path, 0)
+            k(if (path is fun) && (args is argss) && (sig is c.signature) then c
+              else c.copy(path, args)(sig, c.metadata, c.toLoc))
       case c @ Call(FunRef(f, _), _) => super.applyResult(c):
         case call2 @ Call(FunRef(f2, _), argss2) =>
           // In-place rewrites keep the definition symbol. Its current IR signature can
@@ -512,10 +500,6 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
           applyPath(from)(k)
         else
           super.applyPath(s)(k)
-      case ref @ FunRef(f, _) => retypedResultInPlace(f) match
-        // Like the result of a call to a function retyped in place, the read records its planned type.
-        case S(tpe) => super.applyPath(ref)(read => k(Cast.path(read, tpe, check = false)(ref.toLoc)))
-        case N => super.applyPath(ref)(k)
       case _ => super.applyPath(p)(k)
     
     // a free block member symbol of an extracted part becomes an `fv_` parameter, which needs a different node

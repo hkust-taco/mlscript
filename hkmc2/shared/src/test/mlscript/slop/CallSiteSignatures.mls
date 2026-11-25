@@ -120,6 +120,7 @@ applyVariadic(count)
 // Reading a getter is a call of the selection without argument lists, with the getter's signature.
 :sir
 :siret
+:checkIR
 :expect 42
 class Box with
   fun value: Int = 42
@@ -169,6 +170,7 @@ private fun newDate() = new Date()
 // A call with arguments of a getter's selection applies the getter's result, as described by its declared type.
 :sir
 :siret
+:checkIR
 :expect 42
 class Adder with
   fun add: Int -> Int = x => x + 1
