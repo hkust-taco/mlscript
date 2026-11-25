@@ -1,0 +1,154 @@
+:.
+
+// Without eager resolution, an assignment to a record field is an error when no value that reaches it has
+// the field mutable (see strictres/MixedRecords.mls for strict resolution, and UnsafeFieldAssignments.mls
+// for the fields of classes).
+
+:ge
+let fixed = {count: 0, label: "count"}
+set fixed.count = 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'count'
+//│ ║  l.+2: 	set fixed.count = 1
+//│ ║        	         ^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	let fixed = {count: 0, label: "count"}
+//│ ╙──      	             ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ fixed = {count: 0, label: "count"}
+
+:ge
+let mixed = {mut count: 0, label: "count"}
+set mixed.label = "changed"
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'label'
+//│ ║  l.+2: 	set mixed.label = "changed"
+//│ ║        	         ^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	let mixed = {mut count: 0, label: "count"}
+//│ ╙──      	                           ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ mixed = {count: 0, label: "count"}
+
+:expect 1
+let counter = {mut count: 0, label: "count"}
+set counter.count = 1
+counter.count
+//│ = 1
+//│ counter = {count: 1, label: "count"}
+
+// The assignment is accepted if one of the records that reach it has the field mutable. The other record
+// below is frozen, and ignores it.
+:expect [1, 0]
+private fun bump(record) = set record.count = record.count + 1
+let bumped = {mut count: 0}
+let unchanged = {count: 0}
+bump(bumped)
+bump(unchanged)
+[bumped.count, unchanged.count]
+//│ = [1, 0]
+//│ bumped = {count: 1}
+//│ unchanged = {count: 0}
+
+// It is rejected if none of them does.
+:ge
+private fun bumpFixed(record) = set record.count = record.count + 1
+bumpFixed({count: 0})
+bumpFixed({count: 1, label: "one"})
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'count'
+//│ ║  l.+1: 	private fun bumpFixed(record) = set record.count = record.count + 1
+//│ ║        	                                          ^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+2: 	bumpFixed({count: 0})
+//│ ╙──      	           ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// The writable receiver lets the setter compile. On the other receiver, `mut count` keeps the
+// record unfrozen, so the write replaces `inner` even though resolution still sees its initializer.
+:breakme
+:e
+private fun replaceInner(target) = set target.inner = {b: 2}
+private fun readAfterWrite() =
+  let readOnly = {mut count: 0, inner: {a: 1}}
+  let writable = {mut inner: {a: 1}}
+  replaceInner(writable)
+  replaceInner(readOnly)
+  [readOnly.inner.a]
+readAfterWrite()
+//│ = [undefined]
+
+// A mutable copy reuses the field of the record that it copies. The assignment below thus has a single
+// target, which one of the two records has read-only.
+:ge // TODO: allow?
+private fun bumpCopies(record) = set record.count = record.count + 1
+let original = {count: 0}
+let copied = mut {...original}
+bumpCopies(original)
+bumpCopies(copied)
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'count'
+//│ ║  l.+1: 	private fun bumpCopies(record) = set record.count = record.count + 1
+//│ ║        	                                           ^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+2: 	let original = {count: 0}
+//│ ╙──      	                ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ copied = {count: 0}
+//│ original = {count: 0}
+
+// The components of a union of record types follow the same rule.
+private fun writeEither(target: {mut count: Int} | {count: Int}) = set target.count = 1
+
+:ge
+private fun writeNeither(target: {count: Int} | {count: Int, label: Str}) = set target.count = 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'count'
+//│ ║  l.+1: 	private fun writeNeither(target: {count: Int} | {count: Int, label: Str}) = set target.count = 1
+//│ ║        	                                                                                      ^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	private fun writeNeither(target: {count: Int} | {count: Int, label: Str}) = set target.count = 1
+//│ ╙──      	                                  ^^^^^
+
+// A dynamic value permits the assignment too.
+:expect 1
+private fun partlyDynamic(record: dyn, choose: Bool) =
+  let target = if choose then record else {count: 0}
+  set target.count = 1
+let flexible = mut {count: 0}
+partlyDynamic(flexible, true)
+flexible.count
+//│ = 1
+//│ flexible = {count: 1}
+
+
+#lang(eagerResolution: true)
+
+// With eager resolution, every value that reaches the assignment must have the field mutable.
+:ge
+private fun bumpEagerly(record) = set record.count = record.count + 1
+bumpEagerly({mut count: 0})
+bumpEagerly({count: 0})
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'count'
+//│ ║  l.+1: 	private fun bumpEagerly(record) = set record.count = record.count + 1
+//│ ║        	                                            ^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+3: 	bumpEagerly({count: 0})
+//│ ╙──      	             ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:ge
+private fun writeEitherEagerly(target: {mut count: Int} | {count: Int}) = set target.count = 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'count'
+//│ ║  l.+1: 	private fun writeEitherEagerly(target: {mut count: Int} | {count: Int}) = set target.count = 1
+//│ ║        	                                                                                    ^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	private fun writeEitherEagerly(target: {mut count: Int} | {count: Int}) = set target.count = 1
+//│ ╙──      	                                                           ^^^^^
+
+// A dynamic value does not hide a record that has the field read-only.
+:ge
+private fun partlyDynamicEagerly(record: dyn, choose: Bool) =
+  let target = if choose then record else {count: 0}
+  set target.count = 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'count'
+//│ ║  l.+3: 	  set target.count = 1
+//│ ║        	            ^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+2: 	  let target = if choose then record else {count: 0}
+//│ ╙──      	                                           ^^^^^

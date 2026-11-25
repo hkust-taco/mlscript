@@ -463,7 +463,8 @@ enum MemberLookup:
   // type arguments; they never authorize reading an implementation's value flow.
   case Declared(member: BlockMemberSymbol, bindings: Map[VarSymbol, TypeArgument], marks: Ls[Marks], annotation: Opt[Term])
   // A structural field already has its lexical bindings and intersection applied.
-  case Typed(field: RcdField, tpe: TypeArgument, marks: Ls[Marks])
+  // It is `mutable` if its record type lets values be assigned to it (see RecordTypeShape).
+  case Typed(field: RcdField, tpe: TypeArgument, mutable: Bool, marks: Ls[Marks])
   // A preceding spread can place several different fields at the same index.
   case Indexed(fields: Ls[TupleShape.Fixed], marks: Ls[Marks])
   case Dynamic(marks: Ls[Marks])
@@ -480,7 +481,7 @@ enum MemberLookup:
     case Private(own, owner, inherited) => Private(own.withMarks(marks), owner, inherited.withMarks(marks))
     case Found(member, inner) => Found(member, inner ::: marks)
     case Declared(member, bindings, inner, annotation) => Declared(member, bindings, inner ::: marks, annotation)
-    case Typed(field, tpe, inner) => Typed(field, tpe, inner ::: marks)
+    case typed: Typed => typed.copy(marks = typed.marks ::: marks)
     case Indexed(fields, inner) => Indexed(fields, inner ::: marks)
     case Dynamic(inner) => Dynamic(inner ::: marks)
     case _ => this
@@ -687,7 +688,7 @@ final class RecordTypeShape(val fields: Map[MemberKey, TypeArgument], val mutabl
     val keys = Option.when(fields.contains(name))(name).toList ::: (name match
       case name: Str => aliases.getOrElse(name, Set.empty).toList.sortBy(_.name)
       case _ => Nil)
-    MemberLookup.all(keys.map(key => MemberLookup.Typed(declarations(key), fields(key), Nil)))
+    MemberLookup.all(keys.map(key => MemberLookup.Typed(declarations(key), fields(key), mutable(key), Nil)))
 
 /** A conjunction exposes members supplied by any component, including mixtures of nominal and
   * structural interfaces. For example, `Iterator[T] & Iterable[T]` supplies `next`
@@ -1300,11 +1301,13 @@ object TupleShape:
     TupleShape(tuple.source, Rest(parent, segments) :: Nil)(resolver)
 
 
-/** A field found by record member lookup. Spreading r into `mut {...r}` reuses
-  * its field symbols, but writes can change the copied values even if r is immutable.
-  * Store mutability on this lookup result: reads through the mutable copy also return
-  * the values assigned to the field, while reads from an immutable r can only return its
-  * initializer. A copy reads the values that its source holds when the copy is made.
+/** A record field found by member lookup. `mutable` tells whether a read through this lookup returns
+  * the values assigned to the field in addition to its initializer. This holds when the record declares
+  * the field `mut` or is mutable as a whole, and when the record spreads such a record: a spread copies
+  * the value that the field holds at that point.
+  * The lookup carries this flag because one field can be read both ways. `mut {...r}` reuses the fields
+  * of `r`, so assignments through that copy reach a field of `r`, while reads through an immutable `r`
+  * can only return its initializer.
   */
 final case class RecordMember(field: RcdField, mutable: Bool)
 
@@ -1325,7 +1328,7 @@ final class RecordShape private (val source: Term.Rcd, val elements: Ls[RecordSh
       case Nil => Missing
       case RecordShape.Field(field) :: rest => field.key match
         case S(key) =>
-          if key == name then Found(RecordMember(field, source.mut), Nil) else loop(rest)
+          if key == name then Found(RecordMember(field, source.mut || field.mut), Nil) else loop(rest)
         case _ => unknown(field.field)
       case RecordShape.Unknown(shape) :: _ => Unknown(Uncertainty.RecordOverwrite, shape.fromPublicInterface, shape.provenance)
       case RecordShape.Dynamic(marks) :: _ => Dynamic(marks)
@@ -1340,24 +1343,29 @@ final class RecordShape private (val source: Term.Rcd, val elements: Ls[RecordSh
           case Missing => N
           case Found(member: RecordMember, inner) =>
             S(Found(member.copy(mutable = member.mutable || source.mut), inner ::: marks :: Nil))
-          case Found(_: BlockMemberSymbol, _) | _: Declared | Typed(_, _, _) | Indexed(_, _) | Private(_, _, _) =>
+          case Found(_: BlockMemberSymbol, _) | _: Declared | _: Typed | Indexed(_, _) | Private(_, _, _) =>
             // Record spreads recursively look up RecordShapes, which only create RecordMembers.
             lastWords("Record lookup returned a nominal member")
         spread(shape.getMember(name)).getOrElse(loop(rest))
     loop(elements.reverse).instantiate(instances)
 
-  /** Visit the fields a client can read from this record, with the same mutability, scope path,
-    * and type arguments as a selection. A computed key can leave any earlier field visible.
+  /** Visit the fields that a client can read from this record. `visit` receives each field with the
+    * mutability, scope path, and type arguments of a selection of it, and whether the client can also
+    * assign it through this record. A spread copies the values of its source's fields, so this record
+    * alone determines which fields are assignable: all of them if it is mutable as a whole, and
+    * otherwise those it declares `mut` itself. A computed key can leave any earlier field visible.
     */
   def foreachReadableField(marks: Ls[Marks], scope: TypeSubstitution)
-      (visit: (RecordMember, Ls[Marks], TypeSubstitution) => Unit): Unit =
+      (visit: (RecordMember, Bool, Ls[Marks], TypeSubstitution) => Unit): Unit =
     val shadowed = scala.collection.mutable.Set.empty[MemberKey]
     val visited = scala.collection.mutable.Set.empty[(RecordShape, Bool, Ls[Marks], TypeSubstitution)]
     def fields(record: RecordShape, mutableRead: Bool, path: Ls[Marks], bindings: TypeSubstitution): Unit =
       // A repeated spread in the same context can only repeat fields or keys already visited.
       if visited.add((record, mutableRead, path, bindings)) then record.elements.reverseIterator.foreach:
         case RecordShape.Field(field) if field.key.forall(shadowed.add) =>
-          visit(RecordMember(field, mutableRead), path, bindings)
+          // A field reached through a spread is a copy, which does not keep the `mut` of its declaration.
+          val writable = source.mut || ((record is this) && field.mut)
+          visit(RecordMember(field, mutableRead || field.mut), writable, path, bindings)
         case RecordShape.Spread(inner, mark) =>
           fields(inner, mutableRead || inner.source.mut, if mark == NoMarks then path else mark :: path,
             bindings.withOverrides(inner.instances))

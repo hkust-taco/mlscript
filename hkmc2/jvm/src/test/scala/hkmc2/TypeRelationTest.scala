@@ -353,7 +353,7 @@ class TypeRelationTest extends AnyFunSuite:
       import h.given
       val (argument, at) = h.parameter("Argument")
       val (element, et) = h.parameter("Element")
-      val field = RcdField.signature(Term.Lit(Tree.StrLit("value")), Term.UnitVal(), N)
+      val field = RcdField.signature(Term.Lit(Tree.StrLit("value")), Term.UnitVal(), mut = false, symbol = N)
       val source: Term.Rcd = Term.Rcd(false, List(field))
       val record = RecordTypeShape(Map("value" -> TypeArgument(h.tpe(TypeShape.Bottom), et)),
         Set.empty, Map.empty)(source, Map("value" -> field))
@@ -381,7 +381,7 @@ class TypeRelationTest extends AnyFunSuite:
       val fields = ArrayBuffer.empty[TermShape]
       returned.listen: value =>
         value.getMember("value") match
-          case MemberLookup.Typed(_, tpe, marks) =>
+          case MemberLookup.Typed(tpe = tpe, marks = marks) =>
             h.resolver.listenInstanceViews(h.resolver.instanceShape(h.resolver.transportType(tpe.output, marks)))(fields += _)
           case _ => fail("Expected a declared record field")
       assert(fields.isEmpty)
@@ -430,8 +430,8 @@ class TypeRelationTest extends AnyFunSuite:
       value.typeInterpretation = S(element.resolution)
       val next = Term.UnitVal()
       next.typeInterpretation = S(resolution)
-      val valueField = RcdField.signature(Term.Lit(Tree.StrLit("value")), value, N)
-      val nextField = RcdField.signature(Term.Lit(Tree.StrLit("next")), next, N)
+      val valueField = RcdField.signature(Term.Lit(Tree.StrLit("value")), value, mut = false, symbol = N)
+      val nextField = RcdField.signature(Term.Lit(Tree.StrLit("next")), next, mut = false, symbol = N)
       val source: Term.Rcd = Term.Rcd(false, List(valueField, nextField))
       resolution.publish(TypeShape.Record(source, List(valueField -> TypeArgumentResolution.Type(element.resolution),
         nextField -> TypeArgumentResolution.Type(resolution))))
@@ -863,7 +863,7 @@ class TypeRelationTest extends AnyFunSuite:
     val left = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
     val right = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
     def recursive(resolution: TypeResolution): Unit =
-      val next = RcdField.signature(Term.Lit(Tree.StrLit("next")), Term.UnitVal(), N)
+      val next = RcdField.signature(Term.Lit(Tree.StrLit("next")), Term.UnitVal(), mut = false, symbol = N)
       val source: Term.Rcd = Term.Rcd(false, List(next))
       resolution.publish(TypeShape.Record(source, List(next -> TypeArgumentResolution.Type(resolution))))
     recursive(left)

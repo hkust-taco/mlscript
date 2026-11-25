@@ -228,7 +228,7 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
       LetDecl(copy, annotations.map(annotation))(source.toLoc)
     // A record property's identity is not a lexical binding. Its value may bind
     // locals, but selecting this property must still use the resolved field key.
-    case f @ RcdField(field, rhs, sym) => located(f, RcdField(term(field), term(rhs), sym)(f.key))
+    case f @ RcdField(field, rhs, sym) => located(f, RcdField(term(field), term(rhs), sym)(f.mut, f.key))
     case s @ RcdSpread(rcd) => located(s, RcdSpread(term(rcd)))
     case DefineVar(sym, rhs) =>
       val copy: LocalSymbol | TermSymbol = sym match
@@ -486,6 +486,7 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
     def copyNewResolution(source: NewResolvable, copy: NewResolvable): copy.type =
       copy.resolvedTargets = source.resolvedTargets.map(_.subst)
       copy.keyAccess = source.keyAccess.map(_.cloned)
+      copy.readOnlyFields = source.readOnlyFields.map(_.subst)
       copy.isErroneous = source.isErroneous
       copy
     // Keep class qualifiers typed as selections while sharing all clone metadata copying.

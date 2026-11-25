@@ -182,7 +182,7 @@ fun parameter(x) = @unsafe set x = 1
 
 #lang(strictResolution: false)
 
-// All known candidates must permit a write, even when lookup is lenient.
+// Without eager resolution, a write is rejected if no known candidate permits it.
 :ge
 class Other(val value)
 fun ambiguous(a: Public | Other) = set a.value = 1
@@ -194,9 +194,43 @@ fun ambiguous(a: Public | Other) = set a.value = 1
 //│ ╙──      	                ^^^^^
 
 
-// A dynamic alternative must not hide a known immutable field.
-:ge
+// One candidate that permits the write suffices.
+:expect 1
+class Writable(mut val value)
+fun mixedCandidates(a: Public | Writable) = set a.value = 1
+let writable = new Writable(0)
+mixedCandidates(writable)
+writable.value
+//│ = 1
+//│ writable = Writable(1)
+
+// So does a dynamic alternative.
+:expect 1
 fun partlyDynamic(a: Public, b: dyn, choose: Bool) =
+  let target = if choose then a else b
+  set target.value = 1
+let dynamicCell = new Writable(0)
+partlyDynamic(new Public(0), dynamicCell, false)
+dynamicCell.value
+//│ = 1
+//│ dynamicCell = Writable(1)
+
+
+#lang(eagerResolution: true)
+
+// With eager resolution, every known candidate must permit the write.
+:ge
+fun eagerCandidates(a: Public | Writable) = set a.value = 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'value'
+//│ ║  l.+1: 	fun eagerCandidates(a: Public | Writable) = set a.value = 1
+//│ ║        	                                                 ^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.XX: 	class Public(val value)
+//│ ╙──      	                 ^^^^^
+
+// A dynamic alternative does not hide a known immutable field.
+:ge
+fun eagerPartlyDynamic(a: Public, b: dyn, choose: Bool) =
   let target = if choose then a else b
   set target.value = 1
 //│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'value'
