@@ -1757,10 +1757,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       setupTerm("Builtin", Value.Lit(Tree.StrLit(sym.nme))(N) :: Nil)(k)
     case Resolved(Ref(sym), disamb) =>
       sym match
-        case sym: BlockMemberSymbol => k(loweringCtx(sym.asMemberRef(disamb)))
+        case sym: BlockMemberSymbol => k(getterRead(loweringCtx(sym.asMemberRef(disamb))))
         case sym: SimpleSymbol => k(sym.asSimpleRef)
         case sym => lastWords(s"Unexpected symbol kind ${sym.getClass.getSimpleName}: $sym")
-    case Ref(sym: ValueSymbol) => k(loweringCtx(sym.asPath))
+    case Ref(sym: ValueSymbol) => k(getterRead(loweringCtx(sym.asPath)))
     case SimpleRef(sym: LocalVarSymbol) => k(loweringCtx(sym.asSimpleRef))
     case Ref(sym) => lastWords(s"Unexpected symbol kind ${sym.getClass.getSimpleName}: $sym")
     case SynthSel(Ref(sym: ModuleOrObjectSymbol), name) => // Module/object cross-stage references
