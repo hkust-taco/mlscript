@@ -708,8 +708,8 @@ object RcdField:
   def copied(origin: RcdField, record: Term.Rcd)(using State): RcdField =
     derived(origin, RecordFieldSymbol.Origin.Copied(origin.tsym), record.mut, record.toLoc)
   /** Create the field that an intersection of record types has for the fields `left` and `right`, which its
-    * components declare under the same key. It is mutable if one of the two is. Its declaration is that of
-    * `left`, which lookup already used for such a field before the intersection had a field of its own. */
+    * components declare under the same key. Either component can make the field writable.
+    * The left declaration supplies its runtime representation. */
   def merged(left: RcdField, right: RcdField)(using State): RcdField =
     derived(left, RecordFieldSymbol.Origin.Merged(left.tsym, right.tsym), left.tsym.mutable || right.tsym.mutable,
       left.tsym.toLoc)

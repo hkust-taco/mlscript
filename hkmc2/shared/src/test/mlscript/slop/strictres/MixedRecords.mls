@@ -191,7 +191,7 @@ overwriteFrozen()
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Eager resolution rejects an assignment if any of the records that reach it leaves the field read-only.
-// The mutable copy below reuses the field of the record that it copies, so the assignment has one target.
+// The source and its mutable copy share a field declaration, but only the copy permits the write.
 :ge
 private fun bump(record) = set record.count = record.count + 1
 private fun bumpCopy() =
@@ -369,7 +369,7 @@ private fun assignNestedCopy() =
 //│ ║  l.+2: 	  let declared = {mut count: 0}
 //│ ╙──      	                      ^^^^^
 
-// A record and its copy have the same member, so a selection that both reach has one target under strict
+// A record and its copy share the original field declaration, so a selection that both reach has one target under strict
 // resolution, and an assignment that both permit is accepted.
 :expect [2, 1]
 private fun count(record) = record.count
