@@ -761,7 +761,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           (msg"This spread copies the field as read-only:" -> field.toLoc) ::
             (msg"The copied field is defined here:" -> field.root.toLoc) :: Nil
         // The components of an intersection of record types each declare the field.
-        case RecordFieldSymbol.Origin.Merged(left, right) => defined(left) ::: defined(right)
+        case RecordFieldSymbol.Origin.Merged(fields) => fields.flatMap(defined)
         case RecordFieldSymbol.Origin.Declared => defined(field)
       case _ => defined(diagnostic)
     fail:

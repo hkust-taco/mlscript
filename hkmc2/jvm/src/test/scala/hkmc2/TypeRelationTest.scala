@@ -356,7 +356,7 @@ class TypeRelationTest extends AnyFunSuite:
       val field = RcdField.signature(Term.Lit(Tree.StrLit("value")), Term.UnitVal(), mut = false, mutableRecord = false, symbol = N)
       val source: Term.Rcd = Term.Rcd(false, List(field))
       val record = RecordTypeShape(Map("value" -> TypeArgument(h.tpe(TypeShape.Bottom), et)),
-        Set.empty, Map.empty)(source, Map("value" -> field))
+        Set.empty, Map.empty)(source, Vector(RecordTypeShape.Declaration(source, Map("value" -> field))))
       val nullable = h.tpe(TypeShape.Union(at.resolution, h.tpe(TypeShape.Unit).resolution))
       val boundary = ResolutionBoundary(TermSymbol(Fun, N, Tree.Ident("forward")))
       val sites = List.fill(count)(FlowSymbol.app())

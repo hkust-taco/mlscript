@@ -460,15 +460,17 @@ private fun writeNone(target: {count: Int, label: Str} & {count: Int}) = set tar
 //│ ║  l.+1: 	private fun writeNone(target: {count: Int, label: Str} & {count: Int}) = set target.count = 3
 //│ ╙──      	                                                          ^^^^^
 
-// Both alternatives get their count field from the same two declarations, so the read and write are unambiguous.
+// Reordering and regrouping the same field declarations in a union keeps the read and write unambiguous.
 :expect 9
 type Counter = {mut count: Int}
 type LabelledCounter = {count: Int, label: Str}
-type EitherCounter = (Counter & LabelledCounter & {left: Int}) | (Counter & LabelledCounter & {right: Int})
+type TimedCounter = {count: Int, time: Int}
+type EitherCounter = ((Counter & LabelledCounter) & TimedCounter & {left: Int})
+  | (TimedCounter & (LabelledCounter & Counter) & {right: Int})
 private fun updateCount(target: EitherCounter) =
   set target.count = 9
   target.count
-updateCount({mut count: 0, label: "count", left: 1})
+updateCount({mut count: 0, label: "count", time: 0, left: 1})
 //│ = 9
 
 // A record type that requires a `mut` field is not checked against the records that reach it. A union

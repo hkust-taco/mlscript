@@ -36,6 +36,9 @@ sealed trait Shape extends ShapeEvent:
   final def diagnostic(message: Message): Ls[(Message, Opt[Loc])] = this match
     case value: TermShape => value.applicationHead._1 match
       case view: NominalInstanceView => view.provenance.diagnostic(message, view.annotation.flatMap(_.toLoc).orElse(toLoc))
+      case record: RecordTypeShape if record.components.sizeIs > 1 =>
+        (message -> record.toLoc) :: record.components.toList.map(component =>
+          msg"This record type contributes to the intersection." -> component.source.toLoc)
       case view: ContextualShape => view.source.diagnostic(message)
       case view: SpecializedShape => view.declaration.diagnostic(message)
       case unknown: UnknownValueShape => unknown.provenance.diagnostic(message, N)
@@ -463,7 +466,7 @@ enum MemberLookup:
   // type arguments; they never authorize reading an implementation's value flow.
   case Declared(member: BlockMemberSymbol, bindings: Map[VarSymbol, TypeArgument], marks: Ls[Marks], annotation: Opt[Term])
   // A structural field already has its lexical bindings and intersection applied.
-  case Typed(field: RcdField, tpe: TypeArgument, marks: Ls[Marks])
+  case Typed(field: RecordFieldSymbol, tpe: TypeArgument, marks: Ls[Marks])
   // A preceding spread can place several different fields at the same index.
   case Indexed(fields: Ls[TupleShape.Fixed], marks: Ls[Marks])
   case Dynamic(marks: Ls[Marks])
@@ -677,7 +680,8 @@ class BaseShape(val defn: ClassLikeDef, val ext: Opt[TermShape]) extends CoreHea
   * part of the interface: values constrained by it admit their inputs as writes.
   */
 final class RecordTypeShape(val fields: Map[MemberKey, TypeArgument], val mutable: Set[MemberKey], val aliases: Map[Str, Set[SymbolKey]])(
-    val source: Term.Rcd, val declarations: Map[MemberKey, RcdField]) extends CoreHeadShape:
+    val source: Term, val components: Vector[RecordTypeShape.Declaration]) extends CoreHeadShape:
+  def declarations(key: MemberKey): Vector[RcdField] = components.iterator.flatMap(_.fields.get(key)).distinctBy(_.tsym).toVector
   def describe: Str = "record type"
   override def toString: Str = s"RecordTypeShape($fields)"
   def toLoc: Opt[Loc] = source.toLoc
@@ -687,7 +691,11 @@ final class RecordTypeShape(val fields: Map[MemberKey, TypeArgument], val mutabl
     val keys = Option.when(fields.contains(name))(name).toList ::: (name match
       case name: Str => aliases.getOrElse(name, Set.empty).toList.sortBy(_.name)
       case _ => Nil)
-    MemberLookup.all(keys.map(key => MemberLookup.Typed(declarations(key), fields(key), Nil)))
+    MemberLookup.all(keys.map(key => MemberLookup.Typed(rctx.recordTypeField(source, key, declarations(key)), fields(key), Nil)))
+
+object RecordTypeShape:
+  /** The fields declared by one written record type, before substitution or intersection with other records. */
+  final case class Declaration(source: Term.Rcd, fields: Map[MemberKey, RcdField])
 
 /** A conjunction exposes members supplied by any component, including mixtures of nominal and
   * structural interfaces. For example, `Iterator[T] & Iterable[T]` supplies `next`

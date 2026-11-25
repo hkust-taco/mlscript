@@ -322,7 +322,7 @@ final class NewResolverState(val owner: Elaborator.State):
   // consumers through the original graph of the record literal or record type that has them.
   val copiedFields: Cache[(Rcd, RcdSpread, RecordFieldSymbol), RcdField] =
     new Cache(_.copiedFields, identity)
-  val mergedFields: Cache[(RecordFieldSymbol, RecordFieldSymbol), RcdField] =
+  val mergedFields: Cache[Set[RecordFieldSymbol], RecordFieldSymbol] =
     new Cache(_.mergedFields, identity)
   val aggregateProducers: Seen[Tup | CtxTup | Rcd] =
     new Seen(_.aggregateProducers)
@@ -739,16 +739,16 @@ final class ResolutionContext private[semantics] (
     */
   def copiedField(record: Term.Rcd, spread: RcdSpread, origin: RcdField): RcdField =
     canonical(record, _.copiedFields, (record, spread, origin.tsym)):
-      derivedField(origin, RcdField.copied(origin, record.mut, spread)(using owner))
-  /** The field that an intersection has for `left` and `right`, the fields that two of its record types declare
-    * under the same key (see RcdField.merged). `source` is the record type that declares `left`.
-    */
-  def mergedField(source: Term.Rcd, left: RcdField, right: RcdField): RcdField =
-    canonical(source, _.mergedFields, (left.tsym, right.tsym))(derivedField(left, RcdField.merged(left, right)(using owner)))
-  // A derived field is read where the field that it takes its declaration from is written.
-  private def derivedField(model: RcdField, field: RcdField): RcdField =
-    definitionBindersOf(model.tsym).foreach(state.lexicalTypeBinders.update(field.tsym, _)(using state.context))
-    field
+      val copy = RcdField.copied(origin, record.mut, spread)(using owner)
+      // A copied field's declaration is read in the scope where its original was written.
+      definitionBindersOf(origin.tsym).foreach(state.lexicalTypeBinders.update(copy.tsym, _)(using state.context))
+      copy
+  /** The property denoted by `key` in a structural record view. Intersections with the same declarations
+    * denote the same property regardless of their order or grouping. */
+  def recordTypeField(source: Term, key: MemberKey, fields: Vector[RcdField]): RecordFieldSymbol =
+    if fields.sizeIs == 1 then fields.head.tsym else
+      val declarations = fields.iterator.map(_.tsym).toList
+      canonical(source, _.mergedFields, declarations.toSet)(RcdField.mergedSymbol(key, declarations, source)(using owner))
   def canonicalInstance(tpe: DeclaredType)(make: => InstanceShape): InstanceShape =
     canonical(tpe.resolution, _.instanceShapes, tpe)(shapeView(tpe.instances)(make))
   def spreadFlow(spread: Term)(make: => IterationFlow): IterationFlow =

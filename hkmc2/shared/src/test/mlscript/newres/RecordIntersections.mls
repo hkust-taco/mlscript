@@ -31,8 +31,14 @@ fun missing(value: Choice) = value.left
 //│ ║  l.+1: 	fun missing(value: Choice) = value.left
 //│ ║        	                             ^^^^^^^^^^
 //│ ╟── Record type does not contain member 'left'
+//│ ║  l.+1: 	fun missing(value: Choice) = value.left
+//│ ║        	                   ^^^^^^
+//│ ╟── This record type contributes to the intersection.
 //│ ║  l.XX: 	type Choice = ({left: Str} | {right: Int}) & {tag: Str, common: Int}
-//│ ╙──      	                              ^^^^^^^^^^
+//│ ║        	                              ^^^^^^^^^^
+//│ ╟── This record type contributes to the intersection.
+//│ ║  l.XX: 	type Choice = ({left: Str} | {right: Int}) & {tag: Str, common: Int}
+//│ ╙──      	                                              ^^^^^^^^^^^^^^^^^^^^^
 
 // Common fields may themselves contain unions of record intersections.
 :expect "YES"
@@ -64,7 +70,11 @@ hidden(a: 1, b: 2, extra: 3)
 //│ ║  l.+1: 	fun hidden(value: A & B) = value.extra
 //│ ║        	                           ^^^^^^^^^^^
 //│ ╟── Record type does not contain member 'extra'
+//│ ╟── This record type contributes to the intersection.
 //│ ║  l.XX: 	type A = {a: Int}
+//│ ║        	          ^^^^^^
+//│ ╟── This record type contributes to the intersection.
+//│ ║  l.XX: 	type B = {b: Int}
 //│ ╙──      	          ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

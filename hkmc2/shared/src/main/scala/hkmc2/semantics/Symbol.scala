@@ -590,11 +590,12 @@ class ClassCtorSymbol(
 final class RecordFieldSymbol(id: Tree.Ident, val mutable: Bool, val origin: RecordFieldSymbol.Origin)(using State)
     extends TermSymbol(syntax.RecordField, N, id):
   import RecordFieldSymbol.Origin
+  def member: BlockMemberSymbol = defn.get.bsym
   /** The fields that this one derives from, if resolution created it. */
   def origins: Ls[RecordFieldSymbol] = origin match
     case Origin.Declared => Nil
     case Origin.Copied(field) => field :: Nil
-    case Origin.Merged(left, right) => left :: right :: Nil
+    case Origin.Merged(fields) => fields
   /** The declared field whose values a copy holds, and the field itself if it is no copy. */
   def root: RecordFieldSymbol = origin match
     case Origin.Copied(field) => field.root
@@ -602,13 +603,12 @@ final class RecordFieldSymbol(id: Tree.Ident, val mutable: Bool, val origin: Rec
   override def isErased: Bool = origin match
     case Origin.Declared => super.isErased
     case Origin.Copied(field) => field.isErased
-    case Origin.Merged(left, right) => left.isErased && right.isErased
+    case Origin.Merged(fields) => fields.forall(_.isErased)
   private def fieldErasure(declared: => Opt[ErasedValueType | ErasedCallableSignature])
       (read: RecordFieldSymbol => Opt[ErasedValueType]): Opt[ErasedValueType | ErasedCallableSignature] = origin match
     case Origin.Declared => declared
     case Origin.Copied(field) => read(field)
-    case Origin.Merged(left, right) =>
-      S(ErasedType.Intersection(read(left).getOrElse(ErasedType.Unknown) :: read(right).getOrElse(ErasedType.Unknown) :: Nil))
+    case Origin.Merged(fields) => S(ErasedType.Intersection(fields.map(read(_).getOrElse(ErasedType.Unknown))))
   override def sourceErasure(using codegen.Erasure): Opt[ErasedValueType | ErasedCallableSignature] =
     fieldErasure(super.sourceErasure)(_.sourceErasedType)
   override def irErasure: Opt[ErasedValueType | ErasedCallableSignature] =
@@ -626,9 +626,9 @@ object RecordFieldSymbol:
       * `mut {...r}` can thus assign a field that `r` has immutable, and `{...r}` cannot assign a field that `r`
       * has mutable. */
     case Copied(field: RecordFieldSymbol)
-    /** An intersection of record types has the field for `left` and `right`, which its components declare
-      * under the same key. It is mutable if one of them is. */
-    case Merged(left: RecordFieldSymbol, right: RecordFieldSymbol)
+    /** The declarations of this key in the intersected record types, in source traversal order for diagnostics.
+      * Each distinct declaration contributes its erasure and any of them can make the field mutable. */
+    case Merged(fields: Ls[RecordFieldSymbol])
 
 
 sealed trait CtorSymbol extends Symbol:

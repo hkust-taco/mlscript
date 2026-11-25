@@ -705,26 +705,30 @@ object RcdField:
     * receiving record, whose mutability determines whether the copy can be assigned.
     * Resolution reads its initial value through the field's `root`, so its definition has no body. */
   def copied(origin: RcdField, mutableRecord: Bool, spread: RcdSpread)(using State): RcdField =
-    derived(origin, RecordFieldSymbol.Origin.Copied(origin.tsym), mutableRecord, spread.toLoc)
-  /** Create the field that an intersection of record types has for the fields `left` and `right`, which its
-    * components declare under the same key. Either component can make the field writable.
-    * Its runtime representation satisfies both declarations. */
-  def merged(left: RcdField, right: RcdField)(using State): RcdField =
-    derived(left, RecordFieldSymbol.Origin.Merged(left.tsym, right.tsym), left.tsym.mutable || right.tsym.mutable,
-      left.tsym.toLoc)
-  /** Create a field that resolution derives from others as `origin` tells, with the key, the written bounds
-    * and the declared read type of `model`, one of them. */
-  private def derived(model: RcdField, origin: RecordFieldSymbol.Origin, mutable: Bool, loc: Opt[Loc])(using State): RcdField =
-    val id = new Tree.Ident(model.sym.nme)
+    val definition = origin.tsym.defn.get
+    val tsym = derivedSymbol(origin.sym.nme, RecordFieldSymbol.Origin.Copied(origin.tsym), mutableRecord,
+      definition.sign, definition.annotations, spread.toLoc)
+    RcdField(origin.field, origin.rhs, tsym.member)(false, origin.key)
+  /** Create the shared property of record types that declare the same runtime key. Its bounds come from
+    * all the declarations. A symbol key retains its runtime access path even if the source names differ. */
+  def mergedSymbol(key: MemberKey, declarations: Ls[RecordFieldSymbol], source: Term)(using State): RecordFieldSymbol =
+    require(declarations.sizeIs >= 2)
+    val (name, annotations) = key match
+      case name: Str => (name, Nil)
+      case key: SymbolKey => (key.name, Annot.JsSymbol(key)(key.term.toLoc) :: Nil)
+    derivedSymbol(name, RecordFieldSymbol.Origin.Merged(declarations), declarations.exists(_.mutable),
+      N, annotations, source.toLoc)
+  private def derivedSymbol(name: Str, origin: RecordFieldSymbol.Origin, mutable: Bool,
+      signature: Opt[Term], annotations: Ls[Annot], loc: Opt[Loc])(using State): RecordFieldSymbol =
+    val id = new Tree.Ident(name)
     id.withLoc(loc)
-    val sym = new BlockMemberSymbol(model.sym.nme, Nil)
+    val sym = new BlockMemberSymbol(name, Nil)
     val tsym = new RecordFieldSymbol(id, mutable, origin)
     sym.tsym = S(tsym)
-    val definition = model.tsym.defn.getOrElse(lastWords(s"Record field '${model.sym.nme}' has no definition"))
-    tsym.defn = S(TermDefinition(RecordField, sym, tsym, Nil, N, definition.sign, N, TermDefFlags.empty,
-      Modulefulness.none, definition.annotations, N)(loc, loc, N))
+    tsym.defn = S(TermDefinition(RecordField, sym, tsym, Nil, N, signature, N, TermDefFlags.empty,
+      Modulefulness.none, annotations, N)(loc, loc, N))
     sym.complete()
-    RcdField(model.field, model.rhs, sym)(false, model.key)
+    tsym
   /** Create a record property with a fresh member symbol so that selection can identify its definition.
     * The field retains `rhs`, a value expression or structural field bounds. Its member definition
     * takes its declared read type from `signature` and its body from `initializer` independently.

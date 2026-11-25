@@ -1144,7 +1144,7 @@ class NewResolver:
           val projected = project(instances, shapeDependencies(record), TypeSubstitution.empty)
           if projected.isEmpty then record else rctx.shapeView(projected):
             RecordTypeShape(record.fields.map((name, tpe) => name -> tpe.map(instantiateType(_, projected))),
-              record.mutable, record.aliases)(record.source, record.declarations)
+              record.mutable, record.aliases)(record.source, record.components)
         case view: IntersectionView =>
           IntersectionView(view.values.map(instantiateShape(_, instances)))
         case specialized: SpecializedShape =>
@@ -1443,7 +1443,7 @@ class NewResolver:
     * The enclosing typeViews host caches the observation, and combinedTypes caches
     * field combinations; a separate cache keyed by whole record sets is unnecessary.
     */
-  private def intersectViews(values: Ls[TermShape])(publish: Listener)(using ResolutionContext): Unit =
+  private def intersectViews(values: Ls[TermShape], source: Term)(publish: Listener)(using ResolutionContext): Unit =
     val flattened = values.flatMap:
       case Marked(view: IntersectionView, marks) => view.values.flatMap(value => transportShape(value, marks :: Nil) match
         case value: TermShape => S(value)
@@ -1452,7 +1452,7 @@ class NewResolver:
     val records = flattened.collect:
       case Marked(record: RecordTypeShape, marks) =>
         RecordTypeShape(record.fields.map((name, tpe) => name -> tpe.map(transportType(_, marks :: Nil))),
-          record.mutable, record.aliases)(record.source, record.declarations)
+          record.mutable, record.aliases)(record.source, record.components)
     val merged = records.headOption.map: first =>
       val merged = records.tail.foldLeft(first): (left, right) =>
         val fields = right.fields.foldLeft(left.fields):
@@ -1462,13 +1462,9 @@ class NewResolver:
               combinedType(previous.output.resolution, previous.output, tpe.output, false, Set.empty))))
         val aliases = right.aliases.foldLeft(left.aliases):
           case (aliases, (name, keys)) => aliases.updated(name, aliases.getOrElse(name, Set.empty) ++ keys)
-        // The intersection has one field of its own for two that its components declare under the same key.
-        // It is mutable if one of them is (see RecordFieldSymbol).
-        val declarations = right.declarations.foldLeft(left.declarations):
-          case (declarations, (key, field)) => declarations.updated(key, declarations.get(key) match
-            case S(previous) if previous.tsym isnt field.tsym => rctx.mergedField(left.source, previous, field)
-            case _ => field)
-        RecordTypeShape(fields, left.mutable ++ right.mutable, aliases)(left.source, declarations)
+        // Keep each written declaration once. Field lookup uses its origins for symbol identity and diagnostics.
+        val components = (left.components ++ right.components).distinctBy(_.source)
+        RecordTypeShape(fields, left.mutable ++ right.mutable, aliases)(source, components)
       merged
     val components = merged.toList ::: flattened.filter:
       case Marked(_: RecordTypeShape, _) => false
@@ -1530,7 +1526,7 @@ class NewResolver:
               case head :: Nil if values.isEmpty => listenTypeViews(head, view)(publish)
               case head :: tail => listenTypeViews(head, view): value =>
                 conjunction(tail, value :: values)
-              case Nil => intersectViews(values.reverse)(publish)
+              case Nil => intersectViews(values.reverse, source)(publish)
             shape match
               case TypeShape.Dynamic => publish(DynShape())
               case TypeShape.Top => publish(OpaqueTypeShape(source)(
@@ -1667,10 +1663,11 @@ class NewResolver:
                   case (field @ RcdField(Lit(Tree.StrLit(name)), _, _), _) => field.key.collect:
                     case key: SymbolKey => name -> Set(key)
                   case _ => N
+                val declaration = RecordTypeShape.Declaration(source, fields.map((field, _) => field.key.get -> field).toMap)
                 publish(RecordTypeShape(fields.map((field, sign) =>
                   field.key.get -> declaredField(sign, current, field.tsym.mutable)).toMap,
                   fields.collect { case (field, _) if field.tsym.mutable => field.key.get }.toSet, aliases.toMap)(
-                  source, fields.map((field, _) => field.key.get -> field).toMap))
+                  source, Vector(declaration)))
               case TypeShape.Union(left, right) => next(left); next(right)
               case TypeShape.Intersection(left, right) if view != TypeView.Members => next(left); next(right)
               case TypeShape.Intersection(left, right) =>
@@ -2641,8 +2638,9 @@ class NewResolver:
                 case _ => matchLists(ret, tail)
           case Nil => ()
         case Marked(record: RecordTypeShape, _) =>
-          constrainRecord(record.fields.iterator.map((name, tpe) => (record.declarations(name), tpe, record.mutable(name))).toList,
-            actual, marks, site)
+          val fields = record.fields.iterator.flatMap: (name, tpe) =>
+            record.declarations(name).iterator.map((_, tpe, record.mutable(name)))
+          constrainRecord(fields.toList, actual, marks, site)
         case _ => ()
     actual match
       case Marked(_: UnknownValueShape, _) =>
@@ -4110,9 +4108,9 @@ class NewResolver:
       DeclaredSymShape(member, flow, marks, bindings, annotation))
     publishViewed(host, shape, instances)
 
-  private def publishTyped(host: NewResolvable & ShapeHost, field: RcdField, tpe: DeclaredType,
+  private def publishTyped(host: NewResolvable & ShapeHost, field: RecordFieldSymbol, tpe: DeclaredType,
       marks: Ls[Marks], instances: TypeSubstitution)(using ResolutionContext): Unit =
-    rctx.recordResolution(host, host.resolvedTargets.contains(field.tsym))(host.resolvedTargets ::= field.tsym)
+    rctx.recordResolution(host, host.resolvedTargets.contains(field))(host.resolvedTargets ::= field)
     // Project before transporting: transportType interns its wrapper by the whole
     // type, so an unobservable binding would otherwise yield a distinct candidate.
     publishActivated(host, instanceShape(transportType(instantiateType(tpe, instances), marks)))
@@ -4192,7 +4190,7 @@ class NewResolver:
         case MemberLookup.Declared(member, bindings, marks, annotation) =>
           record(member)(publishDeclared(ref, member, ref.resSym, bindings, marks, annotation, instances))
         case MemberLookup.Typed(field = field, tpe = tpe, marks = marks) =>
-          record(field.sym)(publishTyped(ref, field, tpe.output, marks, instances))
+          record(field.member)(publishTyped(ref, field, tpe.output, marks, instances))
         case MemberLookup.Indexed(_, _) if rctx.canResolve(ref) =>
           resolError(ref, msg"Tuple elements must be selected by index." -> ref.toLoc :: Nil)
         case MemberLookup.Dynamic(marks) if rctx.canResolve(ref) || ref.dynamicPrefixes.contains(prefix) =>
@@ -4612,8 +4610,8 @@ class NewResolver:
         rctx.recordResolution(sel, sel.resolvedMembers.contains(member))(sel.resolvedMembers ::= member)
         publishDeclared(sel, member, sel.resSym, bindings, marks, annotation, instances)
       case MemberLookup.Typed(field = field, tpe = tpe, marks = marks)
-      if rctx.canResolve(sel) || sel.resolvedMembers.contains(field.sym) =>
-        rctx.recordResolution(sel, sel.resolvedMembers.contains(field.sym))(sel.resolvedMembers ::= field.sym)
+      if rctx.canResolve(sel) || sel.resolvedMembers.contains(field.member) =>
+        rctx.recordResolution(sel, sel.resolvedMembers.contains(field.member))(sel.resolvedMembers ::= field.member)
         publishTyped(sel, field, tpe.output, marks, instances)
       case MemberLookup.Indexed(fields, marks) if rctx.canResolve(sel) || sel.tupleIndex == sel.id.name.toIntOption =>
         val index = sel.id.name.toIntOption
@@ -4920,7 +4918,7 @@ class NewResolver:
       case MemberLookup.All(members) => members.foreach(follow(_, instances))
       case MemberLookup.Contextual(source, substitution) => follow(source, instances.withOverrides(substitution))
       case MemberLookup.Typed(field, tpe, marks) =>
-        if field.tsym.mutable then check(transportType(instantiateType(tpe.input, instances), marks))
+        if field.mutable then check(transportType(instantiateType(tpe.input, instances), marks))
       case MemberLookup.Declared(member = member, bindings = bindings, marks = marks) =>
         memberField(member, S(bindings), marks, instances)
       case MemberLookup.Found(member: RecordMember, marks) =>

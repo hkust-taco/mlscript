@@ -14,7 +14,7 @@ fun narrowFirst(r: Narrow & Wide): Child = r.item
 //│ define wideFirst⁰ as fun wideFirst¹(r: Unknown): Child⁰ {
 //│   return r.item⁰
 //│ };
-//│ define narrowFirst⁰ as fun narrowFirst¹(r: Unknown): Child⁰ { return r.item¹ };
+//│ define narrowFirst⁰ as fun narrowFirst¹(r: Unknown): Child⁰ { return r.item⁰ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
