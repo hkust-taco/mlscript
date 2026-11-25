@@ -615,7 +615,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         k(new Call(fr, acc.reverse)(groupedSignature, CallMetadata(isMlsFun, mayRaiseEffects, annotations), loc))
       case (Nil, args :: remainingArgss) =>
         acc.reverse match
-        case Nil => lowerRemainingCalls(fr, declaredCalleeType(fr), args, remainingArgss, annotations, loc)(k)
+        case Nil =>
+          // A getter runs before the arguments of the returned function. Its declaration supplies
+          // that function's type even after binding the read to a temporary.
+          bindPath(getterRead(fr)): callee =>
+            lowerRemainingCalls(callee, declaredCalleeType(fr), args, remainingArgss, annotations, loc)(k)
         case acc =>
           val call = new Call(fr, acc)(groupedSignature, CallMetadata(isMlsFun, mayRaiseEffects, Nil), loc)
           val tmp = loweringCtx.registerTempSymbol(N, erasedType = call.erasedType, "baseCall")
@@ -1390,8 +1394,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case N =>
       
       instantiated match
-      // * Due to whacky JS semantics, we need to make sure that selections leading to a call
-      // * are preserved in the call and not moved to a temporary variable.
+      // Pass the selection to lowerMultiCall so it can read a known getter or call a method on its receiver.
       case sup: st.Super => superReference(sup)(conclude)
       case sel: NewSel if sel.isClassValue => classOf(sel.prefix, sel)((p, _) => conclude(p))
       case sel: NewSel => newSelection(sel): (prefix, name, target) =>
@@ -2000,9 +2003,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   inline def subTerm(t: st, inStmtPos: Bool = false)(k: Path => Block)(using LoweringCtx): Block =
     term(t, inStmtPos = inStmtPos)(bindPath(_)(k))
   
-  /** Lowers the callee of an application. When the callee reads a member, the call performs that read itself,
-    * through the member's selection: binding the read to a temporary first would detach the member's value from its
-    * receiver, which JavaScript passes as `this` to the functions that getters return.
+  /** Lowers the callee of an application, retaining a selected member's path. [[lowerMultiCall]] uses
+    * its target to recognize a getter and type the application of its result. An unresolved member
+    * may be a method and needs its receiver at the call.
     */
   def calleeTerm(t: st)(k: Path => Block)(using LoweringCtx): Block =
     term_nonTail(t):

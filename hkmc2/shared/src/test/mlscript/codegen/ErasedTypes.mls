@@ -992,9 +992,10 @@ declare fun addInts: (Int, Int) -> Int
 fun useAdd() = useInt(addInts(1, 2))
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define useAdd⁰ as fun useAdd¹(): Int⁰ {
-//│   let tmp: Int⁰;
-//│   set tmp = globalThis⁰.addInts⁰‹(Int⁰, Int⁰) => Int⁰›(1, 2);
-//│   return useInt¹‹(Int⁰) => Int⁰›(tmp)
+//│   let tmp: Function⁰, tmp1: Int⁰;
+//│   set tmp = globalThis⁰.addInts⁰‹=> Function⁰›;
+//│   set tmp1 = tmp‹(Int⁰, Int⁰) => Int⁰›(1, 2);
+//│   return useInt¹‹(Int⁰) => Int⁰›(tmp1)
 //│ };
 //│ end
 
@@ -1134,18 +1135,20 @@ fun usePlain() = useFn(Plain.f)
 fun applyExt() = useInt(Ext.member(1))
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define applyExt⁰ as fun applyExt¹(): Int⁰ {
-//│   let tmp: Int⁰;
-//│   set tmp = globalThis⁰.Ext⁰.member⁰‹(Int⁰) => Int⁰›(1);
-//│   return useInt¹‹(Int⁰) => Int⁰›(tmp)
+//│   let tmp: Function⁰, tmp1: Int⁰;
+//│   set tmp = globalThis⁰.Ext⁰.member⁰‹=> Function⁰›;
+//│   set tmp1 = tmp‹(Int⁰) => Int⁰›(1);
+//│   return useInt¹‹(Int⁰) => Int⁰›(tmp1)
 //│ };
 //│ end
 
 fun applyPlain() = useInt(Plain.f(1))
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define applyPlain⁰ as fun applyPlain¹(): Int⁰ {
-//│   let tmp: Int⁰;
-//│   set tmp = Plain².f⁷‹(Int⁰) => Int⁰›(1);
-//│   return useInt¹‹(Int⁰) => Int⁰›(tmp)
+//│   let tmp: Function⁰, tmp1: Int⁰;
+//│   set tmp = Plain².f⁷‹=> Function⁰›;
+//│   set tmp1 = tmp‹(Int⁰) => Int⁰›(1);
+//│   return useInt¹‹(Int⁰) => Int⁰›(tmp1)
 //│ };
 //│ end
 

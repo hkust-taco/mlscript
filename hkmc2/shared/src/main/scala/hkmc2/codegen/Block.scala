@@ -33,11 +33,10 @@ BufferableTransform and ReflectionInstrumenter temporarily wrap constructor bloc
 function-processing code. These wrappers do not appear as executable functions; any emitted function
 must satisfy the explicit-return invariant.
 
-Every evaluated selection of a known getter is the callee of a `Call`. A standalone getter read uses
-`Call(path, Nil)` with the getter's signature. If the source immediately applies the returned function,
-the call can take argument lists directly on the selection. This preserves the receiver as JavaScript's
-`this`, and the call carries the signature of the returned function. A `Case.Cls` for a virtual class
-holds `runtime.unreachable` as its class path. Backends use the class symbol and never read that getter.
+Every evaluated selection of a known getter occurs as the callee of `Call(path, Nil)` with the getter's
+signature. To apply the function it returns, bind the read before evaluating the arguments, then call
+the bound function with its own signature. A `Case.Cls` for a virtual class holds `runtime.unreachable`
+as its class path. Backends use the class symbol and never read that getter.
 
 While the IR is mostly immutable, for easier manipulation and to enable some optimizations,
 we do assume that each DefinitionSymbol coming from the source program is "owned" by at most one IR definition;
@@ -1444,15 +1443,14 @@ object CallMetadata:
 /** A call of `fun` applying the argument lists `argss`, described by the callee's erased `signature`.
   *
   * A call applies at most as many argument lists as `signature` has parameter lists; it applies fewer for a partial
-  * application. A call with no argument lists reads a member through a getter signature: for instance, a
-  * `Select` of a getter, or of a property that resolution did not identify, which may run a getter. A `Select` in
-  * callee position denotes the member with its receiver, so a call with argument lists of such a `Select` reads the
-  * member and applies its value in one step, as JavaScript method calls do.
+  * application. A call with no argument lists reads a member through a getter signature. This includes reads
+  * of properties whose definitions are unknown. A known getter always takes this form, including when another
+  * call applies its result. A method call keeps the receiver on its selection.
   *
-  * When `fun` refers to a definition that publishes a callable signature, `signature` is that signature, except for
-  * calls applying arguments to the value of a getter. For other callees, lowering derives `signature` from declared
-  * types where it can, and otherwise uses [[ErasedFuncSignature.dynamic]]. Rewrites that change the callee or the
-  * argument lists must provide the corresponding signature.
+  * When `fun` refers to a definition that publishes a callable signature, `signature` is that signature.
+  * For other callees, lowering derives `signature` from declared types where it can, and otherwise uses
+  * [[ErasedFuncSignature.dynamic]]. Rewrites that change the callee or the argument lists must provide the
+  * corresponding signature.
   */
 case class Call(fun: Path, argss: Ls[Ls[Arg]])
     (val signature: ErasedCallableSignature, val metadata: CallMetadata, val toLoc: Opt[Loc]) extends Result:
@@ -1463,7 +1461,7 @@ case class Call(fun: Path, argss: Ls[Ls[Arg]])
   /** Rewrites can build forward calls before publishing a new definition under the same symbol. Check the
     * signature against the completed IR. Calls constructed against a published definition also check it immediately. */
   def checkTargetSignature(): Unit =
-    assert(Call.targetSignature(fun, memberRead = argss.isEmpty).forall(_ is signature),
+    assert(Call.publishedSignature(fun).forall(_ is signature),
       "A call of a definition must use the signature published by that definition")
   def withLoc(loc: Opt[Loc]): Call = if loc == toLoc then this else copy()(signature, metadata, loc)
   /** This call, rebuilt by a rewrite that changes how its callee and arguments are expressed, but not which
@@ -1471,7 +1469,7 @@ case class Call(fun: Path, argss: Ls[Ls[Arg]])
     * definition gives it a refreshed signature; other callees keep the signature of this call.
     */
   def rebuilt(fun: Path, argss: Ls[Ls[Arg]]): Result =
-    val target = Call.targetSignature(fun, memberRead = argss.isEmpty).getOrElse(signature)
+    val target = Call.publishedSignature(fun).getOrElse(signature)
     // A source call can still span several lists of an already curried import. Substituting its operands
     // preserves the source grouping until bindTarget can emit the intermediate function-object calls.
     if argss.sizeCompare(target.paramListCount) > 0 && fun.targetSymbol.exists(this.fun.targetSymbol.contains) then
@@ -1479,7 +1477,7 @@ case class Call(fun: Path, argss: Ls[Ls[Arg]])
     else Call(fun, argss)(target, metadata, toLoc)
   /** Bind the call to its physical target after definition signatures have been published. */
   def bindTarget(fun: Path, argss: Ls[Ls[Arg]])(k: Result => Block)(using State): Block =
-    val target = Call.targetSignature(fun, memberRead = argss.isEmpty).getOrElse(signature)
+    val target = Call.publishedSignature(fun).getOrElse(signature)
     target match
       case sig: ErasedFuncSignature if argss.sizeCompare(sig.paramListCount) > 0 =>
         FirstClassFunctionTransformer.applyCurried(this, fun, argss, sig)(k)
@@ -1535,11 +1533,6 @@ object Call:
         case sig: ErasedCallableSignature => sig
       case _ => N
   
-  /** A call applying arguments to a getter applies the function value it returns. Only the getter read itself
-    * has the getter's published signature. */
-  def targetSignature(fun: Path, memberRead: Bool): Opt[ErasedCallableSignature] =
-    publishedSignature(fun).filter(sig => memberRead || sig.isInstanceOf[ErasedFuncSignature])
-  
   /** A pass can change a definition's signature under its existing symbol. Recursive and forward calls can
     * precede the new definition, so bind their immutable signatures once the pass has published all its definitions.
     * Calls through function values retain the signature derived at their use site.
@@ -1550,7 +1543,7 @@ object Call:
         override def applyResult(r: Result)(k: Result => Block): Block = r match
           case c: Call =>
             val signature = c.fun.targetSymbol match
-              case S(ts: TermSymbol) if changed(ts) => targetSignature(c.fun, memberRead = c.argss.isEmpty).getOrElse(c.signature)
+              case S(ts: TermSymbol) if changed(ts) => publishedSignature(c.fun).getOrElse(c.signature)
               case _ => c.signature
             k(if signature is c.signature then c else c.copy()(signature, c.metadata, c.toLoc))
           case _ => super.applyResult(r)(k)
@@ -1567,7 +1560,7 @@ object Call:
     * IR: the signature it publishes, or else a dynamic one.
     */
   def signatureOf(fun: Path, listCount: Int): ErasedCallableSignature =
-    targetSignature(fun, memberRead = listCount == 0).getOrElse:
+    publishedSignature(fun).getOrElse:
       if listCount == 0 then ErasedGetterSignature.dynamic else ErasedFuncSignature.dynamic(listCount)
   
   /** A call of `fun` applying `argss`, using [[signatureOf]]. */

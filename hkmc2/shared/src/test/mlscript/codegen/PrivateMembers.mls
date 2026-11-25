@@ -181,9 +181,9 @@ object Example {
 //│   }
 //│   #x;
 //│   get test() {
-//│     let tmp1;
-//│     tmp1 = Example1.#x + 1;
-//│     Example1.#x = tmp1;
+//│     let tmp2;
+//│     tmp2 = Example1.#x + 1;
+//│     Example1.#x = tmp2;
 //│     return Example1.#x;
 //│   }
 //│   toString() { return runtime.render(this); }

@@ -18,7 +18,7 @@ import semantics.Elaborator.{Ctx, State}
   *    through its symbol (see `TermSymbol.irErasure`), and cross-unit inlining reads its body; a pass that builds a
   *    definition and then discards it leaves `irDefn` pointing at the discarded one;
   *  - a call of a known definition uses its current signature, including after a rewrite that keeps its symbol.
-  *  - a path that reads a known getter occurs only as the callee of a call.
+  *  - a path that reads a known getter occurs only as the callee of a call without argument lists.
   */
 class BlockChecker()(using DebugPrinter, State, Raise, Ctx) extends BlockTraverser:
   
@@ -43,14 +43,14 @@ class BlockChecker()(using DebugPrinter, State, Raise, Ctx) extends BlockTravers
   override def applyResult(r: Result): Unit = r match
     case c: Call =>
       c.checkTargetSignature()
-      // A getter is valid here. Its receiver, key and arguments are ordinary value positions.
+      // The checked signature admits no argument lists for a getter. Its receiver and key are value positions.
       super.applyPath(c.fun)
       c.argss.foreach(_.foreach(applyArg))
     case _ => super.applyResult(r)
 
   override def applyPath(p: Path): Unit =
     assert(!Call.publishedSignature(p).exists(_.isInstanceOf[ErasedGetterSignature]),
-      "Reading a known getter requires a Call")
+      "Reading a known getter requires a Call with no argument lists")
     super.applyPath(p)
 
   override def applyCase(cse: Case): Unit = cse match

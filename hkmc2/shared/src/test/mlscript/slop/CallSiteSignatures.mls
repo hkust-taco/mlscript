@@ -167,7 +167,7 @@ private fun newDate() = new Date()
 //│ = ["string", "object"]
 
 
-// A call with arguments of a getter's selection applies the getter's result, as described by its declared type.
+// The getter read and the application of its returned function each carry their own signature.
 :sir
 :siret
 :checkIR
@@ -177,6 +177,7 @@ class Adder with
 let adder = new Adder
 adder.add(41)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Function⁰;
 //│ define Adder⁰ as class Adder¹ {
 //│   method add⁰ = fun add¹: Function⁰ {
 //│     let lambda;
@@ -188,7 +189,8 @@ adder.add(41)
 //│   }
 //│ };
 //│ set adder² = new Adder¹();
-//│ return adder².add¹‹(Int⁰) => Int⁰›(41)
+//│ set tmp = adder².add¹‹=> Function⁰›;
+//│ return tmp‹(Int⁰) => Int⁰›(41)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 //│ adder = Adder

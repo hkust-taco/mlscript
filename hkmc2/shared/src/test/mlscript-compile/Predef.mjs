@@ -278,16 +278,19 @@ lambda = (undefined, function (Predef2, a, b, field) {
     return Rendering.render;
   }
   static print(...xs) {
-    let callPrefix, tmp;
-    callPrefix = runtime.safeCall(Predef.map(Predef.renderAsStr));
-    tmp = runtime.safeCall(callPrefix(...xs));
-    return runtime.safeCall(globalThis.console.log(...tmp))
+    let tmp, callPrefix, tmp1;
+    tmp = Predef.map;
+    callPrefix = runtime.safeCall(tmp(Predef.renderAsStr));
+    tmp1 = runtime.safeCall(callPrefix(...xs));
+    return runtime.safeCall(globalThis.console.log(...tmp1))
   }
   static renderAsStr(arg) {
+    let tmp;
     if (typeof arg === 'string') {
       return arg
     }
-    return runtime.safeCall(Predef.render(arg));
+    tmp = Predef.render;
+    return runtime.safeCall(tmp(arg));
   }
   static check(...args) {
     return runtime.safeCall(Predef.js_assert(...args))
@@ -355,9 +358,10 @@ lambda = (undefined, function (Predef2, a, b, field) {
     }
   }
   static mkStr(...xs) {
-    let callPrefix, lambda$here;
+    let tmp, callPrefix, lambda$here;
+    tmp = Predef.fold;
     lambda$here = lambda$2(Predef);
-    callPrefix = runtime.safeCall(Predef.fold(lambda$here));
+    callPrefix = runtime.safeCall(tmp(lambda$here));
     return runtime.safeCall(callPrefix(...xs))
   }
   static use(instance) {

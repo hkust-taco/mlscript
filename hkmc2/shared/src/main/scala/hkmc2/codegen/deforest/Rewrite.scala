@@ -427,16 +427,11 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
           val fieldSyms = mkCtorFieldSyms(ctor.uid.concreteId)
           val (branchFunBms, branchFunTSym) = branchFunSyms(ctorWhichBranch(ctor.uid.concreteId))
           fillFieldSyms(fieldSyms, mkCall(branchFunBms.asMemberRef(branchFunTSym), fieldSyms)(k))
-      case c @ Call(fun @ FunRef(f, _), argss) if pre.res.funSymToFunDefn.get(f).exists(_.params.isEmpty) =>
-        // The selection names the getter and carries its receiver. Retype the read itself so the
-        // signature describes its new result. Calls with arguments apply the value the getter returns.
+      case c @ Call(fun @ FunRef(f, _), Nil) if pre.res.funSymToFunDefn.contains(f) =>
+        // A read can precede publication of the rewritten getter. Use its planned result for slot coercion.
         applyPath(fun): path =>
-          applyArgss(argss): args =>
-            val sig = if argss.nonEmpty then c.signature
-              else if path.targetSymbol.contains(f) then signatureInPlace(f).erasure
-              else Call.signatureOf(path, 0)
-            k(if (path is fun) && (args is argss) && (sig is c.signature) then c
-              else c.copy(path, args)(sig, c.metadata, c.toLoc))
+          val sig = if path.targetSymbol.contains(f) then signatureInPlace(f).erasure else Call.signatureOf(path, 0)
+          k(if (path is fun) && (sig is c.signature) then c else c.copy(fun = path)(sig, c.metadata, c.toLoc))
       case c @ Call(FunRef(f, _), _) => super.applyResult(c):
         case call2 @ Call(FunRef(f2, _), argss2) =>
           // In-place rewrites keep the definition symbol. Its current IR signature can
