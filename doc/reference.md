@@ -890,10 +890,15 @@ mut {}               // fresh empty mutable record
 (a: 1, b: 2)          // record in parentheses (same thing)
 ```
 
-Declare an individual field writable with `mut a: value`, or make every field writable with
-`mut {...}`. A spread copies the current values of its source fields. Copied fields are
-writable when the destination uses `mut {...}`. The JavaScript backend allocates a mixed
-record as an unfrozen object. The compiler does not yet reject every write to its read-only fields.
+Only mutable fields can be assigned. Declare an individual field mutable with `mut a: value`,
+or make every field mutable with `mut {...}`. A spread copies the current values of its source's
+fields. A copied field does not keep the `mut` of its source: it is mutable only when the
+destination is `mut {...}`.
+
+The JavaScript backend freezes a record without mutable fields, and allocates a record with both
+kinds of fields as an unfrozen object. The compiler does not yet reject every assignment to a
+read-only field of such a record. An accepted one takes effect at run time, although resolution
+does not account for the assigned value.
 
 `{}` denotes an empty record in expression and type positions. It is distinct
 from Unit, written `()`. Empty statement bodies such as `do {}` still return Unit.

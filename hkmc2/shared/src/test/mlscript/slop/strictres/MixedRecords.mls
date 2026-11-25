@@ -1,0 +1,165 @@
+:.
+
+// A record literal or a record type can declare some of its fields `mut` and leave the others read-only
+// (see MutableFields.mls for assignments in general and MutableFieldVariance.mls for the bounds of `mut` fields).
+
+// Several blocks below store this unboxed integer in a field. It has no common representation with unknown
+// values, so the resulting errors show which fields admit values from other compilation units.
+val input: Int32 = unsafe.undefined
+//│ input = undefined
+
+
+// A `mut` field can have a quoted or a computed key.
+:expect [2, 3]
+private fun writeKeys() =
+  let key = "computed"
+  let record = {mut (key): 0, mut "quoted": 1}
+  set record.quoted = 2
+  set record.(key) = 3
+  [record.quoted, record.(key)]
+writeKeys()
+//│ = [2, 3]
+
+// A block of fields forms a record too, and each of its fields can be `mut`.
+:expect [5, 2]
+private fun counter() =
+  mut count: 1
+  next: count + 1
+private fun writeBlockField() =
+  let record = counter()
+  set record.count = 5
+  [record.count, record.next]
+writeBlockField()
+//│ = [5, 2]
+
+// The `mut` modifier applies to a field name. A field written with a parameter list cannot be `mut`.
+:e // TODO: allow?
+{mut twice(x): x * 2}
+//│ ╔══[COMPILATION ERROR] Unexpected record key shape.
+//│ ║  l.+1: 	{mut twice(x): x * 2}
+//│ ╙──      	     ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// A spread copies the values that the `mut` fields of its source hold at that point. The copy can declare
+// `mut` fields of its own.
+:expect ["many", "many", 1]
+private fun copyIntoMixed() =
+  let source = {mut count: 0}
+  set source.count = "many"
+  let copied = {...source, mut version: 0}
+  set copied.version = 1
+  [source.count, copied.count, copied.version]
+copyIntoMixed()
+//│ = ["many", "many", 1]
+
+// A `mut` field declared after a spread replaces the copied field of the same name. Assignments to it
+// do not reach the field of the source.
+:expect [3, 1]
+private fun replaceCopiedField() =
+  let source = {item: "abc"}
+  let copied = {...source, mut item: 0}
+  set copied.item = 1
+  [source.item.length, copied.item]
+replaceCopiedField()
+//│ = [3, 1]
+
+
+// Other compilation units can only assign the `mut` fields of an exposed record. Its read-only fields keep
+// the representation of their initializers.
+val exposedSize = {mut count: 0, size: input}
+//│ exposedSize = {count: 0, size: undefined}
+
+:ge
+val exposedCount = {mut count: input, size: 0}
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+1: 	val exposedCount = {mut count: input, size: 0}
+//│ ║        	                        ^^^^^
+//│ ╟── The exposed interface admits values of unknown representation unless a type annotation restricts them.
+//│ ╟── Field 'count' admits assigned values of unknown shape.
+//│ ║  l.+1: 	val exposedCount = {mut count: input, size: 0}
+//│ ║        	                        ^^^^^
+//│ ╟── 'exposedCount' is exposed by this compilation unit.
+//│ ║  l.+1: 	val exposedCount = {mut count: input, size: 0}
+//│ ╙──      	^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ exposedCount = undefined
+
+// A copy does not expose the `mut` fields of its private source to assignments, whereas its own are exposed.
+private val privateSource = {mut size: input}
+val exportedCopy = {...privateSource, mut version: 0}
+//│ exportedCopy = {size: undefined, version: 0}
+//│ privateSource = {size: undefined}
+
+:ge
+private val otherPrivateSource = {mut size: 0}
+val otherExportedCopy = {...otherPrivateSource, mut version: input}
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+2: 	val otherExportedCopy = {...otherPrivateSource, mut version: input}
+//│ ║        	                                                    ^^^^^^^
+//│ ╟── The exposed interface admits values of unknown representation unless a type annotation restricts them.
+//│ ╟── Field 'version' admits assigned values of unknown shape.
+//│ ║  l.+2: 	val otherExportedCopy = {...otherPrivateSource, mut version: input}
+//│ ║        	                                                    ^^^^^^^
+//│ ╟── 'otherExportedCopy' is exposed by this compilation unit.
+//│ ║  l.+2: 	val otherExportedCopy = {...otherPrivateSource, mut version: input}
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ otherExportedCopy = undefined
+//│ otherPrivateSource = undefined
+
+// The last entry for a name determines both the value and the mutability of a field. A spread written after
+// a `mut` field of the same name replaces it with a read-only copy, so no assignment is exposed below.
+// TODO: warn about the replaced `mut` field?
+private val replacingSource = {size: input}
+val replacedField = {mut size: 0, ...replacingSource}
+//│ replacedField = {size: undefined}
+//│ replacingSource = {size: undefined}
+
+
+// A record type can require a `mut` field next to a read-only one. A class instance supplies both.
+:expect ["cursor", 42]
+private class Cursor(mut val position, val label)
+private fun reset(cursor: {mut position: Int, label: Str}) =
+  set cursor.position = 42
+  cursor.label
+private fun resetCursor() =
+  let cursor = new mut Cursor(0, "cursor")
+  [reset(cursor), cursor.position]
+resetCursor()
+//│ = ["cursor", 42]
+
+
+// The object allocated for a record with both kinds of fields is not frozen, so an assignment to one of its
+// read-only fields takes effect. Resolution does not account for the assigned value: the selection of `a`
+// below resolves to the field of the initializer, and reads a record without that field.
+:breakme
+:e
+private fun overwriteReadOnly() =
+  let record = {mut count: 0, inner: {a: 1}}
+  set record.inner = {b: 2}
+  [record.inner.a]
+overwriteReadOnly()
+//│ = [undefined]
+
+// The same happens when a record type requires a `mut` field that the record declares read-only.
+// TODO: the type checker should reject the call.
+private fun store(target: {mut inner: {b: Int}}) = set target.inner = {b: 2}
+private fun overwriteThroughType() =
+  let record = {mut count: 0, inner: {a: 1}}
+  store(record)
+  [record.inner.a]
+overwriteThroughType()
+//│ = [undefined]
+
+// Resolution does not account for an assignment through a computed key either, whether the record
+// declares the assigned field `mut` or is mutable as a whole.
+:breakme
+:e
+private fun overwriteThroughKey() =
+  let record = {mut inner: {a: 1}}
+  let key = "inner"
+  set record.(key) = {b: 2}
+  [record.inner.a]
+overwriteThroughKey()
+//│ = [undefined]

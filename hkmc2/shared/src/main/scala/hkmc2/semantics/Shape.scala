@@ -1300,9 +1300,13 @@ object TupleShape:
     TupleShape(tuple.source, Rest(parent, segments) :: Nil)(resolver)
 
 
-/** A record field reached by a selection. When `mutable` is true, the field's possible values
-  * include assignments as well as its initializer. A spread copies the value at the time of
-  * the spread, so a read through the copy can depend on writes to the source field.
+/** A record field found by member lookup. `mutable` tells whether a read through this lookup returns
+  * the values assigned to the field in addition to its initializer. This holds when the record declares
+  * the field `mut` or is mutable as a whole, and when the record spreads such a record: a spread copies
+  * the value that the field holds at that point.
+  * The lookup carries this flag because one field can be read both ways. `mut {...r}` reuses the fields
+  * of `r`, so assignments through that copy reach a field of `r`, while reads through an immutable `r`
+  * can only return its initializer.
   */
 final case class RecordMember(field: RcdField, mutable: Bool)
 
@@ -1344,8 +1348,11 @@ final class RecordShape private (val source: Term.Rcd, val elements: Ls[RecordSh
         spread(shape.getMember(name)).getOrElse(loop(rest))
     loop(elements.reverse).instantiate(instances)
 
-  /** Visit each visible field with its lookup context and whether a client can write it through this record.
-    * A spread copies the source field's current value. Only the destination determines whether the copy is writable.
+  /** Visit the fields that a client can read from this record. `visit` receives each field with the
+    * mutability, scope path, and type arguments of a selection of it, and whether the client can also
+    * assign it through this record. A spread copies the values of its source's fields, so this record
+    * alone determines which fields are assignable: all of them if it is mutable as a whole, and
+    * otherwise those it declares `mut` itself. A computed key can leave any earlier field visible.
     */
   def foreachReadableField(marks: Ls[Marks], scope: TypeSubstitution)
       (visit: (RecordMember, Bool, Ls[Marks], TypeSubstitution) => Unit): Unit =
@@ -1355,6 +1362,7 @@ final class RecordShape private (val source: Term.Rcd, val elements: Ls[RecordSh
       // A repeated spread in the same context can only repeat fields or keys already visited.
       if visited.add((record, mutableRead, path, bindings)) then record.elements.reverseIterator.foreach:
         case RecordShape.Field(field) if field.key.forall(shadowed.add) =>
+          // A field reached through a spread is a copy, which does not keep the `mut` of its declaration.
           val writable = source.mut || ((record is this) && field.mut)
           visit(RecordMember(field, mutableRead || field.mut), writable, path, bindings)
         case RecordShape.Spread(inner, mark) =>

@@ -222,6 +222,17 @@ private fun overwriteLabel() =
 overwriteLabel()
 //│ = "changed"
 
+// Every field of a record that is mutable as a whole can be assigned.
+:expect [2, "changed"]
+private class OtherBox(val value)
+private fun replaceBoth() =
+  let record = mut {inner: OtherBox(1), label: "count"}
+  set record.inner = OtherBox(2)
+  set record.label = "changed"
+  [record.inner.value, record.label]
+replaceBoth()
+//│ = [2, "changed"]
+
 // Assigning through a mutable copy of a record assigns the fields of the copied record,
 // so the representations of those fields include the values assigned to them through the copy.
 :expect "many"
@@ -241,6 +252,16 @@ private fun copyMutable() =
   let copied = {...source}
   [source.count, copied.count]
 copyMutable()
+//│ = ["many", "many"]
+
+// So do the copies of a record that is mutable as a whole.
+:expect ["many", "many"]
+private fun copyWholeMutable() =
+  let source = mut {count: 0}
+  set source.count = "many"
+  let copied = {...source}
+  [source.count, copied.count]
+copyWholeMutable()
 //│ = ["many", "many"]
 
 // The fields of an exposed record that are mutable cannot declare types: they take the unknown representation.
@@ -599,6 +620,15 @@ privateMutableSource.item.length
 //│ exportedMixedCopy = {item: "abc", version: 0}
 //│ privateMutableSource = {item: "abc"}
 
+// Neither does the frozen copy of a private record that is mutable as a whole.
+:expect 3
+private val privateWholeSource = mut {item: "abc"}
+val exportedCopyOfWhole = {...privateWholeSource}
+privateWholeSource.item.length
+//│ = 3
+//│ exportedCopyOfWhole = {item: "abc"}
+//│ privateWholeSource = {item: "abc"}
+
 
 // Freezing the copy still exposes the nested values its source held when they were copied.
 :ge
@@ -627,6 +657,35 @@ fun exportFrozenCopy() =
 //│ ╟── 'exportFrozenCopy' is exposed by this compilation unit.
 //│ ║  l.+2: 	fun exportFrozenCopy() =
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// So does the frozen copy of a record that is mutable as a whole.
+:ge
+private class FrozenCopiedWholeCell(mut val value)
+fun exportFrozenCopyOfWhole() =
+  let record = mut {item: 0}
+  set record.item = FrozenCopiedWholeCell(input)
+  {...record}
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+1: 	private class FrozenCopiedWholeCell(mut val value)
+//│ ║        	                                        ^^^^^^^^^
+//│ ╟── The exposed interface admits values of unknown representation unless a type annotation restricts them.
+//│ ╟── Field 'value' admits assigned values of unknown shape.
+//│ ║  l.+1: 	private class FrozenCopiedWholeCell(mut val value)
+//│ ║        	                                            ^^^^^
+//│ ╟── This value is stored in this record field.
+//│ ║  l.+3: 	  let record = mut {item: 0}
+//│ ║        	                    ^^^^
+//│ ╟── This value is returned here.
+//│ ║  l.+3: 	  let record = mut {item: 0}
+//│ ║        	                    ^^^^^^^^
+//│ ║  l.+4: 	  set record.item = FrozenCopiedWholeCell(input)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+5: 	  {...record}
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── 'exportFrozenCopyOfWhole' is exposed by this compilation unit.
+//│ ║  l.+2: 	fun exportFrozenCopyOfWhole() =
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
