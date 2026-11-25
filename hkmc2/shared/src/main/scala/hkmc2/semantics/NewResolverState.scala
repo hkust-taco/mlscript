@@ -164,10 +164,6 @@ final class NewResolverState(val owner: Elaborator.State):
   // input once per activation; callbacks assigned through it must satisfy that input, not the read type.
   val fieldAssignmentTypes: Seen[(Identity[Term], Identity[Term], DeclaredType)] =
     new Seen(_.fieldAssignmentTypes)
-  // The copies of record fields whose assigned values already reach the representation of the field
-  // that they copy (see NewResolver.observeCopiedField).
-  val observedCopies: Seen[RecordFieldSymbol] =
-    new Seen(_.observedCopies)
   val declaredSymShapes: Cache[(BlockMemberSymbol, FlowSymbol, Ls[Marks], Map[VarSymbol, TypeArgument]), DeclaredSymShape] =
     new Cache(_.declaredSymShapes, identity)
   val selfShapes: Cache[InnerSymbol, BaseShape] =

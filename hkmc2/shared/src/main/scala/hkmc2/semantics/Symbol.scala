@@ -587,7 +587,7 @@ class ClassCtorSymbol(
   * copies values without converting them, and a value of an intersection can be used at each of its components,
   * so no separate representation is inferred for such a field: its erasure is that of `representative`.
   * The values assigned to a copy are therefore also inputs of the representation of the field that it copies
-  * (see NewResolver.observeCopiedField).
+  * (see NewResolver.writeField).
   */
 final class RecordFieldSymbol(id: Tree.Ident, val mutable: Bool, val origin: RecordFieldSymbol.Origin)(using State)
     extends TermSymbol(syntax.RecordField, N, id):

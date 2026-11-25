@@ -85,24 +85,20 @@ class NewResolver:
       // the field's representation does not include: lowering converts their values to that representation.
       if isAssignableField(td) then listenMemberVariable(td.tsym)(publish)
 
-  /** Supply the values assigned to `copy`, a record's copy of a field, to the representation of the declared
-    * field that it comes from. A spread does not convert the values that it copies, so a copy has the
-    * representation of that field (see RecordFieldSymbol), which must then hold what the copy holds.
-    * This does nothing for a field that is no copy, or if this compilation unit does not infer the representation
-    * of the declared field: lowering then converts the assigned values to it, as it does for assignments from
-    * other compilation units (see `observeErasureDefinition`).
-    */
-  private def observeCopiedField(copy: RecordFieldSymbol)(using caller: ResolutionContext): Unit =
-    if (copy.root isnt copy) && rctx.state.observedCopies.add(copy) then
-      // Each reader of the representation applies its own bindings, like `memberResultSlot`.
-      given ResolutionContext = caller.withInstances(TypeSubstitution.empty)
-      copy.root.defn.flatMap(observeErasureDefinition).foreach: representation =>
-        listenMemberVariable(copy)(shape => listenInstanceViews(shape)(representation.publish))
+  /** Include a value written to a record copy when inferring the original field's runtime representation. */
+  private def observeCopyWrite(copy: RecordFieldSymbol, value: TermShape)(using caller: ResolutionContext): Unit =
+    val root = copy.root
+    if root isnt copy then
+      // The declaration's representation is shared across calls. Interpret the assigned value with the
+      // writer's type arguments so a write in a generic function contributes its instantiated shapes.
+      val declaration = caller.withInstances(TypeSubstitution.empty)
+      root.defn.flatMap(observeErasureDefinition(_)(using declaration)).foreach: representation =>
+        listenInstanceViews(value)(representation.publish)
 
   /** Whether assignments can replace the value of the field that `td` defines: a mutable field (`mut val`,
     * including a mutable constructor parameter) or a record field. A record field that is not mutable gets no
     * assigned value (see `resolveFieldWrite`), but its representation gets those assigned to its mutable copies
-    * (see `observeCopiedField`).
+    * (see `writeField`).
     */
   private def isAssignableField(td: TermDefinition): Bool =
     (td.k is syntax.MutVal) || (td.k is syntax.RecordField)
@@ -4064,9 +4060,12 @@ class NewResolver:
         softAssert(rctx.hasError(res))
     else register
   
-  private def publishActivated(host: ShapeHost, source: Shape)(using ResolutionContext): Unit =
+  /** Publish a shape in the current activation. Return true on its first publication to this host in that activation. */
+  private def publishActivated(host: ShapeHost, source: Shape)(using ResolutionContext): Bool =
     val shape = if rctx.instances.isEmpty then source else ActivatedShapeEvent(source, rctx.instances)
-    if host.currentShapes.add(shape) then host.notifyShapeListeners(shape)
+    val fresh = host.currentShapes.add(shape)
+    if fresh then host.notifyShapeListeners(shape)
+    fresh
 
   /** `instances` interprets references in the value; rctx.instances identifies
     * the receiving body activation. Preserve both: a recursive argument may still
@@ -4867,12 +4866,21 @@ class NewResolver:
     * Reading the field exits its definition and follows the lookup path to the reader, so an
     * input from a lookup with path `marks` enters along the reverse path. Every read of the
     * field can observe a write, regardless of which selection made it.
+    *
+    * All writes to a copied record field must go through this method, including values admitted by
+    * a type annotation or an exported interface. A spread copies the field without converting its value,
+    * so the original field's runtime representation must accommodate writes to the copy as well.
+    * Publishing directly to the copy's assignment host would bypass representation inference.
+    * Publishing to the original's assignment host would make its readers see writes to a different record.
     */
   private[semantics] def writeField(field: TermSymbol, value: TermShape, marks: Ls[Marks])(using ResolutionContext): Unit =
     softAssert(field.defn.exists(isAssignableField), "Only assignable fields hold assigned values")
     value.enter(marks) match
       case value: TermShape =>
-        publishActivated(rctx.memberVariable(field), MarkedShape.enter(value, ResolutionBoundary(field), N))
+        val assigned = MarkedShape.enter(value, ResolutionBoundary(field), N)
+        if publishActivated(rctx.memberVariable(field), assigned) then field match
+          case copy: RecordFieldSymbol => observeCopyWrite(copy, assigned)
+          case _ => ()
       case NoShape => ()
   
   /** Read the values assigned to `field` (see `writeField`) through a member lookup with the path `marks` at `site`:
@@ -4916,9 +4924,7 @@ class NewResolver:
       case MemberLookup.Declared(member = member, bindings = bindings, marks = marks) =>
         memberField(member, S(bindings), marks, instances)
       case MemberLookup.Found(member: RecordMember, marks) =>
-        if member.mutable then
-          observeCopiedField(member.field.tsym)
-          assign(member.field.tsym, marks)
+        if member.mutable then assign(member.field.tsym, marks)
       case MemberLookup.Found(member: BlockMemberSymbol, marks) =>
         memberField(member, N, marks, instances)
       case _ => ()
