@@ -867,7 +867,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             msg"This selection of member '${id.name}' is ambiguous, as it has multiple resolved targets" -> sel.toLoc ::
             targets.map: target =>
               val owner = target.asTrm.flatMap(_.owner).fold("")(o => s" in ${o.asBlkMember.get.describe} '${o.nme}'")
-              msg"target: ${target.describeKind} '${target.nme}'${owner}" -> target.toLoc
+              // A single spread can copy unrelated fields. Point at the declaration that distinguishes each candidate.
+              val loc = target match
+                case field: RecordFieldSymbol => field.root.toLoc.orElse(field.toLoc)
+                case _ => target.toLoc
+              msg"target: ${target.describeKind} '${target.nme}'${owner}" -> loc
             ,
             source = Diagnostic.Source.Compilation)
         else k(prefix, memberIdent(id, N), N)

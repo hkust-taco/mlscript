@@ -252,6 +252,20 @@ choose(true).answer
 //│ ╙──      	                                 ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
+// One spread can copy either declaration. The error identifies both original fields.
+:e
+{...choose(true)}.answer
+//│ ╔══[COMPILATION ERROR] This selection of member 'answer' is ambiguous, as it has multiple resolved targets
+//│ ║  l.+1: 	{...choose(true)}.answer
+//│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── target: record field 'answer'
+//│ ║  l.XX: 	fun choose(flag) = if flag then {answer: 1} else {answer: 2}
+//│ ║        	                                                  ^^^^^^
+//│ ╟── target: record field 'answer'
+//│ ║  l.XX: 	fun choose(flag) = if flag then {answer: 1} else {answer: 2}
+//│ ╙──      	                                 ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
 // Recursive spreads must converge even as their candidate graph grows.
 // TODO: Resolve fields through widened recursive spreads.
 :fixme
