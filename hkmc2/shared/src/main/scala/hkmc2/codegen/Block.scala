@@ -1250,20 +1250,23 @@ sealed abstract class Result extends Located:
     case Value.Lit(lit) => 0
     case DynSelect(qual, fld, _) => qual.size + fld.size
 
-  /** The erased type of the value produced by this result. */
+  /** The erased type of the value produced by this node, when the IR can supply one.
+    * `N` means the node supplies no value-type information. An unresolved property read, for example,
+    * can produce a value whose representation is unknown. A bare path to a known getter also has `N`
+    * because only the enclosing `Call(path, Nil)` evaluates the getter and carries its result type.
+    *
+    * [[erasedType_!]] maps `N` to [[ErasedType.Unknown]], the top reference type. [[ErasedType.Nothing]]
+    * is an explicit bottom type, as on the `undefined` literal.
+    */
   lazy val erasedType: Opt[ErasedValueType] = this match
     case Value.SimpleRef(sym) => sym match
       case l: LocalVarSymbol => l.erasedType
       case sym: BuiltinSymbol => S(sym.erasedType)
-    // * A reference to a class is the class *object* (a `Class`).
-    case Value.MemberRef(_, _: ClassSymbol) => N
-    case Value.MemberRef(_, disamb: ModuleOrObjectSymbol) => disamb.erasedType
-    case Value.MemberRef(bms, disamb: TypeAliasSymbol) =>
-      // * This is not supposed to happen, but could still be reached in ill-formed programs
-      N
-    // * A `val` or `fun` is a block *member*, so its references are `MemberRef`s rather than `SimpleRef`s, and
-    // * its declared type lives on the associated `TermSymbol` - the same shape `Select` reads below.
-    case Value.MemberRef(_, disamb: TermSymbol) => disamb.erasedType
+    case path @ (_: Value.MemberRef | _: Select | _: SuperSelect | _: DynSelect) => path.targetSymbol match
+      case S(term: TermSymbol) => term.bareReferenceType
+      case S(mod: ModuleOrObjectSymbol) => mod.erasedType
+      // Unresolved members and class objects have no recorded representation.
+      case _ => N
     case Value.This(cls: ClassSymbol) => S(ErasedType.ValueLike(rsc = S(false), cls))
     case Value.This(mod: ModuleOrObjectSymbol) => mod.erasedType
     case Value.Lit(_: Tree.IntLit) => S(ErasedType.Int)
@@ -1281,18 +1284,6 @@ sealed abstract class Result extends Located:
     case c @ Call(fun, argss) =>
       if argss.sizeCompare(c.signature.paramListCount) == 0 then c.signature.ret
       else S(ErasedType.Function(rsc = S(false)))
-    // * A resolved selection has the type of the member it refers to (e.g. `this.field`); an
-    // * unresolved selection (dynamic field access) stays unknown.
-    case sel: SuperSelect => sel.symbol.erasedType
-    case DynSelect(_, _, DynSelectKind.Member(sym)) => sym.erasedType
-    case sel @ Select(_, _) => sel.symbol match
-      case S(ts: TermSymbol) => ts.erasedType
-      // * A class reference is the class object, so it stays unknown.
-      case S(_: ClassSymbol) => N
-      case S(d: ModuleOrObjectSymbol) => d.erasedType
-      // * A type alias is not a value; this can only occur in ill-formed programs.
-      case S(_: TypeAliasSymbol) => N
-      case _ => N
     case Cast(_, target, _) => S(target)
     // * `Instantiate` always yields an instance of the class, since the constructor is guaranteed to be fully-applied
     // * after lowering.
