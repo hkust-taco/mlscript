@@ -152,11 +152,11 @@ private fun rest(xs) = if xs is [_, ..ys] then ys
 //│ set tmp = [1, 2];
 //│ set tmp1 = [0, ...tmp];
 //│ set tmp2 = rest¹‹(Unknown) => Unknown›(tmp1);
-//│ set tmp3 = globalThis⁰.Array¹.isArray⁰‹(...Array⁰) => ?›(tmp2);
+//│ set tmp3 = globalThis⁰.Array¹.isArray⁰‹(?) => ?›(tmp2);
 //│ set tmp4 = [1, 2];
 //│ set tmp5 = [0, ...tmp4];
 //│ set tmp6 = rest¹‹(Unknown) => Unknown›(tmp5);
-//│ set tmp7 = globalThis⁰.Array¹.isArray⁰‹(...Array⁰) => ?›(tmp6);
+//│ set tmp7 = globalThis⁰.Array¹.isArray⁰‹(?) => ?›(tmp6);
 //│ return [tmp3, tmp7]
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [false, true]
