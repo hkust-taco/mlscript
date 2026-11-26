@@ -632,7 +632,7 @@ object RecordFieldSymbol:
     /** A record that spreads another one has the field as its own copy of `field`, which the other record has.
       * `mut {...r}` can thus assign a field that `r` has immutable, and `{...r}` cannot assign a field that `r`
       * has mutable. */
-    case Copied(field: RecordFieldSymbol)
+    case Copied(field: RecordFieldSymbol)(val spreadLoc: Opt[Loc])
     /** The declarations of this key in the intersected record types, in source traversal order for diagnostics.
       * Each distinct declaration contributes its erasure and any of them can make the field mutable. */
     case Merged(fields: Ls[RecordFieldSymbol])

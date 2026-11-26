@@ -757,9 +757,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     val definition = diagnostic match
       case field: RecordFieldSymbol => field.origin match
         // The spread explains why this copy is read-only even when the original field is mutable.
-        case _: RecordFieldSymbol.Origin.Copied =>
-          (msg"This spread copies the field as read-only:" -> field.toLoc) ::
-            (msg"The copied field is defined here:" -> field.root.toLoc) :: Nil
+        case copy: RecordFieldSymbol.Origin.Copied =>
+          (msg"This spread copies the field as read-only:" -> copy.spreadLoc) ::
+            (msg"The copied field is defined here:" -> field.toLoc) :: Nil
         // The components of an intersection of record types each declare the field.
         case RecordFieldSymbol.Origin.Merged(fields) => fields.flatMap(defined)
         case RecordFieldSymbol.Origin.Declared => defined(field)
@@ -881,7 +881,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                   // Alternatives can share a declaration even when none is common to the whole union.
                   case RecordFieldSymbol.Origin.Merged(first :: rest) =>
                     (label -> first.toLoc) :: rest.map(d => msg"This target also includes this declaration." -> d.toLoc)
-                  case _ => (label -> field.root.toLoc.orElse(field.toLoc)) :: Nil
+                  case _ => (label -> field.toLoc) :: Nil
                 case _ => (label -> target.toLoc) :: Nil
             ,
             source = Diagnostic.Source.Compilation)

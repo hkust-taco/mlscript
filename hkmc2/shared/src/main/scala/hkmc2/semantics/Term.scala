@@ -701,13 +701,13 @@ object RcdField:
       case tpe => tpe
     make(field, bounds, signature = S(readType), initializer = N, source = true, mut = mut, mutable = mut || mutableRecord,
       symbol = symbol)
-  /** Create the field that `spread` copies from `origin`. Its symbol points to the spread in the
-    * receiving record, whose mutability determines whether the copy can be assigned.
+  /** Create the field that `spread` copies from `origin`. The field name retains its declaration site.
+    * The spread identifies the copy in the receiving record, whose mutability determines whether it can be assigned.
     * Resolution reads its initial value through the field's `root`, so its definition has no body. */
   def copied(origin: RcdField, mutableRecord: Bool, spread: RcdSpread)(using State): RcdField =
     val definition = origin.tsym.defn.get
-    val tsym = derivedSymbol(origin.sym.nme, RecordFieldSymbol.Origin.Copied(origin.tsym), mutableRecord,
-      definition.sign, definition.annotations, spread.toLoc)
+    val tsym = derivedSymbol(origin.sym.nme, RecordFieldSymbol.Origin.Copied(origin.tsym)(spread.toLoc), mutableRecord,
+      definition.sign, definition.annotations, origin.tsym.toLoc)
     RcdField(origin.field, origin.rhs, tsym.member)(false, origin.key)
   /** Create the shared property of record types that declare the same runtime key. Its bounds come from
     * all the declarations. A symbol key retains its runtime access path even if the source names differ. */

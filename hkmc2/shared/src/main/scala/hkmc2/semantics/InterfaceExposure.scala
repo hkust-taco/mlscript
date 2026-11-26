@@ -32,7 +32,6 @@ object InterfaceExposure:
   /** The write admitted by a mutable field before any annotation restricts its representation. */
   def fieldInput(field: TermSymbol, source: Term, path: ShapeProvenance): UnknownValueShape =
     UnknownValueShape(source, fromPublicInterface = true)(path.via(
-      // A mutable copy can also make an immutable record literal's field assignable.
       msg"Field '${field.nme}' admits assigned values of unknown shape." -> field.toLoc))
 
   def isPublic(definition: Definition): Bool =
@@ -349,7 +348,13 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
         watch((member, context, bindings))(resolver.listenMemberValue(lookup,
           rctx.fieldProjectionSite(field.sym), field.rhs, bindings, () => ())): value =>
           emit(value, path.via(msg"This value is stored in this record field." -> field.toLoc))
-        if member.mutable then field.tsym.defn.foreach(exposeWrite(_, lookup.instantiate(bindings), path))
+        if member.mutable then field.tsym.defn.foreach: td =>
+          // A mutable copy admits writes even when its source field is immutable.
+          val writePath = field.tsym.origin match
+            case copy: RecordFieldSymbol.Origin.Copied =>
+              path.via(msg"This spread creates a writable copy of the field." -> copy.spreadLoc)
+            case _ => path
+          exposeWrite(td, lookup.instantiate(bindings), writePath)
       case base: BaseShape => exposeClassInterface(base.defn)
       case callable: CallableTypeShape =>
         callable.declaration.filter(origin => rctx.state.isOwnedSym(origin.definition.tsym)).foreach: origin =>

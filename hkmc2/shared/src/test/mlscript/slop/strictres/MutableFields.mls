@@ -704,6 +704,9 @@ exportedMutableCopy.item.length
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'length' of a value with unknown shape.
 //│ ╟── Field 'item' admits assigned values of unknown shape.
+//│ ║  l.+1: 	private val privateImmutableSource = {item: "abc"}
+//│ ║        	                                      ^^^^
+//│ ╟── This spread creates a writable copy of the field.
 //│ ║  l.+2: 	val exportedMutableCopy = mut {...privateImmutableSource}
 //│ ║        	                               ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── 'exportedMutableCopy' is exposed by this compilation unit.
