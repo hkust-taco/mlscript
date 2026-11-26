@@ -42,65 +42,12 @@ class NewResolver:
   // shape so repeated subscriptions do not manufacture distinct unit candidates.
   private lazy val unitResultShape = IntroShape(unit, N)
 
-  /** Observe source slots while inference is still open. Interface exposure can subsequently
-    * add unknown inputs, and these subscriptions retain those alternatives too. Expanding an
-    * InstanceShape here uses the resolver's contextual type interpreter; erasure must not
-    * reconstruct substitutions or install new listeners after the block has been completed.
-    */
-  def prepareErasure(root: Statement)(using ResolutionContext): Unit =
-    val declarations = new ErasureDeclarations(root)
-    declarations.parameters.values.foreach: p =>
-      observeErasureVariable(p.sym)
-    declarations.variables.foreach:
-      case symbol: VarSymbol => observeErasureVariable(symbol)
-      case symbol: TermSymbol if !symbol.isErased => observeErasure(symbol)(listenMemberVariable(symbol))
-      // A temporary that elaboration declares (see ErasureDeclarations) is observed like a variable,
-      // unless its representation was fixed when it was created.
-      case symbol: TempSymbol if symbol.erasedType.isEmpty =>
-        observeErasure(symbol)(listenTerm(SimpleRef(symbol)(N)))
-      case _ => ()
-    declarations.statements.foreach:
-      case td: TermDefinition => observeErasureDefinition(td)
-      case lam: Lam if !lam.resultSlot.isErased =>
-        rctx.state.erasureInputs.register(lam.resultSlot): publish =>
-          listenTermViews(lam.body)(publish)
-      case _ => ()
-
-  private def observeErasure(symbol: ErasureInputs.InputSymbol)(connect: Listener => Unit)(using ResolutionContext): Opt[TermShapeHost] =
-    Option.when(rctx.state.isOwnedSym(symbol))(rctx.state.erasureInputs.register(symbol): publish =>
-      connect(shape => listenInstanceViews(shape)(publish))
-    )
-
-  private def observeErasureVariable(symbol: VarSymbol)(using ResolutionContext): Opt[TermShapeHost] =
-    if symbol.isErased then N else observeErasure(symbol)(listenTerm(SimpleRef(symbol)(N)))
-
-  private def observeErasureDefinition(td: TermDefinition)(using ResolutionContext): Opt[TermShapeHost] =
-    if td.tsym.isErased then N else observeErasure(td.tsym): publish =>
-      // The function body returns its payload. AsyncLowering wraps that body later;
-      // the callable's promise representation is assigned separately by Erasure.
-      td.body.foreach(body => listenResult(body)(publish))
-      // A field that assignments can replace also holds the values assigned to it, including those that other
-      // compilation units can assign when it is exposed (see `assignField` and `InterfaceExposure`). Assignments
-      // in later blocks and in other compilation units reach consumer copies of the field's host instead, which
-      // the field's representation does not include: lowering converts their values to that representation.
-      if isAssignableField(td) then listenMemberVariable(td.tsym)(publish)
-
-  /** Include a value written to a record copy when inferring the original field's runtime representation. */
-  private def observeCopyWrite(copy: RecordFieldSymbol, value: TermShape)(using caller: ResolutionContext): Unit =
-    val root = copy.root
-    if root isnt copy then
-      // The declaration's representation is shared across calls. Interpret the assigned value with the
-      // writer's type arguments so a write in a generic function contributes its instantiated shapes.
-      val declaration = caller.withInstances(TypeSubstitution.empty)
-      root.defn.flatMap(observeErasureDefinition(_)(using declaration)).foreach: representation =>
-        listenInstanceViews(value)(representation.publish)
-
   /** Whether assignments can replace the value of the field that `td` defines: a mutable field (`mut val`,
     * including a mutable constructor parameter) or a record field. A record field that is not mutable gets no
     * assigned value (see `resolveFieldWrite`), but its representation gets those assigned to its mutable copies
     * (see `writeField`).
     */
-  private def isAssignableField(td: TermDefinition): Bool =
+  private[semantics] def isAssignableField(td: TermDefinition): Bool =
     (td.k is syntax.MutVal) || (td.k is syntax.RecordField)
   
   /** Interpret types through completed symbolic candidates, independently of term overloads. */
@@ -1095,7 +1042,7 @@ class NewResolver:
       listenTypeViews(transportType(instance.tpe, marks :: Nil), view)(listener)
     case _ => listener(value)
 
-  private def listenTermViews(term: Term)(listener: ValueListener)(using ResolutionContext): Unit =
+  private[semantics] def listenTermViews(term: Term)(listener: ValueListener)(using ResolutionContext): Unit =
     listenTermViewsOrProbe(term)(listener, _ => ())
 
   private def listenTermViewsOrProbe(term: Term)(listener: ValueListener, probe: ProbeListener)(using ResolutionContext): Unit =
@@ -2442,14 +2389,7 @@ class NewResolver:
           case S(tpe) => exposeOmitted(tpe)
           case N =>
             val rest = base.params.exists(_.variadic.exists(_.param.sym is inherited.sym))
-            // Direct calls to the override also use the inherited parameter's runtime slot.
-            // Their arguments contribute to its representation without entering the base body.
-            if !rest && parameterSignature(inherited).isEmpty then
-              val declarations = rctx.withInstances(TypeSubstitution.empty)
-              for
-                baseInputs <- observeErasureVariable(inherited.sym)(using declarations)
-                ownInputs <- observeErasureVariable(target.sym)(using declarations)
-              do ownInputs.subscribeToShapes(baseInputs.publish)
+            rctx.state.erasureInputs.includeOverrideParameter(inherited, target.sym, rest, this)
             def foreignArgument =
               InterfaceExposure.parameterInput(inherited, rest, inheritedExposure(base))(this)._2
             forwardInputs(inherited.sym, MemberSlot.Parameter(inherited), foreignArgument): value =>
@@ -2461,11 +2401,7 @@ class NewResolver:
   private def memberResultSlot(td: TermDefinition)(using caller: ResolutionContext): ErasureInputs.ResultSlot =
     // The declaration has one slot. Each reader applies its own receiver's bindings and exits.
     given ResolutionContext = caller.withInstances(TypeSubstitution.empty)
-    // Constructor parameters determine field storage. An async or generator body produces a
-    // payload, while callers receive a promise or iterator with its own fixed representation.
-    val inferred = if td.sign.nonEmpty || td.tsym.decl.exists(_.isInstanceOf[Param]) || td.resultWrapperAnnotation.nonEmpty
-      then N else observeErasureDefinition(td)
-    rctx.state.erasureInputs.resultSlot(td, inferred): publish =>
+    rctx.state.erasureInputs.resultSlot(td, this): publish =>
       def returned(shape: TermShape)(using ResolutionContext): Unit =
         publish(instantiateShape(shape, rctx.instances))
       val written = memberSignature(td).nonEmpty
@@ -4794,8 +4730,7 @@ class NewResolver:
       case _ => ()
     listenTerm(rhs)(assign(lhs, _))
 
-  /** Assignments to a field are inputs of the field, like its initializer: erasure infers the representation of a
-    * field without a declared type from both (see `observeErasureDefinition`). Resolve the assigned member the way
+  /** Resolve an assignment to a field and record the values it can receive. Resolve the assigned member the way
     * `newSel` and `unresolvedRef` resolve selections. For each possible receiver, check the assigned value against
     * the field's written type or supply it to the field for inference (see `resolveFieldWrite`). The source
     * `scope` of `lhs` determines the private members it can select.
@@ -4877,7 +4812,7 @@ class NewResolver:
       case value: TermShape =>
         val assigned = MarkedShape.enter(value, ResolutionBoundary(field), N)
         if publishActivated(rctx.memberVariable(field), assigned) then field match
-          case copy: RecordFieldSymbol => observeCopyWrite(copy, assigned)
+          case copy: RecordFieldSymbol => rctx.state.erasureInputs.observeCopyWrite(copy, assigned, this)
           case _ => ()
       case NoShape => ()
   
@@ -5551,7 +5486,7 @@ class NewResolver:
       case _: SymShape => softAssert(false, "Value hosts contain only term shapes")
     )
 
-  private def listenMemberVariable(sym: TermSymbol)(receive: Listener)(using ResolutionContext): Unit =
+  private[semantics] def listenMemberVariable(sym: TermSymbol)(receive: Listener)(using ResolutionContext): Unit =
     listenValueHost(rctx.memberVariable(sym))(receive)
 
   private def listen(trm: Term, discardMarks: Bool)(receive: ShapeListener[Shape])(using ResolutionContext): Unit =
@@ -5653,7 +5588,7 @@ class NewResolver:
               // Like the record they are packed into at run time, named tuple fields are immutable.
               val field = RcdField.source(key, value, mut = false, mutableRecord = false)(using rctx.owner)
               lexicalBinders(tuple).foreach(binders => rctx.state.lexicalTypeBinders(field.tsym) = binders)
-              observeErasureDefinition(field.tsym.defn.get)
+              rctx.state.erasureInputs.observeDefinition(field.tsym.defn.get, this)
               field))
             record.withLocOf(tuple)
             // The record's fields are the tuple's own field expressions, so its

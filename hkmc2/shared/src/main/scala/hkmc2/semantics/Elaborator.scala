@@ -3892,7 +3892,7 @@ extends Importer:
     val (res, newCtx) = block(sts, hasResult = false, resultInterp = Trm)
     // TODO handle name clashes
     if newResolution then
-      prepareErasure(res)
+      rctx.state.erasureInputs.observeBlock(res, this)
       settleUnboundReferences()
       InterfaceExposure(this).check(exports, Nil)
     rctx.completeBlock(res)
@@ -3902,7 +3902,7 @@ extends Importer:
     given UnderCtx = UnderCtx.none
     val (res, ctx) = block(sts, hasResult = false, resultInterp = Trm)
     if newResolution then
-      prepareErasure(res)
+      rctx.state.erasureInputs.observeBlock(res, this)
       settleUnboundReferences()
       val exports = res.stats.collect:
         case d: Definition if InterfaceExposure.isPublic(d) => d.bsym

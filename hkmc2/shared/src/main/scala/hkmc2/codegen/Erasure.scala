@@ -36,7 +36,7 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
     */
   private def valueType(input: TermShape | TermDefinition): Opt[ErasedValueType] = input match
     case td: TermDefinition =>
-      if td.tsym.isErased then S(td.tsym.sourceDeclaredResultType.getOrElse(ErasedType.Unknown))
+      if td.tsym.isErasureReady then S(td.tsym.sourceDeclaredResultType.getOrElse(ErasedType.Unknown))
       else wrappedResult(td, declaredResultType(td)).callType
     case MarkedShape(value, _) => valueType(value)
     case ContextualShape(value, _) => valueType(value)
@@ -261,7 +261,7 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
         val specified = declaredResult.orElse:
           // A wrapped definition inherits no payload type from its base's callable result.
           if config.language.useNewResolution && td.resultWrapperAnnotation.nonEmpty then N
-          else overrides.validatedBases(td.tsym).filter(_.isErased).flatMap(_.sourceDeclaredResultType).nextOption()
+          else overrides.validatedBases(td.tsym).filter(_.isErasureReady).flatMap(_.sourceDeclaredResultType).nextOption()
         specified.orElse(inferredType(td.tsym)).map:
           representable(_, td.resultSignature.orElse(td.sign).flatMap(_.toLoc).orElse(td.tsym.toLoc),
             if declaredResult.isEmpty then S(td.tsym) else N)
@@ -414,7 +414,7 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
       * contribute `Unknown`. Making a required inherited parameter optional also admits its null default.
       */
     def eraseParameter(p: Param, visiting: Set[VarSymbol]): Unit =
-      if !p.sym.isErased && !visiting(p.sym) then
+      if !p.sym.isErasureReady && !visiting(p.sym) then
         val declared = declaredParameterType(p)
         val erased = declared.orElse:
           inheritedParams.get(p.sym) match
@@ -424,7 +424,7 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
               inherited.foreach: param =>
                 if parameterSymbols(param.sym) then eraseParameter(param, visiting + p.sym)
               val types = inherited.map: param =>
-                if param.sym.isErased then param.sym.erasedType.getOrElse(ErasedType.Unknown) else ErasedType.Unknown
+                if param.sym.isErasureReady then param.sym.erasedType.getOrElse(ErasedType.Unknown) else ErasedType.Unknown
               // Making a required slot optional additionally admits null on direct subclass calls.
               // Its inherited argument channel is unchanged for calls through the base interface.
               val defaults = if p.flags.opt && inherited.exists(!_.flags.opt) then ErasedType.Unknown :: Nil else Nil
@@ -444,7 +444,7 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
         case sym: BlockMemberSymbol => sym.tsym
         case _ => N
       field.foreach: sym =>
-        if !sym.isErased then sym.initializeErasure:
+        if sym.needsErasure then sym.initializeErasure:
           // Only an unannotated mutable field needs a separate type for the values assigned to it.
           // A declared type, including its reported error, is shared with the constructor parameter.
           if p.flags.mut && p.sign.isEmpty && !p.modulefulness.isModuleful && representationError(p.sym.erasedType).isEmpty
@@ -454,14 +454,14 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
     // are the class's lists, and a saturated call always produces its instance.
     statements.foreach:
       // Code generation and the InvalML typer can each erase the same elaborated tree.
-      case lam: Lam if !lam.resultSlot.isErased =>
+      case lam: Lam if !lam.resultSlot.isErasureReady =>
         val slot = lam.resultSlot
         slot.erasedType = parameterError(Iterator.single(lam.params)).orElse:
           inferredType(slot).map(representable(_, lam.body.toLoc, S(slot)))
-      case asc: Asc if !asc.isErased =>
+      case asc: Asc if !asc.isErasureReady =>
         asc.erasedType = eraseSignature(asc.ty).map(representable(_, asc.ty.toLoc, N))
       case cls: ClassLikeDef => cls.ctorSym.foreach: symbol =>
-        if !symbol.isErased then symbol.initializeErasure:
+        if symbol.needsErasure then symbol.initializeErasure:
           if config.language.useNewResolution then S(ErasedFuncSignature.Signature(
             (cls.paramsOpt.toList ::: cls.auxParams).map(LoweredParamList.fixedPrefix(_).map(_.sym.erasedType)),
             ErasedResult.Direct(S(nominalType(cls)))))
@@ -475,7 +475,7 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
       * only consults inherited results whose members have completed erasure.
       */
     def eraseDefinition(td: TermDefinition, visiting: Set[TermSymbol]): Unit =
-      if !td.tsym.isErased && !visiting(td.tsym) then
+      if td.tsym.needsErasure && !visiting(td.tsym) then
         td.tsym.overriddenMembers.flatMap(definitionsBySymbol.get).foreach(eraseDefinition(_, visiting + td.tsym))
         // Definitions rejected before erasure still need initialized signatures for diagnostic recovery.
         td.tsym.initializeErasure:
@@ -484,8 +484,8 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
     def variableType(sym: ErasureInputs.InputSymbol): Opt[ErasedValueType] =
       inferredType(sym).map(representable(_, sym.toLoc, S(sym)))
     declarations.variables.foreach:
-      case sym: VarSymbol if !sym.isErased => sym.erasedType = variableType(sym)
-      case sym: TermSymbol if !sym.isErased => sym.initializeErasure(variableType(sym))
+      case sym: VarSymbol if !sym.isErasureReady => sym.erasedType = variableType(sym)
+      case sym: TermSymbol if sym.needsErasure => sym.initializeErasure(variableType(sym))
       // A temporary's erased type is populated at most once (see TempSymbol); without inferred inputs, it stays
       // unknown, as it was before erasure.
       case sym: TempSymbol if sym.erasedType.isEmpty => variableType(sym).foreach(tpe => sym.erasedType = S(tpe))

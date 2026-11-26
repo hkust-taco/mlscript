@@ -568,11 +568,11 @@ end CanonicalErasedValueType
   */
 trait HasDelayedErasedType[T <: ErasedValueType]:
   private var assignedErasedType: Opt[T] = null
-  final def isErased: Bool = assignedErasedType != null
+  final def isErasureReady: Bool = assignedErasedType != null
   final def erasedType: Opt[T] =
-    assert(isErased, "Erased type read before erasure")
+    assert(isErasureReady, "Erased type read before erasure")
     assignedErasedType
   final def erasedType_=(value: Opt[T]): Unit =
-    assert(!isErased, "Erased type initialized more than once")
+    assert(!isErasureReady, "Erased type initialized more than once")
     assert(value != null, "An initialized erased type cannot be null")
     assignedErasedType = value

@@ -121,6 +121,68 @@ private[hkmc2] final class ErasureInputs:
   private val values = mutable.Map.empty[InputSlot, TermShapeHost]
   private val results = mutable.Map.empty[TermSymbol, ResultSlot]
 
+  /** Collect the possible values of the block's declarations and lambda results for erasure.
+    * Observation starts before interface exposure so it also sees values supplied by external callers. */
+  private[semantics] def observeBlock(root: Statement, resolver: NewResolver)(using ResolutionContext): Unit =
+    val declarations = new ErasureDeclarations(root)
+    declarations.parameters.values.foreach: p =>
+      observeVariable(p.sym, resolver)
+    declarations.variables.foreach:
+      case symbol: VarSymbol => observeVariable(symbol, resolver)
+      case symbol: TermSymbol if symbol.needsErasure => observeSymbol(symbol, resolver)(resolver.listenMemberVariable(symbol))
+      // A temporary that elaboration declares (see ErasureDeclarations) is observed like a variable,
+      // unless its representation was fixed when it was created.
+      case symbol: TempSymbol if symbol.erasedType.isEmpty =>
+        observeSymbol(symbol, resolver)(resolver.listenTerm(SimpleRef(symbol)(N)))
+      case _ => ()
+    declarations.statements.foreach:
+      case td: TermDefinition => observeDefinition(td, resolver)
+      case lam: Lam if !lam.resultSlot.isErasureReady =>
+        register(lam.resultSlot): publish =>
+          resolver.listenTermViews(lam.body)(publish)
+      case _ => ()
+
+  private def observeSymbol(symbol: InputSymbol, resolver: NewResolver)(connect: ResolutionContext.Listener => Unit)(using ResolutionContext): Opt[TermShapeHost] =
+    Option.when(rctx.state.isOwnedSym(symbol))(register(symbol): publish =>
+      // Expand instances while their type substitutions are in scope. Erasure reads the block's completed observations.
+      connect(shape => resolver.listenInstanceViews(shape)(publish))
+    )
+
+  private def observeVariable(symbol: VarSymbol, resolver: NewResolver)(using ResolutionContext): Opt[TermShapeHost] =
+    if symbol.isErasureReady then N else observeSymbol(symbol, resolver)(resolver.listenTerm(SimpleRef(symbol)(N)))
+
+  private[semantics] def observeDefinition(td: TermDefinition, resolver: NewResolver)(using ResolutionContext): Opt[TermShapeHost] =
+    if !td.tsym.needsErasure then N else observeSymbol(td.tsym, resolver): publish =>
+      // The function body returns its payload. AsyncLowering wraps that body later;
+      // the callable's promise representation is assigned separately by Erasure.
+      td.body.foreach(body => resolver.listenResult(body)(publish))
+      // A field that assignments can replace also holds the values assigned to it, including those that other
+      // compilation units can assign when it is exposed (see `NewResolver.assignField` and `InterfaceExposure`). Assignments
+      // in later blocks and in other compilation units reach consumer copies of the field's host instead, which
+      // the field's representation does not include: lowering converts their values to that representation.
+      if resolver.isAssignableField(td) then resolver.listenMemberVariable(td.tsym)(publish)
+
+  /** Include a value written to a record copy when inferring the original field's runtime representation. */
+  private[semantics] def observeCopyWrite(copy: RecordFieldSymbol, value: TermShape, resolver: NewResolver)(using caller: ResolutionContext): Unit =
+    val root = copy.root
+    if root isnt copy then
+      // The declaration's representation is shared across calls. Interpret the assigned value with the
+      // writer's type arguments so a write in a generic function contributes its instantiated shapes.
+      val declaration = caller.withInstances(TypeSubstitution.empty)
+      root.defn.flatMap(observeDefinition(_, resolver)(using declaration)).foreach: representation =>
+        resolver.listenInstanceViews(value)(representation.publish)
+
+  /** Arguments of direct calls to an override also contribute to its inherited parameter's representation.
+    * The base method's body only observes arguments of calls that can invoke it. */
+  private[semantics] def includeOverrideParameter(base: Param, overriding: VarSymbol, rest: Bool, resolver: NewResolver)
+      (using caller: ResolutionContext): Unit =
+    if !rest && resolver.parameterSignature(base).isEmpty then
+      given ResolutionContext = caller.withInstances(TypeSubstitution.empty)
+      for
+        baseInputs <- observeVariable(base.sym, resolver)
+        overridingInputs <- observeVariable(overriding, resolver)
+      do overridingInputs.subscribeToShapes(baseInputs.publish)
+
   // Includes property declarations synthesized by named-tuple resolution, which
   // have source expressions but are not separate nodes in the source syntax.
   def slots: Iterator[InputSlot] = values.keysIterator
@@ -142,15 +204,21 @@ private[hkmc2] final class ErasureInputs:
   /** The values a caller can receive through `member`. Connect the declaration once, before
     * replaying any of its results, so recursive members share the same slot.
     */
-  private[semantics] def resultSlot(member: TermDefinition, inferredValues: Opt[TermShapeHost])
-      (connect: ResolutionContext.Listener => Unit)(using ResolutionContext): ResultSlot = results.get(member.tsym) match
-    case S(slot) => slot
-    case N =>
-      val slot = new ResultSlot(ErasureInputs.Representation(member, inferredValues))
-      results(member.tsym) = slot
-      slot.inferenceHost
-      connect(value => slot.publish(ErasureInputs.Returned(member, value)))
-      slot
+  private[semantics] def resultSlot(member: TermDefinition, resolver: NewResolver)
+      (connect: ResolutionContext.Listener => Unit)(using ResolutionContext): ResultSlot =
+    // Constructor parameters determine field storage. An async or generator body produces a
+    // payload, while callers receive a promise or iterator with its own fixed representation.
+    val inferred = if member.sign.nonEmpty || member.tsym.decl.exists(_.isInstanceOf[Param]) || member.resultWrapperAnnotation.nonEmpty
+      then N else observeDefinition(member, resolver)
+    // Observing a recursive definition can already have registered its result.
+    results.get(member.tsym) match
+      case S(slot) => slot
+      case N =>
+        val slot = new ResultSlot(ErasureInputs.Representation(member, inferred))
+        results(member.tsym) = slot
+        slot.inferenceHost
+        connect(value => slot.publish(ErasureInputs.Returned(member, value)))
+        slot
 
   /** The completed inputs to a source slot, including the values or declared results of the
     * overrides that `includeOverride` accepts.

@@ -458,10 +458,16 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
     this(k, owner, id)
     initializeErasure(erasure)
   
-  def isErased: Bool = assignedErasure != null
+  /** Whether the source representation can be read, including an initialized unknown representation. */
+  def isErasureReady: Bool = assignedErasure != null
+  /** Derived fields compute their representation from their declarations. Only a symbol that owns
+    * its representation can receive a value from the erasure pass. */
+  protected def ownsErasureSlot: Bool = true
+  /** Whether erasure must initialize a representation on this symbol. */
+  final def needsErasure: Bool = ownsErasureSlot && assignedErasure == null
   
   private def assigned: Opt[ErasedValueType | ErasedCallableSignature] =
-    assert(isErased, s"Erasure of '$nme' read before initialization")
+    assert(assignedErasure != null, s"Erasure of '$nme' read before initialization")
     assignedErasure
   
   /** The erased signature that `Erasure` assigned to this source definition, or that its creator assigned to a
@@ -490,8 +496,9 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
   def irErasure: Opt[ErasedValueType | ErasedCallableSignature] = irFunDefn match
     case S(fun) => S(fun.signature.erasure)
     case N => assigned
-  def initializeErasure(value: Opt[ErasedValueType | ErasedCallableSignature]): Unit =
-    assert(!isErased, "Erasure initialized more than once")
+  final def initializeErasure(value: Opt[ErasedValueType | ErasedCallableSignature]): Unit =
+    assert(ownsErasureSlot, s"'$nme' does not own an erasure slot")
+    assert(assignedErasure == null, "Erasure initialized more than once")
     assert(value != null, "An initialized erasure cannot be null")
     assignedErasure = value
   
@@ -600,10 +607,11 @@ final class RecordFieldSymbol(id: Tree.Ident, val mutable: Bool, val origin: Rec
   def root: RecordFieldSymbol = origin match
     case Origin.Copied(field) => field.root
     case Origin.Declared | _: Origin.Merged => this
-  override def isErased: Bool = origin match
-    case Origin.Declared => super.isErased
-    case Origin.Copied(field) => field.isErased
-    case Origin.Merged(fields) => fields.forall(_.isErased)
+  override protected def ownsErasureSlot: Bool = origin == Origin.Declared
+  override def isErasureReady: Bool = origin match
+    case Origin.Declared => super.isErasureReady
+    case Origin.Copied(field) => field.isErasureReady
+    case Origin.Merged(fields) => fields.forall(_.isErasureReady)
   private def fieldErasure(declared: => Opt[ErasedValueType | ErasedCallableSignature])
       (read: RecordFieldSymbol => Opt[ErasedValueType]): Opt[ErasedValueType | ErasedCallableSignature] = origin match
     case Origin.Declared => declared
@@ -613,9 +621,6 @@ final class RecordFieldSymbol(id: Tree.Ident, val mutable: Bool, val origin: Rec
     fieldErasure(super.sourceErasure)(_.sourceErasedType)
   override def irErasure: Opt[ErasedValueType | ErasedCallableSignature] =
     fieldErasure(super.irErasure)(_.erasedType)
-  override def initializeErasure(value: Opt[ErasedValueType | ErasedCallableSignature]): Unit =
-    assert(origin == Origin.Declared, s"The erasure of derived field '$nme' is computed from its declarations")
-    super.initializeErasure(value)
 
 object RecordFieldSymbol:
   /** How a record or a record type comes to have a field. */
