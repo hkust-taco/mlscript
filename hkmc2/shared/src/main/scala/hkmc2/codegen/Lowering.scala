@@ -1457,6 +1457,16 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       val (target, resolvedSelectionSymbol) = lhs.withoutCaptures.instantiated match
         case Resolved(inner, sym) => inner -> S(sym)
         case target => target -> N
+      def assignSelected(prefix: Term, name: Tree.Ident, ref: NewSel | UnresolvedRef,
+          target: Opt[DefinitionSymbol[?]], dynamic: Bool): Block =
+        val fields = ref.resolvedTargets.collect { case field: TermSymbol => field }
+        if fields.sizeCompare(ref.resolvedTargets) != 0 then fail:
+          ErrorReport(msg"Assignment requires a term member" -> ref.toLoc :: Nil,
+            source = Diagnostic.Source.Compilation)
+        else subTerm_nonTail(prefix): p =>
+          subTerm_nonTail(rhs): r =>
+            castForFieldWrite(r, fields, ref.toLoc): value =>
+              assignNamedField(p, name, value, k(unit), ref.keyAccess, unsafe)(target, fields, dynamic)
       target match
       case SimpleRef(sym) =>
         subTerm(rhs): r =>
@@ -1474,40 +1484,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
               source = Diagnostic.Source.Compilation)
       case ref: UnresolvedRef =>
         openSelection(ref): (prefix, member, target) =>
-          target match
-            case S(sym: TermSymbol) =>
-              subTerm_nonTail(prefix): p =>
-                subTerm_nonTail(rhs): r =>
-                  castPathTo(r, sym.sourceErasedType, ref.toLoc): value =>
-                    assignNamedField(p, memberIdent(ref.id, member), value,
-                      k(unit), ref.keyAccess, unsafe)(S(sym), ref.resolvedTargets, ref.dynamicPrefixes.nonEmpty)
-            case N if ref.resolvedTargets.forall(_.isInstanceOf[TermSymbol]) =>
-              subTerm_nonTail(prefix): p =>
-                subTerm_nonTail(rhs): r =>
-                  assignNamedField(p, memberIdent(ref.id, member), r, k(unit), ref.keyAccess, unsafe)(
-                    N, ref.resolvedTargets, ref.dynamicPrefixes.nonEmpty)
-            case _ => fail:
-              ErrorReport(msg"Assignment requires a term member" -> ref.toLoc :: Nil,
-                source = Diagnostic.Source.Compilation)
+          assignSelected(prefix, memberIdent(ref.id, member), ref, target, ref.dynamicPrefixes.nonEmpty)
       case sel: NewSel => newSelection(sel): (prefix, name, target) =>
-        target match
-          case N if sel.tupleIndex.nonEmpty =>
+        sel.tupleIndex match
+          case S(index) =>
             subTerm_nonTail(prefix): p =>
               subTerm_nonTail(rhs): r =>
-                AssignDynField(p, Value.Lit(Tree.IntLit(BigInt(sel.tupleIndex.get)))(trm.toLoc), DynSelectKind.ArrayIdx, r, k(unit))
-          case S(sym: TermSymbol) =>
-            subTerm_nonTail(prefix): p =>
-              subTerm_nonTail(rhs): r =>
-                castPathTo(r, sym.sourceErasedType, sel.toLoc): value =>
-                  assignNamedField(p, name, value, k(unit), sel.keyAccess, unsafe)(
-                    S(sym), sel.resolvedTargets, sel.hasDynamicTarget)
-          case N if sel.resolvedTargets.forall(_.isInstanceOf[TermSymbol]) =>
-            subTerm_nonTail(prefix): p =>
-              subTerm_nonTail(rhs): r =>
-                assignNamedField(p, name, r, k(unit), sel.keyAccess, unsafe)(N, sel.resolvedTargets, sel.hasDynamicTarget)
-          case _ => fail:
-            ErrorReport(msg"Assignment requires a term member" -> sel.toLoc :: Nil,
-              source = Diagnostic.Source.Compilation)
+                AssignDynField(p, Value.Lit(Tree.IntLit(BigInt(index)))(trm.toLoc), DynSelectKind.ArrayIdx, r, k(unit))
+          case N => assignSelected(prefix, name, sel, target, sel.hasDynamicTarget)
       case sel @ Sel(prefix, nme) =>
         subTerm(prefix): p =>
           subTerm_nonTail(rhs): r =>
@@ -1991,6 +1975,29 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   /** Like [[castTo]], for a path that flows into a path position: a cast of a path is itself a path. */
   def castPathTo(p: Path, expected: Opt[ErasedValueType], loc: Opt[Loc])(k: Path => Block): Block =
     p.tryCoerceTo(expected.getOrElse(ErasedType.Unknown), loc.orElse(p.toLoc)).fold(compError)(k)
+
+  /** Coerce a value for a single store that can reach any of the resolved fields. A dynamic selection
+    * can have no known fields, in which case there is no destination representation to check. */
+  private def castForFieldWrite(value: Path, fields: Ls[TermSymbol], loc: Opt[Loc])(store: Path => Block): Block =
+    fields match
+      case Nil => store(value)
+      case field :: Nil => castPathTo(value, field.sourceErasedType, loc)(store)
+      case _ =>
+        val slots = fields.reverseIterator.map(_.sourceErasedType.getOrElse(ErasedType.Unknown).canonicalize).distinct.toList
+        val actual = value.erasedType_!.canonicalize
+        def fitsAll(tpe: CanonicalErasedValueType): Bool = slots.forall(ErasedType.needsCast(tpe, _).contains(false))
+        slots.find(ErasedType.needsCast(actual, _).isEmpty) match
+          case S(rejected) => castPathTo(value, S(rejected), loc)(store)
+          case N if fitsAll(actual) => store(value)
+          // With single inheritance, a value narrowed for several fields can use their most specific slot.
+          // Disjoint slots have no such slot. Casting an ordinary value to their intersection, Nothing,
+          // would let it through because Nothing fits every representation.
+          case N => slots.find(fitsAll) match
+            case S(slot) => castPathTo(value, S(slot), loc)(store)
+            case N => fail:
+              val types = slots.iterator.map(_.describe).mkString("'", "', '", "'")
+              ErrorReport(msg"Cannot write a value of type '${actual.describe}' to all possible destinations of this field (${types})." ->
+                loc :: Nil, source = Diagnostic.Source.Compilation)
 
   /** The declared erased type of the field a selection resolves to, if it is an annotated `TermSymbol`. */
   private def fieldErasedType(s: Opt[Symbol]): Opt[ErasedValueType] =
