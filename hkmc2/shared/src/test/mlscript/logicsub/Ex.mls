@@ -178,9 +178,9 @@ fun headOption(x) = if x is
 headOption
 //│ Type: ['x, 'A, 'res, 'A1] -> ('x) -> 'res
 //│ Where:
-//│   'x <: Nil | Cons[?, ?]
-//│   'x >:< Cons[?, ?] =>
+//│   'x <: Nil | Cons
+//│   'x >:< Cons =>
 //│       Some['A] <: 'res
 //│       'A1 <: 'A
-//│       'x & Cons[?, ?] <: Cons[out 'A1, ?]
+//│       'x & Cons <: Cons[out 'A1]
 //│   'x >:< Nil => None <: 'res

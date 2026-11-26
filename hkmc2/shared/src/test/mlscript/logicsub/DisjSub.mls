@@ -128,10 +128,10 @@ idIIBB(new Pair(1, 2))
 //│ ║  l.+1: 	idIIBB(new Pair(1, 2))
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  ((Pair[out Bool, out Bool]) -> Bool) & ((Pair[out Int, out Int]) -> Int)  <:  (Pair['A, 'B]) ->{'eff} 'app
-//│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B]}  <:  ¬(Array & {0: Pair[?, ?]})
+//│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B]}  <:  ¬(Array & {0: Pair})
 //│ ╟── because: cannot constrain  Pair['A, 'B]  <:  ⊥
-//│ ╟── because: cannot constrain  (Pair[out Bool, out Bool]) -> Bool  <:  Function[in Array & {0: Pair[?, ?]} & Array & {0: Pair['A, 'B]}, out 'app, out 'eff]
-//│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B] & Pair[?, ?]}  <:  Array & {0: Pair[out Bool, out Bool]}
+//│ ╟── because: cannot constrain  (Pair[out Bool, out Bool]) -> Bool  <:  Function[in Array & {0: Pair} & Array & {0: Pair['A, 'B]}, out 'app, out 'eff]
+//│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B] & Pair}  <:  Array & {0: Pair[out Bool, out Bool]}
 //│ ╟── because: cannot constrain  Pair['A, 'B]  <:  Pair[out Bool, out Bool]
 //│ ╟── because: cannot constrain  'A  <:  Bool
 //│ ╙── because: cannot constrain  1  <:  Bool
@@ -139,10 +139,10 @@ idIIBB(new Pair(1, 2))
 //│ ║  l.+1: 	idIIBB(new Pair(1, 2))
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  ((Pair[out Bool, out Bool]) -> Bool) & ((Pair[out Int, out Int]) -> Int)  <:  (Pair['A, 'B]) ->{'eff} 'app
-//│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B]}  <:  ¬(Array & {0: Pair[?, ?]})
+//│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B]}  <:  ¬(Array & {0: Pair})
 //│ ╟── because: cannot constrain  Pair['A, 'B]  <:  ⊥
-//│ ╟── because: cannot constrain  (Pair[out Bool, out Bool]) -> Bool  <:  Function[in Array & {0: Pair[?, ?]} & Array & {0: Pair['A, 'B]}, out 'app, out 'eff]
-//│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B] & Pair[?, ?]}  <:  Array & {0: Pair[out Bool, out Bool]}
+//│ ╟── because: cannot constrain  (Pair[out Bool, out Bool]) -> Bool  <:  Function[in Array & {0: Pair} & Array & {0: Pair['A, 'B]}, out 'app, out 'eff]
+//│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B] & Pair}  <:  Array & {0: Pair[out Bool, out Bool]}
 //│ ╟── because: cannot constrain  Pair['A, 'B]  <:  Pair[out Bool, out Bool]
 //│ ╟── because: cannot constrain  'B  <:  Bool
 //│ ╙── because: cannot constrain  2  <:  Bool
@@ -154,10 +154,10 @@ idIIBB(new Pair(1, true))
 //│ ║  l.+1: 	idIIBB(new Pair(1, true))
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  ((Pair[out Bool, out Bool]) -> Bool) & ((Pair[out Int, out Int]) -> Int)  <:  (Pair['A, 'B]) ->{'eff} 'app
-//│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B]}  <:  ¬(Array & {0: Pair[?, ?]})
+//│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B]}  <:  ¬(Array & {0: Pair})
 //│ ╟── because: cannot constrain  Pair['A, 'B]  <:  ⊥
-//│ ╟── because: cannot constrain  (Pair[out Bool, out Bool]) -> Bool  <:  Function[in Array & {0: Pair[?, ?]} & Array & {0: Pair['A, 'B]}, out 'app, out 'eff]
-//│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B] & Pair[?, ?]}  <:  Array & {0: Pair[out Bool, out Bool]}
+//│ ╟── because: cannot constrain  (Pair[out Bool, out Bool]) -> Bool  <:  Function[in Array & {0: Pair} & Array & {0: Pair['A, 'B]}, out 'app, out 'eff]
+//│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B] & Pair}  <:  Array & {0: Pair[out Bool, out Bool]}
 //│ ╟── because: cannot constrain  Pair['A, 'B]  <:  Pair[out Bool, out Bool]
 //│ ╟── because: cannot constrain  'A  <:  Bool
 //│ ╙── because: cannot constrain  1  <:  Bool
@@ -165,10 +165,10 @@ idIIBB(new Pair(1, true))
 //│ ║  l.+1: 	idIIBB(new Pair(1, true))
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  ((Pair[out Bool, out Bool]) -> Bool) & ((Pair[out Int, out Int]) -> Int)  <:  (Pair['A, 'B]) ->{'eff} 'app
-//│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B]}  <:  ¬(Array & {0: Pair[?, ?]})
+//│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B]}  <:  ¬(Array & {0: Pair})
 //│ ╟── because: cannot constrain  Pair['A, 'B]  <:  ⊥
-//│ ╟── because: cannot constrain  (Pair[out Int, out Int]) -> Int  <:  Function[in Array & {0: Pair[?, ?]} & Array & {0: Pair['A, 'B]}, out 'app, out 'eff]
-//│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B] & Pair[?, ?]}  <:  Array & {0: Pair[out Int, out Int]}
+//│ ╟── because: cannot constrain  (Pair[out Int, out Int]) -> Int  <:  Function[in Array & {0: Pair} & Array & {0: Pair['A, 'B]}, out 'app, out 'eff]
+//│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B] & Pair}  <:  Array & {0: Pair[out Int, out Int]}
 //│ ╟── because: cannot constrain  Pair['A, 'B]  <:  Pair[out Int, out Int]
 //│ ╟── because: cannot constrain  'B  <:  Int
 //│ ╙── because: cannot constrain  true  <:  Int

@@ -125,7 +125,9 @@ sealed abstract class Type extends InfType with TypeArg:
           // A refinement prints as an intersection, including under negation.
           group(if fields.isEmpty then TypePrecedence.Atom else TypePrecedence.Inter):
             out ++= summon[InfCtx].prim.tagName(name)
-            if args.nonEmpty then out ++= args.iterator.map(_.show).mkString("[", ", ", "]")
+            val unknown = Wildcard.empty
+            val visibleCount = args.lastIndexWhere(_ != unknown) + 1
+            if visibleCount > 0 then args.iterator.take(visibleCount).map(_.show).addString(out, "[", ", ", "]")
             if fields.nonEmpty then
               out ++= fields.iterator.map((l, ty) => s"${l.name}: ${ty.show}").mkString(" & {", ", ", "}")
         case v: InfVar =>
