@@ -142,19 +142,14 @@ private[hkmc2] final class ResolvedValues:
 
     // Interface exposure can discover new fields, and observing a field can in turn expose a value.
     // Keep this observation live until exposure has processed those values.
-    val fields = rctx.state.discoveredFields
-    val detach = fields.inferenceHost.observe: (field, scope) =>
+    def observeField(field: RecordFieldSymbol, scope: ResolutionContext): Unit =
       given ResolutionContext = scope
       field.origin match
         case RecordFieldSymbol.Origin.Copied(_) =>
           // Listen across all calls. The assignment host replays each write with its own type arguments.
           observeSymbol(field, resolver)(resolver.listenMemberVariable(field))
         case _ => field.defn.foreach(observeDefinition(_, resolver))
-    try resolve
-    finally
-      detach()
-      root.resolvedFields = fields.shapes.iterator.map(_._1).toList
-      rctx.state.discoveredFields = new DiscoveredFields
+    root.resolvedFields = rctx.state.discoveredFields.collect(observeField)(resolve)
 
   private def observeSymbol(symbol: InputSymbol, resolver: NewResolver)(connect: ResolutionContext.Listener => Unit)(using ResolutionContext): Unit =
     if rctx.state.isOwnedSym(symbol) then register(symbol): publish =>

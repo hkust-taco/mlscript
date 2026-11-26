@@ -4,9 +4,8 @@ package semantics
 import org.scalatest.funsuite.AnyFunSuite
 import hkmc2.utils.*
 
-/** Diff tests exercise representations. This checks the separate ownership property:
-  * consumers and later worksheet blocks cannot mutate completed observation snapshots.
-  */
+/** Checks the ownership and lifetime of resolution observations. Imports and later worksheet blocks
+  * must preserve completed snapshots, and temporary field discovery must release its graph references. */
 class ResolvedValuesTest extends AnyFunSuite:
   test("completed observations are isolated from worksheet and import consumers"):
     given owner: Elaborator.State = new Elaborator.State
@@ -32,3 +31,25 @@ class ResolvedValuesTest extends AnyFunSuite:
     assert(source.currentShapes(using defining).toSet == Set(initial, other))
     assert(snapshot == List(initial))
     assert(observations == snapshot)
+
+  // Diff tests can check the fields of each block, but cannot detect temporary observers accumulating
+  // in the sealed graph. Reuse the syntax so no new source hosts contribute to its size.
+  test("completing field discovery does not grow the sealed graph"):
+    import io.PlatformPath.given
+    given owner: Elaborator.State = new Elaborator.State
+    val graph = owner.newResolverState
+    given ResolutionContext = graph.context
+    given Raise = diagnostic => fail(diagnostic.theMsg)
+    given DebugPrinter = new DebugPrinter
+    val directory = TestFolders.mainTestDir(os.pwd)
+    given Config = Config.default(directory)
+    given CompilerCtx = CompilerCtx.fresh(io.FileSystem.default, TestFolders.compilerPaths(os.pwd), summon[Config])
+    val resolver = Elaborator(TraceLogger.silent, directory, Elaborator.Ctx.empty)
+    val block = new Term.Blk(Nil, Term.UnitVal())
+    def complete(): Unit =
+      graph.resolvedValues.observeBlock(block, resolver)(())
+      graph.context.completeBlock(block)
+    complete()
+    val size = graph.completedNodes.size
+    (1 to 10).foreach(_ => complete())
+    assert(graph.completedNodes.size == size)

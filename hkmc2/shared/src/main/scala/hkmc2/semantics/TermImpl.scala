@@ -96,7 +96,8 @@ trait FldImpl:
 
 trait BlkImpl:
   this: Blk =>
-  /** Fields that resolution discovered outside the written statements of this compilation unit. */
+  /** Named-tuple properties and writable spread copies created while resolving this block.
+    * Erasure uses these symbols to find the properties' declarations and the values written to copies. */
   private[hkmc2] var resolvedFields: Ls[RecordFieldSymbol] = Nil
   def mkBlkClone(using State, Erasure): Blk = Cloner(SymbolSubst.Id).block(this)
   def showTopLevel(using Scope, ShowCfg, Raise): Document =

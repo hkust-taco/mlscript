@@ -71,7 +71,7 @@ final class NewResolverState(val owner: Elaborator.State):
 
   private[hkmc2] val resolvedValues = new ResolvedValues
   private[semantics] val memberResults = mutable.Map.empty[TermSymbol, MemberResults]
-  private[semantics] var discoveredFields = new DiscoveredFields
+  private[semantics] val discoveredFields = new DiscoveredFields
   val context: ResolutionContext = new ResolutionContext(this, N, N, TypeSubstitution.empty)
   def isOwnedSym(symbol: Symbol): Bool = symbol.getState is owner
   private[semantics] val contexts = mutable.Map.empty[(ResolutionContext, TypeSubstitution), ResolutionContext]
@@ -946,13 +946,35 @@ private[semantics] enum NamespaceWitness:
     case Written(tpe) => tpe.toLoc
     case Instance(cls, site) => site.orElse(cls.headerLoc)
 
-/** Source fields discovered on demand in one block, with the scope of each declaration. */
-private[semantics] final class DiscoveredFields extends Host[(RecordFieldSymbol, ResolutionContext)]:
-  def showDbg(using DebugPrinter): Str = "discovered record fields"
+/** Reports the named-tuple properties and writable spread copies created while resolving one block.
+  * These fields have no declaration in the written block. Some exist before source-value observation
+  * starts, and exposing an exported value can create more. Each needs observation in its declaring
+  * scope before resolution finishes; erasure later needs the field symbols belonging to this block. */
+private[semantics] final class DiscoveredFields:
+  private val entries = mutable.ArrayBuffer.empty[(RecordFieldSymbol, ResolutionContext)]
+  private var observer: Opt[(RecordFieldSymbol, ResolutionContext) => Unit] = N
+
   def add(field: RecordFieldSymbol)(using scope: ResolutionContext): Unit =
     // One declaration covers every invocation, including when a generic caller first discovers it.
     val declaration = scope.withInstances(TypeSubstitution.empty)
-    inferenceHost(using scope.state.context).publish(field -> declaration)(using scope.state.context)
+    // Both producers report a freshly allocated symbol on a lookup miss.
+    entries += field -> declaration
+    observer.foreach(_(field, declaration))
+
+  /** Visit existing fields and those discovered during `resolve`, returning their symbols in discovery order. */
+  def collect(visit: (RecordFieldSymbol, ResolutionContext) => Unit)(resolve: => Unit): Ls[RecordFieldSymbol] =
+    require(observer.isEmpty, "Field discovery already has an observer for this block")
+    observer = S(visit)
+    try
+      // Visiting an entry can create another field. add delivers it immediately, so replay only the initial range.
+      (0 until entries.size).foreach: i =>
+        val (field, scope) = entries(i)
+        visit(field, scope)
+      resolve
+      entries.iterator.map(_._1).toList
+    finally
+      observer = N
+      entries.clear()
 
 /** Values that a virtual member can return, retaining the implementation that returned each value
   * so interface exposure can follow it in its defining scope. */
