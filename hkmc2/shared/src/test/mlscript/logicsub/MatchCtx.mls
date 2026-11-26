@@ -16,9 +16,9 @@ probe
 //│       'reach1 <: ⊥ ∨
 //│           'reach2 <: ⊥ ∨
 //│               'reach3 <: ⊥ ∨ "miss" <: 'res
-//│               'x3 >:< Int => 'y3 >:< Str => 3 <: 'res
-//│           'x2 >:< Int => 'y2 >:< Str => 2 <: 'res
-//│       'x1 >:< Int => 'y1 >:< Str => 1 <: 'res
+//│               'x3 >:< Int ∧ 'y3 >:< Str => 3 <: 'res
+//│           'x2 >:< Int ∧ 'y2 >:< Str => 2 <: 'res
+//│       'x1 >:< Int ∧ 'y1 >:< Str => 1 <: 'res
 //│   'x3 <: Int ∨ ⊤ <: 'reach3
 //│   'x3 >:< Int => 'y3 <: Str ∨ ⊤ <: 'reach3
 //│   'x2 <: Int ∨ ⊤ <: 'reach2

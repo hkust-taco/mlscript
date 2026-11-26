@@ -53,7 +53,7 @@ class PrettyPrinter(output: String => Unit)(using printScope: Scope, ctx: InfCtx
         // keeps its scope over exactly the alternatives in this branch.
         c.y.toBasic match
           case Neg(t) if implications && c.cs.isDefined =>
-            if premises.nonEmpty then premises ++= " => "
+            if premises.nonEmpty then premises ++= " ∧ "
             premises ++= s"${c.x.show} >:< ${t.show}"
           case _ => alternative(s"${c.x.show} <: ${c.y.show}")
         c.cs match
