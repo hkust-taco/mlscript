@@ -9,7 +9,7 @@ type BoundedParts = ((Child, ...Array[in Child out Base]) -> Int) & ((...Array[i
 // the second supplies it from a fixed parameter. Both contribute its value type.
 :expect 2
 private fun compound: BoundedParts
-private fun compound(...rest, last) = last.value
+fun compound(...rest, last) = last.value
 compound(Child(1), Child(2))
 //│ = 2
 
@@ -17,10 +17,10 @@ compound(Child(1), Child(2))
 // on the trailing parameter, even though the array can contain other Base values.
 :e
 private fun hidden: BoundedParts
-private fun hidden(...rest, last) = last.extra
+fun hidden(...rest, last) = last.extra
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.+2: 	private fun hidden(...rest, last) = last.extra
-//│ ║        	                                    ^^^^^^^^^^
+//│ ║  l.+2: 	fun hidden(...rest, last) = last.extra
+//│ ║        	                            ^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'extra'
 //│ ║  l.XX: 	type BoundedParts = ((Child, ...Array[in Child out Base]) -> Int) & ((...Array[in Child out Base], Child) -> Int)
 //│ ╙──      	                                                   ^^^^
@@ -31,7 +31,7 @@ private fun hidden(...rest, last) = last.extra
 type Callback = Child -> Int
 type Callbacks = Array[in (Base -> Int) out Callback]
 private fun callback: ((Callback, ...Callbacks) -> Int) & ((...Callbacks, Callback) -> Int)
-private fun callback(...rest, last) = last(Child(3))
+fun callback(...rest, last) = last(Child(3))
 callback(value => value.extra)
 //│ = 3
 
@@ -42,10 +42,10 @@ type ChildConsumer = (Child -> Int) -> Int
 type BaseConsumer = (Base -> Int) -> Int
 type Consumers = Array[in ChildConsumer out BaseConsumer]
 private fun higherOrder: ((ChildConsumer, ...Consumers) -> Int) & ((...Consumers, ChildConsumer) -> Int)
-private fun higherOrder(...rest, last) = last(value => value.extra)
+fun higherOrder(...rest, last) = last(value => value.extra)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.+5: 	private fun higherOrder(...rest, last) = last(value => value.extra)
-//│ ║        	                                                       ^^^^^^^^^^^
+//│ ║  l.+5: 	fun higherOrder(...rest, last) = last(value => value.extra)
+//│ ║        	                                               ^^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'extra'
 //│ ║  l.+2: 	type BaseConsumer = (Base -> Int) -> Int
 //│ ╙──      	                     ^^^^
@@ -53,6 +53,6 @@ private fun higherOrder(...rest, last) = last(value => value.extra)
 // Later curried lists retain the same bounded-element projection through an alias.
 :expect 4
 private fun curried: Int -> BoundedParts
-private fun curried(n)(...rest, last) = n * last.value
+fun curried(n)(...rest, last) = n * last.value
 curried(2)(Child(2))
 //│ = 4

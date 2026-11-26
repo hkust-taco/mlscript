@@ -5244,7 +5244,7 @@ class NewResolver:
     * definitions. Keep validating selections/opens: a later distinct candidate
     * must be an error, since it cannot change an already interpreted annotation.
     */
-  private def staticAnnotationSymbol(trm: Term): Opt[Symbol] = trm.withoutCaptures match
+  protected def staticAnnotationSymbol(trm: Term): Opt[Symbol] = trm.withoutCaptures match
     case ref: NewRefImpl => S(ref.sym)
     case Ref(sym) => S(sym)
     case sel: NewSel => staticAnnotationSymbol(sel.prefix).flatMap(_.asMod).flatMap(_.tree.definedSymbols.get(sel.id.name))

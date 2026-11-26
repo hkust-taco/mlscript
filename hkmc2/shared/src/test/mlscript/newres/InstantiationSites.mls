@@ -115,7 +115,7 @@ private fun wrap[T](value: T) = make[T](value)
 class First(val first: Int)
 class Second(val second: Int)
 private fun make: [A] -> A -> A
-private fun make = value => value
+fun make = value => value
 private val shared = make
 shared(First(11))
 shared(Second(12)).second

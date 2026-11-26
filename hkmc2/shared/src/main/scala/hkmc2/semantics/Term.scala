@@ -72,24 +72,30 @@ enum Annot extends Located:
   
   def show(using Scope, ShowCfg, Raise): Document = this match
     case JsSymbol(key) => doc"@jsSymbol(${key.term.show})"
-    case Fresh() => doc"@annotations.fresh"
-    case Untyped() => doc"@untyped"
-    case Unsafe() => doc"@unsafe"
-    case PlainField() => doc"@js.plainField"
-    case Inline() => doc"@inline"
-    case NoInline() => doc"@noInline"
-    case Generator() => doc"@generator"
-    case Async() => doc"@async"
-    case RaiseEffects() => doc"@raiseEffects"
-    case TailRec() => doc"@tailrec"
-    case TailCall() => doc"@tailcall"
-    case Affine(n) => doc"@affine($n)"
-    case Modifier(mod) => doc"@${mod.name}"
-    case Pure() => doc"@pure"
-    case Bufferable(keepInstances) => if keepInstances then doc"@bufferable" else doc"@buffered"
     case Trm(trm) => doc"@${trm.show}"
-    case Config(_) => doc"@config(...)"
-    case Debug(_) => doc"@dbg(...)"
+    case _ => doc"${spelling.getOrElse(lastWords(s"No source spelling for the annotation ${this}"))}"
+  
+  /** The source spelling of this annotation if it does not depend on a term: `N` for `@jsSymbol` and user annotations.
+    */
+  def spelling: Opt[Str] = this match
+    case JsSymbol(_) | Trm(_) => N
+    case Fresh() => S("@annotations.fresh")
+    case Untyped() => S("@untyped")
+    case Unsafe() => S("@unsafe")
+    case PlainField() => S("@js.plainField")
+    case Inline() => S("@inline")
+    case NoInline() => S("@noInline")
+    case Generator() => S("@generator")
+    case Async() => S("@async")
+    case RaiseEffects() => S("@raiseEffects")
+    case TailRec() => S("@tailrec")
+    case TailCall() => S("@tailcall")
+    case Affine(n) => S(s"@affine($n)")
+    case Modifier(mod) => S(s"@${mod.name}")
+    case Pure() => S("@pure")
+    case Bufferable(keepInstances) => S(if keepInstances then "@bufferable" else "@buffered")
+    case Config(_) => S("@config(...)")
+    case Debug(_) => S("@dbg(...)")
   
   def mkClone(using State, Erasure): Annot = Cloner(SymbolSubst.Id).annotation(this)
 
@@ -104,13 +110,23 @@ object Annot:
   /** Annotations that only apply to a function with a body, with their source spelling. */
   object ImplementationOnly:
     def unapply(annot: Annot): Opt[Str] = annot match
-      case TailRec() => S("@tailrec")
-      case Inline() => S("@inline")
-      case NoInline() => S("@noInline")
-      case Generator() => S("@generator")
-      case Async() => S("@async")
-      case RaiseEffects() => S("@raiseEffects")
+      case TailRec() | Inline() | NoInline() | Generator() | Async() | RaiseEffects() => annot.spelling
       case _ => N
+  
+  /** Where an annotation belongs on a member that has both a separate signature (`fun f: T`) and a definition. */
+  enum Placement:
+    /** Affects only how the body is compiled. */
+    case Definition
+    /** Affects what callers see. */
+    case Signature
+    /** Fits either side. */
+    case Either
+  
+  object Placement:
+    def of(annot: Annot): Placement = annot match
+      case TailRec() | Inline() | NoInline() | Config(_) | Debug(_) | RaiseEffects() => Definition
+      case Pure() | JsSymbol(_) | Affine(_) | PlainField() | Fresh() => Signature
+      case _ => Either
   
 end Annot
 
@@ -754,10 +770,12 @@ enum Visibility:
   case Public, Private
 
 object Visibility:
-  def of(annotations: Ls[Annot]): Visibility = annotations.collectFirst:
-      case Annot.Modifier(Keyword.`private`) => Visibility.Private
-      case Annot.Modifier(Keyword.`public`) => Visibility.Public
-    .getOrElse(Visibility.Public)
+  /** The visibility written among `annotations`, if any. */
+  def written(annotations: Ls[Annot]): Opt[Visibility] = annotations.collectFirst:
+    case Annot.Modifier(Keyword.`private`) => Visibility.Private
+    case Annot.Modifier(Keyword.`public`) => Visibility.Public
+  
+  def of(annotations: Ls[Annot]): Visibility = written(annotations).getOrElse(Visibility.Public)
 
 /** `isMethod` distinguishes methods from functions. `hasResultAnnotation` records whether a
   * signature describes just the result; erasure consumes leading arrows only for full signatures.

@@ -190,27 +190,33 @@ private fun bothPrivate(x) = x
 bothPrivate(1)
 //│ = 1
 
-:e
+// Visibility belongs on the signature.
 private fun privateSignature: Int -> Int
 fun privateSignature(x) = x
-//│ ╔══[COMPILATION ERROR] The signature and the definition of 'privateSignature' must have the same visibility
-//│ ╟── signature here
-//│ ║  l.+1: 	private fun privateSignature: Int -> Int
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── definition here
-//│ ║  l.+2: 	fun privateSignature(x) = x
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+privateSignature(1)
+//│ = 1
 
-:e
+:w
 fun privateDefinition: Int -> Int
 private fun privateDefinition(x) = x
-//│ ╔══[COMPILATION ERROR] The signature and the definition of 'privateDefinition' must have the same visibility
+//│ ╔══[WARNING] This modifier belongs on the signature of 'privateDefinition', not on its definition
+//│ ║  l.+2: 	private fun privateDefinition(x) = x
+//│ ║        	^^^^^^^
 //│ ╟── signature here
 //│ ║  l.+1: 	fun privateDefinition: Int -> Int
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+// Different visibilities written on the two sides contradict each other.
+:e
+private fun contradictoryVisibility: Int -> Int
+public fun contradictoryVisibility(x) = x
+//│ ╔══[COMPILATION ERROR] The signature and the definition of 'contradictoryVisibility' must have the same visibility
+//│ ╟── signature here
+//│ ║  l.+1: 	private fun contradictoryVisibility: Int -> Int
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── definition here
-//│ ║  l.+2: 	private fun privateDefinition(x) = x
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	public fun contradictoryVisibility(x) = x
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 declare fun declared: Int -> Int
@@ -234,16 +240,19 @@ fun annotatedResult(x): Int = x
 
 open annotations.{ * }
 
-// An annotation that only applies to an implementation belongs on the definition.
-:e
+// An annotation on the wrong side warns but still applies.
+:w
 @tailrec fun tailrecSignature: Int -> Int
 fun tailrecSignature(x) = x
-//│ ╔══[COMPILATION ERROR] This annotation must be written on the definition of 'tailrecSignature', not on its signature
+//│ ╔══[WARNING] This annotation belongs on the definition of 'tailrecSignature', not on its signature
 //│ ║  l.+1: 	@tailrec fun tailrecSignature: Int -> Int
 //│ ║        	^^^^^^^^
 //│ ╟── definition here
 //│ ║  l.+2: 	fun tailrecSignature(x) = x
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[WARNING] This function is marked @tailrec but has no direct self-recursion.
+//│ ║  l.+2: 	fun tailrecSignature(x) = x
+//│ ╙──      	    ^^^^^^^^^^^^^^^^
 
 :e
 fun tailrecDefinition: Int -> Int
@@ -254,6 +263,260 @@ fun tailrecDefinition: Int -> Int
 //│ ╟── It could self-recurse through this call, which is not a tail call.
 //│ ║  l.+2: 	@tailrec fun tailrecDefinition(x) = tailrecDefinition(x) + 1
 //│ ╙──      	                                    ^^^^^^^^^^^^^^^^^^^^
+
+// The definition's settings override the signature's: `count` becomes a loop.
+:w
+:soir
+@config(tailRecOpt: false) fun count: Int -> Int
+@config(tailRecOpt: true) fun count(n) = if n > 0 then count(n - 1) else 0
+//│ ╔══[WARNING] This annotation belongs on the definition of 'count', not on its signature
+//│ ║  l.+1: 	@config(tailRecOpt: false) fun count: Int -> Int
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── definition here
+//│ ║  l.+2: 	@config(tailRecOpt: true) fun count(n) = if n > 0 then count(n - 1) else 0
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[WARNING] This annotation is written on both the signature and the definition of 'count'
+//│ ║  l.+1: 	@config(tailRecOpt: false) fun count: Int -> Int
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── also written here
+//│ ║  l.+2: 	@config(tailRecOpt: true) fun count(n) = if n > 0 then count(n - 1) else 0
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @config(...) @config(...)
+//│ define count⁰ as fun count¹(n) {
+//│   loop loopLabel:
+//│     let scrut, tmp;
+//│     set scrut = >⁰(n, 0);
+//│     match scrut
+//│       true =>
+//│         set tmp = -⁰(n, 1);
+//│         set n = tmp;
+//│         continue loopLabel
+//│       else
+//│         return 0
+//│     end
+//│   unreachable /* Rest of abortive labelled block */
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:w
+fun pureDefinition: Int -> Int
+@pure fun pureDefinition(x) = x
+//│ ╔══[WARNING] This annotation belongs on the signature of 'pureDefinition', not on its definition
+//│ ║  l.+2: 	@pure fun pureDefinition(x) = x
+//│ ║        	^^^^^
+//│ ╟── signature here
+//│ ║  l.+1: 	fun pureDefinition: Int -> Int
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+@pure fun pureSignature: Int -> Int
+fun pureSignature(x) = x
+pureSignature(1)
+//│ = 1
+
+// An annotation on both sides warns and is kept twice, as when written twice on one side.
+:w
+:sir
+@pure fun pureBoth: Int -> Int
+@pure fun pureBoth(x) = x
+//│ ╔══[WARNING] This annotation is written on both the signature and the definition of 'pureBoth'
+//│ ║  l.+1: 	@pure fun pureBoth: Int -> Int
+//│ ║        	^^^^^
+//│ ╟── also written here
+//│ ║  l.+2: 	@pure fun pureBoth(x) = x
+//│ ╙──      	^^^^^
+//│ ╔══[WARNING] This annotation belongs on the signature of 'pureBoth', not on its definition
+//│ ║  l.+2: 	@pure fun pureBoth(x) = x
+//│ ║        	^^^^^
+//│ ╟── signature here
+//│ ║  l.+1: 	@pure fun pureBoth: Int -> Int
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ @pure @pure define pureBoth⁰ as fun pureBoth¹(x) { return x }; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// Different arguments on the two sides: both are kept.
+:w
+:sir
+@affine(0) fun affineBoth: Int -> Int -> Int
+@affine(1) fun affineBoth(x)(y) = x
+//│ ╔══[WARNING] This annotation belongs on the signature of 'affineBoth', not on its definition
+//│ ║  l.+2: 	@affine(1) fun affineBoth(x)(y) = x
+//│ ║        	^^^^^^^^^^
+//│ ╟── signature here
+//│ ║  l.+1: 	@affine(0) fun affineBoth: Int -> Int -> Int
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ @affine(0) @affine(1) define affineBoth⁰ as fun affineBoth¹(x)(y) { return x }; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+module Keys with
+  @fresh val key = Symbol("key")
+  @fresh val other = Symbol("other")
+
+// `@jsSymbol` on both sides is an error.
+:e
+:w
+class WithKey with
+  @jsSymbol(Keys.key) fun keyed: () -> Int
+  @jsSymbol(Keys.key) fun keyed() = 1
+(new WithKey).(Keys.key)()
+//│ ╔══[COMPILATION ERROR] This annotation must be written only on the signature of 'keyed'
+//│ ║  l.+3: 	  @jsSymbol(Keys.key) fun keyed() = 1
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^
+//│ ╟── signature's annotation here
+//│ ║  l.+2: 	  @jsSymbol(Keys.key) fun keyed: () -> Int
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[WARNING] This annotation belongs on the signature of 'keyed', not on its definition
+//│ ║  l.+3: 	  @jsSymbol(Keys.key) fun keyed() = 1
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^
+//│ ╟── signature here
+//│ ║  l.+2: 	  @jsSymbol(Keys.key) fun keyed: () -> Int
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = 1
+
+// Different keys are rejected as well, since the member is installed under only one key.
+:e
+:w
+class WithKeys with
+  @jsSymbol(Keys.key) fun keyed: () -> Int
+  @jsSymbol(Keys.other) fun keyed() = 1
+(new WithKeys).(Keys.key)()
+//│ ╔══[COMPILATION ERROR] This annotation must be written only on the signature of 'keyed'
+//│ ║  l.+3: 	  @jsSymbol(Keys.other) fun keyed() = 1
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── signature's annotation here
+//│ ║  l.+2: 	  @jsSymbol(Keys.key) fun keyed: () -> Int
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[WARNING] This annotation belongs on the signature of 'keyed', not on its definition
+//│ ║  l.+3: 	  @jsSymbol(Keys.other) fun keyed() = 1
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── signature here
+//│ ║  l.+2: 	  @jsSymbol(Keys.key) fun keyed: () -> Int
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = 1
+
+// `@async` and `@generator` may be written on either side: the signature describes the body's result.
+:await
+:expect 1
+fun asyncDefinition: Int -> Int
+@async fun asyncDefinition(x) = x
+asyncDefinition(1)
+//│ = 1
+
+:expect 1
+@generator fun generatorSignature: Int -> Int
+fun generatorSignature(x) =
+  yield x
+  x
+generatorSignature(1).next().value
+//│ = 1
+
+// On both sides, it warns as any other annotation does, and both copies are kept.
+:w
+:await
+:expect 1
+@async fun asyncBoth: Int -> Int
+@async fun asyncBoth(x) = x
+asyncBoth(1)
+//│ ╔══[WARNING] This annotation is written on both the signature and the definition of 'asyncBoth'
+//│ ║  l.+1: 	@async fun asyncBoth: Int -> Int
+//│ ║        	^^^^^^
+//│ ╟── also written here
+//│ ║  l.+2: 	@async fun asyncBoth(x) = x
+//│ ╙──      	^^^^^^
+//│ = 1
+
+// `@js.plainField` and `@fresh` describe what users of the member see.
+:w
+class PlainFieldDefinition with
+  mut val value: Int
+  @js.plainField mut val value = 1
+//│ ╔══[WARNING] This annotation belongs on the signature of 'value', not on its definition
+//│ ║  l.+3: 	  @js.plainField mut val value = 1
+//│ ║        	  ^^^^^^^^^^^^^^
+//│ ╟── signature here
+//│ ║  l.+2: 	  mut val value: Int
+//│ ╙──      	      ^^^^^^^^^^^^^^
+
+class PlainFieldSignature with
+  @js.plainField mut val value: Int
+  mut val value = 1
+
+:w
+val freshDefinition: Any
+@fresh val freshDefinition = Symbol("freshDefinition")
+//│ ╔══[WARNING] This annotation belongs on the signature of 'freshDefinition', not on its definition
+//│ ║  l.+2: 	@fresh val freshDefinition = Symbol("freshDefinition")
+//│ ║        	^^^^^^
+//│ ╟── signature here
+//│ ║  l.+1: 	val freshDefinition: Any
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ freshDefinition = Symbol("freshDefinition")
+
+@fresh val freshSignature: Any
+val freshSignature = Symbol("freshSignature")
+//│ freshSignature = Symbol("freshSignature")
+
+object myAnn
+
+:w
+:sir
+@myAnn fun userBoth: Int -> Int
+@myAnn fun userBoth(x) = x
+//│ ╔══[WARNING] This annotation is written on both the signature and the definition of 'userBoth'
+//│ ║  l.+1: 	@myAnn fun userBoth: Int -> Int
+//│ ║        	^^^^^^
+//│ ╟── also written here
+//│ ║  l.+2: 	@myAnn fun userBoth(x) = x
+//│ ╙──      	^^^^^^
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.+1: 	@myAnn fun userBoth: Int -> Int
+//│ ╙──      	^^^^^^
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.+2: 	@myAnn fun userBoth(x) = x
+//│ ╙──      	^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ @myAnn @myAnn define userBoth⁰ as fun userBoth¹(x) { return x }; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// A modifier on the signature applies to the definition.
+open class Base() with
+  open fun scale: (Int, Int) -> Int
+  fun scale(x, y) = x * y
+class Derived() extends Base() with
+  override fun scale(x, y) = x + y
+Derived().scale(2, 3)
+//│ = 5
+
+open class OpenBase() with
+  open fun g(x: Int): Int = x
+
+class OverrideSignature() extends OpenBase() with
+  override fun g: Int -> Int
+  fun g(x) = x + 1
+OverrideSignature().g(1)
+//│ = 2
+
+// A modifier written only on the definition is misplaced: it warns, and still applies.
+:w
+class OverrideDefinition() extends OpenBase() with
+  fun g: Int -> Int
+  override fun g(x) = x + 2
+OverrideDefinition().g(1)
+//│ ╔══[WARNING] This modifier belongs on the signature of 'g', not on its definition
+//│ ║  l.+3: 	  override fun g(x) = x + 2
+//│ ║        	  ^^^^^^^^
+//│ ╟── signature here
+//│ ║  l.+2: 	  fun g: Int -> Int
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^
+//│ = 3
+
+// `staged` fits either side.
+:staging
+fun stagedDefinition: () -> Int
+staged fun stagedDefinition() = 1
 
 
 // A second declaration is reported, and the member still gets its definition.
@@ -348,7 +611,6 @@ fun definitionTypeParams[A](x) = x
 
 
 // Class members follow the same rules...
-:e
 class Members with
   fun method: Int -> Int
   fun method(x) = x + 1
@@ -358,13 +620,6 @@ class Members with
   fun privateMember(x) = x
 let m = new Members
 [m.method(1), m.getter]
-//│ ╔══[COMPILATION ERROR] The signature and the definition of 'privateMember' must have the same visibility
-//│ ╟── signature here
-//│ ║  l.+6: 	  private fun privateMember: Int -> Int
-//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── definition here
-//│ ║  l.+7: 	  fun privateMember(x) = x
-//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = [2, 1]
 //│ m = Members
 

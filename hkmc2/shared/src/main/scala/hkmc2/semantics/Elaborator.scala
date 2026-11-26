@@ -1010,6 +1010,27 @@ extends Importer:
         case _ => ()
         S(Annot.Trm(trm)(tree.toLoc))
   
+  /** The symbol an annotation term refers to, ignoring its arguments, if known statically. Unlike
+    * `annotationSymbol`, this has no resolution side effects. */
+  private def knownAnnotSymbol(trm: Term): Opt[Symbol] = trm.withoutCaptures match
+    case Term.App(base, _) => knownAnnotSymbol(base)
+    case Term.TyApp(base, _) => knownAnnotSymbol(base)
+    case t => if newResolution then staticAnnotationSymbol(t) else t.symbol
+  
+  /** Whether two annotations are the same kind:
+    *
+    * - `@config`, `@dbg` and `@jsSymbol` are the same regardless of their arguments;
+    * - User annotations are the same if they refer to the same symbol; and
+    * - Otherwise, two annotations are the same if they are equal.
+    *
+    * A user annotation whose [[knownAnnotSymbol symbol is not statically known]] is never the same as another.
+    */
+  private def sameAnnotTarget(a: Annot, b: Annot): Bool = (a, b) match
+    case (Annot.Trm(t1), Annot.Trm(t2)) => knownAnnotSymbol(t1).exists(knownAnnotSymbol(t2).contains)
+    case (_: Annot.Config, _: Annot.Config) | (_: Annot.Debug, _: Annot.Debug)
+      | (_: Annot.JsSymbol, _: Annot.JsSymbol) => true
+    case _ => a == b
+  
   private final case class EffectHandlerMethodSpec(
       methodName: Str,
       valueParamName: Opt[Str],
@@ -2945,36 +2966,70 @@ extends Importer:
                 .getOrElse(die)
                 S((sig, sigLoc, sigAnnotationTrees))
               case _ => N
-            // * Annotations written on either side apply to the definition, except that one only meaningful on an
-            // * implementation must be written on the definition, a `declare`d signature cannot have a definition,
-            // * and both sides must have the same visibility.
+            // * Merges the separate signature's annotations into the definition's; an annotation on the wrong side
+            // * warns but still applies. The signature's come first, so that the definition's `@config` and `@dbg`
+            // * override them: `Lowering` applies them in order.
             val defnAnnotations = externalSig match
               case N => annotations
               case S((_, sigLoc, sigAnnotationTrees)) =>
                 val sigAnnotations = sigAnnotationTrees.flatMap(annot)
-                sigAnnotations.foreach:
-                  case a @ Annot.ImplementationOnly(_) => raise:
-                    ErrorReport:
-                      msg"This annotation must be written on the definition of '${id.name}', not on its signature"
-                        -> a.toLoc
-                      :: msg"definition here" -> statementLoc
-                      :: Nil
-                  case a @ Annot.Modifier(Keyword.`declare`) => raise:
+                def warn(annot: Annot, problem: Message, other: Message -> Opt[Loc]): Unit =
+                  raise(WarningReport(problem -> annot.toLoc :: other :: Nil))
+                sigAnnotations.foreach: a =>
+                  a match
+                  case Annot.Modifier(Keyword.`declare`) => raise:
                     ErrorReport:
                       msg"A 'declare'd signature cannot have a definition" -> a.toLoc
                       :: msg"definition here" -> statementLoc
                       :: Nil
+                  case _: Annot.Modifier => ()
+                  case _ =>
+                    if Annot.Placement.of(a) is Annot.Placement.Definition then
+                      warn(a, msg"This annotation belongs on the definition of '${id.name}', not on its signature",
+                        msg"definition here" -> statementLoc)
+                    annotations.find(sameAnnotTarget(a, _)).foreach: other =>
+                      a match
+                      // * The member is installed under only one key.
+                      case _: Annot.JsSymbol => raise:
+                        ErrorReport:
+                          msg"This annotation must be written only on the signature of '${id.name}'" -> other.toLoc
+                          :: msg"signature's annotation here" -> a.toLoc
+                          :: Nil
+                      case _ =>
+                        warn(a, msg"This annotation is written on both the signature and the definition of '${id.name}'",
+                          msg"also written here" -> other.toLoc)
+                annotations.foreach: a =>
+                  if Annot.Placement.of(a) is Annot.Placement.Signature then
+                    warn(a, msg"This annotation belongs on the signature of '${id.name}', not on its definition",
+                      msg"signature here" -> sigLoc)
+                // * Modifiers, visibility included, belong on the signature, which declares the member's interface. One
+                // * written only on the definition warns, except `staged`, which fits either side; repeating one there is
+                // * silent. Contradicting visibilities are an error rather than misplaced.
+                val sigVisibility = Visibility.written(sigAnnotations)
+                annotations.foreach:
+                  case Annot.Modifier(Keyword.`declare` | Keyword.`staged`) => ()
+                  case Annot.Modifier(Keyword.`private` | Keyword.`public`) if sigVisibility.isDefined => ()
+                  case m: Annot.Modifier if !sigAnnotations.contains(m) =>
+                    warn(m, msg"This modifier belongs on the signature of '${id.name}', not on its definition",
+                      msg"signature here" -> sigLoc)
                   case _ => ()
-                if Visibility.of(sigAnnotations) isnt Visibility.of(annotations) then raise:
-                  ErrorReport:
-                    msg"The signature and the definition of '${id.name}' must have the same visibility" -> N
-                    :: msg"signature here" -> sigLoc
-                    :: msg"definition here" -> statementLoc
-                    :: Nil
-                annotations ++ sigAnnotations.filter:
-                  case Annot.ImplementationOnly(_)
-                    | Annot.Modifier(Keyword.`declare` | Keyword.`private` | Keyword.`public`) => false
-                  case a => !annotations.contains(a)
+                (sigVisibility, Visibility.written(annotations)) match
+                  case (S(sigVis), S(defnVis)) if sigVis isnt defnVis => raise:
+                    ErrorReport:
+                      msg"The signature and the definition of '${id.name}' must have the same visibility" -> N
+                      :: msg"signature here" -> sigLoc
+                      :: msg"definition here" -> statementLoc
+                      :: Nil
+                  case _ => ()
+                // * Duplicates are kept, as when written twice on one side, except for modifiers: the member gets the
+                // * signature's, then those written only on the definition. The signature's visibility wins.
+                sigAnnotations.filter:
+                  case Annot.Modifier(Keyword.`declare`) => false
+                  case _ => true
+                ++ annotations.filter:
+                  case Annot.Modifier(Keyword.`private` | Keyword.`public`) if sigVisibility.isDefined => false
+                  case m: Annot.Modifier => !sigAnnotations.contains(m)
+                  case _ => true
             // * Type parameters written only on the separate signature are the definition's. After a mismatch, which
             // * the pre-pass reports, the signature is ignored: its type parameter names would not resolve.
             val (typeParamTree, sigTypeParamsAgree) = (td.typeParams, externalSig) match
