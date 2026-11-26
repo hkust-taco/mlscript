@@ -5,4 +5,11 @@ module RecordProducers {
   // Resolving this selection records the `value` field in the shape of `fields`,
   // before another file imports this module.
   val observed = fields.value
+
+  // Only the copy receives an Int32. Both sides of the spread must use that representation.
+  fun copiedValue(value: Int32): Int32 =
+    let original = {item: unsafe.undefined}
+    let copy = mut {...original}
+    set copy.item = value
+    copy.item
 }

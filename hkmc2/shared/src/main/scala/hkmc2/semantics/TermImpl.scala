@@ -96,6 +96,12 @@ trait FldImpl:
 
 trait BlkImpl:
   this: Blk =>
+  /** Named-tuple properties and writable spread copies created while resolving this block.
+    * Erasure uses these symbols to find the properties' declarations and the values written to copies.
+    * Only the root block of a compilation unit, or of a worksheet block, has such fields.
+    * `ResolvedValues.observeBlock` assigns them once, when resolution of the block finishes, and `CompilerCtx`
+    * carries them over to the block that adds the runtime imports. `SourceDeclarations` is their only reader. */
+  private[hkmc2] var resolvedFields: Ls[RecordFieldSymbol] = Nil
   def mkBlkClone(using State, Erasure): Blk = Cloner(SymbolSubst.Id).block(this)
   def showTopLevel(using Scope, ShowCfg, Raise): Document =
     (stats ::: (res match
@@ -433,7 +439,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
       case Rcd(mut, stats) =>
         (if mut then doc"mut " else doc"") :: braced:
           doc" # " :: stats.map(_.show).mkDocument(doc", # ")
-      case RcdField(field, rhs, _) => doc"${field.show}: ${rhs.show}"
+      case f @ RcdField(field, rhs, _) => doc"${if f.mut then "mut " else ""}${field.show}: ${rhs.show}"
       case RcdSpread(record) => doc"...${record.show}"
       case Quoted(body) => doc"""code"${body.show}""""
       case Unquoted(body) => doc"$${${body.show}}"
@@ -518,7 +524,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     case r @ SelfRef(sym) => sym.showAsPlain
     case Capture(base, thru) => s"${base.showDbg}^${thru.showDbg}"
     case App(lhs, rhs) => s"${lhs.showDbg}${rhs.showDbgAsParams}"
-    case RcdField(lhs, rhs, _) => s"${lhs.showDbg}: ${rhs.showDbg}"
+    case f @ RcdField(lhs, rhs, _) => s"${if f.mut then "mut " else ""}${lhs.showDbg}: ${rhs.showDbg}"
     case RcdSpread(bod) => s"...${bod.showDbg}"
     case FunTy(lhs: Tup, rhs, eff) =>
       s"${lhs.fields.map(_.showDbg).mkString(", ")} ->${

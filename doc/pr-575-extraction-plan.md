@@ -1,27 +1,25 @@
 # Extraction plan for PR #575
 
-## Merge status on 2026-11-24
+## Merge status on 2026-11-25
 
-[Upstream #575](https://github.com/hkust-taco/mlscript/pull/575) is open from
-`LPTK/compute-erased-types-from-shapes` into `hkust-taco/hkmc2`. The feature
-branch incorporates the upstream tip `9fba08b08` through `b47200fea`. Its latest
-feature merge is `228a8370c`. At those commits #575 changes 36 compiler Scala
-files (+2,861/−1,073) and seven Scala test files (+141/−25). Remove this
-temporary plan once the remaining extractions have landed.
+[Upstream #575](https://github.com/hkust-taco/mlscript/pull/575) merged into
+`hkmc2` at `1b37e4bfc`. Of the 36 original work items, 34 are now upstream.
+The remaining two have independent PRs against `hkmc2`.
+Remove this temporary plan once both have landed.
 
 | Where the original 36 work items stand | Items |
 | --- | --- |
-| In `hkmc2` and inherited by #575 (29) | E01–E11, E13–E19, E21–E28, E31, E35–E36 |
-| On `compute-erased-types-from-shapes`, awaiting #575 for upstream delivery (5) | E12, E29–E30, E32–E33 |
-| Still to merge separately (2) | E20, E34 |
+| Merged into `hkmc2` before #575 (29) | E01–E11, E13–E19, E21–E28, E31, E35–E36 |
+| Merged into `hkmc2` with #575 (5) | E12, E29–E30, E32–E33 |
+| Open against `hkmc2` (2) | E20, E34 |
 
-### Integrated on the feature branch
+### Integrated through #575
 
 | Work | What landed on `compute-erased-types-from-shapes` |
 | --- | --- |
-| Core inference, E12 and E32 | #575 carries shape-based erasure, constructor-companion signatures through cloning, and the read/write model for mutable fields. The branch also incorporates the exposure and failed-coercion fixes from [LPTK #34](https://github.com/LPTK/mlscript/pull/34). |
-| E29–E30 | [LPTK #35](https://github.com/LPTK/mlscript/pull/35) merged at `228a8370c`. It retypes fused values and their callers and proves representation casts across all incoming producers. The earlier [upstream #624](https://github.com/hkust-taco/mlscript/pull/624) closed unmerged. #575 now carries the reviewed implementation. |
-| E33 | Explicit input and output bounds on fields of a whole mutable record, such as `mut { f: in S out T }`, landed directly on this branch in [`0eee40929`](https://github.com/LPTK/mlscript/commit/0eee40929d60b1cc7f4c52b5d7c7420ed5f53b32). |
+| Core inference, E12 and E32 | #575 delivered shape-based erasure, constructor-companion signatures through cloning, and the read/write model for mutable fields. The merge also included the exposure and failed-coercion fixes from [LPTK #34](https://github.com/LPTK/mlscript/pull/34). |
+| E29–E30 | [LPTK #35](https://github.com/LPTK/mlscript/pull/35) merged at `228a8370c`. It retypes fused values and their callers and proves representation casts across all incoming producers. The earlier [upstream #624](https://github.com/hkust-taco/mlscript/pull/624) closed unmerged. #575 delivered the reviewed implementation. |
+| E33 | Explicit input and output bounds on fields of a whole mutable record, such as `mut { f: in S out T }`, landed on the feature branch in [`0eee40929`](https://github.com/LPTK/mlscript/commit/0eee40929d60b1cc7f4c52b5d7c7420ed5f53b32). |
 
 [LPTK #33](https://github.com/LPTK/mlscript/pull/33) supplied the original
 codegen and flow-analysis fixes before the extraction began. Their reviewed
@@ -29,10 +27,20 @@ pieces now appear in the upstream merge record and in #35.
 
 ### Remaining merges
 
-| Work | Destination and order |
+| Work | Upstream PR and scope |
 | --- | --- |
-| E20 — propagate partial calls with checked arguments | [Upstream #626](https://github.com/hkust-taco/mlscript/pull/626) is open from `codex/pr575-partial-call-arguments` into `hkmc2`. It preserves the timing and order of argument evaluation and can merge independently of #575. |
-| E34 — allow individual record fields to be mutable | After #575 lands in `hkmc2`, port the per-field `mut` syntax, semantics and mixed-field tests from `codex/pr575-mutable-record-syntax`. The old [upstream #625](https://github.com/hkust-taco/mlscript/pull/625) closed unmerged and also contains E33. Reuse the field-bound implementation already in #575 when preparing the E34 diff. |
+| E20 — propagate partial calls with checked arguments | [Upstream #626](https://github.com/hkust-taco/mlscript/pull/626) is open from `codex/pr575-partial-call-arguments` into `hkmc2`. It preserves the timing and order of argument evaluation. |
+| E34 — allow individual record fields to be mutable | [Upstream #632](https://github.com/hkust-taco/mlscript/pull/632) is open from `codex/pr575-per-field-mutability` into `hkmc2`. It adds per-field `mut` to record literals and types, including spread copies and cloned patterns. #575 already supplied the explicit field bounds from the closed [#625](https://github.com/hkust-taco/mlscript/pull/625). |
+
+The compiler rejects an assignment that selects a record field through which it
+is not mutable, such as the write to `label` in `{mut count: 0, label: "count"}`,
+or a field that a record type does not make mutable, unless the assignment is
+marked `@unsafe`.
+E34 leaves the remaining enforcement of read-only record fields to the type
+checker. `slop/strictres/MixedRecords.mls` records the assignments that are still
+accepted: through a record type that requires a `mut` field of a record that
+declares it read-only, or through a computed key. The full `hkmc2AllTests/test` suite passed all 1,401 tests on the
+E34 implementation commit `e1ef51bd6`.
 
 ### Related follow-ups
 
@@ -80,7 +88,7 @@ regression inputs, embedded golden output and generated JavaScript. Extensive
 diff-test updates are acceptable when they follow from that bounded source
 change. Do not split a theme into tiny PRs solely to reduce its snapshot diff.
 
-## Merged into `hkmc2`
+## Merged into `hkmc2` before #575
 
 | Work item | Upstream PR or commit | Outcome |
 | --- | --- | --- |
@@ -122,6 +130,9 @@ input annotations and an unchecked nominal receiver so inference and redundant
 cast elimination preserve the coercions those rendering tests exercise.
 
 ## Historical integration snapshots
+
+Immediately before the upstream merge, `228a8370c` differed from `9fba08b08`
+in 36 compiler Scala files (+2,861/−1,073) and seven Scala test files (+141/−25).
 
 These snapshots preserve the measurements, test results and reasons for the
 earlier splits. The [remaining merges](#remaining-merges) section tracks the live queue.
@@ -279,8 +290,7 @@ work subsequently landed on one of the two integration branches.
 
 The E-numbers identify individual work items. B01–B10 group their original
 review themes. The prerequisite column records the dependencies used to design
-the batches. The [remaining merges](#remaining-merges) give the order for the
-two outstanding items.
+the batches. The [remaining merges](#remaining-merges) list both open PRs.
 
 | Batch | Review theme | Work items | Prerequisites | Scope |
 | --- | --- | --- | --- | --- |
@@ -290,10 +300,10 @@ two outstanding items.
 | B04 | Callable signatures through transformations | E13, E25–E26, E28 | — | Generated functions, cloned symbols, eta expansion, DPE and deforestation-generated callables. |
 | B05 | Undefined values across runtime representations | E15 | E14 (merged) | Merged as #606 with representationless `Nothing` and Wasm placeholders. E08 and E14 are complete. |
 | B06 | Optional and variadic arguments | E17–E18, E35 | B05 | #610 and the E35 regression consolidation are in `hkmc2`. |
-| B07 | Optimizer safety | E12, E20–E24 | — | E12 is in #575. E21–E24 are upstream through #627 and #628. E20 has its own open PR, #626. |
-| B08 | Representation-changing deforestation | E27, E29–E30 | B04, B05, B07 | E27 is upstream. LPTK #35 merged E29–E30 into the feature branch. |
-| B09 | Mutable-field resolution and exposure | E31–E32 | — | E31 is upstream. #575 carries E32's assignment tracking and interface-permitted writes. |
-| B10 | Mutable-record declarations | E33–E34 | B09 | E33 is in #575. E34 remains a separate syntax and semantics follow-up. |
+| B07 | Optimizer safety | E12, E20–E24 | — | E12 merged with #575. E21–E24 are upstream through #627 and #628. E20 has its own open PR, #626. |
+| B08 | Representation-changing deforestation | E27, E29–E30 | B04, B05, B07 | E27 is upstream. E29–E30 reached upstream through LPTK #35 and #575. |
+| B09 | Mutable-field resolution and exposure | E31–E32 | — | E31 is upstream. #575 merged E32's assignment tracking and interface-permitted writes. |
+| B10 | Mutable-record declarations | E33–E34 | B09 | E33 merged with #575. E34 is open as #632. |
 
 The original batch boundaries grouped changes that had to preserve a shared
 invariant. In B08, updating a function's calling convention requires retyping

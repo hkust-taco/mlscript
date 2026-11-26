@@ -86,7 +86,7 @@ fun mutate_local_element() =
 
 
 // * Mutating an aliased field/element is an effect.
-fun mutate_alias_field(obj: {value: Int}) =
+fun mutate_alias_field(obj: {mut value: Int}) =
   let local = obj
   set local.value = 42
 fun mutate_alias_element(xs) =

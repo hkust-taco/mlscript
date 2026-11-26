@@ -253,7 +253,7 @@ sealed abstract class LocalVarSymbol(name: Str)(using State) extends FlowSymbol(
   *   `Normalization.joinTempType` populates it with the join of their representations once they have all
   *   been seen.
   * - For a temp bound by `LetDecl` or `SimpleSplit.Head.Let`, erasure infers the representation
-  *   from the values flowing into the binding (see `ErasureDeclarations`).
+  *   from the values flowing into the binding (see `SourceDeclarations`).
   */
 class TempSymbol(val trm: Opt[Term], initErasedType: Opt[ErasedValueType], dbgNme: Str = "tmp")(using State)
     extends LocalVarSymbol(dbgNme):
@@ -458,10 +458,16 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
     this(k, owner, id)
     initializeErasure(erasure)
   
-  def isErased: Bool = assignedErasure != null
+  /** Whether the source representation can be read, including an initialized unknown representation. */
+  def isErasureReady: Bool = assignedErasure != null
+  /** Derived fields compute their representation from their declarations. Only a symbol that owns
+    * its representation can receive a value from the erasure pass. */
+  protected def ownsErasureSlot: Bool = true
+  /** Whether erasure must initialize a representation on this symbol. */
+  final def needsErasure: Bool = ownsErasureSlot && assignedErasure == null
   
   private def assigned: Opt[ErasedValueType | ErasedCallableSignature] =
-    assert(isErased, s"Erasure of '$nme' read before initialization")
+    assert(assignedErasure != null, s"Erasure of '$nme' read before initialization")
     assignedErasure
   
   /** The erased signature that `Erasure` assigned to this source definition, or that its creator assigned to a
@@ -490,8 +496,9 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
   def irErasure: Opt[ErasedValueType | ErasedCallableSignature] = irFunDefn match
     case S(fun) => S(fun.signature.erasure)
     case N => assigned
-  def initializeErasure(value: Opt[ErasedValueType | ErasedCallableSignature]): Unit =
-    assert(!isErased, "Erasure initialized more than once")
+  final def initializeErasure(value: Opt[ErasedValueType | ErasedCallableSignature]): Unit =
+    assert(ownsErasureSlot, s"'$nme' does not own an erasure slot")
+    assert(assignedErasure == null, "Erasure initialized more than once")
     assert(value != null, "An initialized erasure cannot be null")
     assignedErasure = value
   
@@ -585,6 +592,78 @@ class ClassCtorSymbol(
   override def subst(using sub: SymbolSubst): ClassCtorSymbol = sub.mapClassCtorSym(this)
   override def mayRaiseEffects(using Config) =
     super.mayRaiseEffects || config.checkInstantiateEffect
+
+/** The definition symbol of a record field: a property of the records that a record literal creates, or of the
+  * records that a record type describes. `mutable` tells whether the field can be assigned through such a record,
+  * and `origin` how the record or the record type comes to have the field.
+  *
+  * A spread copies a field without converting its value. The copy shares the original field's representation,
+  * which erasure infers from the values of the field and from those assigned to its copies (see
+  * codegen.Erasure.observations). A field shared by intersected record types must satisfy every declaration,
+  * so its erasure is the intersection of their erasures. A selection that reads one of several fields has
+  * the join of their erasures, through a target that is no field itself (see RecordFieldAlternativesSymbol).
+  */
+final class RecordFieldSymbol(id: Tree.Ident, val mutable: Bool, val origin: RecordFieldSymbol.Origin)(using State)
+    extends TermSymbol(syntax.RecordField, N, id):
+  import RecordFieldSymbol.Origin
+  def member: BlockMemberSymbol = defn.get.bsym
+  /** The fields that this one derives from, if resolution created it. */
+  def origins: Ls[RecordFieldSymbol] = origin match
+    case Origin.Declared => Nil
+    case Origin.Copied(field) => field :: Nil
+    case Origin.Merged(fields) => fields
+  /** The declared field whose values a copy holds, and the field itself if it is no copy. */
+  def root: RecordFieldSymbol = origin match
+    case Origin.Copied(field) => field.root
+    case Origin.Declared | _: Origin.Merged => this
+  override protected def ownsErasureSlot: Bool = origin == Origin.Declared
+  override def isErasureReady: Bool = origin match
+    case Origin.Declared => super.isErasureReady
+    case Origin.Copied(field) => field.isErasureReady
+    case Origin.Merged(fields) => fields.forall(_.isErasureReady)
+  private def fieldErasure(declared: => Opt[ErasedValueType | ErasedCallableSignature])
+      (read: RecordFieldSymbol => Opt[ErasedValueType]): Opt[ErasedValueType | ErasedCallableSignature] = origin match
+    case Origin.Declared => declared
+    case Origin.Copied(field) => read(field)
+    case Origin.Merged(fields) => S(ErasedType.Intersection(fields.map(read(_).getOrElse(ErasedType.Unknown))))
+  override def sourceErasure(using codegen.Erasure): Opt[ErasedValueType | ErasedCallableSignature] =
+    fieldErasure(super.sourceErasure)(_.sourceErasedType)
+  override def irErasure: Opt[ErasedValueType | ErasedCallableSignature] =
+    fieldErasure(super.irErasure)(_.erasedType)
+
+object RecordFieldSymbol:
+  /** How a record or a record type comes to have a field. */
+  enum Origin:
+    /** A record literal or a record type declares the field. */
+    case Declared
+    /** A record that spreads another one has the field as its own copy of `field`, which the other record has.
+      * `mut {...r}` can thus assign a field that `r` has immutable, and `{...r}` cannot assign a field that `r`
+      * has mutable. */
+    case Copied(field: RecordFieldSymbol)(val spreadLoc: Opt[Loc])
+    /** The declarations of this key in the intersected record types, in source traversal order for diagnostics.
+      * Each distinct declaration contributes its erasure and any of them can make the field mutable. */
+    case Merged(fields: Ls[RecordFieldSymbol])
+
+/** The target of a selection that reads the field of a record that has one of several `fields`, which are the
+  * same member (see Inheritance.commonMember). Resolution follows such records separately, and lowering
+  * creates this symbol to give the selection one target. The selection reads the value of whichever of
+  * these fields the record has, so its erasure is the join of theirs.
+  *
+  * This is the field of no record and of no record type, hence no RecordFieldSymbol: no member lookup
+  * finds it. No field is thus a copy of it or derives from it, and no selection has it among the targets
+  * that resolution records, from which lowering computes it.
+  */
+final class RecordFieldAlternativesSymbol(val fields: Ls[RecordFieldSymbol])(using State)
+    extends TermSymbol(syntax.RecordField, N, new Tree.Ident(fields.head.nme)):
+  require(fields.sizeIs >= 2, "Alternatives stand for several fields")
+  override protected def ownsErasureSlot: Bool = false
+  override def isErasureReady: Bool = fields.forall(_.isErasureReady)
+  // Unknown is one of the joined representations: it has no common representation with an unboxed primitive.
+  private def joined(read: RecordFieldSymbol => Opt[ErasedValueType]): Opt[ErasedValueType] =
+    S(ErasedType.Union.mk(fields.map(read(_).getOrElse(ErasedType.Unknown))))
+  override def sourceErasure(using codegen.Erasure): Opt[ErasedValueType | ErasedCallableSignature] =
+    joined(_.sourceErasedType)
+  override def irErasure: Opt[ErasedValueType | ErasedCallableSignature] = joined(_.erasedType)
 
 
 sealed trait CtorSymbol extends Symbol:

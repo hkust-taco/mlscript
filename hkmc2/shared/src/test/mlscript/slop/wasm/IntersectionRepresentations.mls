@@ -1,0 +1,20 @@
+:.
+:noInline
+
+:expect 42
+private fun repeated(value: Int32 & Int32) = value
+repeated(wasm.i32.const(42))
+//│ Wasm result:
+//│ = 42
+
+:expect 43
+private fun withTop(value: Any & Int32) = value
+withTop(wasm.i32.const(43))
+//│ Wasm result:
+//│ = 43
+
+:expect 44
+private fun withBinder[T](value: T & Int32) = value
+withBinder[Int32](wasm.i32.const(44))
+//│ Wasm result:
+//│ = 44

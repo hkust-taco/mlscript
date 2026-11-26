@@ -168,6 +168,8 @@ class CompilerCtx(
             blk0.stats),
         blk0.res
       )
+      // Prepending runtime imports preserves the fields discovered during resolution.
+      blk.resolvedFields = blk0.resolvedFields
       val importedModulePaths = CompilerCtx.collectImportedModulePaths(blk)(using state)
       val compilationUnit = CompilationUnit(
         modulePath,

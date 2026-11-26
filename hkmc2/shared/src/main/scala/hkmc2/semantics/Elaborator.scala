@@ -1478,7 +1478,7 @@ extends Importer:
         case Term.WildcardTy(input, _) => input.foreach(registerSignature)
         case _ => ()
     val key = field.key.orElse(symbolKey(field.field, required = false))
-    field.copy()(key)
+    field.copy()(field.mut, key)
 
   /** Elaborate explicit input and output bounds on a type argument or mutable record field. */
   private def wildcardType(tree: Tree)(using Ctx, UnderCtx): Opt[Term.WildcardTy] = tree.deparenthesized match
@@ -2767,10 +2767,13 @@ extends Importer:
         newCtx.givenIn:
           go(sts, Nil, newAcc)(N)
       
-      case Spread(Keywrd(Keyword.`...`), S(body)) :: sts =>
+      case (spread @ Spread(Keywrd(Keyword.`...`), S(body))) :: sts =>
         reportUnusedAnnotations
-        go(sts, Nil, RcdSpread(term(body, fieldInterpretation)) :: acc)(N)
-      case InfixApp(lhs, Keywrd(Keyword.`:`), rhs) :: sts =>
+        go(sts, Nil, RcdSpread(term(body, fieldInterpretation)).withLocOf(spread) :: acc)(N)
+      case InfixApp(key, Keywrd(Keyword.`:`), rhs) :: sts =>
+        val (lhs, fieldMut) = key match
+          case Modified(Keywrd(Keyword.`mut`), name) => (name, true)
+          case name => (name, false)
         var newCtx = ctx
         val (rlhs, rhs_t) = rhs match
           case _: Under => (lhs, subterm(rhs, fieldInterpretation))
@@ -2779,7 +2782,7 @@ extends Importer:
             case Apps(base, tups) =>
               val rrhs = tups.foldRight(rhs):
                 InfixApp(_, Keywrd(Keyword.`=>`), _)
-              val bounds = if mutableRecord && fieldInterpretation == Tpe then wildcardType(rrhs) else N
+              val bounds = if (mutableRecord || fieldMut) && fieldInterpretation == Tpe then wildcardType(rrhs) else N
               (base, bounds.getOrElse(term(rrhs, fieldInterpretation)))
         val newAcc = rlhs match
           case id: Ident if fieldInterpretation == Tpe =>
@@ -2787,11 +2790,12 @@ extends Importer:
             // Keep their types directly so lookup never follows initializer flow.
             reportUnused(annotations.filterNot(_.isInstanceOf[Annot.JsSymbol]))
             val field = Term.Lit(StrLit(id.name)).withLocOf(id)
-            recordFieldScope(RcdField.signature(field, rhs_t, MemberKey.symbol(annotations))) :: acc
+            recordFieldScope(RcdField.signature(field, rhs_t, fieldMut, mutableRecord, MemberKey.symbol(annotations))) :: acc
           case id: Ident =>
             val sym = new VarSymbol(id, mut = true)
             newCtx += id.name -> sym
-            recordFieldScope(RcdField.source(Term.Lit(StrLit(id.name)).withLocOf(id), Ctx.RefElem(sym)(N).ref(S(id))))
+            recordFieldScope(RcdField.source(Term.Lit(StrLit(id.name)).withLocOf(id), Ctx.RefElem(sym)(N).ref(S(id)),
+                fieldMut, mutableRecord))
               :: defineVar(sym, rhs_t)(Loc(rlhs, rhs))
               :: LetDecl(sym, annotations)(id.toLoc)
               :: acc
@@ -2799,17 +2803,17 @@ extends Importer:
             reportUnusedAnnotations
             val field = Term.Lit(lit).withLocOf(lit)
             recordFieldScope(if fieldInterpretation == Tpe
-              then RcdField.signature(field, rhs_t, N)
-              else RcdField.source(field, rhs_t)
+              then RcdField.signature(field, rhs_t, fieldMut, mutableRecord, N)
+              else RcdField.source(field, rhs_t, fieldMut, mutableRecord)
             ) :: acc
           case Bra(Round, inner) =>
             reportUnusedAnnotations
             val key = term(inner, Trm)
-            recordFieldScope(if fieldInterpretation == Tpe then RcdField.signature(key, rhs_t, N)
-              else RcdField.source(key, rhs_t)) :: acc
+            recordFieldScope(if fieldInterpretation == Tpe then RcdField.signature(key, rhs_t, fieldMut, mutableRecord, N)
+              else RcdField.source(key, rhs_t, fieldMut, mutableRecord)) :: acc
           case _ =>
             raise(ErrorReport(msg"Unexpected record key shape." -> rlhs.toLoc :: Nil))
-            recordFieldScope(RcdField.source(Term.Error().withLocOf(rlhs), rhs_t)) :: acc
+            recordFieldScope(RcdField.source(Term.Error().withLocOf(rlhs), rhs_t, fieldMut, mutableRecord)) :: acc
         newCtx.givenIn:
           go(sts, Nil, newAcc)(N)
       case (hd @ LetLike(kw @ Keywrd(`let`), Apps(id: Ident, tups), rhso, N)) :: sts
@@ -3887,8 +3891,7 @@ extends Importer:
     given UnderCtx = UnderCtx.none
     val (res, newCtx) = block(sts, hasResult = false, resultInterp = Trm)
     // TODO handle name clashes
-    if newResolution then
-      prepareErasure(res)
+    if newResolution then rctx.state.resolvedValues.observeBlock(res, this):
       settleUnboundReferences()
       InterfaceExposure(this).check(exports, Nil)
     rctx.completeBlock(res)
@@ -3897,8 +3900,7 @@ extends Importer:
   def topLevel(sts: Block): Ctxl[(Blk, Ctx)] =
     given UnderCtx = UnderCtx.none
     val (res, ctx) = block(sts, hasResult = false, resultInterp = Trm)
-    if newResolution then
-      prepareErasure(res)
+    if newResolution then rctx.state.resolvedValues.observeBlock(res, this):
       settleUnboundReferences()
       val exports = res.stats.collect:
         case d: Definition if InterfaceExposure.isPublic(d) => d.bsym

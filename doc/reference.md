@@ -883,15 +883,32 @@ Modules cannot extend classes. Objects can extend classes.
 
 ```mlscript
 {a: 1, b: 2}          // immutable (frozen) record
+{mut a: 1, b: 2}      // only a is mutable
 mut {a: 1, b: 2}      // mutable record: all its fields are mutable
 {}                   // fresh empty immutable record
 mut {}               // fresh empty mutable record
 (a: 1, b: 2)          // record in parentheses (same thing)
 ```
 
-Only mutable fields can be assigned. Fields are immutable unless their whole record is mutable.
-A mutable record also makes mutable the fields it copies from the records it spreads.
-A record spreading another one copies the current values of its fields.
+Only mutable fields can be assigned. Declare an individual field mutable with `mut a: value`,
+or make every field mutable with `mut {...}`. A spread copies the current values of its source's
+fields. A copied field does not keep the `mut` of its source: it is mutable only when the
+destination is `mut {...}`.
+
+The compiler rejects an assignment that selects a field of a record through which the field is
+not mutable, or a field that a record type does not make mutable. With eager resolution, one such
+record or record type among the values that reach the assignment suffices to reject it. Otherwise,
+the assignment is only rejected if none of these values has the field mutable or is dynamic. The
+`val` fields of classes follow the same rule, and `@unsafe set` permits such an assignment to a
+record field too. A record has a field of its own for each field that it copies, so `{...r}`
+rejects an assignment to a field that `r` declares `mut`, and `mut {...r}` accepts one to a field
+that `r` has read-only. The compiler does not yet reject every assignment to a read-only field:
+a record with a read-only field is accepted where a record type requires that field to be
+mutable, and an assignment through a computed key is not checked against the record that it
+reaches. The JavaScript backend freezes a record without mutable fields, and allocates a
+record with both kinds of fields as an unfrozen object. An unchecked assignment to a read-only
+field of the latter takes effect at run time, although resolution does not account for the
+assigned value.
 
 `{}` denotes an empty record in expression and type positions. It is distinct
 from Unit, written `()`. Empty statement bodies such as `do {}` still return Unit.
@@ -1886,10 +1903,11 @@ lookup still combines the fields of record intersections.
 
 ```mlscript
 type Point = { x: Num, y: Num }
-type CursorView = mut { position: in Int out (Int | Str) }
+type CursorView = { mut position: in Int out (Int | Str), label: Str }
 ```
 
 `CursorView` accepts an `Int` on writes to `position` and exposes `Int | Str` on reads.
+Its `label` field supplies a read-only `Str`.
 A mutable record field can use the same forms as a type argument. A plain `T` supplies both bounds,
 `in S` has the output bound `Any`, and `out T` has the input bound `Nothing`.
 For `type Cell[A] = mut { f: A }`, `Cell[in S out T]` is equivalent to `mut { f: in S out T }`.

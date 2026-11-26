@@ -1526,7 +1526,7 @@ object Call:
   def publishedSignature(fun: Path): Opt[ErasedCallableSignature] = fun match
     case Value.SimpleRef(bs: BuiltinSymbol) => bs.erasedSignature
     case _ => fun.targetSymbol match
-      case S(ts: TermSymbol) if ts.isErased || ts.irFunDefn.isDefined => ts.irErasure.collect:
+      case S(ts: TermSymbol) if ts.isErasureReady || ts.irFunDefn.isDefined => ts.irErasure.collect:
         case sig: ErasedCallableSignature => sig
       case _ => N
   
