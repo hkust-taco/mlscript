@@ -103,8 +103,8 @@ sealed abstract class Type extends InfType with TypeArg:
     case v @ InfVar(lvl, sym, isSkolem) =>
       val name = scope.lookup(v.sym).getOrElse(scope.allocateName(v.sym, v.sym.hint))
       if isSkolem then name else s"'${name}"
-    case Union(lhs, rhs) => s"${lhs.paren} ∨ ${rhs.paren}"
-    case Inter(lhs, rhs) => s"${lhs.paren} ∧ ${rhs.paren}"
+    case Union(lhs, rhs) => s"${lhs.paren} | ${rhs.paren}"
+    case Inter(lhs, rhs) => s"${lhs.paren} & ${rhs.paren}"
     case Neg(ty) => s"¬${ty.paren}"
     case _ => showDbg
   def showDbg: Str = toBasic match
@@ -115,8 +115,8 @@ sealed abstract class Type extends InfType with TypeArg:
     case v @ InfVar(lvl, sym, isSkolem) =>
       val name = if sym.hint.isEmpty then s"${sym.nme}" else s"${sym.nme}(${sym.hint})"
       if isSkolem then s"${name}${sym.uid}_${lvl}" else s"'${name}${sym.uid}_${lvl}"
-    case Union(lhs, rhs) => s"${lhs.parenDbg} ∨ ${rhs.parenDbg}"
-    case Inter(lhs, rhs) => s"${lhs.parenDbg} ∧ ${rhs.parenDbg}"
+    case Union(lhs, rhs) => s"${lhs.parenDbg} | ${rhs.parenDbg}"
+    case Inter(lhs, rhs) => s"${lhs.parenDbg} & ${rhs.parenDbg}"
     case Neg(ty) => s"¬${ty.parenDbg}"
     case Top => "⊤"
     case Bot => "⊥"

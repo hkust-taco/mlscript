@@ -58,9 +58,9 @@ x =>
   idIB(x)
 //│ Type: ('x) ->{'eff} 'app
 //│ Where:
-//│   'x <: ¬Int ∨ ((Int) -> out Int <: Function[in Array & {0: Int} ∧ Array & {0: 'x}, out 'app, out 'eff])
-//│   'x <: ¬Bool ∨ ((Bool) -> out Bool <: Function[in Array & {0: Bool} ∧ Array & {0: 'x}, out 'app, out 'eff])
-//│   'x <: Int ∨ Bool
+//│   'x <: ¬Int ∨ ((Int) -> out Int <: Function[in Array & {0: Int} & Array & {0: 'x}, out 'app, out 'eff])
+//│   'x <: ¬Bool ∨ ((Bool) -> out Bool <: Function[in Array & {0: Bool} & Array & {0: 'x}, out 'app, out 'eff])
+//│   'x <: Int | Bool
 //│   'x <: Int
 
 (x: Int) =>
@@ -78,7 +78,7 @@ x =>
 
 (x: Bool) =>
   idIB(idIB(x))
-//│ Type: (Bool) ->{'eff ∨ 'eff1} 'app
+//│ Type: (Bool) ->{'eff | 'eff1} 'app
 //│ Where:
 //│   Bool <: 'app
 
@@ -96,17 +96,17 @@ ap(idIB)(1)
 x => idIB(x)
 //│ Type: ('x) ->{'eff} 'app
 //│ Where:
-//│   'x <: ¬Int ∨ ((Int) -> out Int <: Function[in Array & {0: Int} ∧ Array & {0: 'x}, out 'app, out 'eff])
-//│   'x <: ¬Bool ∨ ((Bool) -> out Bool <: Function[in Array & {0: Bool} ∧ Array & {0: 'x}, out 'app, out 'eff])
-//│   'x <: Int ∨ Bool
+//│   'x <: ¬Int ∨ ((Int) -> out Int <: Function[in Array & {0: Int} & Array & {0: 'x}, out 'app, out 'eff])
+//│   'x <: ¬Bool ∨ ((Bool) -> out Bool <: Function[in Array & {0: Bool} & Array & {0: 'x}, out 'app, out 'eff])
+//│   'x <: Int | Bool
 
 fun forward(x) = idIB(x)
 forward
 //│ Type: [outer, 'x, 'app, 'eff] -> ('x) ->{out 'eff} out 'app
 //│ Where:
-//│   'x <: ¬Int ∨ ((Int) -> out Int <: Function[in Array & {0: Int} ∧ Array & {0: 'x}, out 'app, out 'eff])
-//│   'x <: ¬Bool ∨ ((Bool) -> out Bool <: Function[in Array & {0: Bool} ∧ Array & {0: 'x}, out 'app, out 'eff])
-//│   'x <: Int ∨ Bool
+//│   'x <: ¬Int ∨ ((Int) -> out Int <: Function[in Array & {0: Int} & Array & {0: 'x}, out 'app, out 'eff])
+//│   'x <: ¬Bool ∨ ((Bool) -> out Bool <: Function[in Array & {0: Bool} & Array & {0: 'x}, out 'app, out 'eff])
+//│   'x <: Int | Bool
 
 forward(1)
 //│ Type: 'app
@@ -134,7 +134,7 @@ idIIBB([1, 2])
 //│ ╔══[COMPILATION ERROR] Type error in application
 //│ ║  l.+1: 	idIIBB([1, 2])
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  (⊥) -> out Bool ∧ (⊥) -> out Int  <:  (Object & {0: 1, 1: 2}) ->{out 'eff} out 'app
+//│ ╟── because: cannot constrain  (⊥) -> out Bool & (⊥) -> out Int  <:  (Object & {0: 1, 1: 2}) ->{out 'eff} out 'app
 //│ ╟── because: cannot constrain  Array & {0: Object & {0: 1, 1: 2}}  <:  Array & {0: ⊥}
 //│ ╟── because: cannot constrain  Object & {0: 1, 1: 2}  <:  ⊥
 //│ ╟── because: cannot constrain  1  <:  ⊥
@@ -162,22 +162,22 @@ idIIBB(new Pair(1, 2))
 //│ ╔══[COMPILATION ERROR] Type error in application
 //│ ║  l.+1: 	idIIBB(new Pair(1, 2))
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  (Pair[out Bool, out Bool]) -> out Bool ∧ (Pair[out Int, out Int]) -> out Int  <:  (Pair['A, 'B]) ->{out 'eff} out 'app
+//│ ╟── because: cannot constrain  (Pair[out Bool, out Bool]) -> out Bool & (Pair[out Int, out Int]) -> out Int  <:  (Pair['A, 'B]) ->{out 'eff} out 'app
 //│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B]}  <:  ¬Array & {0: Pair[?, ?]}
 //│ ╟── because: cannot constrain  Pair['A, 'B]  <:  ⊥
-//│ ╟── because: cannot constrain  (Pair[out Bool, out Bool]) -> out Bool  <:  Function[in Array & {0: Pair[?, ?]} ∧ Array & {0: Pair['A, 'B]}, out 'app, out 'eff]
-//│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B] ∧ Pair[?, ?]}  <:  Array & {0: Pair[out Bool, out Bool]}
+//│ ╟── because: cannot constrain  (Pair[out Bool, out Bool]) -> out Bool  <:  Function[in Array & {0: Pair[?, ?]} & Array & {0: Pair['A, 'B]}, out 'app, out 'eff]
+//│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B] & Pair[?, ?]}  <:  Array & {0: Pair[out Bool, out Bool]}
 //│ ╟── because: cannot constrain  Pair['A, 'B]  <:  Pair[out Bool, out Bool]
 //│ ╟── because: cannot constrain  'A  <:  Bool
 //│ ╙── because: cannot constrain  1  <:  Bool
 //│ ╔══[COMPILATION ERROR] Type error in application
 //│ ║  l.+1: 	idIIBB(new Pair(1, 2))
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  (Pair[out Bool, out Bool]) -> out Bool ∧ (Pair[out Int, out Int]) -> out Int  <:  (Pair['A, 'B]) ->{out 'eff} out 'app
+//│ ╟── because: cannot constrain  (Pair[out Bool, out Bool]) -> out Bool & (Pair[out Int, out Int]) -> out Int  <:  (Pair['A, 'B]) ->{out 'eff} out 'app
 //│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B]}  <:  ¬Array & {0: Pair[?, ?]}
 //│ ╟── because: cannot constrain  Pair['A, 'B]  <:  ⊥
-//│ ╟── because: cannot constrain  (Pair[out Bool, out Bool]) -> out Bool  <:  Function[in Array & {0: Pair[?, ?]} ∧ Array & {0: Pair['A, 'B]}, out 'app, out 'eff]
-//│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B] ∧ Pair[?, ?]}  <:  Array & {0: Pair[out Bool, out Bool]}
+//│ ╟── because: cannot constrain  (Pair[out Bool, out Bool]) -> out Bool  <:  Function[in Array & {0: Pair[?, ?]} & Array & {0: Pair['A, 'B]}, out 'app, out 'eff]
+//│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B] & Pair[?, ?]}  <:  Array & {0: Pair[out Bool, out Bool]}
 //│ ╟── because: cannot constrain  Pair['A, 'B]  <:  Pair[out Bool, out Bool]
 //│ ╟── because: cannot constrain  'B  <:  Bool
 //│ ╙── because: cannot constrain  2  <:  Bool
@@ -191,22 +191,22 @@ idIIBB(new Pair(1, true))
 //│ ╔══[COMPILATION ERROR] Type error in application
 //│ ║  l.+1: 	idIIBB(new Pair(1, true))
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  (Pair[out Bool, out Bool]) -> out Bool ∧ (Pair[out Int, out Int]) -> out Int  <:  (Pair['A, 'B]) ->{out 'eff} out 'app
+//│ ╟── because: cannot constrain  (Pair[out Bool, out Bool]) -> out Bool & (Pair[out Int, out Int]) -> out Int  <:  (Pair['A, 'B]) ->{out 'eff} out 'app
 //│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B]}  <:  ¬Array & {0: Pair[?, ?]}
 //│ ╟── because: cannot constrain  Pair['A, 'B]  <:  ⊥
-//│ ╟── because: cannot constrain  (Pair[out Bool, out Bool]) -> out Bool  <:  Function[in Array & {0: Pair[?, ?]} ∧ Array & {0: Pair['A, 'B]}, out 'app, out 'eff]
-//│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B] ∧ Pair[?, ?]}  <:  Array & {0: Pair[out Bool, out Bool]}
+//│ ╟── because: cannot constrain  (Pair[out Bool, out Bool]) -> out Bool  <:  Function[in Array & {0: Pair[?, ?]} & Array & {0: Pair['A, 'B]}, out 'app, out 'eff]
+//│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B] & Pair[?, ?]}  <:  Array & {0: Pair[out Bool, out Bool]}
 //│ ╟── because: cannot constrain  Pair['A, 'B]  <:  Pair[out Bool, out Bool]
 //│ ╟── because: cannot constrain  'A  <:  Bool
 //│ ╙── because: cannot constrain  1  <:  Bool
 //│ ╔══[COMPILATION ERROR] Type error in application
 //│ ║  l.+1: 	idIIBB(new Pair(1, true))
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  (Pair[out Bool, out Bool]) -> out Bool ∧ (Pair[out Int, out Int]) -> out Int  <:  (Pair['A, 'B]) ->{out 'eff} out 'app
+//│ ╟── because: cannot constrain  (Pair[out Bool, out Bool]) -> out Bool & (Pair[out Int, out Int]) -> out Int  <:  (Pair['A, 'B]) ->{out 'eff} out 'app
 //│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B]}  <:  ¬Array & {0: Pair[?, ?]}
 //│ ╟── because: cannot constrain  Pair['A, 'B]  <:  ⊥
-//│ ╟── because: cannot constrain  (Pair[out Int, out Int]) -> out Int  <:  Function[in Array & {0: Pair[?, ?]} ∧ Array & {0: Pair['A, 'B]}, out 'app, out 'eff]
-//│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B] ∧ Pair[?, ?]}  <:  Array & {0: Pair[out Int, out Int]}
+//│ ╟── because: cannot constrain  (Pair[out Int, out Int]) -> out Int  <:  Function[in Array & {0: Pair[?, ?]} & Array & {0: Pair['A, 'B]}, out 'app, out 'eff]
+//│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B] & Pair[?, ?]}  <:  Array & {0: Pair[out Int, out Int]}
 //│ ╟── because: cannot constrain  Pair['A, 'B]  <:  Pair[out Int, out Int]
 //│ ╟── because: cannot constrain  'B  <:  Int
 //│ ╙── because: cannot constrain  true  <:  Int
@@ -315,9 +315,9 @@ x => map(x)(idIB)
 //│ Type: ('x) ->{⊥} Ls['B]
 //│ Where:
 //│   'x <: Ls['A]
-//│   'A <: ¬Int ∨ ((Int) -> out Int <: Function[in Array & {0: Int} ∧ Array & {0: 'A}, out 'B, ⊥])
-//│   'A <: ¬Bool ∨ ((Bool) -> out Bool <: Function[in Array & {0: Bool} ∧ Array & {0: 'A}, out 'B, ⊥])
-//│   'A <: Int ∨ Bool
+//│   'A <: ¬Int ∨ ((Int) -> out Int <: Function[in Array & {0: Int} & Array & {0: 'A}, out 'B, ⊥])
+//│   'A <: ¬Bool ∨ ((Bool) -> out Bool <: Function[in Array & {0: Bool} & Array & {0: 'A}, out 'B, ⊥])
+//│   'A <: Int | Bool
 
 map(nil())(idIB)
 //│ Type: Ls['B]
@@ -342,11 +342,11 @@ let x = cons(1, cons(true, nil())) in
 //│ ╔══[COMPILATION ERROR] Type error in reference of type ‹not implemented› with expected type ('A) ->{⊥} 'B
 //│ ║  l.+2: 	  map(cons(x, x))(idIB)
 //│ ║        	                  ^^^^
-//│ ╟── because: cannot constrain  (Bool) -> out Bool ∧ (Int) -> out Int  <:  ('A) -> out 'B
-//│ ╟── because: cannot constrain  Array & {0: 'A}  <:  Array & {0: Bool} ∨ Array & {0: Int}
-//│ ╟── because: cannot constrain  (¬Int ∧ ¬Bool) ∧ 'A  <:  ⊥
-//│ ╟── because: cannot constrain  'A  <:  Int ∨ Bool
-//│ ╙── because: cannot constrain  Ls['A1]  <:  Int ∨ Bool
+//│ ╟── because: cannot constrain  (Bool) -> out Bool & (Int) -> out Int  <:  ('A) -> out 'B
+//│ ╟── because: cannot constrain  Array & {0: 'A}  <:  Array & {0: Bool} | Array & {0: Int}
+//│ ╟── because: cannot constrain  (¬Int & ¬Bool) & 'A  <:  ⊥
+//│ ╟── because: cannot constrain  'A  <:  Int | Bool
+//│ ╙── because: cannot constrain  Ls['A1]  <:  Int | Bool
 //│ Type: Ls['B]
 //│ Where:
 //│   Int <: 'B
@@ -366,10 +366,10 @@ fun k: ((Int, Int) -> Int) & ((Bool, Bool) -> Bool)
 x => k(x, x)
 //│ Type: ('x) ->{'eff} 'app
 //│ Where:
-//│   'x <: ¬Int ∨ (Int ∧ 'x <: ⊥ ∨ ((Int, Int) -> out Int <: Function[in Array & {0: Int, 1: Int} ∧ Array & {0: 'x, 1: 'x}, out 'app, out 'eff]))
-//│   'x <: ¬Bool ∨ (Bool ∧ 'x <: ⊥ ∨ ((Bool, Bool) -> out Bool <: Function[in Array & {0: Bool, 1: Bool} ∧ Array & {0: 'x, 1: 'x}, out 'app, out 'eff]))
-//│   'x <: Int ∨ (¬Bool ∧ 'x <: ⊥)
-//│   'x <: Int ∨ Bool ∨ ('x <: ⊥)
+//│   'x <: ¬Int ∨ (Int & 'x <: ⊥ ∨ ((Int, Int) -> out Int <: Function[in Array & {0: Int, 1: Int} & Array & {0: 'x, 1: 'x}, out 'app, out 'eff]))
+//│   'x <: ¬Bool ∨ (Bool & 'x <: ⊥ ∨ ((Bool, Bool) -> out Bool <: Function[in Array & {0: Bool, 1: Bool} & Array & {0: 'x, 1: 'x}, out 'app, out 'eff]))
+//│   'x <: Int ∨ (¬Bool & 'x <: ⊥)
+//│   'x <: Int | Bool ∨ ('x <: ⊥)
 
 // Recursive functions and higher-rank ascription from the BbML worksheets.
 fun f(x) = f(x.a)

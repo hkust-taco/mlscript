@@ -17,17 +17,17 @@ fun f(x) = if x is
 f
 //│ Type: [outer, 'x, 'eff, 'res] -> ('x) ->{out 'eff} out 'res
 //│ Where:
-//│   'x <: Int ∨ Bool ∨ (⊤ <: ⊥)
+//│   'x <: Int | Bool ∨ (⊤ <: ⊥)
 //│   'x <: ¬Bool ∨ (⊥ <: 'eff)
-//│   'x <: ¬Bool ∨ ('x ∧ Bool <: 'res)
+//│   'x <: ¬Bool ∨ ('x & Bool <: 'res)
 //│   'x <: ¬Int ∨ (⊥ <: 'eff)
 //│   'x <: ¬Int ∨ (0 <: 'res)
 
 f(ib) as (Int | Bool)
-//│ Type: Int ∨ Bool
+//│ Type: Int | Bool
 
 f(f(ib)) as (Int | Bool)
-//│ Type: Int ∨ Bool
+//│ Type: Int | Bool
 
 f(f(ib))
 //│ Type: 'app
@@ -40,11 +40,11 @@ f(si)
 //│ ╔══[COMPILATION ERROR] Type error in application
 //│ ║  l.+1: 	f(si)
 //│ ║        	^^^^^
-//│ ╟── because: cannot constrain  ('x) ->{out 'eff} out 'res  <:  (Str ∨ Int) ->{out 'eff1} out 'app
-//│ ╟── because: cannot constrain  Array & {0: Str ∨ Int}  <:  Array & {0: 'x}
-//│ ╟── because: cannot constrain  Str ∨ Int  <:  'x
+//│ ╟── because: cannot constrain  ('x) ->{out 'eff} out 'res  <:  (Str | Int) ->{out 'eff1} out 'app
+//│ ╟── because: cannot constrain  Array & {0: Str | Int}  <:  Array & {0: 'x}
+//│ ╟── because: cannot constrain  Str | Int  <:  'x
 //│ ╟── because: cannot constrain  Str  <:  'x
-//│ ╟── because: cannot constrain  Str  <:  Int ∨ Bool
+//│ ╟── because: cannot constrain  Str  <:  Int | Bool
 //│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ Type: 'app
 //│ Where:
@@ -123,17 +123,17 @@ foo(1, "")
 //│ ╟── because: cannot constrain  ""  <:  ¬Str
 //│ ╟── because: cannot constrain  'x1  <:  ¬Int
 //│ ╟── because: cannot constrain  1  <:  ¬Int
-//│ ╟── because: cannot constrain  'r  <:  ('y1 ∧ Str, 'x1 ∧ Int, 'r) ->{out 'eff2} out 'app2
-//│ ╟── because: cannot constrain  ('x2, 'y2, 'r1) ->{out 'eff3} out 'res  <:  ('y1 ∧ Str, 'x1 ∧ Int, 'r) ->{out 'eff2} out 'app2
-//│ ╟── because: cannot constrain  Array & {0: 'y1 ∧ Str, 1: 'x1 ∧ Int, 2: 'r}  <:  Array & {0: 'x2, 1: 'y2, 2: 'r1}
-//│ ╟── because: cannot constrain  Int ∧ 'x1  <:  'y2
-//│ ╟── because: cannot constrain  'x1  <:  ¬Int ∨ 'y2
-//│ ╟── because: cannot constrain  1  <:  ¬Int ∨ 'y2
+//│ ╟── because: cannot constrain  'r  <:  ('y1 & Str, 'x1 & Int, 'r) ->{out 'eff2} out 'app2
+//│ ╟── because: cannot constrain  ('x2, 'y2, 'r1) ->{out 'eff3} out 'res  <:  ('y1 & Str, 'x1 & Int, 'r) ->{out 'eff2} out 'app2
+//│ ╟── because: cannot constrain  Array & {0: 'y1 & Str, 1: 'x1 & Int, 2: 'r}  <:  Array & {0: 'x2, 1: 'y2, 2: 'r1}
+//│ ╟── because: cannot constrain  Int & 'x1  <:  'y2
+//│ ╟── because: cannot constrain  'x1  <:  ¬Int | 'y2
+//│ ╟── because: cannot constrain  1  <:  ¬Int | 'y2
 //│ ╟── because: cannot constrain  1  <:  'y2
 //│ ╟── because: cannot constrain  1  <:  ¬Int
-//│ ╟── because: cannot constrain  Int ∧ 'y2  <:  Bool
-//│ ╟── because: cannot constrain  'y2  <:  ¬Int ∨ Bool
-//│ ╙── because: cannot constrain  1  <:  ¬Int ∨ Bool
+//│ ╟── because: cannot constrain  Int & 'y2  <:  Bool
+//│ ╟── because: cannot constrain  'y2  <:  ¬Int | Bool
+//│ ╙── because: cannot constrain  1  <:  ¬Int | Bool
 //│ Type: 'app1
 //│ Where:
 //│   Bool <: 'app1
@@ -147,11 +147,11 @@ increv
 //│ Where:
 //│   'x <: Int ∨ (⊥ <: 'eff)
 //│   'x <: Int ∨ (Str <: 'res)
-//│   'x <: Int ∨ ('x ∧ ¬Int <: Str)
+//│   'x <: Int ∨ ('x & ¬Int <: Str)
 //│   'x <: ¬Int ∨ (⊥ <: 'eff)
 //│   'x <: ¬Int ∨ (Int <: 'res)
 //│   'x <: ¬Int ∨ (1 <: Int)
-//│   'x <: ¬Int ∨ ('x ∧ Int <: Int)
+//│   'x <: ¬Int ∨ ('x & Int <: Int)
 
 fun increv'(x) = if x is
   Int then x + 1
@@ -159,14 +159,14 @@ fun increv'(x) = if x is
 increv'
 //│ Type: [outer, 'x, 'eff, 'res] -> ('x) ->{out 'eff} out 'res
 //│ Where:
-//│   'x <: Int ∨ Str ∨ (⊤ <: ⊥)
+//│   'x <: Int | Str ∨ (⊤ <: ⊥)
 //│   'x <: ¬Str ∨ (⊥ <: 'eff)
 //│   'x <: ¬Str ∨ (Str <: 'res)
-//│   'x <: ¬Str ∨ ('x ∧ Str <: Str)
+//│   'x <: ¬Str ∨ ('x & Str <: Str)
 //│   'x <: ¬Int ∨ (⊥ <: 'eff)
 //│   'x <: ¬Int ∨ (Int <: 'res)
 //│   'x <: ¬Int ∨ (1 <: Int)
-//│   'x <: ¬Int ∨ ('x ∧ Int <: Int)
+//│   'x <: ¬Int ∨ ('x & Int <: Int)
 
 increv(si)
 //│ Type: 'app
@@ -179,11 +179,11 @@ increv(sib)
 //│ ╔══[COMPILATION ERROR] Type error in application
 //│ ║  l.+1: 	increv(sib)
 //│ ║        	^^^^^^^^^^^
-//│ ╟── because: cannot constrain  ('x) ->{out 'eff} out 'res  <:  ((Str ∨ Int) ∨ Bool) ->{out 'eff1} out 'app
-//│ ╟── because: cannot constrain  Array & {0: (Str ∨ Int) ∨ Bool}  <:  Array & {0: 'x}
-//│ ╟── because: cannot constrain  (Str ∨ Int) ∨ Bool  <:  'x
+//│ ╟── because: cannot constrain  ('x) ->{out 'eff} out 'res  <:  ((Str | Int) | Bool) ->{out 'eff1} out 'app
+//│ ╟── because: cannot constrain  Array & {0: (Str | Int) | Bool}  <:  Array & {0: 'x}
+//│ ╟── because: cannot constrain  (Str | Int) | Bool  <:  'x
 //│ ╟── because: cannot constrain  Bool  <:  'x
-//│ ╙── because: cannot constrain  Bool  <:  Int ∨ Str
+//│ ╙── because: cannot constrain  Bool  <:  Int | Str
 //│ Type: 'app
 //│ Where:
 //│   Str <: 'app
@@ -200,11 +200,11 @@ increv'(sib)
 //│ ╔══[COMPILATION ERROR] Type error in application
 //│ ║  l.+1: 	increv'(sib)
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  ('x) ->{out 'eff} out 'res  <:  ((Str ∨ Int) ∨ Bool) ->{out 'eff1} out 'app
-//│ ╟── because: cannot constrain  Array & {0: (Str ∨ Int) ∨ Bool}  <:  Array & {0: 'x}
-//│ ╟── because: cannot constrain  (Str ∨ Int) ∨ Bool  <:  'x
+//│ ╟── because: cannot constrain  ('x) ->{out 'eff} out 'res  <:  ((Str | Int) | Bool) ->{out 'eff1} out 'app
+//│ ╟── because: cannot constrain  Array & {0: (Str | Int) | Bool}  <:  Array & {0: 'x}
+//│ ╟── because: cannot constrain  (Str | Int) | Bool  <:  'x
 //│ ╟── because: cannot constrain  Bool  <:  'x
-//│ ╟── because: cannot constrain  Bool  <:  Int ∨ Str
+//│ ╟── because: cannot constrain  Bool  <:  Int | Str
 //│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ Type: 'app
 //│ Where:
@@ -221,7 +221,7 @@ x => if x is
   false then 0
 //│ Type: ('x) ->{'eff} 'res
 //│ Where:
-//│   'x <: true ∨ false ∨ (⊤ <: ⊥)
+//│   'x <: true | false ∨ (⊤ <: ⊥)
 //│   'x <: ¬false ∨ (⊥ <: 'eff)
 //│   'x <: ¬false ∨ (0 <: 'res)
 //│   'x <: ¬true ∨ (⊥ <: 'eff)
@@ -239,7 +239,7 @@ x => if x is
 //│ ║        	^^^^^^^^^^^^^
 //│ ║  l.+3: 	  false then 0) as Bool -> 0
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  Bool  <:  true ∨ false
+//│ ╟── because: cannot constrain  Bool  <:  true | false
 //│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ Type: (Bool) ->{⊥} 0
 
@@ -251,16 +251,16 @@ fun f(x) = if
 f
 //│ Type: [outer, 'x, 'eff, 'res] -> ('x) ->{out 'eff} out 'res
 //│ Where:
-//│   'x <: Int ∨ Str ∨ (⊥ <: 'eff)
-//│   'x <: Int ∨ Str ∨ (Bool <: 'res)
-//│   'x <: Int ∨ Str ∨ (('x ∧ ¬Int) ∧ ¬Str <: Bool)
+//│   'x <: Int | Str ∨ (⊥ <: 'eff)
+//│   'x <: Int | Str ∨ (Bool <: 'res)
+//│   'x <: Int | Str ∨ (('x & ¬Int) & ¬Str <: Bool)
 //│   'x <: ¬Str ∨ (⊥ <: 'eff)
 //│   'x <: ¬Str ∨ (Str <: 'res)
-//│   'x <: ¬Str ∨ ('x ∧ Str <: Str)
+//│   'x <: ¬Str ∨ ('x & Str <: Str)
 //│   'x <: ¬Int ∨ (⊥ <: 'eff)
 //│   'x <: ¬Int ∨ (Int <: 'res)
 //│   'x <: ¬Int ∨ (2 <: Int)
-//│   'x <: ¬Int ∨ ('x ∧ Int <: Int)
+//│   'x <: ¬Int ∨ ('x & Int <: Int)
 
 fun x:Int
 x
@@ -287,13 +287,13 @@ fun f(x, y) = if
 f
 //│ Type: [outer, 'x, 'y, 'eff, 'res] -> ('x, 'y) ->{out 'eff} out 'res
 //│ Where:
-//│   'x <: Int ∨ Str ∨ ('y <: Str ∨ (⊥ <: 'eff))
-//│   'x <: Int ∨ Str ∨ ('y <: Str ∨ (Bool <: 'res))
-//│   'x <: Int ∨ Str ∨ ('y <: Str ∨ (('x ∧ ¬Int) ∧ ¬Str <: Bool))
+//│   'x <: Int | Str ∨ ('y <: Str ∨ (⊥ <: 'eff))
+//│   'x <: Int | Str ∨ ('y <: Str ∨ (Bool <: 'res))
+//│   'x <: Int | Str ∨ ('y <: Str ∨ (('x & ¬Int) & ¬Str <: Bool))
 //│   'x <: ¬Str ∨ ('y <: Str ∨ (⊥ <: 'eff))
 //│   'x <: ¬Str ∨ ('y <: Str ∨ (Int <: 'res))
 //│   'x <: ¬Str ∨ ('y <: Str ∨ (1 <: Int))
-//│   'x <: ¬Str ∨ ('y <: Str ∨ ('y ∧ ¬Str <: Int))
+//│   'x <: ¬Str ∨ ('y <: Str ∨ ('y & ¬Str <: Int))
 //│   'x <: Int ∨ ('y <: ¬Str ∨ (⊥ <: 'eff))
 //│   'x <: Int ∨ ('y <: ¬Str ∨ (1 <: 'res))
 //│   'x <: ¬Int ∨ (⊥ <: 'eff)
@@ -314,7 +314,7 @@ f(ib, ib)
 //│   Int <: 'app
 
 f(ib, ib) as (Int | Bool)
-//│ Type: Int ∨ Bool
+//│ Type: Int | Bool
 
 fun f(x, y) = if
   x is Int then 1
@@ -325,7 +325,7 @@ f
 //│   'x <: Int ∨ ('y <: Int ∨ (⊤ <: ⊥))
 //│   'x <: Int ∨ ('y <: ¬Int ∨ (⊥ <: 'eff))
 //│   'x <: Int ∨ ('y <: ¬Int ∨ (Bool <: 'res))
-//│   'x <: Int ∨ ('y <: ¬Int ∨ ('x ∧ ¬Int <: Bool))
+//│   'x <: Int ∨ ('y <: ¬Int ∨ ('x & ¬Int <: Bool))
 //│   'x <: ¬Int ∨ (⊥ <: 'eff)
 //│   'x <: ¬Int ∨ (1 <: 'res)
 

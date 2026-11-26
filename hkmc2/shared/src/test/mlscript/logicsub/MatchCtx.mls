@@ -66,7 +66,7 @@ fun nestedJoin(x, y, z) = if
 //│ Type: undefined
 
 nestedJoin as ((Int | Str, Int | Str, Int) -> Int)
-//│ Type: (Int ∨ Str, Int ∨ Str, Int) ->{⊥} Int
+//│ Type: (Int | Str, Int | Str, Int) ->{⊥} Int
 
 // The arguments to f must come from the same surviving pair.
 fun callDiagonal(f, x, y) = if
@@ -76,43 +76,43 @@ fun callDiagonal(f, x, y) = if
 //│ Type: undefined
 
 callDiagonal as ((((Int, Int) -> Int) & ((Str, Str) -> Int), Int | Str, Int | Str) -> Int)
-//│ Type: ((Int, Int) -> out Int ∧ (Str, Str) -> out Int, Int ∨ Str, Int ∨ Str) ->{⊥} Int
+//│ Type: ((Int, Int) -> out Int & (Str, Str) -> out Int, Int | Str, Int | Str) ->{⊥} Int
 
 :e
 callDiagonal as (((Int, Int) -> Int, Int | Str, Int | Str) -> Int)
-//│ ╔══[COMPILATION ERROR] Type error in reference with expected type ((Int, Int) ->{⊥} Int, Int ∨ Str, Int ∨ Str) ->{⊥} Int
+//│ ╔══[COMPILATION ERROR] Type error in reference with expected type ((Int, Int) ->{⊥} Int, Int | Str, Int | Str) ->{⊥} Int
 //│ ║  l.+1: 	callDiagonal as (((Int, Int) -> Int, Int | Str, Int | Str) -> Int)
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  ('f, 'x, 'y) ->{out 'eff} out 'res  <:  ((Int, Int) -> out Int, Int ∨ Str, Int ∨ Str) -> out Int
-//│ ╟── because: cannot constrain  Array & {0: (Int, Int) -> out Int, 1: Int ∨ Str, 2: Int ∨ Str}  <:  Array & {0: 'f, 1: 'x, 2: 'y}
-//│ ╟── because: cannot constrain  Int ∨ Str  <:  'y
+//│ ╟── because: cannot constrain  ('f, 'x, 'y) ->{out 'eff} out 'res  <:  ((Int, Int) -> out Int, Int | Str, Int | Str) -> out Int
+//│ ╟── because: cannot constrain  Array & {0: (Int, Int) -> out Int, 1: Int | Str, 2: Int | Str}  <:  Array & {0: 'f, 1: 'x, 2: 'y}
+//│ ╟── because: cannot constrain  Int | Str  <:  'y
 //│ ╟── because: cannot constrain  Str  <:  'y
 //│ ╟── because: cannot constrain  Str  <:  Int
 //│ ╟── because: cannot constrain  'x  <:  ¬Str
 //│ ╟── because: cannot constrain  Str  <:  ¬Str
-//│ ╟── because: cannot constrain  'f  <:  ('x ∧ Str, 'y ∧ ¬Int) ->{out 'eff1} out 'app
-//│ ╟── because: cannot constrain  (Int, Int) -> out Int  <:  ('x ∧ Str, 'y ∧ ¬Int) ->{out 'eff1} out 'app
-//│ ╟── because: cannot constrain  Array & {0: 'x ∧ Str, 1: 'y ∧ ¬Int}  <:  Array & {0: Int, 1: Int}
-//│ ╟── because: cannot constrain  Str ∧ 'x  <:  Int
-//│ ╟── because: cannot constrain  'x  <:  ¬Str ∨ Int
-//│ ╙── because: cannot constrain  Str  <:  ¬Str ∨ Int
-//│ ╔══[COMPILATION ERROR] Type error in reference with expected type ((Int, Int) ->{⊥} Int, Int ∨ Str, Int ∨ Str) ->{⊥} Int
+//│ ╟── because: cannot constrain  'f  <:  ('x & Str, 'y & ¬Int) ->{out 'eff1} out 'app
+//│ ╟── because: cannot constrain  (Int, Int) -> out Int  <:  ('x & Str, 'y & ¬Int) ->{out 'eff1} out 'app
+//│ ╟── because: cannot constrain  Array & {0: 'x & Str, 1: 'y & ¬Int}  <:  Array & {0: Int, 1: Int}
+//│ ╟── because: cannot constrain  Str & 'x  <:  Int
+//│ ╟── because: cannot constrain  'x  <:  ¬Str | Int
+//│ ╙── because: cannot constrain  Str  <:  ¬Str | Int
+//│ ╔══[COMPILATION ERROR] Type error in reference with expected type ((Int, Int) ->{⊥} Int, Int | Str, Int | Str) ->{⊥} Int
 //│ ║  l.+1: 	callDiagonal as (((Int, Int) -> Int, Int | Str, Int | Str) -> Int)
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  ('f, 'x, 'y) ->{out 'eff} out 'res  <:  ((Int, Int) -> out Int, Int ∨ Str, Int ∨ Str) -> out Int
-//│ ╟── because: cannot constrain  Array & {0: (Int, Int) -> out Int, 1: Int ∨ Str, 2: Int ∨ Str}  <:  Array & {0: 'f, 1: 'x, 2: 'y}
-//│ ╟── because: cannot constrain  Int ∨ Str  <:  'y
+//│ ╟── because: cannot constrain  ('f, 'x, 'y) ->{out 'eff} out 'res  <:  ((Int, Int) -> out Int, Int | Str, Int | Str) -> out Int
+//│ ╟── because: cannot constrain  Array & {0: (Int, Int) -> out Int, 1: Int | Str, 2: Int | Str}  <:  Array & {0: 'f, 1: 'x, 2: 'y}
+//│ ╟── because: cannot constrain  Int | Str  <:  'y
 //│ ╟── because: cannot constrain  Str  <:  'y
 //│ ╟── because: cannot constrain  Str  <:  Int
 //│ ╟── because: cannot constrain  'x  <:  ¬Str
 //│ ╟── because: cannot constrain  Str  <:  ¬Str
-//│ ╟── because: cannot constrain  'f  <:  ('x ∧ Str, 'y ∧ ¬Int) ->{out 'eff1} out 'app
-//│ ╟── because: cannot constrain  (Int, Int) -> out Int  <:  ('x ∧ Str, 'y ∧ ¬Int) ->{out 'eff1} out 'app
-//│ ╟── because: cannot constrain  Array & {0: 'x ∧ Str, 1: 'y ∧ ¬Int}  <:  Array & {0: Int, 1: Int}
-//│ ╟── because: cannot constrain  ¬Int ∧ 'y  <:  Int
+//│ ╟── because: cannot constrain  'f  <:  ('x & Str, 'y & ¬Int) ->{out 'eff1} out 'app
+//│ ╟── because: cannot constrain  (Int, Int) -> out Int  <:  ('x & Str, 'y & ¬Int) ->{out 'eff1} out 'app
+//│ ╟── because: cannot constrain  Array & {0: 'x & Str, 1: 'y & ¬Int}  <:  Array & {0: Int, 1: Int}
+//│ ╟── because: cannot constrain  ¬Int & 'y  <:  Int
 //│ ╟── because: cannot constrain  'y  <:  Int
 //│ ╙── because: cannot constrain  Str  <:  Int
-//│ Type: ((Int, Int) ->{⊥} Int, Int ∨ Str, Int ∨ Str) ->{⊥} Int
+//│ Type: ((Int, Int) ->{⊥} Int, Int | Str, Int | Str) ->{⊥} Int
 
 fun same(x, y) = if
   x is Int and y is Int then 1
@@ -128,25 +128,25 @@ fun throughSame(x, y) = if
 // One polymorphic instantiation currently accumulates both diagonal pairs.
 :fixme
 throughSame as ((Int | Str, Int | Str) -> Int)
-//│ ╔══[COMPILATION ERROR] Type error in reference with expected type (Int ∨ Str, Int ∨ Str) ->{⊥} Int
+//│ ╔══[COMPILATION ERROR] Type error in reference with expected type (Int | Str, Int | Str) ->{⊥} Int
 //│ ║  l.+1: 	throughSame as ((Int | Str, Int | Str) -> Int)
 //│ ║        	^^^^^^^^^^^
-//│ ╟── because: cannot constrain  ('x, 'y) ->{out 'eff} out 'res  <:  (Int ∨ Str, Int ∨ Str) -> out Int
-//│ ╟── because: cannot constrain  Array & {0: Int ∨ Str, 1: Int ∨ Str}  <:  Array & {0: 'x, 1: 'y}
-//│ ╟── because: cannot constrain  Int ∨ Str  <:  'y
+//│ ╟── because: cannot constrain  ('x, 'y) ->{out 'eff} out 'res  <:  (Int | Str, Int | Str) -> out Int
+//│ ╟── because: cannot constrain  Array & {0: Int | Str, 1: Int | Str}  <:  Array & {0: 'x, 1: 'y}
+//│ ╟── because: cannot constrain  Int | Str  <:  'y
 //│ ╟── because: cannot constrain  Str  <:  'y
 //│ ╟── because: cannot constrain  Str  <:  Int
 //│ ╟── because: cannot constrain  'x  <:  ¬Str
 //│ ╟── because: cannot constrain  Str  <:  ¬Str
-//│ ╟── because: cannot constrain  ('x1, 'y1) ->{out 'eff1} out 'res1  <:  ('x ∧ Str, 'y ∧ ¬Int) ->{out 'eff2} out 'app
-//│ ╟── because: cannot constrain  Array & {0: 'x ∧ Str, 1: 'y ∧ ¬Int}  <:  Array & {0: 'x1, 1: 'y1}
-//│ ╟── because: cannot constrain  Str ∧ 'x  <:  'x1
-//│ ╟── because: cannot constrain  'x  <:  ¬Str ∨ 'x1
-//│ ╟── because: cannot constrain  Str  <:  ¬Str ∨ 'x1
+//│ ╟── because: cannot constrain  ('x1, 'y1) ->{out 'eff1} out 'res1  <:  ('x & Str, 'y & ¬Int) ->{out 'eff2} out 'app
+//│ ╟── because: cannot constrain  Array & {0: 'x & Str, 1: 'y & ¬Int}  <:  Array & {0: 'x1, 1: 'y1}
+//│ ╟── because: cannot constrain  Str & 'x  <:  'x1
+//│ ╟── because: cannot constrain  'x  <:  ¬Str | 'x1
+//│ ╟── because: cannot constrain  Str  <:  ¬Str | 'x1
 //│ ╟── because: cannot constrain  Str  <:  'x1
 //│ ╟── because: cannot constrain  Str  <:  ¬Str
 //│ ╟── because: cannot constrain  'y1  <:  Str
-//│ ╟── because: cannot constrain  Int ∧ ¬Str  <:  Str
+//│ ╟── because: cannot constrain  Int & ¬Str  <:  Str
 //│ ╟── because: cannot constrain  ⊤  <:  'reach
 //│ ╙── because: cannot constrain  ⊤  <:  ⊥
-//│ Type: (Int ∨ Str, Int ∨ Str) ->{⊥} Int
+//│ Type: (Int | Str, Int | Str) ->{⊥} Int

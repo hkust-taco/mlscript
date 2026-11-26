@@ -54,9 +54,9 @@ idt(nsb)
 //│ ╔══[COMPILATION ERROR] Type error in application
 //│ ║  l.+1: 	idt(nsb)
 //│ ║        	^^^^^^^^
-//│ ╟── because: cannot constrain  (Str) -> out Str ∧ (Int) -> out Int  <:  ((Int ∨ Str) ∨ Bool) ->{out 'eff} out 'app
-//│ ╟── because: cannot constrain  Array & {0: (Int ∨ Str) ∨ Bool}  <:  Array & {0: Str} ∨ Array & {0: Int}
-//│ ╙── because: cannot constrain  (((Int ∧ ¬Int) ∧ ¬Str) ∨ ((Str ∧ ¬Int) ∧ ¬Str)) ∨ ((Bool ∧ ¬Int) ∧ ¬Str)  <:  ⊥
+//│ ╟── because: cannot constrain  (Str) -> out Str & (Int) -> out Int  <:  ((Int | Str) | Bool) ->{out 'eff} out 'app
+//│ ╟── because: cannot constrain  Array & {0: (Int | Str) | Bool}  <:  Array & {0: Str} | Array & {0: Int}
+//│ ╙── because: cannot constrain  (((Int & ¬Int) & ¬Str) | ((Str & ¬Int) & ¬Str)) | ((Bool & ¬Int) & ¬Str)  <:  ⊥
 //│ Type: 'app
 //│ Where:
 //│   Int <: 'app
@@ -107,9 +107,9 @@ fun singletons: (1 & Int) | (Str & "s") | (false & Bool) | (true & Str)
 //│ ╔══[COMPILATION ERROR] Type error in reference of type ‹not implemented› with expected type 'x
 //│ ║  l.+3: 	  Str then "")(nsb)
 //│ ║        	               ^^^
-//│ ╟── because: cannot constrain  (Int ∨ Str) ∨ Bool  <:  'x
+//│ ╟── because: cannot constrain  (Int | Str) | Bool  <:  'x
 //│ ╟── because: cannot constrain  Bool  <:  'x
-//│ ╟── because: cannot constrain  Bool  <:  Int ∨ Str
+//│ ╟── because: cannot constrain  Bool  <:  Int | Str
 //│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ Type: 'res
 //│ Where:

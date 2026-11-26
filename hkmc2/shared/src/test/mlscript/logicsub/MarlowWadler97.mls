@@ -39,10 +39,10 @@ test
 //│ = fun test
 //│ Type: [outer, 'x, 'y, 'reach, 'reach1, 'eff, 'res] -> ('x, 'y) ->{out 'eff} out 'res
 //│ Where:
-//│   'x <: Tru ∨ Fls ∨ ('y <: Fls ∨ (⊤ <: 'reach))
+//│   'x <: Tru | Fls ∨ ('y <: Fls ∨ (⊤ <: 'reach))
 //│   'reach <: ⊥ ∨ (⊤ <: ⊥)
-//│   'x <: ¬Tru ∨ ('y <: Tru ∨ Fls ∨ (⊤ <: 'reach))
-//│   'x <: Tru ∨ Fls ∨ ('y <: ¬Fls ∨ (⊤ <: 'reach1))
+//│   'x <: ¬Tru ∨ ('y <: Tru | Fls ∨ (⊤ <: 'reach))
+//│   'x <: Tru | Fls ∨ ('y <: ¬Fls ∨ (⊤ <: 'reach1))
 //│   'reach1 <: ⊥ ∨ (⊥ <: 'eff)
 //│   'reach1 <: ⊥ ∨ (Fls <: 'res)
 //│   'x <: ¬Tru ∨ ('y <: ¬Fls ∨ (⊤ <: 'reach1))
@@ -90,7 +90,7 @@ test("hi", fls)
 // Check the inferred function against each result promised by these guards.
 test as (((Tru, Tru) -> Tru) & ((Fls, Any) -> Fls) & ((Any, Fls) -> Fls))
 //│ = fun test
-//│ Type: ((Tru, Tru) -> out Tru ∧ (Fls, ⊤) -> out Fls) ∧ (⊤, Fls) -> out Fls
+//│ Type: ((Tru, Tru) -> out Tru & (Fls, ⊤) -> out Fls) & (⊤, Fls) -> out Fls
 
 :e
 test(tru, fls) as Tru

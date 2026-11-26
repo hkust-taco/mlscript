@@ -159,9 +159,9 @@ wf(1)
 //│ ╔══[COMPILATION ERROR] Type error in application
 //│ ║  l.+1: 	wf(1)
 //│ ║        	^^^^^
-//│ ╟── because: cannot constrain  ((Str) -> out Str ∧ (Int ∨ Bool) -> out Int) ∨ ((Str) -> out Str ∧ (Bool) -> out Bool)  <:  (1) ->{out 'eff} out 'app
-//│ ╟── because: cannot constrain  Array & {0: 1}  <:  Array & {0: Str} ∨ Array & {0: Bool}
-//│ ╙── because: cannot constrain  (1 ∧ ¬Bool) ∧ ¬Str  <:  ⊥
+//│ ╟── because: cannot constrain  ((Str) -> out Str & (Int | Bool) -> out Int) | ((Str) -> out Str & (Bool) -> out Bool)  <:  (1) ->{out 'eff} out 'app
+//│ ╟── because: cannot constrain  Array & {0: 1}  <:  Array & {0: Str} | Array & {0: Bool}
+//│ ╙── because: cannot constrain  (1 & ¬Bool) & ¬Str  <:  ⊥
 //│ Type: 'app
 //│ Where:
 //│   Int <: 'app

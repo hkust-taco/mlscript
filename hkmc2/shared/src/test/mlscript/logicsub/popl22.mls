@@ -52,20 +52,20 @@ f(id, strint)
 //│ ╔══[COMPILATION ERROR] Type error in application
 //│ ║  l.+1: 	f(id, strint)
 //│ ║        	^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  ('x1, 'x2) ->{out 'eff} out 'res  <:  ((Int) -> out Int ∧ (Str) -> out Str, Int ∨ Str) ->{out 'eff1} out 'app
-//│ ╟── because: cannot constrain  Array & {0: (Int) -> out Int ∧ (Str) -> out Str, 1: Int ∨ Str}  <:  Array & {0: 'x1, 1: 'x2}
-//│ ╟── because: cannot constrain  Int ∨ Str  <:  'x2
+//│ ╟── because: cannot constrain  ('x1, 'x2) ->{out 'eff} out 'res  <:  ((Int) -> out Int & (Str) -> out Str, Int | Str) ->{out 'eff1} out 'app
+//│ ╟── because: cannot constrain  Array & {0: (Int) -> out Int & (Str) -> out Str, 1: Int | Str}  <:  Array & {0: 'x1, 1: 'x2}
+//│ ╟── because: cannot constrain  Int | Str  <:  'x2
 //│ ╟── because: cannot constrain  Str  <:  'x2
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ ╔══[COMPILATION ERROR] Type error in application
 //│ ║  l.+1: 	f(id, strint)
 //│ ║        	^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  ('x1, 'x2) ->{out 'eff} out 'res  <:  ((Int) -> out Int ∧ (Str) -> out Str, Int ∨ Str) ->{out 'eff1} out 'app
-//│ ╟── because: cannot constrain  Array & {0: (Int) -> out Int ∧ (Str) -> out Str, 1: Int ∨ Str}  <:  Array & {0: 'x1, 1: 'x2}
-//│ ╟── because: cannot constrain  Int ∨ Str  <:  'x2
+//│ ╟── because: cannot constrain  ('x1, 'x2) ->{out 'eff} out 'res  <:  ((Int) -> out Int & (Str) -> out Str, Int | Str) ->{out 'eff1} out 'app
+//│ ╟── because: cannot constrain  Array & {0: (Int) -> out Int & (Str) -> out Str, 1: Int | Str}  <:  Array & {0: 'x1, 1: 'x2}
+//│ ╟── because: cannot constrain  Int | Str  <:  'x2
 //│ ╟── because: cannot constrain  Str  <:  'x2
 //│ ╟── because: cannot constrain  Str  <:  ¬Str
-//│ ╟── because: cannot constrain  (Str) -> out Str  <:  Function[in Array & {0: Str} ∧ Array & {0: 'x2}, out 'app1, out 'eff2]
+//│ ╟── because: cannot constrain  (Str) -> out Str  <:  Function[in Array & {0: Str} & Array & {0: 'x2}, out 'app1, out 'eff2]
 //│ ╟── because: cannot constrain  Str  <:  'app1
 //│ ╟── because: cannot constrain  Str  <:  Int
 //│ ╟── because: cannot constrain  'x2  <:  Str
@@ -166,25 +166,25 @@ fun y: Any -> (Tru | Fls)
 
 :fixme
 prod(y(x => x), y(x => x)) as (Prod[Tru, Tru] | Prod[Fls, Fls])
-//│ ╔══[COMPILATION ERROR] Type error in application with expected type Prod[Tru, Tru] ∨ Prod[Fls, Fls]
+//│ ╔══[COMPILATION ERROR] Type error in application with expected type Prod[Tru, Tru] | Prod[Fls, Fls]
 //│ ║  l.+1: 	prod(y(x => x), y(x => x)) as (Prod[Tru, Tru] | Prod[Fls, Fls])
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  'app  <:  Prod[Tru, Tru] ∨ Prod[Fls, Fls]
-//│ ╟── because: cannot constrain  Prod[?, ?] ∧ 'app  <:  Prod[Tru, Tru]
-//│ ╟── because: cannot constrain  'app  <:  ¬Prod[?, ?] ∨ Prod[Tru, Tru]
-//│ ╟── because: cannot constrain  Prod['A, 'B]  <:  ¬Prod[?, ?] ∨ Prod[Tru, Tru]
+//│ ╟── because: cannot constrain  'app  <:  Prod[Tru, Tru] | Prod[Fls, Fls]
+//│ ╟── because: cannot constrain  Prod[?, ?] & 'app  <:  Prod[Tru, Tru]
+//│ ╟── because: cannot constrain  'app  <:  ¬Prod[?, ?] | Prod[Tru, Tru]
+//│ ╟── because: cannot constrain  Prod['A, 'B]  <:  ¬Prod[?, ?] | Prod[Tru, Tru]
 //│ ╟── because: cannot constrain  'A  <:  Tru
 //│ ╙── because: cannot constrain  Fls  <:  Tru
-//│ ╔══[COMPILATION ERROR] Type error in application with expected type Prod[Tru, Tru] ∨ Prod[Fls, Fls]
+//│ ╔══[COMPILATION ERROR] Type error in application with expected type Prod[Tru, Tru] | Prod[Fls, Fls]
 //│ ║  l.+1: 	prod(y(x => x), y(x => x)) as (Prod[Tru, Tru] | Prod[Fls, Fls])
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  'app  <:  Prod[Tru, Tru] ∨ Prod[Fls, Fls]
-//│ ╟── because: cannot constrain  Prod[?, ?] ∧ 'app  <:  Prod[Fls, Fls]
-//│ ╟── because: cannot constrain  'app  <:  ¬Prod[?, ?] ∨ Prod[Fls, Fls]
-//│ ╟── because: cannot constrain  Prod['A, 'B]  <:  ¬Prod[?, ?] ∨ Prod[Fls, Fls]
+//│ ╟── because: cannot constrain  'app  <:  Prod[Tru, Tru] | Prod[Fls, Fls]
+//│ ╟── because: cannot constrain  Prod[?, ?] & 'app  <:  Prod[Fls, Fls]
+//│ ╟── because: cannot constrain  'app  <:  ¬Prod[?, ?] | Prod[Fls, Fls]
+//│ ╟── because: cannot constrain  Prod['A, 'B]  <:  ¬Prod[?, ?] | Prod[Fls, Fls]
 //│ ╟── because: cannot constrain  'A  <:  Fls
 //│ ╙── because: cannot constrain  Tru  <:  Fls
-//│ Type: Prod[Tru, Tru] ∨ Prod[Fls, Fls]
+//│ Type: Prod[Tru, Tru] | Prod[Fls, Fls]
 
 prod(y(x => x), y(x => x))
 //│ Type: 'app
@@ -217,16 +217,16 @@ f(a, n)
 //│ ╔══[COMPILATION ERROR] Type error in application
 //│ ║  l.+1: 	f(a, n)
 //│ ║        	^^^^^^^
-//│ ╟── because: cannot constrain  ('a, 'n) ->{out 'eff} out 'res  <:  ((Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], Int) ->{out 'eff1} out 'app
-//│ ╟── because: cannot constrain  Array & {0: (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], 1: Int}  <:  Array & {0: 'a, 1: 'n}
-//│ ╟── because: cannot constrain  (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool]  <:  'a
-//│ ╟── because: cannot constrain  (Int) -> out Int ∨ Bool  <:  'a
-//│ ╟── because: cannot constrain  (Int) -> out Int ∨ Bool  <:  Prod[?, ?]
+//│ ╟── because: cannot constrain  ('a, 'n) ->{out 'eff} out 'res  <:  ((Int) -> out Int | Bool | Prod[Int, Int | Bool], Int) ->{out 'eff1} out 'app
+//│ ╟── because: cannot constrain  Array & {0: (Int) -> out Int | Bool | Prod[Int, Int | Bool], 1: Int}  <:  Array & {0: 'a, 1: 'n}
+//│ ╟── because: cannot constrain  (Int) -> out Int | Bool | Prod[Int, Int | Bool]  <:  'a
+//│ ╟── because: cannot constrain  (Int) -> out Int | Bool  <:  'a
+//│ ╟── because: cannot constrain  (Int) -> out Int | Bool  <:  Prod[?, ?]
 //│ ╟── because: cannot constrain  ⊤  <:  ⊥
-//│ ╟── because: cannot constrain  ¬Prod[?, ?] ∧ 'a  <:  ('n) ->{out 'eff2} out 'app1
-//│ ╟── because: cannot constrain  'a  <:  Prod[?, ?] ∨ ('n) ->{out 'eff2} out 'app1
-//│ ╟── because: cannot constrain  (Int) -> out Int ∨ Bool  <:  Prod[?, ?] ∨ ('n) ->{out 'eff2} out 'app1
-//│ ╟── because: cannot constrain  Int ∨ Bool  <:  'app1
+//│ ╟── because: cannot constrain  ¬Prod[?, ?] & 'a  <:  ('n) ->{out 'eff2} out 'app1
+//│ ╟── because: cannot constrain  'a  <:  Prod[?, ?] | ('n) ->{out 'eff2} out 'app1
+//│ ╟── because: cannot constrain  (Int) -> out Int | Bool  <:  Prod[?, ?] | ('n) ->{out 'eff2} out 'app1
+//│ ╟── because: cannot constrain  Int | Bool  <:  'app1
 //│ ╟── because: cannot constrain  Int  <:  'app1
 //│ ╟── because: cannot constrain  Int  <:  ¬Int
 //│ ╟── because: cannot constrain  'app2  <:  Int
@@ -252,14 +252,14 @@ f(a, n)
 //│ ╔══[COMPILATION ERROR] Type error in application
 //│ ║  l.+1: 	f(a, n)
 //│ ║        	^^^^^^^
-//│ ╟── because: cannot constrain  ('a, 'n) ->{out 'eff} out 'res  <:  ((Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], Int) ->{out 'eff1} out 'app
-//│ ╟── because: cannot constrain  Array & {0: (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], 1: Int}  <:  Array & {0: 'a, 1: 'n}
-//│ ╟── because: cannot constrain  (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool]  <:  'a
-//│ ╟── because: cannot constrain  Prod[Int, Int ∨ Bool]  <:  'a
-//│ ╟── because: cannot constrain  Prod[Int, Int ∨ Bool]  <:  ¬Prod[?, ?]
-//│ ╟── because: cannot constrain  Prod[?, ?] ∧ 'a  <:  Prod[in 'A out 'A1, in 'B out 'B1]
-//│ ╟── because: cannot constrain  'a  <:  ¬Prod[?, ?] ∨ Prod[in 'A out 'A1, in 'B out 'B1]
-//│ ╟── because: cannot constrain  Prod[Int, Int ∨ Bool]  <:  ¬Prod[?, ?] ∨ Prod[in 'A out 'A1, in 'B out 'B1]
+//│ ╟── because: cannot constrain  ('a, 'n) ->{out 'eff} out 'res  <:  ((Int) -> out Int | Bool | Prod[Int, Int | Bool], Int) ->{out 'eff1} out 'app
+//│ ╟── because: cannot constrain  Array & {0: (Int) -> out Int | Bool | Prod[Int, Int | Bool], 1: Int}  <:  Array & {0: 'a, 1: 'n}
+//│ ╟── because: cannot constrain  (Int) -> out Int | Bool | Prod[Int, Int | Bool]  <:  'a
+//│ ╟── because: cannot constrain  Prod[Int, Int | Bool]  <:  'a
+//│ ╟── because: cannot constrain  Prod[Int, Int | Bool]  <:  ¬Prod[?, ?]
+//│ ╟── because: cannot constrain  Prod[?, ?] & 'a  <:  Prod[in 'A out 'A1, in 'B out 'B1]
+//│ ╟── because: cannot constrain  'a  <:  ¬Prod[?, ?] | Prod[in 'A out 'A1, in 'B out 'B1]
+//│ ╟── because: cannot constrain  Prod[Int, Int | Bool]  <:  ¬Prod[?, ?] | Prod[in 'A out 'A1, in 'B out 'B1]
 //│ ╟── because: cannot constrain  Int  <:  'A1
 //│ ╟── because: cannot constrain  Int  <:  ¬Int
 //│ ╟── because: cannot constrain  'B2  <:  ¬Int
@@ -269,8 +269,8 @@ f(a, n)
 //│ Type: 'app
 //│ Where:
 //│   Bool <: 'app
-//│   Bool ∧ ¬Int <: 'app
-//│   Int ∧ ¬Int <: 'app
+//│   Bool & ¬Int <: 'app
+//│   Int & ¬Int <: 'app
 //│   Int <: 'app
 
 
@@ -292,10 +292,10 @@ fun is_bool(x) = if x is
 //│ Type: undefined
 
 is_bool as (Tru | Fls) -> Tru
-//│ Type: (Tru ∨ Fls) ->{⊥} Tru
+//│ Type: (Tru | Fls) ->{⊥} Tru
 
 is_bool as ~(Tru | Fls) -> Fls
-//│ Type: (¬Tru ∧ ¬Fls) ->{⊥} Fls
+//│ Type: (¬Tru & ¬Fls) ->{⊥} Fls
 
 // Originally, the paper defines False, empty string "" and zero 0 as Falsy
 // and ~Falsy as Truthy
@@ -308,19 +308,19 @@ fun not_(x) = if x is
 //│ Type: undefined
 
 not_ as (Fls | Z) -> Tru
-//│ Type: (Fls ∨ Z) ->{⊥} Tru
+//│ Type: (Fls | Z) ->{⊥} Tru
 
 not_ as ~(Fls | Z) -> Fls
-//│ Type: (¬Fls ∧ ¬Z) ->{⊥} Fls
+//│ Type: (¬Fls & ¬Z) ->{⊥} Fls
 
 fun to_bool(x) = x not_() not_()
 //│ Type: undefined
 
 to_bool as (Fls | Z) -> Fls
-//│ Type: (Fls ∨ Z) ->{⊥} Fls
+//│ Type: (Fls | Z) ->{⊥} Fls
 
 to_bool as ~(Fls | Z) -> Tru
-//│ Type: (¬Fls ∧ ¬Z) ->{⊥} Tru
+//│ Type: (¬Fls & ¬Z) ->{⊥} Tru
 
 fun and_(x, y) = if x is
   Fls then fls
@@ -329,26 +329,26 @@ fun and_(x, y) = if x is
 //│ Type: undefined
 
 and_ as (Fls | Z, Any) -> Fls
-//│ Type: (Fls ∨ Z, ⊤) ->{⊥} Fls
+//│ Type: (Fls | Z, ⊤) ->{⊥} Fls
 
 and_ as (~(Fls | Z), ~(Fls | Z)) -> Tru
-//│ Type: (¬Fls ∧ ¬Z, ¬Fls ∧ ¬Z) ->{⊥} Tru
+//│ Type: (¬Fls & ¬Z, ¬Fls & ¬Z) ->{⊥} Tru
 
 and_ as (~(Fls | Z), Fls | Z) -> Fls
-//│ Type: (¬Fls ∧ ¬Z, Fls ∨ Z) ->{⊥} Fls
+//│ Type: (¬Fls & ¬Z, Fls | Z) ->{⊥} Fls
 
 
 fun or_(x, y) = not_(x) and_(not_(y)) not_()
 //│ Type: undefined
 
 or_ as (~(Fls | Z), Any) -> Tru
-//│ Type: (¬Fls ∧ ¬Z, ⊤) ->{⊥} Tru
+//│ Type: (¬Fls & ¬Z, ⊤) ->{⊥} Tru
 
 or_ as (Fls | Z, ~(Fls | Z)) -> Tru
-//│ Type: (Fls ∨ Z, ¬Fls ∧ ¬Z) ->{⊥} Tru
+//│ Type: (Fls | Z, ¬Fls & ¬Z) ->{⊥} Tru
 
 or_ as (Fls | Z, Fls | Z) -> Fls
-//│ Type: (Fls ∨ Z, Fls ∨ Z) ->{⊥} Fls
+//│ Type: (Fls | Z, Fls | Z) ->{⊥} Fls
 
 fun strlen: Str -> Int
 fun plus: (Int | Z, Int | Z) -> (Int | Z)
@@ -365,14 +365,14 @@ example14 as (Int | Str, {fst: ~Int, snd: Any}) -> Z
 //│ ╔══[COMPILATION ERROR] Invalid type
 //│ ║  l.+1: 	example14 as (Int | Str, {fst: ~Int, snd: Any}) -> Z
 //│ ╙──      	                          ^^^^^^^^^^^^^^^^^^^
-//│ Type: (Int ∨ Str, ⊥) ->{⊥} Z
+//│ Type: (Int | Str, ⊥) ->{⊥} Z
 
 :fixme
 example14 as (~(Int | Str), {fst: ~Int, snd: Any}) -> Z
 //│ ╔══[COMPILATION ERROR] Invalid type
 //│ ║  l.+1: 	example14 as (~(Int | Str), {fst: ~Int, snd: Any}) -> Z
 //│ ╙──      	                             ^^^^^^^^^^^^^^^^^^^
-//│ Type: (¬Int ∧ ¬Str, ⊥) ->{⊥} Z
+//│ Type: (¬Int & ¬Str, ⊥) ->{⊥} Z
 
 :fixme
 :e
@@ -380,7 +380,7 @@ example14 as (Int | Str, {fst: Int, snd: Any}) -> Int
 //│ ╔══[COMPILATION ERROR] Invalid type
 //│ ║  l.+1: 	example14 as (Int | Str, {fst: Int, snd: Any}) -> Int
 //│ ╙──      	                          ^^^^^^^^^^^^^^^^^^
-//│ Type: (Int ∨ Str, ⊥) ->{⊥} Int
+//│ Type: (Int | Str, ⊥) ->{⊥} Int
 
 // using direct type test instead of predicate functions
 
@@ -395,21 +395,21 @@ example14_ as (Int | Str, {fst: ~Int, snd: Any}) -> Z
 //│ ╔══[COMPILATION ERROR] Invalid type
 //│ ║  l.+1: 	example14_ as (Int | Str, {fst: ~Int, snd: Any}) -> Z
 //│ ╙──      	                           ^^^^^^^^^^^^^^^^^^^
-//│ Type: (Int ∨ Str, ⊥) ->{⊥} Z
+//│ Type: (Int | Str, ⊥) ->{⊥} Z
 
 :fixme
 example14_ as (Int | Str, {fst: Int, snd: Any}) -> Int
 //│ ╔══[COMPILATION ERROR] Invalid type
 //│ ║  l.+1: 	example14_ as (Int | Str, {fst: Int, snd: Any}) -> Int
 //│ ╙──      	                           ^^^^^^^^^^^^^^^^^^
-//│ Type: (Int ∨ Str, ⊥) ->{⊥} Int
+//│ Type: (Int | Str, ⊥) ->{⊥} Int
 
 :fixme
 example14_ as (~(Int | Str), {fst: ~Int, snd: Any}) -> Z
 //│ ╔══[COMPILATION ERROR] Invalid type
 //│ ║  l.+1: 	example14_ as (~(Int | Str), {fst: ~Int, snd: Any}) -> Z
 //│ ╙──      	                              ^^^^^^^^^^^^^^^^^^^
-//│ Type: (¬Int ∧ ¬Str, ⊥) ->{⊥} Z
+//│ Type: (¬Int & ¬Str, ⊥) ->{⊥} Z
 
 fun is_string: (Str -> Tru) & (~Str -> Fls)
 //│ Type: undefined
@@ -425,7 +425,7 @@ fun example6_wrong(x: Int | Str, y: Any) = if
 //│ ║        	                                             ^
 //│ ╟── because: cannot constrain  'app  <:  ¬Tru
 //│ ╟── because: cannot constrain  Tru  <:  ¬Tru
-//│ ╙── because: cannot constrain  Int ∨ Str  <:  Int
+//│ ╙── because: cannot constrain  Int | Str  <:  Int
 //│ ╔══[COMPILATION ERROR] Type error in reference of type Any with expected type Str
 //│ ║  l.+2: 	  x is_int() and_(y is_string()) is Tru then x + strlen(y)
 //│ ║        	                                                        ^
@@ -437,7 +437,7 @@ fun example6_wrong(x: Int | Str, y: Any) = if
 //│ ║        	              ^
 //│ ╟── because: cannot constrain  'app  <:  Tru
 //│ ╟── because: cannot constrain  Fls  <:  Tru
-//│ ╙── because: cannot constrain  Int ∨ Str  <:  Str
+//│ ╙── because: cannot constrain  Int | Str  <:  Str
 //│ Type: undefined
 
 :e
@@ -448,7 +448,7 @@ fun example6_wrong(x: Int | Str, y: Any) = if
 //│ ║  l.+3: 	  else strlen(x)
 //│ ║        	              ^
 //│ ╟── because: cannot constrain  ⊤  <:  Str
-//│ ╟── because: cannot constrain  Int ∨ Str  <:  ¬Int
+//│ ╟── because: cannot constrain  Int | Str  <:  ¬Int
 //│ ╙── because: cannot constrain  Int  <:  Str
 //│ Type: undefined
 
@@ -474,7 +474,7 @@ fun detailed_ex(a: (Int -> (Int | Bool)) | Prod[Int, Int | Bool], n: Int) = if
 //│ ╔══[COMPILATION ERROR] Type error in field selection with expected type Int
 //│ ║  l.+2: 	  a is Prod and a.Prod#fst is Int and a.Prod#snd is Int then a.Prod#fst == a.Prod#snd
 //│ ║        	                                                                           ^^^^^^^^^^
-//│ ╟── because: cannot constrain  (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool]  <:  ¬Prod[?, ?]
+//│ ╟── because: cannot constrain  (Int) -> out Int | Bool | Prod[Int, Int | Bool]  <:  ¬Prod[?, ?]
 //│ ╟── because: cannot constrain  'A  <:  ¬Int
 //│ ╟── because: cannot constrain  Int  <:  ¬Int
 //│ ╟── because: cannot constrain  'B  <:  ¬Int
@@ -484,7 +484,7 @@ fun detailed_ex(a: (Int -> (Int | Bool)) | Prod[Int, Int | Bool], n: Int) = if
 //│ ╔══[COMPILATION ERROR] Type error in application with expected type Int
 //│ ║  l.+4: 	  a(n) is Int then a(n) < 42
 //│ ║        	                   ^^^^
-//│ ╟── because: cannot constrain  (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool]  <:  Prod[?, ?]
+//│ ╟── because: cannot constrain  (Int) -> out Int | Bool | Prod[Int, Int | Bool]  <:  Prod[?, ?]
 //│ ╟── because: cannot constrain  ⊤  <:  ⊥
 //│ ╟── because: cannot constrain  'app  <:  ¬Int
 //│ ╟── because: cannot constrain  Int  <:  ¬Int
@@ -502,7 +502,7 @@ fun detailed_ex(a: (Int -> (Int | Bool)) | Prod[Int, Int | Bool], n: Int) = if
 //│ ╔══[COMPILATION ERROR] Type error in field selection with expected type Int
 //│ ║  l.+2: 	  a is Prod and a.Prod#fst is Int and a.Prod#snd is Int then a.Prod#fst == a.Prod#snd
 //│ ║        	                                                                           ^^^^^^^^^^
-//│ ╟── because: cannot constrain  (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool]  <:  ¬Prod[?, ?]
+//│ ╟── because: cannot constrain  (Int) -> out Int | Bool | Prod[Int, Int | Bool]  <:  ¬Prod[?, ?]
 //│ ╟── because: cannot constrain  'A  <:  ¬Int
 //│ ╟── because: cannot constrain  Int  <:  ¬Int
 //│ ╟── because: cannot constrain  'B  <:  ¬Int
@@ -513,36 +513,36 @@ fun detailed_ex(a: (Int -> (Int | Bool)) | Prod[Int, Int | Bool], n: Int) = if
 
 :fixme
 detailed_ex as ((Int -> (Int | Bool)) | Prod[Int, Int | Bool], Int) -> (Int | Bool)
-//│ ╔══[COMPILATION ERROR] Type error in reference with expected type ((Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], Int) ->{⊥} Int ∨ Bool
+//│ ╔══[COMPILATION ERROR] Type error in reference with expected type ((Int) -> out Int | Bool | Prod[Int, Int | Bool], Int) ->{⊥} Int | Bool
 //│ ║  l.+1: 	detailed_ex as ((Int -> (Int | Bool)) | Prod[Int, Int | Bool], Int) -> (Int | Bool)
 //│ ║        	^^^^^^^^^^^
-//│ ╟── because: cannot constrain  ((Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], Int) ->{out 'eff} out 'res  <:  ((Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], Int) -> out Int ∨ Bool
-//│ ╟── because: cannot constrain  Array & {0: (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], 1: Int}  <:  Array & {0: (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], 1: Int}
-//│ ╟── because: cannot constrain  (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool]  <:  (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool]
-//│ ╙── because: cannot constrain  (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool]  <:  Function[?, ?, ?] ∨ Prod[?, ?]
-//│ Type: ((Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], Int) ->{⊥} Int ∨ Bool
+//│ ╟── because: cannot constrain  ((Int) -> out Int | Bool | Prod[Int, Int | Bool], Int) ->{out 'eff} out 'res  <:  ((Int) -> out Int | Bool | Prod[Int, Int | Bool], Int) -> out Int | Bool
+//│ ╟── because: cannot constrain  Array & {0: (Int) -> out Int | Bool | Prod[Int, Int | Bool], 1: Int}  <:  Array & {0: (Int) -> out Int | Bool | Prod[Int, Int | Bool], 1: Int}
+//│ ╟── because: cannot constrain  (Int) -> out Int | Bool | Prod[Int, Int | Bool]  <:  (Int) -> out Int | Bool | Prod[Int, Int | Bool]
+//│ ╙── because: cannot constrain  (Int) -> out Int | Bool | Prod[Int, Int | Bool]  <:  Function[?, ?, ?] | Prod[?, ?]
+//│ Type: ((Int) -> out Int | Bool | Prod[Int, Int | Bool], Int) ->{⊥} Int | Bool
 
 // TODO a.Prod#snd is not refined
 
 :fixme
 detailed_ex as ((Int -> (Int | Bool)) | Prod[Int, Int | Bool], Int) -> Bool
-//│ ╔══[COMPILATION ERROR] Type error in reference with expected type ((Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], Int) ->{⊥} Bool
+//│ ╔══[COMPILATION ERROR] Type error in reference with expected type ((Int) -> out Int | Bool | Prod[Int, Int | Bool], Int) ->{⊥} Bool
 //│ ║  l.+1: 	detailed_ex as ((Int -> (Int | Bool)) | Prod[Int, Int | Bool], Int) -> Bool
 //│ ║        	^^^^^^^^^^^
-//│ ╟── because: cannot constrain  ((Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], Int) ->{out 'eff} out 'res  <:  ((Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], Int) -> out Bool
-//│ ╟── because: cannot constrain  Array & {0: (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], 1: Int}  <:  Array & {0: (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], 1: Int}
-//│ ╟── because: cannot constrain  (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool]  <:  (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool]
-//│ ╙── because: cannot constrain  (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool]  <:  Function[?, ?, ?] ∨ Prod[?, ?]
-//│ ╔══[COMPILATION ERROR] Type error in reference with expected type ((Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], Int) ->{⊥} Bool
+//│ ╟── because: cannot constrain  ((Int) -> out Int | Bool | Prod[Int, Int | Bool], Int) ->{out 'eff} out 'res  <:  ((Int) -> out Int | Bool | Prod[Int, Int | Bool], Int) -> out Bool
+//│ ╟── because: cannot constrain  Array & {0: (Int) -> out Int | Bool | Prod[Int, Int | Bool], 1: Int}  <:  Array & {0: (Int) -> out Int | Bool | Prod[Int, Int | Bool], 1: Int}
+//│ ╟── because: cannot constrain  (Int) -> out Int | Bool | Prod[Int, Int | Bool]  <:  (Int) -> out Int | Bool | Prod[Int, Int | Bool]
+//│ ╙── because: cannot constrain  (Int) -> out Int | Bool | Prod[Int, Int | Bool]  <:  Function[?, ?, ?] | Prod[?, ?]
+//│ ╔══[COMPILATION ERROR] Type error in reference with expected type ((Int) -> out Int | Bool | Prod[Int, Int | Bool], Int) ->{⊥} Bool
 //│ ║  l.+1: 	detailed_ex as ((Int -> (Int | Bool)) | Prod[Int, Int | Bool], Int) -> Bool
 //│ ║        	^^^^^^^^^^^
-//│ ╟── because: cannot constrain  ((Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], Int) ->{out 'eff} out 'res  <:  ((Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], Int) -> out Bool
+//│ ╟── because: cannot constrain  ((Int) -> out Int | Bool | Prod[Int, Int | Bool], Int) ->{out 'eff} out 'res  <:  ((Int) -> out Int | Bool | Prod[Int, Int | Bool], Int) -> out Bool
 //│ ╟── because: cannot constrain  'res  <:  Bool
 //│ ╙── because: cannot constrain  Int  <:  Bool
-//│ Type: ((Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], Int) ->{⊥} Bool
+//│ Type: ((Int) -> out Int | Bool | Prod[Int, Int | Bool], Int) ->{⊥} Bool
 
 a
-//│ Type: (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool]
+//│ Type: (Int) -> out Int | Bool | Prod[Int, Int | Bool]
 
 :fixme
 if a is
@@ -551,9 +551,9 @@ if a is
 //│ ╔══[COMPILATION ERROR] Type error in application
 //│ ║  l.+3: 	  else a(1)
 //│ ║        	       ^^^^
-//│ ╟── because: cannot constrain  (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool]  <:  Prod[?, ?]
+//│ ╟── because: cannot constrain  (Int) -> out Int | Bool | Prod[Int, Int | Bool]  <:  Prod[?, ?]
 //│ ╟── because: cannot constrain  ⊤  <:  ⊥
-//│ ╙── because: cannot constrain  (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool]  <:  (1) ->{out 'eff} out 'app
+//│ ╙── because: cannot constrain  (Int) -> out Int | Bool | Prod[Int, Int | Bool]  <:  (1) ->{out 'eff} out 'app
 //│ Type: 'res
 //│ Where:
 //│   Int <: 'res
