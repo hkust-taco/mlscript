@@ -1042,7 +1042,7 @@ class NewResolver:
       listenTypeViews(transportType(instance.tpe, marks :: Nil), view)(listener)
     case _ => listener(value)
 
-  private[semantics] def listenTermViews(term: Term)(listener: ValueListener)(using ResolutionContext): Unit =
+  private def listenTermViews(term: Term)(listener: ValueListener)(using ResolutionContext): Unit =
     listenTermViewsOrProbe(term)(listener, _ => ())
 
   private def listenTermViewsOrProbe(term: Term)(listener: ValueListener, probe: ProbeListener)(using ResolutionContext): Unit =

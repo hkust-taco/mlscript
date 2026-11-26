@@ -5,7 +5,8 @@ import org.scalatest.funsuite.AnyFunSuite
 import hkmc2.utils.*
 
 /** Checks the ownership and lifetime of resolution observations. Imports and later worksheet blocks
-  * must preserve completed snapshots, and temporary field discovery must release its graph references. */
+  * must preserve completed snapshots without keeping a copy of the observations, and temporary field
+  * discovery must release its graph references. */
 class ResolvedValuesTest extends AnyFunSuite:
   test("completed observations are isolated from worksheet and import consumers"):
     given owner: Elaborator.State = new Elaborator.State
@@ -13,7 +14,7 @@ class ResolvedValuesTest extends AnyFunSuite:
     val inputs = owner.newResolverState.resolvedValues
     val symbol = VarSymbol(new syntax.Tree.Ident("value"), mut = true)
     val source = new TermShapeHost
-    inputs.register(symbol)(source.subscribeToShapes)
+    inputs.register(symbol)(source.subscribeToShapes)((shape, record) => record(shape))
     val initial = DynShape()
     source.publish(initial)
     defining.completeBlock(Term.UnitVal())
@@ -31,6 +32,10 @@ class ResolvedValuesTest extends AnyFunSuite:
     assert(source.currentShapes(using defining).toSet == Set(initial, other))
     assert(snapshot == List(initial))
     assert(observations == snapshot)
+    // Each consumer copies the source that it published to, and no host of the observations.
+    assert(first.copiedHostCount == 1)
+    assert(second.copiedHostCount == 1)
+    assert(defining.copiedHostCount == 1)
 
   // Diff tests can check the fields of each block, but cannot detect temporary observers accumulating
   // in the sealed graph. Reuse the syntax so no new source hosts contribute to its size.

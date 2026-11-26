@@ -118,8 +118,11 @@ private[hkmc2] final class SourceDeclarations(root: Statement):
 
   visit(root)
 
-/** The source values of declarations in this compilation unit. Erasure reads the completed
-  * observations. Later writes in an importing unit reach that unit's copy. */
+/** The source values of the declarations of a compilation unit, which erasure reads once resolution of
+  * their block has completed. These observations are local to the resolution of that block: values that a
+  * later block or an importing unit delivers to a declaration are not recorded, and such a unit keeps no
+  * copy of the observations (see `register`). Values from other units enter through the exposed interface,
+  * and interface exposure supplies them as unknown inputs before the block completes (see InterfaceExposure). */
 private[hkmc2] final class ResolvedValues:
   private val values = mutable.Map.empty[InputSlot, TermShapeHost]
 
@@ -135,9 +138,7 @@ private[hkmc2] final class ResolvedValues:
       case sym: TermSymbol => observeSymbol(sym, resolver)(resolver.listenMemberVariable(sym))
     declarations.statements.foreach:
       case td: TermDefinition => observeDefinition(td, resolver)
-      case lam: Lam =>
-        register(lam.resultSlot): publish =>
-          resolver.listenTermViews(lam.body)(publish)
+      case lam: Lam => observeViews(lam.resultSlot, resolver)(resolver.listenTerm(lam.body))
       case _ => ()
 
     // Interface exposure can discover new fields, and observing a field can in turn expose a value.
@@ -152,26 +153,40 @@ private[hkmc2] final class ResolvedValues:
     root.resolvedFields = rctx.state.discoveredFields.collect(observeField)(resolve)
 
   private def observeSymbol(symbol: InputSymbol, resolver: NewResolver)(connect: ResolutionContext.Listener => Unit)(using ResolutionContext): Unit =
-    if rctx.state.isOwnedSym(symbol) then register(symbol): publish =>
-      // Expand instances while their type substitutions are in scope.
-      connect(shape => resolver.listenInstanceViews(shape)(publish))
+    if rctx.state.isOwnedSym(symbol) then observeViews(symbol, resolver)(connect)
+
+  private def observeViews(slot: InputSlot, resolver: NewResolver)(connect: ResolutionContext.Listener => Unit)(using ResolutionContext): Unit =
+    // Expand instances while their type substitutions are in scope.
+    register(slot)(connect)((shape, record) => resolver.listenInstanceViews(shape)(record))
 
   private def observeDefinition(td: TermDefinition, resolver: NewResolver)(using ResolutionContext): Unit =
     observeSymbol(td.tsym, resolver): publish =>
       // An async function's body produces the payload of the promise its callers receive.
       td.body.foreach(body => resolver.listenResult(body)(publish))
       // In the defining block this includes writes admitted by interface exposure. Subsequent writes
-      // in importing units reach consumer-local copies of the field's assignment host.
+      // in importing units reach consumer-local copies of the field's assignment host, which `register` ignores.
       if resolver.isAssignableField(td) then resolver.listenMemberVariable(td.tsym)(publish)
 
+  /** Record the values of `slot`. `connect` subscribes its argument to the sources of these values. For each
+    * shape that they deliver, `views` passes the values to record to its listener.
+    *
+    * The subscriptions belong to the inference graph, so later blocks and importing units run them too.
+    * Only a delivery in the unit that registers the slot, before resolution of its block completes, is a
+    * value of the slot: it reaches the host data that erasure reads. Any other delivery would reach a copy of
+    * that data in the delivering unit, which nothing reads. Ignoring it before `views` spares that unit the
+    * copy and the expansion of the views.
+    */
   private[semantics] def register(slot: InputSlot)(connect: ResolutionContext.Listener => Unit)
-      (using ResolutionContext): Unit =
+      (views: (TermShape, ResolutionContext.Listener) => ResolutionContext ?=> Unit)(using ResolutionContext): Unit =
     if !values.contains(slot) then
       val host = new TermShapeHost
       values(slot) = host
       // Even an unused/unproductive definition has a completed, empty observation.
       host.inferenceHost
-      connect(host.publish)
+      // The condition under which publishing writes the original host data (see ResolutionContext.local).
+      def observing(using ResolutionContext): Bool = host.isOwnedBy(rctx.state) && !host.originalData.completed
+      def record(shape: TermShape)(using ResolutionContext): Unit = if observing then host.publish(shape)
+      connect(shape => if observing then views(shape, record))
 
   /** Whether resolution prepared this slot in the current compilation unit. */
   def isPrepared(slot: InputSlot): Bool = values.contains(slot)

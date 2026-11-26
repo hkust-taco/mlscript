@@ -31,6 +31,13 @@ active against private host data, but cannot change completed reference targets.
 This applies even between worksheet blocks sharing an elaborator state. An unknown
 reaching a sealed elimination can still report an error without changing its target.
 
+The values that erasure reads for a block's declarations (`ResolvedValues`) are local to
+the resolution of that block. Their subscriptions stay in the inference graph, but a
+delivery after the block completes, or in an importing unit, is not recorded and copies
+no observation host into that unit. Other units only supply values through the exposed
+interface, which `InterfaceExposure` accounts for with unknown inputs before completion.
+`ResolvedValuesTest` checks this isolation.
+
 [`PublisherTest`](../hkmc2/jvm/src/test/scala/hkmc2/PublisherTest.scala)
 checks independent consumers and unchanged source candidates and listeners,
 cycles, reentrant replay, transitive private inference, and bounded copying
