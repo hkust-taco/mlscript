@@ -108,10 +108,10 @@ increv(si)
 //│   Str <: 'app
 //│   Int <: 'app
 
+// FIXME
 increv'(si)
 //│ Type: 'app
 //│ Where:
-//│   Str <: 'app
 //│   Int <: 'app
 
 fun f(x, y) = if

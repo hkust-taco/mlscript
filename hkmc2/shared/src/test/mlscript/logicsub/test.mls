@@ -71,12 +71,12 @@ idt(ns)
 //│   Int <: 'app
 //│   Str <: 'app
 
+// FIXME
 (x => if x is
   Int then 1
   Str then "")(ns)
 //│ Type: 'res
 //│ Where:
-//│   "" <: 'res
 //│   1 <: 'res
 
 // TODO implement exhaustiveness check

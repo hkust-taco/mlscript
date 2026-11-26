@@ -416,10 +416,10 @@ class Typer(using tl: TL)(using Elaborator.State, Raise, codegen.Erasure, Ctx, C
       case Term.Error() => (Bot, Bot) // TODO: error type?
       case UnitVal() => (InfCtx.objTy, Bot)
       case Lit(lit) => (InfCtx.litTy(lit), Bot)
-      case Ref(sym) =>
-        ctx.get(sym) match
+      case r: (Ref| SimpleRef) =>
+        ctx.get(r.sym) match
           case Some(ty) => (ty, Bot)
-          case _ => (error(msg"Variable not found: ${sym.nme}" -> t.toLoc :: Nil), Bot)
+          case _ => (error(msg"Variable not found: ${r.sym.nme}" -> t.toLoc :: Nil), Bot)
       case t @ Term.App(lhs, Term.Tup(rhs)) =>
         val (funTy, lhsEff) = typeCheck(lhs)
         app(funTy, lhsEff, rhs, t)
