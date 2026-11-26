@@ -13,14 +13,10 @@ fun ap(f) = x => f(x)
 //│ Type: undefined
 
 k(andt)
-//│ Type: 'app
-//│ Where:
-//│   1 <: 'app
+//│ Type: 1
 
 k(ap(andt))
-//│ Type: 'app
-//│ Where:
-//│   1 <: 'app
+//│ Type: 1
 
 :fixme
 k(k)
@@ -31,27 +27,19 @@ k(k)
 //│ ╟── because: cannot constrain  Array & {0: ((⊥) -> out Bool) -> out 1}  <:  Array & {0: (⊥) -> out Bool}
 //│ ╟── because: cannot constrain  ((⊥) -> out Bool) -> out 1  <:  (⊥) -> out Bool
 //│ ╙── because: cannot constrain  1  <:  Bool
-//│ Type: 'app
-//│ Where:
-//│   1 <: 'app
+//│ Type: 1
 
 fun idIB: (Int -> Int) & (Bool -> Bool)
 //│ Type: undefined
 
 idIB(1)
-//│ Type: 'app
-//│ Where:
-//│   Int <: 'app
+//│ Type: Int
 
 idIB(true)
-//│ Type: 'app
-//│ Where:
-//│   Bool <: 'app
+//│ Type: Bool
 
 idIB(if true then 1 else true)
-//│ Type: 'app
-//│ Where:
-//│   Int <: 'app
+//│ Type: Int
 
 x =>
   let y = x+1
@@ -59,39 +47,28 @@ x =>
 //│ Type: ('x) ->{'eff} 'app
 //│ Where:
 //│   'x <: ¬Int ∨ ((Int) -> out Int <: Function[in Array & {0: Int} & Array & {0: 'x}, out 'app, out 'eff])
-//│   'x <: ¬Bool ∨ ((Bool) -> out Bool <: Function[in Array & {0: Bool} & Array & {0: 'x}, out 'app, out 'eff])
 //│   'x <: Int | Bool
 //│   'x <: Int
 
 (x: Int) =>
   let y = x + 1
   idIB(x)
-//│ Type: (Int) ->{'eff} 'app
-//│ Where:
-//│   Int <: 'app
+//│ Type: (Int) ->{⊥} Int
 
 (x: Bool) =>
   idIB(x)
-//│ Type: (Bool) ->{'eff} 'app
-//│ Where:
-//│   Bool <: 'app
+//│ Type: (Bool) ->{⊥} Bool
 
 (x: Bool) =>
   idIB(idIB(x))
-//│ Type: (Bool) ->{'eff | 'eff1} 'app
-//│ Where:
-//│   Bool <: 'app
+//│ Type: (Bool) ->{⊥} Bool
 
 fun ap1(f)=f(1)
 ap1(idIB)
-//│ Type: 'app
-//│ Where:
-//│   Int <: 'app
+//│ Type: Int
 
 ap(idIB)(1)
-//│ Type: 'app
-//│ Where:
-//│   Int <: 'app
+//│ Type: Int
 
 x => idIB(x)
 //│ Type: ('x) ->{'eff} 'app
@@ -102,21 +79,17 @@ x => idIB(x)
 
 fun forward(x) = idIB(x)
 forward
-//│ Type: [outer, 'x, 'app, 'eff] -> ('x) ->{out 'eff} out 'app
+//│ Type: ['x, 'app, 'eff] -> ('x) ->{out 'eff} out 'app
 //│ Where:
 //│   'x <: ¬Int ∨ ((Int) -> out Int <: Function[in Array & {0: Int} & Array & {0: 'x}, out 'app, out 'eff])
 //│   'x <: ¬Bool ∨ ((Bool) -> out Bool <: Function[in Array & {0: Bool} & Array & {0: 'x}, out 'app, out 'eff])
 //│   'x <: Int | Bool
 
 forward(1)
-//│ Type: 'app
-//│ Where:
-//│   Int <: 'app
+//│ Type: Int
 
 forward(true)
-//│ Type: 'app
-//│ Where:
-//│   Bool <: 'app
+//│ Type: Bool
 
 
 :fixme
@@ -139,7 +112,7 @@ idIIBB([1, 2])
 //│ ╟── because: cannot constrain  Object & {0: 1, 1: 2}  <:  ⊥
 //│ ╟── because: cannot constrain  1  <:  ⊥
 //│ ╙── because: cannot constrain  2  <:  ⊥
-//│ Type: 'app
+//│ Type: ⊥
 
 class Pair[out A, out B](fst: A, snd: B)
 //│ Type: undefined
@@ -181,10 +154,7 @@ idIIBB(new Pair(1, 2))
 //│ ╟── because: cannot constrain  Pair['A, 'B]  <:  Pair[out Bool, out Bool]
 //│ ╟── because: cannot constrain  'B  <:  Bool
 //│ ╙── because: cannot constrain  2  <:  Bool
-//│ Type: 'app
-//│ Where:
-//│   Int <: 'app
-//│   Bool <: 'app
+//│ Type: Int | Bool
 
 :e
 idIIBB(new Pair(1, true))
@@ -210,10 +180,7 @@ idIIBB(new Pair(1, true))
 //│ ╟── because: cannot constrain  Pair['A, 'B]  <:  Pair[out Int, out Int]
 //│ ╟── because: cannot constrain  'B  <:  Int
 //│ ╙── because: cannot constrain  true  <:  Int
-//│ Type: 'app
-//│ Where:
-//│   Int <: 'app
-//│   Bool <: 'app
+//│ Type: Int | Bool
 
 
 
@@ -256,7 +223,7 @@ k
 //│ ║        	  ^^^^^^^
 //│ ║  l.+3: 	  b: f(true)
 //│ ╙──      	^^^^^^^^^^^^
-//│ Type: [outer, 'f] -> ('f) -> ⊥
+//│ Type: (⊤) -> ⊥
 
 :fixme
 k(idIB) as {a: Int, b: Bool}
@@ -275,7 +242,7 @@ k
 //│ ║        	  ^^^^^^^
 //│ ║  l.+3: 	  b: f(y)
 //│ ╙──      	^^^^^^^^^
-//│ Type: [outer, 'f, 'x, 'y] -> ('f) -> out ('x, 'y) -> ⊥
+//│ Type: (⊤) -> out (⊤, ⊤) -> ⊥
 
 :fixme
 k(idIB)(true, 1) as {a: Bool, b: Int}
@@ -288,7 +255,7 @@ k(idIB)(true, 1) as {a: Bool, b: Int}
 :breakme
 :e
 k(idIB)("true", 1)
-//│ Type: 'app
+//│ Type: ⊥
 
 :fixme
 (x => x.x + idIB(x.y)) of {x: 0, y: 1}
@@ -312,9 +279,8 @@ fun map = x => f => x.Ls#prim(() => nil(), (a, b) => cons(f(a), map(b)(f)))
 // fun map = x => f => new Ls((n, r) => x.Ls#prim(n, (a, b) => r(f(a), map(b)(f))))
 
 x => map(x)(idIB)
-//│ Type: ('x) ->{⊥} Ls['B]
+//│ Type: (Ls['A]) ->{⊥} Ls['B]
 //│ Where:
-//│   'x <: Ls['A]
 //│   'A <: ¬Int ∨ ((Int) -> out Int <: Function[in Array & {0: Int} & Array & {0: 'A}, out 'B, ⊥])
 //│   'A <: ¬Bool ∨ ((Bool) -> out Bool <: Function[in Array & {0: Bool} & Array & {0: 'A}, out 'B, ⊥])
 //│   'A <: Int | Bool
@@ -356,9 +322,7 @@ fun k: ((Int | Str, Int) -> Int) & ((Bool | Str, Bool) -> Bool)
 //│ Type: undefined
 
 k("", if true then 1 else true)
-//│ Type: 'app
-//│ Where:
-//│   Int <: 'app
+//│ Type: Int
 
 fun k: ((Int, Int) -> Int) & ((Bool, Bool) -> Bool)
 //│ Type: undefined
@@ -369,11 +333,11 @@ x => k(x, x)
 //│   'x <: ¬Int ∨ (Int & 'x <: ⊥ ∨ ((Int, Int) -> out Int <: Function[in Array & {0: Int, 1: Int} & Array & {0: 'x, 1: 'x}, out 'app, out 'eff]))
 //│   'x <: ¬Bool ∨ (Bool & 'x <: ⊥ ∨ ((Bool, Bool) -> out Bool <: Function[in Array & {0: Bool, 1: Bool} & Array & {0: 'x, 1: 'x}, out 'app, out 'eff]))
 //│   'x <: Int ∨ (¬Bool & 'x <: ⊥)
-//│   'x <: Int | Bool ∨ ('x <: ⊥)
+//│   'x <: Int | Bool
 
 // Recursive functions and higher-rank ascription from the BbML worksheets.
 fun f(x) = f(x.a)
 //│ Type: undefined
 
 f => (let g = x => f(x(x)) in g) as [A] -> A -> A
-//│ Type: ('f) ->{⊥} [outer, 'A] -> ('A) ->{⊥} 'A
+//│ Type: (⊤) ->{⊥} [outer, 'A] -> ('A) ->{⊥} 'A

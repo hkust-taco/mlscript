@@ -1,0 +1,74 @@
+:.
+//│ Type: undefined
+
+fun integer: Int -> Int
+//│ Type: undefined
+
+// The unconditional input bound rules out the string arm.
+fun restricted(x) =
+  let n = integer(x)
+  if x is Str then "unreachable" else n
+restricted
+//│ Type: ['x, 'res] -> ('x) -> out 'res
+//│ Where:
+//│   'x <: Str ∨ (Int <: 'res)
+//│   'x <: Int
+
+restricted(1)
+//│ Type: Int
+
+:e
+restricted("s")
+//│ ╔══[COMPILATION ERROR] Type error in application
+//│ ║  l.+1: 	restricted("s")
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  ('x) -> out 'res  <:  ("s") ->{out 'eff} out 'app
+//│ ╟── because: cannot constrain  Array & {0: "s"}  <:  Array & {0: 'x}
+//│ ╟── because: cannot constrain  "s"  <:  'x
+//│ ╙── because: cannot constrain  "s"  <:  Int
+//│ Type: ⊥
+
+// A failed check can leave inconsistent bounds in the diagnostic's recovery type.
+:e
+let n = (x => x)(1) in
+  let bad = n as Str in n
+//│ ╔══[COMPILATION ERROR] Type error in reference with expected type Str
+//│ ║  l.+2: 	  let bad = n as Str in n
+//│ ║        	            ^
+//│ ╟── because: cannot constrain  'x  <:  Str
+//│ ╙── because: cannot constrain  1  <:  Str
+//│ Type: 'x
+//│ Where:
+//│   1 <: 'x
+//│   'x <: Str
+
+// A chain of identity calls has one variable shared between input and result.
+fun identity(x) = x
+fun chain(x) = identity(identity(identity(x)))
+chain
+//│ Type: ['x] -> ('x) -> out 'x
+
+chain(1)
+//│ Type: 1
+
+chain("s")
+//│ Type: "s"
+
+:e
+chain("s") as Int
+//│ ╔══[COMPILATION ERROR] Type error in application with expected type Int
+//│ ║  l.+1: 	chain("s") as Int
+//│ ║        	^^^^^^^^^^
+//│ ╟── because: cannot constrain  'app  <:  Int
+//│ ╙── because: cannot constrain  "s"  <:  Int
+//│ Type: Int
+
+// A nested pair uses the same component twice at each level.
+fun pair(x) = [x, x]
+fun nested(x) = pair(pair(pair(pair(x))))
+nested
+//│ Type: ['x, 'x1, 'x2, 'x3] -> ('x) -> out Object & {0: 'x1, 1: 'x1}
+//│ Where:
+//│   Object & {0: 'x2, 1: 'x2} <: 'x1
+//│   Object & {0: 'x3, 1: 'x3} <: 'x2
+//│   Object & {0: 'x, 1: 'x} <: 'x3

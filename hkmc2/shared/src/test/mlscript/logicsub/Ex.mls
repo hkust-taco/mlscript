@@ -15,9 +15,7 @@ fun add(x,y) = addImpl(x,y)
 //│ Type: undefined
 
 add(1, 2)
-//│ Type: 'app
-//│ Where:
-//│   Int <: 'app
+//│ Type: Int
 
 // add("a", "b")
 
@@ -25,9 +23,7 @@ fun test(a,b,c,d) = add(a,add(b,add(c,d)))
 //│ Type: undefined
 
 test(0, 1, 2, 3)
-//│ Type: 'app
-//│ Where:
-//│   Int <: 'app
+//│ Type: Int
 
 // test("A", "B", "C", "D")
 
@@ -54,10 +50,7 @@ fun selfAdd2(x) = if x is
 fun selfAdd3: (Int -> Int) & (Str -> Str)
 fun selfAdd3(x) = selfAdd1(x)
 selfAdd3(intstr)
-//│ Type: 'app
-//│ Where:
-//│   Int <: 'app
-//│   Str <: 'app
+//│ Type: Int | Str
 
 // fun selfAdd4:  (Int | Str) -> (Int | Str)
 // fun selfAdd4(x) = selfAdd1(x)
@@ -108,12 +101,10 @@ fun negImpl(x) = if x is
   Tru then fls
   Fls then tru
 negImpl
-//│ Type: [outer, 'x, 'eff, 'res] -> ('x) ->{out 'eff} out 'res
+//│ Type: ['x, 'res] -> ('x) -> out 'res
 //│ Where:
-//│   'x <: Tru | Fls ∨ (⊤ <: ⊥)
-//│   'x <: ¬Fls ∨ (⊥ <: 'eff)
+//│   'x <: Tru | Fls
 //│   'x <: ¬Fls ∨ (Tru <: 'res)
-//│   'x <: ¬Tru ∨ (⊥ <: 'eff)
 //│   'x <: ¬Tru ∨ (Fls <: 'res)
 
 fun negate: (Tru -> Fls) & (Fls -> Tru)
@@ -161,25 +152,16 @@ fun cons(x,y) = new Cons(x,y)
 //│ Type: undefined
 
 all2(nil)
-//│ Type: 'app
-//│ Where:
-//│   Tru <: 'app
+//│ Type: Tru
 
 all2(cons(tru, nil))
-//│ Type: 'app
-//│ Where:
-//│   Tru <: 'app
+//│ Type: Tru
 
 all2(cons(tru, cons(tru, nil)))
-//│ Type: 'app
-//│ Where:
-//│   Tru <: 'app
+//│ Type: Tru
 
 all2(cons(tru, cons(fls, nil)))
-//│ Type: 'app
-//│ Where:
-//│   Tru <: 'app
-//│   Fls <: 'app
+//│ Type: Tru | Fls
 
 fun test: Tru -> Tru
 fun test(x) = all2(cons(tru, cons(x, nil)))
@@ -224,12 +206,10 @@ fun headOption(x) = if x is
 //│ Type: undefined
 
 headOption
-//│ Type: [outer, 'x, 'eff, 'A, 'res, 'A1, 'A2, 'B, 'B1] -> ('x) ->{out 'eff} out 'res
+//│ Type: ['x, 'A, 'res, 'A1] -> ('x) -> out 'res
 //│ Where:
-//│   'x <: Nil | Cons[?, ?] ∨ (⊤ <: ⊥)
-//│   'x <: ¬Cons[?, ?] ∨ (⊥ <: 'eff)
+//│   'x <: Nil | Cons[?, ?]
 //│   'x <: ¬Cons[?, ?] ∨ (Some['A] <: 'res)
 //│   'x <: ¬Cons[?, ?] ∨ ('A1 <: 'A)
-//│   'x <: ¬Cons[?, ?] ∨ ('x & Cons[?, ?] <: Cons[in 'A2 out 'A1, in 'B out 'B1])
-//│   'x <: ¬Nil ∨ (⊥ <: 'eff)
+//│   'x <: ¬Cons[?, ?] ∨ ('x & Cons[?, ?] <: Cons[out 'A1, ?])
 //│   'x <: ¬Nil ∨ (None <: 'res)

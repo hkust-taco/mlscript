@@ -144,15 +144,10 @@ fun wf: (((Int | Bool) -> Int) | (Bool -> Bool)) & (Str -> Str)
 //│ Type: undefined
 
 wf("")
-//│ Type: 'app
-//│ Where:
-//│   Str <: 'app
+//│ Type: Str
 
 wf(true)
-//│ Type: 'app
-//│ Where:
-//│   Bool <: 'app
-//│   Int <: 'app
+//│ Type: Bool | Int
 
 :e
 wf(1)
@@ -162,9 +157,7 @@ wf(1)
 //│ ╟── because: cannot constrain  ((Str) -> out Str & (Int | Bool) -> out Int) | ((Str) -> out Str & (Bool) -> out Bool)  <:  (1) ->{out 'eff} out 'app
 //│ ╟── because: cannot constrain  Array & {0: 1}  <:  Array & {0: Str} | Array & {0: Bool}
 //│ ╙── because: cannot constrain  (1 & ¬Bool) & ¬Str  <:  ⊥
-//│ Type: 'app
-//│ Where:
-//│   Int <: 'app
+//│ Type: Int
 
 // function negation and record negation are not wf
 
@@ -235,14 +228,11 @@ fun wf(x) = if x is
 //│ Type: undefined
 
 wf(new Pair(0, ""))
-//│ Type: 'app
-//│ Where:
-//│   0 <: 'app
+//│ Type: 0
 
 wf(new Tri(new Pair(0, ""), 0, ""))
-//│ Type: 'app
+//│ Type: Pair['A, 'B]
 //│ Where:
-//│   Pair['A, 'B] <: 'app
 //│   0 <: 'A
 //│   "" <: 'B
 
@@ -258,7 +248,4 @@ fun zs: Z | S
 //│ Type: undefined
 
 wf(zs, zs)
-//│ Type: 'app
-//│ Where:
-//│   Z <: 'app
-//│   S <: 'app
+//│ Type: Z | S

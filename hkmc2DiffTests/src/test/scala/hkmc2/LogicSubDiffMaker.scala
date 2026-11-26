@@ -26,5 +26,6 @@ abstract class LogicSubDiffMaker extends WasmDiffMaker:
         given logicsub.InfCtx = infctx
         val ty = logicsub.Typer().typePurely(trm)
         val printer = logicsub.PrettyPrinter(output(_))
+        if debug.isSet then printer.printRaw(ty)
         printer.print(ty)
 

@@ -13,6 +13,10 @@ class TypeTraverser:
     apply(false)(c.y)
     c.cs.foreach(_.foreach(apply))
 
+  protected def invariant(pol: Bool, ty: Type): Unit =
+    apply(pol)(ty)
+    apply(!pol)(ty)
+
   def apply(pol: Bool)(ty: Type): Unit = ty.toBasic match
     case Union(x, y) => 
       apply(pol)(x)
@@ -23,12 +27,11 @@ class TypeTraverser:
     case Neg(ty) => apply(!pol)(ty)
     case ClassLikeType(name, targs, refine, _, _) =>
       targs.foreach:
+        case Wildcard(in, out) if in eq out => invariant(!pol, in)
         case Wildcard(in, out) =>
           apply(!pol)(in)
           apply(pol)(out)
-        case ty: Type =>
-          apply(pol)(ty)
-          apply(!pol)(ty)
+        case ty: Type => invariant(pol, ty)
       refine.values.foreach(apply(pol))
     case _ =>
 
@@ -37,6 +40,9 @@ class TypeTraverser:
   * variable's state is visited once, including in recursive types. */
 class BoundTraverser(using ctx: InfCtx) extends TypeTraverser:
   private val visited = scala.collection.mutable.HashSet.empty[InfVarSymbol]
+
+  // Reachability does not depend on variance. Walk nested invariant arguments once.
+  override protected def invariant(pol: Bool, ty: Type): Unit = apply(pol)(ty)
 
   def visitType(ty: InfType): Unit = ty match
     case t: Type => apply(true)(t)

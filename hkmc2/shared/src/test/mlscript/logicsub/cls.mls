@@ -26,16 +26,14 @@ fun idcs: (C -> C) & (Str -> Str)
 //│ Type: undefined
 
 idcs(new C())
-//│ Type: 'app
-//│ Where:
-//│   C <: 'app
+//│ Type: C
 
 :fixme
 idcs(D())
 //│ ╔══[COMPILATION ERROR] Variable not found: D
 //│ ║  l.+1: 	idcs(D())
 //│ ╙──      	     ^
-//│ Type: 'app
+//│ Type: ⊥
 
 :fixme
 idcs(new D())
@@ -45,6 +43,6 @@ idcs(new D())
 //│ ╟── because: cannot constrain  (Str) -> out Str & (C) -> out C  <:  (D) ->{out 'eff} out 'app
 //│ ╟── because: cannot constrain  Array & {0: D}  <:  Array & {0: Str} | Array & {0: C}
 //│ ╙── because: cannot constrain  (D & ¬C) & ¬Str  <:  ⊥
-//│ Type: 'app
+//│ Type: ⊥
 
 

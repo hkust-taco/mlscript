@@ -10,36 +10,27 @@ fun probe(x0, y0, x1, y1, x2, y2, x3, y3) = if
   x3 is Int and y3 is Str then 3
   else "miss"
 probe
-//│ Type: [outer, 'x0, 'reach, 'reach1, 'reach2, 'reach3, 'eff, 'res, 'x3, 'y3, 'x2, 'y2, 'x1, 'y1, 'y0] -> ('x0, 'y0, 'x1, 'y1, 'x2, 'y2, 'x3, 'y3) ->{out 'eff} out 'res
+//│ Type: ['x0, 'reach, 'reach1, 'reach2, 'reach3, 'res, 'x3, 'y3, 'x2, 'y2, 'x1, 'y1, 'y0] -> ('x0, 'y0, 'x1, 'y1, 'x2, 'y2, 'x3, 'y3) -> out 'res
 //│ Where:
 //│   'x0 <: Int ∨ (⊤ <: 'reach)
-//│   'reach <: ⊥ ∨ ('reach1 <: ⊥ ∨ ('reach2 <: ⊥ ∨ ('reach3 <: ⊥ ∨ (⊥ <: 'eff))))
 //│   'reach <: ⊥ ∨ ('reach1 <: ⊥ ∨ ('reach2 <: ⊥ ∨ ('reach3 <: ⊥ ∨ ("miss" <: 'res))))
-//│   'reach <: ⊥ ∨ ('reach1 <: ⊥ ∨ ('reach2 <: ⊥ ∨ ('x3 <: ¬Int ∨ ('y3 <: ¬Str ∨ (⊥ <: 'eff)))))
+//│   'reach <: ⊥ ∨ ('reach1 <: ⊥ ∨ ('reach2 <: ⊥ ∨ ('x3 <: ¬Int ∨ ('y3 <: ¬Str ∨ (3 <: 'res)))))
 //│   'x3 <: Int ∨ (⊤ <: 'reach3)
 //│   'x3 <: ¬Int ∨ ('y3 <: Str ∨ (⊤ <: 'reach3))
-//│   'reach <: ⊥ ∨ ('reach1 <: ⊥ ∨ ('reach2 <: ⊥ ∨ ('x3 <: ¬Int ∨ ('y3 <: ¬Str ∨ (3 <: 'res)))))
-//│   'reach <: ⊥ ∨ ('reach1 <: ⊥ ∨ ('x2 <: ¬Int ∨ ('y2 <: ¬Str ∨ (⊥ <: 'eff))))
+//│   'reach <: ⊥ ∨ ('reach1 <: ⊥ ∨ ('x2 <: ¬Int ∨ ('y2 <: ¬Str ∨ (2 <: 'res))))
 //│   'x2 <: Int ∨ (⊤ <: 'reach2)
 //│   'x2 <: ¬Int ∨ ('y2 <: Str ∨ (⊤ <: 'reach2))
-//│   'reach <: ⊥ ∨ ('reach1 <: ⊥ ∨ ('x2 <: ¬Int ∨ ('y2 <: ¬Str ∨ (2 <: 'res))))
-//│   'reach <: ⊥ ∨ ('x1 <: ¬Int ∨ ('y1 <: ¬Str ∨ (⊥ <: 'eff)))
+//│   'reach <: ⊥ ∨ ('x1 <: ¬Int ∨ ('y1 <: ¬Str ∨ (1 <: 'res)))
 //│   'x1 <: Int ∨ (⊤ <: 'reach1)
 //│   'x1 <: ¬Int ∨ ('y1 <: Str ∨ (⊤ <: 'reach1))
-//│   'reach <: ⊥ ∨ ('x1 <: ¬Int ∨ ('y1 <: ¬Str ∨ (1 <: 'res)))
 //│   'x0 <: ¬Int ∨ ('y0 <: Str ∨ (⊤ <: 'reach))
-//│   'x0 <: ¬Int ∨ ('y0 <: ¬Str ∨ (⊥ <: 'eff))
 //│   'x0 <: ¬Int ∨ ('y0 <: ¬Str ∨ (0 <: 'res))
 
 probe(0, 0, "", "", 2, "hit", 3, "later")
-//│ Type: 'app
-//│ Where:
-//│   2 <: 'app
+//│ Type: 2
 
 probe("", "", 1, 1, "", "", 3, 3)
-//│ Type: 'app
-//│ Where:
-//│   "miss" <: 'app
+//│ Type: "miss"
 
 // The first arm consumes the singleton part of the second arm's Int guard.
 fun literal(x, y) = if
@@ -52,9 +43,7 @@ literal as ((Int, Str) -> Int)
 //│ Type: (Int, Str) ->{⊥} Int
 
 literal(1, "")
-//│ Type: 'app
-//│ Where:
-//│   0 <: 'app
+//│ Type: 0
 
 // When z is Int, missing the first inner arm forces x to be Int.
 // The outer miss then forces y to be Str, so the final arm covers the input.
@@ -140,7 +129,7 @@ throughSame as ((Int | Str, Int | Str) -> Int)
 //│ ╟── because: cannot constrain  Str  <:  Int
 //│ ╟── because: cannot constrain  'x  <:  ¬Str
 //│ ╟── because: cannot constrain  Str  <:  ¬Str
-//│ ╟── because: cannot constrain  ('x1, 'y1) ->{out 'eff1} out 'res1  <:  ('x & Str, 'y & ¬Int) ->{out 'eff2} out 'app
+//│ ╟── because: cannot constrain  ('x1, 'y1) -> out 'res1  <:  ('x & Str, 'y & ¬Int) ->{out 'eff1} out 'app
 //│ ╟── because: cannot constrain  Array & {0: 'x & Str, 1: 'y & ¬Int}  <:  Array & {0: 'x1, 1: 'y1}
 //│ ╟── because: cannot constrain  Str & 'x  <:  'x1
 //│ ╟── because: cannot constrain  'x  <:  ¬Str | 'x1
@@ -148,9 +137,24 @@ throughSame as ((Int | Str, Int | Str) -> Int)
 //│ ╟── because: cannot constrain  Str  <:  'x1
 //│ ╟── because: cannot constrain  Str  <:  ¬Str
 //│ ╟── because: cannot constrain  'y1  <:  Str
-//│ ╟── because: cannot constrain  Int & ¬Str  <:  Str
-//│ ╟── because: cannot constrain  ⊤  <:  'reach
-//│ ╙── because: cannot constrain  ⊤  <:  ⊥
+//│ ╙── because: cannot constrain  Int & ¬Str  <:  Str
+//│ ╔══[COMPILATION ERROR] Type error in reference with expected type (Int | Str, Int | Str) ->{⊥} Int
+//│ ║  l.+1: 	throughSame as ((Int | Str, Int | Str) -> Int)
+//│ ║        	^^^^^^^^^^^
+//│ ╟── because: cannot constrain  ('x, 'y) ->{out 'eff} out 'res  <:  (Int | Str, Int | Str) -> out Int
+//│ ╟── because: cannot constrain  Array & {0: Int | Str, 1: Int | Str}  <:  Array & {0: 'x, 1: 'y}
+//│ ╟── because: cannot constrain  Int | Str  <:  'y
+//│ ╟── because: cannot constrain  Str  <:  'y
+//│ ╟── because: cannot constrain  Str  <:  Int
+//│ ╟── because: cannot constrain  'x  <:  ¬Str
+//│ ╟── because: cannot constrain  Str  <:  ¬Str
+//│ ╟── because: cannot constrain  ('x1, 'y1) -> out 'res1  <:  ('x & Str, 'y & ¬Int) ->{out 'eff1} out 'app
+//│ ╟── because: cannot constrain  Array & {0: 'x & Str, 1: 'y & ¬Int}  <:  Array & {0: 'x1, 1: 'y1}
+//│ ╟── because: cannot constrain  ¬Int & 'y  <:  'y1
+//│ ╟── because: cannot constrain  'y  <:  Int | 'y1
+//│ ╟── because: cannot constrain  Str  <:  Int | 'y1
+//│ ╟── because: cannot constrain  Str & ¬Int  <:  'y1
+//│ ╙── because: cannot constrain  Str & ¬Int  <:  Int
 //│ Type: (Int | Str, Int | Str) ->{⊥} Int
 
 
@@ -164,112 +168,68 @@ throughSame as ((Int | Str, Int | Str) -> Int)
 //│ Type: (Int | Str, Int | Str) ->{⊥} Int
 
 throughSame(10, 20)
-//│ Type: 'app
-//│ Where:
-//│   1 <: 'app
+//│ Type: 1
 
 throughSame("a", "b")
-//│ Type: 'app
-//│ Where:
-//│   2 <: 'app
+//│ Type: 2
 
 throughSame(10, "b")
-//│ Type: 'app
-//│ Where:
-//│   3 <: 'app
+//│ Type: 3
 
 throughSame("a", 20)
-//│ Type: 'app
-//│ Where:
-//│   4 <: 'app
+//│ Type: 4
 
 (x, y) => throughSame(x, y)
-//│ Type: ('x, 'y4) ->{'eff2} 'app1
+//│ Type: ('x, 'y) ->{'eff} 'res
 //│ Where:
-//│   'x <: 'x1
-//│   'x1 <: Int | Str ∨ ((Int, Int) -> out 1 & (Str, Str) -> out 2 <: (('x1 & ¬Int) & ¬Str, 'y) ->{out 'eff} out 'app)
-//│   'y <: Int ∨ ('x1 <: ¬Str ∨ ((Int, Int) -> out 1 & (Str, Str) -> out 2 <: ('x1 & Str, 'y & ¬Int) ->{out 'eff} out 'app))
-//│   'y <: Str ∨ ('x1 <: ¬Int ∨ ((Int, Int) -> out 1 & (Str, Str) -> out 2 <: ('x1 & Int, 'y & ¬Str) ->{out 'eff} out 'app))
-//│   'y <: (Str | Int) | 'y1
-//│   'y <: Int ∨ ('x1 & Str <: 'x2)
-//│   'y <: Str ∨ ('x1 & Int <: 'x2)
-//│   'x1 <: Str ∨ ('y & Int <: 'y1)
-//│   'x1 <: Int ∨ ('y & Str <: 'y1)
-//│   'x1 <: (Int | Str) | 'x2
-//│   'x1 <: Int | Str ∨ (⊤ <: 'reach)
-//│   'reach <: ⊥ ∨ ('eff <: 'eff1)
-//│   'eff1 <: 'eff2
+//│   'x <: Int | Str ∨ ((Int, Int) -> out 1 & (Str, Str) -> out 2 <: (('x & ¬Int) & ¬Str, 'y) ->{out 'eff1} out 'app)
+//│   'y <: Int ∨ ('x <: ¬Str ∨ ((Int, Int) -> out 1 & (Str, Str) -> out 2 <: ('x & Str, 'y & ¬Int) ->{out 'eff1} out 'app))
+//│   'y <: Str ∨ ('x <: ¬Int ∨ ((Int, Int) -> out 1 & (Str, Str) -> out 2 <: ('x & Int, 'y & ¬Str) ->{out 'eff1} out 'app))
+//│   'x <: Int | Str ∨ (⊤ <: 'reach)
+//│   'reach <: ⊥ ∨ ('eff1 <: 'eff)
 //│   'reach <: ⊥ ∨ ('app <: 'res)
-//│   'res <: 'app1
-//│   'reach <: ⊥ ∨ (('x3, 'y2) ->{out 'eff3} out 'res1 <: (Str, Str) -> out 2)
-//│   'x3 <: Int | Str ∨ (⊤ <: 'reach1)
-//│   'reach1 <: ⊥ ∨ (⊤ <: ⊥)
-//│   'x3 <: ¬Str ∨ ('y2 <: Str ∨ (⊤ <: 'reach1))
-//│   'x3 <: ¬Int ∨ ('y2 <: Int ∨ (⊤ <: 'reach1))
-//│   'x3 <: ¬Str ∨ ('y2 <: ¬Str ∨ (⊥ <: 'eff3))
-//│   'x3 <: ¬Str ∨ ('y2 <: ¬Str ∨ (2 <: 'res1))
-//│   'x3 <: ¬Int ∨ ('y2 <: ¬Int ∨ (⊥ <: 'eff3))
-//│   'x3 <: ¬Int ∨ ('y2 <: ¬Int ∨ (1 <: 'res1))
-//│   'reach <: ⊥ ∨ (('x4, 'y3) ->{out 'eff4} out 'res2 <: (Int, Int) -> out 1)
-//│   'x4 <: Int | Str ∨ (⊤ <: 'reach2)
-//│   'reach2 <: ⊥ ∨ (⊤ <: ⊥)
-//│   'x4 <: ¬Str ∨ ('y3 <: Str ∨ (⊤ <: 'reach2))
-//│   'x4 <: ¬Int ∨ ('y3 <: Int ∨ (⊤ <: 'reach2))
-//│   'x4 <: ¬Str ∨ ('y3 <: ¬Str ∨ (⊥ <: 'eff4))
-//│   'x4 <: ¬Str ∨ ('y3 <: ¬Str ∨ (2 <: 'res2))
-//│   'x4 <: ¬Int ∨ ('y3 <: ¬Int ∨ (⊥ <: 'eff4))
-//│   'x4 <: ¬Int ∨ ('y3 <: ¬Int ∨ (1 <: 'res2))
-//│   'x1 <: ¬Str ∨ ('y <: Int ∨ (⊤ <: 'reach))
-//│   'x1 <: ¬Int ∨ ('y <: Str ∨ (⊤ <: 'reach))
-//│   'x1 <: ¬Str ∨ ('y <: ¬Int ∨ (⊥ <: 'eff1))
-//│   'x1 <: ¬Str ∨ ('y <: ¬Int ∨ (4 <: 'res))
-//│   'x1 <: ¬Int ∨ ('y <: ¬Str ∨ (⊥ <: 'eff1))
-//│   'x1 <: ¬Int ∨ ('y <: ¬Str ∨ (3 <: 'res))
-//│   'y4 <: 'y
+//│   'reach <: ⊥ ∨ (('x1, 'y1) -> out 'res1 <: (Str, Str) -> out 2)
+//│   'x1 <: Int | Str
+//│   'x1 <: ¬Str ∨ ('y1 <: Str)
+//│   'x1 <: ¬Int ∨ ('y1 <: Int)
+//│   'x1 <: ¬Str ∨ ('y1 <: ¬Str ∨ (2 <: 'res1))
+//│   'x1 <: ¬Int ∨ ('y1 <: ¬Int ∨ (1 <: 'res1))
+//│   'reach <: ⊥ ∨ (('x2, 'y2) -> out 'res2 <: (Int, Int) -> out 1)
+//│   'x2 <: Int | Str
+//│   'x2 <: ¬Str ∨ ('y2 <: Str)
+//│   'x2 <: ¬Int ∨ ('y2 <: Int)
+//│   'x2 <: ¬Str ∨ ('y2 <: ¬Str ∨ (2 <: 'res2))
+//│   'x2 <: ¬Int ∨ ('y2 <: ¬Int ∨ (1 <: 'res2))
+//│   'x <: ¬Str ∨ ('y <: Int ∨ (⊤ <: 'reach))
+//│   'x <: ¬Int ∨ ('y <: Str ∨ (⊤ <: 'reach))
+//│   'x <: ¬Str ∨ ('y <: ¬Int ∨ (4 <: 'res))
+//│   'x <: ¬Int ∨ ('y <: ¬Str ∨ (3 <: 'res))
 
 (x) => throughSame(x, x)
-//│ Type: ('x) ->{'eff2} 'app1
+//│ Type: ('x) ->{'eff} 'res
 //│ Where:
-//│   'x <: 'y
-//│   'y <: Int ∨ ('x1 <: ¬Str ∨ ((Int, Int) -> out 1 & (Str, Str) -> out 2 <: ('x1 & Str, 'y & ¬Int) ->{out 'eff} out 'app))
-//│   'x1 <: Int | Str ∨ ((Int, Int) -> out 1 & (Str, Str) -> out 2 <: (('x1 & ¬Int) & ¬Str, 'y) ->{out 'eff} out 'app)
-//│   'x1 <: Str ∨ ('y & Int <: 'y1)
-//│   'x1 <: Int ∨ ('y & Str <: 'y1)
-//│   'x1 <: (Int | Str) | 'x2
-//│   'x1 <: Int | Str ∨ (⊤ <: 'reach)
-//│   'reach <: ⊥ ∨ ('eff <: 'eff1)
-//│   'eff1 <: 'eff2
+//│   'x <: Int ∨ ('x <: ¬Str ∨ ((Int, Int) -> out 1 & (Str, Str) -> out 2 <: ('x & Str, 'x & ¬Int) ->{out 'eff1} out 'app))
+//│   'x <: Int | Str ∨ ((Int, Int) -> out 1 & (Str, Str) -> out 2 <: (('x & ¬Int) & ¬Str, 'x) ->{out 'eff1} out 'app)
+//│   'x <: Int | Str ∨ (⊤ <: 'reach)
+//│   'reach <: ⊥ ∨ ('eff1 <: 'eff)
 //│   'reach <: ⊥ ∨ ('app <: 'res)
-//│   'res <: 'app1
-//│   'reach <: ⊥ ∨ (('x3, 'y2) ->{out 'eff3} out 'res1 <: (Str, Str) -> out 2)
-//│   'x3 <: Int | Str ∨ (⊤ <: 'reach1)
-//│   'reach1 <: ⊥ ∨ (⊤ <: ⊥)
-//│   'x3 <: ¬Str ∨ ('y2 <: Str ∨ (⊤ <: 'reach1))
-//│   'x3 <: ¬Int ∨ ('y2 <: Int ∨ (⊤ <: 'reach1))
-//│   'x3 <: ¬Str ∨ ('y2 <: ¬Str ∨ (⊥ <: 'eff3))
-//│   'x3 <: ¬Str ∨ ('y2 <: ¬Str ∨ (2 <: 'res1))
-//│   'x3 <: ¬Int ∨ ('y2 <: ¬Int ∨ (⊥ <: 'eff3))
-//│   'x3 <: ¬Int ∨ ('y2 <: ¬Int ∨ (1 <: 'res1))
-//│   'reach <: ⊥ ∨ (('x4, 'y3) ->{out 'eff4} out 'res2 <: (Int, Int) -> out 1)
-//│   'x4 <: Int | Str ∨ (⊤ <: 'reach2)
-//│   'reach2 <: ⊥ ∨ (⊤ <: ⊥)
-//│   'x4 <: ¬Str ∨ ('y3 <: Str ∨ (⊤ <: 'reach2))
-//│   'x4 <: ¬Int ∨ ('y3 <: Int ∨ (⊤ <: 'reach2))
-//│   'x4 <: ¬Str ∨ ('y3 <: ¬Str ∨ (⊥ <: 'eff4))
-//│   'x4 <: ¬Str ∨ ('y3 <: ¬Str ∨ (2 <: 'res2))
-//│   'x4 <: ¬Int ∨ ('y3 <: ¬Int ∨ (⊥ <: 'eff4))
-//│   'x4 <: ¬Int ∨ ('y3 <: ¬Int ∨ (1 <: 'res2))
-//│   'x1 <: ¬Str ∨ ('y <: Int ∨ (⊤ <: 'reach))
-//│   'x1 <: ¬Int ∨ ('y <: Str ∨ (⊤ <: 'reach))
-//│   'x1 <: ¬Str ∨ ('y <: ¬Int ∨ (⊥ <: 'eff1))
-//│   'x1 <: ¬Str ∨ ('y <: ¬Int ∨ (4 <: 'res))
-//│   'x1 <: ¬Int ∨ ('y <: ¬Str ∨ (⊥ <: 'eff1))
-//│   'x1 <: ¬Int ∨ ('y <: ¬Str ∨ (3 <: 'res))
-//│   'y <: Str ∨ ('x1 <: ¬Int ∨ ((Int, Int) -> out 1 & (Str, Str) -> out 2 <: ('x1 & Int, 'y & ¬Str) ->{out 'eff} out 'app))
-//│   'y <: (Str | Int) | 'y1
-//│   'y <: Int ∨ ('x1 & Str <: 'x2)
-//│   'y <: Str ∨ ('x1 & Int <: 'x2)
-//│   'x <: 'x1
+//│   'reach <: ⊥ ∨ (('x1, 'y) -> out 'res1 <: (Str, Str) -> out 2)
+//│   'x1 <: Int | Str
+//│   'x1 <: ¬Str ∨ ('y <: Str)
+//│   'x1 <: ¬Int ∨ ('y <: Int)
+//│   'x1 <: ¬Str ∨ ('y <: ¬Str ∨ (2 <: 'res1))
+//│   'x1 <: ¬Int ∨ ('y <: ¬Int ∨ (1 <: 'res1))
+//│   'reach <: ⊥ ∨ (('x2, 'y1) -> out 'res2 <: (Int, Int) -> out 1)
+//│   'x2 <: Int | Str
+//│   'x2 <: ¬Str ∨ ('y1 <: Str)
+//│   'x2 <: ¬Int ∨ ('y1 <: Int)
+//│   'x2 <: ¬Str ∨ ('y1 <: ¬Str ∨ (2 <: 'res2))
+//│   'x2 <: ¬Int ∨ ('y1 <: ¬Int ∨ (1 <: 'res2))
+//│   'x <: ¬Str ∨ (⊤ <: 'reach)
+//│   'x <: ¬Int ∨ (⊤ <: 'reach)
+//│   'x <: ¬Str ∨ ('x <: ¬Int ∨ (4 <: 'res))
+//│   'x <: ¬Int ∨ ('x <: ¬Str ∨ (3 <: 'res))
+//│   'x <: Str ∨ ('x <: ¬Int ∨ ((Int, Int) -> out 1 & (Str, Str) -> out 2 <: ('x & Int, 'x & ¬Str) ->{out 'eff1} out 'app))
 
 
 fun throughSame(x, y) = if
@@ -283,99 +243,63 @@ throughSame as ((Int | Str, Int | Str) -> Int)
 //│ Type: (Int | Str, Int | Str) ->{⊥} Int
 
 throughSame(10, 20)
-//│ Type: 'app
-//│ Where:
-//│   1 <: 'app
+//│ Type: 1
 
 throughSame("a", "b")
-//│ Type: 'app
-//│ Where:
-//│   2 <: 'app
+//│ Type: 2
 
 throughSame(10, "b")
-//│ Type: 'app
-//│ Where:
-//│   3 <: 'app
+//│ Type: 3
 
 throughSame("a", 20)
-//│ Type: 'app
-//│ Where:
-//│   4 <: 'app
+//│ Type: 4
 
 (x, y) => throughSame(x, y)
-//│ Type: ('x, 'y3) ->{'eff2} 'app1
+//│ Type: ('x, 'y) ->{'eff} 'res
 //│ Where:
-//│   'x <: 'x1
-//│   'x1 <: Int | Str ∨ (⊤ <: 'reach)
-//│   'reach <: ⊥ ∨ (⊤ <: ⊥)
-//│   'x1 <: ¬Str ∨ ('y <: Int | Str ∨ (⊤ <: 'reach))
-//│   'x1 <: ¬Int ∨ ('y <: Str | Int ∨ (⊤ <: 'reach))
-//│   'x1 <: ¬Str ∨ ('y <: ¬Str ∨ ('eff <: 'eff1))
-//│   'eff1 <: 'eff2
-//│   'x1 <: ¬Str ∨ ('y <: ¬Str ∨ ('app <: 'res))
-//│   'res <: 'app1
-//│   'x1 <: ¬Str ∨ ('y <: ¬Str ∨ (('x2, 'y1) ->{out 'eff3} out 'res1 <: ('x1 & Str, 'y & Str) ->{out 'eff} out 'app))
-//│   'x2 <: Int | Str ∨ (⊤ <: 'reach1)
-//│   'reach1 <: ⊥ ∨ (⊤ <: ⊥)
-//│   'x2 <: ¬Str ∨ ('y1 <: Str ∨ (⊤ <: 'reach1))
-//│   'x2 <: ¬Int ∨ ('y1 <: Int ∨ (⊤ <: 'reach1))
-//│   'x2 <: ¬Str ∨ ('y1 <: ¬Str ∨ (⊥ <: 'eff3))
-//│   'x2 <: ¬Str ∨ ('y1 <: ¬Str ∨ (2 <: 'res1))
-//│   'x2 <: ¬Int ∨ ('y1 <: ¬Int ∨ (⊥ <: 'eff3))
-//│   'x2 <: ¬Int ∨ ('y1 <: ¬Int ∨ (1 <: 'res1))
-//│   'x1 <: ¬Int ∨ ('y <: ¬Int ∨ ('eff4 <: 'eff1))
-//│   'x1 <: ¬Int ∨ ('y <: ¬Int ∨ ('app2 <: 'res))
-//│   'x1 <: ¬Int ∨ ('y <: ¬Int ∨ (('x3, 'y2) ->{out 'eff5} out 'res2 <: ('x1 & Int, 'y & Int) ->{out 'eff4} out 'app2))
-//│   'x3 <: Int | Str ∨ (⊤ <: 'reach2)
-//│   'reach2 <: ⊥ ∨ (⊤ <: ⊥)
-//│   'x3 <: ¬Str ∨ ('y2 <: Str ∨ (⊤ <: 'reach2))
-//│   'x3 <: ¬Int ∨ ('y2 <: Int ∨ (⊤ <: 'reach2))
-//│   'x3 <: ¬Str ∨ ('y2 <: ¬Str ∨ (⊥ <: 'eff5))
-//│   'x3 <: ¬Str ∨ ('y2 <: ¬Str ∨ (2 <: 'res2))
-//│   'x3 <: ¬Int ∨ ('y2 <: ¬Int ∨ (⊥ <: 'eff5))
-//│   'x3 <: ¬Int ∨ ('y2 <: ¬Int ∨ (1 <: 'res2))
-//│   'x1 <: ¬Str ∨ ('y <: ¬Int ∨ (⊥ <: 'eff1))
-//│   'x1 <: ¬Str ∨ ('y <: ¬Int ∨ (4 <: 'res))
-//│   'x1 <: ¬Int ∨ ('y <: ¬Str ∨ (⊥ <: 'eff1))
-//│   'x1 <: ¬Int ∨ ('y <: ¬Str ∨ (3 <: 'res))
-//│   'y3 <: 'y
+//│   'x <: Int | Str
+//│   'x <: ¬Str ∨ ('y <: Int | Str)
+//│   'x <: ¬Int ∨ ('y <: Str | Int)
+//│   'x <: ¬Str ∨ ('y <: ¬Str ∨ ('eff1 <: 'eff))
+//│   'x <: ¬Str ∨ ('y <: ¬Str ∨ ('app <: 'res))
+//│   'x <: ¬Str ∨ ('y <: ¬Str ∨ (('x1, 'y1) -> out 'res1 <: ('x & Str, 'y & Str) ->{out 'eff1} out 'app))
+//│   'x1 <: Int | Str
+//│   'x1 <: ¬Str ∨ ('y1 <: Str)
+//│   'x1 <: ¬Int ∨ ('y1 <: Int)
+//│   'x1 <: ¬Str ∨ ('y1 <: ¬Str ∨ (2 <: 'res1))
+//│   'x1 <: ¬Int ∨ ('y1 <: ¬Int ∨ (1 <: 'res1))
+//│   'x <: ¬Int ∨ ('y <: ¬Int ∨ ('eff2 <: 'eff))
+//│   'x <: ¬Int ∨ ('y <: ¬Int ∨ ('app1 <: 'res))
+//│   'x <: ¬Int ∨ ('y <: ¬Int ∨ (('x2, 'y2) -> out 'res2 <: ('x & Int, 'y & Int) ->{out 'eff2} out 'app1))
+//│   'x2 <: Int | Str
+//│   'x2 <: ¬Str ∨ ('y2 <: Str)
+//│   'x2 <: ¬Int ∨ ('y2 <: Int)
+//│   'x2 <: ¬Str ∨ ('y2 <: ¬Str ∨ (2 <: 'res2))
+//│   'x2 <: ¬Int ∨ ('y2 <: ¬Int ∨ (1 <: 'res2))
+//│   'x <: ¬Str ∨ ('y <: ¬Int ∨ (4 <: 'res))
+//│   'x <: ¬Int ∨ ('y <: ¬Str ∨ (3 <: 'res))
 
 (x) => throughSame(x, x)
-//│ Type: ('x) ->{'eff2} 'app1
+//│ Type: ('x) ->{'eff} 'res
 //│ Where:
-//│   'x <: 'y
-//│   'x <: 'x1
-//│   'x1 <: Int | Str ∨ (⊤ <: 'reach)
-//│   'reach <: ⊥ ∨ (⊤ <: ⊥)
-//│   'x1 <: ¬Str ∨ ('y <: Int | Str ∨ (⊤ <: 'reach))
-//│   'x1 <: ¬Int ∨ ('y <: Str | Int ∨ (⊤ <: 'reach))
-//│   'x1 <: ¬Str ∨ ('y <: ¬Str ∨ ('eff <: 'eff1))
-//│   'eff1 <: 'eff2
-//│   'x1 <: ¬Str ∨ ('y <: ¬Str ∨ ('app <: 'res))
-//│   'res <: 'app1
-//│   'x1 <: ¬Str ∨ ('y <: ¬Str ∨ (('x2, 'y1) ->{out 'eff3} out 'res1 <: ('x1 & Str, 'y & Str) ->{out 'eff} out 'app))
-//│   'x2 <: Int | Str ∨ (⊤ <: 'reach1)
-//│   'reach1 <: ⊥ ∨ (⊤ <: ⊥)
-//│   'x2 <: ¬Str ∨ ('y1 <: Str ∨ (⊤ <: 'reach1))
-//│   'x2 <: ¬Int ∨ ('y1 <: Int ∨ (⊤ <: 'reach1))
-//│   'x2 <: ¬Str ∨ ('y1 <: ¬Str ∨ (⊥ <: 'eff3))
-//│   'x2 <: ¬Str ∨ ('y1 <: ¬Str ∨ (2 <: 'res1))
-//│   'x2 <: ¬Int ∨ ('y1 <: ¬Int ∨ (⊥ <: 'eff3))
-//│   'x2 <: ¬Int ∨ ('y1 <: ¬Int ∨ (1 <: 'res1))
-//│   'x1 <: ¬Int ∨ ('y <: ¬Int ∨ ('eff4 <: 'eff1))
-//│   'x1 <: ¬Int ∨ ('y <: ¬Int ∨ ('app2 <: 'res))
-//│   'x1 <: ¬Int ∨ ('y <: ¬Int ∨ (('x3, 'y2) ->{out 'eff5} out 'res2 <: ('x1 & Int, 'y & Int) ->{out 'eff4} out 'app2))
-//│   'x3 <: Int | Str ∨ (⊤ <: 'reach2)
-//│   'reach2 <: ⊥ ∨ (⊤ <: ⊥)
-//│   'x3 <: ¬Str ∨ ('y2 <: Str ∨ (⊤ <: 'reach2))
-//│   'x3 <: ¬Int ∨ ('y2 <: Int ∨ (⊤ <: 'reach2))
-//│   'x3 <: ¬Str ∨ ('y2 <: ¬Str ∨ (⊥ <: 'eff5))
-//│   'x3 <: ¬Str ∨ ('y2 <: ¬Str ∨ (2 <: 'res2))
-//│   'x3 <: ¬Int ∨ ('y2 <: ¬Int ∨ (⊥ <: 'eff5))
-//│   'x3 <: ¬Int ∨ ('y2 <: ¬Int ∨ (1 <: 'res2))
-//│   'x1 <: ¬Str ∨ ('y <: ¬Int ∨ (⊥ <: 'eff1))
-//│   'x1 <: ¬Str ∨ ('y <: ¬Int ∨ (4 <: 'res))
-//│   'x1 <: ¬Int ∨ ('y <: ¬Str ∨ (⊥ <: 'eff1))
-//│   'x1 <: ¬Int ∨ ('y <: ¬Str ∨ (3 <: 'res))
+//│   'x <: Int | Str
+//│   'x <: ¬Str ∨ ('eff1 <: 'eff)
+//│   'x <: ¬Str ∨ ('app <: 'res)
+//│   'x <: ¬Str ∨ (('x1, 'y) -> out 'res1 <: ('x & Str, 'x & Str) ->{out 'eff1} out 'app)
+//│   'x1 <: Int | Str
+//│   'x1 <: ¬Str ∨ ('y <: Str)
+//│   'x1 <: ¬Int ∨ ('y <: Int)
+//│   'x1 <: ¬Str ∨ ('y <: ¬Str ∨ (2 <: 'res1))
+//│   'x1 <: ¬Int ∨ ('y <: ¬Int ∨ (1 <: 'res1))
+//│   'x <: ¬Int ∨ ('eff2 <: 'eff)
+//│   'x <: ¬Int ∨ ('app1 <: 'res)
+//│   'x <: ¬Int ∨ (('x2, 'y1) -> out 'res2 <: ('x & Int, 'x & Int) ->{out 'eff2} out 'app1)
+//│   'x2 <: Int | Str
+//│   'x2 <: ¬Str ∨ ('y1 <: Str)
+//│   'x2 <: ¬Int ∨ ('y1 <: Int)
+//│   'x2 <: ¬Str ∨ ('y1 <: ¬Str ∨ (2 <: 'res2))
+//│   'x2 <: ¬Int ∨ ('y1 <: ¬Int ∨ (1 <: 'res2))
+//│   'x <: ¬Str ∨ ('x <: ¬Int ∨ (4 <: 'res))
+//│   'x <: ¬Int ∨ ('x <: ¬Str ∨ (3 <: 'res))
 
 

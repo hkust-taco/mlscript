@@ -6,32 +6,22 @@ fun f(x) = x
 //│ Type: undefined
 
 f(1)
-//│ Type: 'app
-//│ Where:
-//│   1 <: 'app
+//│ Type: 1
 
 f("a")
-//│ Type: 'app
-//│ Where:
-//│   "c" <: 'app
-//│   "B" <: 'app
-//│   "a" <: 'app
+//│ Type: ("c" | "B") | "a"
 
 fun g: (Int -> Int) & (Str -> Str)
 //│ Type: undefined
 
 g(1)
-//│ Type: 'app
-//│ Where:
-//│   Int <: 'app
+//│ Type: Int
 
 fun g: (1 -> 1) & (2 -> 2)
 //│ Type: undefined
 
 g(1)
-//│ Type: 'app
-//│ Where:
-//│   1 <: 'app
+//│ Type: 1
 
 fun neg: (true -> false) & (false -> true)
 //│ Type: undefined
@@ -57,48 +47,29 @@ idt(nsb)
 //│ ╟── because: cannot constrain  (Str) -> out Str & (Int) -> out Int  <:  ((Int | Str) | Bool) ->{out 'eff} out 'app
 //│ ╟── because: cannot constrain  Array & {0: (Int | Str) | Bool}  <:  Array & {0: Str} | Array & {0: Int}
 //│ ╙── because: cannot constrain  (((Int & ¬Int) & ¬Str) | ((Str & ¬Int) & ¬Str)) | ((Bool & ¬Int) & ¬Str)  <:  ⊥
-//│ Type: 'app
-//│ Where:
-//│   Int <: 'app
-//│   Str <: 'app
+//│ Type: Int | Str
 
 idt(1)
-//│ Type: 'app
-//│ Where:
-//│   Int <: 'app
+//│ Type: Int
 
 (x => idt(x))(1)
-//│ Type: 'app
-//│ Where:
-//│   Int <: 'app
+//│ Type: Int
 
 
 idt(1 as Int)
-//│ Type: 'app
-//│ Where:
-//│   Int <: 'app
+//│ Type: Int
 
 idt(ns)
-//│ Type: 'app
-//│ Where:
-//│   Int <: 'app
-//│   Str <: 'app
+//│ Type: Int | Str
 
 fun singletons: (1 & Int) | (Str & "s") | (false & Bool) | (true & Str)
 (x => x)(singletons)
-//│ Type: 'x
-//│ Where:
-//│   false <: 'x
-//│   "s" <: 'x
-//│   1 <: 'x
+//│ Type: (false | "s") | 1
 
 (x => if x is
   Int then 1
   Str then "")(ns)
-//│ Type: 'res
-//│ Where:
-//│   "" <: 'res
-//│   1 <: 'res
+//│ Type: "" | 1
 
 :e
 (x => if x is
@@ -111,7 +82,4 @@ fun singletons: (1 & Int) | (Str & "s") | (false & Bool) | (true & Str)
 //│ ╟── because: cannot constrain  Bool  <:  'x
 //│ ╟── because: cannot constrain  Bool  <:  Int | Str
 //│ ╙── because: cannot constrain  ⊤  <:  ⊥
-//│ Type: 'res
-//│ Where:
-//│   "" <: 'res
-//│   1 <: 'res
+//│ Type: "" | 1

@@ -244,7 +244,7 @@ class Typer(using tl: TL)(using Elaborator.State, Raise, codegen.Erasure, Ctx, C
     Collect.visitType(ty)
     val bounds = ctx.xbds.toList
     bounds.foreach(Collect.visitBound)
-    PolyType(vars.result(), outer, bounds, ty)
+    TypeSimplifier.scheme(ty, vars.result(), outer, bounds)
 
   private def app(lhs: InfType, lhsEff: Type, rhs: Ls[Elem], t: Term)
       (using ctx: InfCtx, cctx: CCtx, scope: Scope)

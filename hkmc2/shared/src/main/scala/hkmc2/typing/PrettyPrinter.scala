@@ -1,28 +1,28 @@
 package hkmc2
 package typing
 package logicsub
-import scala.collection.mutable.LinkedHashSet
 import hkmc2.utils.*, shorthands.*
 
 class PrettyPrinter(output: String => Unit)(using printScope: Scope, ctx: InfCtx):
   def print(ty: InfType)(using Raise): Unit =
+    render("Type", TypeSimplifier.forDisplay(TypeSimplifier.snapshot(ty)))
+
+  def printRaw(ty: InfType)(using Raise): Unit = render("Raw type", TypeSimplifier.snapshot(ty))
+
+  private def render(label: String, view: TypeSimplifier.Result)(using Raise): Unit =
     given names: Scope = printScope.nest
-    val bounds = LinkedHashSet.empty[SubOr]
-    object Collect extends BoundTraverser:
+    object Names extends BoundTraverser:
       override def visitVariable(v: InfVar): Unit =
-        // Quantifiers print their bodies in a nested scope. Reserve each name
-        // here so that it denotes the same variable in the separate Where clause.
+        // The body and its Where clause must use the same names across binders.
         names.allocateOrGetName(v.sym, v.sym.hint)
-        super.visitVariable(v)
-      override def visitBound(c: SubOr): Unit =
-        if bounds.add(c) then super.visitBound(c)
-    Collect.visitType(ty)
-    ty.show match
+    Names.visitType(view.body)
+    view.bounds.foreach(b => Names.visitBound(b.c))
+    view.body.show match
       case "()" =>
-      case tyStr => output(s"Type: ${tyStr}")
-    if bounds.nonEmpty then
+      case tyStr => output(s"$label: $tyStr")
+    if view.bounds.nonEmpty then
       output("Where:")
-      bounds.foreach(k => output(s"  ${PrettyPrinter.showConstraint(k)}"))
+      view.bounds.foreach(b => output(s"  ${PrettyPrinter.showConstraint(b.c)}"))
 
 object PrettyPrinter:
   def apply(output: String => Unit)(using Scope, InfCtx): PrettyPrinter = new PrettyPrinter(output)

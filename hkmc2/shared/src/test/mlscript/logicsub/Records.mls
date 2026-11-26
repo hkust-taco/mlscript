@@ -40,7 +40,7 @@ let rcd = { foo: 1, bar: "..." }
 
 // :fixme The fields should retain the types of 1 and "...".
 [rcd.foo, rcd.bar]
-//│ Type: Object & {0: 'tmp, 1: 'tmp1}
+//│ Type: Object & {0: ⊥, 1: ⊥}
 
 // TODO: IntLit as label?
 :fixme
@@ -61,35 +61,35 @@ id of (x: 1)
 //│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
 //│ ║  l.+1: 	id of (x: 1)
 //│ ╙──      	       ^^^^
-//│ Type: 'app
+//│ Type: ⊥
 
 :fixme
 id of { x: 1 }
 //│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
 //│ ║  l.+1: 	id of { x: 1 }
 //│ ╙──      	        ^^^^
-//│ Type: 'app
+//│ Type: ⊥
 
 :fixme
 id of ({ x: 1 })
 //│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
 //│ ║  l.+1: 	id of ({ x: 1 })
 //│ ╙──      	         ^^^^
-//│ Type: 'app
+//│ Type: ⊥
 
 :fixme
 id of ({ x: 1, y: 2 })
 //│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
 //│ ║  l.+1: 	id of ({ x: 1, y: 2 })
 //│ ╙──      	         ^^^^^^^^^^
-//│ Type: 'app
+//│ Type: ⊥
 
 :fixme
 id({x: 1, y: 2})
 //│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
 //│ ║  l.+1: 	id({x: 1, y: 2})
 //│ ╙──      	    ^^^^^^^^^^
-//│ Type: 'app
+//│ Type: ⊥
 
 // * FIXME: handling of record arguments in resolver/checker
 :fixme
@@ -97,7 +97,7 @@ id of { x: 1, y: 2 }
 //│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
 //│ ║  l.+1: 	id of { x: 1, y: 2 }
 //│ ╙──      	        ^^^^^^^^^^
-//│ Type: 'app
+//│ Type: ⊥
 
 :fixme
 fun f(x) =
@@ -112,7 +112,7 @@ f of {a: 1, b: true}
 //│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
 //│ ║  l.+4: 	f of {a: 1, b: true}
 //│ ╙──      	      ^^^^^^^^^^^^^
-//│ Type: 'app
+//│ Type: ⊥
 
 :fixme
 x: 1

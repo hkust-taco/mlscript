@@ -167,22 +167,15 @@ fun reduce(xs, acc, f) = if xs is
 //│ Type: undefined
 
 reduce(new Nil(), 1, "function")
-//│ Type: 'app
-//│ Where:
-//│   1 <: 'app
+//│ Type: 1
 
 let xs = cons(1, cons(4, nil()))
 //│ Type: undefined
 
 xs _out() map(negate)
-//│ Type: 'app
+//│ Type: Ls['A]
 //│ Where:
-//│   Ls['A] <: 'app
 //│   Int <: 'A
-//│   'A <: 'A1
-//│   Int <: 'A1
-//│   'A1 <: 'A
-//│   Ls['A1] <: 'app
 
 fun negate: (Int -> Int) & (Bool -> Bool) & (~(Int | Bool) -> ~(Int | Bool))
 fun negate(x) = if x is

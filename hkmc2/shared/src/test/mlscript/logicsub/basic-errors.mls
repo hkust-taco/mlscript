@@ -8,6 +8,6 @@
 //│ ║  l.+1: 	1(1)
 //│ ║        	^^^^
 //│ ╙── because: cannot constrain  1  <:  (1) ->{out 'eff} out 'app
-//│ Type: 'app
+//│ Type: ⊥
 
 
