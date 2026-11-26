@@ -1,4 +1,4 @@
-#config(language: Language(typeCheck: TypeChecking()))
+:.
 //│ Type: undefined
 
 declare class Str(length: Int, concat: Str -> Str)
