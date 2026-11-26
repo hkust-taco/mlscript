@@ -900,11 +900,12 @@ not mutable, or a field that a record type does not make mutable. With eager res
 record or record type among the values that reach the assignment suffices to reject it. Otherwise,
 the assignment is only rejected if none of these values has the field mutable or is dynamic. The
 `val` fields of classes follow the same rule, and `@unsafe set` permits such an assignment to a
-record field too. The compiler does not yet reject every
-assignment to a read-only field: a copy `{...r}` accepts assignments to the fields that `r`
-declares `mut`, a record with a read-only field is accepted where a record type requires that
-field to be mutable, and an assignment through a computed key is not checked against the record
-that it reaches. The JavaScript backend freezes a record without mutable fields, and allocates a
+record field too. A record has a field of its own for each field that it copies, so `{...r}`
+rejects an assignment to a field that `r` declares `mut`, and `mut {...r}` accepts one to a field
+that `r` has read-only. The compiler does not yet reject every assignment to a read-only field:
+a record with a read-only field is accepted where a record type requires that field to be
+mutable, and an assignment through a computed key is not checked against the record that it
+reaches. The JavaScript backend freezes a record without mutable fields, and allocates a
 record with both kinds of fields as an unfrozen object. An unchecked assignment to a read-only
 field of the latter takes effect at run time, although resolution does not account for the
 assigned value.

@@ -395,3 +395,16 @@ inheritedAmbiguity()
 //│ ║  l.+3: 	  open Selected.{ * }
 //│ ╙──      	       ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// One receiver can supply several members under a name, such as a member and its override. The reference then
+// selects them like `value.label()`: only distinct receivers make it ambiguous.
+:expect "derived"
+class OpenedBase with
+  open fun label() = "base"
+class OpenedDerived extends OpenedBase with
+  override fun label() = "derived"
+fun openedLabel(value: OpenedBase | OpenedDerived) =
+  open value.{ * }
+  label()
+openedLabel(new OpenedDerived)
+//│ = "derived"

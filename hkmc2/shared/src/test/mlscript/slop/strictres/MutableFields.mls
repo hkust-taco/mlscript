@@ -238,8 +238,8 @@ private fun replaceBoth() =
 replaceBoth()
 //│ = [2, "changed"]
 
-// Assigning through a mutable copy of a record assigns the fields of the copied record,
-// so the representations of those fields include the values assigned to them through the copy.
+// A mutable copy of a record has fields of its own, which can be assigned. A spread does not convert the values
+// that it copies, so the representations of the copied fields include the values assigned to their copies.
 :expect "many"
 private fun copy() =
   let source = {count: 0}
@@ -706,12 +706,33 @@ exportedMutableCopy.item.length
 //│ ╟── Field 'item' admits assigned values of unknown shape.
 //│ ║  l.+1: 	private val privateImmutableSource = {item: "abc"}
 //│ ║        	                                      ^^^^
+//│ ╟── This spread creates a writable copy of the field.
+//│ ║  l.+2: 	val exportedMutableCopy = mut {...privateImmutableSource}
+//│ ║        	                               ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── 'exportedMutableCopy' is exposed by this compilation unit.
 //│ ║  l.+2: 	val exportedMutableCopy = mut {...privateImmutableSource}
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ exportedMutableCopy = {item: "abc"}
 //│ privateImmutableSource = {item: "abc"}
+
+// Clients can only assign the exported copy. The private mutable copy that it copies keeps its known values.
+:expect 3
+private val privateBase = {item: "abc"}
+private val privateMutableCopy = mut {...privateBase}
+val exportedCopyOfCopy = mut {...privateMutableCopy}
+privateMutableCopy.item.length
+//│ = 3
+//│ exportedCopyOfCopy = {item: "abc"}
+//│ privateBase = {item: "abc"}
+//│ privateMutableCopy = {item: "abc"}
+
+// An immutable copy of a mutable copy has no field that clients can assign.
+:expect 3
+val exportedFrozenCopyOfCopy = {...mut {...privateBase}}
+exportedFrozenCopyOfCopy.item.length
+//│ = 3
+//│ exportedFrozenCopyOfCopy = {item: "abc"}
 
 
 // Two references to a stored record read and write the same field.

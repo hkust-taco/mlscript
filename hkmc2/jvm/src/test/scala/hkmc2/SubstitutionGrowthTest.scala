@@ -112,7 +112,7 @@ class SubstitutionGrowthTest extends AnyFunSuite:
        |  class Cell with { mut val item = 0 }
        |""".stripMargin)
     val producer = compile(library)
-    val field = new ErasureDeclarations(producer.term).statements.collectFirst {
+    val field = new SourceDeclarations(producer.term).statements.collectFirst {
       case td: TermDefinition if td.tsym.nme == "item" => td.tsym
     }.get
     given owner: ResolutionContext = producer.state.newResolverState.context
@@ -142,7 +142,7 @@ class SubstitutionGrowthTest extends AnyFunSuite:
          |""".stripMargin)
       val artifact = compile(file)
       given state: ResolutionContext = artifact.state.newResolverState.context
-      val declarations = new ErasureDeclarations(artifact.term).statements
+      val declarations = new SourceDeclarations(artifact.term).statements
       val inputs = declarations.collect:
         case td: TermDefinition if td.tsym.nme == "use" || td.tsym.nme == "call" =>
           val param = td.params.last.allParams.head

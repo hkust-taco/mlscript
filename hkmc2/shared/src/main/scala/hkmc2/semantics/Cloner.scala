@@ -74,6 +74,7 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
       val symbol = mapType(summon[Erasure].typeSymbol(source))
       new ErasedType.ValueLike(source.rsc, symbol)
     case ErasedType.Union(members) => ErasedType.Union(members.map(valueType))
+    case ErasedType.Intersection(members) => ErasedType.Intersection(members.map(valueType))
 
   private def located[A <: AutoLocated](source: AutoLocated, copy: A): A =
     if source is copy then copy else copy.withLoc(source.getLoc)
@@ -486,7 +487,6 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
     def copyNewResolution(source: NewResolvable, copy: NewResolvable): copy.type =
       copy.resolvedTargets = source.resolvedTargets.map(_.subst)
       copy.keyAccess = source.keyAccess.map(_.cloned)
-      copy.readOnlyFields = source.readOnlyFields.map(_.subst)
       copy.isErroneous = source.isErroneous
       copy
     // Keep class qualifiers typed as selections while sharing all clone metadata copying.
