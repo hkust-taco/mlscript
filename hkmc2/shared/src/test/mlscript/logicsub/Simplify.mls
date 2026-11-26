@@ -100,3 +100,35 @@ keep
 //│ Type: ['x] -> ('x) -> 'x
 //│ Where:
 //│   'x <: ¬Str
+
+// Both exclusions restrict the same union. Bool remains available to callers.
+fun oneOfThree: (Int | Str | Bool) -> ()
+fun noInts: ~Int -> ()
+fun remaining(x) =
+  let a = noInts(x)
+  let b = oneOfThree(x)
+  let c = noStrings(x)
+  x
+remaining
+//│ Type: ['x] -> ('x) -> 'x
+//│ Where:
+//│   'x <: Bool
+
+remaining(true)
+//│ Type: true
+
+:e
+remaining(1)
+//│ ╔══[COMPILATION ERROR] Type error in application
+//│ ║  l.+1: 	remaining(1)
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  ('x) -> 'x  <:  (1) ->{'eff} 'app
+//│ ╟── because: cannot constrain  Array & {0: 1}  <:  Array & {0: 'x}
+//│ ╟── because: cannot constrain  1  <:  'x
+//│ ╙── because: cannot constrain  1  <:  Bool
+//│ Type: 1
+
+// The same exclusions exhaust a two-member union in a single type expression.
+fun exhausted: (~Str & ~Int & (Int | Str)) -> Int
+exhausted
+//│ Type: (⊥) -> Int

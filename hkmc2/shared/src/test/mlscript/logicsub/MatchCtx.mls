@@ -11,10 +11,10 @@ fun probe(x0, y0, x1, y1, x2, y2, x3, y3) = if
 probe
 //│ Type: ['x0, 'res, 'x3, 'y3, 'x2, 'y2, 'x1, 'y1, 'y0] -> ('x0, 'y0, 'x1, 'y1, 'x2, 'y2, 'x3, 'y3) -> 'res
 //│ Where:
-//│   ('x0 >:< ¬Int ∨ ('x0 >:< Int ∧ 'y0 >:< ¬Str)) =>
-//│       ('x1 >:< ¬Int ∨ ('x1 >:< Int ∧ 'y1 >:< ¬Str)) =>
-//│           ('x2 >:< ¬Int ∨ ('x2 >:< Int ∧ 'y2 >:< ¬Str)) =>
-//│               ('x3 >:< ¬Int ∨ ('x3 >:< Int ∧ 'y3 >:< ¬Str)) => "miss" <: 'res
+//│   'x0 <: Int ∧ ('x0 <: ¬Int ∨ 'y0 <: Str) ∨
+//│       'x1 <: Int ∧ ('x1 <: ¬Int ∨ 'y1 <: Str) ∨
+//│           'x2 <: Int ∧ ('x2 <: ¬Int ∨ 'y2 <: Str) ∨
+//│               'x3 <: Int ∧ ('x3 <: ¬Int ∨ 'y3 <: Str) ∨ "miss" <: 'res
 //│               'x3 >:< Int ∧ 'y3 >:< Str => 3 <: 'res
 //│           'x2 >:< Int ∧ 'y2 >:< Str => 2 <: 'res
 //│       'x1 >:< Int ∧ 'y1 >:< Str => 1 <: 'res
@@ -207,7 +207,7 @@ throughSame("a", 20)
 //│   'x <: Int | Str ∨ ((Int, Int) -> 1) & ((Str, Str) -> 2) <: ('x & ¬Int & ¬Str, 'y) ->{'eff1} 'app
 //│   'x >:< Str => 'y <: Int ∨ ((Int, Int) -> 1) & ((Str, Str) -> 2) <: ('x & Str, 'y & ¬Int) ->{'eff1} 'app
 //│   'x >:< Int => 'y <: Str ∨ ((Int, Int) -> 1) & ((Str, Str) -> 2) <: ('x & Int, 'y & ¬Str) ->{'eff1} 'app
-//│   ('x >:< ¬(Int | Str) ∨ ('x >:< Str ∧ 'y >:< ¬Int) ∨ ('x >:< Int ∧ 'y >:< ¬Str)) =>
+//│   'x <: Int | Str ∧ ('x <: ¬Str ∨ 'y <: Int) ∧ ('x <: ¬Int ∨ 'y <: Str) ∨
 //│       'eff1 <: 'eff
 //│       'app <: 'res
 //│       ('x1, 'y1) -> 'res1 <: (Str, Str) -> 2
@@ -234,7 +234,7 @@ throughSame("a", 20)
 //│ Where:
 //│   'x >:< Str => 'x <: Int ∨ ((Int, Int) -> 1) & ((Str, Str) -> 2) <: ('x & Str, 'x & ¬Int) ->{'eff1} 'app
 //│   'x <: Int | Str ∨ ((Int, Int) -> 1) & ((Str, Str) -> 2) <: ('x & ¬Int & ¬Str, 'x) ->{'eff1} 'app
-//│   ('x >:< ¬(Int | Str) ∨ 'x >:< Str ∨ 'x >:< Int) =>
+//│   'x <: ⊥ ∨
 //│       'eff1 <: 'eff
 //│       'app <: 'res
 //│       ('x1, 'y) -> 'res1 <: (Str, Str) -> 2

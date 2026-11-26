@@ -30,11 +30,11 @@ class PrettyPrinter(output: String => Unit)(using printScope: Scope, ctx: InfCtx
       case tyStr => output(s"$label: $tyStr")
     if bounds.clauses.nonEmpty then
       output("Where:")
-      renderBounds(bounds.clauses, 2, if implications then bounds.premise else _ => None)
+      renderBounds(bounds.clauses, 2, bounds.head(_, implications))
 
   /** Each line at the same indentation is a conjunct. A disjunction can
     * continue on one line until its fallback has several conjuncts. */
-  private def renderBounds(bounds: Ls[SubOr], indent: Int, premise: SubOr => Opt[Str])(using Scope, Raise): Unit =
+  private def renderBounds(bounds: Ls[SubOr], indent: Int, head: SubOr => DisplayBounds.Head): Unit =
     bounds.foreach: bound =>
       val premises = new StringBuilder
       val alternatives = new StringBuilder
@@ -55,12 +55,11 @@ class PrettyPrinter(output: String => Unit)(using printScope: Scope, ctx: InfCtx
         // On a single disjunctive path, A ∨ (¬P ∨ B) is P => A ∨ B.
         // Stop collecting premises at a conjunction so that each guard
         // keeps its scope over exactly the alternatives in this branch.
-        val guard = if c.cs.isDefined then premise(c) else None
-        guard match
-          case Some(text) =>
+        head(c) match
+          case DisplayBounds.Head.Premise(text) =>
             if premises.nonEmpty then premises ++= " ∧ "
             premises ++= text
-          case None => alternative(s"${c.x.show} <: ${c.y.show}")
+          case DisplayBounds.Head.Disjunct(text) => alternative(text)
         c.cs match
           case None => emit(branching = false)
           case Some(Nil) =>
@@ -69,7 +68,7 @@ class PrettyPrinter(output: String => Unit)(using printScope: Scope, ctx: InfCtx
           case Some(next :: Nil) => disjunction(next)
           case Some(cs) =>
             emit(branching = true)
-            renderBounds(cs, indent + 4, premise)
+            renderBounds(cs, indent + 4, head)
       disjunction(bound)
 
 object PrettyPrinter:

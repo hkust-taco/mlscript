@@ -9,22 +9,38 @@ import hkmc2.utils.*, shorthands.*
   * Each path to a join holds subtype tests that must all fail to reach it.
   * Any one of its paths suffices. */
 private[logicsub] final case class DisplayBounds(clauses: Ls[SubOr], joins: Map[InfVar, Ls[Ls[SubOr]]]):
-  def premise(c: SubOr)(using Scope, InfCtx, Raise): Opt[Str] = (c.x, c.y.toBasic) match
-    case (v: InfVar, Bot) => joins.get(v).map: paths =>
-      val alternatives = paths.iterator.map: path =>
-        val overlaps = path.iterator.map: test =>
-          val rhs = test.y.toBasic match
-            case Neg(t) => t
-            case Bot => Top
-            case t => Neg(t)
-          s"${test.x.show} >:< ${rhs.show}"
-        val conjunction = overlaps.mkString(" ∧ ")
-        if paths.tail.nonEmpty && path.tail.nonEmpty then s"($conjunction)" else conjunction
-      if paths.tail.isEmpty then alternatives.next() else alternatives.mkString("(", " ∨ ", ")")
-    case (_, Neg(t)) => Some(s"${c.x.show} >:< ${t.show}")
-    case _ => None
+  import DisplayBounds.Head
+
+  /** Uses a premise when failing every test on one path gives positive
+    * overlaps. Other heads express the subtype conditions for skipping the fallback. */
+  def head(c: SubOr, implications: Bool)(using Scope, InfCtx, Raise): Head =
+    def subtype(test: SubOr): Str = s"${test.x.show} <: ${test.y.show}"
+    def overlapType(test: SubOr): Opt[Type] = test.y.toBasic match
+      case Neg(t) if !t.toBasic.isInstanceOf[Neg] && t.toBasic != Top && t.toBasic != Bot => Some(t)
+      case _ => None
+    def overlap(test: SubOr): Opt[Str] = overlapType(test).map(t => s"${test.x.show} >:< ${t.show}")
+    if !implications || c.cs.isEmpty then Head.Disjunct(subtype(c))
+    else (c.x, c.y) match
+      case (v: InfVar, Bot) if joins.contains(v) =>
+        val paths = joins(v)
+        paths match
+          case path :: Nil if path.forall(overlapType(_).isDefined) =>
+            Head.Premise(path.iterator.flatMap(overlap).mkString(" ∧ "))
+          case _ =>
+            // The join is empty when every incoming path has a successful
+            // subtype test. Keep that conjunction factored over the fallback.
+            val empty = paths.iterator.map: path =>
+              val tests = path.iterator.map(subtype)
+              if paths.tail.nonEmpty && path.tail.nonEmpty then tests.mkString("(", " ∨ ", ")")
+              else tests.mkString(" ∨ ")
+            Head.Disjunct(empty.mkString(" ∧ "))
+      case _ => overlap(c).fold[Head](Head.Disjunct(subtype(c)))(Head.Premise.apply)
 
 private[logicsub] object DisplayBounds:
+  enum Head:
+    case Premise(text: Str)
+    case Disjunct(text: Str)
+
   /** Factors equal heads within each conjunction, in first-occurrence order.
     * P ∨ B and P ∨ C share the fallback B ∧ C. A bare P absorbs both. */
   private def factor(bounds: IterableOnce[SubOr]): Ls[SubOr] =

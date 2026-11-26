@@ -43,7 +43,6 @@ x =>
 //│ Type: ('x) ->{'eff} 'app
 //│ Where:
 //│   'x >:< Int => (Int) -> Int <: Function[in Array & {0: Int} & Array & {0: 'x}, out 'app, out 'eff]
-//│   'x <: Int | Bool
 //│   'x <: Int
 
 (x: Int) =>

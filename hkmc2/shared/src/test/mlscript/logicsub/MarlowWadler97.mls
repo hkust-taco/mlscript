@@ -40,7 +40,7 @@ test
 //│   'x >:< Tru =>
 //│       'y <: Tru | Fls
 //│       'y >:< Tru => Tru <: 'res
-//│   (('x >:< ¬(Tru | Fls) ∧ 'y >:< Fls) ∨ ('x >:< Tru ∧ 'y >:< Fls)) => Fls <: 'res
+//│   'x <: Fls ∨ 'y <: ¬Fls ∨ Fls <: 'res
 //│   'x >:< Fls => Fls <: 'res
 
 :expect Tru()

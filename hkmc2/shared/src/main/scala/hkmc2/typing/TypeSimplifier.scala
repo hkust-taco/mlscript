@@ -51,6 +51,59 @@ private[logicsub] object TypeSimplifier:
     if subtype(x, y) then x else if subtype(y, x) then y
     else if disjoint(x, y) then Bot else Inter(x, y)
 
+  /** Rewrites the conjuncts of upper bounds and intersects them. An exclusion
+    * removes matching union members and continues to restrict the survivors. */
+  private def intersectBounds(types: Iterator[Type])(rewrite: Type => Type): Type =
+    if !types.hasNext then return Top
+    val first = types.next()
+    if !types.hasNext && !first.toBasic.isInstanceOf[Inter] then return rewrite(first)
+    val positive = mutable.LinkedHashSet.empty[Type]
+    val negative = mutable.LinkedHashSet.empty[Type]
+    val excluded = mutable.HashSet.empty[Type]
+    // Flatten a shared intersection once, even if several parents contain it.
+    val seen = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap[Type, java.lang.Boolean])
+    def exclude(t: Type): Unit = t.toBasic match
+      case Union(l, r) =>
+        exclude(l)
+        exclude(r)
+      case t => excluded += t
+    def collect(t: Type): Unit = if seen.add(t) then t.toBasic match
+      case Inter(l, r) =>
+        collect(l)
+        collect(r)
+      case atom => rewrite(atom) match
+        case neg @ Neg(n) => if negative.add(neg) then exclude(n)
+        case other => positive += other
+    collect(first)
+    types.foreach(collect)
+    def prune(t: Type): Type = t.toBasic match
+      case Union(l, r) => union(prune(l), prune(r))
+      case t => if excluded(t) then Bot else t
+    val terms = if excluded.isEmpty then positive.iterator else positive.iterator.map(prune)
+    (terms ++ negative.iterator).foldLeft[Type](Top)(inter)
+
+  /** Conjoins bounds with the same subject and fallback using
+    * (X <: A ∨ K) ∧ (X <: B ∨ K) ≡ X <: A & B ∨ K. */
+  private def mergeUpperBounds(bounds: Ls[Bound]): Ls[Bound] = bounds match
+    case Nil | _ :: Nil => bounds
+    case _ =>
+      // An owner determines where instantiation will find this obligation.
+      def key(b: Bound) = (b.c.x, b.c.cs, b.owner)
+      val groups = bounds.groupMap(key)(_.c.y)
+      // Keep independent bounds when their meet is a residual intersection.
+      // The solver's DNF for an intersection of unions can take exponential space.
+      val merged = groups.iterator.collect { case (k, ys @ (_ :: _ :: _)) =>
+        k -> intersectBounds(ys.iterator)(identity)
+      }.filterNot(_._2.isInstanceOf[Inter]).toMap
+      if merged.isEmpty then bounds else
+        val emitted = mutable.HashSet.empty[(Type, Opt[Ls[SubOr]], Opt[InfVar])]
+        bounds.flatMap: b =>
+          val k = key(b)
+          merged.get(k) match
+            case None => b :: Nil
+            case Some(y) if emitted.add(k) => b.copy(c = b.c.copy(y = y)) :: Nil
+            case _ => Nil
+
   private class Rewrite(sub: collection.Map[InfVar, Type]) extends TypeMap:
     override def applyArg(pol: Bool)(a: TypeArg): TypeArg = a match
       case t: Type => apply(pol)(t)
@@ -62,7 +115,7 @@ private[logicsub] object TypeSimplifier:
     override def apply(pol: Bool)(t: Type): Type = t.toBasic match
       case v: InfVar => sub.getOrElse(v, v)
       case Union(l, r) => union(apply(pol)(l), apply(pol)(r))
-      case Inter(l, r) => inter(apply(pol)(l), apply(pol)(r))
+      case i: Inter => intersectBounds(Iterator.single(i))(apply(pol))
       case Neg(n) => apply(!pol)(n) match
         case Top => Bot
         case Bot => Top
@@ -118,11 +171,11 @@ private[logicsub] object TypeSimplifier:
             val next = failed.updated(x, y :: failed.getOrElse(x, Nil))
             val tail = cs match
               case k :: Nil => go(k, next, true)
-              case ks => ks.flatMap(go(_, next, true)).distinct
+              case ks => mergeUpperBounds(ks.flatMap(go(_, next, true)).distinct.map(Bound(_, None))).map(_.c)
             if tail.contains(impossible) then (if refuted then impossible else SubOr(x, y)) :: Nil
             else if refuted || tail.isEmpty then tail
             else SubOr(x, y, Some(tail)) :: Nil
-    bounds.flatMap(b => go(b.c, Map.empty, false).map(c => b.copy(c = c))).distinct
+    mergeUpperBounds(bounds.flatMap(b => go(b.c, Map.empty, false).map(c => b.copy(c = c))).distinct)
 
   private def rewrite(view: Result, sub: collection.Map[InfVar, Type], removed: SubOr => Bool): Result =
     val f = Rewrite(sub)
@@ -169,8 +222,9 @@ private[logicsub] object TypeSimplifier:
     // exponentially in the printed type or a stored scheme.
     SccAnalysis.sccsFrom(deps, candidates).foreach:
       case v :: Nil if !deps(v)(v) =>
-        val ts = defs.get(v).iterator.flatMap(_.iterator).map(f(positive))
-        val replacement = if positive then ts.foldLeft[Type](Bot)(union) else ts.foldLeft[Type](Top)(inter)
+        val ts = defs.get(v).iterator.flatMap(_.iterator)
+        val replacement = if positive then ts.map(f(positive)).foldLeft[Type](Bot)(union)
+          else intersectBounds(ts)(f(positive))
         val atomic = replacement match
           case _: InfVar | Bot | Top => true
           case t: ClassLikeType => plainTag(t)
