@@ -80,3 +80,29 @@ fun sharedNarrowFirst(r: (NarrowAgain & WideAgain) | (NarrowAgain & WideAgain & 
 //│ define sharedNarrowFirst⁰ as fun sharedNarrowFirst¹(r: Unknown): Child⁰ { return r.item² };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+type LooseLeft = {item: Any, left: Int}
+type LooseRight = {item: Any, right: Int}
+type Counted = {item: Int32, count: Int}
+type TaggedCount = {item: Int32, tag: Int}
+type EitherCount = (LooseLeft & LooseRight & Counted) | (LooseLeft & LooseRight & TaggedCount)
+
+// Each alternative stores an Int32, including when their declaration of the primitive field differs.
+fun readCount(r: LooseLeft & LooseRight & Counted): Int32 = r.item
+
+:fixme
+fun readEitherCount(r: EitherCount): Int32 = r.item
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
+//│ ║  l.+1: 	fun readEitherCount(r: EitherCount): Int32 = r.item
+//│ ╙──      	                                             ^^^^^^
+
+// An unboxed field cannot be returned through a reference slot.
+:ge
+fun boxedCount(r: LooseLeft & LooseRight & Counted): Any = r.item
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
+//│ ║  l.+1: 	fun boxedCount(r: LooseLeft & LooseRight & Counted): Any = r.item
+//│ ╙──      	                                                           ^^^^^^
+
+:breakme
+:ge
+fun boxedEitherCount(r: EitherCount): Any = r.item
