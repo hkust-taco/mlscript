@@ -2728,11 +2728,16 @@ extends Importer:
               :: Nil
           // * Type parameters written only on the definition would be out of scope in the signature.
           (impl.typeParams, sig.typeParams) match
-          case (S(own), N) => raise:
-            ErrorReport:
-              msg"The type parameters of '$name' must be written on its signature" -> own.toLoc
-              :: msg"signature here" -> sig.toLoc
-              :: Nil
+          case (S(own), N) =>
+            // * Other shapes are reported by `typeParams`; `…` stands for them, since `...` is the spread syntax.
+            val names = own.tys.iterator.collect { case p: Ident => p.name }.toList
+            val ownNames = (if own.tys.lengthIs > names.length then names :+ "…" else names).mkString(", ")
+            raise:
+              ErrorReport:
+                msg"The type parameters of '$name' must be written on its signature" -> own.toLoc
+                :: msg"signature here" -> sig.toLoc
+                :: msg"Write them on the signature, as in `${sig.k.str} $name[${ownNames}]: …`" -> N
+                :: Nil
           case (S(own), S(sigTps)) if !sameTypeParamNames(own, sigTps) => raise:
             ErrorReport:
               msg"The signature and the definition of '$name' must have the same type parameters" -> N

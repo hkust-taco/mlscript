@@ -607,7 +607,37 @@ fun definitionTypeParams[A](x) = x
 //│ ║        	                         ^
 //│ ╟── signature here
 //│ ║  l.+1: 	fun definitionTypeParams: A -> A
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Write them on the signature, as in `fun definitionTypeParams[A]: …`
+
+// A signature that quantifies over its own type parameters does not bind the definition's.
+:e
+fun quantifiedSignature: [A] -> A -> A
+fun quantifiedSignature[A](x: A) = x
+quantifiedSignature(1)
+//│ ╔══[COMPILATION ERROR] The type parameters of 'quantifiedSignature' must be written on its signature
+//│ ║  l.+2: 	fun quantifiedSignature[A](x: A) = x
+//│ ║        	                        ^
+//│ ╟── signature here
+//│ ║  l.+1: 	fun quantifiedSignature: [A] -> A -> A
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Write them on the signature, as in `fun quantifiedSignature[A]: …`
+//│ = 1
+
+// A type parameter that is not a name is elided in the suggestion.
+:e
+fun shapedTypeParams: Int -> Int
+fun shapedTypeParams[A, in B](x) = x
+//│ ╔══[COMPILATION ERROR] The type parameters of 'shapedTypeParams' must be written on its signature
+//│ ║  l.+2: 	fun shapedTypeParams[A, in B](x) = x
+//│ ║        	                     ^^^^^^^
+//│ ╟── signature here
+//│ ║  l.+1: 	fun shapedTypeParams: Int -> Int
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Write them on the signature, as in `fun shapedTypeParams[A, …]: …`
+//│ ╔══[COMPILATION ERROR] Unsupported type parameter shape: 'in'-modified identifier
+//│ ║  l.+2: 	fun shapedTypeParams[A, in B](x) = x
+//│ ╙──      	                           ^
 
 
 // Class members follow the same rules...
