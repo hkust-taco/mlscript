@@ -1,8 +1,6 @@
 :.
-//│ Type: undefined
 
 fun integer: Int -> Int
-//│ Type: undefined
 
 // The unconditional input bound rules out the string arm.
 fun restricted(x) =
@@ -77,3 +75,18 @@ nested
 fun grouped: [A, B, C] -> ((A | B) & C, ~(Int -> Str)) -> (A | (B & C))
 grouped
 //│ Type: ['A, 'B, 'C] -> (('A | 'B) & 'C, ¬((Int) -> Str)) -> 'A | 'B & 'C
+
+fun finish(x) =
+  let y = x
+finish
+//│ Type: (⊤) -> ()
+
+[finish(1) as (), (), unsafe.undefined, null]
+//│ Type: Object & {0: (), 1: (), 2: undefined, 3: null}
+
+:e
+unsafe.undefined as ()
+//│ ╔══[COMPILATION ERROR] Type error in undefined literal with expected type ()
+//│ ║  l.+1: 	unsafe.undefined as ()
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╙── because: cannot constrain  undefined  <:  ()

@@ -160,6 +160,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           
       typeProd(res)
     
+    case OmittedResult() => P.Ctor(LitSymbol(Tree.UnitLit(false)), Nil)(t)
     case Lit(lit) =>
       P.Ctor(LitSymbol(lit), Nil)(t)
 

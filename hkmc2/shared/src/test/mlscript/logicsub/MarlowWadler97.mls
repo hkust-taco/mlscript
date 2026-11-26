@@ -1,5 +1,4 @@
 :.
-//│ Type: undefined
 :js
 
 
@@ -11,14 +10,12 @@
 class
   Tru()
   Fls()
-//│ Type: undefined
 
 let
   tru = new Tru()
   fls = new Fls()
 //│ fls = Fls()
 //│ tru = Tru()
-//│ Type: undefined
 
 // :ucs desugared
 :ucs normalized
@@ -111,7 +108,6 @@ fun test(x, y) = if
   x is Fls and y is Tru then fls
   y is Fls then fls
 // test
-//│ Type: undefined
 
 // * Note: and this one even larger
 
@@ -121,4 +117,3 @@ fun test(x, y) = if
   y is Fls then fls
   y is Fls then fls
 // test
-//│ Type: undefined

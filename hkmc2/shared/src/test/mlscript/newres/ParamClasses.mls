@@ -215,7 +215,7 @@ let f = new Foo(1)
 //│           Tup of Ls of
 //│             Fld:
 //│               term = Lit of IntLit of 1
-//│   res = Lit of UnitLit of false
+//│   res = OmittedResult
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f2; f2 = globalThis.Object.freeze(new Foo3.class(1));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

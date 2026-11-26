@@ -500,6 +500,7 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
     val that = source match
       case Error() => Error()
       case UnitVal() => UnitVal()
+      case OmittedResult() => OmittedResult()
       case DynTy() => DynTy()
       case Missing => return Missing
       case Lit(lit) => Lit(lit)

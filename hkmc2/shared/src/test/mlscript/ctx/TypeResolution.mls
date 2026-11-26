@@ -88,7 +88,7 @@ fun f(x: Foo) = x
 //│               modulefulness = Modulefulness of N
 //│       body = S of SimpleRef of x⁰
 //│       modulefulness = Modulefulness of N
-//│   res = Lit of UnitLit of false
+//│   res = OmittedResult
 
 module M
 object O
@@ -144,7 +144,7 @@ fun f(module m: M): module M = m
 //│       body = S of SimpleRef of m¹
 //│       flags = (result annotation)
 //│       modulefulness = Modulefulness of N
-//│   res = Lit of UnitLit of false
+//│   res = OmittedResult
 
 :rt
 fun f(o: O) = o
@@ -166,7 +166,7 @@ fun f(o: O) = o
 //│               modulefulness = Modulefulness of N
 //│       body = S of SimpleRef of o¹
 //│       modulefulness = Modulefulness of N
-//│   res = Lit of UnitLit of false
+//│   res = OmittedResult
 
 // The implicit `this` (class:Foo) in the SynthSel(class:Foo, "foo") should be resolved correctly.
 :rt
@@ -192,7 +192,7 @@ class Foo with
 //│         res = NewSel:
 //│           prefix = SelfRef of class:Foo¹
 //│           id = Ident of "foo"
-//│   res = Lit of UnitLit of false
+//│   res = OmittedResult
 
 // The explicit `this` (class:Foo) in the Sel(class:Foo, "foo") should be resolved correctly.
 :rt
@@ -218,4 +218,4 @@ class Foo with
 //│         res = NewSel:
 //│           prefix = SelfRef of class:Foo³
 //│           id = Ident of "foo"
-//│   res = Lit of UnitLit of false
+//│   res = OmittedResult

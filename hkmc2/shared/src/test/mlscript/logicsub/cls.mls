@@ -1,14 +1,11 @@
 :.
-//│ Type: undefined
 
 
 class C()
 class D() extends C()
-//│ Type: undefined
 
 
 fun idc: (C -> C)
-//│ Type: undefined
 
 idc(new C())
 //│ Type: C
@@ -23,7 +20,6 @@ idc(new D())
 
 
 fun idcs: (C -> C) & (Str -> Str)
-//│ Type: undefined
 
 idcs(new C())
 //│ Type: C

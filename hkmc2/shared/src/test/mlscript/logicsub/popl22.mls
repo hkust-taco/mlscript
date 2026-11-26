@@ -1,11 +1,9 @@
 :.
-//│ Type: undefined
 
 declare fun concat: (Str, Str) -> Str
 declare fun (+): (Int, Int) -> Int
 declare fun (<): (Int, Int) -> Bool
 declare fun (==): (Int, Int) -> Bool
-//│ Type: undefined
 
 
 // On Type-Cases, Union Elimination, and Occurrence Typing
@@ -16,7 +14,6 @@ declare fun (==): (Int, Int) -> Bool
 fun f(x) = if x is
   Int then x + 1  // x: Int
   else x.a        // x: ~Int
-//│ Type: undefined
 
 // Union elimination rule and set-theoretic types can capture occurence typing
 // and the refinement can occur in any position
@@ -26,10 +23,8 @@ fun f(x1, x2) = if
   x1(x2) is Int then x2 + 1
   else
     concat(x1(x2), x2)
-//│ Type: undefined
 
 fun id: (Int -> Int) & (Str -> Str)
-//│ Type: undefined
 
 f(id, 1)
 //│ Type: Int
@@ -38,7 +33,6 @@ f(id, "")
 //│ Type: Str
 
 fun strint: Int | Str
-//│ Type: undefined
 
 // Considering x2: Int | Str, the type is splitted to Int, and Str in two branches
 // thus type check the following expression
@@ -74,29 +68,24 @@ fun f(x1, x2) = if x2 is
   Int then x2 + 1
   else
     concat(x1(x2), x2)
-//│ Type: undefined
 
 f(id, strint)
 //│ Type: Int | Str
 
 data class Prod[A, B](val fst: A, val snd: B)
-//│ Type: undefined
 
 class
   Tru()
   Fls()
   Z()
-//│ Type: undefined
 
 let tru = new Tru()
 let fls = new Fls()
 fun prod(p, q) = new Prod(p, q)
-//│ Type: undefined
 
 // Maximal Sharing Canonical Forms is used in type checking
 
 fun y: Any -> (Tru | Fls)
-//│ Type: undefined
 
 :fixme
 :e
@@ -187,7 +176,6 @@ prod(y(x => x), y(x => x))
 
 fun a: (Int -> (Int | Bool)) | Prod[Int, Int | Bool]
 fun n: Int
-//│ Type: undefined
 
 // type test `a(n) is Int` does not refine a and n, and thus a(n)
 
@@ -197,7 +185,6 @@ fun f(a, n) = if
     else a.Prod#snd
   a(n) is Int then a(n) < 42
   else a(n)
-//│ Type: undefined
 
 // while a(n) is Int, in the then branch, a(n) still has type Int | Bool
 
@@ -231,7 +218,6 @@ fun f(a, n) = if
   let x = a(n)
   x is Int then x < 42
   else x
-//│ Type: undefined
 
 :fixme
 f(a, n)
@@ -258,7 +244,6 @@ f(a, n)
 
 fun is_int(x) =
   if x is Int then tru else fls
-//│ Type: undefined
 
 is_int as Int -> Tru
 //│ Type: (Int) -> Tru
@@ -270,7 +255,6 @@ fun is_bool(x) = if x is
   Tru then tru
   Fls then tru
   else fls
-//│ Type: undefined
 
 is_bool as (Tru | Fls) -> Tru
 //│ Type: (Tru | Fls) -> Tru
@@ -286,7 +270,6 @@ fun not_(x) = if x is
   Fls then tru
   Z then tru
   else fls
-//│ Type: undefined
 
 not_ as (Fls | Z) -> Tru
 //│ Type: (Fls | Z) -> Tru
@@ -295,7 +278,6 @@ not_ as ~(Fls | Z) -> Fls
 //│ Type: (¬Fls & ¬Z) -> Fls
 
 fun to_bool(x) = x not_() not_()
-//│ Type: undefined
 
 to_bool as (Fls | Z) -> Fls
 //│ Type: (Fls | Z) -> Fls
@@ -307,7 +289,6 @@ fun and_(x, y) = if x is
   Fls then fls
   Z then fls
   else to_bool(y)
-//│ Type: undefined
 
 and_ as (Fls | Z, Any) -> Fls
 //│ Type: (Fls | Z, ⊤) -> Fls
@@ -320,7 +301,6 @@ and_ as (~(Fls | Z), Fls | Z) -> Fls
 
 
 fun or_(x, y) = not_(x) and_(not_(y)) not_()
-//│ Type: undefined
 
 or_ as (~(Fls | Z), Any) -> Tru
 //│ Type: (¬Fls & ¬Z, ⊤) -> Tru
@@ -333,13 +313,11 @@ or_ as (Fls | Z, Fls | Z) -> Fls
 
 fun strlen: Str -> Int
 fun plus: (Int | Z, Int | Z) -> (Int | Z)
-//│ Type: undefined
 
 fun example14(input, extra) = if
   input is_int() and_(extra.fst is_int()) is Tru then input + extra.fst
   extra.fst is_int() is Tru then input strlen() + extra.fst
   else new Z()
-//│ Type: undefined
 
 :fixme
 example14 as (Int | Str, {fst: ~Int, snd: Any}) -> Z
@@ -369,7 +347,6 @@ fun example14_(input, extra) = if
   input is Int and extra.fst is Int then input + extra.fst
   extra.fst is Int then input strlen() + extra.fst
   else new Z()
-//│ Type: undefined
 
 :fixme
 example14_ as (Int | Str, {fst: ~Int, snd: Any}) -> Z
@@ -393,7 +370,6 @@ example14_ as (~(Int | Str), {fst: ~Int, snd: Any}) -> Z
 //│ Type: (¬Int & ¬Str, ⊥) -> Z
 
 fun is_string: (Str -> Tru) & (~Str -> Fls)
-//│ Type: undefined
 
 // example6_wrong is ill typed
 
@@ -419,7 +395,6 @@ fun example6_wrong(x: Int | Str, y: Any) = if
 //│ ╟── because: cannot constrain  'app  <:  Tru
 //│ ╟── because: cannot constrain  Fls  <:  Tru
 //│ ╙── because: cannot constrain  Int | Str  <:  Str
-//│ Type: undefined
 
 :e
 fun example6_wrong(x: Int | Str, y: Any) = if
@@ -431,12 +406,10 @@ fun example6_wrong(x: Int | Str, y: Any) = if
 //│ ╟── because: cannot constrain  ⊤  <:  Str
 //│ ╟── because: cannot constrain  Int | Str  <:  ¬Int
 //│ ╙── because: cannot constrain  Int  <:  Str
-//│ Type: undefined
 
 fun example6_ok(x, y) = if
   x is_int() and_(y is_string()) is Tru then x + strlen(y)
   else strlen(x)
-//│ Type: undefined
 
 example6_ok as (Str, Any) -> Int
 //│ Type: (Str, ⊤) -> Int
@@ -471,7 +444,6 @@ fun detailed_ex(a: (Int -> (Int | Bool)) | Prod[Int, Int | Bool], n: Int) = if
 //│ ╟── because: cannot constrain  Int  <:  ¬Int
 //│ ╟── because: cannot constrain  'app1  <:  Int
 //│ ╙── because: cannot constrain  Bool  <:  Int
-//│ Type: undefined
 
 :fixme
 fun detailed_ex(a: (Int -> (Int | Bool)) | Prod[Int, Int | Bool], n: Int) = if
@@ -490,7 +462,6 @@ fun detailed_ex(a: (Int -> (Int | Bool)) | Prod[Int, Int | Bool], n: Int) = if
 //│ ╟── because: cannot constrain  Int  <:  ¬Int
 //│ ╟── because: cannot constrain  'B1  <:  Int
 //│ ╙── because: cannot constrain  Bool  <:  Int
-//│ Type: undefined
 
 :fixme
 detailed_ex as ((Int -> (Int | Bool)) | Prod[Int, Int | Bool], Int) -> (Int | Bool)

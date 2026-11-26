@@ -1,16 +1,12 @@
 :.
-//│ Type: undefined
 
 class
   Nil()
   Cons[A, Tl](val hd: A, val tl: Tl)
-//│ Type: undefined
 
 let nil = new Nil()
-//│ Type: undefined
 
 let cons(hd, tl) = new Cons(hd, tl)
-//│ Type: undefined
 
 cons(0, 0)
 //│ Type: Cons['A, 'Tl]
@@ -25,13 +21,11 @@ cons
 //│   0 <: 'Tl
 
 fun cons(hd, tl) = new Cons(hd, tl)
-//│ Type: undefined
 
 fun map(xs, f) =
   if xs is
     Nil then nil
     Cons then new Cons(f(xs.Cons#hd), map(xs.Cons#tl, f))
-//│ Type: undefined
 
 nil map(x => x)
 //│ Type: Nil
@@ -82,7 +76,6 @@ fun maprec(xs, f, r) =
     Nil then nil
     Cons then new Cons(f(xs.Cons#hd), r(xs.Cons#tl, f, r))
 fun map(xs, f) = maprec(xs, f, maprec)
-//│ Type: undefined
 
 
 nil map(x => x)

@@ -1127,6 +1127,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     
     trm match
     case st.UnitVal() => k(unit)
+    case st.OmittedResult() => k(Value.Lit(Tree.UnitLit(false))(trm.toLoc))
     case st.Lit(lit) =>
       if lit =/= Tree.UnitLit(false) then warnStmt
       k(Value.Lit(lit)(trm.toLoc))
@@ -1721,6 +1722,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     state.importSymbol.asSimpleRef.selSN("meta").selSN("url")
 
   def quote(t: st)(k: Result => Block)(using LoweringCtx): Block = t match
+    case OmittedResult() => setupTerm("Lit", Value.Lit(Tree.UnitLit(false))(N) :: Nil)(k)
     case Lit(lit) =>
       setupTerm("Lit", Value.Lit(lit)(N) :: Nil)(k)
     case BuiltinRef(sym) if Elaborator.binaryOps.contains(sym.nme) =>

@@ -1,16 +1,13 @@
 :.
-//│ Type: undefined
 
 declare fun (&&): (Bool, Bool) -> Bool
 declare fun (+): (Int, Int) -> Int
-//│ Type: undefined
 
 
 
 fun andt(x) = x && true
 fun k(f: Nothing -> Bool) = 1
 fun ap(f) = x => f(x)
-//│ Type: undefined
 
 k(andt)
 //│ Type: 1
@@ -30,7 +27,6 @@ k(k)
 //│ Type: 1
 
 fun idIB: (Int -> Int) & (Bool -> Bool)
-//│ Type: undefined
 
 idIB(1)
 //│ Type: Int
@@ -100,7 +96,6 @@ fun idIIBB: (([Int, Int]) -> Int) & (([Bool, Bool]) -> Bool)
 //│ ╔══[COMPILATION ERROR] Invalid type
 //│ ║  l.+1: 	fun idIIBB: (([Int, Int]) -> Int) & (([Bool, Bool]) -> Bool)
 //│ ╙──      	                                      ^^^^^^^^^^^^
-//│ Type: undefined
 
 :fixme
 idIIBB([1, 2])
@@ -115,7 +110,6 @@ idIIBB([1, 2])
 //│ Type: ⊥
 
 class Pair[out A, out B](fst: A, snd: B)
-//│ Type: undefined
 
 new Pair(1, 2)
 //│ Type: Pair['A, 'B]
@@ -128,7 +122,6 @@ new Pair(1, 2)
 :breakme
 :e
 fun idIIBB: (Pair[Int, Int] -> Int) & (Pair[Bool, Bool] -> Bool)
-//│ Type: undefined
 
 :e
 idIIBB(new Pair(1, 2))
@@ -190,7 +183,6 @@ fun foo: {"x": Int, "y": Int}
 //│ ╔══[COMPILATION ERROR] Invalid type
 //│ ║  l.+1: 	fun foo: {"x": Int, "y": Int}
 //│ ╙──      	          ^^^^^^^^^^^^^^^^^^
-//│ Type: undefined
 
 :fixme
 foo as {x: Int, y: Int}
@@ -204,7 +196,6 @@ fun foo(x) = if x is
   [true, true] then 1
   [false, false] then 2
 //│ ═══[COMPILATION ERROR] Unsupported pattern
-//│ Type: undefined
 
 :fixme
 {x: 1, y:true}
@@ -267,14 +258,11 @@ k(idIB)("true", 1)
 data class Ls[A](prim: [R] -> (() -> R, (A, Ls[A]) -> R) -> R)
 fun nil() = new Ls((n, _) => n())
 fun cons(x, y) = new Ls((n, r) => r(x, y))
-//│ Type: undefined
 
 fun map: [A, B, E] -> Ls[out A] -> (A -> B) -> Ls[out B]
-//│ Type: undefined
 
 fun map: [A, B, E] -> Ls[A] -> (A -> B) -> Ls[B]
 fun map = x => f => x.Ls#prim(() => nil(), (a, b) => cons(f(a), map(b)(f)))
-//│ Type: undefined
 
 // fun map = x => f => new Ls((n, r) => x.Ls#prim(n, (a, b) => r(f(a), map(b)(f))))
 
@@ -319,13 +307,11 @@ let x = cons(1, cons(true, nil())) in
 //│   Bool <: 'B
 
 fun k: ((Int | Str, Int) -> Int) & ((Bool | Str, Bool) -> Bool)
-//│ Type: undefined
 
 k("", if true then 1 else true)
 //│ Type: Int
 
 fun k: ((Int, Int) -> Int) & ((Bool, Bool) -> Bool)
-//│ Type: undefined
 
 x => k(x, x)
 //│ Type: ('x) ->{'eff} 'app
@@ -337,7 +323,6 @@ x => k(x, x)
 
 // Recursive functions and higher-rank ascription from the BbML worksheets.
 fun f(x) = f(x.a)
-//│ Type: undefined
 
 f => (let g = x => f(x(x)) in g) as [A] -> A -> A
 //│ Type: (⊤) -> [outer, 'A] -> ('A) -> 'A

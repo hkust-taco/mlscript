@@ -1,15 +1,12 @@
 :.
-//│ Type: undefined
 
 declare fun (+): (Int, Int) -> Int
-//│ Type: undefined
 
 fun ib: Int | Bool
 fun si: Str | Int
 fun sib: Str | Int | Bool
 fun rev: Str -> Str
 fun neg: Bool -> Bool
-//│ Type: undefined
 
 fun f(x) = if x is
   Int then 0
@@ -67,10 +64,8 @@ fun foorec(x, y, r) = if
   x is Int and y is Int then x + y
   x is Str then neg(y)
   y is Str then r(y, x, r)
-//│ Type: undefined
 
 fun foo(x, y) = foorec(x, y, foorec)
-//│ Type: undefined
 
 foo(true, "")
 //│ Type: Bool
@@ -169,7 +164,6 @@ increv'(sib)
 fun f(x, y) = if
   x is Int and y is Int then 1
   x is Bool then y
-//│ Type: undefined
 
 x => if x is
   true then 0
@@ -267,7 +261,6 @@ f(ib, 1)
 fun capture(x) =
   fun choose(y) = if y is Int then x else y
   choose(1)
-//│ Type: undefined
 
 capture("s") as "s"
 //│ Type: "s"

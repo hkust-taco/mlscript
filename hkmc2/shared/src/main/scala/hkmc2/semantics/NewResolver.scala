@@ -5725,7 +5725,7 @@ class NewResolver:
         expand(record.stats, Nil)
     // Ignore undefined during resolution. Runtime literals and pattern tests
     // are compiled from the term itself and do not need a shape.
-    case Lit(Tree.UnitLit(false)) => ()
+    case OmittedResult() | Lit(Tree.UnitLit(false)) => ()
     case intro: IntroTerm =>
       // Literals and lambdas have the declared interface of their builtin class,
       // including inherited members. Retain their own shape for calls, pattern

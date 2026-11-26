@@ -1,5 +1,4 @@
 :.
-//│ Type: undefined
 
 // Each conjunction can fail on either scrutinee. All sixteen paths reach
 // the same else expression, which contributes one result bound.
@@ -41,7 +40,6 @@ fun literal(x, y) = if
   x is 1 and y is Str then 0
   x is Int and y is Str then (if x is 1 then "unreachable" else 1)
   else 2
-//│ Type: undefined
 
 literal as ((Int, Str) -> Int)
 //│ Type: (Int, Str) -> Int
@@ -56,7 +54,6 @@ fun nestedJoin(x, y, z) = if
   else if
     x is Str and z is Int then 1
     y is Str then 2
-//│ Type: undefined
 
 nestedJoin as ((Int | Str, Int | Str, Int) -> Int)
 //│ Type: (Int | Str, Int | Str, Int) -> Int
@@ -66,7 +63,6 @@ fun callDiagonal(f, x, y) = if
   x is Int and y is Str then 0
   x is Str and y is Int then 0
   else f(x, y)
-//│ Type: undefined
 
 callDiagonal as ((((Int, Int) -> Int) & ((Str, Str) -> Int), Int | Str, Int | Str) -> Int)
 //│ Type: (((Int, Int) -> Int) & ((Str, Str) -> Int), Int | Str, Int | Str) -> Int
@@ -111,14 +107,12 @@ callDiagonal as (((Int, Int) -> Int, Int | Str, Int | Str) -> Int)
 fun same(x, y) = if
   x is Int and y is Int then 1
   x is Str and y is Str then 2
-//│ Type: undefined
 
 
 fun throughSame(x, y) = if
   x is Int and y is Str then 3
   x is Str and y is Int then 4
   else same(x, y)
-//│ Type: undefined
 
 // A single polymorphic instantiation cannnot satisfy this.
 :e
@@ -166,7 +160,6 @@ fun throughSame(x, y) = if
   x is Int and y is Str then 3
   x is Str and y is Int then 4
   else same{as {((Int, Int) -> 1) & ((Str, Str) -> 2)}}(x, y)
-//│ Type: undefined
 
 throughSame as ((Int | Str, Int | Str) -> Int)
 //│ Type: (Int | Str, Int | Str) -> Int
@@ -257,7 +250,6 @@ fun throughSame(x, y) = if
   x is Str and y is Int then 4
   x is Int and y is Int then same(x, y)
   x is Str and y is Str then same(x, y)
-//│ Type: undefined
 
 throughSame as ((Int | Str, Int | Str) -> Int)
 //│ Type: (Int | Str, Int | Str) -> Int

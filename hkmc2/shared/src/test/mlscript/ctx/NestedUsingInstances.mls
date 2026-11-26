@@ -47,7 +47,7 @@ module Ex with
 //│               term = Resolved{sym=term:instance$Ident(Int)¹,typ=class:Int⁰}:
 //│                 t = Ref{sym=member:instance$Ident(Int)⁰} of member:instance$Ident(Int)⁰
 //│                 sym = term:instance$Ident(Int)¹
-//│   res = Lit of UnitLit of false
+//│   res = OmittedResult
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 

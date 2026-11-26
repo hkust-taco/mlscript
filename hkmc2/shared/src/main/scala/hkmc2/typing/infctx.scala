@@ -96,6 +96,9 @@ class InfCtx(
   // def withPrefix(x: Type, y: Type) = ???
 
 class PrimCtx(using st: Elaborator.State, ctx: Elaborator.Ctx, cfg: Config):
+  lazy val unitTy: ClassLikeType = InfCtx.mkTag(st.unitSymbol)
+  def tagName(tag: ClsTag): Str =
+    if st.runtimeSymbolsInitialized && tag === st.unitSymbol then "()" else tag.nme
   val objSym: ClsTag = ctx.get("Object").get.symbol.get.asTpe.get
   private val intSym = ctx.get("Int").get.symbol.get.asTpe.get
   private val strSym = ctx.get("Str").get.symbol.get.asTpe.get
@@ -117,7 +120,6 @@ object InfCtx:
     InfCtx(1, N, HashMap.empty, Bot, ListBuffer.empty)(using HashMap.empty)
   def mkTag(s: ClsTag): ClassLikeType = ClassLikeType(s, Nil, Nil, Nil, N)
   def litTy(lit: Literal)(using ctx: InfCtx): ClassLikeType = mkTag(ctx.prim.litTag(lit))
-  def objTy(using ctx: InfCtx): ClassLikeType = mkTag(ctx.prim.objSym)
   def funTy(args: Ls[Type], ret: Type, eff: Type)(using ctx: InfCtx): ClassLikeType =
     val u = tupTy(args)
     val w = Ls(Wildcard.in(u), Wildcard.out(ret), Wildcard.out(eff))

@@ -117,7 +117,7 @@ class Typer(using tl: TL)(using Elaborator.State, Raise, codegen.Erasure, Ctx, C
         case Neg(t) => ~mono(t, !pol)
         case CompType(lhs, rhs, pol) =>
           if pol then mono(lhs, pol) | mono(rhs, pol) else mono(lhs, pol) & mono(rhs, pol)
-        case UnitVal() => InfCtx.objTy
+        case UnitVal() => ctx.prim.unitTy
         case Lit(x) => InfCtx.litTy(x)
         case _ => ty.symbol.flatMap(_.asTpe) match
           case S(cls: (ClassSymbol | TypeAliasSymbol)) => typeAndSubstType(Term.TyApp(ty, Nil)(N), pol)
@@ -447,7 +447,7 @@ class Typer(using tl: TL)(using Elaborator.State, Raise, codegen.Erasure, Ctx, C
     given CCtx = CCtx.init(t, N)
     t match
       case Term.Error() => (Bot, Bot) // TODO: error type?
-      case UnitVal() => (InfCtx.objTy, Bot)
+      case UnitVal() | OmittedResult() => (ctx.prim.unitTy, Bot)
       case Lit(lit) => (InfCtx.litTy(lit), Bot)
       case r: (Ref| SimpleRef) =>
         ctx.get(r.sym) match

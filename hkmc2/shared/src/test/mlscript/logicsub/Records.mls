@@ -1,5 +1,4 @@
 :.
-//│ Type: undefined
 
 
 :fixme
@@ -12,7 +11,6 @@ let r = {}
 //│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
 //│ ║  l.+1: 	let r = {}
 //│ ╙──      	        ^^
-//│ Type: undefined
 
 {1}
 //│ Type: 1
@@ -36,7 +34,6 @@ let rcd = { foo: 1, bar: "..." }
 //│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
 //│ ║  l.+1: 	let rcd = { foo: 1, bar: "..." }
 //│ ╙──      	            ^^^^^^^^^^^^^^^^^^
-//│ Type: undefined
 
 // :fixme The fields should retain the types of 1 and "...".
 [rcd.foo, rcd.bar]
@@ -54,7 +51,6 @@ let rcd = { foo: 1, bar: "..." }
 //│ Type: ⊥
 
 fun id(x) = x
-//│ Type: undefined
 
 :fixme
 id of (x: 1)

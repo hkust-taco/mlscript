@@ -124,7 +124,7 @@ sealed abstract class Type extends InfType with TypeArg:
         case ClassLikeType(sym = name, args = args, refinement = fields) =>
           // A refinement prints as an intersection, including under negation.
           group(if fields.isEmpty then TypePrecedence.Atom else TypePrecedence.Inter):
-            out ++= name.nme
+            out ++= summon[InfCtx].prim.tagName(name)
             if args.nonEmpty then out ++= args.iterator.map(_.show).mkString("[", ", ", "]")
             if fields.nonEmpty then
               out ++= fields.iterator.map((l, ty) => s"${l.name}: ${ty.show}").mkString(" & {", ", ", "}")
