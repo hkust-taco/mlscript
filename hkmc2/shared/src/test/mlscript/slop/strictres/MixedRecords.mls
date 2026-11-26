@@ -346,6 +346,23 @@ copyAfterAssignment()
 //│ ╙──      	                       ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
+// Resolution does not order a copy and the assignments to the field that it copies. The copy below thus also
+// reads the value that its source is assigned after the copy was made.
+:e // TODO: allow?
+private fun assignmentAfterCopy() =
+  let declared = {mut item: {a: 1}}
+  let copied = {...declared}
+  set declared.item = {b: 2}
+  copied.item.a
+assignmentAfterCopy()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+5: 	  copied.item.a
+//│ ║        	  ^^^^^^^^^^^^^
+//│ ╟── Record literal does not contain member 'a'
+//│ ║  l.+4: 	  set declared.item = {b: 2}
+//│ ╙──      	                       ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
 // A spread does not convert the values that it copies, so a copy has the representation of the field that it
 // copies. That representation includes the values assigned to the copy.
 :ge
