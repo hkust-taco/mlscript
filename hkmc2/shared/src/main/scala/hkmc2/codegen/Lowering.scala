@@ -864,17 +864,17 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         if strictResolution then fail:
           ErrorReport(
             msg"This selection of member '${id.name}' is ambiguous, as it has multiple resolved targets" -> sel.toLoc ::
-            targets.map: target =>
+            targets.flatMap: target =>
               val owner = target.asTrm.flatMap(_.owner).fold("")(o => s" in ${o.asBlkMember.get.describe} '${o.nme}'")
-              // A single spread can copy unrelated fields. Point at the declaration that distinguishes each candidate.
-              val loc = target match
+              val label = msg"target: ${target.describeKind} '${target.nme}'${owner}"
+              target match
+                // A single spread can copy unrelated fields. Point at the declarations of each candidate.
                 case field: RecordFieldSymbol => field.root.origin match
-                  // An intersection that type normalization forms has no source location. Its first
-                  // declaration of the field tells this candidate from the others.
-                  case RecordFieldSymbol.Origin.Merged(declaration :: _) => declaration.toLoc
-                  case _ => field.root.toLoc.orElse(field.toLoc)
-                case _ => target.toLoc
-              msg"target: ${target.describeKind} '${target.nme}'${owner}" -> loc
+                  // Alternatives can share a declaration even when none is common to the whole union.
+                  case RecordFieldSymbol.Origin.Merged(first :: rest) =>
+                    (label -> first.toLoc) :: rest.map(d => msg"This target also includes this declaration." -> d.toLoc)
+                  case _ => (label -> field.root.toLoc.orElse(field.toLoc)) :: Nil
+                case _ => (label -> target.toLoc) :: Nil
             ,
             source = Diagnostic.Source.Compilation)
         else k(prefix, memberIdent(id, N), N)

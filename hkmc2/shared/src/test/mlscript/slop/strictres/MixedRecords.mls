@@ -557,7 +557,7 @@ updateSharedPart(mut {count: 0, label: "count", other: 1})
 //│ = 8
 
 // An intersection shares no declaration with a record type that declares the field separately. The error
-// shows a declaration of each candidate.
+// shows which declarations make up each candidate.
 :ge
 private fun readSeparate(target: (Counter & LabelledCounter) | {count: Int, other: Int}) = target.count
 //│ ╔══[COMPILATION ERROR] This selection of member 'count' is ambiguous, as it has multiple resolved targets
@@ -568,7 +568,36 @@ private fun readSeparate(target: (Counter & LabelledCounter) | {count: Int, othe
 //│ ║        	                                                                ^^^^^
 //│ ╟── target: record field 'count'
 //│ ║  l.XX: 	type Counter = {mut count: Int}
-//│ ╙──      	                    ^^^^^
+//│ ║        	                    ^^^^^
+//│ ╟── This target also includes this declaration.
+//│ ║  l.XX: 	type LabelledCounter = {count: Int, label: Str}
+//│ ╙──      	                        ^^^^^
+
+// Here every pair of alternatives shares a declaration. Only the complete groups distinguish the three targets.
+:ge
+private fun overlapping(target: (Counter & LabelledCounter) | (Counter & TimedCounter)
+    | (LabelledCounter & TimedCounter)) = target.count
+//│ ╔══[COMPILATION ERROR] This selection of member 'count' is ambiguous, as it has multiple resolved targets
+//│ ║  l.+2: 	    | (LabelledCounter & TimedCounter)) = target.count
+//│ ║        	                                          ^^^^^^^^^^^^
+//│ ╟── target: record field 'count'
+//│ ║  l.XX: 	type LabelledCounter = {count: Int, label: Str}
+//│ ║        	                        ^^^^^
+//│ ╟── This target also includes this declaration.
+//│ ║  l.XX: 	type TimedCounter = {count: Int, time: Int}
+//│ ║        	                     ^^^^^
+//│ ╟── target: record field 'count'
+//│ ║  l.XX: 	type Counter = {mut count: Int}
+//│ ║        	                    ^^^^^
+//│ ╟── This target also includes this declaration.
+//│ ║  l.XX: 	type TimedCounter = {count: Int, time: Int}
+//│ ║        	                     ^^^^^
+//│ ╟── target: record field 'count'
+//│ ║  l.XX: 	type Counter = {mut count: Int}
+//│ ║        	                    ^^^^^
+//│ ╟── This target also includes this declaration.
+//│ ║  l.XX: 	type LabelledCounter = {count: Int, label: Str}
+//│ ╙──      	                        ^^^^^
 
 // The assignment is rejected if a component of the union has the field immutable, like for a union of
 // record types without intersections.
