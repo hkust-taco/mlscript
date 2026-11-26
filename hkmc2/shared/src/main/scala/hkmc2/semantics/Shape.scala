@@ -682,7 +682,7 @@ class BaseShape(val defn: ClassLikeDef, val ext: Opt[TermShape]) extends CoreHea
 final class RecordTypeShape(val fields: Map[MemberKey, TypeArgument], val mutable: Set[MemberKey], val aliases: Map[Str, Set[SymbolKey]])(
     val source: Term, val components: Vector[RecordTypeShape.Declaration]) extends CoreHeadShape:
   def declarations(key: MemberKey): Vector[RcdField] = components.iterator.flatMap(_.fields.get(key)).distinctBy(_.tsym).toVector
-  def describe: Str = "record type"
+  def describe: Str = if components.sizeIs > 1 then "intersection of record types" else "record type"
   override def toString: Str = s"RecordTypeShape($fields)"
   def toLoc: Opt[Loc] = source.toLoc
   protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup =
