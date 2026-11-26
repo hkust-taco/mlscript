@@ -253,7 +253,7 @@ sealed abstract class LocalVarSymbol(name: Str)(using State) extends FlowSymbol(
   *   `Normalization.joinTempType` populates it with the join of their representations once they have all
   *   been seen.
   * - For a temp bound by `LetDecl` or `SimpleSplit.Head.Let`, erasure infers the representation
-  *   from the values flowing into the binding (see `ErasureDeclarations`).
+  *   from the values flowing into the binding (see `SourceDeclarations`).
   */
 class TempSymbol(val trm: Opt[Term], initErasedType: Opt[ErasedValueType], dbgNme: Str = "tmp")(using State)
     extends LocalVarSymbol(dbgNme):

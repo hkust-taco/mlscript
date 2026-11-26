@@ -7,11 +7,11 @@ import hkmc2.utils.*
 /** Diff tests exercise representations. This checks the separate ownership property:
   * consumers and later worksheet blocks cannot mutate completed observation snapshots.
   */
-class ErasureInputsTest extends AnyFunSuite:
+class ResolvedValuesTest extends AnyFunSuite:
   test("completed observations are isolated from worksheet and import consumers"):
     given owner: Elaborator.State = new Elaborator.State
     given defining: ResolutionContext = owner.newResolverState.context
-    val inputs = owner.newResolverState.erasureInputs
+    val inputs = owner.newResolverState.resolvedValues
     val symbol = VarSymbol(new syntax.Tree.Ident("value"), mut = true)
     val source = new TermShapeHost
     inputs.register(symbol)(source.subscribeToShapes)

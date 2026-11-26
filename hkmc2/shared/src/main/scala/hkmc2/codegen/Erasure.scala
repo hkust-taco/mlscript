@@ -21,7 +21,7 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
   private given Erasure = this
   private given reporter: Diagnostic.Reporter = new Diagnostic.Reporter(report)
 
-  private val declarations = new ErasureDeclarations(root)
+  private val declarations = new SourceDeclarations(root)
   // A spread copies the stored value without conversion. The declaration and its writable copies
   // therefore need one representation, although resolution tracks assignments to each field separately.
   private lazy val copiesByDeclaration = declarations.copiedFields.toList.groupBy(_.root)
@@ -93,10 +93,10 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
   /** The observations that constrain a slot. Erasure checks parameters before results, so an
     * override whose parameters have no representation cannot cause a second error at its base.
     */
-  private def observations(symbol: ErasureInputs.InputSlot): Iterator[TermShape | TermDefinition] =
+  private def observations(symbol: ResolvedValues.InputSlot): Iterator[TermShape | TermDefinition] =
     if !config.language.useNewResolution then Iterator.empty
     else
-      val inputs = summon[State].newResolverState.erasureInputs
+      val inputs = summon[State].newResolverState.resolvedValues
       // A diamond contributes each declaration once; an erroneous cycle must also terminate.
       def family[A](root: A)(children: A => Iterator[A]): Iterator[A] =
         val seen = mutable.Set(root)
@@ -121,7 +121,7 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
         case _ => Iterator.empty
       inputs.observations(symbol) ++ related
 
-  private def inferredType(symbol: ErasureInputs.InputSlot): Opt[ErasedValueType] =
+  private def inferredType(symbol: ResolvedValues.InputSlot): Opt[ErasedValueType] =
     joined(observations(symbol).flatMap(valueType).toList)
 
   /** The representation of a slot that holds values of each of `types`, or `N` when there are none. */
@@ -171,8 +171,8 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
   /** An external input that contributed to this slot's inferred representation, if any.
     * Its provenance identifies the exposed interface even when the value flowed into a private helper.
     */
-  private def externalInputOrigin(symbol: ErasureInputs.InputSlot): Opt[UnknownValueShape] =
-    val inputs = summon[State].newResolverState.erasureInputs
+  private def externalInputOrigin(symbol: ResolvedValues.InputSlot): Opt[UnknownValueShape] =
+    val inputs = summon[State].newResolverState.resolvedValues
     if !config.language.useNewResolution || !inputs.isPrepared(symbol) then N
     else observations(symbol).collect { case value: TermShape => value.applicationHead._1 }.collectFirst:
       case unknown: UnknownValueShape if unknown.fromPublicInterface => unknown
@@ -190,7 +190,7 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
     * checked; every other compilation unit is erased after the runtime is loaded.
     */
   private def representable(tpe: ErasedValueType, loc: Opt[Loc],
-      inferredSource: Opt[ErasureInputs.InputSlot]): ErasedValueType =
+      inferredSource: Opt[ResolvedValues.InputSlot]): ErasedValueType =
     if !summon[State].runtimeSymbolsInitialized then tpe
     else tpe.canonicalize match
       case incompatible @ ErasedType.Incompatible(lhs, rhs) if !incompatible.reported =>
@@ -423,14 +423,7 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
 
     // Establish source argument correspondence before inheriting representations. Equal leading
     // counts alone do not suffice: optional and trailing parameters can redistribute the inputs.
-    // Retain the traversed declarations: handlers remove the resumption parameter list from them.
-    val observed =
-      if config.language.useNewResolution then summon[State].newResolverState.erasureInputs.slots
-      else Iterator.empty
-    // Observations can refer to earlier worksheet declarations. Reuse their initialized signatures
-    // without reporting their override diagnostics again in this program.
-    val definitions = (sourceDefinitions ++ observed.collect {
-      case sym: TermSymbol => sym.defn }.flatten).distinctBy(_.tsym)
+    // Use the traversed definitions: handler declarations omit the resumption parameter list here.
     overrideChecks.checkExposedSignatures()
     val inheritedParams = overrideChecks.inheritedParameters
     val parameterSymbols = parameters.iterator.map(_.sym).toSet
@@ -495,7 +488,7 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
           else N
       case _ => ()
     // Erase inherited results before their overrides, guarding against erroneous inheritance cycles.
-    val definitionsBySymbol = definitions.map(td => td.tsym -> td).toMap
+    val definitionsBySymbol = sourceDefinitions.map(td => td.tsym -> td).toMap
     /** Publishes a declaration's erased signature after initializing its local inherited members,
       * so an unannotated override can inherit their result representation. Imported members already
       * have erased signatures. `visiting` breaks erroneous inheritance cycles; signature computation
@@ -507,8 +500,8 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
         // Definitions rejected before erasure still need initialized signatures for diagnostic recovery.
         td.tsym.initializeErasure:
           if td.isErroneous then N else erasedDefinitionSignature(td, overrideChecks)
-    definitions.foreach(eraseDefinition(_, Set.empty))
-    def variableType(sym: ErasureInputs.InputSymbol): Opt[ErasedValueType] =
+    sourceDefinitions.foreach(eraseDefinition(_, Set.empty))
+    def variableType(sym: ResolvedValues.InputSymbol): Opt[ErasedValueType] =
       inferredType(sym).map(representable(_, sym.toLoc, S(sym)))
     declarations.variables.foreach:
       case sym: VarSymbol if !sym.isErasureReady => sym.erasedType = variableType(sym)

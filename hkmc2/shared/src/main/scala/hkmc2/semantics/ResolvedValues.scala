@@ -4,18 +4,18 @@ package semantics
 import scala.collection.mutable
 import hkmc2.utils.*, shorthands.*
 import Term.*
-import ErasureInputs.{InputSlot, InputSymbol}
+import ResolvedValues.{InputSlot, InputSymbol}
 
-/** Source declarations needed both when observing inference and when assigning representations.
+/** Source declarations and writable field copies in an elaborated block.
   * Several declarations are outside subStatements: split bindings, handler parameters,
   * auxiliary constructor parameters, and the definitions synthesized for record fields.
-  * Keep their enumeration shared so every delayed slot is prepared before erasure reads it.
+  * Include them so clients see declarations that do not appear as ordinary statements.
   *
   * Variables include the temporaries that hold a split's scrutinee or save the value of `x`
   * across `set x = v in body`. These slots need the representation of the value they hold,
   * including when a match or a restored assignment reads an unboxed primitive on Wasm.
   */
-private[hkmc2] final class ErasureDeclarations(root: Statement):
+private[hkmc2] final class SourceDeclarations(root: Statement):
   val statements = mutable.ArrayBuffer.empty[Statement]
   val parameters = mutable.LinkedHashMap.empty[VarSymbol, Param]
   val variables = mutable.LinkedHashSet.empty[InputSymbol]
@@ -120,26 +120,22 @@ private[hkmc2] final class ErasureDeclarations(root: Statement):
 
 /** The source values of declarations in this compilation unit. Erasure reads the completed
   * observations. Later writes in an importing unit reach that unit's copy. */
-private[hkmc2] final class ErasureInputs:
+private[hkmc2] final class ResolvedValues:
   private val values = mutable.Map.empty[InputSlot, TermShapeHost]
 
-  /** Collect the possible values of the block's declarations and lambda results for erasure.
-    * Observation starts before interface exposure so it also sees values supplied by external callers. */
+  /** Collect the possible values of the block's declarations and lambda results while resolution
+    * finishes. These include values admitted by the public interface and declarations discovered on demand. */
   private[semantics] def observeBlock(root: Blk, resolver: NewResolver)(resolve: => Unit)(using ResolutionContext): Unit =
-    val declarations = new ErasureDeclarations(root)
-    declarations.parameters.values.foreach: p =>
-      observeVariable(p.sym, resolver)
+    val declarations = new SourceDeclarations(root)
+    def variable(sym: LocalVarSymbol): Unit =
+      observeSymbol(sym, resolver)(resolver.listenTerm(SimpleRef(sym)(N)))
+    declarations.parameters.values.foreach(p => variable(p.sym))
     declarations.variables.foreach:
-      case symbol: VarSymbol => observeVariable(symbol, resolver)
-      case symbol: TermSymbol if symbol.needsErasure => observeSymbol(symbol, resolver)(resolver.listenMemberVariable(symbol))
-      // A temporary that elaboration declares (see ErasureDeclarations) is observed like a variable,
-      // unless its representation was fixed when it was created.
-      case symbol: TempSymbol if symbol.erasedType.isEmpty =>
-        observeSymbol(symbol, resolver)(resolver.listenTerm(SimpleRef(symbol)(N)))
-      case _ => ()
+      case sym: LocalVarSymbol => variable(sym)
+      case sym: TermSymbol => observeSymbol(sym, resolver)(resolver.listenMemberVariable(sym))
     declarations.statements.foreach:
       case td: TermDefinition => observeDefinition(td, resolver)
-      case lam: Lam if !lam.resultSlot.isErasureReady =>
+      case lam: Lam =>
         register(lam.resultSlot): publish =>
           resolver.listenTermViews(lam.body)(publish)
       case _ => ()
@@ -148,62 +144,50 @@ private[hkmc2] final class ErasureInputs:
     // Keep this observation live until exposure has processed those values.
     val fields = rctx.state.discoveredFields
     val detach = fields.inferenceHost.observe: (field, scope) =>
+      given ResolutionContext = scope
       field.origin match
         case RecordFieldSymbol.Origin.Copied(_) =>
           // Listen across all calls. The assignment host replays each write with its own type arguments.
-          observeSymbol(field, resolver)(publish => resolver.listenMemberVariable(field)(publish)(using scope))(using scope)
-        case _ => field.defn.foreach(observeDefinition(_, resolver)(using scope))
+          observeSymbol(field, resolver)(resolver.listenMemberVariable(field))
+        case _ => field.defn.foreach(observeDefinition(_, resolver))
     try resolve
     finally
       detach()
       root.resolvedFields = fields.shapes.iterator.map(_._1).toList
       rctx.state.discoveredFields = new DiscoveredFields
 
-  private def observeSymbol(symbol: InputSymbol, resolver: NewResolver)(connect: ResolutionContext.Listener => Unit)(using ResolutionContext): Opt[TermShapeHost] =
-    Option.when(rctx.state.isOwnedSym(symbol))(register(symbol): publish =>
-      // Expand instances while their type substitutions are in scope. Erasure reads the block's completed observations.
+  private def observeSymbol(symbol: InputSymbol, resolver: NewResolver)(connect: ResolutionContext.Listener => Unit)(using ResolutionContext): Unit =
+    if rctx.state.isOwnedSym(symbol) then register(symbol): publish =>
+      // Expand instances while their type substitutions are in scope.
       connect(shape => resolver.listenInstanceViews(shape)(publish))
-    )
 
-  private def observeVariable(symbol: VarSymbol, resolver: NewResolver)(using ResolutionContext): Opt[TermShapeHost] =
-    if symbol.isErasureReady then N else observeSymbol(symbol, resolver)(resolver.listenTerm(SimpleRef(symbol)(N)))
-
-  private[semantics] def observeDefinition(td: TermDefinition, resolver: NewResolver)(using ResolutionContext): Opt[TermShapeHost] =
-    if !td.tsym.needsErasure then N else observeSymbol(td.tsym, resolver): publish =>
-      // The function body returns its payload. AsyncLowering wraps that body later;
-      // the callable's promise representation is assigned separately by Erasure.
+  private def observeDefinition(td: TermDefinition, resolver: NewResolver)(using ResolutionContext): Unit =
+    observeSymbol(td.tsym, resolver): publish =>
+      // An async function's body produces the payload of the promise its callers receive.
       td.body.foreach(body => resolver.listenResult(body)(publish))
-      // A field that assignments can replace also holds the values assigned to it, including those that other
-      // compilation units can assign when it is exposed (see `NewResolver.assignField` and `InterfaceExposure`). Assignments
-      // in later blocks and in other compilation units reach consumer copies of the field's host instead, which
-      // the field's representation does not include: lowering converts their values to that representation.
+      // In the defining block this includes writes admitted by interface exposure. Subsequent writes
+      // in importing units reach consumer-local copies of the field's assignment host.
       if resolver.isAssignableField(td) then resolver.listenMemberVariable(td.tsym)(publish)
 
-  // Includes property declarations synthesized by named-tuple resolution, which
-  // have source expressions but are not separate nodes in the source syntax.
-  def slots: Iterator[InputSlot] = values.keysIterator
-
   private[semantics] def register(slot: InputSlot)(connect: ResolutionContext.Listener => Unit)
-      (using ResolutionContext): TermShapeHost = values.get(slot) match
-    case S(host) => host
-    case N =>
+      (using ResolutionContext): Unit =
+    if !values.contains(slot) then
       val host = new TermShapeHost
       values(slot) = host
       // Even an unused/unproductive definition has a completed, empty observation.
       host.inferenceHost
       connect(host.publish)
-      host
 
   /** Whether resolution prepared this slot in the current compilation unit. */
   def isPrepared(slot: InputSlot): Bool = values.contains(slot)
 
   /** The values of this declaration when resolution of its defining block completed. */
   def observations(slot: InputSlot): Iterator[TermShape] =
-    val host = values.getOrElse(slot, lastWords("Source slot was not prepared for erasure"))
-    assert(host.originalData.completed, "Erasure requires completed value observations")
+    val host = values.getOrElse(slot, lastWords("No resolved values were recorded for this declaration"))
+    assert(host.originalData.completed, "Reading resolved values before block completion")
     host.shapes.iterator
 
-private[hkmc2] object ErasureInputs:
+private[hkmc2] object ResolvedValues:
   /** Symbols whose variable values or definition results supply runtime representations.
     * Elaboration temporaries include the saved value restored by a backtracking assignment.
     */
