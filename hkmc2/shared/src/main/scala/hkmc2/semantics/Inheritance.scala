@@ -47,12 +47,20 @@ object Inheritance:
           (msg"Class '${parent.sym.nme}' is defined here; declare it 'open' or 'abstract' to allow external subclasses" -> parent.toLoc) :: Nil,
         source = Diagnostic.Source.Compilation))
 
-  /** An ancestor may itself be a target (one receiver overrides a member, another inherits it).
-    * Discard less-specific common ancestors, so a chain of overrides is not an ambiguity.
+  /** The member that all of `targets` denote, if there is one: the most specific definition that each of
+    * them is, overrides, or derives from. An ancestor may itself be a target (one receiver overrides a
+    * member, another inherits it). Discard less-specific common ancestors, so a chain of overrides is
+    * not an ambiguity.
+    *
+    * Record fields can share several most specific declarations. In `(A & B) | (A & B & C)`, where each
+    * record type declares `count`, the two intersections have distinct fields, which both derive from
+    * the declarations of `A` and of `B`. These declare the same property of the same records, so the
+    * first one, in the order in which the first target derives from them, identifies the member.
     */
   def commonMember(targets: Ls[DefinitionSymbol[?]])(using Erasure): Opt[DefinitionSymbol[?]] =
-    def ancestors(sym: DefinitionSymbol[?]): Set[DefinitionSymbol[?]] =
-      val seen = mutable.Set.empty[DefinitionSymbol[?]]
+    // In visiting order, which makes the choice between several shared declarations deterministic.
+    def ancestors(sym: DefinitionSymbol[?]): mutable.LinkedHashSet[DefinitionSymbol[?]] =
+      val seen = mutable.LinkedHashSet.empty[DefinitionSymbol[?]]
       def visit(current: DefinitionSymbol[?]): Unit = if seen.add(current) then
         current.overriddenMembers.foreach(visit)
         // A record field that resolution derives from others is the same member as its origins: a record
@@ -61,14 +69,17 @@ object Inheritance:
           case field: RecordFieldSymbol => field.origins.foreach(visit)
           case _ => ()
       visit(sym)
-      seen.toSet
+      seen
     targets.distinct match
       case Nil => N
       case target :: Nil => S(target)
       case first :: rest =>
-        val common = rest.foldLeft(ancestors(first))((acc, sym) => acc intersect ancestors(sym))
-        common.filterNot(base => common.exists(other => (other isnt base) && ancestors(other)(base))).toList match
+        val others = rest.map(ancestors)
+        val common = ancestors(first).iterator.filter(sym => others.forall(_(sym))).toList
+        common.filterNot(base => common.exists(other => (other isnt base) && ancestors(other)(base))) match
           case target :: Nil => S(target)
+          // Only the fields of intersected record types derive from several declarations.
+          case (target: RecordFieldSymbol) :: _ => S(target)
           case _ => N
 
   /** Whether an override of `inherited` uses a different kind of definition, such as a `fun` overriding

@@ -489,6 +489,44 @@ private fun updateCount(target: EitherCounter) =
 updateCount({mut count: 0, label: "count", time: 0, left: 1})
 //│ = 9
 
+// The components of a union can also intersect different record types. The declarations that all of them
+// share identify the field, so the read and the write have one target.
+:expect 7
+private fun updateShared(target: (Counter & LabelledCounter) | (Counter & LabelledCounter & TimedCounter)) =
+  set target.count = 7
+  target.count
+updateShared(mut {count: 0, label: "count"})
+//│ = 7
+
+// An intersection shares no declaration with a record type that declares the field separately. The error
+// shows a declaration of each candidate.
+:ge
+private fun readSeparate(target: (Counter & LabelledCounter) | {count: Int, other: Int}) = target.count
+//│ ╔══[COMPILATION ERROR] This selection of member 'count' is ambiguous, as it has multiple resolved targets
+//│ ║  l.+1: 	private fun readSeparate(target: (Counter & LabelledCounter) | {count: Int, other: Int}) = target.count
+//│ ║        	                                                                                           ^^^^^^^^^^^^
+//│ ╟── target: record field 'count'
+//│ ║  l.+1: 	private fun readSeparate(target: (Counter & LabelledCounter) | {count: Int, other: Int}) = target.count
+//│ ║        	                                                                ^^^^^
+//│ ╟── target: record field 'count'
+//│ ║  l.XX: 	type Counter = {mut count: Int}
+//│ ╙──      	                    ^^^^^
+
+// The assignment is rejected if a component of the union has the field immutable, like for a union of
+// record types without intersections.
+:ge
+private fun writeShared(target: (LabelledCounter & TimedCounter) | (Counter & LabelledCounter & TimedCounter)) =
+  set target.count = 7
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'count'
+//│ ║  l.+2: 	  set target.count = 7
+//│ ║        	            ^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.XX: 	type LabelledCounter = {count: Int, label: Str}
+//│ ║        	                        ^^^^^
+//│ ╟── Defined here:
+//│ ║  l.XX: 	type TimedCounter = {count: Int, time: Int}
+//│ ╙──      	                     ^^^^^
+
 // A record type that requires a `mut` field is not checked against the records that reach it. A union
 // constrains a record against each of its components, and the record below is a valid value of the union.
 :expect 0

@@ -868,7 +868,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
               val owner = target.asTrm.flatMap(_.owner).fold("")(o => s" in ${o.asBlkMember.get.describe} '${o.nme}'")
               // A single spread can copy unrelated fields. Point at the declaration that distinguishes each candidate.
               val loc = target match
-                case field: RecordFieldSymbol => field.root.toLoc.orElse(field.toLoc)
+                case field: RecordFieldSymbol => field.root.origin match
+                  // An intersection that type normalization forms has no source location. Its first
+                  // declaration of the field tells this candidate from the others.
+                  case RecordFieldSymbol.Origin.Merged(declaration :: _) => declaration.toLoc
+                  case _ => field.root.toLoc.orElse(field.toLoc)
                 case _ => target.toLoc
               msg"target: ${target.describeKind} '${target.nme}'${owner}" -> loc
             ,
