@@ -346,9 +346,9 @@ copyAfterAssignment()
 //│ ╙──      	                       ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-// Resolution does not order a copy and the assignments to the field that it copies. The copy below thus also
-// reads the value that its source is assigned after the copy was made.
-:e // TODO: allow?
+// Resolution does not order a copy and the assignments to the field that it copies (no flow sensitivity).
+// The copy below thus also reads the value that its source is assigned after the copy was made.
+:e
 private fun assignmentAfterCopy() =
   let declared = {mut item: {a: 1}}
   let copied = {...declared}
