@@ -14,9 +14,11 @@ class ResolvedValuesTest extends AnyFunSuite:
     val inputs = owner.newResolverState.resolvedValues
     val symbol = VarSymbol(new syntax.Tree.Ident("value"), mut = true)
     val source = new TermShapeHost
-    inputs.register(symbol)(source.subscribeToShapes)((shape, record) => record(shape))
+    val views = new TermShapeHost
+    inputs.register(symbol)(source.subscribeToShapes)((_, record) => views.subscribeToShapes(record))
     val initial = DynShape()
     source.publish(initial)
+    views.publish(initial)
     defining.completeBlock(Term.UnitVal())
     def observations = inputs.observations(symbol).toList
     val snapshot = observations
@@ -36,6 +38,12 @@ class ResolvedValuesTest extends AnyFunSuite:
     assert(first.copiedHostCount == 1)
     assert(second.copiedHostCount == 1)
     assert(defining.copiedHostCount == 1)
+    // A view subscribed before completion can deliver later, even without a new value from the source.
+    views.publish(later)(using first)
+    views.publish(other)(using defining)
+    assert(first.copiedHostCount == 2)
+    assert(defining.copiedHostCount == 2)
+    assert(observations == snapshot)
 
   // Diff tests can check the fields of each block, but cannot detect temporary observers accumulating
   // in the sealed graph. Reuse the syntax so no new source hosts contribute to its size.
