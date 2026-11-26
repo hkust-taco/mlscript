@@ -9,9 +9,9 @@ fun restricted(x) =
   let n = integer(x)
   if x is Str then "unreachable" else n
 restricted
-//│ Type: ['x, 'res] -> ('x) -> out 'res
+//│ Type: ['x, 'res] -> ('x) -> 'res
 //│ Where:
-//│   'x <: Str ∨ (Int <: 'res)
+//│   'x <: Str ∨ Int <: 'res
 //│   'x <: Int
 
 restricted(1)
@@ -22,7 +22,7 @@ restricted("s")
 //│ ╔══[COMPILATION ERROR] Type error in application
 //│ ║  l.+1: 	restricted("s")
 //│ ║        	^^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  ('x) -> out 'res  <:  ("s") ->{out 'eff} out 'app
+//│ ╟── because: cannot constrain  ('x) -> 'res  <:  ("s") ->{'eff} 'app
 //│ ╟── because: cannot constrain  Array & {0: "s"}  <:  Array & {0: 'x}
 //│ ╟── because: cannot constrain  "s"  <:  'x
 //│ ╙── because: cannot constrain  "s"  <:  Int
@@ -46,7 +46,7 @@ let n = (x => x)(1) in
 fun identity(x) = x
 fun chain(x) = identity(identity(identity(x)))
 chain
-//│ Type: ['x] -> ('x) -> out 'x
+//│ Type: ['x] -> ('x) -> 'x
 
 chain(1)
 //│ Type: 1
@@ -67,8 +67,13 @@ chain("s") as Int
 fun pair(x) = [x, x]
 fun nested(x) = pair(pair(pair(pair(x))))
 nested
-//│ Type: ['x, 'x1, 'x2, 'x3] -> ('x) -> out Object & {0: 'x1, 1: 'x1}
+//│ Type: ['x, 'x1, 'x2, 'x3] -> ('x) -> Object & {0: 'x1, 1: 'x1}
 //│ Where:
 //│   Object & {0: 'x2, 1: 'x2} <: 'x1
 //│   Object & {0: 'x3, 1: 'x3} <: 'x2
 //│   Object & {0: 'x, 1: 'x} <: 'x3
+
+// A union inside an intersection and an arrow under negation both need parentheses.
+fun grouped: [A, B, C] -> ((A | B) & C, ~(Int -> Str)) -> (A | (B & C))
+grouped
+//│ Type: ['A, 'B, 'C] -> (('A | 'B) & 'C, ¬((Int) -> Str)) -> 'A | 'B & 'C

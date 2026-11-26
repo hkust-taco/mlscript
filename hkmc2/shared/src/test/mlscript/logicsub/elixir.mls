@@ -52,12 +52,12 @@ fun subtract(a, b) = if
 //│ ║  l.+3: 	  a is Int and b is Int then a + negate(b)
 //│ ║        	                                 ^^^^^^^^^
 //│ ╟── because: cannot constrain  Int  <:  ¬Int
-//│ ╙── because: cannot constrain  (Int | Tru) | Fls  <:  Int
+//│ ╙── because: cannot constrain  Int | Tru | Fls  <:  Int
 //│ ╔══[COMPILATION ERROR] Type error in application of type ‹not implemented› with expected type Int
 //│ ║  l.+3: 	  a is Int and b is Int then a + negate(b)
 //│ ║        	                                 ^^^^^^^^^
 //│ ╟── because: cannot constrain  Int  <:  ¬Int
-//│ ╙── because: cannot constrain  (Int | Tru) | Fls  <:  Int
+//│ ╙── because: cannot constrain  Int | Tru | Fls  <:  Int
 //│ Type: undefined
 
 fun negate: (Int -> Int) & ((Tru | Fls) -> (Tru | Fls))

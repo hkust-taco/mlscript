@@ -85,8 +85,9 @@ class InfCtx(
            case S(ty) => msg" with expected type ${ty.show}"
            case N => msg""
          }" -> origin.toLoc
-       :: parents.reverse.map(p =>
-         msg"because: cannot constrain  ${p._1.show}  <:  ${p._2.show}" -> N
+       :: parents.reverse.map((lhs, rhs) =>
+         val (x, y) = PrettyPrinter.displayBound(lhs, rhs)
+         msg"because: cannot constrain  ${x.show}  <:  ${y.show}" -> N
        )
      ))
   // TODO

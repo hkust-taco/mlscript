@@ -15,11 +15,11 @@ fun f(x) = if x is
   Int then 0
   Bool then x
 f
-//│ Type: ['x, 'res] -> ('x) -> out 'res
+//│ Type: ['x, 'res] -> ('x) -> 'res
 //│ Where:
 //│   'x <: Int | Bool
-//│   'x <: ¬Bool ∨ ('x & Bool <: 'res)
-//│   'x <: ¬Int ∨ (0 <: 'res)
+//│   'x <: ¬Bool ∨ 'x & Bool <: 'res
+//│   'x <: ¬Int ∨ 0 <: 'res
 
 f(ib) as (Int | Bool)
 //│ Type: Int | Bool
@@ -35,7 +35,7 @@ f(si)
 //│ ╔══[COMPILATION ERROR] Type error in application
 //│ ║  l.+1: 	f(si)
 //│ ║        	^^^^^
-//│ ╟── because: cannot constrain  ('x) -> out 'res  <:  (Str | Int) ->{out 'eff} out 'app
+//│ ╟── because: cannot constrain  ('x) -> 'res  <:  (Str | Int) ->{'eff} 'app
 //│ ╟── because: cannot constrain  Array & {0: Str | Int}  <:  Array & {0: 'x}
 //│ ╟── because: cannot constrain  Str | Int  <:  'x
 //│ ╟── because: cannot constrain  Str  <:  'x
@@ -79,30 +79,30 @@ foo(1, 2)
 //│ Type: Int
 
 foo as (Int, Int) -> Int
-//│ Type: (Int, Int) ->{⊥} Int
+//│ Type: (Int, Int) -> Int
 
 foo as (Str, Bool) -> Bool
-//│ Type: (Str, Bool) ->{⊥} Bool
+//│ Type: (Str, Bool) -> Bool
 
 (x => foo(x, true)) as Str -> Bool
-//│ Type: (Str) ->{⊥} Bool
+//│ Type: (Str) -> Bool
 
 (x => foo(x, "")) as Bool -> Bool
-//│ Type: (Bool) ->{⊥} Bool
+//│ Type: (Bool) -> Bool
 
 :e
 foo(1, "")
 //│ ╔══[COMPILATION ERROR] Type error in application
 //│ ║  l.+1: 	foo(1, "")
 //│ ║        	^^^^^^^^^^
-//│ ╟── because: cannot constrain  ('x, 'y) ->{out 'eff} out 'res  <:  (1, "") ->{out 'eff1} out 'app
+//│ ╟── because: cannot constrain  ('x, 'y) ->{'eff} 'res  <:  (1, "") ->{'eff1} 'app
 //│ ╟── because: cannot constrain  Array & {0: 1, 1: ""}  <:  Array & {0: 'x, 1: 'y}
 //│ ╟── because: cannot constrain  ""  <:  'y
 //│ ╟── because: cannot constrain  ""  <:  ¬Str
 //│ ╟── because: cannot constrain  'x  <:  ¬Int
 //│ ╟── because: cannot constrain  1  <:  ¬Int
-//│ ╟── because: cannot constrain  'r  <:  ('y & Str, 'x & Int, 'r) ->{out 'eff2} out 'app1
-//│ ╟── because: cannot constrain  ('x1, 'y1, 'r1) ->{out 'eff3} out 'res1  <:  ('y & Str, 'x & Int, 'r) ->{out 'eff2} out 'app1
+//│ ╟── because: cannot constrain  'r  <:  ('y & Str, 'x & Int, 'r) ->{'eff2} 'app1
+//│ ╟── because: cannot constrain  ('x1, 'y1, 'r1) ->{'eff3} 'res1  <:  ('y & Str, 'x & Int, 'r) ->{'eff2} 'app1
 //│ ╟── because: cannot constrain  Array & {0: 'y & Str, 1: 'x & Int, 2: 'r}  <:  Array & {0: 'x1, 1: 'y1, 2: 'r1}
 //│ ╟── because: cannot constrain  Int & 'x  <:  'y1
 //│ ╟── because: cannot constrain  'x  <:  ¬Int | 'y1
@@ -119,21 +119,22 @@ fun increv(x) = if x is
   else
     rev(x)
 increv
-//│ Type: ['x, 'res] -> ('x) -> out 'res
+//│ Type: ['x, 'res] -> ('x) -> 'res
 //│ Where:
-//│   'x <: Int ∨ (Str <: 'res)
-//│   'x <: Int ∨ ('x & ¬Int <: Str)
-//│   'x <: ¬Int ∨ (Int <: 'res)
+//│   'x <: Int ∨
+//│       Str <: 'res
+//│       'x <: Str | Int
+//│   'x <: ¬Int ∨ Int <: 'res
 
 fun increv'(x) = if x is
   Int then x + 1
   Str then rev(x)
 increv'
-//│ Type: ['x, 'res] -> ('x) -> out 'res
+//│ Type: ['x, 'res] -> ('x) -> 'res
 //│ Where:
 //│   'x <: Int | Str
-//│   'x <: ¬Str ∨ (Str <: 'res)
-//│   'x <: ¬Int ∨ (Int <: 'res)
+//│   'x <: ¬Str ∨ Str <: 'res
+//│   'x <: ¬Int ∨ Int <: 'res
 
 increv(si)
 //│ Type: Str | Int
@@ -143,9 +144,9 @@ increv(sib)
 //│ ╔══[COMPILATION ERROR] Type error in application
 //│ ║  l.+1: 	increv(sib)
 //│ ║        	^^^^^^^^^^^
-//│ ╟── because: cannot constrain  ('x) -> out 'res  <:  ((Str | Int) | Bool) ->{out 'eff} out 'app
-//│ ╟── because: cannot constrain  Array & {0: (Str | Int) | Bool}  <:  Array & {0: 'x}
-//│ ╟── because: cannot constrain  (Str | Int) | Bool  <:  'x
+//│ ╟── because: cannot constrain  ('x) -> 'res  <:  (Str | Int | Bool) ->{'eff} 'app
+//│ ╟── because: cannot constrain  Array & {0: Str | Int | Bool}  <:  Array & {0: 'x}
+//│ ╟── because: cannot constrain  Str | Int | Bool  <:  'x
 //│ ╟── because: cannot constrain  Bool  <:  'x
 //│ ╙── because: cannot constrain  Bool  <:  Int | Str
 //│ Type: Str | Int
@@ -158,9 +159,9 @@ increv'(sib)
 //│ ╔══[COMPILATION ERROR] Type error in application
 //│ ║  l.+1: 	increv'(sib)
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  ('x) -> out 'res  <:  ((Str | Int) | Bool) ->{out 'eff} out 'app
-//│ ╟── because: cannot constrain  Array & {0: (Str | Int) | Bool}  <:  Array & {0: 'x}
-//│ ╟── because: cannot constrain  (Str | Int) | Bool  <:  'x
+//│ ╟── because: cannot constrain  ('x) -> 'res  <:  (Str | Int | Bool) ->{'eff} 'app
+//│ ╟── because: cannot constrain  Array & {0: Str | Int | Bool}  <:  Array & {0: 'x}
+//│ ╟── because: cannot constrain  Str | Int | Bool  <:  'x
 //│ ╟── because: cannot constrain  Bool  <:  'x
 //│ ╙── because: cannot constrain  Bool  <:  Int | Str
 //│ Type: Str | Int
@@ -173,11 +174,11 @@ fun f(x, y) = if
 x => if x is
   true then 0
   false then 0
-//│ Type: ('x) ->{⊥} 'res
+//│ Type: ('x) -> 'res
 //│ Where:
 //│   'x <: true | false
-//│   'x <: ¬false ∨ (0 <: 'res)
-//│   'x <: ¬true ∨ (0 <: 'res)
+//│   'x <: ¬false ∨ 0 <: 'res
+//│   'x <: ¬true ∨ 0 <: 'res
 
 // The solver does not recognize that the two singleton types cover Bool.
 :fixme
@@ -193,7 +194,7 @@ x => if x is
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  Bool  <:  true | false
 //│ ╙── because: cannot constrain  ⊤  <:  ⊥
-//│ Type: (Bool) ->{⊥} 0
+//│ Type: (Bool) -> 0
 
 fun f(x) = if
   x is Int then x + 2
@@ -201,12 +202,13 @@ fun f(x) = if
   else
     neg(x)
 f
-//│ Type: ['x, 'res] -> ('x) -> out 'res
+//│ Type: ['x, 'res] -> ('x) -> 'res
 //│ Where:
-//│   'x <: Int | Str ∨ (Bool <: 'res)
-//│   'x <: Int | Str ∨ (('x & ¬Int) & ¬Str <: Bool)
-//│   'x <: ¬Str ∨ (Str <: 'res)
-//│   'x <: ¬Int ∨ (Int <: 'res)
+//│   'x <: Int | Str ∨
+//│       Bool <: 'res
+//│       'x <: Bool | Int | Str
+//│   'x <: ¬Str ∨ Str <: 'res
+//│   'x <: ¬Int ∨ Int <: 'res
 
 fun x:Int
 x
@@ -216,7 +218,7 @@ f(x)
 //│ Type: Int
 
 f(sib)
-//│ Type: (Str | Int) | Bool
+//│ Type: Str | Int | Bool
 
 fun f(x, y) = if
   x is Int then y
@@ -225,17 +227,19 @@ fun f(x, y) = if
   else
     neg(x)
 f
-//│ Type: ['x, 'y, 'res] -> ('x, 'y) -> out 'res
+//│ Type: ['x, 'y, 'res] -> ('x, 'y) -> 'res
 //│ Where:
-//│   'x <: Int | Str ∨ ('y <: Str ∨ (Bool <: 'res))
-//│   'x <: Int | Str ∨ ('y <: Str ∨ (('x & ¬Int) & ¬Str <: Bool))
-//│   'x <: ¬Str ∨ ('y <: Str ∨ (Int <: 'res))
-//│   'x <: ¬Str ∨ ('y <: Str ∨ ('y & ¬Str <: Int))
-//│   'x <: Int ∨ ('y <: ¬Str ∨ (1 <: 'res))
-//│   'x <: ¬Int ∨ ('y <: 'res)
+//│   'x <: Int | Str ∨ 'y <: Str ∨
+//│       Bool <: 'res
+//│       'x <: Bool | Int | Str
+//│   'x <: ¬Str ∨ 'y <: Str ∨
+//│       Int <: 'res
+//│       'y <: Int | Str
+//│   'x <: Int ∨ 'y <: ¬Str ∨ 1 <: 'res
+//│   'x <: ¬Int ∨ 'y <: 'res
 
 f(ib, sib)
-//│ Type: ((1 | Str) | Bool) | Int
+//│ Type: 1 | Str | Bool | Int
 
 f(ib, ib)
 //│ Type: Bool | Int
@@ -247,12 +251,14 @@ fun f(x, y) = if
   x is Int then 1
   y is Int then neg(x)
 f
-//│ Type: ['x, 'y, 'res] -> ('x, 'y) -> out 'res
+//│ Type: ['x, 'y, 'res] -> ('x, 'y) -> 'res
 //│ Where:
-//│   'x <: Int ∨ ('y <: Int)
-//│   'x <: Int ∨ ('y <: ¬Int ∨ (Bool <: 'res))
-//│   'x <: Int ∨ ('y <: ¬Int ∨ ('x & ¬Int <: Bool))
-//│   'x <: ¬Int ∨ (1 <: 'res)
+//│   'x <: Int ∨
+//│       'y <: Int
+//│       'y <: ¬Int ∨
+//│           Bool <: 'res
+//│           'x <: Bool | Int
+//│   'x <: ¬Int ∨ 1 <: 'res
 
 f(ib, 1)
 //│ Type: 1 | Bool

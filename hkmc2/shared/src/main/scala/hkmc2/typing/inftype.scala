@@ -72,8 +72,16 @@ case class PolyType(tvs: Ls[InfVar], outer: Opt[InfVar], xbds: Ls[SubOr], body: 
 case class PolyFunType(args: Ls[InfType], ret: InfType, eff: Type) extends InfType:
   lazy val lvl = (ret :: eff :: args).iterator.map(_.lvl).max
   def show(using Scope, InfCtx, Raise) =
-    s"(${args.map(_.show).mkString(", ")}) ->{${eff.show}} ${ret.show}"
+    showArrow(args.iterator, ret, eff)
   def showDbg = s"(${args.map(_.showDbg).mkString(", ")}) ->{${eff.showDbg}} ${ret.showDbg}"
+
+private def showArrow(args: Iterator[InfType], ret: InfType, eff: Type)(using Scope, InfCtx, Raise): Str =
+  val params = args.map(_.show).mkString("(", ", ", ")")
+  val effect = if eff.toBasic === Bot then "" else s"{${eff.show}}"
+  s"$params ->$effect ${ret.show}"
+
+private enum TypePrecedence:
+  case Arrow, Union, Inter, Neg, Atom
 
 sealed abstract class Type extends InfType with TypeArg:
   lazy val lvl = toBasic match
@@ -86,27 +94,47 @@ sealed abstract class Type extends InfType with TypeArg:
     case Union(lhs, rhs) => lhs.lvl.max(rhs.lvl)
     case Inter(lhs, rhs) => lhs.lvl.max(rhs.lvl)
     case Neg(ty) => ty.lvl
-  def show(using Scope, InfCtx, Raise) = toBasic match
-    // Overload constraints can have an intersection or bottom as their domain.
-    // Only an argument tuple has positional fields suitable for arrow notation.
-    case ClassLikeType(sym = f, args = Wildcard(ClassLikeType(sym = aSym, refinement = r), Top) :: ret :: eff :: Nil)
-        if f === summon[InfCtx].prim.fnSym && aSym === summon[InfCtx].prim.arrSym =>
-      val a = s"(${r.values.map(_.show).mkString(", ")})"
-      if eff.posPart.toBasic === Bot then
-        s"$a -> ${ret.show}"
-      else
-        s"$a ->{${eff.show}} ${ret.show}"
-    case ClassLikeType(name, targs, refinement, _,_) =>
-      val cls = if targs.isEmpty then s"${name.nme}" else s"${name.nme}[${targs.map(_.show).mkString(", ")}]"
-      val r = refinement.map { case (l,t) => s"${l.name}: ${t.show}" }.mkString(", ")
-      cls ++ (if refinement.isEmpty then "" else s" & {$r}")
-    case v @ InfVar(lvl, sym, isSkolem) =>
-      val name = scope.lookup(v.sym).getOrElse(scope.allocateName(v.sym, v.sym.hint))
-      if isSkolem then name else s"'${name}"
-    case Union(lhs, rhs) => s"${lhs.paren} | ${rhs.paren}"
-    case Inter(lhs, rhs) => s"${lhs.paren} & ${rhs.paren}"
-    case Neg(ty) => s"¬${ty.paren}"
-    case _ => showDbg
+  def show(using Scope, InfCtx, Raise): Str =
+    val out = new StringBuilder
+    def append(t: Type, enclosing: TypePrecedence): Unit =
+      def group(prec: TypePrecedence)(write: => Unit): Unit =
+        val parens = prec.ordinal < enclosing.ordinal
+        if parens then out += '('
+        write
+        if parens then out += ')'
+      def infix(l: Type, op: Str, r: Type, prec: TypePrecedence): Unit = group(prec):
+        append(l, prec)
+        out ++= op
+        append(r, prec)
+      t.toBasic match
+        case Union(l, r) => infix(l, " | ", r, TypePrecedence.Union)
+        case Inter(l, r) => infix(l, " & ", r, TypePrecedence.Inter)
+        case Neg(n) =>
+          out += '¬'
+          append(n, TypePrecedence.Neg)
+        // Arrow notation expresses the input's lower bound and the result's and
+        // effect's upper bounds. Other intervals need explicit Function arguments.
+        case ClassLikeType(sym = f, refinement = Nil,
+            args = Wildcard(ClassLikeType(sym = a, args = Nil, refinement = fields), Top) ::
+              Wildcard(Bot, ret) :: Wildcard(Bot, eff) :: Nil)
+            if f === summon[InfCtx].prim.fnSym && a === summon[InfCtx].prim.arrSym &&
+              fields.iterator.zipWithIndex.forall((field, i) => field._1.name === i.toString) =>
+          group(TypePrecedence.Arrow):
+            out ++= showArrow(fields.iterator.map(_._2), ret, eff)
+        case ClassLikeType(sym = name, args = args, refinement = fields) =>
+          // A refinement prints as an intersection, including under negation.
+          group(if fields.isEmpty then TypePrecedence.Atom else TypePrecedence.Inter):
+            out ++= name.nme
+            if args.nonEmpty then out ++= args.iterator.map(_.show).mkString("[", ", ", "]")
+            if fields.nonEmpty then
+              out ++= fields.iterator.map((l, ty) => s"${l.name}: ${ty.show}").mkString(" & {", ", ", "}")
+        case v: InfVar =>
+          if !v.isSkolem then out += '\''
+          out ++= scope.lookup(v.sym).getOrElse(scope.allocateName(v.sym, v.sym.hint))
+        case Top => out += '⊤'
+        case Bot => out += '⊥'
+    append(this, TypePrecedence.Arrow)
+    out.result()
   def showDbg: Str = toBasic match
     case ClassLikeType(name, targs, refinement, _,_) =>
       val cls = if targs.isEmpty then s"${name.nme}" else s"${name.nme}[${targs.map(_.showDbg).mkString(", ")}]"
@@ -120,10 +148,6 @@ sealed abstract class Type extends InfType with TypeArg:
     case Neg(ty) => s"¬${ty.parenDbg}"
     case Top => "⊤"
     case Bot => "⊥"
-
-  protected[logicsub] def paren(using Scope, InfCtx, Raise): Str = toBasic match
-    case _: InfVar | _: ClassLikeType | _: Neg | Top | Bot => show
-    case _ => s"($show)"
 
   protected[logicsub] def parenDbg: Str = toBasic match
     case _: InfVar | _: ClassLikeType | _: Neg | Top | Bot => showDbg

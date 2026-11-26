@@ -37,15 +37,17 @@ test
 //│ >    x is Fls then fls⁰
 //│ >    y is Fls then fls⁰
 //│ = fun test
-//│ Type: ['x, 'y, 'reach, 'res] -> ('x, 'y) -> out 'res
+//│ Type: ['x, 'y, 'reach, 'res] -> ('x, 'y) -> 'res
 //│ Where:
-//│   'x <: Tru | Fls ∨ ('y <: Fls)
-//│   'x <: ¬Tru ∨ ('y <: Tru | Fls)
-//│   'x <: Tru | Fls ∨ ('y <: ¬Fls ∨ (⊤ <: 'reach))
-//│   'reach <: ⊥ ∨ (Fls <: 'res)
-//│   'x <: ¬Tru ∨ ('y <: ¬Fls ∨ (⊤ <: 'reach))
-//│   'x <: ¬Fls ∨ (Fls <: 'res)
-//│   'x <: ¬Tru ∨ ('y <: ¬Tru ∨ (Tru <: 'res))
+//│   'x <: Tru | Fls ∨
+//│       'y <: Fls
+//│       'y <: ¬Fls ∨ ⊤ <: 'reach
+//│   'x <: ¬Tru ∨
+//│       'y <: Tru | Fls
+//│       'y <: ¬Fls ∨ ⊤ <: 'reach
+//│       'y <: ¬Tru ∨ Tru <: 'res
+//│   'reach <: ⊥ ∨ Fls <: 'res
+//│   'x <: ¬Fls ∨ Fls <: 'res
 
 :expect Tru()
 test(tru, tru)
@@ -76,7 +78,7 @@ test("hi", fls)
 // Check the inferred function against each result promised by these guards.
 test as (((Tru, Tru) -> Tru) & ((Fls, Any) -> Fls) & ((Any, Fls) -> Fls))
 //│ = fun test
-//│ Type: ((Tru, Tru) -> out Tru & (Fls, ⊤) -> out Fls) & (⊤, Fls) -> out Fls
+//│ Type: ((Tru, Tru) -> Tru) & ((Fls, ⊤) -> Fls) & ((⊤, Fls) -> Fls)
 
 :e
 test(tru, fls) as Tru
@@ -95,7 +97,7 @@ test(true, false)
 //│ ╔══[COMPILATION ERROR] Type error in application
 //│ ║  l.+1: 	test(true, false)
 //│ ║        	^^^^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  ('x, 'y) -> out 'res  <:  (true, false) ->{out 'eff} out 'app
+//│ ╟── because: cannot constrain  ('x, 'y) -> 'res  <:  (true, false) ->{'eff} 'app
 //│ ╟── because: cannot constrain  Array & {0: true, 1: false}  <:  Array & {0: 'x, 1: 'y}
 //│ ╟── because: cannot constrain  false  <:  'y
 //│ ╙── because: cannot constrain  false  <:  Fls

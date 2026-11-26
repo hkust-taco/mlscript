@@ -83,7 +83,7 @@ fun test : ((A, Int, Any) -> Int) & ((B, Any, Str) -> Int)
 //│ Type: undefined
 
 test as (A | B, Int, Str) -> Int
-//│ Type: (A | B, Int, Str) ->{⊥} Int
+//│ Type: (A | B, Int, Str) -> Int
 
 
 
@@ -101,11 +101,11 @@ fun negImpl(x) = if x is
   Tru then fls
   Fls then tru
 negImpl
-//│ Type: ['x, 'res] -> ('x) -> out 'res
+//│ Type: ['x, 'res] -> ('x) -> 'res
 //│ Where:
 //│   'x <: Tru | Fls
-//│   'x <: ¬Fls ∨ (Tru <: 'res)
-//│   'x <: ¬Tru ∨ (Fls <: 'res)
+//│   'x <: ¬Fls ∨ Tru <: 'res
+//│   'x <: ¬Tru ∨ Fls <: 'res
 
 fun negate: (Tru -> Fls) & (Fls -> Tru)
 fun negate(x) = negImpl(x)
@@ -180,7 +180,7 @@ fun all3(xs) = foldLeft(xs, tru, both)
 //│ Type: undefined
 
 all3 as Nil -> Tru
-//│ Type: (Nil) ->{⊥} Tru
+//│ Type: (Nil) -> Tru
 
 // FIXME
 // all3 as Cons[Tru,Nil] -> Tru
@@ -206,10 +206,11 @@ fun headOption(x) = if x is
 //│ Type: undefined
 
 headOption
-//│ Type: ['x, 'A, 'res, 'A1] -> ('x) -> out 'res
+//│ Type: ['x, 'A, 'res, 'A1] -> ('x) -> 'res
 //│ Where:
 //│   'x <: Nil | Cons[?, ?]
-//│   'x <: ¬Cons[?, ?] ∨ (Some['A] <: 'res)
-//│   'x <: ¬Cons[?, ?] ∨ ('A1 <: 'A)
-//│   'x <: ¬Cons[?, ?] ∨ ('x & Cons[?, ?] <: Cons[out 'A1, ?])
-//│   'x <: ¬Nil ∨ (None <: 'res)
+//│   'x <: ¬Cons[?, ?] ∨
+//│       Some['A] <: 'res
+//│       'A1 <: 'A
+//│       'x & Cons[?, ?] <: Cons[out 'A1, ?]
+//│   'x <: ¬Nil ∨ None <: 'res

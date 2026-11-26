@@ -7,7 +7,7 @@
 //│ ╔══[COMPILATION ERROR] Type error in application
 //│ ║  l.+1: 	1(1)
 //│ ║        	^^^^
-//│ ╙── because: cannot constrain  1  <:  (1) ->{out 'eff} out 'app
+//│ ╙── because: cannot constrain  1  <:  (1) ->{'eff} 'app
 //│ Type: ⊥
 
 

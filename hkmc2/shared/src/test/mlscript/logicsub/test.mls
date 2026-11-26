@@ -9,7 +9,7 @@ f(1)
 //│ Type: 1
 
 f("a")
-//│ Type: ("c" | "B") | "a"
+//│ Type: "c" | "B" | "a"
 
 fun g: (Int -> Int) & (Str -> Str)
 //│ Type: undefined
@@ -44,9 +44,9 @@ idt(nsb)
 //│ ╔══[COMPILATION ERROR] Type error in application
 //│ ║  l.+1: 	idt(nsb)
 //│ ║        	^^^^^^^^
-//│ ╟── because: cannot constrain  (Str) -> out Str & (Int) -> out Int  <:  ((Int | Str) | Bool) ->{out 'eff} out 'app
-//│ ╟── because: cannot constrain  Array & {0: (Int | Str) | Bool}  <:  Array & {0: Str} | Array & {0: Int}
-//│ ╙── because: cannot constrain  (((Int & ¬Int) & ¬Str) | ((Str & ¬Int) & ¬Str)) | ((Bool & ¬Int) & ¬Str)  <:  ⊥
+//│ ╟── because: cannot constrain  ((Str) -> Str) & ((Int) -> Int)  <:  (Int | Str | Bool) ->{'eff} 'app
+//│ ╟── because: cannot constrain  Array & {0: Int | Str | Bool}  <:  Array & {0: Str} | Array & {0: Int}
+//│ ╙── because: cannot constrain  Int & ¬Int & ¬Str | Str & ¬Int & ¬Str | Bool & ¬Int & ¬Str  <:  ⊥
 //│ Type: Int | Str
 
 idt(1)
@@ -64,7 +64,7 @@ idt(ns)
 
 fun singletons: (1 & Int) | (Str & "s") | (false & Bool) | (true & Str)
 (x => x)(singletons)
-//│ Type: (false | "s") | 1
+//│ Type: false | "s" | 1
 
 (x => if x is
   Int then 1
@@ -78,7 +78,7 @@ fun singletons: (1 & Int) | (Str & "s") | (false & Bool) | (true & Str)
 //│ ╔══[COMPILATION ERROR] Type error in reference of type ‹not implemented› with expected type 'x
 //│ ║  l.+3: 	  Str then "")(nsb)
 //│ ║        	               ^^^
-//│ ╟── because: cannot constrain  (Int | Str) | Bool  <:  'x
+//│ ╟── because: cannot constrain  Int | Str | Bool  <:  'x
 //│ ╟── because: cannot constrain  Bool  <:  'x
 //│ ╟── because: cannot constrain  Bool  <:  Int | Str
 //│ ╙── because: cannot constrain  ⊤  <:  ⊥
