@@ -3115,7 +3115,7 @@ extends Importer:
               // * `fun f: C -> C` with `fun f(C) = ...`, `C` is the type. Its other names resolve where it is written.
               val (st, sigCtx) = td.annotatedResultType match
                 case S(st) => (S(st), newCtx)
-                case N => (if sigTypeParamsAgree then externalSig else N) match
+                case N => externalSig.filter(_ => sigTypeParamsAgree) match
                   case S(sig) =>
                     val typeParamBindings = tps.iterator.flatten.map(p => p.sym.name -> p.sym)
                     (sig.tree.annotatedResultType, sig.ctx.nest(OuterCtx.NonReturnContext(S(tsym))) ++ typeParamBindings)
