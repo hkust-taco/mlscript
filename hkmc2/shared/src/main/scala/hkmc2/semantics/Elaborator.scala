@@ -2745,6 +2745,21 @@ extends Importer:
               :: msg"definition's type parameters" -> own.toLoc
               :: Nil
           case _ => ()
+          // * Like a modifier, a symbolic name belongs on the signature, which declares how callers refer to the member.
+          // * `definedSymbols` registers the symbolic names of both sides, so differing ones would both resolve.
+          (sig.symbName, impl.symbName) match
+          case (S(R(sigName)), S(R(implName))) if sigName.name =/= implName.name => raise:
+            ErrorReport:
+              msg"The signature and the definition of '$name' must have the same symbolic name" -> N
+              :: msg"signature's symbolic name" -> sigName.toLoc
+              :: msg"definition's symbolic name" -> implName.toLoc
+              :: Nil
+          case (N, S(R(implName))) => raise:
+            WarningReport:
+              msg"This symbolic name belongs on the signature of '$name', not on its definition" -> implName.toLoc
+              :: msg"signature here" -> sig.toLoc
+              :: Nil
+          case _ => ()
         case _ => ()
     
     /** Whether `td` is a separate signature that its definition elaborates, or a declaration that the pre-pass rejects

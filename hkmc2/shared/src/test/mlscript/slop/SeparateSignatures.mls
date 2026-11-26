@@ -519,6 +519,57 @@ fun stagedDefinition: () -> Int
 staged fun stagedDefinition() = 1
 
 
+// The signature and the definition must have the same symbolic name, if both give one.
+:e
+fun (+++) plus: (Int, Int) -> Int
+fun (***) plus(a, b) = a + b
+//│ ╔══[COMPILATION ERROR] The signature and the definition of 'plus' must have the same symbolic name
+//│ ╟── signature's symbolic name
+//│ ║  l.+1: 	fun (+++) plus: (Int, Int) -> Int
+//│ ║        	     ^^^
+//│ ╟── definition's symbolic name
+//│ ║  l.+2: 	fun (***) plus(a, b) = a + b
+//│ ╙──      	     ^^^
+
+fun (+++) plusSignature: (Int, Int) -> Int
+fun plusSignature(a, b) = a + b
+1 +++ 2
+//│ = 3
+
+// Like a modifier, a symbolic name belongs on the signature: written only on the definition, it warns and still
+// applies, and repeating it there is silent.
+:w
+fun plusDefinition: (Int, Int) -> Int
+fun (***) plusDefinition(a, b) = a + b
+1 *** 2
+//│ ╔══[WARNING] This symbolic name belongs on the signature of 'plusDefinition', not on its definition
+//│ ║  l.+2: 	fun (***) plusDefinition(a, b) = a + b
+//│ ║        	     ^^^
+//│ ╟── signature here
+//│ ║  l.+1: 	fun plusDefinition: (Int, Int) -> Int
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = 3
+
+fun (<+>) plusBoth: (Int, Int) -> Int
+fun (<+>) plusBoth(a, b) = a + b
+1 <+> 2
+//│ = 3
+
+:w
+module Ops with
+  fun minus: (Int, Int) -> Int
+  fun (<->) minus(a, b) = a - b
+open Ops.{ <-> }
+3 <-> 1
+//│ ╔══[WARNING] This symbolic name belongs on the signature of 'minus', not on its definition
+//│ ║  l.+3: 	  fun (<->) minus(a, b) = a - b
+//│ ║        	       ^^^
+//│ ╟── signature here
+//│ ║  l.+2: 	  fun minus: (Int, Int) -> Int
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = 2
+
+
 // A second declaration is reported, and the member still gets its definition.
 :e
 fun twice: Int -> Int
