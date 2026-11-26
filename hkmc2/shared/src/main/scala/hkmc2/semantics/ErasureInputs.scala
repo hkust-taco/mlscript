@@ -172,17 +172,6 @@ private[hkmc2] final class ErasureInputs:
       root.defn.flatMap(observeDefinition(_, resolver)(using declaration)).foreach: representation =>
         resolver.listenInstanceViews(value)(representation.publish)
 
-  /** Arguments of direct calls to an override also contribute to its inherited parameter's representation.
-    * The base method's body only observes arguments of calls that can invoke it. */
-  private[semantics] def includeOverrideParameter(base: Param, overriding: VarSymbol, rest: Bool, resolver: NewResolver)
-      (using caller: ResolutionContext): Unit =
-    if !rest && resolver.parameterSignature(base).isEmpty then
-      given ResolutionContext = caller.withInstances(TypeSubstitution.empty)
-      for
-        baseInputs <- observeVariable(base.sym, resolver)
-        overridingInputs <- observeVariable(overriding, resolver)
-      do overridingInputs.subscribeToShapes(baseInputs.publish)
-
   // Includes property declarations synthesized by named-tuple resolution, which
   // have source expressions but are not separate nodes in the source syntax.
   def slots: Iterator[InputSlot] = values.keysIterator

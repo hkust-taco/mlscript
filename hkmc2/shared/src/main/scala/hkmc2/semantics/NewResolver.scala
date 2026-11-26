@@ -2389,7 +2389,6 @@ class NewResolver:
           case S(tpe) => exposeOmitted(tpe)
           case N =>
             val rest = base.params.exists(_.variadic.exists(_.param.sym is inherited.sym))
-            rctx.state.erasureInputs.includeOverrideParameter(inherited, target.sym, rest, this)
             def foreignArgument =
               InterfaceExposure.parameterInput(inherited, rest, inheritedExposure(base))(this)._2
             forwardInputs(inherited.sym, MemberSlot.Parameter(inherited), foreignArgument): value =>

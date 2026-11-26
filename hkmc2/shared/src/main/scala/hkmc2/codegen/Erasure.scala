@@ -21,6 +21,10 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
   private given Erasure = this
   private given reporter: Diagnostic.Reporter = new Diagnostic.Reporter(report)
 
+  private val declarations = new ErasureDeclarations(root)
+  private lazy val sourceDefinitions = declarations.statements.collect { case td: TermDefinition => td }.toList.distinctBy(_.tsym)
+  private lazy val overrideChecks = new OverrideChecks(sourceDefinitions)
+
   /** Whether erasure encountered errors, including ones diagnosed in inherited signatures.
     * Signatures are initialized even on failure for later diagnostics, but the program must not
     * be lowered with those recovery representations.
@@ -88,8 +92,18 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
     */
   private def observations(symbol: ErasureInputs.InputSlot): Iterator[TermShape | TermDefinition] =
     if !config.language.useNewResolution then Iterator.empty
-    else summon[State].newResolverState.erasureInputs.observations(symbol): td =>
-      !td.isErroneous && parameterError(td.params).isEmpty
+    else
+      val inputs = summon[State].newResolverState.erasureInputs
+      def values(slot: ErasureInputs.InputSlot) = inputs.observations(slot): td =>
+        !td.isErroneous && parameterError(td.params).isEmpty
+      symbol match
+        case base: VarSymbol if overrideChecks.overridingParameters.contains(base) =>
+          val seen = mutable.Set.empty[VarSymbol]
+          def arguments(p: VarSymbol): Iterator[TermShape | TermDefinition] =
+            if !seen.add(p) || !inputs.isPrepared(p) then Iterator.empty
+            else values(p) ++ overrideChecks.overridingParameters.getOrElse(p, Nil).iterator.flatMap(arguments)
+          arguments(base)
+        case _ => values(symbol)
 
   private def inferredType(symbol: ErasureInputs.InputSlot): Opt[ErasedValueType] =
     joined(observations(symbol).flatMap(valueType).toList)
@@ -280,7 +294,6 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
       case _ => N
 
   locally:
-    val declarations = new ErasureDeclarations(root)
     val statements = declarations.statements
     val parameters = declarations.parameters.values.toList
     val parentConstructions = mutable.Set.empty[Identity[Statement]]
@@ -400,10 +413,8 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
       else Iterator.empty
     // Observations can refer to earlier worksheet declarations. Reuse their initialized signatures
     // without reporting their override diagnostics again in this program.
-    val sourceDefinitions = statements.collect { case td: TermDefinition => td }.toList.distinctBy(_.tsym)
     val definitions = (sourceDefinitions ++ observed.collect {
       case sym: TermSymbol => sym.defn }.flatten).distinctBy(_.tsym)
-    val overrideChecks = new OverrideChecks(sourceDefinitions)
     overrideChecks.checkExposedSignatures()
     val inheritedParams = overrideChecks.inheritedParameters
     val parameterSymbols = parameters.iterator.map(_.sym).toSet
