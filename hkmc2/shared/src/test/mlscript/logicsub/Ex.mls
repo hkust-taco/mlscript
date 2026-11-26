@@ -120,7 +120,7 @@ fun foldLeft: [A,B] -> (Ls[A], B, (B, A) -> B) -> B
 
 class
   Nil()
-  Cons[A, B](val hd : A, val tl: B)
+  Cons[out A, out B](val hd : A, val tl: B)
 
 fun all2(x) = if x is
   Nil then tru
@@ -128,6 +128,12 @@ fun all2(x) = if x is
 
 let nil = new Nil()
 fun cons(x,y) = new Cons(x,y)
+
+nil
+//│ Type: Nil
+
+cons
+//│ Type: ['A, 'B] -> ('A, 'B) -> Cons['A, 'B]
 
 all2(nil)
 //│ Type: Tru
@@ -167,7 +173,7 @@ fun test(x) = all3(cons(tru, cons(x, nil)))
 
 class
   None()
-  Some[A](val x: A)
+  Some[out A](val x: A)
 
 let none = new None()
 
