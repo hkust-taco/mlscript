@@ -177,6 +177,33 @@ fun paramNamedLikeClass(D) = D
 paramNamedLikeClass(D())
 //│ = D()
 
+// Its names resolve where it is written, so an `open` between the two does not reach it.
+module Opened with
+  class Hidden(val y: Int)
+  class Shadow(val y: Int)
+
+:e
+fun openedLater: Hidden -> Int
+open Opened.{ Hidden }
+fun openedLater(h) = h.y
+//│ ╔══[COMPILATION ERROR] Name not found: Hidden
+//│ ║  l.+1: 	fun openedLater: Hidden -> Int
+//│ ╙──      	                 ^^^^^^
+//│ ╔══[COMPILATION ERROR] This selection of member 'y' has no resolved target
+//│ ║  l.+3: 	fun openedLater(h) = h.y
+//│ ╙──      	                     ^^^
+
+class Shadow(val x: Int)
+
+// The signature's `Shadow` is the outer class, which has `x`; the opened one has `y`.
+fun shadowed() =
+  fun h: Shadow -> Int
+  open Opened.{ Shadow }
+  fun h(s) = s.x
+  h
+shadowed()(Shadow(1))
+//│ = 1
+
 // A use between the signature and the definition calls the definition.
 fun usedBetween: Int -> Int
 val usedBetweenResult = usedBetween(1)
@@ -625,6 +652,21 @@ adopted(1)
 fun sameTypeParams[A]: A -> A
 fun sameTypeParams[A](x) = x
 sameTypeParams(1)
+//│ = 1
+
+// The signature sees the type parameter, not a value parameter of the same name.
+:el
+fun typeParamNamedLikeParam[A]: A -> A
+fun typeParamNamedLikeParam[A](A) = A
+typeParamNamedLikeParam(1)
+//│ Elab: { fun member:typeParamNamedLikeParam⁰[List(A⁰)](A¹): A⁰ -> A⁰ = A¹; member:typeParamNamedLikeParam⁰(1) }
+//│ = 1
+
+:el
+fun adoptedNamedLikeParam[A]: A -> A
+fun adoptedNamedLikeParam(A) = A
+adoptedNamedLikeParam(1)
+//│ Elab: { fun member:adoptedNamedLikeParam⁰[List(A²)](A³): A² -> A² = A³; member:adoptedNamedLikeParam⁰(1) }
 //│ = 1
 
 // After a type parameter mismatch, the signature is ignored, so its names cause no further errors.

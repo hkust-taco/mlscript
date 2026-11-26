@@ -2618,6 +2618,10 @@ extends Importer:
       ):
     
     val members = blk.definedSymbols.toMap
+    // * Each separate signature that `go` skips, by member: its statement's location and annotations, and the scope it
+    // * is written in. The definition, which comes later, elaborates the signature in that scope, so that an `open`
+    // * between the two does not change what the signature's names refer to.
+    val skippedSignatures = mutable.HashMap.empty[BlockMemberSymbol, (loc: Opt[Loc], annotationTrees: Ls[Tree], ctx: Ctx)]
     // A qualified annotation can need a preceding val's receiver before the
     // enclosing block finishes. Publish a member once all its overloads have
     // definitions; waiting for unrelated later statements needlessly hides that
@@ -2798,11 +2802,15 @@ extends Importer:
         (mkBlk(acc, N, hasResult, mutableRecord), ctx)
       // * Skipped with its annotations (see `elaboratedByDefn`): elaborating it here would give the member a
       // * second `TermDefinition`.
-      case PossiblyAnnotated(_, td: TermDef) :: sts if elaboratedByDefn(td) =>
+      case (stmt @ PossiblyAnnotated(annotationTrees, td: TermDef)) :: sts if elaboratedByDefn(td) =>
         // * Otherwise reported by the `TermDef` case.
         td.symbName match
         case S(L(d)) => raise(d)
         case _ => ()
+        td.name.foreach: id =>
+          members.get(id.name).foreach: sym =>
+            if sym.trmSeparateSigAndImpl.exists(_.sig is td) then
+              skippedSignatures(sym) = (loc = stmt.toLoc, annotationTrees = annotationTrees, ctx = ctx)
         reportUnusedAnnotations
         go(sts, Nil, acc)(N)
       // * Constructor blocks support no annotations: they are desugared into sibling classes
@@ -2977,22 +2985,21 @@ extends Importer:
         td.name match
           case R(id) =>
             val sym = members.getOrElse(id.name, die)
-            // * The separate signature this definition elaborates, with its statement's location and annotations, read
-            // * from the block because `definedSymbols` drops annotations.
+            // * The separate signature this definition elaborates, with its statement's location, annotations and
+            // * scope, as `go` recorded them when it skipped the signature.
             val externalSig = sym.trmSeparateSigAndImpl match
               case S((sig = sig, impl = impl)) if impl is td =>
-                val (sigLoc, sigAnnotationTrees) = blk.desugStmts.iterator.collectFirst:
-                  case stmt @ PossiblyAnnotated(anns, t) if t eq sig => (stmt.toLoc, anns)
-                .getOrElse(die)
-                S((sig, sigLoc, sigAnnotationTrees))
+                val skipped = skippedSignatures.getOrElse(sym, die)
+                S((tree = sig, loc = skipped.loc, annotationTrees = skipped.annotationTrees, ctx = skipped.ctx))
               case _ => N
             // * Merges the separate signature's annotations into the definition's; an annotation on the wrong side
             // * warns but still applies. The signature's come first, so that the definition's `@config` and `@dbg`
             // * override them: `Lowering` applies them in order.
             val defnAnnotations = externalSig match
               case N => annotations
-              case S((_, sigLoc, sigAnnotationTrees)) =>
-                val sigAnnotations = sigAnnotationTrees.flatMap(annot)
+              case S(sig) =>
+                val sigLoc = sig.loc
+                val sigAnnotations = sig.annotationTrees.flatMap(annot(_)(using sig.ctx))
                 def warn(annot: Annot, problem: Message, other: Message -> Opt[Loc]): Unit =
                   raise(WarningReport(problem -> annot.toLoc :: other :: Nil))
                 sigAnnotations.foreach: a =>
@@ -3054,8 +3061,8 @@ extends Importer:
             // * the pre-pass reports, the signature is ignored: its type parameter names would not resolve.
             val (typeParamTree, sigTypeParamsAgree) = (td.typeParams, externalSig) match
               case (own, N) => (own, true)
-              case (N, S((sig, _, _))) => (sig.typeParams, true)
-              case (S(own), S((sig, _, _))) => (S(own), sig.typeParams.exists(sameTypeParamNames(own, _)))
+              case (N, S(sig)) => (sig.tree.typeParams, true)
+              case (S(own), S(sig)) => (S(own), sig.tree.typeParams.exists(sameTypeParamNames(own, _)))
             val owner =
               // * Instance declarations are not meant to be exported as externally-available members,
               // * even when declared within some class or module.
@@ -3105,12 +3112,14 @@ extends Importer:
                 res
               
               // * Elaborate signature. A separate signature cannot see the definition's value parameters: in
-              // * `fun f: C -> C` with `fun f(C) = ...`, `C` is the type.
+              // * `fun f: C -> C` with `fun f(C) = ...`, `C` is the type. Its other names resolve where it is written.
               val (st, sigCtx) = td.annotatedResultType match
                 case S(st) => (S(st), newCtx)
-                case N =>
-                  val sig = if sigTypeParamsAgree then externalSig else N
-                  (sig.flatMap((sig, _, _) => sig.annotatedResultType), newCtx1)
+                case N => (if sigTypeParamsAgree then externalSig else N) match
+                  case S(sig) =>
+                    val typeParamBindings = tps.iterator.flatten.map(p => p.sym.name -> p.sym)
+                    (sig.tree.annotatedResultType, sig.ctx.nest(OuterCtx.NonReturnContext(S(tsym))) ++ typeParamBindings)
+                  case N => (N, newCtx1)
               val s = st.map:
                 // unwrap possible module modifier
                 // e.g, `fun f: module M`
