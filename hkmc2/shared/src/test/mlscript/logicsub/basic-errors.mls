@@ -1,0 +1,13 @@
+:.
+//│ Type: undefined
+
+
+:e
+1(1)
+//│ ╔══[COMPILATION ERROR] Type error in application
+//│ ║  l.+1: 	1(1)
+//│ ║        	^^^^
+//│ ╙── because: cannot constrain  1  <:  (1) ->{out 'eff} out 'app
+//│ Type: 'app
+
+

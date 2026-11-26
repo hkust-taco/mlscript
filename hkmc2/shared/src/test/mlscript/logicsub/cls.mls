@@ -1,0 +1,50 @@
+:.
+//│ Type: undefined
+
+
+class C()
+class D() extends C()
+//│ Type: undefined
+
+
+fun idc: (C -> C)
+//│ Type: undefined
+
+idc(new C())
+//│ Type: C
+
+:fixme
+idc(new D())
+//│ ╔══[COMPILATION ERROR] Type error in object instantiation of type D with expected type C
+//│ ║  l.+1: 	idc(new D())
+//│ ║        	    ^^^^^^^
+//│ ╙── because: cannot constrain  D  <:  C
+//│ Type: C
+
+
+fun idcs: (C -> C) & (Str -> Str)
+//│ Type: undefined
+
+idcs(new C())
+//│ Type: 'app
+//│ Where:
+//│   C <: 'app
+
+:fixme
+idcs(D())
+//│ ╔══[COMPILATION ERROR] Variable not found: D
+//│ ║  l.+1: 	idcs(D())
+//│ ╙──      	     ^
+//│ Type: 'app
+
+:fixme
+idcs(new D())
+//│ ╔══[COMPILATION ERROR] Type error in application
+//│ ║  l.+1: 	idcs(new D())
+//│ ║        	^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  (Str) -> out Str ∧ (C) -> out C  <:  (D) ->{out 'eff} out 'app
+//│ ╟── because: cannot constrain  Array & {0: D}  <:  Array & {0: Str} ∨ Array & {0: C}
+//│ ╙── because: cannot constrain  (D ∧ ¬C) ∧ ¬Str  <:  ⊥
+//│ Type: 'app
+
+
