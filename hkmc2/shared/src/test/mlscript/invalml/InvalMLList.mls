@@ -62,5 +62,32 @@ fun mapi = s =>
 //│ ╟── because: cannot constrain  'r  <:  E ∨ outer
 //│ ╙── because: cannot constrain  ¬outer  <:  E ∨ outer
 
+fun mapii = s =>
+  region r in
+    let i = r.ref 0
+    f => map(s) of x =>
+      i := !(i) + 1
+      f(!(i), x)
 
-
+:e
+region r in
+  let sum = r.ref 0
+  let s1 = mkList of !(sum)
+  let s2 = mapii(s1) of (x, i) => x * i
+  !(sum) + head(s2)
+//│ ╔══[COMPILATION ERROR] Type error in block
+//│ ║  l.+1: 	region r in
+//│ ║        	^^^^^^^^^^^
+//│ ║  l.+2: 	  let sum = r.ref 0
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+3: 	  let s1 = mkList of !(sum)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+4: 	  let s2 = mapii(s1) of (x, i) => x * i
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+5: 	... (more lines omitted) ...
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  'eff  <:  ⊥
+//│ ╟── because: cannot constrain  ¬'r  <:  ⊥
+//│ ╟── because: cannot constrain  ⊤  <:  'r
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
+//│ Type: Int

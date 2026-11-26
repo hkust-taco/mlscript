@@ -34,7 +34,7 @@ fun f(x) = f(x)
 f
 //│ Type: ⊤ -> ⊥
 
-:todo
+:fixme
 fun f(x) = f(x.a)
 //│ ╔══[COMPILATION ERROR] Term shape not yet supported by InvalML: Sel(Ref(x),Ident(a))
 //│ ║  l.+1: 	fun f(x) = f(x.a)

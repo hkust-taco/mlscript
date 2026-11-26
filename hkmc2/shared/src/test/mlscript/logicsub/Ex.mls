@@ -108,7 +108,13 @@ fun negImpl(x) = if x is
   Tru then fls
   Fls then tru
 negImpl
-//│ Type: [outer] -> ('x) ->{out 'eff} out 'res
+//│ Type: [outer, 'x, 'eff, 'res] -> ('x) ->{out 'eff} out 'res
+//│ Where:
+//│   'x <: Tru ∨ ('x ∧ ¬Tru <: Fls ∨ (⊤ <: ⊥))
+//│   'x <: Tru ∨ ('x ∧ ¬Tru <: ¬Fls ∨ (⊥ <: 'eff))
+//│   'x <: Tru ∨ ('x ∧ ¬Tru <: ¬Fls ∨ (Tru <: 'res))
+//│   'x <: ¬Tru ∨ (⊥ <: 'eff)
+//│   'x <: ¬Tru ∨ (Fls <: 'res)
 
 fun negate: (Tru -> Fls) & (Fls -> Tru)
 fun negate(x) = negImpl(x)
@@ -173,6 +179,7 @@ all2(cons(tru, cons(fls, nil)))
 //│ Type: 'app
 //│ Where:
 //│   Tru <: 'app
+//│   Fls <: 'app
 
 fun test: Tru -> Tru
 fun test(x) = all2(cons(tru, cons(x, nil)))
@@ -217,4 +224,12 @@ fun headOption(x) = if x is
 //│ Type: undefined
 
 headOption
-//│ Type: [outer] -> ('x) ->{out 'eff} out 'res
+//│ Type: [outer, 'x, 'eff, 'A, 'res, 'A1, 'A2, 'B, 'B1] -> ('x) ->{out 'eff} out 'res
+//│ Where:
+//│   'x <: Nil ∨ ('x ∧ ¬Nil <: Cons[?, ?] ∨ (⊤ <: ⊥))
+//│   'x <: Nil ∨ ('x ∧ ¬Nil <: ¬Cons[?, ?] ∨ (⊥ <: 'eff))
+//│   'x <: Nil ∨ ('x ∧ ¬Nil <: ¬Cons[?, ?] ∨ (Some['A] <: 'res))
+//│   'x <: Nil ∨ ('x ∧ ¬Nil <: ¬Cons[?, ?] ∨ ('A1 <: 'A))
+//│   'x <: Nil ∨ ('x ∧ ¬Nil <: ¬Cons[?, ?] ∨ (('x ∧ ¬Nil) ∧ Cons[?, ?] <: Cons[in 'A2 out 'A1, in 'B out 'B1]))
+//│   'x <: ¬Nil ∨ (⊥ <: 'eff)
+//│   'x <: ¬Nil ∨ (None <: 'res)

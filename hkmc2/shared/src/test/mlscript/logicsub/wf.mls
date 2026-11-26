@@ -1,0 +1,264 @@
+:.
+//│ Type: undefined
+
+
+// functions intersection requires disjoint parameters
+
+fun wf: (Int -> Int) & (Str -> Str)
+//│ Type: undefined
+
+// :fixme The checker accepts this ill-formed type.
+:breakme
+:e
+fun ill: (Int -> Int) & (Int -> Any)
+fun ill(x) = x
+//│ Type: undefined
+
+:fixme
+:e
+fun ill: (({a: Int}) -> Int) & (({b: Int}) -> Int)
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun ill: (({a: Int}) -> Int) & (({b: Int}) -> Int)
+//│ ╙──      	            ^^^^^^
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun ill: (({a: Int}) -> Int) & (({b: Int}) -> Int)
+//│ ╙──      	                                  ^^^^^^
+//│ Type: undefined
+
+// :fixme The checker accepts this ill-formed type.
+:breakme
+:e
+fun ill: [A] -> (A -> A) & (Int -> Int)
+//│ Type: undefined
+
+:fixme
+fun wf: {a: (Int -> Int) & (Str -> Str)}
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun wf: {a: (Int -> Int) & (Str -> Str)}
+//│ ╙──      	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ Type: undefined
+
+:fixme
+:e
+fun ill: {a: (Int -> Int) & (Int -> Any)}
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun ill: {a: (Int -> Int) & (Int -> Any)}
+//│ ╙──      	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ Type: undefined
+
+// intersection of the same function type may not always be simplified
+
+fun wf: (Int -> Int) & (Int -> Int)
+//│ Type: undefined
+
+// :fixme The checker accepts this ill-formed type.
+:breakme
+:e
+fun ill: (Int -> Int) & (Str -> Str) & (Int -> Int)
+//│ Type: undefined
+
+// same rules apply on negative position
+// :fixme The checker accepts this ill-formed type.
+:breakme
+:e
+fun ill: ((Int -> Int) & (Int -> Any)) -> Str
+//│ Type: undefined
+
+// similarly, records union requires pairwise disjointness
+
+:fixme
+fun wf: {a: Int} | {a: Str}
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun wf: {a: Int} | {a: Str}
+//│ ╙──      	         ^^^^^^
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun wf: {a: Int} | {a: Str}
+//│ ╙──      	                    ^^^^^^
+//│ Type: undefined
+
+:fixme
+:e
+fun ill: [A] -> (Int | Str, A) -> ({a: Int, b: A} | {a: Int, b: Str})
+fun ill(x, p) = if x is
+  Int then { a: x, b: p }
+  Str then { a: 0, b: x }
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun ill: [A] -> (Int | Str, A) -> ({a: Int, b: A} | {a: Int, b: Str})
+//│ ╙──      	                                    ^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun ill: [A] -> (Int | Str, A) -> ({a: Int, b: A} | {a: Int, b: Str})
+//│ ╙──      	                                                     ^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
+//│ ║  l.+3: 	  Int then { a: x, b: p }
+//│ ╙──      	             ^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
+//│ ║  l.+4: 	  Str then { a: 0, b: x }
+//│ ╙──      	             ^^^^^^^^^^
+//│ Type: undefined
+
+// it is not required that all records shares the same discriminant field
+
+:fixme
+fun wf: (({a: Int, b:Int}) -> Int) & (({b: Bool, c: Bool}) -> Bool) & (({a: Str, c: Str}) -> Str)
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun wf: (({a: Int, b:Int}) -> Int) & (({b: Bool, c: Bool}) -> Bool) & (({a: Str, c: Str}) -> Str)
+//│ ╙──      	           ^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun wf: (({a: Int, b:Int}) -> Int) & (({b: Bool, c: Bool}) -> Bool) & (({a: Str, c: Str}) -> Str)
+//│ ╙──      	                                        ^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun wf: (({a: Int, b:Int}) -> Int) & (({b: Bool, c: Bool}) -> Bool) & (({a: Str, c: Str}) -> Str)
+//│ ╙──      	                                                                         ^^^^^^^^^^^^^^
+//│ Type: undefined
+
+:fixme
+fun wf: (({tag: {a: Int, b:Int}}) -> Int) & (({tag: {b: Str, c: Bool}}) -> Bool) & (({tag: {a: Str, c: Str}}) -> Str)
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun wf: (({tag: {a: Int, b:Int}}) -> Int) & (({tag: {b: Str, c: Bool}}) -> Bool) & (({tag: {a: Str, c: Str}}) -> Str)
+//│ ╙──      	           ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun wf: (({tag: {a: Int, b:Int}}) -> Int) & (({tag: {b: Str, c: Bool}}) -> Bool) & (({tag: {a: Str, c: Str}}) -> Str)
+//│ ╙──      	                                               ^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun wf: (({tag: {a: Int, b:Int}}) -> Int) & (({tag: {b: Str, c: Bool}}) -> Bool) & (({tag: {a: Str, c: Str}}) -> Str)
+//│ ╙──      	                                                                                      ^^^^^^^^^^^^^^^^^^^^
+//│ Type: undefined
+
+// functions union merges
+
+:fixme
+fun wf: ((({a: Int}) -> Int) | (({b: Str}) -> Str)) & (({b: Int}) -> Int)
+fun wf(u) = u.b
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun wf: ((({a: Int}) -> Int) | (({b: Str}) -> Str)) & (({b: Int}) -> Int)
+//│ ╙──      	            ^^^^^^
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun wf: ((({a: Int}) -> Int) | (({b: Str}) -> Str)) & (({b: Int}) -> Int)
+//│ ╙──      	                                  ^^^^^^
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun wf: ((({a: Int}) -> Int) | (({b: Str}) -> Str)) & (({b: Int}) -> Int)
+//│ ╙──      	                                                         ^^^^^^
+//│ Type: undefined
+
+fun wf: (((Int | Bool) -> Int) | (Bool -> Bool)) & (Str -> Str)
+//│ Type: undefined
+
+wf("")
+//│ Type: 'app
+//│ Where:
+//│   Str <: 'app
+
+wf(true)
+//│ Type: 'app
+//│ Where:
+//│   Bool <: 'app
+//│   Int <: 'app
+
+:e
+wf(1)
+//│ ╔══[COMPILATION ERROR] Type error in application
+//│ ║  l.+1: 	wf(1)
+//│ ║        	^^^^^
+//│ ╟── because: cannot constrain  ((Str) -> out Str ∧ (Int ∨ Bool) -> out Int) ∨ ((Str) -> out Str ∧ (Bool) -> out Bool)  <:  (1) ->{out 'eff} out 'app
+//│ ╟── because: cannot constrain  Array & {0: 1}  <:  Array & {0: Str} ∨ Array & {0: Bool}
+//│ ╙── because: cannot constrain  (1 ∧ ¬Bool) ∧ ¬Str  <:  ⊥
+//│ Type: 'app
+//│ Where:
+//│   Int <: 'app
+
+// function negation and record negation are not wf
+
+// :fixme The checker accepts this ill-formed type.
+:breakme
+:e
+fun ill: ~(Int -> Int)
+//│ Type: undefined
+
+:fixme
+:e
+fun ill: ~{a: Int}
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun ill: ~{a: Int}
+//│ ╙──      	           ^^^^^^
+//│ Type: undefined
+
+:fixme
+:e
+fun ill: (({a: Int}) -> Int) & (~{a: Int} -> ~Int)
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun ill: (({a: Int}) -> Int) & (~{a: Int} -> ~Int)
+//│ ╙──      	            ^^^^^^
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun ill: (({a: Int}) -> Int) & (~{a: Int} -> ~Int)
+//│ ╙──      	                                  ^^^^^^
+//│ Type: undefined
+
+:fixme
+fun wf: (({a: Int}) -> Int) & (({a: ~Int}) -> ~Int)
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun wf: (({a: Int}) -> Int) & (({a: ~Int}) -> ~Int)
+//│ ╙──      	           ^^^^^^
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun wf: (({a: Int}) -> Int) & (({a: ~Int}) -> ~Int)
+//│ ╙──      	                                 ^^^^^^^
+//│ Type: undefined
+
+// class declaration has no wf check
+
+class F(val f: (Int -> Int) & (Int -> Any))
+//│ Type: undefined
+
+// wf check on use site
+
+// :fixme The checker accepts this ill-formed type.
+:breakme
+:e
+fun k(f)=f.F#f
+//│ Type: undefined
+
+// Class not disjoint with itself
+
+class Pair[A, B](val a: A, val b: B)
+class Tri[A, B, C](val a: A, val b: B, val c: C)
+//│ Type: undefined
+
+// :fixme The checker accepts this ill-formed type.
+:breakme
+:e
+fun ill: (Pair[Int, Int] -> Int) & (Pair[Str, Str] -> Str)
+//│ Type: undefined
+
+fun wf: [A] -> (Pair[A, Any] -> A) & (Tri[A, Any, Any] -> A)
+fun wf(x) = if x is
+  Pair then x.Pair#a
+  Tri then x.Tri#a
+//│ Type: undefined
+
+wf(new Pair(0, ""))
+//│ Type: 'app
+//│ Where:
+//│   0 <: 'app
+
+wf(new Tri(new Pair(0, ""), 0, ""))
+//│ Type: 'app
+//│ Where:
+//│   Pair['A, 'B] <: 'app
+//│   0 <: 'A
+//│   "" <: 'B
+
+class
+ Z()
+ S()
+//│ Type: undefined
+
+fun wf: ((Z, Z) -> Z) & ((Z, S) -> S) & ((S, Z | S) -> S)
+//│ Type: undefined
+
+fun zs: Z | S
+//│ Type: undefined
+
+wf(zs, zs)
+//│ Type: 'app
+//│ Where:
+//│   Z <: 'app
+//│   S <: 'app

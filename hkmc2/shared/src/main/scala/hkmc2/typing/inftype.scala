@@ -87,9 +87,10 @@ sealed abstract class Type extends InfType with TypeArg:
     case Inter(lhs, rhs) => lhs.lvl.max(rhs.lvl)
     case Neg(ty) => ty.lvl
   def show(using Scope, InfCtx, Raise) = toBasic match
-    case ClassLikeType(f, args, _,_,_) if f === summon[InfCtx].prim.fnSym =>
-      val fargs :: ret :: eff :: Nil = args.runtimeChecked
-      val ClassLikeType(_,_,r,_,_) = fargs.negPart.runtimeChecked
+    // Overload constraints can have an intersection or bottom as their domain.
+    // Only an argument tuple has positional fields suitable for arrow notation.
+    case ClassLikeType(sym = f, args = Wildcard(ClassLikeType(sym = aSym, refinement = r), Top) :: ret :: eff :: Nil)
+        if f === summon[InfCtx].prim.fnSym && aSym === summon[InfCtx].prim.arrSym =>
       val a = s"(${r.values.map(_.show).mkString(", ")})"
       if eff.posPart.toBasic === Bot then
         s"$a -> ${ret.show}"
@@ -136,7 +137,7 @@ sealed abstract class Type extends InfType with TypeArg:
     case ClassLikeType(s, args, refine,congr,_) =>
       val p = args.iterator.zip(congr).forall:
         case (t, true) => t.negPart === Bot && t.posPart.partialpattern
-        case (t, false) => t is Wildcard.empty
+        case (t, false) => t === Wildcard.empty
       p && refine.values.forall(_.partialpattern)
     case Union(x,y) => x.partialpattern && y.partialpattern
     case Inter(x,y) => x.partialpattern && y.partialpattern

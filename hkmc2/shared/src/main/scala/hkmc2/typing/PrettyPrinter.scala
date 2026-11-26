@@ -1,19 +1,28 @@
 package hkmc2
 package typing
 package logicsub
-import scala.collection.mutable.{Set => MutSet, ListBuffer}
-import semantics.*
+import scala.collection.mutable.LinkedHashSet
 import hkmc2.utils.*, shorthands.*
 
-class PrettyPrinter(output: String => Unit)(using Scope, InfCtx):
+class PrettyPrinter(output: String => Unit)(using printScope: Scope, ctx: InfCtx):
   def print(ty: InfType)(using Raise): Unit =
+    given names: Scope = printScope.nest
+    val bounds = LinkedHashSet.empty[SubOr]
+    object Collect extends BoundTraverser:
+      override def visitVariable(v: InfVar): Unit =
+        // Quantifiers print their bodies in a nested scope. Reserve each name
+        // here so that it denotes the same variable in the separate Where clause.
+        names.allocateOrGetName(v.sym, v.sym.hint)
+        super.visitVariable(v)
+      override def visitBound(c: SubOr): Unit =
+        if bounds.add(c) then super.visitBound(c)
+    Collect.visitType(ty)
     ty.show match
       case "()" =>
       case tyStr => output(s"Type: ${tyStr}")
-    val cs = PrettyPrinter.collectConstraints(ty).distinct
-    if cs.nonEmpty then
+    if bounds.nonEmpty then
       output("Where:")
-      cs.foreach(k => output(s"  ${PrettyPrinter.showConstraint(k)}"))
+      bounds.foreach(k => output(s"  ${PrettyPrinter.showConstraint(k)}"))
 
 object PrettyPrinter:
   def apply(output: String => Unit)(using Scope, InfCtx): PrettyPrinter = new PrettyPrinter(output)
@@ -24,25 +33,4 @@ object PrettyPrinter:
       case S(cs) =>
         val ds = cs.map(showConstraint).mkString(" ∧ ")
         s"$p ∨ ($ds)"
-  private def collectConstraints(ty: InfType)
-      (using infCtx: InfCtx, scope: Scope, raise: Raise)
-      (using cache: MutSet[InfVarSymbol] = MutSet.empty)
-      : List[SubOr] =
-    val res = ListBuffer[SubOr]()
-    object CollectConstraints extends TypeTraverser:
-      override def apply(pol: Boolean)(t: Type): Unit =
-        t.toBasic match
-          case v @ InfVar(_, sym, _) =>
-            if cache.add(sym) then
-              val varSt = infCtx.varSt.get(sym)
-              varSt.foreach: st =>
-                st.lowerBounds.foreach(lb => res += SubOr(lb, v))
-                st.upperBounds.foreach:
-                  case (ub, cs) => res += SubOr(v, ub, cs)
-          case _ => super.apply(pol)(t)
-    ty match
-      case t: Type => CollectConstraints(true)(t)
-      case PolyFunType(args, ret, eff) => (args ++ List(ret, eff)).flatMap(collectConstraints)
-      case PolyType(_, _, _, t) => collectConstraints(t)
-    res.toList
 

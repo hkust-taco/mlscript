@@ -5,7 +5,6 @@ package logicsub
 import scala.collection.mutable
 import syntax.*
 import semantics.*
-import Message.MessageContext
 import hkmc2.utils.*, shorthands.*
 import utils.*
 import utils.Scope
@@ -93,27 +92,27 @@ object ConstraintSolver:
         else cctx.err
       case Conj(k @ NF.Inter(x :: _), NF.Union(ys @ (_ :: _)), N,N,ws,zs) =>
         def h(y: ClassLikeType) =
-          def f(u: Ls[TypeArg], w: Ls[TypeArg], s: Ls[TypeArg], p:Ls[Bool])
-              : Ls[ClassLikeType] = (w,p) match
-            case (Nil, _) => Nil
-            case (t::ws, true::ps) =>
-              val a = u ++ (Wildcard.out(~t.posPart)::s)
-              y.copy(args = a) :: f(s.head::u, ws, s.tail, ps)
-            case (t::ws, false::ps) => f(s.head::u, ws, s.tail, ps)
-            case _ => ???
-          def g(u: Ls[(Tree.Ident, Type)]) =
-            val w = y.args.map(_ => Wildcard.empty)
-            y.refinement.map((a,t) => y.copy(args = w, refinement = (a,~t)::Nil))
-          f(Nil, y.args, y.args.map(_ => Wildcard.empty), y.congr) ++ g(y.refinement)
-        val (ps,t) = ys.partition(_.partialpattern)
+          val wildcards = y.args.map(_ => Wildcard.empty)
+          require(y.args.length === y.congr.length)
+          val args = y.args.iterator.zip(y.congr).zipWithIndex.collect:
+            case ((arg, true), i) =>
+              y.copy(args = wildcards.updated(i, Wildcard.out(~arg.posPart)), refinement = Nil)
+          val fields = y.refinement.iterator.map: (label, ty) =>
+            y.copy(args = wildcards, refinement = (label, ~ty) :: Nil)
+          (args ++ fields).toList
+        // A value with this tag cannot inhabit unrelated union alternatives.
+        // Keeping them can send the identical conjunction back into this rule.
+        val (ps,t) = ys.filter(y => ctx.asSubcls(x, y.sym).isDefined).partition(_.partialpattern)
         val xrs = x.refinement.keys.toSet
         val qs = ps.filter: p =>
-          ctx.asSubcls(x,p.sym).isDefined && p.refinement.keys.forall(xrs.contains)
+          p.refinement.keys.forall(xrs.contains)
         val ks = qs.foldLeft(Ls(k)): (ks, y) =>
           ks.flatMap(k => h(y).map(c => k.merge(NF.Inter(Ls(c))).get))
-        ks.foreach(k => constrainConj(Conj(k, NF.Union(t),N,N,ws,zs)))
+        if t.length === ys.length then cctx.err
+        else ks.foreach(k => constrainConj(Conj(k, NF.Union(t),N,N,ws,zs)))
       case _ =>
-        raise(ErrorReport(msg"Cannot solve ${conj.i.toString()} <: ⊥" -> N :: Nil))
+        // The caller may be trying this constraint as one alternative of a guard.
+        // Report the subtype error only after its fallbacks have failed.
         cctx.err
 
   // private class SkolemBoundsInliner(using ctx: KCtx) extends TypeMap:

@@ -15,7 +15,13 @@ fun f(x) = if x is
   Int then 0
   Bool then x
 f
-//│ Type: [outer] -> ('x) ->{out 'eff} out 'res
+//│ Type: [outer, 'x, 'eff, 'res] -> ('x) ->{out 'eff} out 'res
+//│ Where:
+//│   'x <: Int ∨ ('x ∧ ¬Int <: Bool ∨ (⊤ <: ⊥))
+//│   'x <: Int ∨ ('x ∧ ¬Int <: ¬Bool ∨ (⊥ <: 'eff))
+//│   'x <: Int ∨ ('x ∧ ¬Int <: ¬Bool ∨ (('x ∧ ¬Int) ∧ Bool <: 'res))
+//│   'x <: ¬Int ∨ (⊥ <: 'eff)
+//│   'x <: ¬Int ∨ (0 <: 'res)
 
 f(ib) as (Int | Bool)
 //│ Type: Int ∨ Bool
@@ -23,19 +29,28 @@ f(ib) as (Int | Bool)
 f(f(ib)) as (Int | Bool)
 //│ Type: Int ∨ Bool
 
-// FIXME
 f(f(ib))
 //│ Type: 'app
 //│ Where:
 //│   0 <: 'app
 //│   Bool ∧ ¬Int <: 'app
 
-// FIXME
-// :e
+:e
 f(si)
+//│ ╔══[COMPILATION ERROR] Type error in application
+//│ ║  l.+1: 	f(si)
+//│ ║        	^^^^^
+//│ ╟── because: cannot constrain  ('x) ->{out 'eff} out 'res  <:  (Str ∨ Int) ->{out 'eff1} out 'app
+//│ ╟── because: cannot constrain  Array & {0: Str ∨ Int}  <:  Array & {0: 'x}
+//│ ╟── because: cannot constrain  Str ∨ Int  <:  'x
+//│ ╟── because: cannot constrain  Str  <:  'x
+//│ ╟── because: cannot constrain  Str  <:  Int
+//│ ╟── because: cannot constrain  ¬Int ∧ 'x  <:  Bool
+//│ ╟── because: cannot constrain  'x  <:  Int ∨ Bool
+//│ ╟── because: cannot constrain  Str  <:  Int ∨ Bool
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ Type: 'app
 //│ Where:
-//│   Bool ∧ ¬Int <: 'app
 //│   0 <: 'app
 
 
@@ -68,36 +83,94 @@ f(1, sib)
 //│   "" <: 'app
 //│   1 <: 'app
 
-// FIXME
-// fun foorec(x, y, r) = if
-//   x is Int and y is Int then x + y
-//     x is Str then not(y)
-//     y is Str then r(y, x, r)
+fun foorec(x, y, r) = if
+  x is Int and y is Int then x + y
+  x is Str then neg(y)
+  y is Str then r(y, x, r)
+//│ Type: undefined
 
-// fun foo(x, y) = foorec(x, y, foorec)
+fun foo(x, y) = foorec(x, y, foorec)
+//│ Type: undefined
 
-// foo(true, "")
-// foo(1, 2)
-// foo as (Int, Int) -> Int
-// foo as (Str, Bool) -> Bool
-// (x => foo(x, true)) as Str -> Bool
-// (x => foo(x, "")) as Bool -> Bool
+foo(true, "")
+//│ Type: 'app
+//│ Where:
+//│   Bool <: 'app
 
-// :e
-// foo(1, "")
+foo(1, 2)
+//│ Type: 'app
+//│ Where:
+//│   Int <: 'app
+
+foo as (Int, Int) -> Int
+//│ Type: (Int, Int) ->{⊥} Int
+
+foo as (Str, Bool) -> Bool
+//│ Type: (Str, Bool) ->{⊥} Bool
+
+(x => foo(x, true)) as Str -> Bool
+//│ Type: (Str) ->{⊥} Bool
+
+(x => foo(x, "")) as Bool -> Bool
+//│ Type: (Bool) ->{⊥} Bool
+
+:e
+foo(1, "")
+//│ ╔══[COMPILATION ERROR] Type error in application
+//│ ║  l.+1: 	foo(1, "")
+//│ ║        	^^^^^^^^^^
+//│ ╟── because: cannot constrain  ('x, 'y) ->{out 'eff} out 'app  <:  (1, "") ->{out 'eff1} out 'app1
+//│ ╟── because: cannot constrain  Array & {0: 1, 1: ""}  <:  Array & {0: 'x, 1: 'y}
+//│ ╟── because: cannot constrain  ""  <:  'y
+//│ ╟── because: cannot constrain  ""  <:  'y1
+//│ ╟── because: cannot constrain  ""  <:  Int
+//│ ╟── because: cannot constrain  Int ∧ 'x1  <:  Str
+//│ ╟── because: cannot constrain  'x1  <:  ¬Int ∨ Str
+//│ ╟── because: cannot constrain  1  <:  ¬Int ∨ Str
+//│ ╟── because: cannot constrain  ¬Int ∧ 'y1  <:  ¬Str
+//│ ╟── because: cannot constrain  'y1  <:  ¬Str ∨ Int
+//│ ╟── because: cannot constrain  ""  <:  ¬Str ∨ Int
+//│ ╟── because: cannot constrain  'r  <:  (('y1 ∧ ¬Int) ∧ Str, ('x1 ∧ Int) ∧ ¬Str, 'r) ->{out 'eff2} out 'app2
+//│ ╟── because: cannot constrain  ('x2, 'y2, 'r1) ->{out 'eff3} out 'res  <:  (('y1 ∧ ¬Int) ∧ Str, ('x1 ∧ Int) ∧ ¬Str, 'r) ->{out 'eff2} out 'app2
+//│ ╟── because: cannot constrain  Array & {0: ('y1 ∧ ¬Int) ∧ Str, 1: ('x1 ∧ Int) ∧ ¬Str, 2: 'r}  <:  Array & {0: 'x2, 1: 'y2, 2: 'r1}
+//│ ╟── because: cannot constrain  (Int ∧ ¬Str) ∧ 'x1  <:  'y2
+//│ ╟── because: cannot constrain  'x1  <:  (¬Int ∨ Str) ∨ 'y2
+//│ ╟── because: cannot constrain  1  <:  (¬Int ∨ Str) ∨ 'y2
+//│ ╟── because: cannot constrain  1 ∧ ¬Str  <:  'y2
+//│ ╙── because: cannot constrain  1 ∧ ¬Str  <:  Bool
+//│ Type: 'app1
+//│ Where:
+//│   Bool <: 'app1
 
 fun increv(x) = if x is
   Int then x + 1
   else
     rev(x)
 increv
-//│ Type: [outer] -> ('x) ->{out 'eff} out 'res
+//│ Type: [outer, 'x, 'eff, 'res] -> ('x) ->{out 'eff} out 'res
+//│ Where:
+//│   'x <: Int ∨ (⊥ <: 'eff)
+//│   'x <: Int ∨ (Str <: 'res)
+//│   'x <: Int ∨ ('x ∧ ¬Int <: Str)
+//│   'x <: ¬Int ∨ (⊥ <: 'eff)
+//│   'x <: ¬Int ∨ (Int <: 'res)
+//│   'x <: ¬Int ∨ (1 <: Int)
+//│   'x <: ¬Int ∨ ('x ∧ Int <: Int)
 
 fun increv'(x) = if x is
   Int then x + 1
   Str then rev(x)
 increv'
-//│ Type: [outer] -> ('x) ->{out 'eff} out 'res
+//│ Type: [outer, 'x, 'eff, 'res] -> ('x) ->{out 'eff} out 'res
+//│ Where:
+//│   'x <: Int ∨ ('x ∧ ¬Int <: Str ∨ (⊤ <: ⊥))
+//│   'x <: Int ∨ ('x ∧ ¬Int <: ¬Str ∨ (⊥ <: 'eff))
+//│   'x <: Int ∨ ('x ∧ ¬Int <: ¬Str ∨ (Str <: 'res))
+//│   'x <: Int ∨ ('x ∧ ¬Int <: ¬Str ∨ (('x ∧ ¬Int) ∧ Str <: Str))
+//│   'x <: ¬Int ∨ (⊥ <: 'eff)
+//│   'x <: ¬Int ∨ (Int <: 'res)
+//│   'x <: ¬Int ∨ (1 <: Int)
+//│   'x <: ¬Int ∨ ('x ∧ Int <: Int)
 
 increv(si)
 //│ Type: 'app
@@ -105,7 +178,6 @@ increv(si)
 //│   Str <: 'app
 //│   Int <: 'app
 
-// The failing call leaves bounds on the inferred function in this worksheet.
 :e
 increv(sib)
 //│ ╔══[COMPILATION ERROR] Type error in application
@@ -121,11 +193,23 @@ increv(sib)
 //│   Str <: 'app
 //│   Int <: 'app
 
-// FIXME
-// :e
-// increv'(sib)
-
 increv'(si)
+//│ Type: 'app
+//│ Where:
+//│   Str <: 'app
+//│   Int <: 'app
+
+:e
+increv'(sib)
+//│ ╔══[COMPILATION ERROR] Type error in application
+//│ ║  l.+1: 	increv'(sib)
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  ('x) ->{out 'eff} out 'res  <:  ((Str ∨ Int) ∨ Bool) ->{out 'eff1} out 'app
+//│ ╟── because: cannot constrain  Array & {0: (Str ∨ Int) ∨ Bool}  <:  Array & {0: 'x}
+//│ ╟── because: cannot constrain  (Str ∨ Int) ∨ Bool  <:  'x
+//│ ╟── because: cannot constrain  Bool  <:  'x
+//│ ╟── because: cannot constrain  Bool  <:  Int ∨ Str
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ Type: 'app
 //│ Where:
 //│   Str <: 'app
@@ -136,11 +220,33 @@ fun f(x, y) = if
   x is Bool then y
 //│ Type: undefined
 
-// literal matching not yet implemented
+x => if x is
+  true then 0
+  false then 0
+//│ Type: ('x) ->{'eff} 'res
+//│ Where:
+//│   'x <: true ∨ ('x ∧ ¬true <: false ∨ (⊤ <: ⊥))
+//│   'x <: true ∨ ('x ∧ ¬true <: ¬false ∨ (⊥ <: 'eff))
+//│   'x <: true ∨ ('x ∧ ¬true <: ¬false ∨ (0 <: 'res))
+//│   'x <: ¬true ∨ (⊥ <: 'eff)
+//│   'x <: ¬true ∨ (0 <: 'res)
 
-// x => if x is
-//  true then 0
-//  false then 0
+// The solver does not recognize that the two singleton types cover Bool.
+:fixme
+(x => if x is
+  true then 0
+  false then 0) as Bool -> 0
+//│ ╔══[COMPILATION ERROR] Type error in `if` expression with expected type 0
+//│ ║  l.+1: 	(x => if x is
+//│ ║        	         ^^^^
+//│ ║  l.+2: 	  true then 0
+//│ ║        	^^^^^^^^^^^^^
+//│ ║  l.+3: 	  false then 0) as Bool -> 0
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  Bool  <:  true
+//│ ╟── because: cannot constrain  Bool ∧ ¬true  <:  false
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
+//│ Type: (Bool) ->{⊥} 0
 
 fun f(x) = if
   x is Int then x + 2
@@ -148,7 +254,18 @@ fun f(x) = if
   else
     neg(x)
 f
-//│ Type: [outer] -> ('x) ->{out 'eff} out 'res
+//│ Type: [outer, 'x, 'eff, 'res] -> ('x) ->{out 'eff} out 'res
+//│ Where:
+//│   'x <: Int ∨ ('x ∧ ¬Int <: Str ∨ (⊥ <: 'eff))
+//│   'x <: Int ∨ ('x ∧ ¬Int <: Str ∨ (Bool <: 'res))
+//│   'x <: Int ∨ ('x ∧ ¬Int <: Str ∨ (('x ∧ ¬Int) ∧ ¬Str <: Bool))
+//│   'x <: Int ∨ ('x ∧ ¬Int <: ¬Str ∨ (⊥ <: 'eff))
+//│   'x <: Int ∨ ('x ∧ ¬Int <: ¬Str ∨ (Str <: 'res))
+//│   'x <: Int ∨ ('x ∧ ¬Int <: ¬Str ∨ (('x ∧ ¬Int) ∧ Str <: Str))
+//│   'x <: ¬Int ∨ (⊥ <: 'eff)
+//│   'x <: ¬Int ∨ (Int <: 'res)
+//│   'x <: ¬Int ∨ (2 <: Int)
+//│   'x <: ¬Int ∨ ('x ∧ Int <: Int)
 
 fun x:Int
 x
@@ -159,7 +276,12 @@ f(x)
 //│ Where:
 //│   Int <: 'app
 
-// f(sib)
+f(sib)
+//│ Type: 'app
+//│ Where:
+//│   Str <: 'app
+//│   Int <: 'app
+//│   Bool <: 'app
 
 fun f(x, y) = if
   x is Int then y
@@ -168,7 +290,19 @@ fun f(x, y) = if
   else
     neg(x)
 f
-//│ Type: [outer] -> ('x, 'y) ->{out 'eff} out 'res
+//│ Type: [outer, 'x, 'y, 'eff, 'res] -> ('x, 'y) ->{out 'eff} out 'res
+//│ Where:
+//│   'x <: Int ∨ ('y <: Str ∨ ('x ∧ ¬Int <: Str ∨ (⊥ <: 'eff)))
+//│   'x <: Int ∨ ('y <: Str ∨ ('x ∧ ¬Int <: Str ∨ (Bool <: 'res)))
+//│   'x <: Int ∨ ('y <: Str ∨ ('x ∧ ¬Int <: Str ∨ (('x ∧ ¬Int) ∧ ¬Str <: Bool)))
+//│   'x <: Int ∨ ('y <: Str ∨ ('x ∧ ¬Int <: ¬Str ∨ (⊥ <: 'eff)))
+//│   'x <: Int ∨ ('y <: Str ∨ ('x ∧ ¬Int <: ¬Str ∨ (Int <: 'res)))
+//│   'x <: Int ∨ ('y <: Str ∨ ('x ∧ ¬Int <: ¬Str ∨ (1 <: Int)))
+//│   'x <: Int ∨ ('y <: Str ∨ ('x ∧ ¬Int <: ¬Str ∨ ('y ∧ ¬Str <: Int)))
+//│   'x <: Int ∨ ('y <: ¬Str ∨ (⊥ <: 'eff))
+//│   'x <: Int ∨ ('y <: ¬Str ∨ (1 <: 'res))
+//│   'x <: ¬Int ∨ (⊥ <: 'eff)
+//│   'x <: ¬Int ∨ ('y <: 'res)
 
 f(ib, sib)
 //│ Type: 'app
@@ -178,26 +312,48 @@ f(ib, sib)
 //│   Bool <: 'app
 //│   Int <: 'app
 
-// :ns
 f(ib, ib)
 //│ Type: 'app
 //│ Where:
 //│   Bool <: 'app
 //│   Int <: 'app
-//│   Str <: 'app
-//│   1 <: 'app
 
-// :todo
-// f(ib, ib)
+f(ib, ib) as (Int | Bool)
+//│ Type: Int ∨ Bool
 
 fun f(x, y) = if
   x is Int then 1
   y is Int then neg(x)
 f
-//│ Type: [outer] -> ('x, 'y) ->{out 'eff} out 'res
+//│ Type: [outer, 'x, 'y, 'eff, 'res] -> ('x, 'y) ->{out 'eff} out 'res
+//│ Where:
+//│   'x <: Int ∨ ('y <: Int ∨ (⊤ <: ⊥))
+//│   'x <: Int ∨ ('y <: ¬Int ∨ (⊥ <: 'eff))
+//│   'x <: Int ∨ ('y <: ¬Int ∨ (Bool <: 'res))
+//│   'x <: Int ∨ ('y <: ¬Int ∨ ('x ∧ ¬Int <: Bool))
+//│   'x <: ¬Int ∨ (⊥ <: 'eff)
+//│   'x <: ¬Int ∨ (1 <: 'res)
 
 f(ib, 1)
 //│ Type: 'app
 //│ Where:
 //│   1 <: 'app
 //│   Bool <: 'app
+
+// Instantiating the local function must preserve the type of its captured argument.
+fun capture(x) =
+  fun choose(y) = if y is Int then x else y
+  choose(1)
+//│ Type: undefined
+
+capture("s") as "s"
+//│ Type: "s"
+
+:e
+capture("s") as Int
+//│ ╔══[COMPILATION ERROR] Type error in application with expected type Int
+//│ ║  l.+1: 	capture("s") as Int
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  'app  <:  Int
+//│ ╙── because: cannot constrain  "s"  <:  Int
+//│ Type: Int

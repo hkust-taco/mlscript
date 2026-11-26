@@ -387,3 +387,5 @@ case class PolyFunType(args: Ls[GeneralType], ret: GeneralType, eff: Type) exten
 class VarState:
   var lowerBounds: Ls[Type] = Nil
   var upperBounds: Ls[Type] = Nil
+  // Bounds can refer back to their variable. Keep traces finite and independent of object identity.
+  override def toString = "<>"

@@ -1,0 +1,572 @@
+:.
+//│ Type: undefined
+
+declare fun concat: (Str, Str) -> Str
+declare fun (+): (Int, Int) -> Int
+declare fun (<): (Int, Int) -> Bool
+declare fun (==): (Int, Int) -> Bool
+//│ Type: undefined
+
+
+// On Type-Cases, Union Elimination, and Occurrence Typing
+// https://www.irif.fr/~gc/papers/popl22.pdf
+
+// Occurence typing uses type test to refine the type of the term
+
+fun f(x) = if x is
+  Int then x + 1  // x: Int
+  else x.a        // x: ~Int
+//│ Type: undefined
+
+// Union elimination rule and set-theoretic types can capture occurence typing
+// and the refinement can occur in any position
+// instead of only by type test
+
+fun f(x1, x2) = if
+  x1(x2) is Int then x2 + 1
+  else
+    concat(x1(x2), x2)
+//│ Type: undefined
+
+fun id: (Int -> Int) & (Str -> Str)
+//│ Type: undefined
+
+f(id, 1)
+//│ Type: 'app
+//│ Where:
+//│   Int <: 'app
+
+f(id, "")
+//│ Type: 'app
+//│ Where:
+//│   Str <: 'app
+
+fun strint: Int | Str
+//│ Type: undefined
+
+// Considering x2: Int | Str, the type is splitted to Int, and Str in two branches
+// thus type check the following expression
+
+:e
+f(id, strint)
+//│ ╔══[COMPILATION ERROR] Type error in application
+//│ ║  l.+1: 	f(id, strint)
+//│ ║        	^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  ('x1, 'x2) ->{out 'eff} out 'res  <:  ((Int) -> out Int ∧ (Str) -> out Str, Int ∨ Str) ->{out 'eff1} out 'app
+//│ ╟── because: cannot constrain  Array & {0: (Int) -> out Int ∧ (Str) -> out Str, 1: Int ∨ Str}  <:  Array & {0: 'x1, 1: 'x2}
+//│ ╟── because: cannot constrain  Int ∨ Str  <:  'x2
+//│ ╟── because: cannot constrain  Str  <:  'x2
+//│ ╙── because: cannot constrain  Str  <:  Int
+//│ ╔══[COMPILATION ERROR] Type error in application
+//│ ║  l.+1: 	f(id, strint)
+//│ ║        	^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  ('x1, 'x2) ->{out 'eff} out 'res  <:  ((Int) -> out Int ∧ (Str) -> out Str, Int ∨ Str) ->{out 'eff1} out 'app
+//│ ╟── because: cannot constrain  Array & {0: (Int) -> out Int ∧ (Str) -> out Str, 1: Int ∨ Str}  <:  Array & {0: 'x1, 1: 'x2}
+//│ ╟── because: cannot constrain  Int ∨ Str  <:  'x2
+//│ ╟── because: cannot constrain  Str  <:  'x2
+//│ ╟── because: cannot constrain  Str  <:  ¬Str
+//│ ╟── because: cannot constrain  (Str) -> out Str  <:  Function[in Array & {0: Str} ∧ Array & {0: 'x2}, out 'app1, out 'eff2]
+//│ ╟── because: cannot constrain  Str  <:  'app1
+//│ ╟── because: cannot constrain  Str  <:  Int
+//│ ╟── because: cannot constrain  'x2  <:  Str
+//│ ╙── because: cannot constrain  Int  <:  Str
+//│ Type: 'app
+//│ Where:
+//│   Int <: 'app
+//│   Str <: 'app
+
+// without union elimination rule, type test on x2 is required
+
+fun f(x1, x2) = if x2 is
+  Int then x2 + 1
+  else
+    concat(x1(x2), x2)
+//│ Type: undefined
+
+f(id, strint)
+//│ Type: 'app
+//│ Where:
+//│   Int <: 'app
+//│   Str <: 'app
+
+data class Prod[A, B](val fst: A, val snd: B)
+//│ Type: undefined
+
+class
+  Tru()
+  Fls()
+  Z()
+//│ Type: undefined
+
+let tru = new Tru()
+let fls = new Fls()
+fun prod(p, q) = new Prod(p, q)
+//│ Type: undefined
+
+// Maximal Sharing Canonical Forms is used in type checking
+
+fun y: Any -> (Tru | Fls)
+//│ Type: undefined
+
+:fixme
+:e
+{ fst: y(x => x), snd: y(x => x) } as ({ fst: Tru, snd: Tru } | { fst: Fls, snd: Fls })
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	{ fst: y(x => x), snd: y(x => x) } as ({ fst: Tru, snd: Tru } | { fst: Fls, snd: Fls })
+//│ ╙──      	                                         ^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	{ fst: y(x => x), snd: y(x => x) } as ({ fst: Tru, snd: Tru } | { fst: Fls, snd: Fls })
+//│ ╙──      	                                                                  ^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
+//│ ║  l.+1: 	{ fst: y(x => x), snd: y(x => x) } as ({ fst: Tru, snd: Tru } | { fst: Fls, snd: Fls })
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ Type: ⊥
+
+// The above expression is typed with the following MSC-forms
+
+:fixme
+{
+  let a1 = y
+  let a2 = x => x
+  let a3 = a1(a2)
+  let a4 = { fst: a3, snd: a3 }
+  a4
+}
+//│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
+//│ ║  l.+5: 	  let a4 = { fst: a3, snd: a3 }
+//│ ╙──      	             ^^^^^^^^^^^^^^^^
+//│ Type: ⊥
+
+// Again, type test on a3 is required
+
+:fixme
+{
+  let a1 = y
+  let a2 = x => x
+  let a3 = a1(a2)
+  let a4 = if a3 is Tru then { fst: a3, snd: a3 } else  { fst: a3, snd: a3 }
+  a4
+} as ({ fst: Tru, snd: Tru } | { fst: Fls, snd: Fls })
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+7: 	} as ({ fst: Tru, snd: Tru } | { fst: Fls, snd: Fls })
+//│ ╙──      	        ^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+7: 	} as ({ fst: Tru, snd: Tru } | { fst: Fls, snd: Fls })
+//│ ╙──      	                                 ^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
+//│ ║  l.+5: 	  let a4 = if a3 is Tru then { fst: a3, snd: a3 } else  { fst: a3, snd: a3 }
+//│ ╙──      	                               ^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
+//│ ║  l.+5: 	  let a4 = if a3 is Tru then { fst: a3, snd: a3 } else  { fst: a3, snd: a3 }
+//│ ╙──      	                                                          ^^^^^^^^^^^^^^^^
+//│ Type: ⊥
+
+
+// Since classes are merged in union, the following term type checks
+
+:fixme
+prod(y(x => x), y(x => x)) as (Prod[Tru, Tru] | Prod[Fls, Fls])
+//│ ╔══[COMPILATION ERROR] Type error in application with expected type Prod[Tru, Tru] ∨ Prod[Fls, Fls]
+//│ ║  l.+1: 	prod(y(x => x), y(x => x)) as (Prod[Tru, Tru] | Prod[Fls, Fls])
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  'app  <:  Prod[Tru, Tru] ∨ Prod[Fls, Fls]
+//│ ╟── because: cannot constrain  Prod[?, ?] ∧ 'app  <:  Prod[Tru, Tru]
+//│ ╟── because: cannot constrain  'app  <:  ¬Prod[?, ?] ∨ Prod[Tru, Tru]
+//│ ╟── because: cannot constrain  Prod['A, 'B]  <:  ¬Prod[?, ?] ∨ Prod[Tru, Tru]
+//│ ╟── because: cannot constrain  'A  <:  Tru
+//│ ╙── because: cannot constrain  Fls  <:  Tru
+//│ ╔══[COMPILATION ERROR] Type error in application with expected type Prod[Tru, Tru] ∨ Prod[Fls, Fls]
+//│ ║  l.+1: 	prod(y(x => x), y(x => x)) as (Prod[Tru, Tru] | Prod[Fls, Fls])
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  'app  <:  Prod[Tru, Tru] ∨ Prod[Fls, Fls]
+//│ ╟── because: cannot constrain  Prod[?, ?] ∧ 'app  <:  Prod[Fls, Fls]
+//│ ╟── because: cannot constrain  'app  <:  ¬Prod[?, ?] ∨ Prod[Fls, Fls]
+//│ ╟── because: cannot constrain  Prod['A, 'B]  <:  ¬Prod[?, ?] ∨ Prod[Fls, Fls]
+//│ ╟── because: cannot constrain  'A  <:  Fls
+//│ ╙── because: cannot constrain  Tru  <:  Fls
+//│ Type: Prod[Tru, Tru] ∨ Prod[Fls, Fls]
+
+prod(y(x => x), y(x => x))
+//│ Type: 'app
+//│ Where:
+//│   Prod['A, 'B] <: 'app
+//│   Fls <: 'A
+//│   Tru <: 'A
+//│   Fls <: 'B
+//│   Tru <: 'B
+
+
+fun a: (Int -> (Int | Bool)) | Prod[Int, Int | Bool]
+fun n: Int
+//│ Type: undefined
+
+// type test `a(n) is Int` does not refine a and n, and thus a(n)
+
+fun f(a, n) = if
+  a is Prod and
+    a.Prod#fst is Int and a.Prod#snd is Int then a.Prod#fst == a.Prod#snd
+    else a.Prod#snd
+  a(n) is Int then a(n) < 42
+  else a(n)
+//│ Type: undefined
+
+// while a(n) is Int, in the then branch, a(n) still has type Int | Bool
+
+:e
+f(a, n)
+//│ ╔══[COMPILATION ERROR] Type error in application
+//│ ║  l.+1: 	f(a, n)
+//│ ║        	^^^^^^^
+//│ ╟── because: cannot constrain  ('a, 'n) ->{out 'eff} out 'res  <:  ((Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], Int) ->{out 'eff1} out 'app
+//│ ╟── because: cannot constrain  Array & {0: (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], 1: Int}  <:  Array & {0: 'a, 1: 'n}
+//│ ╟── because: cannot constrain  (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool]  <:  'a
+//│ ╟── because: cannot constrain  (Int) -> out Int ∨ Bool  <:  'a
+//│ ╟── because: cannot constrain  (Int) -> out Int ∨ Bool  <:  Prod[?, ?]
+//│ ╟── because: cannot constrain  ⊤  <:  ⊥
+//│ ╟── because: cannot constrain  ¬Prod[?, ?] ∧ 'a  <:  ('n) ->{out 'eff2} out 'app1
+//│ ╟── because: cannot constrain  'a  <:  Prod[?, ?] ∨ ('n) ->{out 'eff2} out 'app1
+//│ ╟── because: cannot constrain  (Int) -> out Int ∨ Bool  <:  Prod[?, ?] ∨ ('n) ->{out 'eff2} out 'app1
+//│ ╟── because: cannot constrain  Int ∨ Bool  <:  'app1
+//│ ╟── because: cannot constrain  Int  <:  'app1
+//│ ╟── because: cannot constrain  Int  <:  ¬Int
+//│ ╟── because: cannot constrain  'app2  <:  Int
+//│ ╙── because: cannot constrain  Bool  <:  Int
+//│ Type: 'app
+//│ Where:
+//│   Bool <: 'app
+//│   Int <: 'app
+
+// the following rewrite refines x
+
+fun f(a, n) = if
+  a is Prod and
+    a.Prod#fst is Int and a.Prod#snd is Int then a.Prod#fst == a.Prod#snd
+    else a.Prod#snd
+  let x = a(n)
+  x is Int then x < 42
+  else x
+//│ Type: undefined
+
+:fixme
+f(a, n)
+//│ ╔══[COMPILATION ERROR] Type error in application
+//│ ║  l.+1: 	f(a, n)
+//│ ║        	^^^^^^^
+//│ ╟── because: cannot constrain  ('a, 'n) ->{out 'eff} out 'res  <:  ((Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], Int) ->{out 'eff1} out 'app
+//│ ╟── because: cannot constrain  Array & {0: (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], 1: Int}  <:  Array & {0: 'a, 1: 'n}
+//│ ╟── because: cannot constrain  (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool]  <:  'a
+//│ ╟── because: cannot constrain  Prod[Int, Int ∨ Bool]  <:  'a
+//│ ╟── because: cannot constrain  Prod[Int, Int ∨ Bool]  <:  ¬Prod[?, ?]
+//│ ╟── because: cannot constrain  Prod[?, ?] ∧ 'a  <:  Prod[in 'A out 'A1, in 'B out 'B1]
+//│ ╟── because: cannot constrain  'a  <:  ¬Prod[?, ?] ∨ Prod[in 'A out 'A1, in 'B out 'B1]
+//│ ╟── because: cannot constrain  Prod[Int, Int ∨ Bool]  <:  ¬Prod[?, ?] ∨ Prod[in 'A out 'A1, in 'B out 'B1]
+//│ ╟── because: cannot constrain  Int  <:  'A1
+//│ ╟── because: cannot constrain  Int  <:  ¬Int
+//│ ╟── because: cannot constrain  'B2  <:  ¬Int
+//│ ╟── because: cannot constrain  Int  <:  ¬Int
+//│ ╟── because: cannot constrain  'B3  <:  Int
+//│ ╙── because: cannot constrain  Bool  <:  Int
+//│ Type: 'app
+//│ Where:
+//│   Bool <: 'app
+//│   Bool ∧ ¬Int <: 'app
+//│   Int ∧ ¬Int <: 'app
+//│   Int <: 'app
+
+
+
+fun is_int(x) =
+  if x is Int then tru else fls
+//│ Type: undefined
+
+is_int as Int -> Tru
+//│ Type: (Int) ->{⊥} Tru
+
+is_int as ~Int -> Fls
+//│ Type: (¬Int) ->{⊥} Fls
+
+fun is_bool(x) = if x is
+  Tru then tru
+  Fls then tru
+  else fls
+//│ Type: undefined
+
+is_bool as (Tru | Fls) -> Tru
+//│ Type: (Tru ∨ Fls) ->{⊥} Tru
+
+is_bool as ~(Tru | Fls) -> Fls
+//│ Type: (¬Tru ∧ ¬Fls) ->{⊥} Fls
+
+// Originally, the paper defines False, empty string "" and zero 0 as Falsy
+// and ~Falsy as Truthy
+// Here Fls and Z are treated as falsy, and otherwise truthy
+
+fun not_(x) = if x is
+  Fls then tru
+  Z then tru
+  else fls
+//│ Type: undefined
+
+not_ as (Fls | Z) -> Tru
+//│ Type: (Fls ∨ Z) ->{⊥} Tru
+
+not_ as ~(Fls | Z) -> Fls
+//│ Type: (¬Fls ∧ ¬Z) ->{⊥} Fls
+
+fun to_bool(x) = x not_() not_()
+//│ Type: undefined
+
+to_bool as (Fls | Z) -> Fls
+//│ Type: (Fls ∨ Z) ->{⊥} Fls
+
+to_bool as ~(Fls | Z) -> Tru
+//│ Type: (¬Fls ∧ ¬Z) ->{⊥} Tru
+
+fun and_(x, y) = if x is
+  Fls then fls
+  Z then fls
+  else to_bool(y)
+//│ Type: undefined
+
+and_ as (Fls | Z, Any) -> Fls
+//│ Type: (Fls ∨ Z, ⊤) ->{⊥} Fls
+
+and_ as (~(Fls | Z), ~(Fls | Z)) -> Tru
+//│ Type: (¬Fls ∧ ¬Z, ¬Fls ∧ ¬Z) ->{⊥} Tru
+
+and_ as (~(Fls | Z), Fls | Z) -> Fls
+//│ Type: (¬Fls ∧ ¬Z, Fls ∨ Z) ->{⊥} Fls
+
+
+fun or_(x, y) = not_(x) and_(not_(y)) not_()
+//│ Type: undefined
+
+or_ as (~(Fls | Z), Any) -> Tru
+//│ Type: (¬Fls ∧ ¬Z, ⊤) ->{⊥} Tru
+
+or_ as (Fls | Z, ~(Fls | Z)) -> Tru
+//│ Type: (Fls ∨ Z, ¬Fls ∧ ¬Z) ->{⊥} Tru
+
+or_ as (Fls | Z, Fls | Z) -> Fls
+//│ Type: (Fls ∨ Z, Fls ∨ Z) ->{⊥} Fls
+
+fun strlen: Str -> Int
+fun plus: (Int | Z, Int | Z) -> (Int | Z)
+//│ Type: undefined
+
+fun example14(input, extra) = if
+  input is_int() and_(extra.fst is_int()) is Tru then input + extra.fst
+  extra.fst is_int() is Tru then input strlen() + extra.fst
+  else new Z()
+//│ Type: undefined
+
+:fixme
+example14 as (Int | Str, {fst: ~Int, snd: Any}) -> Z
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	example14 as (Int | Str, {fst: ~Int, snd: Any}) -> Z
+//│ ╙──      	                          ^^^^^^^^^^^^^^^^^^^
+//│ Type: (Int ∨ Str, ⊥) ->{⊥} Z
+
+:fixme
+example14 as (~(Int | Str), {fst: ~Int, snd: Any}) -> Z
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	example14 as (~(Int | Str), {fst: ~Int, snd: Any}) -> Z
+//│ ╙──      	                             ^^^^^^^^^^^^^^^^^^^
+//│ Type: (¬Int ∧ ¬Str, ⊥) ->{⊥} Z
+
+:fixme
+:e
+example14 as (Int | Str, {fst: Int, snd: Any}) -> Int
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	example14 as (Int | Str, {fst: Int, snd: Any}) -> Int
+//│ ╙──      	                          ^^^^^^^^^^^^^^^^^^
+//│ Type: (Int ∨ Str, ⊥) ->{⊥} Int
+
+// using direct type test instead of predicate functions
+
+fun example14_(input, extra) = if
+  input is Int and extra.fst is Int then input + extra.fst
+  extra.fst is Int then input strlen() + extra.fst
+  else new Z()
+//│ Type: undefined
+
+:fixme
+example14_ as (Int | Str, {fst: ~Int, snd: Any}) -> Z
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	example14_ as (Int | Str, {fst: ~Int, snd: Any}) -> Z
+//│ ╙──      	                           ^^^^^^^^^^^^^^^^^^^
+//│ Type: (Int ∨ Str, ⊥) ->{⊥} Z
+
+:fixme
+example14_ as (Int | Str, {fst: Int, snd: Any}) -> Int
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	example14_ as (Int | Str, {fst: Int, snd: Any}) -> Int
+//│ ╙──      	                           ^^^^^^^^^^^^^^^^^^
+//│ Type: (Int ∨ Str, ⊥) ->{⊥} Int
+
+:fixme
+example14_ as (~(Int | Str), {fst: ~Int, snd: Any}) -> Z
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	example14_ as (~(Int | Str), {fst: ~Int, snd: Any}) -> Z
+//│ ╙──      	                              ^^^^^^^^^^^^^^^^^^^
+//│ Type: (¬Int ∧ ¬Str, ⊥) ->{⊥} Z
+
+fun is_string: (Str -> Tru) & (~Str -> Fls)
+//│ Type: undefined
+
+// example6_wrong is ill typed
+
+:e
+fun example6_wrong(x: Int | Str, y: Any) = if
+  x is_int() and_(y is_string()) is Tru then x + strlen(y)
+  else strlen(x)
+//│ ╔══[COMPILATION ERROR] Type error in reference of type ‹not implemented› with expected type Int
+//│ ║  l.+2: 	  x is_int() and_(y is_string()) is Tru then x + strlen(y)
+//│ ║        	                                             ^
+//│ ╟── because: cannot constrain  'app  <:  ¬Tru
+//│ ╟── because: cannot constrain  Tru  <:  ¬Tru
+//│ ╙── because: cannot constrain  Int ∨ Str  <:  Int
+//│ ╔══[COMPILATION ERROR] Type error in reference of type Any with expected type Str
+//│ ║  l.+2: 	  x is_int() and_(y is_string()) is Tru then x + strlen(y)
+//│ ║        	                                                        ^
+//│ ╟── because: cannot constrain  'app  <:  ¬Tru
+//│ ╟── because: cannot constrain  Tru  <:  ¬Tru
+//│ ╙── because: cannot constrain  ⊤  <:  Str
+//│ ╔══[COMPILATION ERROR] Type error in reference of type ‹not implemented› with expected type Str
+//│ ║  l.+3: 	  else strlen(x)
+//│ ║        	              ^
+//│ ╟── because: cannot constrain  'app  <:  Tru
+//│ ╟── because: cannot constrain  Fls  <:  Tru
+//│ ╙── because: cannot constrain  Int ∨ Str  <:  Str
+//│ Type: undefined
+
+:e
+fun example6_wrong(x: Int | Str, y: Any) = if
+  x is Int and y is Str then x + strlen(y)
+  else strlen(x)
+//│ ╔══[COMPILATION ERROR] Type error in reference of type ‹not implemented› with expected type Str
+//│ ║  l.+3: 	  else strlen(x)
+//│ ║        	              ^
+//│ ╟── because: cannot constrain  Int ∨ Str  <:  ¬Int
+//│ ╟── because: cannot constrain  ⊤  <:  Str
+//│ ╙── because: cannot constrain  Int  <:  Str
+//│ Type: undefined
+
+fun example6_ok(x, y) = if
+  x is_int() and_(y is_string()) is Tru then x + strlen(y)
+  else strlen(x)
+//│ Type: undefined
+
+example6_ok as (Str, Any) -> Int
+//│ Type: (Str, ⊤) ->{⊥} Int
+
+example6_ok as (Int, Str) -> Int
+//│ Type: (Int, Str) ->{⊥} Int
+
+// the same as above
+
+:e
+fun detailed_ex(a: (Int -> (Int | Bool)) | Prod[Int, Int | Bool], n: Int) = if
+  a is Prod and a.Prod#fst is Int and a.Prod#snd is Int then a.Prod#fst == a.Prod#snd
+  a is Prod then a.Prod#snd
+  a(n) is Int then a(n) < 42
+  else a(n)
+//│ ╔══[COMPILATION ERROR] Type error in field selection with expected type Int
+//│ ║  l.+2: 	  a is Prod and a.Prod#fst is Int and a.Prod#snd is Int then a.Prod#fst == a.Prod#snd
+//│ ║        	                                                                           ^^^^^^^^^^
+//│ ╟── because: cannot constrain  (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool]  <:  ¬Prod[?, ?]
+//│ ╟── because: cannot constrain  'A  <:  ¬Int
+//│ ╟── because: cannot constrain  Int  <:  ¬Int
+//│ ╟── because: cannot constrain  'B  <:  ¬Int
+//│ ╟── because: cannot constrain  Int  <:  ¬Int
+//│ ╟── because: cannot constrain  'B1  <:  Int
+//│ ╙── because: cannot constrain  Bool  <:  Int
+//│ ╔══[COMPILATION ERROR] Type error in application with expected type Int
+//│ ║  l.+4: 	  a(n) is Int then a(n) < 42
+//│ ║        	                   ^^^^
+//│ ╟── because: cannot constrain  (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool]  <:  Prod[?, ?]
+//│ ╟── because: cannot constrain  ⊤  <:  ⊥
+//│ ╟── because: cannot constrain  ((Int) -> out Int ∨ Bool ∧ ¬Prod[?, ?]) ∨ (Prod[Int, Int ∨ Bool] ∧ ¬Prod[?, ?])  <:  Prod[?, ?]
+//│ ╟── because: cannot constrain  ⊤  <:  ⊥
+//│ ╟── because: cannot constrain  'app  <:  ¬Int
+//│ ╟── because: cannot constrain  Int  <:  ¬Int
+//│ ╟── because: cannot constrain  'app1  <:  Int
+//│ ╙── because: cannot constrain  Bool  <:  Int
+//│ Type: undefined
+
+:fixme
+fun detailed_ex(a: (Int -> (Int | Bool)) | Prod[Int, Int | Bool], n: Int) = if
+  a is Prod and a.Prod#fst is Int and a.Prod#snd is Int then a.Prod#fst == a.Prod#snd
+  a is Prod then a.Prod#snd
+  let x = a(n)
+  x is Int then x < 42
+  else x
+//│ ╔══[COMPILATION ERROR] Type error in field selection with expected type Int
+//│ ║  l.+2: 	  a is Prod and a.Prod#fst is Int and a.Prod#snd is Int then a.Prod#fst == a.Prod#snd
+//│ ║        	                                                                           ^^^^^^^^^^
+//│ ╟── because: cannot constrain  (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool]  <:  ¬Prod[?, ?]
+//│ ╟── because: cannot constrain  'A  <:  ¬Int
+//│ ╟── because: cannot constrain  Int  <:  ¬Int
+//│ ╟── because: cannot constrain  'B  <:  ¬Int
+//│ ╟── because: cannot constrain  Int  <:  ¬Int
+//│ ╟── because: cannot constrain  'B1  <:  Int
+//│ ╙── because: cannot constrain  Bool  <:  Int
+//│ Type: undefined
+
+:fixme
+detailed_ex as ((Int -> (Int | Bool)) | Prod[Int, Int | Bool], Int) -> (Int | Bool)
+//│ ╔══[COMPILATION ERROR] Type error in reference with expected type ((Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], Int) ->{⊥} Int ∨ Bool
+//│ ║  l.+1: 	detailed_ex as ((Int -> (Int | Bool)) | Prod[Int, Int | Bool], Int) -> (Int | Bool)
+//│ ║        	^^^^^^^^^^^
+//│ ╟── because: cannot constrain  ((Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], Int) ->{out 'eff} out 'res  <:  ((Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], Int) -> out Int ∨ Bool
+//│ ╟── because: cannot constrain  Array & {0: (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], 1: Int}  <:  Array & {0: (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], 1: Int}
+//│ ╟── because: cannot constrain  (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool]  <:  (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool]
+//│ ╙── because: cannot constrain  (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool]  <:  Function[?, ?, ?] ∨ Prod[?, ?]
+//│ Type: ((Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], Int) ->{⊥} Int ∨ Bool
+
+// TODO a.Prod#snd is not refined
+
+:fixme
+detailed_ex as ((Int -> (Int | Bool)) | Prod[Int, Int | Bool], Int) -> Bool
+//│ ╔══[COMPILATION ERROR] Type error in reference with expected type ((Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], Int) ->{⊥} Bool
+//│ ║  l.+1: 	detailed_ex as ((Int -> (Int | Bool)) | Prod[Int, Int | Bool], Int) -> Bool
+//│ ║        	^^^^^^^^^^^
+//│ ╟── because: cannot constrain  ((Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], Int) ->{out 'eff} out 'res  <:  ((Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], Int) -> out Bool
+//│ ╟── because: cannot constrain  Array & {0: (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], 1: Int}  <:  Array & {0: (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], 1: Int}
+//│ ╟── because: cannot constrain  (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool]  <:  (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool]
+//│ ╙── because: cannot constrain  (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool]  <:  Function[?, ?, ?] ∨ Prod[?, ?]
+//│ ╔══[COMPILATION ERROR] Type error in reference with expected type ((Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], Int) ->{⊥} Bool
+//│ ║  l.+1: 	detailed_ex as ((Int -> (Int | Bool)) | Prod[Int, Int | Bool], Int) -> Bool
+//│ ║        	^^^^^^^^^^^
+//│ ╟── because: cannot constrain  ((Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], Int) ->{out 'eff} out 'res  <:  ((Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], Int) -> out Bool
+//│ ╟── because: cannot constrain  'res  <:  Bool
+//│ ╙── because: cannot constrain  Int  <:  Bool
+//│ Type: ((Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool], Int) ->{⊥} Bool
+
+a
+//│ Type: (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool]
+
+:fixme
+if a is
+  Prod then true
+  else a(1)
+//│ ╔══[COMPILATION ERROR] Type error in application
+//│ ║  l.+3: 	  else a(1)
+//│ ║        	       ^^^^
+//│ ╟── because: cannot constrain  (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool]  <:  Prod[?, ?]
+//│ ╟── because: cannot constrain  ⊤  <:  ⊥
+//│ ╙── because: cannot constrain  (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool]  <:  (1) ->{out 'eff} out 'app
+//│ Type: 'res
+//│ Where:
+//│   Int <: 'res
+//│   Bool <: 'res
+//│   true <: 'res
+
+(x => if x is
+  Prod then true
+  else x(1)) of a
+//│ Type: 'res
+//│ Where:
+//│   true <: 'res
+//│   Bool <: 'res
+//│   Int <: 'res

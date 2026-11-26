@@ -36,9 +36,9 @@ g(1)
 fun neg: (true -> false) & (false -> true)
 //│ Type: undefined
 
-// TODO literal pattern
-// fun a: (false -> Int) & (true -> Str)
-// fun a(x) = if neg(x) then 1 else  ""
+fun a: (false -> Int) & (true -> Str)
+fun a(x) = if neg(x) then 1 else ""
+//│ Type: undefined
 
 fun ns: Int | Str
 //│ Type: undefined
@@ -49,9 +49,18 @@ fun nsb: Int | Str | Bool
 fun idt: (Int -> Int) & (Str -> Str)
 //│ Type: undefined
 
-// TODO fix the :e flag
-// :e
-// idt(nsb)
+:e
+idt(nsb)
+//│ ╔══[COMPILATION ERROR] Type error in application
+//│ ║  l.+1: 	idt(nsb)
+//│ ║        	^^^^^^^^
+//│ ╟── because: cannot constrain  (Str) -> out Str ∧ (Int) -> out Int  <:  ((Int ∨ Str) ∨ Bool) ->{out 'eff} out 'app
+//│ ╟── because: cannot constrain  Array & {0: (Int ∨ Str) ∨ Bool}  <:  Array & {0: Str} ∨ Array & {0: Int}
+//│ ╙── because: cannot constrain  (((Int ∧ ¬Int) ∧ ¬Str) ∨ ((Str ∧ ¬Int) ∧ ¬Str)) ∨ ((Bool ∧ ¬Int) ∧ ¬Str)  <:  ⊥
+//│ Type: 'app
+//│ Where:
+//│   Int <: 'app
+//│   Str <: 'app
 
 idt(1)
 //│ Type: 'app
@@ -91,11 +100,17 @@ fun singletons: (1 & Int) | (Str & "s") | (false & Bool) | (true & Str)
 //│   "" <: 'res
 //│   1 <: 'res
 
-// TODO implement exhaustiveness check
-// :e
+:e
 (x => if x is
   Int then 1
   Str then "")(nsb)
+//│ ╔══[COMPILATION ERROR] Type error in reference of type ‹not implemented› with expected type 'x
+//│ ║  l.+3: 	  Str then "")(nsb)
+//│ ║        	               ^^^
+//│ ╟── because: cannot constrain  (Int ∨ Str) ∨ Bool  <:  'x
+//│ ╟── because: cannot constrain  Bool  <:  'x
+//│ ╟── because: cannot constrain  Bool  <:  Int ∨ Str
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ Type: 'res
 //│ Where:
 //│   "" <: 'res

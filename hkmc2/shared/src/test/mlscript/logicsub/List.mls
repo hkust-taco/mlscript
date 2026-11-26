@@ -1,0 +1,169 @@
+:.
+//│ Type: undefined
+
+class
+  Nil()
+  Cons[A, Tl](val hd: A, val tl: Tl)
+//│ Type: undefined
+
+let nil = new Nil()
+//│ Type: undefined
+
+let cons(hd, tl) = new Cons(hd, tl)
+//│ Type: undefined
+
+cons(0, 0)
+//│ Type: Cons['A, 'Tl]
+//│ Where:
+//│   0 <: 'A
+//│   0 <: 'Tl
+
+cons
+//│ Type: ('hd, 'tl) ->{⊥} Cons['A, 'Tl]
+//│ Where:
+//│   0 <: 'hd
+//│   'hd <: 'A
+//│   0 <: 'A
+//│   0 <: 'tl
+//│   'tl <: 'Tl
+//│   0 <: 'Tl
+
+fun cons(hd, tl) = new Cons(hd, tl)
+//│ Type: undefined
+
+fun map(xs, f) =
+  if xs is
+    Nil then nil
+    Cons then new Cons(f(xs.Cons#hd), map(xs.Cons#tl, f))
+//│ Type: undefined
+
+nil map(x => x)
+//│ Type: 'app
+//│ Where:
+//│   Nil <: 'app
+
+let c = cons(1, nil)
+c map(x => x)
+//│ Type: 'app
+//│ Where:
+//│   Cons['A, 'Tl] <: 'app
+//│   1 <: 'A
+//│   Nil <: 'Tl
+//│   Cons['A, 'Tl] <: 'Tl
+//│   Nil <: 'app
+
+:e
+cons(1, 2) map(x => x)
+//│ ╔══[COMPILATION ERROR] Type error in application
+//│ ║  l.+1: 	cons(1, 2) map(x => x)
+//│ ║        	           ^^^^^^^^^^^
+//│ ╟── because: cannot constrain  ('xs, 'f) ->{out 'eff} out 'res  <:  ('app, ('x) -> out 'x) ->{out 'eff1} out 'app1
+//│ ╟── because: cannot constrain  Array & {0: 'app, 1: ('x) -> out 'x}  <:  Array & {0: 'xs, 1: 'f}
+//│ ╟── because: cannot constrain  'app  <:  'xs
+//│ ╟── because: cannot constrain  Cons['A, 'Tl]  <:  'xs
+//│ ╟── because: cannot constrain  Cons['A, 'Tl]  <:  Nil
+//│ ╟── because: cannot constrain  ¬Nil ∧ 'xs  <:  ¬Cons[?, ?]
+//│ ╟── because: cannot constrain  'xs  <:  ¬Cons[?, ?] ∨ Nil
+//│ ╟── because: cannot constrain  Cons['A, 'Tl]  <:  ¬Cons[?, ?] ∨ Nil
+//│ ╟── because: cannot constrain  (Cons[?, ?] ∧ ¬Nil) ∧ 'xs  <:  Cons[in 'A1 out 'A2, in 'Tl1 out 'Tl2]
+//│ ╟── because: cannot constrain  'xs  <:  (¬Cons[?, ?] ∨ Nil) ∨ Cons[in 'A1 out 'A2, in 'Tl1 out 'Tl2]
+//│ ╟── because: cannot constrain  Cons['A, 'Tl]  <:  (¬Cons[?, ?] ∨ Nil) ∨ Cons[in 'A1 out 'A2, in 'Tl1 out 'Tl2]
+//│ ╟── because: cannot constrain  'Tl  <:  'Tl2
+//│ ╟── because: cannot constrain  2  <:  'Tl2
+//│ ╟── because: cannot constrain  2  <:  'xs
+//│ ╟── because: cannot constrain  2  <:  Nil ∨ Cons[?, ?]
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
+//│ Type: 'app1
+//│ Where:
+//│   Cons['A3, 'Tl3] <: 'app1
+//│   1 <: 'A3
+//│   Cons['A3, 'Tl3] <: 'Tl3
+
+cons(1, cons("", nil)) map(x => cons(x, true))
+//│ Type: 'app
+//│ Where:
+//│   Cons['A, 'Tl1] <: 'app
+//│   Cons['A1, 'Tl] <: 'A
+//│   "" <: 'A1
+//│   1 <: 'A1
+//│   true <: 'Tl
+//│   Nil <: 'Tl1
+//│   Cons['A, 'Tl1] <: 'Tl1
+//│   Nil <: 'app
+
+
+fun maprec(xs, f, r) =
+  if xs is
+    Nil then nil
+    Cons then new Cons(f(xs.Cons#hd), r(xs.Cons#tl, f, r))
+fun map(xs, f) = maprec(xs, f, maprec)
+//│ Type: undefined
+
+
+nil map(x => x)
+//│ Type: 'app
+//│ Where:
+//│   Nil <: 'app
+
+let c = cons(1, nil)
+c map(x => x)
+//│ Type: 'app
+//│ Where:
+//│   Cons['A, 'Tl] <: 'app
+//│   1 <: 'A
+//│   Nil <: 'Tl
+
+:e
+cons(1, 2) map(x => x)
+//│ ╔══[COMPILATION ERROR] Type error in application
+//│ ║  l.+1: 	cons(1, 2) map(x => x)
+//│ ║        	           ^^^^^^^^^^^
+//│ ╟── because: cannot constrain  ('xs, 'f) ->{out 'eff} out 'app  <:  ('app1, ('x) -> out 'x) ->{out 'eff1} out 'app2
+//│ ╟── because: cannot constrain  Array & {0: 'app1, 1: ('x) -> out 'x}  <:  Array & {0: 'xs, 1: 'f}
+//│ ╟── because: cannot constrain  'app1  <:  'xs
+//│ ╟── because: cannot constrain  Cons['A, 'Tl]  <:  'xs
+//│ ╟── because: cannot constrain  Cons['A, 'Tl]  <:  'xs1
+//│ ╟── because: cannot constrain  Cons['A, 'Tl]  <:  Nil
+//│ ╟── because: cannot constrain  ¬Nil ∧ 'xs1  <:  ¬Cons[?, ?]
+//│ ╟── because: cannot constrain  'xs1  <:  ¬Cons[?, ?] ∨ Nil
+//│ ╟── because: cannot constrain  Cons['A, 'Tl]  <:  ¬Cons[?, ?] ∨ Nil
+//│ ╟── because: cannot constrain  (Cons[?, ?] ∧ ¬Nil) ∧ 'xs1  <:  Cons[in 'A1 out 'A2, in 'Tl1 out 'Tl2]
+//│ ╟── because: cannot constrain  'xs1  <:  (¬Cons[?, ?] ∨ Nil) ∨ Cons[in 'A1 out 'A2, in 'Tl1 out 'Tl2]
+//│ ╟── because: cannot constrain  Cons['A, 'Tl]  <:  (¬Cons[?, ?] ∨ Nil) ∨ Cons[in 'A1 out 'A2, in 'Tl1 out 'Tl2]
+//│ ╟── because: cannot constrain  'Tl  <:  'Tl2
+//│ ╟── because: cannot constrain  2  <:  'Tl2
+//│ ╟── because: cannot constrain  2  <:  'xs2
+//│ ╟── because: cannot constrain  2  <:  Nil
+//│ ╟── because: cannot constrain  ¬Nil ∧ 'xs2  <:  Cons[?, ?]
+//│ ╟── because: cannot constrain  'xs2  <:  Nil ∨ Cons[?, ?]
+//│ ╟── because: cannot constrain  2  <:  Nil ∨ Cons[?, ?]
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
+//│ Type: 'app2
+//│ Where:
+//│   Cons['A3, 'Tl3] <: 'app2
+//│   1 <: 'A3
+
+:fixme
+let c = cons(nil, nil)
+c map(x => x map(x => (a: x)))
+//│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
+//│ ║  l.+2: 	c map(x => x map(x => (a: x)))
+//│ ╙──      	                       ^^^^
+//│ Type: 'app
+//│ Where:
+//│   Cons['A, 'Tl] <: 'app
+//│   Nil <: 'A
+//│   Nil <: 'Tl
+
+:fixme
+let c = cons(cons(nil, nil), nil)
+c map(x => x map(x => (a: x)))
+//│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
+//│ ║  l.+2: 	c map(x => x map(x => (a: x)))
+//│ ╙──      	                       ^^^^
+//│ Type: 'app
+//│ Where:
+//│   Cons['A, 'Tl1] <: 'app
+//│   Cons['A1, 'Tl] <: 'A
+//│   Nil <: 'Tl
+//│   Nil <: 'Tl1

@@ -232,9 +232,20 @@ class Typer(using tl: TL)(using Elaborator.State, Raise, codegen.Erasure, Ctx, C
     // xbds.foreach(k => ctx.constrain(substMono(map)(k)))
     subst(map)(body)
 
-  private def generalize(ty: InfType, outer: Opt[InfVar], lvl: Int)(using ctx: InfCtx): PolyType =
-    // TODO
-    PolyType(Nil, outer, ctx.xbds.toList, ty)
+  /** Quantifies the function's inference variables at its definition level.
+    * Bounds and their fallbacks can mention variables absent from the function
+    * type; each instantiation needs fresh copies of those variables as well. */
+  private def generalize(ty: Type, outer: Opt[InfVar], lvl: Int)(using ctx: InfCtx): PolyType =
+    val vars = List.newBuilder[InfVar]
+    object Collect extends BoundTraverser:
+      override def visitVariable(v: InfVar): Unit =
+        if v.lvl === lvl && !v.isSkolem then
+          vars += v
+          super.visitVariable(v)
+    Collect.visitType(ty)
+    val bounds = ctx.xbds.toList
+    bounds.foreach(Collect.visitBound)
+    PolyType(vars.result(), outer, bounds, ty)
 
   private def app(lhs: InfType, lhsEff: Type, rhs: Ls[Elem], t: Term)
       (using ctx: InfCtx, cctx: CCtx, scope: Scope)
@@ -331,27 +342,45 @@ class Typer(using tl: TL)(using Elaborator.State, Raise, codegen.Erasure, Ctx, C
     case N => 
       (error(msg"Not a valid class: ${cls.describe}" -> cls.toLoc :: Nil), Bot)
 
-  private def typeSplitImpl(split: Split, sign: InfType, eff: Type)
+  private def typeSplitImpl(split: Split, fallthrough: Ls[Split], sign: InfType, eff: Type)
       (using ctx: InfCtx)(using CCtx, Scope): Unit = split match
-    case Split.Cons(Branch(s: SimpleRef, cp: FlatPattern.ClassLike, cons), alts) =>
-      val scrutinee = tryMkMono(typeCheck(s)._1, s)
-      val sym = cp.constructor.symbol.get.asCls.get
-      val params = sym.defn.get.tparams
-      val pattern = ClassLikeType(sym, params.map(_ => Wildcard.empty), Nil, params.map(_ => false), N)
-      typeSplitImpl(cons, sign, eff)(using ctx.matchBranch(s, scrutinee, pattern))
-      typeSplitImpl(alts, sign, eff)(using ctx.matchBranch(s, scrutinee, ~pattern))
-    case Split.Cons(Branch(_, p, _), _) =>
-      error(msg"Unsupported pattern" -> p.toLoc :: Nil)
+    case Split.Cons(Branch(s, pat, cons), alts) =>
+      val pattern = pat match
+        case cp: FlatPattern.ClassLike =>
+          val sym = cp.constructor.symbol.get.asCls.get
+          val params = sym.defn.get.tparams
+          S(ClassLikeType(sym, params.map(_ => Wildcard.empty), Nil, params.map(_ => false), N))
+        case FlatPattern.Lit(literal) => S(InfCtx.litTy(literal))
+        case _ => N
+      pattern match
+        case S(p) =>
+          val scrutinee = tryMkMono(typeCheck(s)._1, s)
+          val neg = ~p
+          // A repeated test can only take the arm consistent with the earlier
+          // refinement. Exploring both would duplicate the remaining arms at
+          // every repetition of a multi-scrutinee guard.
+          val known = scrutinee.conjuncts.find(t => t === p || t === neg)
+          // When a nested guard fails, matching resumes at the next enclosing arm
+          // with the refinements learned on the way to that failure.
+          if !known.contains(neg) then
+            val next = if alts === Split.End then fallthrough else alts :: fallthrough
+            typeSplitImpl(cons, next, sign, eff)(using ctx.matchBranch(s, scrutinee, p))
+          if !known.contains(p) then
+            typeSplitImpl(alts, fallthrough, sign, eff)(using ctx.matchBranch(s, scrutinee, neg))
+        case N => error(msg"Unsupported pattern" -> pat.toLoc :: Nil)
     case Split.Else(e) =>
       constrain(ascribe(e, sign)._2, eff)
     case Split.Let(name, term, tail) =>
       val nestCtx = ctx.nest
       nestCtx.givenIn:
-        val termTy = typeCheck(term)
+        val (termTy, termEff) = typeCheck(term)
         // val sk = freshSkolem(name)
-        nestCtx += name -> termTy._1
-        typeSplitImpl(tail, sign, eff)
-    case Split.End => //TODO
+        constrain(termEff, eff)
+        nestCtx += name -> termTy
+        typeSplitImpl(tail, fallthrough, sign, eff)
+    case Split.End => fallthrough match
+      case next :: rest => typeSplitImpl(next, rest, sign, eff)
+      case Nil => constrain(Top, Bot)
     case _ => ???
 
   private def typeSplit
@@ -359,7 +388,7 @@ class Typer(using tl: TL)(using Elaborator.State, Raise, codegen.Erasure, Ctx, C
       : (InfType, Type) =
     val res = sign.getOrElse(freshVar(new TempSymbol(N, N, "res")))
     val eff = freshVar(new TempSymbol(N, N, "eff"))
-    typeSplitImpl(split, res, eff)
+    typeSplitImpl(split, Nil, res, eff)
     (res, eff)
 
   def ascribe(lhs: Term, rhs: InfType)(using ctx: InfCtx, scope: Scope): (InfType, Type) = // TODO
@@ -501,4 +530,4 @@ class Typer(using tl: TL)(using Elaborator.State, Raise, codegen.Erasure, Ctx, C
         ascribe(term, res)
       case Term.Annotated(Annot.Untyped, _) => (Bot, Bot)
       case _ =>
-        (error(msg"Term shape not yet supported: ${t.toString}" -> t.toLoc :: Nil), Bot)
+        (error(msg"The logic-subtyping checker does not support this ${t.describe}." -> t.toLoc :: Nil), Bot)

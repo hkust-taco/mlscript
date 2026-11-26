@@ -1,0 +1,138 @@
+:.
+//│ Type: undefined
+:js
+
+
+
+// * Sec. 9 of A Practical Subtyping System For Erlang
+// * (https://homepages.inf.ed.ac.uk/wadler/papers/erlang/erlang.pdf)
+
+
+class
+  Tru()
+  Fls()
+//│ Type: undefined
+
+let
+  tru = new Tru()
+  fls = new Fls()
+//│ fls = Fls()
+//│ tru = Tru()
+//│ Type: undefined
+
+// :ucs desugared
+:ucs normalized
+fun test(x, y) = if
+  x is Tru and y is Tru then tru
+  x is Tru and y is Tru then tru
+  x is Tru and y is Tru then tru
+  x is Fls then fls
+  y is Fls then fls
+test
+//│ Normalized:
+//│ >  ‹if|while›
+//│ >    x is Tru and
+//│ >      y is Tru then tru⁰
+//│ >      y is Fls then fls⁰
+//│ >    x is Fls then fls⁰
+//│ >    y is Fls then fls⁰
+//│ = fun test
+//│ Type: [outer, 'x, 'y, 'eff, 'res] -> ('x, 'y) ->{out 'eff} out 'res
+//│ Where:
+//│   'x <: Tru ∨ ('x ∧ ¬Tru <: Tru ∨ (('x ∧ ¬Tru) ∧ ¬Tru <: Tru ∨ ((('x ∧ ¬Tru) ∧ ¬Tru) ∧ ¬Tru <: Fls ∨ ('y <: Fls ∨ (⊤ <: ⊥)))))
+//│   'x <: Tru ∨ ('x ∧ ¬Tru <: Tru ∨ (('x ∧ ¬Tru) ∧ ¬Tru <: Tru ∨ ((('x ∧ ¬Tru) ∧ ¬Tru) ∧ ¬Tru <: Fls ∨ ('y <: ¬Fls ∨ (⊥ <: 'eff)))))
+//│   'x <: Tru ∨ ('x ∧ ¬Tru <: Tru ∨ (('x ∧ ¬Tru) ∧ ¬Tru <: Tru ∨ ((('x ∧ ¬Tru) ∧ ¬Tru) ∧ ¬Tru <: Fls ∨ ('y <: ¬Fls ∨ (Fls <: 'res)))))
+//│   'x <: Tru ∨ ('x ∧ ¬Tru <: Tru ∨ (('x ∧ ¬Tru) ∧ ¬Tru <: Tru ∨ ((('x ∧ ¬Tru) ∧ ¬Tru) ∧ ¬Tru <: ¬Fls ∨ (⊥ <: 'eff))))
+//│   'x <: Tru ∨ ('x ∧ ¬Tru <: Tru ∨ (('x ∧ ¬Tru) ∧ ¬Tru <: Tru ∨ ((('x ∧ ¬Tru) ∧ ¬Tru) ∧ ¬Tru <: ¬Fls ∨ (Fls <: 'res))))
+//│   'x <: ¬Tru ∨ ('y <: Tru ∨ ('x ∧ Tru <: ¬Tru ∨ ('y ∧ ¬Tru <: Tru ∨ (('x ∧ Tru) ∧ Tru <: ¬Tru ∨ (('y ∧ ¬Tru) ∧ ¬Tru <: Tru ∨ ((('x ∧ Tru) ∧ Tru) ∧ Tru <: Fls ∨ ((('y ∧ ¬Tru) ∧ ¬Tru) ∧ ¬Tru <: Fls ∨ (⊤ <: ⊥))))))))
+//│   'x <: ¬Tru ∨ ('y <: Tru ∨ ('x ∧ Tru <: ¬Tru ∨ ('y ∧ ¬Tru <: Tru ∨ (('x ∧ Tru) ∧ Tru <: ¬Tru ∨ (('y ∧ ¬Tru) ∧ ¬Tru <: Tru ∨ ((('x ∧ Tru) ∧ Tru) ∧ Tru <: Fls ∨ ((('y ∧ ¬Tru) ∧ ¬Tru) ∧ ¬Tru <: ¬Fls ∨ (⊥ <: 'eff))))))))
+//│   'x <: ¬Tru ∨ ('y <: Tru ∨ ('x ∧ Tru <: ¬Tru ∨ ('y ∧ ¬Tru <: Tru ∨ (('x ∧ Tru) ∧ Tru <: ¬Tru ∨ (('y ∧ ¬Tru) ∧ ¬Tru <: Tru ∨ ((('x ∧ Tru) ∧ Tru) ∧ Tru <: Fls ∨ ((('y ∧ ¬Tru) ∧ ¬Tru) ∧ ¬Tru <: ¬Fls ∨ (Fls <: 'res))))))))
+//│   'x <: ¬Tru ∨ ('y <: Tru ∨ ('x ∧ Tru <: ¬Tru ∨ ('y ∧ ¬Tru <: Tru ∨ (('x ∧ Tru) ∧ Tru <: ¬Tru ∨ (('y ∧ ¬Tru) ∧ ¬Tru <: Tru ∨ ((('x ∧ Tru) ∧ Tru) ∧ Tru <: ¬Fls ∨ (⊥ <: 'eff)))))))
+//│   'x <: ¬Tru ∨ ('y <: Tru ∨ ('x ∧ Tru <: ¬Tru ∨ ('y ∧ ¬Tru <: Tru ∨ (('x ∧ Tru) ∧ Tru <: ¬Tru ∨ (('y ∧ ¬Tru) ∧ ¬Tru <: Tru ∨ ((('x ∧ Tru) ∧ Tru) ∧ Tru <: ¬Fls ∨ (Fls <: 'res)))))))
+//│   'x <: ¬Tru ∨ ('y <: ¬Tru ∨ (⊥ <: 'eff))
+//│   'x <: ¬Tru ∨ ('y <: ¬Tru ∨ (Tru <: 'res))
+
+:expect Tru()
+test(tru, tru)
+//│ = Tru()
+//│ Type: 'app
+//│ Where:
+//│   Tru <: 'app
+
+:expect Fls()
+test(tru, fls)
+//│ = Fls()
+//│ Type: 'app
+//│ Where:
+//│   Fls <: 'app
+
+:expect Fls()
+test(fls, tru)
+//│ = Fls()
+//│ Type: 'app
+//│ Where:
+//│   Fls <: 'app
+
+:expect Fls()
+test(fls, fls)
+//│ = Fls()
+//│ Type: 'app
+//│ Where:
+//│   Fls <: 'app
+
+:expect Fls()
+test("hi", fls)
+//│ = Fls()
+//│ Type: 'app
+//│ Where:
+//│   Fls <: 'app
+
+
+// Check the inferred function against each result promised by these guards.
+test as (((Tru, Tru) -> Tru) & ((Fls, Any) -> Fls) & ((Any, Fls) -> Fls))
+//│ = fun test
+//│ Type: ((Tru, Tru) -> out Tru ∧ (Fls, ⊤) -> out Fls) ∧ (⊤, Fls) -> out Fls
+
+:e
+test(tru, fls) as Tru
+//│ = Fls()
+//│ ╔══[COMPILATION ERROR] Type error in application with expected type Tru
+//│ ║  l.+1: 	test(tru, fls) as Tru
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  'app  <:  Tru
+//│ ╙── because: cannot constrain  Fls  <:  Tru
+//│ Type: Tru
+
+:re
+:e
+test(true, false)
+//│ ═══[RUNTIME ERROR] Error: match error
+//│ ╔══[COMPILATION ERROR] Type error in application
+//│ ║  l.+1: 	test(true, false)
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  ('x, 'y) ->{out 'eff} out 'res  <:  (true, false) ->{out 'eff1} out 'app
+//│ ╟── because: cannot constrain  Array & {0: true, 1: false}  <:  Array & {0: 'x, 1: 'y}
+//│ ╟── because: cannot constrain  false  <:  'y
+//│ ╟── because: cannot constrain  false  <:  Fls
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
+//│ Type: 'app
+
+
+// * Note: this version generates a large type
+
+fun test(x, y) = if
+  x is Tru and y is Tru then tru
+  x is Fls and y is Tru then fls
+  y is Fls then fls
+// test
+//│ Type: undefined
+
+// * Note: and this one even larger
+
+fun test(x, y) = if
+  x is Tru and y is Tru then tru
+  x is Fls and y is Tru then fls
+  y is Fls then fls
+  y is Fls then fls
+// test
+//│ Type: undefined
