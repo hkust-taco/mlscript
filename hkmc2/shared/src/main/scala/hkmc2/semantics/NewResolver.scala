@@ -45,7 +45,7 @@ class NewResolver:
   /** Whether assignments can replace the value of the field that `td` defines: a mutable field (`mut val`,
     * including a mutable constructor parameter) or a record field. A record field that is not mutable gets no
     * assigned value (see `resolveFieldWrite`), but its representation gets those assigned to its mutable copies
-    * (see `writeField`).
+    * (see codegen.Erasure.observations).
     */
   private[semantics] def isAssignableField(td: TermDefinition): Bool =
     (td.k is syntax.MutVal) || (td.k is syntax.RecordField)
@@ -4812,8 +4812,7 @@ class NewResolver:
     softAssert(field.defn.exists(isAssignableField), "Only assignable fields hold assigned values")
     value.enter(marks) match
       case value: TermShape =>
-        val assigned = MarkedShape.enter(value, ResolutionBoundary(field), N)
-        publishActivated(rctx.memberVariable(field), assigned)
+        publishActivated(rctx.memberVariable(field), MarkedShape.enter(value, ResolutionBoundary(field), N))
       case NoShape => ()
   
   /** Read the values assigned to `field` (see `writeField`) through a member lookup with the path `marks` at `site`:

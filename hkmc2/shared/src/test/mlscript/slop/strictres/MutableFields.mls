@@ -713,6 +713,24 @@ exportedMutableCopy.item.length
 //│ exportedMutableCopy = {item: "abc"}
 //│ privateImmutableSource = {item: "abc"}
 
+// Clients can only assign the exported copy. The private mutable copy that it copies keeps its known values.
+:expect 3
+private val privateBase = {item: "abc"}
+private val privateMutableCopy = mut {...privateBase}
+val exportedCopyOfCopy = mut {...privateMutableCopy}
+privateMutableCopy.item.length
+//│ = 3
+//│ exportedCopyOfCopy = {item: "abc"}
+//│ privateBase = {item: "abc"}
+//│ privateMutableCopy = {item: "abc"}
+
+// An immutable copy of a mutable copy has no field that clients can assign.
+:expect 3
+val exportedFrozenCopyOfCopy = {...mut {...privateBase}}
+exportedFrozenCopyOfCopy.item.length
+//│ = 3
+//│ exportedFrozenCopyOfCopy = {item: "abc"}
+
 
 // Two references to a stored record read and write the same field.
 :e

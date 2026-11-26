@@ -409,6 +409,37 @@ private fun sameMember() =
 sameMember()
 //│ = [2, 1]
 
+// Each spread has its own copies, including two spreads of the same record in one literal.
+:expect [0, 1]
+private fun spreadTwice() =
+  let declared = {mut count: 0}
+  let copied = mut {...declared, ...declared}
+  set copied.count = 1
+  [declared.count, copied.count]
+spreadTwice()
+//│ = [0, 1]
+
+// An assignment through a record type that makes the field mutable reaches the copy alone, like a direct one.
+:expect 1
+private fun replaceTyped(target: {mut item: {a: Int} | {b: Int}}) = set target.item = {b: 2}
+private fun typedCopy() =
+  let declared = {item: {a: 1}}
+  let copied = mut {...declared}
+  replaceTyped(copied)
+  declared.item.a
+typedCopy()
+//│ = 1
+
+// The record that a tuple packs its named fields into is copied like a record literal.
+:expect 1
+private fun copyNamedFields() =
+  let tuple = [item: {a: 1}, other: 2]
+  let copied = mut {...tuple.0}
+  set copied.item = {b: 3}
+  tuple.0.item.a
+copyNamedFields()
+//│ = 1
+
 // An assignment through a field that a record type does not make mutable is rejected as well: the records
 // that the type describes receive no input for that field.
 :ge

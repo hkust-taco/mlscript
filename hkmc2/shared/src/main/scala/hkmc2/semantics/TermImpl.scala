@@ -97,7 +97,10 @@ trait FldImpl:
 trait BlkImpl:
   this: Blk =>
   /** Named-tuple properties and writable spread copies created while resolving this block.
-    * Erasure uses these symbols to find the properties' declarations and the values written to copies. */
+    * Erasure uses these symbols to find the properties' declarations and the values written to copies.
+    * Only the root block of a compilation unit, or of a worksheet block, has such fields.
+    * `ResolvedValues.observeBlock` assigns them once, when resolution of the block finishes, and `CompilerCtx`
+    * carries them over to the block that adds the runtime imports. `SourceDeclarations` is their only reader. */
   private[hkmc2] var resolvedFields: Ls[RecordFieldSymbol] = Nil
   def mkBlkClone(using State, Erasure): Blk = Cloner(SymbolSubst.Id).block(this)
   def showTopLevel(using Scope, ShowCfg, Raise): Document =

@@ -590,9 +590,10 @@ class ClassCtorSymbol(
   * records that a record type describes. `mutable` tells whether the field can be assigned through such a record,
   * and `origin` how the record or the record type comes to have the field.
   *
-  * A spread copies a field without converting its value. The copy shares the original field's representation
-  * and contributes writes to its inference (see NewResolver.writeField). A field shared by intersected record
-  * types must satisfy every declaration, so its erasure is the intersection of their erasures.
+  * A spread copies a field without converting its value. The copy shares the original field's representation,
+  * which erasure infers from the values of the field and from those assigned to its copies (see
+  * codegen.Erasure.observations). A field shared by intersected record types must satisfy every declaration,
+  * so its erasure is the intersection of their erasures.
   */
 final class RecordFieldSymbol(id: Tree.Ident, val mutable: Bool, val origin: RecordFieldSymbol.Origin)(using State)
     extends TermSymbol(syntax.RecordField, N, id):

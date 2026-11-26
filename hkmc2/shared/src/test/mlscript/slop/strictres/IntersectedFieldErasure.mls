@@ -40,3 +40,25 @@ fun writtenField(r: {item: Parent & Child}): Child = r.item
 //│ define writtenField⁰ as fun writtenField¹(r: Unknown): Child⁰ { return r.item¹ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// A record type places no constraint on the representation, and the join of a union is refined by the other
+// component. Unrelated classes have no common instance, so their intersection has the bottom representation.
+:sir
+:siret
+class Other
+fun withRecord(value: Child & {tag: Int}) = value
+fun withUnion(value: (Parent | Other) & Child) = value
+fun unrelated(value: Parent & Other) = value
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define withRecord⁰ as fun withRecord¹(value: Child⁰): Child⁰ {
+//│   return value
+//│ };
+//│ define withUnion⁰ as fun withUnion¹(value: Child⁰): Child⁰ {
+//│   return value
+//│ };
+//│ define unrelated⁰ as fun unrelated¹(value: Nothing): Nothing {
+//│   return value
+//│ };
+//│ define Other⁰ as class Other¹;
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
