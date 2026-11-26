@@ -22,3 +22,21 @@ fun narrowFirst(r: Narrow & Wide): Child = r.item
 // function body must not require a conversion from either primitive to Str.
 fun disjoint(r: {item: Int32} & {item: Int64}): Str = r.item
 fun disjointReversed(r: {item: Int64} & {item: Int32}): Str = r.item
+
+// The parameter, the result inferred from returning it, and the written field type all erase to Child.
+:sir
+:siret
+type Both = Parent & Child
+fun annotated(value: Child & Parent): Both = value
+fun inferred(value: Both) = value
+fun writtenField(r: {item: Parent & Child}): Child = r.item
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define annotated⁰ as fun annotated¹(value: Child⁰): Child⁰ {
+//│   return value
+//│ };
+//│ define inferred⁰ as fun inferred¹(value: Child⁰): Child⁰ {
+//│   return value
+//│ };
+//│ define writtenField⁰ as fun writtenField¹(r: Unknown): Child⁰ { return r.item¹ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

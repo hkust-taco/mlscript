@@ -69,9 +69,8 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
       case Lit(syntax.Tree.UnitLit(true)) => S(ErasedType.Unknown)
     case _: CallableTypeShape => S(ErasedType.Function(S(false)))
     case tuple: TupleShape => S(if tuple.collection.isEmpty then ErasedType.Array else ErasedType.Unknown)
-    // An intersection describes one value through several interfaces, not alternative values.
-    // Keep the same conservative representation as an intersection in a declared signature.
-    case _: IntersectionView => S(ErasedType.Unknown)
+    case view: IntersectionView =>
+      S(ErasedType.Intersection(view.values.map(value => valueType(value).getOrElse(ErasedType.Nothing))))
     case _: (RecordShape | RecordTypeShape | DynShape | UnknownValueShape | OpaqueTypeShape | RigidTypeShape | ErrShape) =>
       S(ErasedType.Unknown)
     case _: InstanceShape =>
@@ -119,6 +118,7 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
           case _ => ErasedType.Unknown
         case Alias(_, rhs) :: Nil => rhs.fold(ErasedType.Unknown)(erase(_, next))
         case Union(left, right) :: Nil => ErasedType.union(erase(left, next), erase(right, next))
+        case Intersection(left, right) :: Nil => ErasedType.Intersection(erase(left, next) :: erase(right, next) :: Nil)
         case Reference(base, _, _, _) :: Nil => erase(base, next)
         case Applied(base, _) :: Nil => erase(base, next)
         case Function(_, _) :: Nil => ErasedType.Function(S(false))

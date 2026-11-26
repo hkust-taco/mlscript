@@ -97,14 +97,17 @@ object ErasedType:
       def flatten(tpe: ErasedValueType): Iterator[CanonicalErasedValueType] = tpe match
         case Intersection(parts) => parts.iterator.flatMap(flatten)
         case other => Iterator.single(other.canonicalize)
-      val types = members.iterator.flatMap(flatten).distinct.toList
+      // An erased source type can lose a constraint. In particular, Any and an unbounded type parameter
+      // both erase to Unknown on their own. Neither rules out the Int32 values of T & Int32.
+      // A known reference class, on the other hand, does rule out an unboxed primitive.
+      val types = members.iterator.flatMap(flatten).filterNot(_ == Unknown).distinct.toList
       types.collectFirst { case error: Incompatible => error }.getOrElse:
         // With single inheritance an inhabited intersection of known nominal types has a most specific member.
         types.filter(tpe => types.forall(needsCast(tpe, _).contains(false))) match
           case bound :: Nil => bound
           case Nil =>
             if types.exists(a => types.exists(b => needsCast(a, b).isEmpty)) then Nothing
-            else Unknown // Incomplete class headers can leave the subtype relation undecided.
+            else Unknown // No known bound, or incomplete class headers leave the subtype relation undecided.
           case equivalent =>
             // Casts ignore resource metadata. Preserve the common class when only this metadata differs.
             equivalent.collect { case AnyRef(_, sym) => sym }.distinct match
@@ -296,8 +299,8 @@ object ErasedType:
         l <- eraseSign(lhs)
         r <- eraseSign(rhs)
       yield ErasedType.union(l, r)
-    // Legacy signature erasure uses the default reference representation for a written intersection.
-    case CompType(_, _, false) => S(ErasedType.Unknown)
+    case CompType(lhs, rhs, false) =>
+      S(Intersection(eraseSign(lhs).getOrElse(Unknown) :: eraseSign(rhs).getOrElse(Unknown) :: Nil))
     case DynTy() => S(ErasedType.Unknown)
     case UnitVal() => S(ErasedType.Unit)
     // * A written arrow denotes a function value, and every function value is a `Function`.
@@ -403,7 +406,7 @@ sealed trait Canonicalizable:
     * reclassification both happen in [[CanonicalErasedValueType.apply]], and a signature canonicalizes its parameter
     * and return types.
     *
-    * Intersections are never decomposed and are erased to [[ErasedType.Unknown]].
+    * Intersections canonicalize their members together to find the representation shared by every component.
     *
     * Call [[canonicalize]] rather than this, so that the result is memoized.
     */
@@ -559,45 +562,25 @@ object CanonicalErasedValueType:
     * - `rsc` is true if this is a resource type.
     */
   def apply(rsc: Opt[Bool], tpeSym: TypeSymbol)(using Ctx, State): CanonicalErasedValueType =
-    /** Resolves through an arbitrary chain of type aliases to the type symbols the alias denotes.
-      *
-      * A union alias denotes each of its members, so the result is a list; every other resolvable alias denotes a
-      * single symbol. Type arguments are erased along the way, so `type Opt[A] = Some[A] | None` resolves to
-      * `Some :: None :: Nil`.
-      *
-      * If the chain is not defined (e.g. in `declare type ...`), is cyclic, or contains a member that is itself
-      * unresolvable, `sym` is returned unchanged.
-      */
-    def resolveTpeSymAlias: Ls[TypeSymbol] =
-      // * Resolves a single type symbol, or `N` if it is an alias that cannot be resolved.
-      def loop(cur: TypeSymbol, seen: Set[TypeSymbol]): Opt[Ls[TypeSymbol]] = cur match
-        case als: TypeAliasSymbol =>
-          if seen(als) then N
-          else als.defn.flatMap(_.rhs).flatMap(alternatives(_, seen + als))
-        case base => S(base :: Nil)
-      // * Resolves the alternatives denoted by the right-hand side of an alias, flattening nested unions.
-      // This list represents alternatives joined by lub below. An intersection is not a list of alternatives.
-      def alternatives(tpe: Term, seen: Set[TypeSymbol]): Opt[Ls[TypeSymbol]] = tpe match
-        case Term.CompType(lhs, rhs, true) =>
-          for
-            ls <- alternatives(lhs, seen)
-            rs <- alternatives(rhs, seen)
-          yield ls ::: rs
-        case _ => tpe.symbol.flatMap(_.asTpe).flatMap(loop(_, seen))
-      loop(tpeSym, Set.empty).getOrElse(tpeSym :: Nil)
-    
-    // * A union alias denotes each of its members, and erases to their LUB; every other symbol resolves to itself
-    // * or to a single alias target.
-    resolveTpeSymAlias.map(resolved(rsc, _)).reduceLeft((lhs, rhs) => ErasedType.lub(lhs, rhs))
-
-  /** Creates an instance from an already-resolved symbol. */
-  private def resolved(rsc: Opt[Bool], sym: TypeSymbol)(using Ctx, State): CanonicalErasedValueType = sym match
-    // * An unresolvable alias becomes the top type.
-    case _: TypeAliasSymbol => ErasedType.Unknown
-    case base =>
-      PrimitiveType.values.find(_.sym === base) match
-        case S(prim) => ErasedType.Primitive(prim)
-        case _ => ErasedType.AnyRef(rsc, base)
+    // Preserve unions and intersections through alias chains until canonicalization. Type arguments
+    // erase away. An abstract or cyclic alias supplies no known representation.
+    def resolve(sym: TypeSymbol, seen: Set[TypeAliasSymbol]): Opt[ErasedValueType] = sym match
+      case alias: TypeAliasSymbol =>
+        if seen(alias) then N else alias.defn.flatMap(_.rhs).flatMap(underlying(_, seen + alias))
+      case base => PrimitiveType.values.find(_.sym === base) match
+        case S(primitive) => S(ErasedType.Primitive(primitive))
+        case N => S(ErasedType.AnyRef(rsc, base))
+    def underlying(tpe: Term, seen: Set[TypeAliasSymbol]): Opt[ErasedValueType] = tpe match
+      case Term.CompType(lhs, rhs, true) =>
+        for
+          left <- underlying(lhs, seen)
+          right <- underlying(rhs, seen)
+        yield ErasedType.union(left, right)
+      case Term.CompType(lhs, rhs, false) =>
+        S(ErasedType.Intersection(underlying(lhs, seen).getOrElse(ErasedType.Unknown) ::
+          underlying(rhs, seen).getOrElse(ErasedType.Unknown) :: Nil))
+      case _ => tpe.symbol.flatMap(_.asTpe).flatMap(resolve(_, seen))
+    resolve(tpeSym, Set.empty).fold(ErasedType.Unknown)(_.canonicalize)
 
 end CanonicalErasedValueType
 
