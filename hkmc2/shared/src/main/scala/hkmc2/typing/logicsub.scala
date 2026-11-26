@@ -184,8 +184,7 @@ class Typer(using tl: TL)(using Elaborator.State, Raise, codegen.Erasure, Ctx, C
   private def substMono(map: Map[InfVarSymbol, InfVar])(x: Type): Type =
     Subst(map)(true)(x)
 
-  private def substMono(map: Map[InfVarSymbol, InfVar])(x: SubOr): SubOr = x match
-    case SubOr(x, y, cs) => SubOr(substMono(map)(x), substMono(map)(y), cs.map(_.map(substMono(map))))
+  private def substMono(map: Map[InfVarSymbol, InfVar])(x: SubOr): SubOr = Subst(map)(x)
 
   private def subst(map: Map[InfVarSymbol, InfVar])(x: InfType): InfType =
     x match
@@ -342,53 +341,56 @@ class Typer(using tl: TL)(using Elaborator.State, Raise, codegen.Erasure, Ctx, C
     case N => 
       (error(msg"Not a valid class: ${cls.describe}" -> cls.toLoc :: Nil), Bot)
 
-  private def typeSplitImpl(split: Split, fallthrough: Ls[Split], sign: InfType, eff: Type)
-      (using ctx: InfCtx)(using CCtx, Scope): Unit = split match
-    case Split.Cons(Branch(s, pat, cons), alts) =>
-      val pattern = pat match
-        case cp: FlatPattern.ClassLike =>
-          val sym = cp.constructor.symbol.get.asCls.get
-          val params = sym.defn.get.tparams
-          S(ClassLikeType(sym, params.map(_ => Wildcard.empty), Nil, params.map(_ => false), N))
-        case FlatPattern.Lit(literal) => S(InfCtx.litTy(literal))
-        case _ => N
-      pattern match
-        case S(p) =>
-          val scrutinee = tryMkMono(typeCheck(s)._1, s)
-          val neg = ~p
-          // A repeated test can only take the arm consistent with the earlier
-          // refinement. Exploring both would duplicate the remaining arms at
-          // every repetition of a multi-scrutinee guard.
-          val known = scrutinee.conjuncts.find(t => t === p || t === neg)
-          // When a nested guard fails, matching resumes at the next enclosing arm
-          // with the refinements learned on the way to that failure.
-          if !known.contains(neg) then
-            val next = if alts === Split.End then fallthrough else alts :: fallthrough
-            typeSplitImpl(cons, next, sign, eff)(using ctx.matchBranch(s, scrutinee, p))
-          if !known.contains(p) then
-            typeSplitImpl(alts, fallthrough, sign, eff)(using ctx.matchBranch(s, scrutinee, neg))
-        case N => error(msg"Unsupported pattern" -> pat.toLoc :: Nil)
-    case Split.Else(e) =>
-      constrain(ascribe(e, sign)._2, eff)
-    case Split.Let(name, term, tail) =>
-      val nestCtx = ctx.nest
-      nestCtx.givenIn:
-        val (termTy, termEff) = typeCheck(term)
-        // val sk = freshSkolem(name)
-        constrain(termEff, eff)
-        nestCtx += name -> termTy
-        typeSplitImpl(tail, fallthrough, sign, eff)
-    case Split.End => fallthrough match
-      case next :: rest => typeSplitImpl(next, rest, sign, eff)
-      case Nil => constrain(Top, Bot)
-    case _ => ???
-
   private def typeSplit
-      (split: Split, sign: Opt[InfType])(using InfCtx, CCtx, Scope)
+      (split: Split, sign: Opt[InfType])(using ctx: InfCtx, cc: CCtx, scope: Scope)
       : (InfType, Type) =
+    import MatchCtx.*
     val res = sign.getOrElse(freshVar(new TempSymbol(N, N, "res")))
     val eff = freshVar(new TempSymbol(N, N, "eff"))
-    typeSplitImpl(split, Nil, res, eff)
+    val matching = ctx.arm.fold(new SplitTyping)(_.split)
+    val incoming = ctx.arm.fold[MatchCtx](Always)(_.path)
+
+    // Return the condition for falling off this subtree, relative to its
+    // entry. The enclosing alternative receives both ways the branch can
+    // fail, even when the consequent contains more scrutinees or bindings.
+    def visit(split: Split, entry: MatchCtx)(using lexical: InfCtx): MatchCtx = split match
+      case Split.Cons(Branch(ref, pat, cons), alts) =>
+        val pattern = pat match
+          case cp: FlatPattern.ClassLike =>
+            val sym = cp.constructor.symbol.get.asCls.get
+            val params = sym.defn.get.tparams
+            S(ClassLikeType(sym, params.map(_ => Wildcard.empty), Nil, params.map(_ => false), N))
+          case FlatPattern.Lit(literal) => S(InfCtx.litTy(literal))
+          case _ => N
+        pattern match
+          case S(p) =>
+            val s = matching.subject(ref, matching.under(entry, lexical).givenIn:
+              tryMkMono(typeCheck(ref)._1, ref))
+            val hit = Test(s, p, true)
+            val miss = Test(s, p, false)
+            val residual = visit(cons, entry.and(hit))
+            // miss ∨ (hit ∧ residual) is equivalent to miss ∨ residual.
+            val next = miss.or(residual)
+            next.and(visit(alts, entry.and(next)))
+          case N =>
+            error(msg"Unsupported pattern" -> pat.toLoc :: Nil)
+            Never
+      case Split.Else(e) =>
+        matching.under(entry, lexical).givenIn:
+          constrain(ascribe(e, res)._2, eff)
+        Never
+      case Split.Let(name, term, tail) =>
+        val nested = matching.under(entry, lexical).nest
+        nested.givenIn:
+          val (termTy, termEff) = typeCheck(term)
+          constrain(termEff, eff)
+          nested += name -> termTy
+        visit(tail, entry)(using nested)
+      case Split.End => Always
+      case _ => ???
+
+    val uncovered = incoming.and(visit(split, incoming))
+    if uncovered != Never then matching.under(uncovered, ctx).constrain(SubOr(Top, Bot))
     (res, eff)
 
   def ascribe(lhs: Term, rhs: InfType)(using ctx: InfCtx, scope: Scope): (InfType, Type) = // TODO

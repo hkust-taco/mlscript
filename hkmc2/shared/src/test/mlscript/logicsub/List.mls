@@ -61,13 +61,10 @@ cons(1, 2) map(x => x)
 //│ ╟── because: cannot constrain  Array & {0: 'app, 1: ('x) -> out 'x}  <:  Array & {0: 'xs, 1: 'f}
 //│ ╟── because: cannot constrain  'app  <:  'xs
 //│ ╟── because: cannot constrain  Cons['A, 'Tl]  <:  'xs
-//│ ╟── because: cannot constrain  Cons['A, 'Tl]  <:  Nil
-//│ ╟── because: cannot constrain  ¬Nil ∧ 'xs  <:  ¬Cons[?, ?]
-//│ ╟── because: cannot constrain  'xs  <:  ¬Cons[?, ?] ∨ Nil
-//│ ╟── because: cannot constrain  Cons['A, 'Tl]  <:  ¬Cons[?, ?] ∨ Nil
-//│ ╟── because: cannot constrain  (Cons[?, ?] ∧ ¬Nil) ∧ 'xs  <:  Cons[in 'A1 out 'A2, in 'Tl1 out 'Tl2]
-//│ ╟── because: cannot constrain  'xs  <:  (¬Cons[?, ?] ∨ Nil) ∨ Cons[in 'A1 out 'A2, in 'Tl1 out 'Tl2]
-//│ ╟── because: cannot constrain  Cons['A, 'Tl]  <:  (¬Cons[?, ?] ∨ Nil) ∨ Cons[in 'A1 out 'A2, in 'Tl1 out 'Tl2]
+//│ ╟── because: cannot constrain  Cons['A, 'Tl]  <:  ¬Cons[?, ?]
+//│ ╟── because: cannot constrain  Cons[?, ?] ∧ 'xs  <:  Cons[in 'A1 out 'A2, in 'Tl1 out 'Tl2]
+//│ ╟── because: cannot constrain  'xs  <:  ¬Cons[?, ?] ∨ Cons[in 'A1 out 'A2, in 'Tl1 out 'Tl2]
+//│ ╟── because: cannot constrain  Cons['A, 'Tl]  <:  ¬Cons[?, ?] ∨ Cons[in 'A1 out 'A2, in 'Tl1 out 'Tl2]
 //│ ╟── because: cannot constrain  'Tl  <:  'Tl2
 //│ ╟── because: cannot constrain  2  <:  'Tl2
 //│ ╟── because: cannot constrain  2  <:  'xs
@@ -123,19 +120,13 @@ cons(1, 2) map(x => x)
 //│ ╟── because: cannot constrain  'app1  <:  'xs
 //│ ╟── because: cannot constrain  Cons['A, 'Tl]  <:  'xs
 //│ ╟── because: cannot constrain  Cons['A, 'Tl]  <:  'xs1
-//│ ╟── because: cannot constrain  Cons['A, 'Tl]  <:  Nil
-//│ ╟── because: cannot constrain  ¬Nil ∧ 'xs1  <:  ¬Cons[?, ?]
-//│ ╟── because: cannot constrain  'xs1  <:  ¬Cons[?, ?] ∨ Nil
-//│ ╟── because: cannot constrain  Cons['A, 'Tl]  <:  ¬Cons[?, ?] ∨ Nil
-//│ ╟── because: cannot constrain  (Cons[?, ?] ∧ ¬Nil) ∧ 'xs1  <:  Cons[in 'A1 out 'A2, in 'Tl1 out 'Tl2]
-//│ ╟── because: cannot constrain  'xs1  <:  (¬Cons[?, ?] ∨ Nil) ∨ Cons[in 'A1 out 'A2, in 'Tl1 out 'Tl2]
-//│ ╟── because: cannot constrain  Cons['A, 'Tl]  <:  (¬Cons[?, ?] ∨ Nil) ∨ Cons[in 'A1 out 'A2, in 'Tl1 out 'Tl2]
+//│ ╟── because: cannot constrain  Cons['A, 'Tl]  <:  ¬Cons[?, ?]
+//│ ╟── because: cannot constrain  Cons[?, ?] ∧ 'xs1  <:  Cons[in 'A1 out 'A2, in 'Tl1 out 'Tl2]
+//│ ╟── because: cannot constrain  'xs1  <:  ¬Cons[?, ?] ∨ Cons[in 'A1 out 'A2, in 'Tl1 out 'Tl2]
+//│ ╟── because: cannot constrain  Cons['A, 'Tl]  <:  ¬Cons[?, ?] ∨ Cons[in 'A1 out 'A2, in 'Tl1 out 'Tl2]
 //│ ╟── because: cannot constrain  'Tl  <:  'Tl2
 //│ ╟── because: cannot constrain  2  <:  'Tl2
 //│ ╟── because: cannot constrain  2  <:  'xs2
-//│ ╟── because: cannot constrain  2  <:  Nil
-//│ ╟── because: cannot constrain  ¬Nil ∧ 'xs2  <:  Cons[?, ?]
-//│ ╟── because: cannot constrain  'xs2  <:  Nil ∨ Cons[?, ?]
 //│ ╟── because: cannot constrain  2  <:  Nil ∨ Cons[?, ?]
 //│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ Type: 'app2

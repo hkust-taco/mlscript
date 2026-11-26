@@ -6,6 +6,13 @@ import hkmc2.utils.*, shorthands.*
 import semantics.InfVarSymbol
 
 class TypeTraverser:
+  /** Visits the operands of a bound and its fallbacks. A fallback belongs
+    * to the enclosing disjunction and carries no independent obligation. */
+  def apply(c: SubOr): Unit =
+    apply(true)(c.x)
+    apply(false)(c.y)
+    c.cs.foreach(_.foreach(apply))
+
   def apply(pol: Bool)(ty: Type): Unit = ty.toBasic match
     case Union(x, y) => 
       apply(pol)(x)
@@ -43,14 +50,7 @@ class BoundTraverser(using ctx: InfCtx) extends TypeTraverser:
       visitType(body)
       bounds.foreach(visitBound)
 
-  def visitBound(bound: SubOr): Unit =
-    // A fallback contributes variables to this bound, but is not an
-    // independently required constraint.
-    def operands(c: SubOr): Unit =
-      apply(true)(c.x)
-      apply(false)(c.y)
-      c.cs.foreach(_.foreach(operands))
-    operands(bound)
+  def visitBound(bound: SubOr): Unit = apply(bound)
 
   protected def visitVariable(v: InfVar): Unit =
     ctx.varSt.get(v.sym).foreach: st =>
@@ -63,6 +63,9 @@ class BoundTraverser(using ctx: InfCtx) extends TypeTraverser:
     case _ => super.apply(pol)(t)
 
 class TypeMap:
+  def apply(c: SubOr): SubOr =
+    SubOr(apply(true)(c.x), apply(false)(c.y), c.cs.map(_.map(apply)))
+
   def applyArg(pol: Bool)(t: TypeArg): TypeArg =
     Wildcard(apply(!pol)(t.negPart), apply(pol)(t.posPart))
   def apply(pol: Bool)(t: Type): Type = t.toBasic match

@@ -57,6 +57,8 @@ class InfCtx(
 ) extends KCtx:
   def +=(p: Symbol -> InfType) = env += p
   def get(sym: Symbol): Opt[InfType] = env.get(sym) `orElse` parent.dlof(_.get(sym))(None)
+  private[logicsub] def arm: Opt[MatchCtx.Arm] = N
+  private[logicsub] def unguarded: InfCtx = this
   def nest: InfCtx = InfCtx(lvl, Some(this), HashMap.empty, outRegAcc, xbds)
   def nestWithOuter(outer: InfVar): InfCtx = InfCtx(lvl + 1, Some(this), HashMap.empty, outRegAcc | outer, ListBuffer.empty)
   def nextLevel: InfCtx = InfCtx(lvl + 1, Some(this), HashMap.empty, outRegAcc, ListBuffer.empty)
@@ -91,12 +93,6 @@ class InfCtx(
   def ubs(s: InfVarSymbol): Ls[Type] = varSt.getOrElseUpdate(s, new InfVarState).upperBounds.map(_._1)
   def lbs(s: InfVarSymbol): Ls[Type] = varSt.getOrElseUpdate(s, new InfVarState).lowerBounds
   // def withPrefix(x: Type, y: Type) = ???
-  /** Narrows the scrutinee for one branch and enforces its constraints whenever
-    * the scrutinee can inhabit the refinement under the enclosing guards. */
-  def matchBranch(ref: SimpleRef, scrutinee: Type, refinement: Type): ThenCtx =
-    val env = HashMap[Symbol, InfType](ref.sym -> (scrutinee & refinement))
-    val unreachable = SubOr(scrutinee, ~refinement)
-    ThenCtx(lvl, S(this), env, outRegAcc, xbds, S(unreachable))
 
 class PrimCtx(using st: Elaborator.State, ctx: Elaborator.Ctx, cfg: Config):
   val objSym: ClsTag = ctx.get("Object").get.symbol.get.asTpe.get
@@ -149,22 +145,14 @@ final case class SuffixCtx(suffix: Ls[SubOr], cont: KCtx)(using PrimCtx) extends
       (using CCtx, TL, Raise, Scope) =
     suffix.foreach(cont.constrain)
 
-class ThenCtx(
-  lvl: Int, parent: Option[InfCtx],
-  env: HashMap[Symbol, InfType], outRegAcc: Type,
-  xbds: ListBuffer[SubOr], unreachable: Opt[SubOr]
-)(using HashMap[InfVarSymbol, InfVarState], PrimCtx, Ctx, Config)
-extends InfCtx(lvl, parent, env, outRegAcc, xbds):
-  // The parent enforces its own guard when a nested lexical scope forwards a constraint.
-  override def nest: ThenCtx = ThenCtx(lvl, Some(this), HashMap.empty, outRegAcc, xbds, N)
-  override def nestWithOuter(outer: InfVar): ThenCtx =
-    ThenCtx(lvl + 1, Some(this), HashMap.empty, outRegAcc | outer, ListBuffer.empty, N)
-  override def nextLevel: ThenCtx =
-    ThenCtx(lvl + 1, Some(this), HashMap.empty, outRegAcc, ListBuffer.empty, N)
-  // override def addub(s: InfVar, ub: Type, cs: Opt[Ls[SubOr]] = N)(using CCtx, TL, Raise) =
-  //   cont.addub(s,ub,cs)
-  // override def addlb(lb: Type, s: InfVar)(using CCtx, TL, Raise) = cont.addlb(lb,s)
-  // override def err(parents: Ls[(Type, Type)], origin: Term, exp: Opt[InfType])
-  //   (using CCtx, TL, Raise, Scope) = cont.err(parents, origin, exp)
-  override def constrain(c: SubOr)(using CCtx, TL, Raise) =
-    parent.get.constrain(unreachable.fold(c)(_.or(c)))
+/** A lexical scope in a conditional arm. Constraints use the joint condition
+  * of the arm and keep the level and extruded bounds of their lexical scope. */
+private[logicsub] class ThenCtx(
+  override val unguarded: InfCtx, enclosing: InfCtx, active: MatchCtx.Arm
+) extends InfCtx(unguarded.lvl, S(enclosing), HashMap.empty, unguarded.outRegAcc, unguarded.xbds)
+    (using unguarded.varSt, unguarded.prim, unguarded.ctx, unguarded.cfg):
+  override def arm = S(active)
+  override def nest: ThenCtx = ThenCtx(unguarded, this, active)
+  override def nestWithOuter(outer: InfVar): ThenCtx = ThenCtx(unguarded.nestWithOuter(outer), this, active)
+  override def nextLevel: ThenCtx = ThenCtx(unguarded.nextLevel, this, active)
+  override def constrain(c: SubOr)(using CCtx, TL, Raise) = active.enforce(c, unguarded)

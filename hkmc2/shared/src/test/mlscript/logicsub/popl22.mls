@@ -447,8 +447,8 @@ fun example6_wrong(x: Int | Str, y: Any) = if
 //│ ╔══[COMPILATION ERROR] Type error in reference of type ‹not implemented› with expected type Str
 //│ ║  l.+3: 	  else strlen(x)
 //│ ║        	              ^
-//│ ╟── because: cannot constrain  Int ∨ Str  <:  ¬Int
 //│ ╟── because: cannot constrain  ⊤  <:  Str
+//│ ╟── because: cannot constrain  Int ∨ Str  <:  ¬Int
 //│ ╙── because: cannot constrain  Int  <:  Str
 //│ Type: undefined
 
@@ -485,8 +485,6 @@ fun detailed_ex(a: (Int -> (Int | Bool)) | Prod[Int, Int | Bool], n: Int) = if
 //│ ║  l.+4: 	  a(n) is Int then a(n) < 42
 //│ ║        	                   ^^^^
 //│ ╟── because: cannot constrain  (Int) -> out Int ∨ Bool ∨ Prod[Int, Int ∨ Bool]  <:  Prod[?, ?]
-//│ ╟── because: cannot constrain  ⊤  <:  ⊥
-//│ ╟── because: cannot constrain  ((Int) -> out Int ∨ Bool ∧ ¬Prod[?, ?]) ∨ (Prod[Int, Int ∨ Bool] ∧ ¬Prod[?, ?])  <:  Prod[?, ?]
 //│ ╟── because: cannot constrain  ⊤  <:  ⊥
 //│ ╟── because: cannot constrain  'app  <:  ¬Int
 //│ ╟── because: cannot constrain  Int  <:  ¬Int

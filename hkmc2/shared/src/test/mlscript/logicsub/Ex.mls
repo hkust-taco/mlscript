@@ -110,9 +110,9 @@ fun negImpl(x) = if x is
 negImpl
 //│ Type: [outer, 'x, 'eff, 'res] -> ('x) ->{out 'eff} out 'res
 //│ Where:
-//│   'x <: Tru ∨ ('x ∧ ¬Tru <: Fls ∨ (⊤ <: ⊥))
-//│   'x <: Tru ∨ ('x ∧ ¬Tru <: ¬Fls ∨ (⊥ <: 'eff))
-//│   'x <: Tru ∨ ('x ∧ ¬Tru <: ¬Fls ∨ (Tru <: 'res))
+//│   'x <: Tru ∨ Fls ∨ (⊤ <: ⊥)
+//│   'x <: ¬Fls ∨ (⊥ <: 'eff)
+//│   'x <: ¬Fls ∨ (Tru <: 'res)
 //│   'x <: ¬Tru ∨ (⊥ <: 'eff)
 //│   'x <: ¬Tru ∨ (Fls <: 'res)
 
@@ -226,10 +226,10 @@ fun headOption(x) = if x is
 headOption
 //│ Type: [outer, 'x, 'eff, 'A, 'res, 'A1, 'A2, 'B, 'B1] -> ('x) ->{out 'eff} out 'res
 //│ Where:
-//│   'x <: Nil ∨ ('x ∧ ¬Nil <: Cons[?, ?] ∨ (⊤ <: ⊥))
-//│   'x <: Nil ∨ ('x ∧ ¬Nil <: ¬Cons[?, ?] ∨ (⊥ <: 'eff))
-//│   'x <: Nil ∨ ('x ∧ ¬Nil <: ¬Cons[?, ?] ∨ (Some['A] <: 'res))
-//│   'x <: Nil ∨ ('x ∧ ¬Nil <: ¬Cons[?, ?] ∨ ('A1 <: 'A))
-//│   'x <: Nil ∨ ('x ∧ ¬Nil <: ¬Cons[?, ?] ∨ (('x ∧ ¬Nil) ∧ Cons[?, ?] <: Cons[in 'A2 out 'A1, in 'B out 'B1]))
+//│   'x <: Nil ∨ Cons[?, ?] ∨ (⊤ <: ⊥)
+//│   'x <: ¬Cons[?, ?] ∨ (⊥ <: 'eff)
+//│   'x <: ¬Cons[?, ?] ∨ (Some['A] <: 'res)
+//│   'x <: ¬Cons[?, ?] ∨ ('A1 <: 'A)
+//│   'x <: ¬Cons[?, ?] ∨ ('x ∧ Cons[?, ?] <: Cons[in 'A2 out 'A1, in 'B out 'B1])
 //│   'x <: ¬Nil ∨ (⊥ <: 'eff)
 //│   'x <: ¬Nil ∨ (None <: 'res)

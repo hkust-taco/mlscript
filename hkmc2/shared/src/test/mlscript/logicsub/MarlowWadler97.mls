@@ -37,18 +37,17 @@ test
 //│ >    x is Fls then fls⁰
 //│ >    y is Fls then fls⁰
 //│ = fun test
-//│ Type: [outer, 'x, 'y, 'eff, 'res] -> ('x, 'y) ->{out 'eff} out 'res
+//│ Type: [outer, 'x, 'y, 'reach, 'reach1, 'eff, 'res] -> ('x, 'y) ->{out 'eff} out 'res
 //│ Where:
-//│   'x <: Tru ∨ ('x ∧ ¬Tru <: Tru ∨ (('x ∧ ¬Tru) ∧ ¬Tru <: Tru ∨ ((('x ∧ ¬Tru) ∧ ¬Tru) ∧ ¬Tru <: Fls ∨ ('y <: Fls ∨ (⊤ <: ⊥)))))
-//│   'x <: Tru ∨ ('x ∧ ¬Tru <: Tru ∨ (('x ∧ ¬Tru) ∧ ¬Tru <: Tru ∨ ((('x ∧ ¬Tru) ∧ ¬Tru) ∧ ¬Tru <: Fls ∨ ('y <: ¬Fls ∨ (⊥ <: 'eff)))))
-//│   'x <: Tru ∨ ('x ∧ ¬Tru <: Tru ∨ (('x ∧ ¬Tru) ∧ ¬Tru <: Tru ∨ ((('x ∧ ¬Tru) ∧ ¬Tru) ∧ ¬Tru <: Fls ∨ ('y <: ¬Fls ∨ (Fls <: 'res)))))
-//│   'x <: Tru ∨ ('x ∧ ¬Tru <: Tru ∨ (('x ∧ ¬Tru) ∧ ¬Tru <: Tru ∨ ((('x ∧ ¬Tru) ∧ ¬Tru) ∧ ¬Tru <: ¬Fls ∨ (⊥ <: 'eff))))
-//│   'x <: Tru ∨ ('x ∧ ¬Tru <: Tru ∨ (('x ∧ ¬Tru) ∧ ¬Tru <: Tru ∨ ((('x ∧ ¬Tru) ∧ ¬Tru) ∧ ¬Tru <: ¬Fls ∨ (Fls <: 'res))))
-//│   'x <: ¬Tru ∨ ('y <: Tru ∨ ('x ∧ Tru <: ¬Tru ∨ ('y ∧ ¬Tru <: Tru ∨ (('x ∧ Tru) ∧ Tru <: ¬Tru ∨ (('y ∧ ¬Tru) ∧ ¬Tru <: Tru ∨ ((('x ∧ Tru) ∧ Tru) ∧ Tru <: Fls ∨ ((('y ∧ ¬Tru) ∧ ¬Tru) ∧ ¬Tru <: Fls ∨ (⊤ <: ⊥))))))))
-//│   'x <: ¬Tru ∨ ('y <: Tru ∨ ('x ∧ Tru <: ¬Tru ∨ ('y ∧ ¬Tru <: Tru ∨ (('x ∧ Tru) ∧ Tru <: ¬Tru ∨ (('y ∧ ¬Tru) ∧ ¬Tru <: Tru ∨ ((('x ∧ Tru) ∧ Tru) ∧ Tru <: Fls ∨ ((('y ∧ ¬Tru) ∧ ¬Tru) ∧ ¬Tru <: ¬Fls ∨ (⊥ <: 'eff))))))))
-//│   'x <: ¬Tru ∨ ('y <: Tru ∨ ('x ∧ Tru <: ¬Tru ∨ ('y ∧ ¬Tru <: Tru ∨ (('x ∧ Tru) ∧ Tru <: ¬Tru ∨ (('y ∧ ¬Tru) ∧ ¬Tru <: Tru ∨ ((('x ∧ Tru) ∧ Tru) ∧ Tru <: Fls ∨ ((('y ∧ ¬Tru) ∧ ¬Tru) ∧ ¬Tru <: ¬Fls ∨ (Fls <: 'res))))))))
-//│   'x <: ¬Tru ∨ ('y <: Tru ∨ ('x ∧ Tru <: ¬Tru ∨ ('y ∧ ¬Tru <: Tru ∨ (('x ∧ Tru) ∧ Tru <: ¬Tru ∨ (('y ∧ ¬Tru) ∧ ¬Tru <: Tru ∨ ((('x ∧ Tru) ∧ Tru) ∧ Tru <: ¬Fls ∨ (⊥ <: 'eff)))))))
-//│   'x <: ¬Tru ∨ ('y <: Tru ∨ ('x ∧ Tru <: ¬Tru ∨ ('y ∧ ¬Tru <: Tru ∨ (('x ∧ Tru) ∧ Tru <: ¬Tru ∨ (('y ∧ ¬Tru) ∧ ¬Tru <: Tru ∨ ((('x ∧ Tru) ∧ Tru) ∧ Tru <: ¬Fls ∨ (Fls <: 'res)))))))
+//│   'x <: Tru ∨ Fls ∨ ('y <: Fls ∨ (⊤ <: 'reach))
+//│   'reach <: ⊥ ∨ (⊤ <: ⊥)
+//│   'x <: ¬Tru ∨ ('y <: Tru ∨ Fls ∨ (⊤ <: 'reach))
+//│   'x <: Tru ∨ Fls ∨ ('y <: ¬Fls ∨ (⊤ <: 'reach1))
+//│   'reach1 <: ⊥ ∨ (⊥ <: 'eff)
+//│   'reach1 <: ⊥ ∨ (Fls <: 'res)
+//│   'x <: ¬Tru ∨ ('y <: ¬Fls ∨ (⊤ <: 'reach1))
+//│   'x <: ¬Fls ∨ (⊥ <: 'eff)
+//│   'x <: ¬Fls ∨ (Fls <: 'res)
 //│   'x <: ¬Tru ∨ ('y <: ¬Tru ∨ (⊥ <: 'eff))
 //│   'x <: ¬Tru ∨ ('y <: ¬Tru ∨ (Tru <: 'res))
 
@@ -114,6 +113,7 @@ test(true, false)
 //│ ╟── because: cannot constrain  Array & {0: true, 1: false}  <:  Array & {0: 'x, 1: 'y}
 //│ ╟── because: cannot constrain  false  <:  'y
 //│ ╟── because: cannot constrain  false  <:  Fls
+//│ ╟── because: cannot constrain  ⊤  <:  'reach
 //│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ Type: 'app
 
