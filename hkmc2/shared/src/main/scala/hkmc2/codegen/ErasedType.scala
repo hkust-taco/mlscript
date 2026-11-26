@@ -92,8 +92,8 @@ object ErasedType:
   final case class Intersection(members: Ls[ErasedValueType]) extends ErasedValueType:
     require(members.nonEmpty)
     type Canonical = CanonicalErasedValueType
-    override def sym(using Ctx, State): NoSymbol = NoSymbol
-    override protected def computeCanonicalize(using Ctx, State): CanonicalErasedValueType =
+    def sym(using Ctx, State): NoSymbol = NoSymbol
+    protected def computeCanonicalize(using Ctx, State): CanonicalErasedValueType =
       def flatten(tpe: ErasedValueType): Iterator[CanonicalErasedValueType] = tpe match
         case Intersection(parts) => parts.iterator.flatMap(flatten)
         case other => Iterator.single(other.canonicalize)
