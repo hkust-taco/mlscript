@@ -86,6 +86,36 @@ fun opened(value: {shared: Int} & {shared: Int, extra: Bool}) =
 opened(shared: 7, extra: true)
 //│ = 7
 
+// A single wildcard receiver has the same shared field as an explicit selection.
+type Count = {count: Int}
+type NamedCount = {count: Int, name: Str}
+type EitherCount = (Count & NamedCount & {count: Int, left: Int}) | (Count & NamedCount & {count: Int, right: Int})
+
+:expect 7
+fun readCount(value: EitherCount) = value.count
+readCount(count: 7, name: "seven", left: 0)
+//│ = 7
+
+:fixme
+fun openCount(value: EitherCount) =
+  open value.{ * }
+  count
+//│ ╔══[COMPILATION ERROR] Wildcard-open reference 'count' is ambiguous
+//│ ║  l.+3: 	  count
+//│ ║        	  ^^^^^
+//│ ╟── candidate: record field 'count' defined here
+//│ ║  l.XX: 	fun readCount(value: EitherCount) = value.count
+//│ ║        	                     ^^^^^^^^^^^
+//│ ╟── Opened here
+//│ ║  l.+2: 	  open value.{ * }
+//│ ║        	       ^^^^^
+//│ ╟── candidate: record field 'count' defined here
+//│ ║  l.XX: 	fun readCount(value: EitherCount) = value.count
+//│ ║        	                     ^^^^^^^^^^^
+//│ ╟── Opened here
+//│ ║  l.+2: 	  open value.{ * }
+//│ ╙──      	       ^^^^^
+
 // Intersection constraints infer generic fields and check callback parameters.
 :expect "TYPED"
 fun extract[T](value: {item: T} & {tag: Int}): T = value.item
