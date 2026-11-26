@@ -2580,8 +2580,11 @@ class NewResolver:
                 case _ => matchLists(ret, tail)
           case Nil => ()
         case Marked(record: RecordTypeShape, _) =>
+          // The type and the mutability of a field of intersected record types already combine all its
+          // declarations, so one constraint per key suffices. The first declaration only locates it: its
+          // symbol identifies the site of the read, and its term is where a failed read is reported.
           val fields = record.fields.iterator.flatMap: (name, tpe) =>
-            record.declarations(name).iterator.map((_, tpe, record.mutable(name)))
+            record.declarations(name).headOption.map((_, tpe, record.mutable(name)))
           constrainRecord(fields.toList, actual, marks, site)
         case _ => ()
     actual match
