@@ -4000,12 +4000,10 @@ class NewResolver:
         softAssert(rctx.hasError(res))
     else register
   
-  /** Publish a shape in the current activation. Return true on its first publication to this host in that activation. */
-  private def publishActivated(host: ShapeHost, source: Shape)(using ResolutionContext): Bool =
+  /** Publish a shape together with the type arguments of the activation that produced it. */
+  private def publishActivated(host: ShapeHost, source: Shape)(using ResolutionContext): Unit =
     val shape = if rctx.instances.isEmpty then source else ActivatedShapeEvent(source, rctx.instances)
-    val fresh = host.currentShapes.add(shape)
-    if fresh then host.notifyShapeListeners(shape)
-    fresh
+    host.inferenceHost.publish(shape)
 
   /** `instances` interprets references in the value; rctx.instances identifies
     * the receiving body activation. Preserve both: a recursive argument may still
@@ -4807,19 +4805,15 @@ class NewResolver:
     * field can observe a write, regardless of which selection made it.
     *
     * All writes to a copied record field must go through this method, including values admitted by
-    * a type annotation or an exported interface. A spread copies the field without converting its value,
-    * so the original field's runtime representation must accommodate writes to the copy as well.
-    * Publishing directly to the copy's assignment host would bypass representation inference.
-    * Publishing to the original's assignment host would make its readers see writes to a different record.
+    * a type annotation or an exported interface. Each write enters the copy's scope with the writer's type
+    * arguments. Publishing it to the original field would make readers see writes to a different record.
     */
   private[semantics] def writeField(field: TermSymbol, value: TermShape, marks: Ls[Marks])(using ResolutionContext): Unit =
     softAssert(field.defn.exists(isAssignableField), "Only assignable fields hold assigned values")
     value.enter(marks) match
       case value: TermShape =>
         val assigned = MarkedShape.enter(value, ResolutionBoundary(field), N)
-        if publishActivated(rctx.memberVariable(field), assigned) then field match
-          case copy: RecordFieldSymbol => rctx.state.erasureInputs.observeCopyWrite(copy, assigned, this)
-          case _ => ()
+        publishActivated(rctx.memberVariable(field), assigned)
       case NoShape => ()
   
   /** Read the values assigned to `field` (see `writeField`) through a member lookup with the path `marks` at `site`:

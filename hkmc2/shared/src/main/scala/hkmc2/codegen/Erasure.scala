@@ -22,6 +22,9 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
   private given reporter: Diagnostic.Reporter = new Diagnostic.Reporter(report)
 
   private val declarations = new ErasureDeclarations(root)
+  // A spread copies the stored value without conversion. The declaration and its writable copies
+  // therefore need one representation, although resolution tracks assignments to each field separately.
+  private lazy val copiesByDeclaration = declarations.copiedFields.toList.groupBy(_.root)
   private lazy val sourceDefinitions = declarations.statements.collect { case td: TermDefinition => td }.toList.distinctBy(_.tsym)
   private lazy val overrideChecks = new OverrideChecks(sourceDefinitions)
 
@@ -101,6 +104,8 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
           Iterator.single(child) ++ descendants(child)
         descendants(root)
       val related: Iterator[TermShape | TermDefinition] = symbol match
+        case field: RecordFieldSymbol =>
+          copiesByDeclaration.getOrElse(field, Nil).iterator.flatMap(inputs.observations)
         case base: VarSymbol if overrideChecks.overridingParameters.contains(base) =>
           family(base)(p => overrideChecks.overridingParameters.getOrElse(p, Nil).iterator.filter(inputs.isPrepared))
             .flatMap(inputs.observations)

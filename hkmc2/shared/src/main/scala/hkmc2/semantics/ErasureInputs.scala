@@ -19,6 +19,7 @@ private[hkmc2] final class ErasureDeclarations(root: Statement):
   val statements = mutable.ArrayBuffer.empty[Statement]
   val parameters = mutable.LinkedHashMap.empty[VarSymbol, Param]
   val variables = mutable.LinkedHashSet.empty[InputSymbol]
+  val copiedFields = mutable.ArrayBuffer.empty[RecordFieldSymbol]
   private val visited = mutable.Set.empty[Identity[Statement]]
 
   private def parameter(p: Param): Unit =
@@ -102,7 +103,10 @@ private[hkmc2] final class ErasureDeclarations(root: Statement):
       case IfLike(_, _, branches) => split(branches)
       case New(_, _, refinement) => refinement.foreach: (symbol, body) =>
         symbol.defn.fold(visit(body.blk))(visit)
-      case block: Blk => block.resolvedFields.foreach(_.defn.foreach(visit))
+      case block: Blk => block.resolvedFields.foreach: field =>
+        field.origin match
+          case RecordFieldSymbol.Origin.Copied(_) => copiedFields += field
+          case _ => field.defn.foreach(visit)
       case Rcd(_, stats) => stats.foreach(visit)
       case field: RcdField => field.tsym.defn.foreach(visit)
       case _ => ()
@@ -144,7 +148,11 @@ private[hkmc2] final class ErasureInputs:
     // Keep this observation live until exposure has processed those values.
     val fields = rctx.state.discoveredFields
     val detach = fields.inferenceHost.observe: (field, scope) =>
-      field.defn.foreach(observeDefinition(_, resolver)(using scope))
+      field.origin match
+        case RecordFieldSymbol.Origin.Copied(_) =>
+          // Listen across all calls. The assignment host replays each write with its own type arguments.
+          observeSymbol(field, resolver)(publish => resolver.listenMemberVariable(field)(publish)(using scope))(using scope)
+        case _ => field.defn.foreach(observeDefinition(_, resolver)(using scope))
     try resolve
     finally
       detach()
@@ -170,16 +178,6 @@ private[hkmc2] final class ErasureInputs:
       // in later blocks and in other compilation units reach consumer copies of the field's host instead, which
       // the field's representation does not include: lowering converts their values to that representation.
       if resolver.isAssignableField(td) then resolver.listenMemberVariable(td.tsym)(publish)
-
-  /** Include a value written to a record copy when inferring the original field's runtime representation. */
-  private[semantics] def observeCopyWrite(copy: RecordFieldSymbol, value: TermShape, resolver: NewResolver)(using caller: ResolutionContext): Unit =
-    val root = copy.root
-    if root isnt copy then
-      // The declaration's representation is shared across calls. Interpret the assigned value with the
-      // writer's type arguments so a write in a generic function contributes its instantiated shapes.
-      val declaration = caller.withInstances(TypeSubstitution.empty)
-      root.defn.flatMap(observeDefinition(_, resolver)(using declaration)).foreach: representation =>
-        resolver.listenInstanceViews(value)(representation.publish)
 
   // Includes property declarations synthesized by named-tuple resolution, which
   // have source expressions but are not separate nodes in the source syntax.

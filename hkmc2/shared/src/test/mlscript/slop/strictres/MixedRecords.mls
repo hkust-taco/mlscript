@@ -362,6 +362,22 @@ private fun assignOtherRepresentation() =
 //│ ╙──      	               ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
+// Each call writes through the copy with its own type argument. The original field starts
+// undefined, so the conflict comes entirely from the two writes.
+:ge
+private fun writeCopy[T](record, value: T) =
+  let copy = mut {...record}
+  set copy.item = value
+private fun writeBoth() =
+  let original = {item: unsafe.undefined}
+  writeCopy[Int32](original, input)
+  writeCopy[Str](original, "many")
+writeBoth()
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
+//│ ║  l.+5: 	  let original = {item: unsafe.undefined}
+//│ ╙──      	                  ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
 // A copy of a copy is a field of its own too. The error shows the record whose copy is assigned and the
 // field that the copies come from.
 :ge

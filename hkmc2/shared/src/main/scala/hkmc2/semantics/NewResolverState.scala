@@ -744,6 +744,7 @@ final class ResolutionContext private[semantics] (
       val copy = RcdField.copied(origin, record.mut, spread)(using owner)
       // A copied field's declaration is read in the scope where its original was written.
       definitionBindersOf(origin.tsym).foreach(state.lexicalTypeBinders.update(copy.tsym, _)(using state.context))
+      if copy.tsym.mutable then state.discoveredFields.add(copy.tsym)(using state.context)
       copy
   /** The property denoted by `key` in a structural record view. Intersections with the same declarations
     * denote the same property regardless of their order or grouping. */
