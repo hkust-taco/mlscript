@@ -710,15 +710,21 @@ object RcdField:
       definition.sign, definition.annotations, spread.toLoc)
     RcdField(origin.field, origin.rhs, tsym.member)(false, origin.key)
   /** Create the shared property of record types that declare the same runtime key. Its bounds come from
-    * all the declarations. A symbol key retains its runtime access path even if the source names differ.
-    * `loc` is the location of the intersection of these record types, if the source has one. */
-  def mergedSymbol(key: MemberKey, declarations: Ls[RecordFieldSymbol], loc: Opt[Loc])(using State): RecordFieldSymbol =
+    * all the declarations. A symbol key retains its runtime access path even if the source names differ. */
+  def mergedSymbol(key: MemberKey, declarations: Ls[RecordFieldSymbol], source: Term)(using State): RecordFieldSymbol =
     require(declarations.sizeIs >= 2)
     val (name, annotations) = key match
       case name: Str => (name, Nil)
       case key: SymbolKey => (key.name, Annot.JsSymbol(key)(key.term.toLoc) :: Nil)
     derivedSymbol(name, RecordFieldSymbol.Origin.Merged(declarations), declarations.exists(_.mutable),
-      N, annotations, loc)
+      N, annotations, source.toLoc)
+  /** Create the field that a selection reads when its receiver has one of `fields`, which are the same member
+    * and thus have the same runtime key. No source location denotes these alternatives together. */
+  def alternativesSymbol(fields: Ls[RecordFieldSymbol])(using State): RecordFieldSymbol =
+    require(fields.sizeIs >= 2)
+    val first = fields.head
+    derivedSymbol(first.nme, RecordFieldSymbol.Origin.Alternatives(fields), fields.forall(_.mutable),
+      N, first.defn.get.annotations, N)
   private def derivedSymbol(name: Str, origin: RecordFieldSymbol.Origin, mutable: Bool,
       signature: Opt[Term], annotations: Ls[Annot], loc: Opt[Loc])(using State): RecordFieldSymbol =
     val id = new Tree.Ident(name)

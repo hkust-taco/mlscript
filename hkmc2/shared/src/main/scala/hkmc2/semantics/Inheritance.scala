@@ -52,16 +52,17 @@ object Inheritance:
     * member, another inherits it). Discard less-specific common ancestors, so a chain of overrides is
     * not an ambiguity.
     *
-    * Fields of intersected record types can share several most specific declarations. In
-    * `(A & B) | (A & B & C)`, where each record type declares `count`, the two intersections have distinct
-    * fields, which both derive from the declarations of `A` and of `B`. The targets then denote the field
-    * of `A & B`: the one that an intersection has for exactly these declarations (see
-    * ResolutionContext.sharedRecordTypeField). Like an intersection, it does not depend on their order.
+    * Record fields are the same member if they derive from a common declaration: a field and its copies,
+    * or the fields of intersections that share a record type, as in `(A & B) | (A & C)`. A field and its
+    * copies hold the same values in the same representation, so the field stands for them. Other fields
+    * can differ in representation from the declarations that they share: if `A` declares `item: Any` and
+    * `B` and `C` declare `item: Int32`, both intersections store an `Int32`, which the declaration of `A`
+    * alone does not tell. Their member is then the field that has one of these targets, whose
+    * representation is the join of theirs (see RecordFieldSymbol.Origin.Alternatives).
     */
   def commonMember(targets: Ls[DefinitionSymbol[?]])(using Erasure, Elaborator.State): Opt[DefinitionSymbol[?]] =
-    // In visiting order, so that the declarations of a shared field are listed in a deterministic order.
-    def ancestors(sym: DefinitionSymbol[?]): mutable.LinkedHashSet[DefinitionSymbol[?]] =
-      val seen = mutable.LinkedHashSet.empty[DefinitionSymbol[?]]
+    def ancestors(sym: DefinitionSymbol[?]): Set[DefinitionSymbol[?]] =
+      val seen = mutable.Set.empty[DefinitionSymbol[?]]
       def visit(current: DefinitionSymbol[?]): Unit = if seen.add(current) then
         current.overriddenMembers.foreach(visit)
         // A record field that resolution derives from others is the same member as its origins: a record
@@ -70,20 +71,22 @@ object Inheritance:
           case field: RecordFieldSymbol => field.origins.foreach(visit)
           case _ => ()
       visit(sym)
-      seen
+      seen.toSet
     targets.distinct match
       case Nil => N
       case target :: Nil => S(target)
-      case first :: rest =>
-        val others = rest.map(ancestors)
-        val common = ancestors(first).iterator.filter(sym => others.forall(_(sym))).toList
-        common.filterNot(base => common.exists(other => (other isnt base) && ancestors(other)(base))) match
+      case distinct @ (first :: rest) =>
+        val common = rest.foldLeft(ancestors(first))((acc, sym) => acc intersect ancestors(sym))
+        val fields = distinct.collect { case field: RecordFieldSymbol => field.root }
+        if common.isEmpty then N
+        else if fields.nonEmpty then
+          assert(fields.sizeCompare(distinct) == 0, "Record fields only share ancestors with other record fields")
+          fields.distinct match
+            case field :: Nil => S(field)
+            case alternatives => S(summon[Elaborator.State].newResolverState.context.alternativeField(alternatives))
+        else common.filterNot(base => common.exists(other => (other isnt base) && ancestors(other)(base))).toList match
           case target :: Nil => S(target)
-          case specific =>
-            // Several most specific definitions are one member only if they declare a field of record types.
-            val declarations = specific.collect { case field: RecordFieldSymbol => field }
-            if declarations.isEmpty || declarations.sizeCompare(specific) != 0 then N
-            else S(summon[Elaborator.State].newResolverState.context.sharedRecordTypeField(declarations))
+          case _ => N
 
   /** Whether an override of `inherited` uses a different kind of definition, such as a `fun` overriding
     * a `val`, or a `mut val` overriding a `val`. A value is computed once when its object is constructed,

@@ -326,6 +326,10 @@ final class NewResolverState(val owner: Elaborator.State):
     new Cache(_.copiedFields, identity)
   val mergedFields: Cache[Set[RecordFieldSymbol], RecordFieldSymbol] =
     new Cache(_.mergedFields, identity)
+  // The field that a selection reads through several fields that are the same member has no record of its
+  // own (see RecordFieldSymbol.Origin.Alternatives). The set of these fields identifies it.
+  val alternativeFields: Cache[Set[RecordFieldSymbol], RecordFieldSymbol] =
+    new Cache(_.alternativeFields, identity)
   val aggregateProducers: Seen[Tup | CtxTup | Rcd] =
     new Seen(_.aggregateProducers)
   // Whether a binder is supplied is fixed by its authoritative syntactic site.
@@ -751,18 +755,14 @@ final class ResolutionContext private[semantics] (
   def recordTypeField(source: Term, key: MemberKey, fields: Vector[RcdField]): RecordFieldSymbol =
     if fields.sizeIs == 1 then fields.head.tsym else
       val declarations = fields.iterator.map(_.tsym).toList
-      canonical(source, _.mergedFields, declarations.toSet)(RcdField.mergedSymbol(key, declarations, source.toLoc)(using owner))
-  /** The field of the intersection of the record types that declare `declarations`, several fields with the
-    * same key. Intersections that each include these record types have fields that derive from all of them,
-    * and this field is the member that their fields have in common (see Inheritance.commonMember).
-    * No written type needs to denote this intersection. `recordTypeField` returns the same field for one that does.
+      canonical(source, _.mergedFields, declarations.toSet)(RcdField.mergedSymbol(key, declarations, source)(using owner))
+  /** The field that a selection reads when its receiver has one of `fields`, several fields that are the
+    * same member (see RecordFieldSymbol.Origin.Alternatives). The set of these fields identifies it.
+    * Lowering asks for it once resolution is complete, and the unit that lowers the selection keeps it:
+    * the fields can come from several units.
     */
-  def sharedRecordTypeField(declarations: Ls[RecordFieldSymbol]): RecordFieldSymbol =
-    assert(declarations.sizeIs >= 2 && declarations.forall(_.origin == RecordFieldSymbol.Origin.Declared),
-      "Only declared fields of several record types have a field of their intersection")
-    val key = MemberKey.symbol(declarations.head.member).getOrElse(declarations.head.nme)
-    // The declarations can come from several units. Keep their field with the unit that selects it.
-    canonical(null, _.mergedFields, declarations.toSet)(RcdField.mergedSymbol(key, declarations, N)(using owner))
+  def alternativeField(fields: Ls[RecordFieldSymbol]): RecordFieldSymbol =
+    canonical(null, _.alternativeFields, fields.toSet)(RcdField.alternativesSymbol(fields)(using owner))
   def canonicalInstance(tpe: DeclaredType)(make: => InstanceShape): InstanceShape =
     canonical(tpe.resolution, _.instanceShapes, tpe)(shapeView(tpe.instances)(make))
   def spreadFlow(spread: Term)(make: => IterationFlow): IterationFlow =
