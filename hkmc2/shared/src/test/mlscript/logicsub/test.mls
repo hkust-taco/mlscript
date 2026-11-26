@@ -20,9 +20,10 @@ f("a")
 fun g: (Int -> Int) & (Str -> Str)
 //│ Type: undefined
 
-// FIXME
 g(1)
 //│ Type: 'app
+//│ Where:
+//│   Int <: 'app
 
 fun g: (1 -> 1) & (2 -> 2)
 //│ Type: undefined
@@ -52,12 +53,15 @@ fun idt: (Int -> Int) & (Str -> Str)
 // :e
 // idt(nsb)
 
-// FIXME missing bounds
 idt(1)
 //│ Type: 'app
+//│ Where:
+//│   Int <: 'app
 
 (x => idt(x))(1)
 //│ Type: 'app
+//│ Where:
+//│   Int <: 'app
 
 
 idt(1 as Int)
@@ -70,6 +74,14 @@ idt(ns)
 //│ Where:
 //│   Int <: 'app
 //│   Str <: 'app
+
+fun singletons: (1 & Int) | (Str & "s") | (false & Bool) | (true & Str)
+(x => x)(singletons)
+//│ Type: 'x
+//│ Where:
+//│   false <: 'x
+//│   "s" <: 'x
+//│   1 <: 'x
 
 // FIXME
 (x => if x is

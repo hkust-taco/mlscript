@@ -44,20 +44,27 @@ fun f(x, y) = if
   y is Str then ""
 f(1, "")
 //│ Type: 'app
+//│ Where:
+//│   1 <: 'app
 
 f(1, sib)
 //│ Type: 'app
+//│ Where:
+//│   1 <: 'app
 
 fun f(x, y) = if
   y is Str then ""
   x is Int then 1
 f(1, "")
 //│ Type: 'app
+//│ Where:
+//│   "" <: 'app
 
 f(1, sib)
 //│ Type: 'app
 //│ Where:
 //│   "" <: 'app
+//│   1 <: 'app
 
 // FIXME
 // fun foorec(x, y, r) = if

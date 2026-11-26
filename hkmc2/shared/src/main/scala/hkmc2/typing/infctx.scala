@@ -35,11 +35,8 @@ trait KCtx(using val prim: PrimCtx):
     case SubOr(x,y,S(cs)) => ConstraintSolver.constrain(x,y)(using SuffixCtx(cs, this))
   def asSubcls(x: ClassLikeType, y: ClsTag): Opt[ClassLikeType] =
     if x.sym === y then S(x)
-    else x.sym match
-      case LitSymbol(_: IntLit) if prim.intSym === y => S(ClassLikeType(y, Nil, Nil, Nil, N))
-      case LitSymbol(_: StrLit) if prim.strSym === y => S(ClassLikeType(y, Nil, Nil, Nil, N))
-      case LitSymbol(_: BoolLit) if prim.boolSym === y => S(ClassLikeType(y, Nil, Nil, Nil, N))
-      case _ => N
+    else if x.sym.isLiteralOf(y) then S(InfCtx.mkTag(y))
+    else N
 
   def addub(s: InfVar, ub: Type, cs: Opt[Ls[SubOr]] = N)(using CCtx, TL, Raise): Unit
   def addlb(lb: Type, s: InfVar)(using CCtx, TL, Raise): Unit
@@ -99,20 +96,26 @@ class InfCtx(
 
 class PrimCtx(using st: Elaborator.State, ctx: Elaborator.Ctx, cfg: Config):
   val objSym: ClsTag = ctx.get("Object").get.symbol.get.asTpe.get
-  val intSym: ClsTag = ctx.get("Int").get.symbol.get.asTpe.get
-  val strSym: ClsTag = ctx.get("Str").get.symbol.get.asTpe.get
-  val boolSym: ClsTag = ctx.get("Bool").get.symbol.get.asTpe.get
+  private val intSym = ctx.get("Int").get.symbol.get.asTpe.get
+  private val strSym = ctx.get("Str").get.symbol.get.asTpe.get
+  private val boolSym = ctx.get("Bool").get.symbol.get.asTpe.get
   val errSym: ClsTag = ctx.get("Error").get.symbol.get.asTpe.get
   val fnSym: ClsTag = ctx.get("Function").get.symbol.get.asTpe.get
   val arrSym: ClsTag = ctx.get("Array").get.symbol.get.asTpe.get
-  def litSym(x: syntax.Literal): ClsTag = LitSymbol(x)
+  def litTag(lit: syntax.Literal): LiteralTag =
+    val base = lit match
+      case _: IntLit => S(intSym)
+      case _: StrLit => S(strSym)
+      case _: BoolLit => S(boolSym)
+      case _: DecLit | _: UnitLit => N
+    LiteralTag(LitSymbol(lit), base)
 
 object InfCtx:
   def init(using st: Elaborator.State, ctx: Elaborator.Ctx, tl: TL, cfg: Config): InfCtx =
     given PrimCtx = new PrimCtx
     InfCtx(1, N, HashMap.empty, Bot, ListBuffer.empty)(using HashMap.empty)
   def mkTag(s: ClsTag): ClassLikeType = ClassLikeType(s, Nil, Nil, Nil, N)
-  def litTy(lit: Literal)(using ctx: InfCtx): ClassLikeType = mkTag(ctx.prim.litSym(lit))
+  def litTy(lit: Literal)(using ctx: InfCtx): ClassLikeType = mkTag(ctx.prim.litTag(lit))
   def objTy(using ctx: InfCtx): ClassLikeType = mkTag(ctx.prim.objSym)
   def funTy(args: Ls[Type], ret: Type, eff: Type)(using ctx: InfCtx): ClassLikeType =
     val u = tupTy(args)

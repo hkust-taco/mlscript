@@ -212,15 +212,28 @@ case class ClassLikeType(
     case Nil => S(Ls(this))
     case x :: xs if x.sym === sym && x.ov.isDefined =>
       S(this :: x :: xs)
-    case x :: _ if x.sym is sym =>
-      S(Ls(cs.foldLeft(this)((x, y) => x.merge(y.args, y.refinement))))
+    // Keep the narrower tag and intersect the refinements from both operands.
+    case x :: _ if x.sym === sym || sym.isLiteralOf(x.sym) =>
+      S(cs.foldLeft(this)((x, y) => x.merge(y.args, y.refinement)) :: Nil)
+    case x :: Nil if x.sym.isLiteralOf(sym) =>
+      S(x.merge(args, refinement) :: Nil)
     case _ => N
-type ClsTag = LitSymbol | TypeSymbol | ModuleOrObjectSymbol
+
+/** A singleton literal and the primitive class that contains it, when known. */
+final case class LiteralTag(sym: LitSymbol, base: Opt[TypeSymbol])
+type ClsTag = LiteralTag | TypeSymbol
+extension (tag: ClsTag)
+  def nme: Str = tag match
+    case lit: LiteralTag => lit.sym.nme
+    case cls: TypeSymbol => cls.nme
+  def isLiteralOf(cls: ClsTag): Bool = tag match
+    case lit: LiteralTag => lit.base.contains(cls)
+    case _: TypeSymbol => false
 
 object Discriminator extends TypeMap:
   override def apply(pol: Bool)(t: Type) = t.simp match
     case _: InfVar => Top
-    case c @ ClassLikeType(_: LitSymbol, _,_,_,_) => c
+    case c @ ClassLikeType(sym = _: LiteralTag) => c
     case c @ ClassLikeType(s: (TypeSymbol | ModuleOrObjectSymbol), args, refine,congr,ov) =>
       // TODO flags in `s.defn.get.tparams`
       val a = args.iterator.zip(congr).map:

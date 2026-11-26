@@ -14,9 +14,10 @@ fun add: ((Int,Int) -> Int) & ((Str,Str) -> Str)
 fun add(x,y) = addImpl(x,y)
 //│ Type: undefined
 
-// FIXME
 add(1, 2)
 //│ Type: 'app
+//│ Where:
+//│   Int <: 'app
 
 // add("a", "b")
 
