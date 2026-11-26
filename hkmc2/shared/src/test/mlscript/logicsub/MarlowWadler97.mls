@@ -34,16 +34,13 @@ test
 //│ >    x is Fls then fls⁰
 //│ >    y is Fls then fls⁰
 //│ = fun test
-//│ Type: ['x, 'y, 'reach, 'res] -> ('x, 'y) -> 'res
+//│ Type: ['x, 'y, 'res] -> ('x, 'y) -> 'res
 //│ Where:
-//│   'x <: Tru | Fls ∨
-//│       'y <: Fls
-//│       'y >:< Fls => ⊤ <: 'reach
+//│   'x <: Tru | Fls ∨ 'y <: Fls
 //│   'x >:< Tru =>
 //│       'y <: Tru | Fls
-//│       'y >:< Fls => ⊤ <: 'reach
 //│       'y >:< Tru => Tru <: 'res
-//│   'reach <: ⊥ ∨ Fls <: 'res
+//│   (('x >:< ¬(Tru | Fls) ∧ 'y >:< Fls) ∨ ('x >:< Tru ∧ 'y >:< Fls)) => Fls <: 'res
 //│   'x >:< Fls => Fls <: 'res
 
 :expect Tru()

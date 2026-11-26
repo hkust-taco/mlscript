@@ -6,31 +6,35 @@ import hkmc2.utils.*, shorthands.*
 
 class PrettyPrinter(output: String => Unit)(using printScope: Scope, ctx: InfCtx):
   def print(ty: InfType)(using Raise): Unit =
-    val view = TypeSimplifier.forDisplay(TypeSimplifier.snapshot(ty))
-    render("Type", view.body, PrettyPrinter.factor(view.bounds.iterator.map(_.c)), implications = true)
+    val (body, bounds) = TypeSimplifier.forDisplay(TypeSimplifier.snapshot(ty))
+    render("Type", body, bounds, implications = true)
 
   def printRaw(ty: InfType)(using Raise): Unit =
     val view = TypeSimplifier.snapshot(ty)
-    render("Raw type", view.body, view.bounds.map(_.c), implications = false)
+    render("Raw type", view.body, DisplayBounds(view.bounds.map(_.c), Map.empty), implications = false)
 
-  private def render(label: String, body: InfType, bounds: Ls[SubOr], implications: Bool)(using Raise): Unit =
+  private def render(label: String, body: InfType, bounds: DisplayBounds, implications: Bool)(using Raise): Unit =
     given names: Scope = printScope.nest
     object Names extends BoundTraverser:
       override def visitVariable(v: InfVar): Unit =
         // The body and its Where clause must use the same names across binders.
-        names.allocateOrGetName(v.sym, v.sym.hint)
+        bounds.joins.get(v) match
+          case None => names.allocateOrGetName(v.sym, v.sym.hint)
+          case Some(paths) => for path <- paths; test <- path do
+            visitType(test.x)
+            visitType(test.y)
     Names.visitType(body)
-    bounds.foreach(Names.visitBound)
+    bounds.clauses.foreach(Names.visitBound)
     body.show match
       case "()" =>
       case tyStr => output(s"$label: $tyStr")
-    if bounds.nonEmpty then
+    if bounds.clauses.nonEmpty then
       output("Where:")
-      renderBounds(bounds, 2, implications)
+      renderBounds(bounds.clauses, 2, if implications then bounds.premise else _ => None)
 
   /** Each line at the same indentation is a conjunct. A disjunction can
     * continue on one line until its fallback has several conjuncts. */
-  private def renderBounds(bounds: Ls[SubOr], indent: Int, implications: Bool)(using Scope, Raise): Unit =
+  private def renderBounds(bounds: Ls[SubOr], indent: Int, premise: SubOr => Opt[Str])(using Scope, Raise): Unit =
     bounds.foreach: bound =>
       val premises = new StringBuilder
       val alternatives = new StringBuilder
@@ -51,11 +55,12 @@ class PrettyPrinter(output: String => Unit)(using printScope: Scope, ctx: InfCtx
         // On a single disjunctive path, A ∨ (¬P ∨ B) is P => A ∨ B.
         // Stop collecting premises at a conjunction so that each guard
         // keeps its scope over exactly the alternatives in this branch.
-        c.y.toBasic match
-          case Neg(t) if implications && c.cs.isDefined =>
+        val guard = if c.cs.isDefined then premise(c) else None
+        guard match
+          case Some(text) =>
             if premises.nonEmpty then premises ++= " ∧ "
-            premises ++= s"${c.x.show} >:< ${t.show}"
-          case _ => alternative(s"${c.x.show} <: ${c.y.show}")
+            premises ++= text
+          case None => alternative(s"${c.x.show} <: ${c.y.show}")
         c.cs match
           case None => emit(branching = false)
           case Some(Nil) =>
@@ -64,7 +69,7 @@ class PrettyPrinter(output: String => Unit)(using printScope: Scope, ctx: InfCtx
           case Some(next :: Nil) => disjunction(next)
           case Some(cs) =>
             emit(branching = true)
-            renderBounds(cs, indent + 4, implications)
+            renderBounds(cs, indent + 4, premise)
       disjunction(bound)
 
 object PrettyPrinter:
@@ -97,15 +102,4 @@ object PrettyPrinter:
         val rhs = if upper.contains(Top) then Top else upper.iterator.reduceOption[Type](Union.apply).getOrElse(Bot)
         positive.iterator.reduceLeft(Inter.apply) -> rhs
     case _ => x -> y
-
-  /** Factors equal heads within each conjunction, in first-occurrence order.
-    * P ∨ B and P ∨ C share the fallback B ∧ C. A bare P absorbs both. */
-  private def factor(bounds: IterableOnce[SubOr]): Ls[SubOr] =
-    val groups = mutable.LinkedHashMap.empty[(Type, Type), Opt[mutable.ListBuffer[SubOr]]]
-    bounds.iterator.foreach: c =>
-      val head = displayBound(c.x, c.y)
-      c.cs match
-        case None => groups.update(head, None)
-        case Some(cs) => groups.getOrElseUpdate(head, Some(mutable.ListBuffer.empty)).foreach(_ ++= cs)
-    groups.iterator.map { case ((x, y), cs) => SubOr(x, y, cs.map(factor)) }.toList
 

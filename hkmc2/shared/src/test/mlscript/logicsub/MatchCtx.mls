@@ -9,31 +9,56 @@ fun probe(x0, y0, x1, y1, x2, y2, x3, y3) = if
   x3 is Int and y3 is Str then 3
   else "miss"
 probe
-//│ Type: ['x0, 'reach, 'reach1, 'reach2, 'reach3, 'res, 'x3, 'y3, 'x2, 'y2, 'x1, 'y1, 'y0] -> ('x0, 'y0, 'x1, 'y1, 'x2, 'y2, 'x3, 'y3) -> 'res
+//│ Type: ['x0, 'res, 'x3, 'y3, 'x2, 'y2, 'x1, 'y1, 'y0] -> ('x0, 'y0, 'x1, 'y1, 'x2, 'y2, 'x3, 'y3) -> 'res
 //│ Where:
-//│   'x0 <: Int ∨ ⊤ <: 'reach
-//│   'reach <: ⊥ ∨
-//│       'reach1 <: ⊥ ∨
-//│           'reach2 <: ⊥ ∨
-//│               'reach3 <: ⊥ ∨ "miss" <: 'res
+//│   ('x0 >:< ¬Int ∨ ('x0 >:< Int ∧ 'y0 >:< ¬Str)) =>
+//│       ('x1 >:< ¬Int ∨ ('x1 >:< Int ∧ 'y1 >:< ¬Str)) =>
+//│           ('x2 >:< ¬Int ∨ ('x2 >:< Int ∧ 'y2 >:< ¬Str)) =>
+//│               ('x3 >:< ¬Int ∨ ('x3 >:< Int ∧ 'y3 >:< ¬Str)) => "miss" <: 'res
 //│               'x3 >:< Int ∧ 'y3 >:< Str => 3 <: 'res
 //│           'x2 >:< Int ∧ 'y2 >:< Str => 2 <: 'res
 //│       'x1 >:< Int ∧ 'y1 >:< Str => 1 <: 'res
-//│   'x3 <: Int ∨ ⊤ <: 'reach3
-//│   'x3 >:< Int => 'y3 <: Str ∨ ⊤ <: 'reach3
-//│   'x2 <: Int ∨ ⊤ <: 'reach2
-//│   'x2 >:< Int => 'y2 <: Str ∨ ⊤ <: 'reach2
-//│   'x1 <: Int ∨ ⊤ <: 'reach1
-//│   'x1 >:< Int => 'y1 <: Str ∨ ⊤ <: 'reach1
-//│   'x0 >:< Int =>
-//│       'y0 <: Str ∨ ⊤ <: 'reach
-//│       'y0 >:< Str => 0 <: 'res
+//│   'x0 >:< Int ∧ 'y0 >:< Str => 0 <: 'res
 
 probe(0, 0, "", "", 2, "hit", 3, "later")
 //│ Type: 2
 
 probe("", "", 1, 1, "", "", 3, 3)
 //│ Type: "miss"
+
+// Both branches of the flag test use the same fallthrough condition on x and y.
+fun twoContinuations(flag, x, y) = if
+  flag is Str then (if x is Int and y is Str then 1 else 2)
+  else (if x is Int and y is Str then 3 else 4)
+twoContinuations
+//│ Type: ['flag, 'reach, 'res, 'x, 'y] -> ('flag, 'x, 'y) -> 'res
+//│ Where:
+//│   'flag <: Str ∨
+//│       'reach <: ⊥ ∨ 4 <: 'res
+//│       'x >:< Int ∧ 'y >:< Str => 3 <: 'res
+//│   'x <: Int ∨ ⊤ <: 'reach
+//│   'x >:< Int => 'y <: Str ∨ ⊤ <: 'reach
+//│   'flag >:< Str =>
+//│       'reach <: ⊥ ∨ 2 <: 'res
+//│       'x >:< Int ∧ 'y >:< Str => 1 <: 'res
+
+// The two joins have different continuations but share the incoming test on x.
+fun sharedPrefix(x, y, z) =
+  let a = if x is Int and y is Str then 1 else 2
+  if x is Int and z is Str then a else 3
+sharedPrefix
+//│ Type: ['x, 'reach, 'res, 'z, 'res1, 'reach1, 'y] -> ('x, 'y, 'z) -> 'res
+//│ Where:
+//│   'x <: Int ∨
+//│       ⊤ <: 'reach
+//│       ⊤ <: 'reach1
+//│   'reach <: ⊥ ∨ 3 <: 'res
+//│   'x >:< Int =>
+//│       'z <: Str ∨ ⊤ <: 'reach
+//│       'z >:< Str => 'res1 <: 'res
+//│       'y <: Str ∨ ⊤ <: 'reach1
+//│       'y >:< Str => 1 <: 'res1
+//│   'reach1 <: ⊥ ∨ 2 <: 'res1
 
 // The first arm consumes the singleton part of the second arm's Int guard.
 fun literal(x, y) = if
@@ -179,12 +204,10 @@ throughSame("a", 20)
 (x, y) => throughSame(x, y)
 //│ Type: ('x, 'y) ->{'eff} 'res
 //│ Where:
-//│   'x <: Int | Str ∨
-//│       ((Int, Int) -> 1) & ((Str, Str) -> 2) <: ('x & ¬Int & ¬Str, 'y) ->{'eff1} 'app
-//│       ⊤ <: 'reach
+//│   'x <: Int | Str ∨ ((Int, Int) -> 1) & ((Str, Str) -> 2) <: ('x & ¬Int & ¬Str, 'y) ->{'eff1} 'app
 //│   'x >:< Str => 'y <: Int ∨ ((Int, Int) -> 1) & ((Str, Str) -> 2) <: ('x & Str, 'y & ¬Int) ->{'eff1} 'app
 //│   'x >:< Int => 'y <: Str ∨ ((Int, Int) -> 1) & ((Str, Str) -> 2) <: ('x & Int, 'y & ¬Str) ->{'eff1} 'app
-//│   'reach <: ⊥ ∨
+//│   ('x >:< ¬(Int | Str) ∨ ('x >:< Str ∧ 'y >:< ¬Int) ∨ ('x >:< Int ∧ 'y >:< ¬Str)) =>
 //│       'eff1 <: 'eff
 //│       'app <: 'res
 //│       ('x1, 'y1) -> 'res1 <: (Str, Str) -> 2
@@ -203,21 +226,15 @@ throughSame("a", 20)
 //│   'x2 >:< Int =>
 //│       'y2 <: Int
 //│       'y2 >:< Int => 1 <: 'res2
-//│   'x >:< Str =>
-//│       'y <: Int ∨ ⊤ <: 'reach
-//│       'y >:< Int => 4 <: 'res
-//│   'x >:< Int =>
-//│       'y <: Str ∨ ⊤ <: 'reach
-//│       'y >:< Str => 3 <: 'res
+//│   'x >:< Str ∧ 'y >:< Int => 4 <: 'res
+//│   'x >:< Int ∧ 'y >:< Str => 3 <: 'res
 
 (x) => throughSame(x, x)
 //│ Type: ('x) ->{'eff} 'res
 //│ Where:
 //│   'x >:< Str => 'x <: Int ∨ ((Int, Int) -> 1) & ((Str, Str) -> 2) <: ('x & Str, 'x & ¬Int) ->{'eff1} 'app
-//│   'x <: Int | Str ∨
-//│       ((Int, Int) -> 1) & ((Str, Str) -> 2) <: ('x & ¬Int & ¬Str, 'x) ->{'eff1} 'app
-//│       ⊤ <: 'reach
-//│   'reach <: ⊥ ∨
+//│   'x <: Int | Str ∨ ((Int, Int) -> 1) & ((Str, Str) -> 2) <: ('x & ¬Int & ¬Str, 'x) ->{'eff1} 'app
+//│   ('x >:< ¬(Int | Str) ∨ 'x >:< Str ∨ 'x >:< Int) =>
 //│       'eff1 <: 'eff
 //│       'app <: 'res
 //│       ('x1, 'y) -> 'res1 <: (Str, Str) -> 2
@@ -236,12 +253,8 @@ throughSame("a", 20)
 //│   'x2 >:< Int =>
 //│       'y1 <: Int
 //│       'y1 >:< Int => 1 <: 'res2
-//│   'x >:< Str =>
-//│       ⊤ <: 'reach
-//│       'x >:< Int => 4 <: 'res
-//│   'x >:< Int =>
-//│       ⊤ <: 'reach
-//│       'x >:< Str => 3 <: 'res
+//│   'x >:< Str ∧ 'x >:< Int => 4 <: 'res
+//│   'x >:< Int ∧ 'x >:< Str => 3 <: 'res
 //│   'x >:< Int => 'x <: Str ∨ ((Int, Int) -> 1) & ((Str, Str) -> 2) <: ('x & Int, 'x & ¬Str) ->{'eff1} 'app
 
 

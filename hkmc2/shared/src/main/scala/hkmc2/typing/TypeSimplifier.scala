@@ -221,10 +221,10 @@ private[logicsub] object TypeSimplifier:
 
   /** Simplifies the outermost inferred type for display and retains any
     * variables that a nested quantifier can observe. */
-  def forDisplay(raw: Result)(using InfCtx): Result =
-    val (body, quantified) = raw.body match
-      case p: PolyType => p.body -> Some(p.tvs.toSet)
-      case t => t -> None
+  def forDisplay(raw: Result)(using InfCtx): (InfType, DisplayBounds) =
+    val (body, quantified, outerBinder) = raw.body match
+      case p: PolyType => (p.body, Some(p.tvs.toSet), p.outer)
+      case t => (t, None, None)
     val view = raw.copy(body = body)
     // A nested scheme may capture variables from this type at either polarity.
     // Keep its whole reachable graph opaque to elimination in this scope.
@@ -247,9 +247,12 @@ private[logicsub] object TypeSimplifier:
     val (inner, outer) = raw.bounds.partition(b => innerBounds(b.c))
     val scoped = simplify(view.copy(bounds = outer), eligible)
     val result = scoped.copy(bounds = scoped.bounds ::: inner)
-    raw.body match
-      case p: PolyType => result.copy(body = bind(p, result, live(result) ++ protectedVars))
-      case _ => result
+    val visible = variables(visitBody(result.body, true, _))
+    val bounds = DisplayBounds.project(result.bounds.iterator.map(_.c), eligible -- visible -- outerBinder)
+    val displayed = raw.body match
+      case p: PolyType => bind(p, result, (live(result) ++ protectedVars) -- bounds.joins.keys)
+      case _ => result.body
+    displayed -> bounds
 
   /** Builds a private template for an inferred function. Only its quantified
     * flexible variables are candidates for elimination. Captured variables
