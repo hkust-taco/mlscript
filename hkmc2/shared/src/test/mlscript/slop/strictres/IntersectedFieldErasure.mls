@@ -199,3 +199,63 @@ fun putDynamic(r: IntItem | dyn, b: Bool) = set r.item = b
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Bool' at an unrelated type 'Int'
 //│ ║  l.+1: 	fun putDynamic(r: IntItem | dyn, b: Bool) = set r.item = b
 //│ ╙──      	                                                ^^^^^^
+
+// The arrow declaration supplies the unboxed parameter and result in either order of the intersection.
+:sir
+:siret
+:checkIR
+type Operation32 = {invoke: Int32 -> Int32}
+type LooseOperation = {invoke: Any}
+fun preciseFirst(source: Operation32 & LooseOperation, value: Int32): Int32 = source.invoke(value)
+fun looseFirst(source: LooseOperation & Operation32, value: Int32): Int32 = source.invoke(value)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define preciseFirst⁰ as fun preciseFirst¹(source: Unknown, value: Int32): Int32 {
+//│   return source.invoke⁰‹(Int32) => Int32›(value)
+//│ };
+//│ define looseFirst⁰ as fun looseFirst¹(source: Unknown, value: Int32): Int32 {
+//│   return source.invoke⁰‹(Int32) => Int32›(value)
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// The union shares only the loose declaration. Both alternatives agree on the signatures of both calls.
+:sir
+:siret
+:checkIR
+type Curried = {invoke: Int -> Int32 -> Int32}
+type TaggedCurried = {invoke: Int -> Int32 -> Int32, tag: Int}
+type EitherOperation = (Curried & LooseOperation) | (TaggedCurried & LooseOperation)
+fun callEither(source: EitherOperation, value: Int32): Int32 = source.invoke(0)(value)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define callEither⁰ as fun callEither¹(source: Unknown, value: Int32): Int32 {
+//│   let callPrefix: Function⁰;
+//│   set callPrefix = source.invoke¹‹(Int⁰) => Function⁰›(0);
+//│   return callPrefix‹(Int32) => Int32›(value)
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// Both fields accept an unboxed argument on the first call. Only one of the returned functions does.
+:sir
+:siret
+:checkIR
+type ReturnsBoxed = {invoke: Int32 -> Int -> Int}
+type ReturnsUnboxed = {invoke: Int32 -> Int32 -> Int32}
+type MixedOperations = (ReturnsBoxed & LooseOperation) | (ReturnsUnboxed & LooseOperation)
+fun sharedPrefix(source: MixedOperations, value: Int32) = source.invoke(value)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define sharedPrefix⁰ as fun sharedPrefix¹(source: Unknown, value: Int32): Function⁰ {
+//│   return source.invoke²‹(Int32) => Function⁰›(value)
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:ge
+fun callMixed(source: MixedOperations, value: Int32): Int32 = source.invoke(value)(value)
+fun callMixedBoxed(source: MixedOperations, value: Int32): Int = source.invoke(value)(0)
+//│ ╔══[COMPILATION ERROR] Cannot determine a common calling convention for the possible function types at this call
+//│ ║  l.+1: 	fun callMixed(source: MixedOperations, value: Int32): Int32 = source.invoke(value)(value)
+//│ ╙──      	                                                                                  ^^^^^^^
+//│ ╔══[COMPILATION ERROR] Cannot determine a common calling convention for the possible function types at this call
+//│ ║  l.+2: 	fun callMixedBoxed(source: MixedOperations, value: Int32): Int = source.invoke(value)(0)
+//│ ╙──      	                                                                                     ^^^

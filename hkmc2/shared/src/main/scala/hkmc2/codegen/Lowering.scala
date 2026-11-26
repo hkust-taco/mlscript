@@ -626,12 +626,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           // A getter runs before the arguments of the returned function. Its declaration supplies
           // that function's type even after binding the read to a temporary.
           bindPath(getterRead(fr)): callee =>
-            lowerRemainingCalls(callee, declaredCalleeType(fr), args, remainingArgss, annotations, loc)(k)
+            lowerRemainingCalls(callee, declaredCalleeTypes(fr), args, remainingArgss, annotations, loc)(k)
         case acc =>
           val call = new Call(fr, acc)(groupedSignature, CallMetadata(isMlsFun, mayRaiseEffects, Nil), loc)
           val tmp = loweringCtx.registerTempSymbol(N, erasedType = call.erasedType, "baseCall")
-          val resultType = if isConstructor then N else definition.flatMap(declaredResultType)
-          Assign(tmp, call, lowerRemainingCalls(tmp.asSimpleRef, resultType, args, remainingArgss, annotations, loc)(k))
+          val resultTypes = if isConstructor then Nil else definition.flatMap(declaredResultType).map(_ :: Nil).toList
+          Assign(tmp, call, lowerRemainingCalls(tmp.asSimpleRef, resultTypes, args, remainingArgss, annotations, loc)(k))
       case (_ :: _, Nil) =>
         k(new Call(fr, acc.reverse)(groupedSignature, CallMetadata(isMlsFun, mayRaiseEffects, annotations), loc))
     target match
@@ -642,18 +642,35 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case _ => zipArgs(Nil, args, Nil, fs.mayRaiseEffects)
     case N => zipArgs(Nil, args, Nil, true)
   
-  /** Lower the application of each argument list in turn, starting with a call of `base`, whose declared type is
-    * `baseType`. A declared function type describes each call and the type of its result. Callees without one get
-    * dynamic signatures, unless they publish their own, which only happens for definitions without source
-    * parameter lists.
+  /** Each alternative describes a possible callee. Within an alternative all the listed declarations
+    * constrain the same field of an intersected record. An empty alternative has no declared arrow type.
     */
-  def lowerRemainingCalls(base: Path, baseType: Opt[TypeResolution], args: Term, remainingArgss: Ls[Term],
+  private type CalleeTypes = Ls[Ls[TypeResolution]]
+
+  /** Lower the application of each argument list in turn, starting with a call of `base`. A declared function
+    * type describes each call and the type of its result. Callees without one get dynamic signatures, unless
+    * they publish their own, which only happens for definitions without source parameter lists.
+    */
+  private def lowerRemainingCalls(base: Path, baseTypes: CalleeTypes, args: Term, remainingArgss: Ls[Term],
         annotations: Ls[Annot], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
-    val (signature, resultType) = Call.publishedSignature(base) match
-      case S(sig: ErasedFuncSignature) => (sig, N)
-      case _ => baseType.flatMap(summon[Erasure].application) match
-        case S((sig, resultType)) => (sig, S(resultType))
-        case N => (ErasedFuncSignature.dynamic(1), N)
+    val (signature, resultTypes) = Call.publishedSignature(base) match
+      case S(sig: ErasedFuncSignature) => (sig, Nil)
+      case _ =>
+        val applications = baseTypes.map(_.flatMap(summon[Erasure].application))
+        val known = applications.iterator.flatten.map(_._1)
+        known.nextOption() match
+          case N => (ErasedFuncSignature.dynamic(1), Nil)
+          case S(first) =>
+            val results = applications.map(_.map(_._2))
+            if applications.forall(_.nonEmpty) && known.forall(_.canonicalize == first.canonicalize) then
+              (first, results)
+            // A dynamic call passes and returns reference values. A disagreement about a known unboxed
+            // slot cannot use that convention, even if the arguments at this call happen to be references.
+            else if applications.forall(_.forall(app => allowsDynamicCall(app._1))) then
+              (ErasedFuncSignature.dynamic(1), results)
+            else return fail(ErrorReport(
+              msg"Cannot determine a common calling convention for the possible function types at this call" ->
+                args.toLoc.orElse(loc) :: Nil, source = Diagnostic.Source.Compilation))
     lowerArgs(args, signature.paramLists.head.params): as =>
       val call = Call(base, as :: Nil)(signature, CallMetadata(false, true, annotations), loc)
       remainingArgss match
@@ -661,24 +678,38 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case args :: remainingArgss =>
         val tmp = loweringCtx.registerTempSymbol(N, erasedType = call.erasedType, "callPrefix")
         Assign(tmp, call,
-          lowerRemainingCalls(tmp.asSimpleRef, resultType, args, remainingArgss, annotations, loc)(k))
+          lowerRemainingCalls(tmp.asSimpleRef, resultTypes, args, remainingArgss, annotations, loc)(k))
+
+  private def allowsDynamicCall(sig: ErasedFuncSignature): Bool =
+    def fitsReference(slot: Opt[ErasedValueType]): Bool =
+      slot.forall(tpe => ErasedType.needsCast(tpe.canonicalize, ErasedType.Unknown).contains(false))
+    fitsReference(sig.ret) && sig.paramLists.forall(ps => ps.params.forall(fitsReference) && ps.rest.forall(fitsReference))
   
-  /** The declared type of a callee that publishes no function signature, such as a parameter, a value, or a getter
+  /** The declared types of a callee that publishes no function signature, such as a parameter, a value, or a getter
     * whose result is applied. Only the new resolver records the interpretations of declared types.
     */
-  private def declaredCalleeType(fun: Path): Opt[TypeResolution] =
+  private def declaredCalleeTypes(fun: Path): CalleeTypes =
     def paramType(decl: Opt[Declaration]): Opt[TypeResolution] = decl match
       case S(param: Param) => param.sign.flatMap(_.typeInterpretation)
       case _ => N
-    if !newResolution then N
+    def declared(sym: TermSymbol): Opt[TypeResolution] = sym.defn match
+      case S(td) => declaredResultType(td)
+      // * Constructor fields keep their declared type on their parameter.
+      case N => paramType(sym.decl)
+    // A copy holds the same value as its source. An intersection satisfies the arrow declarations from
+    // all its fields, including when a component such as Any imposes no calling convention.
+    def fieldTypes(field: RecordFieldSymbol): Iterator[TypeResolution] = field.origins match
+      case Nil => declared(field).iterator
+      case parts => parts.iterator.flatMap(fieldTypes)
+    if !newResolution then Nil
     else fun match
-      case Value.SimpleRef(sym: VarSymbol) => paramType(sym.decl)
+      case Value.SimpleRef(sym: VarSymbol) => paramType(sym.decl).map(_ :: Nil).toList
       case _ => fun.targetSymbol match
-        case S(ts: TermSymbol) => ts.defn match
-          case S(td) => declaredResultType(td)
-          // * Constructor fields keep their declared type on their parameter.
-          case N => paramType(ts.decl)
-        case _ => N
+        case S(field: RecordFieldSymbol) => fieldTypes(field).toList :: Nil
+        // Any of these fields may be read, so each contributes a separate alternative.
+        case S(alts: RecordFieldAlternativesSymbol) => alts.fields.map(fieldTypes(_).toList)
+        case S(ts: TermSymbol) => declared(ts).map(_ :: Nil).toList
+        case _ => Nil
   
   /** The declared type of what `td` evaluates to once all of its parameter lists, if any, are applied.
     * The results of async and generator definitions are wrapper objects, which are not described by the
@@ -711,7 +742,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         val inst = buildInstantiate(acc.reverse)
         val tmp = loweringCtx.registerTempSymbol(N, erasedType = inst.erasedType, "baseInst")
         Assign(tmp, inst,
-          lowerRemainingCalls(tmp.asSimpleRef, N, args, remainingArgss, annotations, N)(k))
+          lowerRemainingCalls(tmp.asSimpleRef, Nil, args, remainingArgss, annotations, N)(k))
       case (remainingParamss, Nil) =>
         // * Eta-expand missing argument lists by creating lambdas for each remaining param list.
         // * This makes partial `new C(args...)` explicit instead of relying on the JS class curry.
@@ -745,7 +776,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             val inst = buildInstantiate(as :: Nil)
             val tmp = loweringCtx.registerTempSymbol(N, erasedType = inst.erasedType, "baseInst")
             Assign(tmp, inst,
-              lowerRemainingCalls(tmp.asSimpleRef, N, remainingArgss.head, remainingArgss.tail, annotations, N)(k))
+              lowerRemainingCalls(tmp.asSimpleRef, Nil, remainingArgss.head, remainingArgss.tail, annotations, N)(k))
     else zipArgs(ctorParamLists.lists, args, Nil)
   
   /** Materialize omitted MLscript constructor parameters as null before optimizers
