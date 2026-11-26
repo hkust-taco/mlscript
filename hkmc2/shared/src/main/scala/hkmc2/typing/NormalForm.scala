@@ -21,7 +21,12 @@ object NF:
 
   final case class Union(v: Ls[ClassLikeType]) extends NormalForm:
     lazy val toBasic = v.foldLeft[Type](Bot)(_ | _).toBasic
-    def merge(other: Union) = Union(v ++ other.v)
+    // Recursive bounds can exclude the same class on every visit. Keep the
+    // normal form stable so the solver recognizes the repeated constraint.
+    def merge(other: Union): Union =
+      if v.isEmpty then other
+      else if other.v.isEmpty then this
+      else Union((v.iterator ++ other.v).distinct.toList)
 
   object Inter:
     val empty = Inter(Nil)

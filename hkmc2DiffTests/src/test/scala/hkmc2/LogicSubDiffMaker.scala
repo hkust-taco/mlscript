@@ -14,19 +14,17 @@ abstract class LogicSubDiffMaker extends WasmDiffMaker:
     given Config = mkConfig
     logicsub.InfCtx.init
 
-  var typer: Opt[logicsub.Typer] = None
-
   override def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Config, Raise): Unit =
     super.processTerm(trm, inImport)
     Config.extractConfigFromStats(trm).givenIn:
       if summon[Config].language.typeCheck.isDefined then
         given Scope = Scope.empty(Scope.Cfg.default)
-        if typer.isEmpty then
-          given Elaborator.Ctx = curCtx
-          given codegen.Erasure = codegen.Erasure(trm, summon[Raise])
-          typer = S(logicsub.Typer())
+        // Each block has its own diagnostic expectations. Only the inference
+        // context carries definitions and bounds from earlier blocks.
+        given Elaborator.Ctx = curCtx
+        given codegen.Erasure = codegen.Erasure(trm, summon[Raise]) // FIXME: don't rerun erasure!
         given logicsub.InfCtx = infctx
-        val ty = typer.get.typePurely(trm)
+        val ty = logicsub.Typer().typePurely(trm)
         val printer = logicsub.PrettyPrinter(output(_))
         printer.print(ty)
 

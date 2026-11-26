@@ -24,9 +24,10 @@ add(1, 2)
 fun test(a,b,c,d) = add(a,add(b,add(c,d)))
 //│ Type: undefined
 
-// FIXME
 test(0, 1, 2, 3)
 //│ Type: 'app
+//│ Where:
+//│   Int <: 'app
 
 // test("A", "B", "C", "D")
 

@@ -10,15 +10,18 @@ import hkmc2.utils.*, shorthands.*
 import utils.*
 import utils.Scope
 
-type Cache = mutable.HashSet[(Type, Type)]
+/** Subtype checks visited during one constraint, including the fallback to enforce on failure. */
+type Cache = mutable.HashSet[(KCtx, (Type, Type))]
 type ExtrudeCache = mutable.HashMap[(InfVarSymbol, Bool), InfVar]
 
 case class CCtx(cache: Cache, parents: Ls[(Type, Type)], origin: Term, exp: Opt[InfType])(using Scope):
   def err(using ctx: KCtx)(using TL, Raise) = 
     given CCtx = this
     ctx.err(parents, origin, exp)
-  def nest(sub: (Type, Type)): CCtx =
-    copy(cache = cache += sub, parents = parents match
+  def cached(sub: (Type, Type))(using ctx: KCtx): Bool = cache.contains(ctx -> sub)
+  def nest(sub: (Type, Type))(using ctx: KCtx): CCtx =
+    cache += ctx -> sub
+    copy(parents = parents match
       case `sub` :: _ => parents
       case _ =>  sub :: parents
     )
@@ -130,7 +133,7 @@ object ConstraintSolver:
       (using ctx: KCtx, cctx:CCtx)(using TL, Raise)
       : Unit =
     val p = lhs.toDnf -> rhs.toDnf
-    if cctx.cache(p) then log(s"Cached!")
+    if cctx.cached(p) then log(s"Cached!")
     else tl.trace(s"CONSTRAINT ${lhs.showDbg} <: ${rhs.showDbg}"):
       cctx.nest(p) givenIn:
         val disj = inlineSkolemBounds(lhs & ~rhs).toDnf
@@ -140,7 +143,7 @@ object ConstraintSolver:
     val (ps, ts) = rhs.disjuncts.toList.partition(_.partialpattern)
     if ts.length > 1 then
       val p = lhs.toDnf -> rhs
-      if cctx.cache(p) then log(s"Cached!")
+      if cctx.cached(p) then log(s"Cached!")
       else tl.trace(s"CONSTRAINT ${lhs.showDbg} <: ${rhs.showDbg}"):
         cctx.nest(p) givenIn:
           val u = ps.foldLeft(lhs)((x, y) => x & ~y)

@@ -97,7 +97,7 @@ sealed abstract class Type extends InfType with TypeArg:
         s"$a ->{${eff.show}} ${ret.show}"
     case ClassLikeType(name, targs, refinement, _,_) =>
       val cls = if targs.isEmpty then s"${name.nme}" else s"${name.nme}[${targs.map(_.show).mkString(", ")}]"
-      val r = refinement.map { case (l,t) => s"${l.name}: ${t.showDbg}" }.mkString(", ")
+      val r = refinement.map { case (l,t) => s"${l.name}: ${t.show}" }.mkString(", ")
       cls ++ (if refinement.isEmpty then "" else s" & {$r}")
     case v @ InfVar(lvl, sym, isSkolem) =>
       val name = scope.lookup(v.sym).getOrElse(scope.allocateName(v.sym, v.sym.hint))

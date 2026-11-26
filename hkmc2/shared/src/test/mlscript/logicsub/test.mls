@@ -83,12 +83,12 @@ fun singletons: (1 & Int) | (Str & "s") | (false & Bool) | (true & Str)
 //│   "s" <: 'x
 //│   1 <: 'x
 
-// FIXME
 (x => if x is
   Int then 1
   Str then "")(ns)
 //│ Type: 'res
 //│ Where:
+//│   "" <: 'res
 //│   1 <: 'res
 
 // TODO implement exhaustiveness check

@@ -331,24 +331,26 @@ class Typer(using tl: TL)(using Elaborator.State, Raise, codegen.Erasure, Ctx, C
     case N => 
       (error(msg"Not a valid class: ${cls.describe}" -> cls.toLoc :: Nil), Bot)
 
-  private def typeSplitImpl(split: Split, sign: InfType, eff: Type, pre: MatchCtx)
-      (using InfCtx, CCtx, Scope): Unit = split match
+  private def typeSplitImpl(split: Split, sign: InfType, eff: Type)
+      (using ctx: InfCtx)(using CCtx, Scope): Unit = split match
     case Split.Cons(Branch(s: SimpleRef, cp: FlatPattern.ClassLike, cons), alts) =>
-      val p = pre.pm(s, tryMkMono(typeCheck(s)._1, s), cp)
-      typeSplitImpl(cons, sign, eff, p)
-      typeSplitImpl(alts, sign, eff, p.el)
+      val scrutinee = tryMkMono(typeCheck(s)._1, s)
+      val sym = cp.constructor.symbol.get.asCls.get
+      val params = sym.defn.get.tparams
+      val pattern = ClassLikeType(sym, params.map(_ => Wildcard.empty), Nil, params.map(_ => false), N)
+      typeSplitImpl(cons, sign, eff)(using ctx.matchBranch(s, scrutinee, pattern))
+      typeSplitImpl(alts, sign, eff)(using ctx.matchBranch(s, scrutinee, ~pattern))
     case Split.Cons(Branch(_, p, _), _) =>
       error(msg"Unsupported pattern" -> p.toLoc :: Nil)
     case Split.Else(e) =>
-      given InfCtx = pre.thenCtx
       constrain(ascribe(e, sign)._2, eff)
     case Split.Let(name, term, tail) =>
-      val nestCtx = pre.thenCtx
+      val nestCtx = ctx.nest
       nestCtx.givenIn:
         val termTy = typeCheck(term)
         // val sk = freshSkolem(name)
         nestCtx += name -> termTy._1
-        typeSplitImpl(tail, sign, eff, pre)
+        typeSplitImpl(tail, sign, eff)
     case Split.End => //TODO
     case _ => ???
 
@@ -357,7 +359,7 @@ class Typer(using tl: TL)(using Elaborator.State, Raise, codegen.Erasure, Ctx, C
       : (InfType, Type) =
     val res = sign.getOrElse(freshVar(new TempSymbol(N, N, "res")))
     val eff = freshVar(new TempSymbol(N, N, "eff"))
-    typeSplitImpl(split, res, eff, MatchCtx.init)
+    typeSplitImpl(split, res, eff)
     (res, eff)
 
   def ascribe(lhs: Term, rhs: InfType)(using ctx: InfCtx, scope: Scope): (InfType, Type) = // TODO

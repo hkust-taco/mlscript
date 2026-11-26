@@ -9,7 +9,7 @@ import hkmc2.utils.*, shorthands.*
 import utils.*
 
 import Message.MessageContext
-import semantics.*, Term.*, ucs.FlatPattern
+import semantics.*, Term.*
 import Elaborator.Ctx
 import syntax.*
 import Tree.*
@@ -91,8 +91,12 @@ class InfCtx(
   def ubs(s: InfVarSymbol): Ls[Type] = varSt.getOrElseUpdate(s, new InfVarState).upperBounds.map(_._1)
   def lbs(s: InfVarSymbol): Ls[Type] = varSt.getOrElseUpdate(s, new InfVarState).lowerBounds
   // def withPrefix(x: Type, y: Type) = ???
-  def thenCtx(env: HashMap[Symbol, InfType], prefix: Ls[SubOr]): ThenCtx =
-    ThenCtx(lvl, S(this), env, outRegAcc, xbds, prefix)
+  /** Narrows the scrutinee for one branch and enforces its constraints whenever
+    * the scrutinee can inhabit the refinement under the enclosing guards. */
+  def matchBranch(ref: SimpleRef, scrutinee: Type, refinement: Type): ThenCtx =
+    val env = HashMap[Symbol, InfType](ref.sym -> (scrutinee & refinement))
+    val unreachable = SubOr(scrutinee, ~refinement)
+    ThenCtx(lvl, S(this), env, outRegAcc, xbds, S(unreachable))
 
 class PrimCtx(using st: Elaborator.State, ctx: Elaborator.Ctx, cfg: Config):
   val objSym: ClsTag = ctx.get("Object").get.symbol.get.asTpe.get
@@ -133,7 +137,9 @@ object InfCtx:
   def refinedObj(r: Ls[Tree.Ident -> Type])(using ctx: InfCtx): ClassLikeType =
     ClassLikeType(ctx.prim.objSym, Nil, r, Nil, N)
 
-class SuffixCtx(val suffix: Ls[SubOr], val cont: KCtx)(using PrimCtx) extends KCtx:
+// A failed subtype check runs its suffix in cont. Both determine whether the solver
+// can reuse a visit, including when propagation reconstructs the same fallback.
+final case class SuffixCtx(suffix: Ls[SubOr], cont: KCtx)(using PrimCtx) extends KCtx:
   def addub(s: InfVar, ub: Type, cs: Opt[Ls[SubOr]] = N)(using CCtx, TL, Raise) = cs match
     case N => cont.addub(s, ub, S(suffix))
     case S(Nil) =>
@@ -146,71 +152,19 @@ class SuffixCtx(val suffix: Ls[SubOr], val cont: KCtx)(using PrimCtx) extends KC
 class ThenCtx(
   lvl: Int, parent: Option[InfCtx],
   env: HashMap[Symbol, InfType], outRegAcc: Type,
-  xbds: ListBuffer[SubOr], prefix: Ls[SubOr]
+  xbds: ListBuffer[SubOr], unreachable: Opt[SubOr]
 )(using HashMap[InfVarSymbol, InfVarState], PrimCtx, Ctx, Config)
 extends InfCtx(lvl, parent, env, outRegAcc, xbds):
-  override def nest: ThenCtx = ThenCtx(lvl, Some(this), HashMap.empty, outRegAcc, xbds, prefix)
+  // The parent enforces its own guard when a nested lexical scope forwards a constraint.
+  override def nest: ThenCtx = ThenCtx(lvl, Some(this), HashMap.empty, outRegAcc, xbds, N)
   override def nestWithOuter(outer: InfVar): ThenCtx =
-    ThenCtx(lvl + 1, Some(this), HashMap.empty, outRegAcc | outer, ListBuffer.empty, prefix)
+    ThenCtx(lvl + 1, Some(this), HashMap.empty, outRegAcc | outer, ListBuffer.empty, N)
   override def nextLevel: ThenCtx =
-    ThenCtx(lvl + 1, Some(this), HashMap.empty, outRegAcc, ListBuffer.empty, prefix)
+    ThenCtx(lvl + 1, Some(this), HashMap.empty, outRegAcc, ListBuffer.empty, N)
   // override def addub(s: InfVar, ub: Type, cs: Opt[Ls[SubOr]] = N)(using CCtx, TL, Raise) =
   //   cont.addub(s,ub,cs)
   // override def addlb(lb: Type, s: InfVar)(using CCtx, TL, Raise) = cont.addlb(lb,s)
   // override def err(parents: Ls[(Type, Type)], origin: Term, exp: Opt[InfType])
   //   (using CCtx, TL, Raise, Scope) = cont.err(parents, origin, exp)
   override def constrain(c: SubOr)(using CCtx, TL, Raise) =
-   prefix.foreach(k => parent.get.constrain(k.or(c)))
-
-
-class MatchCtx(
-  val prefix: Opt[MatchCtx],
-  val refine: Ls[Ls[SimpleRef -> Type]],
-  val svt: HashMap[SimpleRef, InfVar -> Type]
-):
-  def endif: Unit = if prefix.isEmpty then ???
-  def pm(s: SimpleRef, t: => Type, cp: FlatPattern.ClassLike)
-      (using ctx: InfCtx, scope: Scope, st: Elaborator.State): MatchCtx =
-    val sym = cp.constructor.symbol.get.asCls.get
-    val params = sym.defn.get.tparams
-    val patt = ClassLikeType(sym, params.map(_ => Wildcard.empty), Nil, params.map(_ => false), N) // TODO
-    val (sv, st) = svt.get(s) match
-      case N =>
-        val vsym = new TempSymbol(S(s), N, s.sym.nme)
-        val v = InfVar(ctx.lvl, InfVarSymbol(vsym), false)
-        svt += s -> (v , t)
-        (v, t)
-      case S(v, t) => (v, t)
-    val nr = refine.map(s -> patt :: _)
-    MatchCtx(S(this), nr, svt)
-  def el: MatchCtx = MatchCtx(prefix.get.prefix, pneg, svt)
-  def thenCtx(using ctx: InfCtx)(using CCtx, TL, Raise): InfCtx =
-    val c = prefix match
-      case N => ctx
-      case S(p) => p.thenCtx
-    if refine.contains(Nil) then c
-    else
-      val p = refine.map: r =>
-        val m = r.groupMapReduce(_._1)(_._2)(_&_)
-        val ss = r.keys.distinct.toList
-        ss.map(s => SubOr(svt(s)._2, ~m(s))).reduceRight(_.or(_))
-      val tctx = c.thenCtx(env, p)
-      refine.foreach: r =>
-        val m = r.groupMapReduce(_._1)(_._2)(_&_)
-        r.keys.distinct.foreach: s =>
-          val (v, t) = svt(s)
-          tctx.constrain(SubOr(m(s) & t, v))
-      tctx
-  def env: HashMap[Symbol, InfType] =
-    val ss = refine.flatMap(_.keys).distinct
-    // if refine.length == 1
-    HashMap.from(ss.map(s => s.sym -> svt(s)._1))
-  def cond(r: Ls[SimpleRef -> Type]): SubOr =
-    val m = r.groupMapReduce(_._1)(_._2)(_&_)
-    r.keys.distinct.map(s => SubOr(svt(s)._2, ~m(s))).reduceRight(_.or(_))
-  def pneg: Ls[Ls[SimpleRef -> Type]] =
-    refine.foldRight(Ls(Nil)): (r, ps) =>
-      ps.flatMap(p => r.map((s, t) => (s, ~t) :: p))
-
-object MatchCtx:
-  def init: MatchCtx = MatchCtx(N, Ls(Nil), HashMap.empty)
+    parent.get.constrain(unreachable.fold(c)(_.or(c)))

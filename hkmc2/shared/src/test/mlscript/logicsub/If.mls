@@ -28,12 +28,14 @@ f(f(ib))
 //│ Type: 'app
 //│ Where:
 //│   0 <: 'app
+//│   Bool ∧ ¬Int <: 'app
 
 // FIXME
 // :e
 f(si)
 //│ Type: 'app
 //│ Where:
+//│   Bool ∧ ¬Int <: 'app
 //│   0 <: 'app
 
 
@@ -97,9 +99,23 @@ fun increv'(x) = if x is
 increv'
 //│ Type: [outer] -> ('x) ->{out 'eff} out 'res
 
-// FIXME
-// :e
+increv(si)
+//│ Type: 'app
+//│ Where:
+//│   Str <: 'app
+//│   Int <: 'app
+
+// The failing call leaves bounds on the inferred function in this worksheet.
+:e
 increv(sib)
+//│ ╔══[COMPILATION ERROR] Type error in application
+//│ ║  l.+1: 	increv(sib)
+//│ ║        	^^^^^^^^^^^
+//│ ╟── because: cannot constrain  ('x) ->{out 'eff} out 'res  <:  ((Str ∨ Int) ∨ Bool) ->{out 'eff1} out 'app
+//│ ╟── because: cannot constrain  Array & {0: (Str ∨ Int) ∨ Bool}  <:  Array & {0: 'x}
+//│ ╟── because: cannot constrain  (Str ∨ Int) ∨ Bool  <:  'x
+//│ ╟── because: cannot constrain  Bool  <:  'x
+//│ ╙── because: cannot constrain  Bool  <:  Int ∨ Str
 //│ Type: 'app
 //│ Where:
 //│   Str <: 'app
@@ -109,16 +125,10 @@ increv(sib)
 // :e
 // increv'(sib)
 
-increv(si)
-//│ Type: 'app
-//│ Where:
-//│   Str <: 'app
-//│   Int <: 'app
-
-// FIXME
 increv'(si)
 //│ Type: 'app
 //│ Where:
+//│   Str <: 'app
 //│   Int <: 'app
 
 fun f(x, y) = if
@@ -147,7 +157,7 @@ x
 f(x)
 //│ Type: 'app
 //│ Where:
-//│   Bool <: 'app
+//│   Int <: 'app
 
 // f(sib)
 
@@ -163,13 +173,18 @@ f
 f(ib, sib)
 //│ Type: 'app
 //│ Where:
+//│   1 <: 'app
+//│   Str <: 'app
 //│   Bool <: 'app
+//│   Int <: 'app
 
 // :ns
 f(ib, ib)
 //│ Type: 'app
 //│ Where:
 //│   Bool <: 'app
+//│   Int <: 'app
+//│   Str <: 'app
 //│   1 <: 'app
 
 // :todo
@@ -185,3 +200,4 @@ f(ib, 1)
 //│ Type: 'app
 //│ Where:
 //│   1 <: 'app
+//│   Bool <: 'app
