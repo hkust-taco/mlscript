@@ -16,18 +16,18 @@ probe
 //│       'reach1 <: ⊥ ∨
 //│           'reach2 <: ⊥ ∨
 //│               'reach3 <: ⊥ ∨ "miss" <: 'res
-//│               'x3 <: ¬Int ∨ 'y3 <: ¬Str ∨ 3 <: 'res
-//│           'x2 <: ¬Int ∨ 'y2 <: ¬Str ∨ 2 <: 'res
-//│       'x1 <: ¬Int ∨ 'y1 <: ¬Str ∨ 1 <: 'res
+//│               'x3 >:< Int => 'y3 >:< Str => 3 <: 'res
+//│           'x2 >:< Int => 'y2 >:< Str => 2 <: 'res
+//│       'x1 >:< Int => 'y1 >:< Str => 1 <: 'res
 //│   'x3 <: Int ∨ ⊤ <: 'reach3
-//│   'x3 <: ¬Int ∨ 'y3 <: Str ∨ ⊤ <: 'reach3
+//│   'x3 >:< Int => 'y3 <: Str ∨ ⊤ <: 'reach3
 //│   'x2 <: Int ∨ ⊤ <: 'reach2
-//│   'x2 <: ¬Int ∨ 'y2 <: Str ∨ ⊤ <: 'reach2
+//│   'x2 >:< Int => 'y2 <: Str ∨ ⊤ <: 'reach2
 //│   'x1 <: Int ∨ ⊤ <: 'reach1
-//│   'x1 <: ¬Int ∨ 'y1 <: Str ∨ ⊤ <: 'reach1
-//│   'x0 <: ¬Int ∨
+//│   'x1 >:< Int => 'y1 <: Str ∨ ⊤ <: 'reach1
+//│   'x0 >:< Int =>
 //│       'y0 <: Str ∨ ⊤ <: 'reach
-//│       'y0 <: ¬Str ∨ 0 <: 'res
+//│       'y0 >:< Str => 0 <: 'res
 
 probe(0, 0, "", "", 2, "hit", 3, "later")
 //│ Type: 2
@@ -182,38 +182,38 @@ throughSame("a", 20)
 //│   'x <: Int | Str ∨
 //│       ((Int, Int) -> 1) & ((Str, Str) -> 2) <: ('x & ¬Int & ¬Str, 'y) ->{'eff1} 'app
 //│       ⊤ <: 'reach
-//│   'y <: Int ∨ 'x <: ¬Str ∨ ((Int, Int) -> 1) & ((Str, Str) -> 2) <: ('x & Str, 'y & ¬Int) ->{'eff1} 'app
-//│   'y <: Str ∨ 'x <: ¬Int ∨ ((Int, Int) -> 1) & ((Str, Str) -> 2) <: ('x & Int, 'y & ¬Str) ->{'eff1} 'app
+//│   'x >:< Str => 'y <: Int ∨ ((Int, Int) -> 1) & ((Str, Str) -> 2) <: ('x & Str, 'y & ¬Int) ->{'eff1} 'app
+//│   'x >:< Int => 'y <: Str ∨ ((Int, Int) -> 1) & ((Str, Str) -> 2) <: ('x & Int, 'y & ¬Str) ->{'eff1} 'app
 //│   'reach <: ⊥ ∨
 //│       'eff1 <: 'eff
 //│       'app <: 'res
 //│       ('x1, 'y1) -> 'res1 <: (Str, Str) -> 2
 //│       ('x2, 'y2) -> 'res2 <: (Int, Int) -> 1
 //│   'x1 <: Int | Str
-//│   'x1 <: ¬Str ∨
+//│   'x1 >:< Str =>
 //│       'y1 <: Str
-//│       'y1 <: ¬Str ∨ 2 <: 'res1
-//│   'x1 <: ¬Int ∨
+//│       'y1 >:< Str => 2 <: 'res1
+//│   'x1 >:< Int =>
 //│       'y1 <: Int
-//│       'y1 <: ¬Int ∨ 1 <: 'res1
+//│       'y1 >:< Int => 1 <: 'res1
 //│   'x2 <: Int | Str
-//│   'x2 <: ¬Str ∨
+//│   'x2 >:< Str =>
 //│       'y2 <: Str
-//│       'y2 <: ¬Str ∨ 2 <: 'res2
-//│   'x2 <: ¬Int ∨
+//│       'y2 >:< Str => 2 <: 'res2
+//│   'x2 >:< Int =>
 //│       'y2 <: Int
-//│       'y2 <: ¬Int ∨ 1 <: 'res2
-//│   'x <: ¬Str ∨
+//│       'y2 >:< Int => 1 <: 'res2
+//│   'x >:< Str =>
 //│       'y <: Int ∨ ⊤ <: 'reach
-//│       'y <: ¬Int ∨ 4 <: 'res
-//│   'x <: ¬Int ∨
+//│       'y >:< Int => 4 <: 'res
+//│   'x >:< Int =>
 //│       'y <: Str ∨ ⊤ <: 'reach
-//│       'y <: ¬Str ∨ 3 <: 'res
+//│       'y >:< Str => 3 <: 'res
 
 (x) => throughSame(x, x)
 //│ Type: ('x) ->{'eff} 'res
 //│ Where:
-//│   'x <: Int ∨ 'x <: ¬Str ∨ ((Int, Int) -> 1) & ((Str, Str) -> 2) <: ('x & Str, 'x & ¬Int) ->{'eff1} 'app
+//│   'x >:< Str => 'x <: Int ∨ ((Int, Int) -> 1) & ((Str, Str) -> 2) <: ('x & Str, 'x & ¬Int) ->{'eff1} 'app
 //│   'x <: Int | Str ∨
 //│       ((Int, Int) -> 1) & ((Str, Str) -> 2) <: ('x & ¬Int & ¬Str, 'x) ->{'eff1} 'app
 //│       ⊤ <: 'reach
@@ -223,26 +223,26 @@ throughSame("a", 20)
 //│       ('x1, 'y) -> 'res1 <: (Str, Str) -> 2
 //│       ('x2, 'y1) -> 'res2 <: (Int, Int) -> 1
 //│   'x1 <: Int | Str
-//│   'x1 <: ¬Str ∨
+//│   'x1 >:< Str =>
 //│       'y <: Str
-//│       'y <: ¬Str ∨ 2 <: 'res1
-//│   'x1 <: ¬Int ∨
+//│       'y >:< Str => 2 <: 'res1
+//│   'x1 >:< Int =>
 //│       'y <: Int
-//│       'y <: ¬Int ∨ 1 <: 'res1
+//│       'y >:< Int => 1 <: 'res1
 //│   'x2 <: Int | Str
-//│   'x2 <: ¬Str ∨
+//│   'x2 >:< Str =>
 //│       'y1 <: Str
-//│       'y1 <: ¬Str ∨ 2 <: 'res2
-//│   'x2 <: ¬Int ∨
+//│       'y1 >:< Str => 2 <: 'res2
+//│   'x2 >:< Int =>
 //│       'y1 <: Int
-//│       'y1 <: ¬Int ∨ 1 <: 'res2
-//│   'x <: ¬Str ∨
+//│       'y1 >:< Int => 1 <: 'res2
+//│   'x >:< Str =>
 //│       ⊤ <: 'reach
-//│       'x <: ¬Int ∨ 4 <: 'res
-//│   'x <: ¬Int ∨
+//│       'x >:< Int => 4 <: 'res
+//│   'x >:< Int =>
 //│       ⊤ <: 'reach
-//│       'x <: ¬Str ∨ 3 <: 'res
-//│   'x <: Str ∨ 'x <: ¬Int ∨ ((Int, Int) -> 1) & ((Str, Str) -> 2) <: ('x & Int, 'x & ¬Str) ->{'eff1} 'app
+//│       'x >:< Str => 3 <: 'res
+//│   'x >:< Int => 'x <: Str ∨ ((Int, Int) -> 1) & ((Str, Str) -> 2) <: ('x & Int, 'x & ¬Str) ->{'eff1} 'app
 
 
 fun throughSame(x, y) = if
@@ -270,62 +270,62 @@ throughSame("a", 20)
 //│ Type: ('x, 'y) ->{'eff} 'res
 //│ Where:
 //│   'x <: Int | Str
-//│   'x <: ¬Str ∨
+//│   'x >:< Str =>
 //│       'y <: Int | Str
-//│       'y <: ¬Str ∨
+//│       'y >:< Str =>
 //│           'eff1 <: 'eff
 //│           'app <: 'res
 //│           ('x1, 'y1) -> 'res1 <: ('x & Str, 'y & Str) ->{'eff1} 'app
-//│       'y <: ¬Int ∨ 4 <: 'res
-//│   'x <: ¬Int ∨
+//│       'y >:< Int => 4 <: 'res
+//│   'x >:< Int =>
 //│       'y <: Str | Int
-//│       'y <: ¬Int ∨
+//│       'y >:< Int =>
 //│           'eff2 <: 'eff
 //│           'app1 <: 'res
 //│           ('x2, 'y2) -> 'res2 <: ('x & Int, 'y & Int) ->{'eff2} 'app1
-//│       'y <: ¬Str ∨ 3 <: 'res
+//│       'y >:< Str => 3 <: 'res
 //│   'x1 <: Int | Str
-//│   'x1 <: ¬Str ∨
+//│   'x1 >:< Str =>
 //│       'y1 <: Str
-//│       'y1 <: ¬Str ∨ 2 <: 'res1
-//│   'x1 <: ¬Int ∨
+//│       'y1 >:< Str => 2 <: 'res1
+//│   'x1 >:< Int =>
 //│       'y1 <: Int
-//│       'y1 <: ¬Int ∨ 1 <: 'res1
+//│       'y1 >:< Int => 1 <: 'res1
 //│   'x2 <: Int | Str
-//│   'x2 <: ¬Str ∨
+//│   'x2 >:< Str =>
 //│       'y2 <: Str
-//│       'y2 <: ¬Str ∨ 2 <: 'res2
-//│   'x2 <: ¬Int ∨
+//│       'y2 >:< Str => 2 <: 'res2
+//│   'x2 >:< Int =>
 //│       'y2 <: Int
-//│       'y2 <: ¬Int ∨ 1 <: 'res2
+//│       'y2 >:< Int => 1 <: 'res2
 
 (x) => throughSame(x, x)
 //│ Type: ('x) ->{'eff} 'res
 //│ Where:
 //│   'x <: Int | Str
-//│   'x <: ¬Str ∨
+//│   'x >:< Str =>
 //│       'eff1 <: 'eff
 //│       'app <: 'res
 //│       ('x1, 'y) -> 'res1 <: ('x & Str, 'x & Str) ->{'eff1} 'app
-//│       'x <: ¬Int ∨ 4 <: 'res
+//│       'x >:< Int => 4 <: 'res
 //│   'x1 <: Int | Str
-//│   'x1 <: ¬Str ∨
+//│   'x1 >:< Str =>
 //│       'y <: Str
-//│       'y <: ¬Str ∨ 2 <: 'res1
-//│   'x1 <: ¬Int ∨
+//│       'y >:< Str => 2 <: 'res1
+//│   'x1 >:< Int =>
 //│       'y <: Int
-//│       'y <: ¬Int ∨ 1 <: 'res1
-//│   'x <: ¬Int ∨
+//│       'y >:< Int => 1 <: 'res1
+//│   'x >:< Int =>
 //│       'eff2 <: 'eff
 //│       'app1 <: 'res
 //│       ('x2, 'y1) -> 'res2 <: ('x & Int, 'x & Int) ->{'eff2} 'app1
-//│       'x <: ¬Str ∨ 3 <: 'res
+//│       'x >:< Str => 3 <: 'res
 //│   'x2 <: Int | Str
-//│   'x2 <: ¬Str ∨
+//│   'x2 >:< Str =>
 //│       'y1 <: Str
-//│       'y1 <: ¬Str ∨ 2 <: 'res2
-//│   'x2 <: ¬Int ∨
+//│       'y1 >:< Str => 2 <: 'res2
+//│   'x2 >:< Int =>
 //│       'y1 <: Int
-//│       'y1 <: ¬Int ∨ 1 <: 'res2
+//│       'y1 >:< Int => 1 <: 'res2
 
 

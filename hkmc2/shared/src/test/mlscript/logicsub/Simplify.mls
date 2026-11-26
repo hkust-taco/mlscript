@@ -90,3 +90,13 @@ unsafe.undefined as ()
 //│ ║  l.+1: 	unsafe.undefined as ()
 //│ ║        	^^^^^^^^^^^^^^^^
 //│ ╙── because: cannot constrain  undefined  <:  ()
+
+// A disjointness requirement with no fallback is an unconditional bound.
+fun noStrings: ~Str -> Int
+fun keep(x) =
+  let n = noStrings(x)
+  x
+keep
+//│ Type: ['x] -> ('x) -> 'x
+//│ Where:
+//│   'x <: ¬Str

@@ -38,13 +38,13 @@ test
 //│ Where:
 //│   'x <: Tru | Fls ∨
 //│       'y <: Fls
-//│       'y <: ¬Fls ∨ ⊤ <: 'reach
-//│   'x <: ¬Tru ∨
+//│       'y >:< Fls => ⊤ <: 'reach
+//│   'x >:< Tru =>
 //│       'y <: Tru | Fls
-//│       'y <: ¬Fls ∨ ⊤ <: 'reach
-//│       'y <: ¬Tru ∨ Tru <: 'res
+//│       'y >:< Fls => ⊤ <: 'reach
+//│       'y >:< Tru => Tru <: 'res
 //│   'reach <: ⊥ ∨ Fls <: 'res
-//│   'x <: ¬Fls ∨ Fls <: 'res
+//│   'x >:< Fls => Fls <: 'res
 
 :expect Tru()
 test(tru, tru)

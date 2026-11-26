@@ -90,8 +90,8 @@ negImpl
 //│ Type: ['x, 'res] -> ('x) -> 'res
 //│ Where:
 //│   'x <: Tru | Fls
-//│   'x <: ¬Fls ∨ Tru <: 'res
-//│   'x <: ¬Tru ∨ Fls <: 'res
+//│   'x >:< Fls => Tru <: 'res
+//│   'x >:< Tru => Fls <: 'res
 
 fun negate: (Tru -> Fls) & (Fls -> Tru)
 fun negate(x) = negImpl(x)
@@ -179,8 +179,8 @@ headOption
 //│ Type: ['x, 'A, 'res, 'A1] -> ('x) -> 'res
 //│ Where:
 //│   'x <: Nil | Cons[?, ?]
-//│   'x <: ¬Cons[?, ?] ∨
+//│   'x >:< Cons[?, ?] =>
 //│       Some['A] <: 'res
 //│       'A1 <: 'A
 //│       'x & Cons[?, ?] <: Cons[out 'A1, ?]
-//│   'x <: ¬Nil ∨ None <: 'res
+//│   'x >:< Nil => None <: 'res

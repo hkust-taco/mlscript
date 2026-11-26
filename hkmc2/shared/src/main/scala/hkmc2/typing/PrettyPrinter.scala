@@ -7,13 +7,13 @@ import hkmc2.utils.*, shorthands.*
 class PrettyPrinter(output: String => Unit)(using printScope: Scope, ctx: InfCtx):
   def print(ty: InfType)(using Raise): Unit =
     val view = TypeSimplifier.forDisplay(TypeSimplifier.snapshot(ty))
-    render("Type", view.body, PrettyPrinter.factor(view.bounds.iterator.map(_.c)))
+    render("Type", view.body, PrettyPrinter.factor(view.bounds.iterator.map(_.c)), implications = true)
 
   def printRaw(ty: InfType)(using Raise): Unit =
     val view = TypeSimplifier.snapshot(ty)
-    render("Raw type", view.body, view.bounds.map(_.c))
+    render("Raw type", view.body, view.bounds.map(_.c), implications = false)
 
-  private def render(label: String, body: InfType, bounds: Ls[SubOr])(using Raise): Unit =
+  private def render(label: String, body: InfType, bounds: Ls[SubOr], implications: Bool)(using Raise): Unit =
     given names: Scope = printScope.nest
     object Names extends BoundTraverser:
       override def visitVariable(v: InfVar): Unit =
@@ -26,25 +26,45 @@ class PrettyPrinter(output: String => Unit)(using printScope: Scope, ctx: InfCtx
       case tyStr => output(s"$label: $tyStr")
     if bounds.nonEmpty then
       output("Where:")
-      renderBounds(bounds, 2)
+      renderBounds(bounds, 2, implications)
 
   /** Each line at the same indentation is a conjunct. A disjunction can
     * continue on one line until its fallback has several conjuncts. */
-  private def renderBounds(bounds: Ls[SubOr], indent: Int)(using Scope, Raise): Unit =
+  private def renderBounds(bounds: Ls[SubOr], indent: Int, implications: Bool)(using Scope, Raise): Unit =
     bounds.foreach: bound =>
-      val line = new StringBuilder(" " * indent)
+      val premises = new StringBuilder
+      val alternatives = new StringBuilder
+      def alternative(text: Str): Unit =
+        if alternatives.nonEmpty then alternatives ++= " ∨ "
+        alternatives ++= text
+      def emit(branching: Bool): Unit =
+        val line = new StringBuilder(" " * indent)
+        if premises.nonEmpty then
+          line ++= premises
+          line ++= " =>"
+          if alternatives.nonEmpty then line += ' '
+        line ++= alternatives
+        if branching && alternatives.nonEmpty then line ++= " ∨"
+        output(line.result())
       @scala.annotation.tailrec
       def disjunction(c: SubOr): Unit =
-        line ++= s"${c.x.show} <: ${c.y.show}"
+        // On a single disjunctive path, A ∨ (¬P ∨ B) is P => A ∨ B.
+        // Stop collecting premises at a conjunction so that each guard
+        // keeps its scope over exactly the alternatives in this branch.
+        c.y.toBasic match
+          case Neg(t) if implications && c.cs.isDefined =>
+            if premises.nonEmpty then premises ++= " => "
+            premises ++= s"${c.x.show} >:< ${t.show}"
+          case _ => alternative(s"${c.x.show} <: ${c.y.show}")
         c.cs match
-          case None => output(line.result())
-          case Some(Nil) => output((line ++= " ∨ ⊤").result())
-          case Some(next :: Nil) =>
-            line ++= " ∨ "
-            disjunction(next)
+          case None => emit(branching = false)
+          case Some(Nil) =>
+            alternative("⊤")
+            emit(branching = false)
+          case Some(next :: Nil) => disjunction(next)
           case Some(cs) =>
-            output((line ++= " ∨").result())
-            renderBounds(cs, indent + 4)
+            emit(branching = true)
+            renderBounds(cs, indent + 4, implications)
       disjunction(bound)
 
 object PrettyPrinter:

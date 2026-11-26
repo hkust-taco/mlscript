@@ -42,7 +42,7 @@ x =>
   idIB(x)
 //│ Type: ('x) ->{'eff} 'app
 //│ Where:
-//│   'x <: ¬Int ∨ (Int) -> Int <: Function[in Array & {0: Int} & Array & {0: 'x}, out 'app, out 'eff]
+//│   'x >:< Int => (Int) -> Int <: Function[in Array & {0: Int} & Array & {0: 'x}, out 'app, out 'eff]
 //│   'x <: Int | Bool
 //│   'x <: Int
 
@@ -69,16 +69,16 @@ ap(idIB)(1)
 x => idIB(x)
 //│ Type: ('x) ->{'eff} 'app
 //│ Where:
-//│   'x <: ¬Int ∨ (Int) -> Int <: Function[in Array & {0: Int} & Array & {0: 'x}, out 'app, out 'eff]
-//│   'x <: ¬Bool ∨ (Bool) -> Bool <: Function[in Array & {0: Bool} & Array & {0: 'x}, out 'app, out 'eff]
+//│   'x >:< Int => (Int) -> Int <: Function[in Array & {0: Int} & Array & {0: 'x}, out 'app, out 'eff]
+//│   'x >:< Bool => (Bool) -> Bool <: Function[in Array & {0: Bool} & Array & {0: 'x}, out 'app, out 'eff]
 //│   'x <: Int | Bool
 
 fun forward(x) = idIB(x)
 forward
 //│ Type: ['x, 'app, 'eff] -> ('x) ->{'eff} 'app
 //│ Where:
-//│   'x <: ¬Int ∨ (Int) -> Int <: Function[in Array & {0: Int} & Array & {0: 'x}, out 'app, out 'eff]
-//│   'x <: ¬Bool ∨ (Bool) -> Bool <: Function[in Array & {0: Bool} & Array & {0: 'x}, out 'app, out 'eff]
+//│   'x >:< Int => (Int) -> Int <: Function[in Array & {0: Int} & Array & {0: 'x}, out 'app, out 'eff]
+//│   'x >:< Bool => (Bool) -> Bool <: Function[in Array & {0: Bool} & Array & {0: 'x}, out 'app, out 'eff]
 //│   'x <: Int | Bool
 
 forward(1)
@@ -269,8 +269,8 @@ fun map = x => f => x.Ls#prim(() => nil(), (a, b) => cons(f(a), map(b)(f)))
 x => map(x)(idIB)
 //│ Type: (Ls['A]) -> Ls['B]
 //│ Where:
-//│   'A <: ¬Int ∨ (Int) -> Int <: Function[in Array & {0: Int} & Array & {0: 'A}, out 'B, ⊥]
-//│   'A <: ¬Bool ∨ (Bool) -> Bool <: Function[in Array & {0: Bool} & Array & {0: 'A}, out 'B, ⊥]
+//│   'A >:< Int => (Int) -> Int <: Function[in Array & {0: Int} & Array & {0: 'A}, out 'B, ⊥]
+//│   'A >:< Bool => (Bool) -> Bool <: Function[in Array & {0: Bool} & Array & {0: 'A}, out 'B, ⊥]
 //│   'A <: Int | Bool
 
 map(nil())(idIB)
@@ -316,8 +316,8 @@ fun k: ((Int, Int) -> Int) & ((Bool, Bool) -> Bool)
 x => k(x, x)
 //│ Type: ('x) ->{'eff} 'app
 //│ Where:
-//│   'x <: ¬Int ∨ Int & 'x <: ⊥ ∨ (Int, Int) -> Int <: Function[in Array & {0: Int, 1: Int} & Array & {0: 'x, 1: 'x}, out 'app, out 'eff]
-//│   'x <: ¬Bool ∨ Bool & 'x <: ⊥ ∨ (Bool, Bool) -> Bool <: Function[in Array & {0: Bool, 1: Bool} & Array & {0: 'x, 1: 'x}, out 'app, out 'eff]
+//│   'x >:< Int => Int & 'x <: ⊥ ∨ (Int, Int) -> Int <: Function[in Array & {0: Int, 1: Int} & Array & {0: 'x, 1: 'x}, out 'app, out 'eff]
+//│   'x >:< Bool => Bool & 'x <: ⊥ ∨ (Bool, Bool) -> Bool <: Function[in Array & {0: Bool, 1: Bool} & Array & {0: 'x, 1: 'x}, out 'app, out 'eff]
 //│   'x <: Int ∨ 'x <: Bool
 //│   'x <: Int | Bool
 
