@@ -5596,7 +5596,7 @@ class NewResolver:
               // Like the record they are packed into at run time, named tuple fields are immutable.
               val field = RcdField.source(key, value, mut = false, mutableRecord = false)(using rctx.owner)
               lexicalBinders(tuple).foreach(binders => rctx.state.lexicalTypeBinders(field.tsym) = binders)
-              rctx.state.erasureInputs.observeDefinition(field.tsym.defn.get, this)
+              rctx.state.discoveredFields.add(field.tsym)
               field))
             record.withLocOf(tuple)
             // The record's fields are the tuple's own field expressions, so its

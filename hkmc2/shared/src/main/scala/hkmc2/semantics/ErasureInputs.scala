@@ -102,6 +102,7 @@ private[hkmc2] final class ErasureDeclarations(root: Statement):
       case IfLike(_, _, branches) => split(branches)
       case New(_, _, refinement) => refinement.foreach: (symbol, body) =>
         symbol.defn.fold(visit(body.blk))(visit)
+      case block: Blk => block.resolvedFields.foreach(_.defn.foreach(visit))
       case Rcd(_, stats) => stats.foreach(visit)
       case field: RcdField => field.tsym.defn.foreach(visit)
       case _ => ()
@@ -120,7 +121,7 @@ private[hkmc2] final class ErasureInputs:
 
   /** Collect the possible values of the block's declarations and lambda results for erasure.
     * Observation starts before interface exposure so it also sees values supplied by external callers. */
-  private[semantics] def observeBlock(root: Statement, resolver: NewResolver)(using ResolutionContext): Unit =
+  private[semantics] def observeBlock(root: Blk, resolver: NewResolver)(resolve: => Unit)(using ResolutionContext): Unit =
     val declarations = new ErasureDeclarations(root)
     declarations.parameters.values.foreach: p =>
       observeVariable(p.sym, resolver)
@@ -138,6 +139,17 @@ private[hkmc2] final class ErasureInputs:
         register(lam.resultSlot): publish =>
           resolver.listenTermViews(lam.body)(publish)
       case _ => ()
+
+    // Interface exposure can discover new fields, and observing a field can in turn expose a value.
+    // Keep this observation live until exposure has processed those values.
+    val fields = rctx.state.discoveredFields
+    val detach = fields.inferenceHost.observe: (field, scope) =>
+      field.defn.foreach(observeDefinition(_, resolver)(using scope))
+    try resolve
+    finally
+      detach()
+      root.resolvedFields = fields.shapes.iterator.map(_._1).toList
+      rctx.state.discoveredFields = new DiscoveredFields
 
   private def observeSymbol(symbol: InputSymbol, resolver: NewResolver)(connect: ResolutionContext.Listener => Unit)(using ResolutionContext): Opt[TermShapeHost] =
     Option.when(rctx.state.isOwnedSym(symbol))(register(symbol): publish =>

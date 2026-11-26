@@ -71,6 +71,7 @@ final class NewResolverState(val owner: Elaborator.State):
 
   private[hkmc2] val erasureInputs = new ErasureInputs
   private[semantics] val memberResults = mutable.Map.empty[TermSymbol, MemberResults]
+  private[semantics] var discoveredFields = new DiscoveredFields
   val context: ResolutionContext = new ResolutionContext(this, N, N, TypeSubstitution.empty)
   def isOwnedSym(symbol: Symbol): Bool = symbol.getState is owner
   private[semantics] val contexts = mutable.Map.empty[(ResolutionContext, TypeSubstitution), ResolutionContext]
@@ -943,6 +944,12 @@ private[semantics] enum NamespaceWitness:
   def toLoc: Opt[Loc] = this match
     case Written(tpe) => tpe.toLoc
     case Instance(cls, site) => site.orElse(cls.headerLoc)
+
+/** Source fields discovered on demand in one block, with the scope of each declaration. */
+private[semantics] final class DiscoveredFields extends Host[(RecordFieldSymbol, ResolutionContext)]:
+  def showDbg(using DebugPrinter): Str = "discovered record fields"
+  def add(field: RecordFieldSymbol)(using scope: ResolutionContext): Unit =
+    inferenceHost(using scope.state.context).publish(field -> scope)(using scope.state.context)
 
 /** Values that a virtual member can return, retaining the implementation that returned each value
   * so interface exposure can follow it in its defining scope. */
