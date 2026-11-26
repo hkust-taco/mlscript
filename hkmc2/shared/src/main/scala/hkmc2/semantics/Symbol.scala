@@ -594,7 +594,7 @@ class ClassCtorSymbol(
   * which erasure infers from the values of the field and from those assigned to its copies (see
   * codegen.Erasure.observations). A field shared by intersected record types must satisfy every declaration,
   * so its erasure is the intersection of their erasures. A selection that reads one of several fields has
-  * the join of their erasures.
+  * the join of their erasures, through a target that is no field itself (see RecordFieldAlternativesSymbol).
   */
 final class RecordFieldSymbol(id: Tree.Ident, val mutable: Bool, val origin: RecordFieldSymbol.Origin)(using State)
     extends TermSymbol(syntax.RecordField, N, id):
@@ -605,24 +605,20 @@ final class RecordFieldSymbol(id: Tree.Ident, val mutable: Bool, val origin: Rec
     case Origin.Declared => Nil
     case Origin.Copied(field) => field :: Nil
     case Origin.Merged(fields) => fields
-    case Origin.Alternatives(fields) => fields
   /** The declared field whose values a copy holds, and the field itself if it is no copy. */
   def root: RecordFieldSymbol = origin match
     case Origin.Copied(field) => field.root
-    case Origin.Declared | _: Origin.Merged | _: Origin.Alternatives => this
+    case Origin.Declared | _: Origin.Merged => this
   override protected def ownsErasureSlot: Bool = origin == Origin.Declared
   override def isErasureReady: Bool = origin match
     case Origin.Declared => super.isErasureReady
     case Origin.Copied(field) => field.isErasureReady
     case Origin.Merged(fields) => fields.forall(_.isErasureReady)
-    case Origin.Alternatives(fields) => fields.forall(_.isErasureReady)
   private def fieldErasure(declared: => Opt[ErasedValueType | ErasedCallableSignature])
       (read: RecordFieldSymbol => Opt[ErasedValueType]): Opt[ErasedValueType | ErasedCallableSignature] = origin match
     case Origin.Declared => declared
     case Origin.Copied(field) => read(field)
     case Origin.Merged(fields) => S(ErasedType.Intersection(fields.map(read(_).getOrElse(ErasedType.Unknown))))
-    // Unknown is one of the joined representations: it has no common representation with an unboxed primitive.
-    case Origin.Alternatives(fields) => S(ErasedType.Union.mk(fields.map(read(_).getOrElse(ErasedType.Unknown))))
   override def sourceErasure(using codegen.Erasure): Opt[ErasedValueType | ErasedCallableSignature] =
     fieldErasure(super.sourceErasure)(_.sourceErasedType)
   override def irErasure: Opt[ErasedValueType | ErasedCallableSignature] =
@@ -640,12 +636,27 @@ object RecordFieldSymbol:
     /** The declarations of this key in the intersected record types, in source traversal order for diagnostics.
       * Each distinct declaration contributes its erasure and any of them can make the field mutable. */
     case Merged(fields: Ls[RecordFieldSymbol])
-    /** A record that has one of several record types or shapes has one of `fields`, which are the same
-      * member (see Inheritance.commonMember). Resolution follows such records separately and has no field
-      * for their union. Lowering creates this one as the target of a selection that reaches several of
-      * them. The field holds the value of whichever of them the record has, so its erasure is the join of
-      * theirs, and all of them must be mutable for it to be. */
-    case Alternatives(fields: Ls[RecordFieldSymbol])
+
+/** The target of a selection that reads the field of a record that has one of several `fields`, which are the
+  * same member (see Inheritance.commonMember). Resolution follows such records separately, and lowering
+  * creates this symbol to give the selection one target. The selection reads the value of whichever of
+  * these fields the record has, so its erasure is the join of theirs.
+  *
+  * This is the field of no record and of no record type, hence no RecordFieldSymbol: no member lookup
+  * finds it. No field is thus a copy of it or derives from it, and no selection has it among the targets
+  * that resolution records, from which lowering computes it.
+  */
+final class RecordFieldAlternativesSymbol(val fields: Ls[RecordFieldSymbol])(using State)
+    extends TermSymbol(syntax.RecordField, N, new Tree.Ident(fields.head.nme)):
+  require(fields.sizeIs >= 2, "Alternatives stand for several fields")
+  override protected def ownsErasureSlot: Bool = false
+  override def isErasureReady: Bool = fields.forall(_.isErasureReady)
+  // Unknown is one of the joined representations: it has no common representation with an unboxed primitive.
+  private def joined(read: RecordFieldSymbol => Opt[ErasedValueType]): Opt[ErasedValueType] =
+    S(ErasedType.Union.mk(fields.map(read(_).getOrElse(ErasedType.Unknown))))
+  override def sourceErasure(using codegen.Erasure): Opt[ErasedValueType | ErasedCallableSignature] =
+    joined(_.sourceErasedType)
+  override def irErasure: Opt[ErasedValueType | ErasedCallableSignature] = joined(_.erasedType)
 
 
 sealed trait CtorSymbol extends Symbol:

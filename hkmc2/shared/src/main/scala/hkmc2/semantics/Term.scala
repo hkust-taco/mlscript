@@ -718,13 +718,6 @@ object RcdField:
       case key: SymbolKey => (key.name, Annot.JsSymbol(key)(key.term.toLoc) :: Nil)
     derivedSymbol(name, RecordFieldSymbol.Origin.Merged(declarations), declarations.exists(_.mutable),
       N, annotations, source.toLoc)
-  /** Create the field that a selection reads when its receiver has one of `fields`, which are the same member
-    * and thus have the same runtime key. No source location denotes these alternatives together. */
-  def alternativesSymbol(fields: Ls[RecordFieldSymbol])(using State): RecordFieldSymbol =
-    require(fields.sizeIs >= 2)
-    val first = fields.head
-    derivedSymbol(first.nme, RecordFieldSymbol.Origin.Alternatives(fields), fields.forall(_.mutable),
-      N, first.defn.get.annotations, N)
   private def derivedSymbol(name: Str, origin: RecordFieldSymbol.Origin, mutable: Bool,
       signature: Opt[Term], annotations: Ls[Annot], loc: Opt[Loc])(using State): RecordFieldSymbol =
     val id = new Tree.Ident(name)

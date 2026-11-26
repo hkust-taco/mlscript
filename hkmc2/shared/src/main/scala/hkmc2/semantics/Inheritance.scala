@@ -57,8 +57,8 @@ object Inheritance:
     * copies hold the same values in the same representation, so the field stands for them. Other fields
     * can differ in representation from the declarations that they share: if `A` declares `item: Any` and
     * `B` and `C` declare `item: Int32`, both intersections store an `Int32`, which the declaration of `A`
-    * alone does not tell. Their member is then the field that has one of these targets, whose
-    * representation is the join of theirs (see RecordFieldSymbol.Origin.Alternatives).
+    * alone does not tell. Their member is then the symbol that stands for one of these targets, whose
+    * representation is the join of theirs (see RecordFieldAlternativesSymbol).
     */
   def commonMember(targets: Ls[DefinitionSymbol[?]])(using Erasure, Elaborator.State): Opt[DefinitionSymbol[?]] =
     def ancestors(sym: DefinitionSymbol[?]): Set[DefinitionSymbol[?]] =

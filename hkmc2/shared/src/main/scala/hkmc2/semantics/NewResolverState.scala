@@ -326,9 +326,9 @@ final class NewResolverState(val owner: Elaborator.State):
     new Cache(_.copiedFields, identity)
   val mergedFields: Cache[Set[RecordFieldSymbol], RecordFieldSymbol] =
     new Cache(_.mergedFields, identity)
-  // The field that a selection reads through several fields that are the same member has no record of its
-  // own (see RecordFieldSymbol.Origin.Alternatives). The set of these fields identifies it.
-  val alternativeFields: Cache[Set[RecordFieldSymbol], RecordFieldSymbol] =
+  // The target of a selection that reads one of several fields that are the same member (see
+  // RecordFieldAlternativesSymbol). The set of these fields identifies it.
+  val alternativeFields: Cache[Set[RecordFieldSymbol], RecordFieldAlternativesSymbol] =
     new Cache(_.alternativeFields, identity)
   val aggregateProducers: Seen[Tup | CtxTup | Rcd] =
     new Seen(_.aggregateProducers)
@@ -756,13 +756,13 @@ final class ResolutionContext private[semantics] (
     if fields.sizeIs == 1 then fields.head.tsym else
       val declarations = fields.iterator.map(_.tsym).toList
       canonical(source, _.mergedFields, declarations.toSet)(RcdField.mergedSymbol(key, declarations, source)(using owner))
-  /** The field that a selection reads when its receiver has one of `fields`, several fields that are the
-    * same member (see RecordFieldSymbol.Origin.Alternatives). The set of these fields identifies it.
+  /** The target of a selection whose receiver has one of `fields`, several fields that are the same member
+    * (see RecordFieldAlternativesSymbol). The set of these fields identifies it.
     * Lowering asks for it once resolution is complete, and the unit that lowers the selection keeps it:
     * the fields can come from several units.
     */
-  def alternativeField(fields: Ls[RecordFieldSymbol]): RecordFieldSymbol =
-    canonical(null, _.alternativeFields, fields.toSet)(RcdField.alternativesSymbol(fields)(using owner))
+  def alternativeField(fields: Ls[RecordFieldSymbol]): RecordFieldAlternativesSymbol =
+    canonical(null, _.alternativeFields, fields.toSet)(new RecordFieldAlternativesSymbol(fields)(using owner))
   def canonicalInstance(tpe: DeclaredType)(make: => InstanceShape): InstanceShape =
     canonical(tpe.resolution, _.instanceShapes, tpe)(shapeView(tpe.instances)(make))
   def spreadFlow(spread: Term)(make: => IterationFlow): IterationFlow =
