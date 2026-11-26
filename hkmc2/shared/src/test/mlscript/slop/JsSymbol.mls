@@ -583,3 +583,13 @@ let ftcNext = ftcKeyed.next
 //│ ftcKeyed = FtcKeyed
 //│ ftcNext = class anonymous
 
+
+// Both alternatives have the same runtime key for entry, including the intersection with a second alias.
+:expect [73, 73]
+type KeyedEntry = {@jsSymbol(Keys.second) entry: Int}
+type TaggedEntry = {@jsSymbol(Keys.second) alternate: Int, tag: Int}
+private fun readEntry(r: KeyedEntry | (KeyedEntry & TaggedEntry)) =
+  open r.{ * }
+  [r.entry, entry]
+readEntry({(Keys.second): 73, tag: 0})
+//│ = [73, 73]

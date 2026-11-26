@@ -821,7 +821,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       // targets of a selection of that name on the receiver (see `newSelection`): the receiver can have a
       // record field or a copy of it, or the fields of several intersections of record types.
       case (prefix, member @ S(first)) :: rest if rest.forall((other, alternative) =>
-          (other is prefix) && alternative.exists(_.nme == first.nme)) =>
+          (other is prefix) && alternative.exists(m => ref.keyAccess.nonEmpty || m.nme == first.nme)) =>
         val targets = ref.resolvedTargets.distinct
         Inheritance.commonMember(targets) match
           case S(target) => k(prefix, member, S(target))
@@ -854,6 +854,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case Nil => fail:
         ErrorReport(msg"This selection of member '${id.name}' has no resolved target" -> sel.toLoc :: Nil,
           source = Diagnostic.Source.Compilation)
+      // A common symbol key identifies the runtime property even when its declarations have different names.
+      case target :: Nil if sel.keyAccess.nonEmpty => k(prefix, id, S(target))
       case target :: Nil =>
         // For `r = {make: C}`, the pattern head `r.make` resolves to class C,
         // but the generated property read must use `make`. resolvedMembers holds
