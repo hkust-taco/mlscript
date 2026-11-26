@@ -819,13 +819,19 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       .map((prefix, member) => prefix -> S(member)) ::: dynamic.map(_ -> N)
     if erroneousRef(ref) then compError else candidates match
       case (prefix, N) :: Nil => k(prefix, N, N)
-      case (prefix, member @ S(_)) :: Nil => ref.resolvedTargets.distinct match
-        case target :: Nil => k(prefix, member, S(target))
-        case targets if targets.nonEmpty && !strictResolution => k(prefix, member, N)
-        case targets => fail:
-          ErrorReport(msg"Wildcard-open reference '${ref.id.name}' requires one resolved definition" -> ref.toLoc ::
-            targets.map(target => msg"target: ${target.describeKind}" -> target.toLoc),
-            source = Diagnostic.Source.Compilation)
+      // The name must identify one receiver. The members that it finds there under one name are then the
+      // targets of a selection of that name on the receiver (see `newSelection`): the receiver can have a
+      // record field or a copy of it, or the fields of several intersections of record types.
+      case (prefix, member @ S(first)) :: rest if rest.forall((other, alternative) =>
+          (other is prefix) && alternative.exists(_.nme == first.nme)) =>
+        val targets = ref.resolvedTargets.distinct
+        Inheritance.commonMember(targets) match
+          case S(target) => k(prefix, member, S(target))
+          case N if targets.nonEmpty && !strictResolution => k(prefix, member, N)
+          case N => fail:
+            ErrorReport(msg"Wildcard-open reference '${ref.id.name}' requires one resolved definition" -> ref.toLoc ::
+              targets.map(target => msg"target: ${target.describeKind}" -> target.toLoc),
+              source = Diagnostic.Source.Compilation)
       case Nil => fail:
         ErrorReport(msg"Name not found in wildcard opens: ${ref.id.name}" -> ref.toLoc :: Nil,
           source = Diagnostic.Source.Compilation)

@@ -96,25 +96,12 @@ fun readCount(value: EitherCount) = value.count
 readCount(count: 7, name: "seven", left: 0)
 //│ = 7
 
-:fixme
+:expect 7
 fun openCount(value: EitherCount) =
   open value.{ * }
   count
-//│ ╔══[COMPILATION ERROR] Wildcard-open reference 'count' is ambiguous
-//│ ║  l.+3: 	  count
-//│ ║        	  ^^^^^
-//│ ╟── candidate: record field 'count' defined here
-//│ ║  l.XX: 	fun readCount(value: EitherCount) = value.count
-//│ ║        	                     ^^^^^^^^^^^
-//│ ╟── Opened here
-//│ ║  l.+2: 	  open value.{ * }
-//│ ║        	       ^^^^^
-//│ ╟── candidate: record field 'count' defined here
-//│ ║  l.XX: 	fun readCount(value: EitherCount) = value.count
-//│ ║        	                     ^^^^^^^^^^^
-//│ ╟── Opened here
-//│ ║  l.+2: 	  open value.{ * }
-//│ ╙──      	       ^^^^^
+openCount(count: 7, name: "seven", left: 0)
+//│ = 7
 
 // Intersection constraints infer generic fields and check callback parameters.
 :expect "TYPED"

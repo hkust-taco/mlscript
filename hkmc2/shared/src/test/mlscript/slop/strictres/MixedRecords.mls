@@ -426,6 +426,19 @@ private fun sameMember() =
 sameMember()
 //│ = [2, 1]
 
+// A wildcard open names one receiver, whose fields are then selected like `record.total`: the receiver can be
+// a record or its copy, for a read and for an assignment.
+:expect [1, 5]
+private fun openEither(flag) =
+  let declared = mut {total: 1}
+  let record = if flag then declared else mut {...declared}
+  open record.{ * }
+  let before = total
+  set total = 5
+  [before, record.total]
+openEither(false)
+//│ = [1, 5]
+
 // Each spread has its own copies, including two spreads of the same record in one literal.
 :expect [0, 1]
 private fun spreadTwice() =
