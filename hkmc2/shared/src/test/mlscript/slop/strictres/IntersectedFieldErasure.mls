@@ -115,3 +115,30 @@ fun readMixed(r: (Boxed & Unboxed) | Boxed): Int32 = r.item
 //│ ╔══[COMPILATION ERROR] Types 'Unknown' and 'Int32' have no common representation
 //│ ║  l.+3: 	fun readMixed(r: (Boxed & Unboxed) | Boxed): Int32 = r.item
 //│ ╙──      	                                                     ^^^^^^
+
+// Both fields have a reference representation, but neither can store a Bool.
+type WithItem = {item: Any}
+type IntItem = WithItem & {mut item: Int, left: Int}
+type StrItem = WithItem & {mut item: Str, right: Int}
+
+:ge
+fun putIntItem(r: IntItem, b: Bool) = set r.item = b
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Bool' at an unrelated type 'Int'
+//│ ║  l.+1: 	fun putIntItem(r: IntItem, b: Bool) = set r.item = b
+//│ ╙──      	                                          ^^^^^^
+
+:ge
+fun putStrItem(r: StrItem, b: Bool) = set r.item = b
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Bool' at an unrelated type 'Str'
+//│ ║  l.+1: 	fun putStrItem(r: StrItem, b: Bool) = set r.item = b
+//│ ╙──      	                                          ^^^^^^
+
+:breakme
+:ge
+fun putEitherItem(r: IntItem | StrItem, b: Bool) = set r.item = b
+
+:breakme
+:ge
+fun putOpenedItem(r: IntItem | StrItem, b: Bool) =
+  open r.{ * }
+  set item = b
