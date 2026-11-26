@@ -62,3 +62,21 @@ fun unrelated(value: Parent & Other) = value
 //│ define Other⁰ as class Other¹;
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// Components of a union that intersect different record types select the field of the record types that they
+// share. Like an intersection, this field does not depend on the order of its declarations: both reads
+// produce a Child.
+:sir
+:siret
+type Tagged = {item: Parent, tag: Int}
+type WideAgain = {item: Parent}
+type NarrowAgain = {item: Child}
+fun sharedWideFirst(r: (Wide & Narrow) | (Wide & Narrow & Tagged)): Child = r.item
+fun sharedNarrowFirst(r: (NarrowAgain & WideAgain) | (NarrowAgain & WideAgain & Tagged)): Child = r.item
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define sharedWideFirst⁰ as fun sharedWideFirst¹(r: Unknown): Child⁰ {
+//│   return r.item⁰
+//│ };
+//│ define sharedNarrowFirst⁰ as fun sharedNarrowFirst¹(r: Unknown): Child⁰ { return r.item² };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

@@ -546,6 +546,16 @@ private fun updateShared(target: (Counter & LabelledCounter) | (Counter & Labell
 updateShared(mut {count: 0, label: "count"})
 //│ = 7
 
+// No component needs to be the intersection of the shared record types.
+:expect 8
+type OtherCounter = {count: Int, other: Int}
+private fun updateSharedPart(target: (Counter & LabelledCounter & OtherCounter)
+    | (Counter & LabelledCounter & TimedCounter)) =
+  set target.count = 8
+  target.count
+updateSharedPart(mut {count: 0, label: "count", other: 1})
+//│ = 8
+
 // An intersection shares no declaration with a record type that declares the field separately. The error
 // shows a declaration of each candidate.
 :ge

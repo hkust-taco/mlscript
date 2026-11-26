@@ -751,7 +751,18 @@ final class ResolutionContext private[semantics] (
   def recordTypeField(source: Term, key: MemberKey, fields: Vector[RcdField]): RecordFieldSymbol =
     if fields.sizeIs == 1 then fields.head.tsym else
       val declarations = fields.iterator.map(_.tsym).toList
-      canonical(source, _.mergedFields, declarations.toSet)(RcdField.mergedSymbol(key, declarations, source)(using owner))
+      canonical(source, _.mergedFields, declarations.toSet)(RcdField.mergedSymbol(key, declarations, source.toLoc)(using owner))
+  /** The field of the intersection of the record types that declare `declarations`, several fields with the
+    * same key. Intersections that each include these record types have fields that derive from all of them,
+    * and this field is the member that their fields have in common (see Inheritance.commonMember).
+    * No written type needs to denote this intersection. `recordTypeField` returns the same field for one that does.
+    */
+  def sharedRecordTypeField(declarations: Ls[RecordFieldSymbol]): RecordFieldSymbol =
+    assert(declarations.sizeIs >= 2 && declarations.forall(_.origin == RecordFieldSymbol.Origin.Declared),
+      "Only declared fields of several record types have a field of their intersection")
+    val key = MemberKey.symbol(declarations.head.member).getOrElse(declarations.head.nme)
+    // The declarations can come from several units. Keep their field with the unit that selects it.
+    canonical(null, _.mergedFields, declarations.toSet)(RcdField.mergedSymbol(key, declarations, N)(using owner))
   def canonicalInstance(tpe: DeclaredType)(make: => InstanceShape): InstanceShape =
     canonical(tpe.resolution, _.instanceShapes, tpe)(shapeView(tpe.instances)(make))
   def spreadFlow(spread: Term)(make: => IterationFlow): IterationFlow =

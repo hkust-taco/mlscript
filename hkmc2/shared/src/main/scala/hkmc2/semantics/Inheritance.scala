@@ -52,13 +52,14 @@ object Inheritance:
     * member, another inherits it). Discard less-specific common ancestors, so a chain of overrides is
     * not an ambiguity.
     *
-    * Record fields can share several most specific declarations. In `(A & B) | (A & B & C)`, where each
-    * record type declares `count`, the two intersections have distinct fields, which both derive from
-    * the declarations of `A` and of `B`. These declare the same property of the same records, so the
-    * first one, in the order in which the first target derives from them, identifies the member.
+    * Fields of intersected record types can share several most specific declarations. In
+    * `(A & B) | (A & B & C)`, where each record type declares `count`, the two intersections have distinct
+    * fields, which both derive from the declarations of `A` and of `B`. The targets then denote the field
+    * of `A & B`: the one that an intersection has for exactly these declarations (see
+    * ResolutionContext.sharedRecordTypeField). Like an intersection, it does not depend on their order.
     */
-  def commonMember(targets: Ls[DefinitionSymbol[?]])(using Erasure): Opt[DefinitionSymbol[?]] =
-    // In visiting order, which makes the choice between several shared declarations deterministic.
+  def commonMember(targets: Ls[DefinitionSymbol[?]])(using Erasure, Elaborator.State): Opt[DefinitionSymbol[?]] =
+    // In visiting order, so that the declarations of a shared field are listed in a deterministic order.
     def ancestors(sym: DefinitionSymbol[?]): mutable.LinkedHashSet[DefinitionSymbol[?]] =
       val seen = mutable.LinkedHashSet.empty[DefinitionSymbol[?]]
       def visit(current: DefinitionSymbol[?]): Unit = if seen.add(current) then
@@ -78,9 +79,11 @@ object Inheritance:
         val common = ancestors(first).iterator.filter(sym => others.forall(_(sym))).toList
         common.filterNot(base => common.exists(other => (other isnt base) && ancestors(other)(base))) match
           case target :: Nil => S(target)
-          // Only the fields of intersected record types derive from several declarations.
-          case (target: RecordFieldSymbol) :: _ => S(target)
-          case _ => N
+          case specific =>
+            // Several most specific definitions are one member only if they declare a field of record types.
+            val declarations = specific.collect { case field: RecordFieldSymbol => field }
+            if declarations.isEmpty || declarations.sizeCompare(specific) != 0 then N
+            else S(summon[Elaborator.State].newResolverState.context.sharedRecordTypeField(declarations))
 
   /** Whether an override of `inherited` uses a different kind of definition, such as a `fun` overriding
     * a `val`, or a `mut val` overriding a `val`. A value is computed once when its object is constructed,
