@@ -67,6 +67,10 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
     */
   val inheritedParameters: Map[VarSymbol, Ls[Param]] = edges.flatMap(_.parameters).toList.groupMap(_._1.sym)(_._2)
   
+  /** The local implementations of each virtual member with compatible parameter lists. */
+  val overridingMembers: Map[TermSymbol, Ls[TermDefinition]] =
+    edges.filter(edge => Inheritance.isOpen(edge.inherited)).toList.groupMap(_.inherited.tsym)(_.overriding)
+
   /** The parameters whose direct calls contribute values to an unannotated inherited parameter.
     * A written parameter type fixes its own representation, and a rest parameter packs its arguments into an array. */
   val overridingParameters: Map[VarSymbol, Ls[VarSymbol]] =

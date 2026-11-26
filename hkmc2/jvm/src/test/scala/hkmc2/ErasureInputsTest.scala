@@ -18,7 +18,7 @@ class ErasureInputsTest extends AnyFunSuite:
     val initial = DynShape()
     source.publish(initial)
     defining.completeBlock(Term.UnitVal())
-    def observations = inputs.observations(symbol)(_ => true).toList
+    def observations = inputs.observations(symbol).toList
     val snapshot = observations
     val first = new Elaborator.State().newResolverState.context
     val second = new Elaborator.State().newResolverState.context

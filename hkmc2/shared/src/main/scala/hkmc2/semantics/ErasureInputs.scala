@@ -4,7 +4,7 @@ package semantics
 import scala.collection.mutable
 import hkmc2.utils.*, shorthands.*
 import Term.*
-import ErasureInputs.{InputSlot, InputSymbol, ResultSlot}
+import ErasureInputs.{InputSlot, InputSymbol}
 
 /** Source declarations needed both when observing inference and when assigning representations.
   * Several declarations are outside subStatements: split bindings, handler parameters,
@@ -113,13 +113,10 @@ private[hkmc2] final class ErasureDeclarations(root: Statement):
 
   visit(root)
 
-/** Source values and virtual member results collected during resolution. Interface exposure
-  * can subscribe to a member's results as they arrive. Erasure reads the completed observations
-  * of the defining compilation unit. Later writes in an importing unit reach that unit's copy.
-  */
+/** The source values of declarations in this compilation unit. Erasure reads the completed
+  * observations. Later writes in an importing unit reach that unit's copy. */
 private[hkmc2] final class ErasureInputs:
   private val values = mutable.Map.empty[InputSlot, TermShapeHost]
-  private val results = mutable.Map.empty[TermSymbol, ResultSlot]
 
   /** Collect the possible values of the block's declarations and lambda results for erasure.
     * Observation starts before interface exposure so it also sees values supplied by external callers. */
@@ -190,39 +187,11 @@ private[hkmc2] final class ErasureInputs:
   /** Whether resolution prepared this slot in the current compilation unit. */
   def isPrepared(slot: InputSlot): Bool = values.contains(slot)
 
-  /** The values a caller can receive through `member`. Connect the declaration once, before
-    * replaying any of its results, so recursive members share the same slot.
-    */
-  private[semantics] def resultSlot(member: TermDefinition, resolver: NewResolver)
-      (connect: ResolutionContext.Listener => Unit)(using ResolutionContext): ResultSlot =
-    // Constructor parameters determine field storage. An async or generator body produces a
-    // payload, while callers receive a promise or iterator with its own fixed representation.
-    val inferred = if member.sign.nonEmpty || member.tsym.decl.exists(_.isInstanceOf[Param]) || member.resultWrapperAnnotation.nonEmpty
-      then N else observeDefinition(member, resolver)
-    // Observing a recursive definition can already have registered its result.
-    results.get(member.tsym) match
-      case S(slot) => slot
-      case N =>
-        val slot = new ResultSlot(ErasureInputs.Representation(member, inferred))
-        results(member.tsym) = slot
-        slot.inferenceHost
-        connect(value => slot.publish(ErasureInputs.Returned(member, value)))
-        slot
-
-  /** The completed inputs to a source slot, including the values or declared results of the
-    * overrides that `includeOverride` accepts.
-    */
-  def observations(slot: InputSlot)(includeOverride: TermDefinition => Bool): Iterator[TermShape | TermDefinition] =
+  /** The values of this declaration when resolution of its defining block completed. */
+  def observations(slot: InputSlot): Iterator[TermShape] =
     val host = values.getOrElse(slot, lastWords("Source slot was not prepared for erasure"))
-    val overriding = slot match
-      case member: TermSymbol =>
-        for
-          slot <- results.get(member).iterator
-          case source: ErasureInputs.Representation <- ErasureInputs.completed(slot) if includeOverride(source.member)
-          value <- source.inputs
-        yield value
-      case _ => Iterator.empty
-    ErasureInputs.completed(host) ++ overriding
+    assert(host.originalData.completed, "Erasure requires completed value observations")
+    host.shapes.iterator
 
 private[hkmc2] object ErasureInputs:
   /** Symbols whose variable values or definition results supply runtime representations.
@@ -230,34 +199,4 @@ private[hkmc2] object ErasureInputs:
     */
   type InputSymbol = LocalVarSymbol | TermSymbol
   type InputSlot = InputSymbol | LambdaResultSlot
-
-  private def completed[A](host: Host[A]): Iterator[A] =
-    assert(host.originalData.completed, "Erasure requires completed value observations")
-    host.shapes.iterator
-
-  private[semantics] final case class Returned(member: TermDefinition, value: TermShape)
-  private[semantics] final case class Representation(member: TermDefinition, inferred: Opt[TermShapeHost]):
-    def inputs: Iterator[TermShape | TermDefinition] = inferred.fold(Iterator.single(member))(completed)
-
-  private given CandidateKey[Returned | Representation] with
-    def apply(result: Returned | Representation)(using ResolutionContext): Any = result match
-      case Returned(member, value) => (member.tsym, ShapeIdentity.key(value))
-      case source: Representation => source.member.tsym
-
-  /** The values clients can read from a member across all receivers, together with the
-    * declarations that constrain its runtime representation. A fixed representation such as
-    * a promise still forwards every overriding implementation's caller-visible values.
-    */
-  private[semantics] final class ResultSlot(private val representation: Representation)
-      extends Host[Returned | Representation]:
-    def showDbg(using DebugPrinter): Str = "override results"
-    private[ErasureInputs] def publish(result: Returned | Representation)(using ResolutionContext): Unit = result match
-      case _: Representation if representation.inferred.isEmpty => ()
-      case _ => inferenceHost.publish(result)
-    def include(overriding: ResultSlot)(using ResolutionContext): Unit =
-      publish(overriding.representation)
-      overriding.subscribeToShapes(publish)
-    def listenValues(receive: ShapeListener[Returned])(using ResolutionContext): Unit = subscribeToShapes:
-      case value: Returned => receive(value)
-      case _: Representation => ()
 

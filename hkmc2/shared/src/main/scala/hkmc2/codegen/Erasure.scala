@@ -94,16 +94,27 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
     if !config.language.useNewResolution then Iterator.empty
     else
       val inputs = summon[State].newResolverState.erasureInputs
-      def values(slot: ErasureInputs.InputSlot) = inputs.observations(slot): td =>
-        !td.isErroneous && parameterError(td.params).isEmpty
-      symbol match
+      // A diamond contributes each declaration once; an erroneous cycle must also terminate.
+      def family[A](root: A)(children: A => Iterator[A]): Iterator[A] =
+        val seen = mutable.Set(root)
+        def descendants(parent: A): Iterator[A] = children(parent).filter(seen.add).flatMap: child =>
+          Iterator.single(child) ++ descendants(child)
+        descendants(root)
+      val related: Iterator[TermShape | TermDefinition] = symbol match
         case base: VarSymbol if overrideChecks.overridingParameters.contains(base) =>
-          val seen = mutable.Set.empty[VarSymbol]
-          def arguments(p: VarSymbol): Iterator[TermShape | TermDefinition] =
-            if !seen.add(p) || !inputs.isPrepared(p) then Iterator.empty
-            else values(p) ++ overrideChecks.overridingParameters.getOrElse(p, Nil).iterator.flatMap(arguments)
-          arguments(base)
-        case _ => values(symbol)
+          family(base)(p => overrideChecks.overridingParameters.getOrElse(p, Nil).iterator.filter(inputs.isPrepared))
+            .flatMap(inputs.observations)
+        case base: TermSymbol if overrideChecks.overridingMembers.contains(base) =>
+          // A constructor parameter fixes field storage. Async and generator callers receive the
+          // wrapper, while observations of their bodies describe the payload.
+          def inferred(td: TermDefinition): Bool = td.sign.isEmpty && !td.tsym.decl.exists(_.isInstanceOf[Param])
+            && td.resultWrapperAnnotation.isEmpty && inputs.isPrepared(td.tsym)
+          base.defn.iterator.flatMap(td => family(td)(parent =>
+            if inferred(parent) then overrideChecks.overridingMembers.getOrElse(parent.tsym, Nil).iterator else Iterator.empty
+          )).filter(td => !td.isErroneous && parameterError(td.params).isEmpty).flatMap: td =>
+            if inferred(td) then inputs.observations(td.tsym) else Iterator.single(td)
+        case _ => Iterator.empty
+      inputs.observations(symbol) ++ related
 
   private def inferredType(symbol: ErasureInputs.InputSlot): Opt[ErasedValueType] =
     joined(observations(symbol).flatMap(valueType).toList)

@@ -2224,7 +2224,7 @@ class NewResolver:
   private[semantics] def exposeMemberResult(td: TermDefinition, marks: Ls[Marks], path: ShapeProvenance)(using ResolutionContext): Unit =
     assert(rctx.state.isOwnedSym(td.tsym))
     val instances = rctx.instances
-    memberResultSlot(td).listenValues: result =>
+    memberResults(td).subscribeToShapes: result =>
       val source = result.member
       val (exits, at) = if source.tsym is td.tsym then (marks, path)
         else (InterfaceExposure.declarationExits(source, N), overrideExposure(source, path))
@@ -2397,16 +2397,23 @@ class NewResolver:
               publishParameter(target.sym, MarkedShape.enter(value, scope, entry))
 
   /** The possible results of calls or field reads through `td`, across its invocations and overrides. */
-  private def memberResultSlot(td: TermDefinition)(using caller: ResolutionContext): ErasureInputs.ResultSlot =
-    // The declaration has one slot. Each reader applies its own receiver's bindings and exits.
+  private def memberResults(td: TermDefinition)(using caller: ResolutionContext): MemberResults =
+    // The declaration has one result host. Each reader applies its own receiver's bindings and exits.
     given ResolutionContext = caller.withInstances(TypeSubstitution.empty)
-    rctx.state.erasureInputs.resultSlot(td, this): publish =>
-      def returned(shape: TermShape)(using ResolutionContext): Unit =
-        publish(instantiateShape(shape, rctx.instances))
-      val written = memberSignature(td).nonEmpty
-      if written || (td.body.nonEmpty && !Inheritance.isExternal(td)) then
-        listenDefinitionResult(td, TypeSubstitution.empty)(returned)
-      if !written && isAssignableField(td) then listenMemberVariable(td.tsym)(returned)
+    rctx.state.memberResults.get(td.tsym) match
+      case S(results) => results
+      case N =>
+        val results = new MemberResults
+        // Replaying the body of a recursive member can request its results again.
+        rctx.state.memberResults(td.tsym) = results
+        results.inferenceHost
+        def returned(shape: TermShape)(using ResolutionContext): Unit =
+          results.inferenceHost.publish(MemberResult(td, instantiateShape(shape, rctx.instances)))
+        val written = memberSignature(td).nonEmpty
+        if written || (td.body.nonEmpty && !Inheritance.isExternal(td)) then
+          listenDefinitionResult(td, TypeSubstitution.empty)(returned)
+        if !written && isAssignableField(td) then listenMemberVariable(td.tsym)(returned)
+        results
 
   /** Check an overriding body or field initializer against the result type its callers inherit.
     * For a returned callback, the inherited type supplies the arguments callers may pass to it.
@@ -4975,7 +4982,9 @@ class NewResolver:
                       if !rctx.state.isOwnedSym(target) then
                         exposeMemberResult(overriding, InterfaceExposure.declarationExits(overriding, N),
                           overrideExposure(overriding, inheritedExposure(inherited)))
-                      else memberResultSlot(inherited).include(memberResultSlot(overriding))
+                      else
+                        val results = memberResults(inherited)
+                        memberResults(overriding).subscribeToShapes(result => results.inferenceHost.publish(result))
           // Private members are not overridden, so they do not hide the inherited members they shadow.
           lookup.visibleFrom(_ => false, reportInaccessible = false).foreachClassMember(rctx.instances)((base, path, instances, _) =>
             link(base, path, instances))

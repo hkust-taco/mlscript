@@ -70,6 +70,7 @@ final class NewResolverState(val owner: Elaborator.State):
   import NewResolverState.{Cache, Seen}
 
   private[hkmc2] val erasureInputs = new ErasureInputs
+  private[semantics] val memberResults = mutable.Map.empty[TermSymbol, MemberResults]
   val context: ResolutionContext = new ResolutionContext(this, N, N, TypeSubstitution.empty)
   def isOwnedSym(symbol: Symbol): Bool = symbol.getState is owner
   private[semantics] val contexts = mutable.Map.empty[(ResolutionContext, TypeSubstitution), ResolutionContext]
@@ -942,6 +943,16 @@ private[semantics] enum NamespaceWitness:
   def toLoc: Opt[Loc] = this match
     case Written(tpe) => tpe.toLoc
     case Instance(cls, site) => site.orElse(cls.headerLoc)
+
+/** Values that a virtual member can return, retaining the implementation that returned each value
+  * so interface exposure can follow it in its defining scope. */
+private[semantics] final case class MemberResult(member: TermDefinition, value: TermShape)
+private[semantics] object MemberResult:
+  given CandidateKey[MemberResult] with
+    def apply(result: MemberResult)(using ResolutionContext): Any = (result.member.tsym, ShapeIdentity.key(result.value))
+
+private[semantics] final class MemberResults extends Host[MemberResult]:
+  def showDbg(using DebugPrinter): Str = "override results"
 
 private[semantics] final class TermShapeHost extends Host[TermShape]:
   def showDbg(using DebugPrinter): Str = "instance views"
