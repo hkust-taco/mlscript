@@ -73,7 +73,7 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
     runPass("ReflectionInstrumenter")(ReflectionInstrumenter(using summon).apply)
     // Source lowering groups calls by the written parameter lists, which staged code also reflects.
     // Optimizers and backends consume the conventions of the completed IR definitions, including imports.
-    runPass("BindCallSignatures")(_.mapMain(Call.bindSignatures))
+    runPass("BindCallSignatures")(_.mapMain(FirstClassFunctionTransformer.bindCalls))
     preOptimizeHook(result)
     
     // * We run this pass here first, before inlining so that the @tailrec/@tailcall annotations

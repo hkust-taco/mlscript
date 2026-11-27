@@ -1467,20 +1467,12 @@ case class Call(fun: Path, argss: Ls[Ls[Arg]])
     */
   def rebuilt(fun: Path, argss: Ls[Ls[Arg]]): Result =
     val target = Call.publishedSignature(fun).getOrElse(signature)
-    // A source call can still span several lists of an already curried import. Substituting its operands
-    // preserves the source grouping until bindTarget can emit the intermediate function-object calls.
+    // A source call can span several lists of an import that the function-object transform has curried.
+    // Substituting its operands preserves the source grouping until `FirstClassFunctionTransformer.bindCall`
+    // emits the intermediate function-object calls.
     if argss.sizeCompare(target.paramListCount) > 0 && fun.targetSymbol.exists(this.fun.targetSymbol.contains) then
       copy(fun, argss)(signature, metadata, toLoc)
     else Call(fun, argss)(target, metadata, toLoc)
-  /** Bind the call to its physical target after definition signatures have been published. */
-  def bindTarget(fun: Path, argss: Ls[Ls[Arg]])(k: Result => Block)(using State): Block =
-    val target = Call.publishedSignature(fun).getOrElse(signature)
-    target match
-      case sig: ErasedFuncSignature if argss.sizeCompare(sig.paramListCount) > 0 =>
-        FirstClassFunctionTransformer.applyCurried(this, fun, argss, sig)(k)
-      case _ =>
-        k(if (fun is this.fun) && (argss is this.argss) && (target is signature) then this
-          else Call(fun, argss)(target, metadata, toLoc))
   lazy val isKnownUnsaturatedCall: Bool =
     fun.targetSymbol match
     case S(ts: TermSymbol) =>
@@ -1545,13 +1537,6 @@ object Call:
             k(if signature is c.signature then c else c.copy()(signature, c.metadata, c.toLoc))
           case _ => super.applyResult(r)(k)
       .applyBlock(block)
-  
-  def bindSignatures(block: Block)(using State): Block =
-    new BlockTransformer(SymbolSubst.Id):
-      override def applyResult(r: Result)(k: Result => Block): Block = r match
-        case c: Call => c.bindTarget(c.fun, c.argss)(k)
-        case _ => super.applyResult(r)(k)
-    .applyBlock(block)
   
   /** The signature for applying `listCount` argument lists to `fun` when nothing is known about `fun` beyond its
     * IR: the signature it publishes, or else a dynamic one.

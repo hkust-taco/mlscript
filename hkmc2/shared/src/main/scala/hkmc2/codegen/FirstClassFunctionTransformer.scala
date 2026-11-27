@@ -106,7 +106,7 @@ class FirstClassFunctionTransformer
     // * A member read applies nothing, so its selection is not a function object.
     case Call(_, Nil) => super.applyResult(r)(k)
     case c @ Call(fun, argss) => applyListOf(argss, (args, k2) => applyArgs(args)(k2)): argss2 =>
-      def call(f: Path): Block = c.bindTarget(f, argss2)(k)
+      def call(f: Path): Block = FirstClassFunctionTransformer.bindCall(c, f, argss2)(k)
       fun match
         case ref @ Value.SimpleRef(sym) => sym match
           case _: VarSymbol |  _: TempSymbol => call(ref.selSN("call"))
@@ -149,13 +149,43 @@ class FirstClassFunctionTransformer
     applyBlock(desugared)
 
 object FirstClassFunctionTransformer:
-  /** The function-object transform is the only pass that removes parameter lists from a retained definition.
-    * Each later list applies the returned object's `call` method. The original call supplies the parameter
-    * and result types for those methods, including when an earlier compilation unit transformed the definition.
+  /** Binds every call in `block` to the signature that its callee publishes (see [[bindCall]]).
+    *
+    * Lowering groups the argument lists of a call by the parameter lists written for its callee, which staged
+    * code also reflects. The pipeline runs this pass after staging, so that optimizers and backends see calls
+    * that follow the conventions of the completed IR definitions, including imported ones.
     */
-  def applyCurried(c: Call, fun: Path, argss: Ls[Ls[Arg]], entry: ErasedFuncSignature)
+  def bindCalls(block: Block)(using State): Block =
+    new BlockTransformer(SymbolSubst.Id):
+      override def applyResult(r: Result)(k: Result => Block): Block = r match
+        case c: Call => bindCall(c, c.fun, c.argss)(k)
+        case _ => super.applyResult(r)(k)
+    .applyBlock(block)
+  
+  /** Passes to `k` the call `c`, with `fun` as its callee and `argss` as its argument lists, under the signature
+    * that `fun` publishes. A callee that publishes no signature keeps the signature of `c`.
+    *
+    * The function-object transform is the only pass that removes parameter lists from a definition that keeps its
+    * symbol: the definition retains its first list and returns a function object for the lists that follow. A
+    * callee that publishes fewer parameter lists than `argss` has was therefore transformed, in this compilation
+    * unit or in the one that defines it. The call then applies the first list, and each later list applies the
+    * `call` method of the object that the previous call returned (see [[applyCurried]]).
+    */
+  def bindCall(c: Call, fun: Path, argss: Ls[Ls[Arg]])(k: Result => Block)(using State): Block =
+    Call.publishedSignature(fun).getOrElse(c.signature) match
+      case entry: ErasedFuncSignature if argss.sizeCompare(entry.paramListCount) > 0 =>
+        applyCurried(c, fun, argss, entry)(k)
+      case target =>
+        k(if (fun is c.fun) && (argss is c.argss) && (target is c.signature) then c
+          else Call(fun, argss)(target, c.metadata, c.toLoc))
+  
+  /** Applies `argss` to `fun`, a definition converted to function objects, whose signature `entry` has a single
+    * parameter list. The signature of `c`, which groups the lists as the source definition does, supplies the
+    * parameter and result types of the `call` methods.
+    */
+  private def applyCurried(c: Call, fun: Path, argss: Ls[Ls[Arg]], entry: ErasedFuncSignature)
         (k: Result => Block)(using State): Block =
-    assert(entry.paramListCount == 1)
+    assert(entry.paramListCount == 1, "A definition converted to function objects takes one parameter list")
     val source = c.signature match
       case s: ErasedFuncSignature => s
       case _ => lastWords("A curried application needs a function signature")
