@@ -105,7 +105,7 @@ trait BlkImpl:
   def mkBlkClone(using State, Erasure): Blk = Cloner(SymbolSubst.Id).block(this)
   def showTopLevel(using Scope, ShowCfg, Raise): Document =
     (stats ::: (res match
-      case Lit(Tree.UnitLit(false)) => Nil
+      case OmittedResult() | Lit(Tree.UnitLit(false)) => Nil
       case res => res :: Nil)).map(_.show).mkDocument(doc", # ")
 
 
@@ -139,6 +139,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     val desc = this match
       case Error() => "‹error›"
       case UnitVal() => "unit value"
+      case OmittedResult() => "omitted block result"
       case DynTy() => "dynamic type"
       case _: Rcd => "record literal"
       case Lit(lit) => lit.describeLit
@@ -220,7 +221,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     case _ => subTerms
   def subTerms: Vector[Term] = this match
     case ref: MemberRef => ref.keyAccess.toVector
-    case Error() | Missing | _: Lit | _: AnyRef_ | _: DynTy | _: UnitVal => Vector.empty
+    case Error() | Missing | _: Lit | _: AnyRef_ | _: DynTy | _: UnitVal | _: OmittedResult => Vector.empty
     case Capture(base, thru) => Vector.single(base)
     case Resolved(t, sym) => Vector.single(t)
     case App(lhs, rhs) => Vector.double(lhs, rhs)
@@ -318,7 +319,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     
     def res: Document = this match
       case lit: Lit => lit.lit.idStr
-      case UnitVal() => doc"()"
+      case UnitVal() | OmittedResult() => doc"()"
       case DynTy() => doc"dyn"
       case r: SimpleRef =>
         r.sym match
@@ -376,7 +377,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
       case blk: Blk => braced:
         doc" # " :: (blk.stats :::
             blk.res.match
-            case Lit(Tree.UnitLit(false)) => Nil
+            case OmittedResult() | Lit(Tree.UnitLit(false)) => Nil
             case res => res :: Nil
           ).map(_.show).mkDocument(doc", # ")
       case ld: LetDecl =>
@@ -514,7 +515,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     case _ => s"(...$showDbg)"
   
   def showPlain(using DebugPrinter): Str = this match
-    case Term.UnitVal() => "()"
+    case Term.UnitVal() | Term.OmittedResult() => "()"
     case Term.DynTy() => "dyn"
     case Lit(lit) => lit.idStr
     case Resolved(t, sym) => t.showPlain
@@ -548,7 +549,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     case SynthWhile(split) => s"while { ${split.showDbg} }"
     case Lam(params, body) => s"λ${params.showDbg}. ${body.showDbg}"
     case Blk(stats, res) =>
-      (stats.map(_.showDbg + "; ") :+ (res match { case Lit(Tree.UnitLit(false)) => "" case x => x.showDbg + " " }))
+      (stats.map(_.showDbg + "; ") :+ (res match { case OmittedResult() | Lit(Tree.UnitLit(false)) => "" case x => x.showDbg + " " }))
       .mkString("{ ", "", "}")
     case Rcd(mut, stats) =>
       (if mut then "mut " else "") + stats.map(_.showDbg + "; ").mkString("{ ", "", "}")

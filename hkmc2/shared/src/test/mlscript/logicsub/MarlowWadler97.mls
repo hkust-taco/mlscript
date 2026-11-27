@@ -1,0 +1,116 @@
+:.
+:js
+
+
+
+// * Sec. 9 of A Practical Subtyping System For Erlang
+// * (https://homepages.inf.ed.ac.uk/wadler/papers/erlang/erlang.pdf)
+
+
+class
+  Tru()
+  Fls()
+
+let
+  tru = new Tru()
+  fls = new Fls()
+//│ fls = Fls()
+//│ tru = Tru()
+
+// :ucs desugared
+:ucs normalized
+fun test(x, y) = if
+  x is Tru and y is Tru then tru
+  x is Tru and y is Tru then tru
+  x is Tru and y is Tru then tru
+  x is Fls then fls
+  y is Fls then fls
+test
+//│ Normalized:
+//│ >  ‹if|while›
+//│ >    x is Tru and
+//│ >      y is Tru then tru⁰
+//│ >      y is Fls then fls⁰
+//│ >    x is Fls then fls⁰
+//│ >    y is Fls then fls⁰
+//│ = fun test
+//│ Type: ['x, 'y, 'res] -> ('x, 'y) -> 'res
+//│ Where:
+//│   'x <: Tru | Fls ∨ 'y <: Fls
+//│   'x >:< Tru =>
+//│       'y <: Tru | Fls
+//│       'y >:< Tru => Tru <: 'res
+//│   'x <: Fls ∨ 'y <: ¬Fls ∨ Fls <: 'res
+//│   'x >:< Fls => Fls <: 'res
+
+:expect Tru()
+test(tru, tru)
+//│ = Tru()
+//│ Type: Tru
+
+:expect Fls()
+test(tru, fls)
+//│ = Fls()
+//│ Type: Fls
+
+:expect Fls()
+test(fls, tru)
+//│ = Fls()
+//│ Type: Fls
+
+:expect Fls()
+test(fls, fls)
+//│ = Fls()
+//│ Type: Fls
+
+:expect Fls()
+test("hi", fls)
+//│ = Fls()
+//│ Type: Fls
+
+
+// Check the inferred function against each result promised by these guards.
+test as (((Tru, Tru) -> Tru) & ((Fls, Any) -> Fls) & ((Any, Fls) -> Fls))
+//│ = fun test
+//│ Type: ((Tru, Tru) -> Tru) & ((Fls, ⊤) -> Fls) & ((⊤, Fls) -> Fls)
+
+:e
+test(tru, fls) as Tru
+//│ = Fls()
+//│ ╔══[COMPILATION ERROR] Type error in application with expected type Tru
+//│ ║  l.+1: 	test(tru, fls) as Tru
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  'app  <:  Tru
+//│ ╙── because: cannot constrain  Fls  <:  Tru
+//│ Type: Tru
+
+:re
+:e
+test(true, false)
+//│ ═══[RUNTIME ERROR] Error: match error
+//│ ╔══[COMPILATION ERROR] Type error in application
+//│ ║  l.+1: 	test(true, false)
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  ('x, 'y) -> 'res  <:  (true, false) ->{'eff} 'app
+//│ ╟── because: cannot constrain  Array & {0: true, 1: false}  <:  Array & {0: 'x, 1: 'y}
+//│ ╟── because: cannot constrain  false  <:  'y
+//│ ╙── because: cannot constrain  false  <:  Fls
+//│ Type: ⊥
+
+
+// * Note: this version generates a large type
+
+fun test(x, y) = if
+  x is Tru and y is Tru then tru
+  x is Fls and y is Tru then fls
+  y is Fls then fls
+// test
+
+// * Note: and this one even larger
+
+fun test(x, y) = if
+  x is Tru and y is Tru then tru
+  x is Fls and y is Tru then fls
+  y is Fls then fls
+  y is Fls then fls
+// test

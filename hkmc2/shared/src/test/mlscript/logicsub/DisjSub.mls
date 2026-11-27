@@ -1,0 +1,327 @@
+:.
+
+declare fun (&&): (Bool, Bool) -> Bool
+declare fun (+): (Int, Int) -> Int
+
+
+
+fun andt(x) = x && true
+fun k(f: Nothing -> Bool) = 1
+fun ap(f) = x => f(x)
+
+k(andt)
+//│ Type: 1
+
+k(ap(andt))
+//│ Type: 1
+
+:fixme
+k(k)
+//│ ╔══[COMPILATION ERROR] Type error in application
+//│ ║  l.+1: 	k(k)
+//│ ║        	^^^^
+//│ ╟── because: cannot constrain  ((⊥) -> Bool) -> 1  <:  (((⊥) -> Bool) -> 1) ->{'eff} 'app
+//│ ╟── because: cannot constrain  Array & {0: ((⊥) -> Bool) -> 1}  <:  Array & {0: (⊥) -> Bool}
+//│ ╟── because: cannot constrain  ((⊥) -> Bool) -> 1  <:  (⊥) -> Bool
+//│ ╙── because: cannot constrain  1  <:  Bool
+//│ Type: 1
+
+fun idIB: (Int -> Int) & (Bool -> Bool)
+
+idIB(1)
+//│ Type: Int
+
+idIB(true)
+//│ Type: Bool
+
+idIB(if true then 1 else true)
+//│ Type: Int
+
+x =>
+  let y = x+1
+  idIB(x)
+//│ Type: ('x) ->{'eff} 'app
+//│ Where:
+//│   'x >:< Int => (Int) -> Int <: Function[in Array & {0: Int} & Array & {0: 'x}, out 'app, out 'eff]
+//│   'x <: Int
+
+(x: Int) =>
+  let y = x + 1
+  idIB(x)
+//│ Type: (Int) -> Int
+
+(x: Bool) =>
+  idIB(x)
+//│ Type: (Bool) -> Bool
+
+(x: Bool) =>
+  idIB(idIB(x))
+//│ Type: (Bool) -> Bool
+
+fun ap1(f)=f(1)
+ap1(idIB)
+//│ Type: Int
+
+ap(idIB)(1)
+//│ Type: Int
+
+x => idIB(x)
+//│ Type: ('x) ->{'eff} 'app
+//│ Where:
+//│   'x >:< Int => (Int) -> Int <: Function[in Array & {0: Int} & Array & {0: 'x}, out 'app, out 'eff]
+//│   'x >:< Bool => (Bool) -> Bool <: Function[in Array & {0: Bool} & Array & {0: 'x}, out 'app, out 'eff]
+//│   'x <: Int | Bool
+
+fun forward(x) = idIB(x)
+forward
+//│ Type: ['x, 'app, 'eff] -> ('x) ->{'eff} 'app
+//│ Where:
+//│   'x >:< Int => (Int) -> Int <: Function[in Array & {0: Int} & Array & {0: 'x}, out 'app, out 'eff]
+//│   'x >:< Bool => (Bool) -> Bool <: Function[in Array & {0: Bool} & Array & {0: 'x}, out 'app, out 'eff]
+//│   'x <: Int | Bool
+
+forward(1)
+//│ Type: Int
+
+forward(true)
+//│ Type: Bool
+
+
+:fixme
+fun idIIBB: (([Int, Int]) -> Int) & (([Bool, Bool]) -> Bool)
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun idIIBB: (([Int, Int]) -> Int) & (([Bool, Bool]) -> Bool)
+//│ ╙──      	              ^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun idIIBB: (([Int, Int]) -> Int) & (([Bool, Bool]) -> Bool)
+//│ ╙──      	                                      ^^^^^^^^^^^^
+
+:fixme
+idIIBB([1, 2])
+//│ ╔══[COMPILATION ERROR] Type error in application
+//│ ║  l.+1: 	idIIBB([1, 2])
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  ((⊥) -> Bool) & ((⊥) -> Int)  <:  (Object & {0: 1, 1: 2}) ->{'eff} 'app
+//│ ╟── because: cannot constrain  Array & {0: Object & {0: 1, 1: 2}}  <:  Array & {0: ⊥}
+//│ ╟── because: cannot constrain  Object & {0: 1, 1: 2}  <:  ⊥
+//│ ╟── because: cannot constrain  1  <:  ⊥
+//│ ╙── because: cannot constrain  2  <:  ⊥
+//│ Type: ⊥
+
+class Pair[out A, out B](fst: A, snd: B)
+
+new Pair(1, 2)
+//│ Type: Pair['A, 'B]
+//│ Where:
+//│   1 <: 'A
+//│   2 <: 'B
+
+// WF check on intersection types
+// :fixme The overload declaration needs a well-formedness check.
+:breakme
+:e
+fun idIIBB: (Pair[Int, Int] -> Int) & (Pair[Bool, Bool] -> Bool)
+
+:e
+idIIBB(new Pair(1, 2))
+//│ ╔══[COMPILATION ERROR] Type error in application
+//│ ║  l.+1: 	idIIBB(new Pair(1, 2))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  ((Pair[out Bool, out Bool]) -> Bool) & ((Pair[out Int, out Int]) -> Int)  <:  (Pair['A, 'B]) ->{'eff} 'app
+//│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B]}  <:  ¬(Array & {0: Pair})
+//│ ╟── because: cannot constrain  Pair['A, 'B]  <:  ⊥
+//│ ╟── because: cannot constrain  (Pair[out Bool, out Bool]) -> Bool  <:  Function[in Array & {0: Pair} & Array & {0: Pair['A, 'B]}, out 'app, out 'eff]
+//│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B] & Pair}  <:  Array & {0: Pair[out Bool, out Bool]}
+//│ ╟── because: cannot constrain  Pair['A, 'B]  <:  Pair[out Bool, out Bool]
+//│ ╟── because: cannot constrain  'A  <:  Bool
+//│ ╙── because: cannot constrain  1  <:  Bool
+//│ ╔══[COMPILATION ERROR] Type error in application
+//│ ║  l.+1: 	idIIBB(new Pair(1, 2))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  ((Pair[out Bool, out Bool]) -> Bool) & ((Pair[out Int, out Int]) -> Int)  <:  (Pair['A, 'B]) ->{'eff} 'app
+//│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B]}  <:  ¬(Array & {0: Pair})
+//│ ╟── because: cannot constrain  Pair['A, 'B]  <:  ⊥
+//│ ╟── because: cannot constrain  (Pair[out Bool, out Bool]) -> Bool  <:  Function[in Array & {0: Pair} & Array & {0: Pair['A, 'B]}, out 'app, out 'eff]
+//│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B] & Pair}  <:  Array & {0: Pair[out Bool, out Bool]}
+//│ ╟── because: cannot constrain  Pair['A, 'B]  <:  Pair[out Bool, out Bool]
+//│ ╟── because: cannot constrain  'B  <:  Bool
+//│ ╙── because: cannot constrain  2  <:  Bool
+//│ Type: Int | Bool
+
+:e
+idIIBB(new Pair(1, true))
+//│ ╔══[COMPILATION ERROR] Type error in application
+//│ ║  l.+1: 	idIIBB(new Pair(1, true))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  ((Pair[out Bool, out Bool]) -> Bool) & ((Pair[out Int, out Int]) -> Int)  <:  (Pair['A, 'B]) ->{'eff} 'app
+//│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B]}  <:  ¬(Array & {0: Pair})
+//│ ╟── because: cannot constrain  Pair['A, 'B]  <:  ⊥
+//│ ╟── because: cannot constrain  (Pair[out Bool, out Bool]) -> Bool  <:  Function[in Array & {0: Pair} & Array & {0: Pair['A, 'B]}, out 'app, out 'eff]
+//│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B] & Pair}  <:  Array & {0: Pair[out Bool, out Bool]}
+//│ ╟── because: cannot constrain  Pair['A, 'B]  <:  Pair[out Bool, out Bool]
+//│ ╟── because: cannot constrain  'A  <:  Bool
+//│ ╙── because: cannot constrain  1  <:  Bool
+//│ ╔══[COMPILATION ERROR] Type error in application
+//│ ║  l.+1: 	idIIBB(new Pair(1, true))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  ((Pair[out Bool, out Bool]) -> Bool) & ((Pair[out Int, out Int]) -> Int)  <:  (Pair['A, 'B]) ->{'eff} 'app
+//│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B]}  <:  ¬(Array & {0: Pair})
+//│ ╟── because: cannot constrain  Pair['A, 'B]  <:  ⊥
+//│ ╟── because: cannot constrain  (Pair[out Int, out Int]) -> Int  <:  Function[in Array & {0: Pair} & Array & {0: Pair['A, 'B]}, out 'app, out 'eff]
+//│ ╟── because: cannot constrain  Array & {0: Pair['A, 'B] & Pair}  <:  Array & {0: Pair[out Int, out Int]}
+//│ ╟── because: cannot constrain  Pair['A, 'B]  <:  Pair[out Int, out Int]
+//│ ╟── because: cannot constrain  'B  <:  Int
+//│ ╙── because: cannot constrain  true  <:  Int
+//│ Type: Int | Bool
+
+
+
+
+:fixme
+fun foo: {"x": Int, "y": Int}
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun foo: {"x": Int, "y": Int}
+//│ ╙──      	          ^^^^^^^^^^^^^^^^^^
+
+:fixme
+foo as {x: Int, y: Int}
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	foo as {x: Int, y: Int}
+//│ ╙──      	        ^^^^^^^^^^^^^^
+//│ Type: ⊥
+
+:fixme
+fun foo(x) = if x is
+  [true, true] then 1
+  [false, false] then 2
+//│ ═══[COMPILATION ERROR] Unsupported pattern
+
+:fixme
+{x: 1, y:true}
+//│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
+//│ ║  l.+1: 	{x: 1, y:true}
+//│ ╙──      	 ^^^^^^^^^^^^
+//│ Type: ⊥
+
+:fixme
+fun k(f) =
+  a: f(0)
+  b: f(true)
+k
+//│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
+//│ ║  l.+2: 	  a: f(0)
+//│ ║        	  ^^^^^^^
+//│ ║  l.+3: 	  b: f(true)
+//│ ╙──      	^^^^^^^^^^^^
+//│ Type: (⊤) -> ⊥
+
+:fixme
+k(idIB) as {a: Int, b: Bool}
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	k(idIB) as {a: Int, b: Bool}
+//│ ╙──      	            ^^^^^^^^^^^^^^^
+//│ Type: ⊥
+
+:fixme
+fun k(f) = (x, y) =>
+  a: f(x)
+  b: f(y)
+k
+//│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
+//│ ║  l.+2: 	  a: f(x)
+//│ ║        	  ^^^^^^^
+//│ ║  l.+3: 	  b: f(y)
+//│ ╙──      	^^^^^^^^^
+//│ Type: (⊤) -> (⊤, ⊤) -> ⊥
+
+:fixme
+k(idIB)(true, 1) as {a: Bool, b: Int}
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	k(idIB)(true, 1) as {a: Bool, b: Int}
+//│ ╙──      	                     ^^^^^^^^^^^^^^^
+//│ Type: ⊥
+
+// :fixme The record-building function should reject this argument.
+:breakme
+:e
+k(idIB)("true", 1)
+//│ Type: ⊥
+
+:fixme
+(x => x.x + idIB(x.y)) of {x: 0, y: 1}
+//│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
+//│ ║  l.+1: 	(x => x.x + idIB(x.y)) of {x: 0, y: 1}
+//│ ╙──      	                           ^^^^^^^^^^
+//│ Type: Int
+
+data class Ls[A](prim: [R] -> (() -> R, (A, Ls[A]) -> R) -> R)
+fun nil() = new Ls((n, _) => n())
+fun cons(x, y) = new Ls((n, r) => r(x, y))
+
+fun map: [A, B, E] -> Ls[out A] -> (A -> B) -> Ls[out B]
+
+fun map: [A, B, E] -> Ls[A] -> (A -> B) -> Ls[B]
+fun map = x => f => x.Ls#prim(() => nil(), (a, b) => cons(f(a), map(b)(f)))
+
+// fun map = x => f => new Ls((n, r) => x.Ls#prim(n, (a, b) => r(f(a), map(b)(f))))
+
+x => map(x)(idIB)
+//│ Type: (Ls['A]) -> Ls['B]
+//│ Where:
+//│   'A >:< Int => (Int) -> Int <: Function[in Array & {0: Int} & Array & {0: 'A}, out 'B, ⊥]
+//│   'A >:< Bool => (Bool) -> Bool <: Function[in Array & {0: Bool} & Array & {0: 'A}, out 'B, ⊥]
+//│   'A <: Int | Bool
+
+map(nil())(idIB)
+//│ Type: Ls['B]
+
+map(nil())(idIB) as Ls[Str]
+//│ Type: Ls[Str]
+
+map(cons(1, nil()))(idIB)
+//│ Type: Ls['B]
+//│ Where:
+//│   Int <: 'B
+
+map(cons(1, cons(true, nil())))(idIB)
+//│ Type: Ls['B]
+//│ Where:
+//│   Int <: 'B
+//│   Bool <: 'B
+
+:e
+let x = cons(1, cons(true, nil())) in
+  map(cons(x, x))(idIB)
+//│ ╔══[COMPILATION ERROR] Type error in reference of type ‹not implemented› with expected type ('A) -> 'B
+//│ ║  l.+2: 	  map(cons(x, x))(idIB)
+//│ ║        	                  ^^^^
+//│ ╟── because: cannot constrain  ((Bool) -> Bool) & ((Int) -> Int)  <:  ('A) -> 'B
+//│ ╟── because: cannot constrain  Array & {0: 'A}  <:  Array & {0: Bool} | Array & {0: Int}
+//│ ╟── because: cannot constrain  'A  <:  Int | Bool
+//│ ╟── because: cannot constrain  'A  <:  Int | Bool
+//│ ╙── because: cannot constrain  Ls['A1]  <:  Int | Bool
+//│ Type: Ls['B]
+//│ Where:
+//│   Int <: 'B
+//│   Bool <: 'B
+
+fun k: ((Int | Str, Int) -> Int) & ((Bool | Str, Bool) -> Bool)
+
+k("", if true then 1 else true)
+//│ Type: Int
+
+fun k: ((Int, Int) -> Int) & ((Bool, Bool) -> Bool)
+
+x => k(x, x)
+//│ Type: ('x) ->{'eff} 'app
+//│ Where:
+//│   'x >:< Int => Int & 'x <: ⊥ ∨ (Int, Int) -> Int <: Function[in Array & {0: Int, 1: Int} & Array & {0: 'x, 1: 'x}, out 'app, out 'eff]
+//│   'x >:< Bool => Bool & 'x <: ⊥ ∨ (Bool, Bool) -> Bool <: Function[in Array & {0: Bool, 1: Bool} & Array & {0: 'x, 1: 'x}, out 'app, out 'eff]
+//│   'x <: Int ∨ 'x <: Bool
+//│   'x <: Int | Bool
+
+// Recursive functions and higher-rank ascription from the BbML worksheets.
+fun f(x) = f(x.a)
+
+f => (let g = x => f(x(x)) in g) as [A] -> A -> A
+//│ Type: (⊤) -> [outer, 'A] -> ('A) -> 'A

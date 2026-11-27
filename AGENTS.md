@@ -72,6 +72,11 @@ user's confirmation unless that specific design is already explicitly approved.
 Authorization to fix compiler behavior does not by itself authorize introducing
 annotations, changing member naming or dispatch rules, or extending public APIs.
 
+**Ask before making major design changes**, including removing or replacing a
+core abstraction. Explain which invariants the existing design protects and how
+the proposed change would preserve them. Obtain the user's approval before
+implementing the change unless they have already approved that specific design.
+
 You are working on an industry-strength compiler codebase.
 Although its test suite is extensive, tests alone are not enough to determine the quality of a change;
 the goal is not just to "make everything green".
@@ -154,6 +159,11 @@ and use clear language and terminology.
 
 
 ## Performance Gotchas
+
+**Consider worst-case time and space complexity** when choosing or changing an
+algorithm. Compare the proposed approach with the existing one and avoid
+asymptotic regressions, especially exponential blowups. Account for repeated
+visits to shared subproblems and for the size of intermediate and final results.
 
 Be careful not to materialize intermediate collections needlessly:
 instead of `someCollection.toList.map(...).filter(...)` or `someList.map(...).filter(...)`,

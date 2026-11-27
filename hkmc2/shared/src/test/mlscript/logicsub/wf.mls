@@ -1,0 +1,223 @@
+:.
+
+
+// functions intersection requires disjoint parameters
+
+fun wf: (Int -> Int) & (Str -> Str)
+
+// :fixme The checker accepts this ill-formed type.
+:breakme
+:e
+fun ill: (Int -> Int) & (Int -> Any)
+fun ill(x) = x
+
+:fixme
+:e
+fun ill: (({a: Int}) -> Int) & (({b: Int}) -> Int)
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun ill: (({a: Int}) -> Int) & (({b: Int}) -> Int)
+//│ ╙──      	            ^^^^^^
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun ill: (({a: Int}) -> Int) & (({b: Int}) -> Int)
+//│ ╙──      	                                  ^^^^^^
+
+// :fixme The checker accepts this ill-formed type.
+:breakme
+:e
+fun ill: [A] -> (A -> A) & (Int -> Int)
+
+:fixme
+fun wf: {a: (Int -> Int) & (Str -> Str)}
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun wf: {a: (Int -> Int) & (Str -> Str)}
+//│ ╙──      	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:fixme
+:e
+fun ill: {a: (Int -> Int) & (Int -> Any)}
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun ill: {a: (Int -> Int) & (Int -> Any)}
+//│ ╙──      	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+// intersection of the same function type may not always be simplified
+
+fun wf: (Int -> Int) & (Int -> Int)
+
+// :fixme The checker accepts this ill-formed type.
+:breakme
+:e
+fun ill: (Int -> Int) & (Str -> Str) & (Int -> Int)
+
+// same rules apply on negative position
+// :fixme The checker accepts this ill-formed type.
+:breakme
+:e
+fun ill: ((Int -> Int) & (Int -> Any)) -> Str
+
+// similarly, records union requires pairwise disjointness
+
+:fixme
+fun wf: {a: Int} | {a: Str}
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun wf: {a: Int} | {a: Str}
+//│ ╙──      	         ^^^^^^
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun wf: {a: Int} | {a: Str}
+//│ ╙──      	                    ^^^^^^
+
+:fixme
+:e
+fun ill: [A] -> (Int | Str, A) -> ({a: Int, b: A} | {a: Int, b: Str})
+fun ill(x, p) = if x is
+  Int then { a: x, b: p }
+  Str then { a: 0, b: x }
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun ill: [A] -> (Int | Str, A) -> ({a: Int, b: A} | {a: Int, b: Str})
+//│ ╙──      	                                    ^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun ill: [A] -> (Int | Str, A) -> ({a: Int, b: A} | {a: Int, b: Str})
+//│ ╙──      	                                                     ^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
+//│ ║  l.+3: 	  Int then { a: x, b: p }
+//│ ╙──      	             ^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
+//│ ║  l.+4: 	  Str then { a: 0, b: x }
+//│ ╙──      	             ^^^^^^^^^^
+
+// it is not required that all records shares the same discriminant field
+
+:fixme
+fun wf: (({a: Int, b:Int}) -> Int) & (({b: Bool, c: Bool}) -> Bool) & (({a: Str, c: Str}) -> Str)
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun wf: (({a: Int, b:Int}) -> Int) & (({b: Bool, c: Bool}) -> Bool) & (({a: Str, c: Str}) -> Str)
+//│ ╙──      	           ^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun wf: (({a: Int, b:Int}) -> Int) & (({b: Bool, c: Bool}) -> Bool) & (({a: Str, c: Str}) -> Str)
+//│ ╙──      	                                        ^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun wf: (({a: Int, b:Int}) -> Int) & (({b: Bool, c: Bool}) -> Bool) & (({a: Str, c: Str}) -> Str)
+//│ ╙──      	                                                                         ^^^^^^^^^^^^^^
+
+:fixme
+fun wf: (({tag: {a: Int, b:Int}}) -> Int) & (({tag: {b: Str, c: Bool}}) -> Bool) & (({tag: {a: Str, c: Str}}) -> Str)
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun wf: (({tag: {a: Int, b:Int}}) -> Int) & (({tag: {b: Str, c: Bool}}) -> Bool) & (({tag: {a: Str, c: Str}}) -> Str)
+//│ ╙──      	           ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun wf: (({tag: {a: Int, b:Int}}) -> Int) & (({tag: {b: Str, c: Bool}}) -> Bool) & (({tag: {a: Str, c: Str}}) -> Str)
+//│ ╙──      	                                               ^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun wf: (({tag: {a: Int, b:Int}}) -> Int) & (({tag: {b: Str, c: Bool}}) -> Bool) & (({tag: {a: Str, c: Str}}) -> Str)
+//│ ╙──      	                                                                                      ^^^^^^^^^^^^^^^^^^^^
+
+// functions union merges
+
+:fixme
+fun wf: ((({a: Int}) -> Int) | (({b: Str}) -> Str)) & (({b: Int}) -> Int)
+fun wf(u) = u.b
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun wf: ((({a: Int}) -> Int) | (({b: Str}) -> Str)) & (({b: Int}) -> Int)
+//│ ╙──      	            ^^^^^^
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun wf: ((({a: Int}) -> Int) | (({b: Str}) -> Str)) & (({b: Int}) -> Int)
+//│ ╙──      	                                  ^^^^^^
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun wf: ((({a: Int}) -> Int) | (({b: Str}) -> Str)) & (({b: Int}) -> Int)
+//│ ╙──      	                                                         ^^^^^^
+
+fun wf: (((Int | Bool) -> Int) | (Bool -> Bool)) & (Str -> Str)
+
+wf("")
+//│ Type: Str
+
+wf(true)
+//│ Type: Bool | Int
+
+:e
+wf(1)
+//│ ╔══[COMPILATION ERROR] Type error in application
+//│ ║  l.+1: 	wf(1)
+//│ ║        	^^^^^
+//│ ╟── because: cannot constrain  ((Str) -> Str) & ((Int | Bool) -> Int) | ((Str) -> Str) & ((Bool) -> Bool)  <:  (1) ->{'eff} 'app
+//│ ╟── because: cannot constrain  Array & {0: 1}  <:  Array & {0: Str} | Array & {0: Bool}
+//│ ╙── because: cannot constrain  1  <:  Bool | Str
+//│ Type: Int
+
+// function negation and record negation are not wf
+
+// :fixme The checker accepts this ill-formed type.
+:breakme
+:e
+fun ill: ~(Int -> Int)
+
+:fixme
+:e
+fun ill: ~{a: Int}
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun ill: ~{a: Int}
+//│ ╙──      	           ^^^^^^
+
+:fixme
+:e
+fun ill: (({a: Int}) -> Int) & (~{a: Int} -> ~Int)
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun ill: (({a: Int}) -> Int) & (~{a: Int} -> ~Int)
+//│ ╙──      	            ^^^^^^
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun ill: (({a: Int}) -> Int) & (~{a: Int} -> ~Int)
+//│ ╙──      	                                  ^^^^^^
+
+:fixme
+fun wf: (({a: Int}) -> Int) & (({a: ~Int}) -> ~Int)
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun wf: (({a: Int}) -> Int) & (({a: ~Int}) -> ~Int)
+//│ ╙──      	           ^^^^^^
+//│ ╔══[COMPILATION ERROR] Invalid type
+//│ ║  l.+1: 	fun wf: (({a: Int}) -> Int) & (({a: ~Int}) -> ~Int)
+//│ ╙──      	                                 ^^^^^^^
+
+// class declaration has no wf check
+
+class F(val f: (Int -> Int) & (Int -> Any))
+
+// wf check on use site
+
+// :fixme The checker accepts this ill-formed type.
+:breakme
+:e
+fun k(f)=f.F#f
+
+// Class not disjoint with itself
+
+class Pair[A, B](val a: A, val b: B)
+class Tri[A, B, C](val a: A, val b: B, val c: C)
+
+// :fixme The checker accepts this ill-formed type.
+:breakme
+:e
+fun ill: (Pair[Int, Int] -> Int) & (Pair[Str, Str] -> Str)
+
+fun wf: [A] -> (Pair[A, Any] -> A) & (Tri[A, Any, Any] -> A)
+fun wf(x) = if x is
+  Pair then x.Pair#a
+  Tri then x.Tri#a
+
+wf(new Pair(0, ""))
+//│ Type: 0
+
+wf(new Tri(new Pair(0, ""), 0, ""))
+//│ Type: Pair['A, 'B]
+//│ Where:
+//│   0 <: 'A
+//│   "" <: 'B
+
+class
+ Z()
+ S()
+
+fun wf: ((Z, Z) -> Z) & ((Z, S) -> S) & ((S, Z | S) -> S)
+
+fun zs: Z | S
+
+wf(zs, zs)
+//│ Type: Z | S

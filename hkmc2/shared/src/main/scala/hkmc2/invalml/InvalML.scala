@@ -701,7 +701,7 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
         goStats(stats)
         val (ty, eff) = typeCheck(res)
         (ty, effBuff.foldLeft(eff)((res, e) => res | e))
-      case UnitVal() => (InvalCtx.unitTy, Bot)
+      case UnitVal() | OmittedResult() => (InvalCtx.unitTy, Bot)
       case Lit(lit) => ((lit match
         case _: IntLit => InvalCtx.intTy
         case _: DecLit => InvalCtx.numTy

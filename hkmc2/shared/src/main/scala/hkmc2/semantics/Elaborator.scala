@@ -795,7 +795,7 @@ object Elaborator:
       val id = new Ident("NonLocalReturn")
       val sym = ClassSymbol(DummyTypeDef(syntax.Cls), id)
       val bsym = BlockMemberSymbol("ret", Nil, true)
-      val defn = ClassDef(N, syntax.Cls, sym, bsym, N, Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), Nil, N,
+      val defn = ClassDef(N, syntax.Cls, sym, bsym, N, Nil, Nil, N, ObjBody(Blk(Nil, Term.OmittedResult())), Nil, N,
         auxCtorParams = Nil, ctorAnnotations = Nil)(N, N, N)
       sym.defn = S(defn)
       Term.SynthSel(runtimeSymbol.ref(), id)(S(sym), FlowSymbol.synthSel(id.name), N, N)
@@ -1860,7 +1860,7 @@ extends Importer:
       derivedClsSym.defn = S(ClassDef(
         N, syntax.Cls, derivedClsSym,
         BlockMemberSymbol(derivedClsSym.name, Nil), N,
-        Nil, Nil, parent, ObjBody(Blk(Nil, Term.Lit(Tree.UnitLit(false)))), Nil, N, auxCtorParams = Nil, ctorAnnotations = Nil)(
+        Nil, Nil, parent, ObjBody(Blk(Nil, Term.OmittedResult())), Nil, N, auxCtorParams = Nil, ctorAnnotations = Nil)(
           // The header of the handler class is `handle id = c`, without the handler definitions and body.
           hd.toLoc, hd.toLoc.map(_.left ++ Loc(id, c)), N))
       
@@ -1868,7 +1868,7 @@ extends Importer:
         block(sts_, hasResult = false)._1
       
       elabed.res match
-      case Term.Lit(UnitLit(false)) =>
+      case Term.OmittedResult() | Term.Lit(UnitLit(false)) =>
       case trm => raise(WarningReport(msg"Terms in handler block do nothing" -> trm.toLoc :: Nil))
       
       val tds = elabed.stats.map {
@@ -2587,9 +2587,8 @@ extends Importer:
   
   // * Some blocks do not have a meaningful result,
   // * e.g., constructor blocks or top-level blocks (in MLscript files and diff-tests);
-  // * for these, elaborate with `hasResult = false`, which uses `undefined` as the result
-  // * when there is no other result available. This is fine since the value is never used.
-  // * These useless trailing `undefined`s are then removed by `Lowering`.
+  // * For these, an omitted result lets lowering skip materializing the unit
+  // * value. An explicit result, including unsafe.undefined, remains a term.
   def blockOrRcd(blk: Block, hasResult: Bool, resultInterp: Interpretation, mutableRecord: Bool)(using UnderCtx)
     : Ctxl[(Blk | Rcd, Ctx)]
     = trace[(Blk | Rcd, Ctx)](
@@ -3168,12 +3167,12 @@ extends Importer:
         
         def mkBody(extraParams: Ls[ParamList])(using Ctx) = withFields(extraParams):
           body match
-          case N | S(Error()) => (new Blk(Nil, Term.Lit(UnitLit(false))), ctx)
+          case N | S(Error()) => (new Blk(Nil, Term.OmittedResult()), ctx)
           case S(b: Block) => block(b, hasResult = false, resultInterp = Trm)
           case S(t) =>
             raise(ErrorReport(
               msg"Illegal body of ${k.desc} definition (should be a block; found ${t.describe})." -> t.toLoc :: Nil))
-            (new Blk(Nil, Term.Lit(UnitLit(false))), ctx)
+            (new Blk(Nil, Term.OmittedResult()), ctx)
         
         val defn = debugElaboration(annotations)(k match
         case Als =>
@@ -3433,7 +3432,7 @@ extends Importer:
     else Blk(acc.reverse, res.getOrElse:
       if hasResult
         then unit
-        else Term.Lit(UnitLit(false))
+        else Term.OmittedResult()
     )
   
   def newOf(td: TypeDef): Ctxl[Opt[Term.New]] =

@@ -1,0 +1,1 @@
+#config(language: Language(typeCheck: TypeChecking()))

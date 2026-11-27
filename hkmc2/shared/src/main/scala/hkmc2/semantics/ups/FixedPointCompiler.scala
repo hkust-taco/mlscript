@@ -642,7 +642,7 @@ class FixedPointCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, 
   /** A leaf of a loop split: execute the state updates; the `while` form
     * then re-enters the loop from the top. */
   private def perform(stmts: Statement*): Split =
-    Split.Else(Term.Blk(stmts.toList, Term.Lit(UnitLit(false))))
+    Split.Else(Term.Blk(stmts.toList, Term.OmittedResult()))
 
   private def intPattern(value: Int): FlatPattern = FlatPattern.Lit(IntLit(BigInt(value)))
 

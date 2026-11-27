@@ -21,8 +21,8 @@ class Foo {
 //│             body = S of Lit of IntLit of 1
 //│             flags = (method)
 //│             modulefulness = Modulefulness of N
-//│         res = Lit of UnitLit of false
-//│   res = Lit of UnitLit of false
+//│         res = OmittedResult
+//│   res = OmittedResult
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :sr

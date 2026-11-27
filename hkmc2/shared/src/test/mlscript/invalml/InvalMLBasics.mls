@@ -141,7 +141,90 @@ let t = new Some(true) in t.Some#value
 data class Printer[T](f: T -> Str)
 
 fun foofoo(x) =
+  if x is Int then
+    let t = x + 1 in "foo"
+foofoo
+//│ Type: (¬Int ∨ Int) -> Str
+
+fun foofoo(x) =
   let t = x + 1 in "foo"
+
+:d
+foofoo
+//│ Elab: { member:foofoo⁰ }
+//│ 1. Typing { member:foofoo⁰‹472› }
+//│ | 1. Typing member:foofoo⁰‹472›
+//│ | : ([outer41_2, 'x43_2] -> 'x43_2 ->{⊥} Str, ⊥)
+//│ : ([outer41_2, 'x43_2] -> 'x43_2 ->{⊥} Str, ⊥)
+//│ CONSTRAINT ⊥ <: ⊥
+//│ Type: [outer, 'x] -> 'x -> Str
+//│ Where:
+//│   'x <: Int
+//│ simplifyStructure(D( Int ))
+//│ | simplifyStructure(Int)
+//│ | = Int
+//│ | simplifyStructure(¬⊥)
+//│ | | simplifyStructure(⊥)
+//│ | | = ⊥
+//│ | = ⊤
+//│ = Int
+//│ simplifyStructure('x43_2 ->{⊥} Str)
+//│ | simplifyStructure('x43_2)
+//│ | = 'x43_2
+//│ | simplifyStructure(Str)
+//│ | = Str
+//│ | simplifyStructure(⊥)
+//│ | = ⊥
+//│ = 'x43_2 ->{⊥} Str
+//│ Simplifying type [outer41_2, 'x43_2] -> 'x43_2 ->{⊥} Str
+//│ | Analyse[+] [outer41_2, 'x43_2] -> 'x43_2 ->{⊥} Str  []
+//│ | | Analyse[+] 'x43_2 ->{⊥} Str  []
+//│ | | | Analyse[-] 'x43_2  []
+//│ | | | | Analyse[-] Int  ['x43_2]
+//│ | | | | | Level is < 0
+//│ | | | Analyse[+] Str  []
+//│ | | | | Level is < 0
+//│ | | | Analyse[+] ⊥  []
+//│ | | | | Level is < 0
+//│ Unif-pre: HashMap()
+//│ Occ#: TreeMap(InfVar(2,43,<>,false) -> 1)
+//│ Pos: TreeSet(InfVar(2,41,<>,true))
+//│ Neg: TreeSet(InfVar(2,41,<>,true), InfVar(2,43,<>,false))
+//│ Rec: TreeSet()
+//│ Unif: TreeMap()
+//│ subst([outer41_2, 'x43_2] -> 'x43_2 ->{⊥} Str)
+//│ | subst('x43_2 ->{⊥} Str)
+//│ | | subst('x43_2)
+//│ | | | Repr: 'x43_2
+//│ | | | subst(Int)
+//│ | | | = Int
+//│ | | = Int
+//│ | | subst(Str)
+//│ | | = Str
+//│ | | subst(⊥)
+//│ | | = ⊥
+//│ | = Int ->{⊥} Str
+//│ = [outer41_2, 'x43_2] -> Int ->{⊥} Str
+//│ Type: Int -> Str
+
+fun f() = new Printer(foofoo)
+f
+//│ Type: ['T] -> () -> Printer['T]
+//│ Where:
+//│   'T <: Int
+
+f().Printer#f(42)
+//│ Type: Str
+
+:e
+f().Printer#f("oops")
+//│ ╔══[COMPILATION ERROR] Type error in string literal with expected type 'T
+//│ ║  l.+1: 	f().Printer#f("oops")
+//│ ║        	              ^^^^^^
+//│ ╟── because: cannot constrain  Str  <:  'T
+//│ ╟── because: cannot constrain  Str  <:  'T1
+//│ ╙── because: cannot constrain  Str  <:  Int
+//│ Type: Str
 
 new Printer(foofoo)
 //│ Type: Printer['T]

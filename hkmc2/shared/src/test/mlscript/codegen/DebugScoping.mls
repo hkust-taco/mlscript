@@ -37,7 +37,7 @@ DebugMethods.selected(7)
 :dl
 @dbg(showUids: false) fun command_lowering() = 1601
 //│ Lowering.term 1601
-//│ Lowering.term undefined
+//│ Lowering.term ()
 //│ avoidNames Scoped(Set(member:command_lowering⁰),Define(FunDefn(None,member:command_lowering⁰,term:command_lower...
 //│ | avoidNames Define(FunDefn(None,member:command_lowering⁰,term:command_lowering¹,Signature(List(LoweredParamList(...
 //│ | | avoidNames Return(Lit(IntLit(1601)))...
@@ -65,7 +65,7 @@ print(1701)
 //│ Expanding term Ref(member:DebugParent⁰)
 //│ ~> Resolved(Ref(member:DebugParent⁰),class:DebugParent¹)
 //│ Lowering.term { } (in stmt)
-//│ Lowering.term undefined (in stmt)
+//│ Lowering.term () (in stmt)
 //│ > 1701
 
 
@@ -139,7 +139,7 @@ module DebugCompanion with
 //│ Lowering.term { val member:value⁰ = value¹^term:DebugCompanion⁰/value²; } (in stmt)
 //│ Lowering.term value¹^term:DebugCompanion⁰/value² – symbol value¹
 //│ Lowering.term value¹ – symbol value¹
-//│ Lowering.term undefined (in stmt)
+//│ Lowering.term () (in stmt)
 //│ Lowering.term 1102
 //│ Lowering.term { } (in stmt)
-//│ Lowering.term undefined (in stmt)
+//│ Lowering.term () (in stmt)

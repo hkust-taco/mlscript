@@ -1,0 +1,128 @@
+:.
+
+
+:fixme
+{}
+//│ ═══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
+//│ Type: ⊥
+
+:fixme
+let r = {}
+//│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
+//│ ║  l.+1: 	let r = {}
+//│ ╙──      	        ^^
+
+{1}
+//│ Type: 1
+
+:w
+{1, 2}
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.+1: 	{1, 2}
+//│ ╙──      	 ^
+//│ Type: 2
+
+:fixme
+{foo: 1}
+//│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
+//│ ║  l.+1: 	{foo: 1}
+//│ ╙──      	 ^^^^^^
+//│ Type: ⊥
+
+:fixme
+let rcd = { foo: 1, bar: "..." }
+//│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
+//│ ║  l.+1: 	let rcd = { foo: 1, bar: "..." }
+//│ ╙──      	            ^^^^^^^^^^^^^^^^^^
+
+// :fixme The fields should retain the types of 1 and "...".
+[rcd.foo, rcd.bar]
+//│ Type: Object & {0: ⊥, 1: ⊥}
+
+// TODO: IntLit as label?
+:fixme
+"0": rcd.foo
+"1": rcd.bar
+//│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
+//│ ║  l.+1: 	"0": rcd.foo
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.+2: 	"1": rcd.bar
+//│ ╙──      	^^^^^^^^^^^^
+//│ Type: ⊥
+
+fun id(x) = x
+
+:fixme
+id of (x: 1)
+//│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
+//│ ║  l.+1: 	id of (x: 1)
+//│ ╙──      	       ^^^^
+//│ Type: ⊥
+
+:fixme
+id of { x: 1 }
+//│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
+//│ ║  l.+1: 	id of { x: 1 }
+//│ ╙──      	        ^^^^
+//│ Type: ⊥
+
+:fixme
+id of ({ x: 1 })
+//│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
+//│ ║  l.+1: 	id of ({ x: 1 })
+//│ ╙──      	         ^^^^
+//│ Type: ⊥
+
+:fixme
+id of ({ x: 1, y: 2 })
+//│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
+//│ ║  l.+1: 	id of ({ x: 1, y: 2 })
+//│ ╙──      	         ^^^^^^^^^^
+//│ Type: ⊥
+
+:fixme
+id({x: 1, y: 2})
+//│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
+//│ ║  l.+1: 	id({x: 1, y: 2})
+//│ ╙──      	    ^^^^^^^^^^
+//│ Type: ⊥
+
+// * FIXME: handling of record arguments in resolver/checker
+:fixme
+id of { x: 1, y: 2 }
+//│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
+//│ ║  l.+1: 	id of { x: 1, y: 2 }
+//│ ╙──      	        ^^^^^^^^^^
+//│ Type: ⊥
+
+:fixme
+fun f(x) =
+  x: x.a
+  y: x.b
+f of {a: 1, b: true}
+//│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
+//│ ║  l.+2: 	  x: x.a
+//│ ║        	  ^^^^^^
+//│ ║  l.+3: 	  y: x.b
+//│ ╙──      	^^^^^^^^
+//│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
+//│ ║  l.+4: 	f of {a: 1, b: true}
+//│ ╙──      	      ^^^^^^^^^^^^^
+//│ Type: ⊥
+
+:fixme
+x: 1
+y: x
+//│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
+//│ ║  l.+1: 	x: 1
+//│ ║        	^^^^
+//│ ║  l.+2: 	y: x
+//│ ╙──      	^^^^
+//│ Type: ⊥
+
+:fixme
+(x => ({x: 1, y: x}))("")
+//│ ╔══[COMPILATION ERROR] The logic-subtyping checker does not support this record literal.
+//│ ║  l.+1: 	(x => ({x: 1, y: x}))("")
+//│ ╙──      	        ^^^^^^^^^^
+//│ Type: ⊥

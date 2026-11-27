@@ -28,7 +28,7 @@ fs.readFileSync(debugFile, "utf8") == "Lowering.term 42\nLowering.term 45\n"
 :dl
 @dbg(showUids: false) fun forced_output() = 47
 //│ Lowering.term 47
-//│ Lowering.term undefined
+//│ Lowering.term ()
 //│ avoidNames Scoped(Set(member:forced_output⁰),Define(FunDefn(None,member:forced_output⁰,term:forced_output¹,Sign...
 //│ | avoidNames Define(FunDefn(None,member:forced_output⁰,term:forced_output¹,Signature(List(LoweredParamList(‹›,Lis...
 //│ | | avoidNames Return(Lit(IntLit(47)))...
@@ -69,4 +69,4 @@ import "../../../../../../target/DebugImportB.mls"
 let trace = fs.readFileSync(importLog, "utf8")
 trace.includes("Lowering.term 2101") && trace.includes("Lowering.term 2102") && not(trace.includes("old session contents"))
 //│ = true
-//│ trace = "Lowering.term 2101\nLowering.term { } (in stmt)\nLowering.term undefined (in stmt)\nLowering.term 2102\nLowering.term { } (in stmt)\nLowering.term undefined (in stmt)\n"
+//│ trace = "Lowering.term 2101\nLowering.term { } (in stmt)\nLowering.term () (in stmt)\nLowering.term 2102\nLowering.term { } (in stmt)\nLowering.term () (in stmt)\n"

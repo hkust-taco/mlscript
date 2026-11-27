@@ -326,6 +326,9 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
 
   case Error()
   case UnitVal()
+  /** End of a block with no result expression in a context that discards
+    * its value. Its source type is unit and lowering may omit the return. */
+  case OmittedResult()
   case DynTy()
   case Missing // Placeholder terms that were not elaborated due to the "lightweight" elaboration mode `Mode.Light`
   case Lit(lit: Literal)
@@ -553,7 +556,7 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
       val bodyFree = body.freeVars
       if bodyFree(result.nme) then bodyFree - result.nme else bodyFree
     case Forall(_, _, body) => body.freeVars
-    case Error | Missing | _: Lit | _: DynTy | _: UnitVal | _: LeadingDotSel | _: Continue => Set.empty
+    case Error | Missing | _: Lit | _: DynTy | _: UnitVal | _: OmittedResult | _: LeadingDotSel | _: Continue => Set.empty
     case Break(_, result, value) => value.iterator.flatMap(_.freeVars).toSet + result.nme
     case _ => subTerms.iterator.flatMap(_.freeVars).toSet
 
@@ -1086,7 +1089,7 @@ case class PatternDef(
   /** Each pattern definition should contain two methods: `unapply` and
    *  `unapplyStringPrefix`, which are generated in `Lowering`. Hence, there
    *  is no need to make `body` a parameter. */
-  val body: ObjBody = ObjBody(Blk(Nil, Term.Lit(syntax.Tree.UnitLit(false))))
+  val body: ObjBody = ObjBody(Blk(Nil, Term.OmittedResult()))
   /** Pattern definitions do not need parameter lists. */
   val paramsOpt: Opt[ParamList] = N
   val auxParams: Ls[ParamList] = Nil

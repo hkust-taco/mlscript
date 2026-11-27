@@ -238,6 +238,7 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
         case s: SplitSymbol => s.subst
         case s: InstSymbol => s.subst
         case s: TermSymbol => s.subst
+        case s: InfVarSymbol => s.subst
       DefineVar(copy, term(rhs))(source.toLoc)
     case sc: SetConfig => sc
 
@@ -499,6 +500,7 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
     val that = source match
       case Error() => Error()
       case UnitVal() => UnitVal()
+      case OmittedResult() => OmittedResult()
       case DynTy() => DynTy()
       case Missing => return Missing
       case Lit(lit) => Lit(lit)

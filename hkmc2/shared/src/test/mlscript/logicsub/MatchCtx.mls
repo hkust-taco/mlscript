@@ -1,0 +1,344 @@
+:.
+
+// Each conjunction can fail on either scrutinee. All sixteen paths reach
+// the same else expression, which contributes one result bound.
+fun probe(x0, y0, x1, y1, x2, y2, x3, y3) = if
+  x0 is Int and y0 is Str then 0
+  x1 is Int and y1 is Str then 1
+  x2 is Int and y2 is Str then 2
+  x3 is Int and y3 is Str then 3
+  else "miss"
+probe
+//│ Type: ['x0, 'res, 'x3, 'y3, 'x2, 'y2, 'x1, 'y1, 'y0] -> ('x0, 'y0, 'x1, 'y1, 'x2, 'y2, 'x3, 'y3) -> 'res
+//│ Where:
+//│   'x0 <: Int ∧ ('x0 <: ¬Int ∨ 'y0 <: Str) ∨
+//│       'x1 <: Int ∧ ('x1 <: ¬Int ∨ 'y1 <: Str) ∨
+//│           'x2 <: Int ∧ ('x2 <: ¬Int ∨ 'y2 <: Str) ∨
+//│               'x3 <: Int ∧ ('x3 <: ¬Int ∨ 'y3 <: Str) ∨ "miss" <: 'res
+//│               'x3 >:< Int ∧ 'y3 >:< Str => 3 <: 'res
+//│           'x2 >:< Int ∧ 'y2 >:< Str => 2 <: 'res
+//│       'x1 >:< Int ∧ 'y1 >:< Str => 1 <: 'res
+//│   'x0 >:< Int ∧ 'y0 >:< Str => 0 <: 'res
+
+probe(0, 0, "", "", 2, "hit", 3, "later")
+//│ Type: 2
+
+probe("", "", 1, 1, "", "", 3, 3)
+//│ Type: "miss"
+
+// Both branches of the flag test use the same fallthrough condition on x and y.
+fun twoContinuations(flag, x, y) = if
+  flag is Str then (if x is Int and y is Str then 1 else 2)
+  else (if x is Int and y is Str then 3 else 4)
+twoContinuations
+//│ Type: ['flag, 'reach, 'res, 'x, 'y] -> ('flag, 'x, 'y) -> 'res
+//│ Where:
+//│   'flag <: Str ∨
+//│       'reach <: ⊥ ∨ 4 <: 'res
+//│       'x >:< Int ∧ 'y >:< Str => 3 <: 'res
+//│   'x <: Int ∨ ⊤ <: 'reach
+//│   'x >:< Int => 'y <: Str ∨ ⊤ <: 'reach
+//│   'flag >:< Str =>
+//│       'reach <: ⊥ ∨ 2 <: 'res
+//│       'x >:< Int ∧ 'y >:< Str => 1 <: 'res
+
+// The two joins have different continuations but share the incoming test on x.
+fun sharedPrefix(x, y, z) =
+  let a = if x is Int and y is Str then 1 else 2
+  if x is Int and z is Str then a else 3
+sharedPrefix
+//│ Type: ['x, 'reach, 'res, 'z, 'res1, 'reach1, 'y] -> ('x, 'y, 'z) -> 'res
+//│ Where:
+//│   'x <: Int ∨
+//│       ⊤ <: 'reach
+//│       ⊤ <: 'reach1
+//│   'reach <: ⊥ ∨ 3 <: 'res
+//│   'x >:< Int =>
+//│       'z <: Str ∨ ⊤ <: 'reach
+//│       'z >:< Str => 'res1 <: 'res
+//│       'y <: Str ∨ ⊤ <: 'reach1
+//│       'y >:< Str => 1 <: 'res1
+//│   'reach1 <: ⊥ ∨ 2 <: 'res1
+
+// The first arm consumes the singleton part of the second arm's Int guard.
+fun literal(x, y) = if
+  x is 1 and y is Str then 0
+  x is Int and y is Str then (if x is 1 then "unreachable" else 1)
+  else 2
+
+literal as ((Int, Str) -> Int)
+//│ Type: (Int, Str) -> Int
+
+literal(1, "")
+//│ Type: 0
+
+// When z is Int, missing the first inner arm forces x to be Int.
+// The outer miss then forces y to be Str, so the final arm covers the input.
+fun nestedJoin(x, y, z) = if
+  x is Int and y is Int then 0
+  else if
+    x is Str and z is Int then 1
+    y is Str then 2
+
+nestedJoin as ((Int | Str, Int | Str, Int) -> Int)
+//│ Type: (Int | Str, Int | Str, Int) -> Int
+
+// The arguments to f must come from the same surviving pair.
+fun callDiagonal(f, x, y) = if
+  x is Int and y is Str then 0
+  x is Str and y is Int then 0
+  else f(x, y)
+
+callDiagonal as ((((Int, Int) -> Int) & ((Str, Str) -> Int), Int | Str, Int | Str) -> Int)
+//│ Type: (((Int, Int) -> Int) & ((Str, Str) -> Int), Int | Str, Int | Str) -> Int
+
+:e
+callDiagonal as (((Int, Int) -> Int, Int | Str, Int | Str) -> Int)
+//│ ╔══[COMPILATION ERROR] Type error in reference with expected type ((Int, Int) -> Int, Int | Str, Int | Str) -> Int
+//│ ║  l.+1: 	callDiagonal as (((Int, Int) -> Int, Int | Str, Int | Str) -> Int)
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  ('f, 'x, 'y) ->{'eff} 'res  <:  ((Int, Int) -> Int, Int | Str, Int | Str) -> Int
+//│ ╟── because: cannot constrain  Array & {0: (Int, Int) -> Int, 1: Int | Str, 2: Int | Str}  <:  Array & {0: 'f, 1: 'x, 2: 'y}
+//│ ╟── because: cannot constrain  Int | Str  <:  'y
+//│ ╟── because: cannot constrain  Str  <:  'y
+//│ ╟── because: cannot constrain  Str  <:  Int
+//│ ╟── because: cannot constrain  'x  <:  ¬Str
+//│ ╟── because: cannot constrain  Str  <:  ¬Str
+//│ ╟── because: cannot constrain  'f  <:  ('x & Str, 'y & ¬Int) ->{'eff1} 'app
+//│ ╟── because: cannot constrain  (Int, Int) -> Int  <:  ('x & Str, 'y & ¬Int) ->{'eff1} 'app
+//│ ╟── because: cannot constrain  Array & {0: 'x & Str, 1: 'y & ¬Int}  <:  Array & {0: Int, 1: Int}
+//│ ╟── because: cannot constrain  Str & 'x  <:  Int
+//│ ╟── because: cannot constrain  'x  <:  ¬Str | Int
+//│ ╙── because: cannot constrain  Str  <:  ¬Str | Int
+//│ ╔══[COMPILATION ERROR] Type error in reference with expected type ((Int, Int) -> Int, Int | Str, Int | Str) -> Int
+//│ ║  l.+1: 	callDiagonal as (((Int, Int) -> Int, Int | Str, Int | Str) -> Int)
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  ('f, 'x, 'y) ->{'eff} 'res  <:  ((Int, Int) -> Int, Int | Str, Int | Str) -> Int
+//│ ╟── because: cannot constrain  Array & {0: (Int, Int) -> Int, 1: Int | Str, 2: Int | Str}  <:  Array & {0: 'f, 1: 'x, 2: 'y}
+//│ ╟── because: cannot constrain  Int | Str  <:  'y
+//│ ╟── because: cannot constrain  Str  <:  'y
+//│ ╟── because: cannot constrain  Str  <:  Int
+//│ ╟── because: cannot constrain  'x  <:  ¬Str
+//│ ╟── because: cannot constrain  Str  <:  ¬Str
+//│ ╟── because: cannot constrain  'f  <:  ('x & Str, 'y & ¬Int) ->{'eff1} 'app
+//│ ╟── because: cannot constrain  (Int, Int) -> Int  <:  ('x & Str, 'y & ¬Int) ->{'eff1} 'app
+//│ ╟── because: cannot constrain  Array & {0: 'x & Str, 1: 'y & ¬Int}  <:  Array & {0: Int, 1: Int}
+//│ ╟── because: cannot constrain  'y  <:  Int
+//│ ╟── because: cannot constrain  'y  <:  Int
+//│ ╙── because: cannot constrain  Str  <:  Int
+//│ Type: ((Int, Int) -> Int, Int | Str, Int | Str) -> Int
+
+
+fun same(x, y) = if
+  x is Int and y is Int then 1
+  x is Str and y is Str then 2
+
+
+fun throughSame(x, y) = if
+  x is Int and y is Str then 3
+  x is Str and y is Int then 4
+  else same(x, y)
+
+// A single polymorphic instantiation cannnot satisfy this.
+:e
+throughSame as ((Int | Str, Int | Str) -> Int)
+//│ ╔══[COMPILATION ERROR] Type error in reference with expected type (Int | Str, Int | Str) -> Int
+//│ ║  l.+1: 	throughSame as ((Int | Str, Int | Str) -> Int)
+//│ ║        	^^^^^^^^^^^
+//│ ╟── because: cannot constrain  ('x, 'y) ->{'eff} 'res  <:  (Int | Str, Int | Str) -> Int
+//│ ╟── because: cannot constrain  Array & {0: Int | Str, 1: Int | Str}  <:  Array & {0: 'x, 1: 'y}
+//│ ╟── because: cannot constrain  Int | Str  <:  'y
+//│ ╟── because: cannot constrain  Str  <:  'y
+//│ ╟── because: cannot constrain  Str  <:  Int
+//│ ╟── because: cannot constrain  'x  <:  ¬Str
+//│ ╟── because: cannot constrain  Str  <:  ¬Str
+//│ ╟── because: cannot constrain  ('x1, 'y1) -> 'res1  <:  ('x & Str, 'y & ¬Int) ->{'eff1} 'app
+//│ ╟── because: cannot constrain  Array & {0: 'x & Str, 1: 'y & ¬Int}  <:  Array & {0: 'x1, 1: 'y1}
+//│ ╟── because: cannot constrain  Str & 'x  <:  'x1
+//│ ╟── because: cannot constrain  'x  <:  ¬Str | 'x1
+//│ ╟── because: cannot constrain  Str  <:  ¬Str | 'x1
+//│ ╟── because: cannot constrain  Str  <:  'x1
+//│ ╟── because: cannot constrain  Str  <:  ¬Str
+//│ ╟── because: cannot constrain  'y1  <:  Str
+//│ ╙── because: cannot constrain  Int  <:  Str
+//│ ╔══[COMPILATION ERROR] Type error in reference with expected type (Int | Str, Int | Str) -> Int
+//│ ║  l.+1: 	throughSame as ((Int | Str, Int | Str) -> Int)
+//│ ║        	^^^^^^^^^^^
+//│ ╟── because: cannot constrain  ('x, 'y) ->{'eff} 'res  <:  (Int | Str, Int | Str) -> Int
+//│ ╟── because: cannot constrain  Array & {0: Int | Str, 1: Int | Str}  <:  Array & {0: 'x, 1: 'y}
+//│ ╟── because: cannot constrain  Int | Str  <:  'y
+//│ ╟── because: cannot constrain  Str  <:  'y
+//│ ╟── because: cannot constrain  Str  <:  Int
+//│ ╟── because: cannot constrain  'x  <:  ¬Str
+//│ ╟── because: cannot constrain  Str  <:  ¬Str
+//│ ╟── because: cannot constrain  ('x1, 'y1) -> 'res1  <:  ('x & Str, 'y & ¬Int) ->{'eff1} 'app
+//│ ╟── because: cannot constrain  Array & {0: 'x & Str, 1: 'y & ¬Int}  <:  Array & {0: 'x1, 1: 'y1}
+//│ ╟── because: cannot constrain  'y  <:  'y1 | Int
+//│ ╟── because: cannot constrain  'y  <:  Int | 'y1
+//│ ╟── because: cannot constrain  Str  <:  Int | 'y1
+//│ ╟── because: cannot constrain  Str  <:  'y1 | Int
+//│ ╙── because: cannot constrain  Str  <:  Int
+//│ Type: (Int | Str, Int | Str) -> Int
+
+
+fun throughSame(x, y) = if
+  x is Int and y is Str then 3
+  x is Str and y is Int then 4
+  else same{as {((Int, Int) -> 1) & ((Str, Str) -> 2)}}(x, y)
+
+throughSame as ((Int | Str, Int | Str) -> Int)
+//│ Type: (Int | Str, Int | Str) -> Int
+
+throughSame(10, 20)
+//│ Type: 1
+
+throughSame("a", "b")
+//│ Type: 2
+
+throughSame(10, "b")
+//│ Type: 3
+
+throughSame("a", 20)
+//│ Type: 4
+
+(x, y) => throughSame(x, y)
+//│ Type: ('x, 'y) ->{'eff} 'res
+//│ Where:
+//│   'x <: Int | Str ∨ ((Int, Int) -> 1) & ((Str, Str) -> 2) <: ('x & ¬Int & ¬Str, 'y) ->{'eff1} 'app
+//│   'x >:< Str => 'y <: Int ∨ ((Int, Int) -> 1) & ((Str, Str) -> 2) <: ('x & Str, 'y & ¬Int) ->{'eff1} 'app
+//│   'x >:< Int => 'y <: Str ∨ ((Int, Int) -> 1) & ((Str, Str) -> 2) <: ('x & Int, 'y & ¬Str) ->{'eff1} 'app
+//│   'x <: Int | Str ∧ ('x <: ¬Str ∨ 'y <: Int) ∧ ('x <: ¬Int ∨ 'y <: Str) ∨
+//│       'eff1 <: 'eff
+//│       'app <: 'res
+//│       ('x1, 'y1) -> 'res1 <: (Str, Str) -> 2
+//│       ('x2, 'y2) -> 'res2 <: (Int, Int) -> 1
+//│   'x1 <: Int | Str
+//│   'x1 >:< Str =>
+//│       'y1 <: Str
+//│       'y1 >:< Str => 2 <: 'res1
+//│   'x1 >:< Int =>
+//│       'y1 <: Int
+//│       'y1 >:< Int => 1 <: 'res1
+//│   'x2 <: Int | Str
+//│   'x2 >:< Str =>
+//│       'y2 <: Str
+//│       'y2 >:< Str => 2 <: 'res2
+//│   'x2 >:< Int =>
+//│       'y2 <: Int
+//│       'y2 >:< Int => 1 <: 'res2
+//│   'x >:< Str ∧ 'y >:< Int => 4 <: 'res
+//│   'x >:< Int ∧ 'y >:< Str => 3 <: 'res
+
+(x) => throughSame(x, x)
+//│ Type: ('x) ->{'eff} 'res
+//│ Where:
+//│   'x >:< Str => 'x <: Int ∨ ((Int, Int) -> 1) & ((Str, Str) -> 2) <: ('x & Str, 'x & ¬Int) ->{'eff1} 'app
+//│   'x <: Int | Str ∨ ((Int, Int) -> 1) & ((Str, Str) -> 2) <: ('x & ¬Int & ¬Str, 'x) ->{'eff1} 'app
+//│   'x <: ⊥ ∨
+//│       'eff1 <: 'eff
+//│       'app <: 'res
+//│       ('x1, 'y) -> 'res1 <: (Str, Str) -> 2
+//│       ('x2, 'y1) -> 'res2 <: (Int, Int) -> 1
+//│   'x1 <: Int | Str
+//│   'x1 >:< Str =>
+//│       'y <: Str
+//│       'y >:< Str => 2 <: 'res1
+//│   'x1 >:< Int =>
+//│       'y <: Int
+//│       'y >:< Int => 1 <: 'res1
+//│   'x2 <: Int | Str
+//│   'x2 >:< Str =>
+//│       'y1 <: Str
+//│       'y1 >:< Str => 2 <: 'res2
+//│   'x2 >:< Int =>
+//│       'y1 <: Int
+//│       'y1 >:< Int => 1 <: 'res2
+//│   'x >:< Str ∧ 'x >:< Int => 4 <: 'res
+//│   'x >:< Int ∧ 'x >:< Str => 3 <: 'res
+//│   'x >:< Int => 'x <: Str ∨ ((Int, Int) -> 1) & ((Str, Str) -> 2) <: ('x & Int, 'x & ¬Str) ->{'eff1} 'app
+
+
+fun throughSame(x, y) = if
+  x is Int and y is Str then 3
+  x is Str and y is Int then 4
+  x is Int and y is Int then same(x, y)
+  x is Str and y is Str then same(x, y)
+
+throughSame as ((Int | Str, Int | Str) -> Int)
+//│ Type: (Int | Str, Int | Str) -> Int
+
+throughSame(10, 20)
+//│ Type: 1
+
+throughSame("a", "b")
+//│ Type: 2
+
+throughSame(10, "b")
+//│ Type: 3
+
+throughSame("a", 20)
+//│ Type: 4
+
+(x, y) => throughSame(x, y)
+//│ Type: ('x, 'y) ->{'eff} 'res
+//│ Where:
+//│   'x <: Int | Str
+//│   'x >:< Str =>
+//│       'y <: Int | Str
+//│       'y >:< Str =>
+//│           'eff1 <: 'eff
+//│           'app <: 'res
+//│           ('x1, 'y1) -> 'res1 <: ('x & Str, 'y & Str) ->{'eff1} 'app
+//│       'y >:< Int => 4 <: 'res
+//│   'x >:< Int =>
+//│       'y <: Str | Int
+//│       'y >:< Int =>
+//│           'eff2 <: 'eff
+//│           'app1 <: 'res
+//│           ('x2, 'y2) -> 'res2 <: ('x & Int, 'y & Int) ->{'eff2} 'app1
+//│       'y >:< Str => 3 <: 'res
+//│   'x1 <: Int | Str
+//│   'x1 >:< Str =>
+//│       'y1 <: Str
+//│       'y1 >:< Str => 2 <: 'res1
+//│   'x1 >:< Int =>
+//│       'y1 <: Int
+//│       'y1 >:< Int => 1 <: 'res1
+//│   'x2 <: Int | Str
+//│   'x2 >:< Str =>
+//│       'y2 <: Str
+//│       'y2 >:< Str => 2 <: 'res2
+//│   'x2 >:< Int =>
+//│       'y2 <: Int
+//│       'y2 >:< Int => 1 <: 'res2
+
+(x) => throughSame(x, x)
+//│ Type: ('x) ->{'eff} 'res
+//│ Where:
+//│   'x <: Int | Str
+//│   'x >:< Str =>
+//│       'eff1 <: 'eff
+//│       'app <: 'res
+//│       ('x1, 'y) -> 'res1 <: ('x & Str, 'x & Str) ->{'eff1} 'app
+//│       'x >:< Int => 4 <: 'res
+//│   'x1 <: Int | Str
+//│   'x1 >:< Str =>
+//│       'y <: Str
+//│       'y >:< Str => 2 <: 'res1
+//│   'x1 >:< Int =>
+//│       'y <: Int
+//│       'y >:< Int => 1 <: 'res1
+//│   'x >:< Int =>
+//│       'eff2 <: 'eff
+//│       'app1 <: 'res
+//│       ('x2, 'y1) -> 'res2 <: ('x & Int, 'x & Int) ->{'eff2} 'app1
+//│       'x >:< Str => 3 <: 'res
+//│   'x2 <: Int | Str
+//│   'x2 >:< Str =>
+//│       'y1 <: Str
+//│       'y1 >:< Str => 2 <: 'res2
+//│   'x2 >:< Int =>
+//│       'y1 <: Int
+//│       'y1 >:< Int => 1 <: 'res2
+
+
