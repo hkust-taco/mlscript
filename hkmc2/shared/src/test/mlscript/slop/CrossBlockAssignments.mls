@@ -1,0 +1,52 @@
+:.
+
+
+// A function assigns a variable of its own worksheet block. Later blocks see both.
+let counter = 0
+fun bump() =
+  set counter += 1
+  counter
+//│ counter = 0
+
+
+// The call of `bump` assigns `counter` between the assignment and the read below.
+// FIXME: The simplifier only collects the variables captured by the definitions of the block it optimizes
+// (`DataFlowAnalysis.capturedVars`). It does not know that `bump` captures `counter`, so it propagates the
+// constant assigned here past the call.
+:fixme
+:noInline
+:soir
+:expect 2
+set counter = 0
+let bumped = bump()
+bumped + counter
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ set counter⁰ = 0; set bumped⁰ = bump⁰(); return +⁰(bumped⁰, 0)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] Expected: '2', got: '1'
+//│ = 1
+//│ bumped = 1
+
+// Inlining the call afterwards exposes its assignment, which comes too late for the propagated read.
+:fixme
+:soir
+:expect 2
+set counter = 0
+let inlined = bump()
+inlined + counter
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ set counter⁰ = 0; set counter⁰ = 1; set inlined⁰ = 1; return 1
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] Expected: '2', got: '1'
+//│ = 1
+//│ inlined = 1
+
+// A function body reads the variable at each use, because the variable is free in it.
+:noInline
+:expect 2
+fun inFunction() =
+  set counter = 0
+  let bumped = bump()
+  bumped + counter
+inFunction()
+//│ = 2
