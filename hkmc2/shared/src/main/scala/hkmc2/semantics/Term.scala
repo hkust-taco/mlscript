@@ -36,13 +36,13 @@ enum Annot extends Located:
   case Trm(trm: Term)(override val symbol: Opt[Symbol], val toLoc: Opt[Loc])
   // NOTE: The presence of TailRec and TailCall annotations does not affect whether a function is optimized or not;
   // it only affects whether a warning is thrown if the function/call is not actually tail-recursive.
-  case TailRec()(val toLoc: Opt[Loc])
+  case TailRec()(val toLoc: Opt[Loc]) extends Annot, Annot.RequiresFunctionBody("@tailrec")
   case TailCall()(val toLoc: Opt[Loc])
-  case Inline()(val toLoc: Opt[Loc])
-  case NoInline()(val toLoc: Opt[Loc])
-  case Generator()(val toLoc: Opt[Loc])
-  case Async()(val toLoc: Opt[Loc])
-  case RaiseEffects()(val toLoc: Opt[Loc])
+  case Inline()(val toLoc: Opt[Loc]) extends Annot, Annot.RequiresFunctionBody("@inline")
+  case NoInline()(val toLoc: Opt[Loc]) extends Annot, Annot.RequiresFunctionBody("@noInline")
+  case Generator()(val toLoc: Opt[Loc]) extends Annot, Annot.RequiresFunctionBody("@generator")
+  case Async()(val toLoc: Opt[Loc]) extends Annot, Annot.RequiresFunctionBody("@async")
+  case RaiseEffects()(val toLoc: Opt[Loc]) extends Annot, Annot.RequiresFunctionBody("@raiseEffects")
   // * EffectAnalysis Annotations
   // @pure: overriding annotation indicating that the function is pure.
   case Pure()(val toLoc: Opt[Loc])
@@ -72,30 +72,19 @@ enum Annot extends Located:
   
   def show(using Scope, ShowCfg, Raise): Document = this match
     case JsSymbol(key) => doc"@jsSymbol(${key.term.show})"
+    case a: Annot.RequiresFunctionBody => doc"${a.spelling}"
+    case Fresh() => doc"@annotations.fresh"
+    case Untyped() => doc"@untyped"
+    case Unsafe() => doc"@unsafe"
+    case PlainField() => doc"@js.plainField"
+    case TailCall() => doc"@tailcall"
+    case Affine(n) => doc"@affine($n)"
+    case Modifier(mod) => doc"@${mod.name}"
+    case Pure() => doc"@pure"
+    case Bufferable(keepInstances) => if keepInstances then doc"@bufferable" else doc"@buffered"
     case Trm(trm) => doc"@${trm.show}"
-    case _ => doc"${spelling.getOrElse(lastWords(s"No source spelling for the annotation ${this}"))}"
-  
-  /** The source spelling of this annotation if it does not depend on a term: `N` for `@jsSymbol` and user annotations.
-    */
-  def spelling: Opt[Str] = this match
-    case JsSymbol(_) | Trm(_) => N
-    case Fresh() => S("@annotations.fresh")
-    case Untyped() => S("@untyped")
-    case Unsafe() => S("@unsafe")
-    case PlainField() => S("@js.plainField")
-    case Inline() => S("@inline")
-    case NoInline() => S("@noInline")
-    case Generator() => S("@generator")
-    case Async() => S("@async")
-    case RaiseEffects() => S("@raiseEffects")
-    case TailRec() => S("@tailrec")
-    case TailCall() => S("@tailcall")
-    case Affine(n) => S(s"@affine($n)")
-    case Modifier(mod) => S(s"@${mod.name}")
-    case Pure() => S("@pure")
-    case Bufferable(keepInstances) => S(if keepInstances then "@bufferable" else "@buffered")
-    case Config(_) => S("@config(...)")
-    case Debug(_) => S("@dbg(...)")
+    case Config(_) => doc"@config(...)"
+    case Debug(_) => doc"@dbg(...)"
   
   def mkClone(using State, Erasure): Annot = Cloner(SymbolSubst.Id).annotation(this)
 
@@ -107,11 +96,8 @@ object Annot:
   def declareModifierOf(annotations: Ls[Annot]): Opt[Annot.Modifier] = annotations.collectFirst:
     case mod @ Annot.Modifier(Keyword.`declare`) => mod
   
-  /** Annotations that only apply to a function with a body, with their source spelling. */
-  object ImplementationOnly:
-    def unapply(annot: Annot): Opt[Str] = annot match
-      case TailRec() | Inline() | NoInline() | Generator() | Async() | RaiseEffects() => annot.spelling
-      case _ => N
+  /** An annotation whose effect requires a function body. `spelling` names it in source and diagnostics. */
+  sealed trait RequiresFunctionBody(val spelling: Str)
   
   /** Where an annotation belongs on a member that has both a separate signature (`fun f: T`) and a definition. */
   enum Placement:
