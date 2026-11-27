@@ -508,6 +508,29 @@ object myAnn
 //│ @myAnn @myAnn define userBoth⁰ as fun userBoth¹(x) { return x }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
+module Markers with
+  object marker
+
+// Both paths resolve to the same user annotation, even through a wildcard open.
+:w
+fun wildcardDuplicate() =
+  open Markers.{ * }
+  @marker fun inner: Int -> Int
+  @Markers.marker fun inner(x) = x
+  inner(1)
+//│ ╔══[WARNING] This annotation is written on both the signature and the definition of 'inner'
+//│ ║  l.+3: 	  @marker fun inner: Int -> Int
+//│ ║        	  ^^^^^^^
+//│ ╟── also written here
+//│ ║  l.+4: 	  @Markers.marker fun inner(x) = x
+//│ ╙──      	  ^^^^^^^^^^^^^^^
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.+3: 	  @marker fun inner: Int -> Int
+//│ ╙──      	  ^^^^^^^
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.+4: 	  @Markers.marker fun inner(x) = x
+//│ ╙──      	  ^^^^^^^^^^^^^^^
+
 // A modifier on the signature applies to the definition.
 open class Base() with
   open fun scale: (Int, Int) -> Int

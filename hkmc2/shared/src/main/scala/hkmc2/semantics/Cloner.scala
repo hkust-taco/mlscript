@@ -241,7 +241,7 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
     case sc: SetConfig => sc
 
   def annotation(source: Annot): Annot = source match
-    case Annot.Trm(t) => Annot.Trm(term(t))(source.toLoc)
+    case a @ Annot.Trm(t) => Annot.Trm(term(t))(a.symbol.map(_.subst), a.toLoc)
     case Annot.JsSymbol(key) => Annot.JsSymbol(key.copy(path = key.path.map(_.subst))(term(key.term)))(source.toLoc)
     case _ => source
 

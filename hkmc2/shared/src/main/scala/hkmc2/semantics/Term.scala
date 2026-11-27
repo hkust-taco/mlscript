@@ -31,7 +31,9 @@ enum Annot extends Located:
   case Unsafe()(val toLoc: Opt[Loc])
   case PlainField()(val toLoc: Opt[Loc])
   case Modifier(mod: Keyword)(val toLoc: Opt[Loc])
-  case Trm(trm: Term)(val toLoc: Opt[Loc])
+  // Annotation lookup also accepts wildcard imports and selections through values.
+  // Keep the recognized head for comparisons between a signature and its definition.
+  case Trm(trm: Term)(override val symbol: Opt[Symbol], val toLoc: Opt[Loc])
   // NOTE: The presence of TailRec and TailCall annotations does not affect whether a function is optimized or not;
   // it only affects whether a warning is thrown if the function/call is not actually tail-recursive.
   case TailRec()(val toLoc: Opt[Loc])
@@ -60,9 +62,7 @@ enum Annot extends Located:
   //   `f` is one-shot and each function value produced by `f(a)` is also one-shot.
   case Affine(whichParamList: Int)(val toLoc: Opt[Loc])
   
-  def symbol: Opt[Symbol] = this match
-    case Trm(trm) => trm.symbol
-    case _ => N
+  def symbol: Opt[Symbol] = N
   
   def subTerms: Vector[Term] = this match
     case Trm(trm) => Vector.single(trm)

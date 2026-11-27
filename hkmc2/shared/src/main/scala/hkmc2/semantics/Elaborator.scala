@@ -1008,14 +1008,12 @@ extends Importer:
             return S(Annot.Pure()(tree.toLoc))
           case _ => ()
         case _ => ()
-        S(Annot.Trm(trm)(tree.toLoc))
+        S(Annot.Trm(trm)(if newResolution then symbol else legacyAnnotSymbol(trm), tree.toLoc))
   
-  /** The symbol an annotation term refers to, ignoring its arguments, if known statically. Unlike
-    * `annotationSymbol`, this has no resolution side effects. */
-  private def knownAnnotSymbol(trm: Term): Opt[Symbol] = trm.withoutCaptures match
-    case Term.App(base, _) => knownAnnotSymbol(base)
-    case Term.TyApp(base, _) => knownAnnotSymbol(base)
-    case t => if newResolution then staticAnnotationSymbol(t) else t.symbol
+  private def legacyAnnotSymbol(trm: Term): Opt[Symbol] = trm.withoutCaptures match
+    case Term.App(base, _) => legacyAnnotSymbol(base)
+    case Term.TyApp(base, _) => legacyAnnotSymbol(base)
+    case t => t.symbol
   
   /** Whether two annotations are the same kind:
     *
@@ -1023,10 +1021,10 @@ extends Importer:
     * - User annotations are the same if they refer to the same symbol; and
     * - Otherwise, two annotations are the same if they are equal.
     *
-    * A user annotation whose [[knownAnnotSymbol symbol is not statically known]] is never the same as another.
+    * A user annotation whose main symbol is unknown is never the same as another.
     */
   private def sameAnnotTarget(a: Annot, b: Annot): Bool = (a, b) match
-    case (Annot.Trm(t1), Annot.Trm(t2)) => knownAnnotSymbol(t1).exists(knownAnnotSymbol(t2).contains)
+    case (a: Annot.Trm, b: Annot.Trm) => a.symbol.exists(b.symbol.contains)
     case (_: Annot.Config, _: Annot.Config) | (_: Annot.Debug, _: Annot.Debug)
       | (_: Annot.JsSymbol, _: Annot.JsSymbol) => true
     case _ => a == b
