@@ -151,15 +151,15 @@ class KBare with
 fun lateSymbolic(x) = x
 fun (class Lol) lateSymbolic: Int
 lateSymbolic(1)
+//│ ╔══[COMPILATION ERROR] This type definition is not a valid symbolic name
+//│ ║  l.+2: 	fun (class Lol) lateSymbolic: Int
+//│ ╙──      	     ^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] The signature of 'lateSymbolic' must be written before its definition
 //│ ║  l.+2: 	fun (class Lol) lateSymbolic: Int
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── defined here
 //│ ║  l.+1: 	fun lateSymbolic(x) = x
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] This type definition is not a valid symbolic name
-//│ ║  l.+2: 	fun (class Lol) lateSymbolic: Int
-//│ ╙──      	     ^^^^^^^^^
 //│ = 1
 
 
@@ -203,6 +203,19 @@ fun shadowed() =
   h
 shadowed()(Shadow(1))
 //│ = 1
+
+// Each body gets its own signature and type parameters when definitions arrive in reverse order.
+:expect [1, 2]
+class LeftField(val left: Int)
+class RightField(val right: Int)
+fun interleaved() =
+  fun left[A]: (LeftField, A) -> Int
+  fun right[A]: (RightField, A) -> Int
+  fun right(obj, value: A) = obj.right
+  fun left(obj, value: A) = obj.left
+  [left(LeftField(1), true), right(RightField(2), "ok")]
+interleaved()
+//│ = [1, 2]
 
 // A use between the signature and the definition calls the definition.
 fun usedBetween: Int -> Int
@@ -510,6 +523,29 @@ object myAnn
 
 module Markers with
   object marker
+
+// A later receiver cannot supply an annotation on a signature or inside its type.
+:e
+fun forwardSignatureAnnotation() =
+  @later.marker fun inner: Int -> Int
+  val later = Markers
+  fun inner(x) = x
+  inner(1)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	  @later.marker fun inner: Int -> Int
+//│ ║        	  ^^^^^^^^^^^^^
+//│ ╙── An annotation's main symbol must be uniquely known when the annotation is elaborated.
+
+:e
+fun forwardTypeAnnotation() =
+  fun inner: (@later.marker Int) -> Int
+  val later = Markers
+  fun inner(x) = x
+  inner(1)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	  fun inner: (@later.marker Int) -> Int
+//│ ║        	              ^^^^^^^^^^^^^
+//│ ╙── An annotation's main symbol must be uniquely known when the annotation is elaborated.
 
 // Both paths resolve to the same user annotation, even through a wildcard open.
 :w
