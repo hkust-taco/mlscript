@@ -195,12 +195,13 @@ f(1, 2, 1000)
 //│   return scope0$cap.mutated$0¹
 //│ };
 //│ define f⁴ as fun f⁵(unused, immutable, mutated) {
-//│   let mutated1, a, tmp, tmp1, scope0$cap;
+//│   let mutated1, a, arg, tmp, tmp1, scope0$cap;
 //│   set scope0$cap = new mut Capture$scope0¹(mutated1);
 //│   set scope0$cap.mutated$0¹ = mutated;
 //│   set a = g²(scope0$cap, immutable);
+//│   set arg = a;
 //│   set tmp = h⁰(scope0$cap);
-//│   set tmp1 = +⁰(a, tmp);
+//│   set tmp1 = +⁰(arg, tmp);
 //│   return +⁰(tmp1, unused)
 //│ };
 //│ return f⁵(1, 2, 1000)

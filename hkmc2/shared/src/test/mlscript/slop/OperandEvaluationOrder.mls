@@ -1,0 +1,169 @@
+:.
+:noInline
+:flowBasedOpt off
+
+
+// Each test resets the counter through a call: a later worksheet block that assigns the variable itself
+// lets the simplifier propagate the assigned constant past the calls of `bump`, whose definition it does not see.
+let counter = 0
+fun reset() = set counter = 0
+fun bump() =
+  set counter += 1
+  counter
+class Reader with
+  fun next = bump()
+let reader = new Reader
+//│ counter = 0
+//│ reader = Reader
+
+
+// The operands of a builtin operator are evaluated from left to right, like the arguments of a call.
+// The left operand is a variable that the right operand assigns, so it is read into a temporary first.
+:sir
+:expect [true, false]
+reset()
+[counter < bump(), counter === bump()]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let arg, tmp, tmp1, arg1, tmp2, tmp3;
+//│ do reset⁰();
+//│ set arg = counter⁰;
+//│ set tmp = bump⁰();
+//│ set tmp1 = <⁰(arg, tmp);
+//│ set arg1 = counter⁰;
+//│ set tmp2 = bump⁰();
+//│ set tmp3 = ===⁰(arg1, tmp2);
+//│ return [tmp1, tmp3]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [true, false]
+
+// Reading a getter runs code, like a call.
+:expect 1
+reset()
+counter + reader.next
+//│ = 1
+
+// Each operator reads its own left operand before its right operand runs.
+:expect 4
+reset()
+counter + (bump() + counter) + bump()
+//│ = 4
+
+// A left operand needs no temporary if its value cannot change, or if the right operand runs no code.
+:sir
+:expect 8
+fun stableOperands(a, b) =
+  let total = a
+  set total = total + b
+  total * 2 + (a + bump())
+reset()
+stableOperands(1, 2)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define stableOperands⁰ as fun stableOperands¹(a, b) {
+//│   let total, tmp, tmp1, tmp2, tmp3;
+//│   set total = a;
+//│   set tmp = +⁰(total, b);
+//│   set total = tmp;
+//│   set tmp1 = *⁰(total, 2);
+//│   set tmp2 = bump⁰();
+//│   set tmp3 = +⁰(a, tmp2);
+//│   return +⁰(tmp1, tmp3)
+//│ };
+//│ do reset⁰();
+//│ return stableOperands¹(1, 2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 8
+
+// A right operand that returns never reaches the operation.
+:sir
+:expect [5, 2]
+fun earlyReturn(a) =
+  let total = a
+  set total = total + 1
+  total + (if a > 0 then return 5 else bump())
+reset()
+[earlyReturn(1), earlyReturn(0)]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp, tmp1;
+//│ define earlyReturn⁰ as fun earlyReturn¹(a) {
+//│   let total, scrut, tmp2, arg, tmp3;
+//│   set total = a;
+//│   set tmp2 = +⁰(total, 1);
+//│   set total = tmp2;
+//│   set arg = total;
+//│   set scrut = >⁰(a, 0);
+//│   match scrut
+//│     true =>
+//│       return 5
+//│     else
+//│       set tmp3 = bump⁰();
+//│       return +⁰(arg, tmp3)
+//│   end
+//│ };
+//│ do reset⁰();
+//│ set tmp = earlyReturn¹(1);
+//│ set tmp1 = earlyReturn¹(0);
+//│ return [tmp, tmp1]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [5, 2]
+
+
+// The remaining cases read a path after the code of the operands that follow it has run.
+
+let callee = x => "old"
+fun swapCallee() =
+  set callee = x => "new"
+  0
+//│ callee = fun callee
+
+// FIXME: The callee is read after its argument assigns it.
+:fixme
+:expect "old"
+callee(swapCallee())
+//│ ═══[RUNTIME ERROR] Expected: '"old"', got: '"new"'
+//│ = "new"
+
+class Holder with
+  mut val text: Str = "ab"
+let holder = new mut Holder
+fun replaceText() =
+  set holder.text = "xyz"
+  0
+//│ holder = Holder
+
+// FIXME: The receiver is read after the argument assigns the field that holds it.
+:fixme
+:expect "a"
+holder.text.charAt(replaceText())
+//│ ═══[RUNTIME ERROR] Expected: '"a"', got: '"x"'
+//│ = "x"
+
+let items = mut [10, 20]
+let others = mut [30, 40]
+fun swapItems() =
+  set items = others
+  1
+//│ items = [10, 20]
+//│ others = [30, 40]
+
+// FIXME: The indexed array is read after the index assigns the variable that holds it.
+:fixme
+:expect 20
+items.[swapItems()]
+//│ ═══[RUNTIME ERROR] Expected: '20', got: '40'
+//│ = 40
+
+let targets = mut [10, 20]
+let spares = mut [30, 40]
+fun swapTargets() =
+  set targets = spares
+  1
+//│ spares = [30, 40]
+//│ targets = [10, 20]
+
+// FIXME: The same applies to the target of an assignment, which here writes to `spares`.
+:fixme
+:expect [30, 40]
+set targets.[swapTargets()] = 99
+spares
+//│ ═══[RUNTIME ERROR] Expected: '[30, 40]', got: '[30, 99]'
+//│ = [30, 99]

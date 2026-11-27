@@ -229,7 +229,7 @@ together(true)
 //│ };
 //│ @private
 //│ define together⁰ as fun together¹(c: Bool⁰): Int⁰ {
-//│   let b: Unboxed², o: Reference⁰, first: Int⁰, tmp: Int32, tmp1: Int⁰, tmp2: Object⁰, tmp3: Int32, tmp4: Unboxed², tmp5: Int⁰;
+//│   let b: Unboxed², o: Reference⁰, first: Int⁰, tmp: Int32, tmp1: Int⁰, tmp2: Object⁰, arg: Int⁰, tmp3: Int32, tmp4: Unboxed², tmp5: Int⁰;
 //│   set tmp = wasm⁰.i32⁰.const⁰‹(Int⁰) => Int32›(1);
 //│   set b = Unboxed⁰‹(Int32) => Unboxed²›(tmp);
 //│   set o = Reference¹‹(Int⁰) => Reference⁰›(2);
@@ -246,10 +246,11 @@ together(true)
 //│       set tmp1 = discard¹‹(Unknown) => Int⁰›(tmp2);
 //│       end
 //│   set first = tmp1;
+//│   set arg = first;
 //│   set tmp3 = wasm⁰.i32⁰.const⁰‹(Int⁰) => Int32›(2);
 //│   set tmp4 = Unboxed⁰‹(Int32) => Unboxed²›(tmp3);
 //│   set tmp5 = read¹‹(Unboxed²) => Int⁰›(tmp4);
-//│   return +⁰‹(?, ?) => ?›(first, tmp5)
+//│   return +⁰‹(?, ?) => ?›(arg, tmp5)
 //│ };
 //│ return together¹‹(Bool⁰) => Int⁰›(true)
 //│ Wasm result:
@@ -281,7 +282,7 @@ instances(true)
 //│ };
 //│ @private @private
 //│ define instances$instances as fun instances$instances⁰(c: Bool⁰): Int⁰ {
-//│   let b: Unboxed², o: Reference⁰, first: Int⁰, tmp: Int32, tmp1: Int⁰, tmp2: Object⁰, tmp3: Int32, tmp4: Int⁰, tmp5: Int32, Unboxed_p: Int32;
+//│   let b: Unboxed², o: Reference⁰, first: Int⁰, tmp: Int32, tmp1: Int⁰, tmp2: Object⁰, arg: Int⁰, tmp3: Int32, tmp4: Int⁰, tmp5: Int32, Unboxed_p: Int32;
 //│   set tmp = wasm⁰.i32⁰.const⁰‹(Int⁰) => Int32›(1);
 //│   set b = Unboxed⁰‹(Int32) => Unboxed²›(tmp);
 //│   set o = Reference¹‹(Int⁰) => Reference⁰›(2);
@@ -298,11 +299,12 @@ instances(true)
 //│       set tmp1 = skip⁰‹(Unknown) => Int⁰›(tmp2);
 //│       end
 //│   set first = tmp1;
+//│   set arg = first;
 //│   set tmp3 = wasm⁰.i32⁰.const⁰‹(Int⁰) => Int32›(2);
 //│   set Unboxed_p = tmp3;
 //│   set tmp5 = Unboxed_p;
 //│   set tmp4 = instances_get$get⁰‹(Int32) => Int⁰›(tmp5);
-//│   return +⁰‹(?, ?) => ?›(first, tmp4)
+//│   return +⁰‹(?, ?) => ?›(arg, tmp4)
 //│ };
 //│ @private @private
 //│ define instances_get$get1 as fun instances_get$get¹(b: Int32): Int⁰ {
@@ -318,7 +320,7 @@ instances(true)
 //│ };
 //│ @private
 //│ define instances⁰ as fun instances¹(c: Bool⁰): Int⁰ {
-//│   let b: Unboxed², o: Reference⁰, first: Int⁰, tmp: Int32, tmp1: Int⁰, tmp2: Object⁰, tmp3: Int32, tmp4: Int⁰, tmp5: Int32, Unboxed_p: Int32;
+//│   let b: Unboxed², o: Reference⁰, first: Int⁰, tmp: Int32, tmp1: Int⁰, tmp2: Object⁰, arg: Int⁰, tmp3: Int32, tmp4: Int⁰, tmp5: Int32, Unboxed_p: Int32;
 //│   set tmp = wasm⁰.i32⁰.const⁰‹(Int⁰) => Int32›(1);
 //│   set b = Unboxed⁰‹(Int32) => Unboxed²›(tmp);
 //│   set o = Reference¹‹(Int⁰) => Reference⁰›(2);
@@ -335,11 +337,12 @@ instances(true)
 //│       set tmp1 = skip⁰‹(Unknown) => Int⁰›(tmp2);
 //│       end
 //│   set first = tmp1;
+//│   set arg = first;
 //│   set tmp3 = wasm⁰.i32⁰.const⁰‹(Int⁰) => Int32›(2);
 //│   set Unboxed_p = tmp3;
 //│   set tmp5 = Unboxed_p;
 //│   set tmp4 = instances_get$get¹‹(Int32) => Int⁰›(tmp5);
-//│   return +⁰‹(?, ?) => ?›(first, tmp4)
+//│   return +⁰‹(?, ?) => ?›(arg, tmp4)
 //│ };
 //│ return instances$instances⁰‹(Bool⁰) => Int⁰›(true)
 //│ Wasm result:

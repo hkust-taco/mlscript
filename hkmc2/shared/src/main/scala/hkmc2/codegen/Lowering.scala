@@ -1376,8 +1376,17 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           case State.andSymbol => mkBooleanMatch(true)
           case State.orSymbol => mkBooleanMatch(false)
           case _ =>
-            subTerm_nonTail(arg2): ar2 =>
-              k(Call.of(sym.asSimpleRef.withLocOf(ref), (Arg(N, ar1) :: Arg(N, ar2) :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, trm.toLoc))
+            // * Like an argument that precedes others, the left operand is evaluated before the code of the
+            // * right operand runs (see `stabilized`).
+            val operands = collection.mutable.Buffer.empty[Arg]
+            val evaluation = stabilized(operands, ar1)(Arg(N, _)):
+              subTerm_nonTail(arg2): ar2 =>
+                operands += Arg(N, ar2)
+                End()
+            // * A right operand that aborts has no path, and the operation is never reached.
+            if operands.sizeIs < 2 then evaluation
+            else Begin(evaluation,
+              k(Call.of(sym.asSimpleRef.withLocOf(ref), operands.toList :: Nil)(CallMetadata.defaultMlsFun, trm.toLoc)))
       case _ => fail:
         ErrorReport(
           msg"Unexpected arguments for builtin symbol '${sym.nme}'" -> arg.toLoc :: Nil, S(arg),
@@ -1969,34 +1978,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     */
     val asr = collection.mutable.Buffer.empty[Arg]
     val fsr = collection.mutable.Buffer.empty[RcdArg]
-    // * Arguments are evaluated from left to right, but an argument lowered to a path is only read when the
-    // * arguments are consumed, after the statements lowered for the arguments that follow it. Unless the path
-    // * denotes the same value at that point, it is read into a temporary first; the temporary is only kept if
-    // * those statements can run code. A temporary of the lowering denotes the value it was assigned when it is
-    // * referenced: the statements of later arguments, which assign their own fresh temporaries, never assign it.
-    // * Nor can they redefine a function, although `isStable` excludes references to functions, whose lifted
-    // * closures do not keep their identity. An unchecked cast inherits its operand's stability.
-    // * A checked cast must run before any effects of later arguments, even when its operand is stable.
-    def denotesSameValue(read: Path): Bool = read match
-      case CastPath(operand, _, false) => denotesSameValue(operand)
-      case Value.SimpleRef(_: TempSymbol) => true
-      case Value.MemberRef(_, ts: TermSymbol) if ts.k is syntax.Fun => true
-      case _ => read.isStable
-    def stabilized[A](args: collection.mutable.Buffer[A], read: Path)(mk: Path => A)(rest: => Block): Block =
-      if denotesSameValue(read) then
-        args += mk(read)
-        rest
-      else
-        val tmp = new TempSymbol(N, read.erasedType, "arg")
-        val index = args.length
-        args += mk(tmp.asSimpleRef)
-        val restBlock = rest
-        if runsCode(restBlock) then
-          loweringCtx.collectScopedSym(tmp)
-          Assign(tmp, read, restBlock)
-        else
-          args(index) = mk(read)
-          restBlock
     type Elems = Ls[(Term -> Term) \/ (Opt[SpreadKind] -> st)]
     // * `expected` tracks the erased types of the not-yet-consumed positional parameters.
     // * A spread or named argument breaks positional alignment, so remaining arguments pass through uncast.
@@ -2038,8 +2019,46 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           k(asr.toList :+ Arg(N, rcdSym.asSimpleRef))))
       
   
-  /** Whether running `b`, the statements lowered for some arguments, can run code that changes the values of
-    * paths lowered for earlier arguments. Defining functions does not, nor does assigning a pure result to a
+  /** Whether `read`, the path lowered for an operand, denotes the same value after the statements lowered for
+    * the operands that follow it. A temporary of the lowering denotes the value it was assigned when it is
+    * referenced: the statements of later operands, which assign their own fresh temporaries, never assign it.
+    * Nor can they redefine a function, although `isStable` excludes references to functions, whose lifted
+    * closures do not keep their identity. An unchecked cast inherits its operand's stability.
+    * A checked cast must run before any effects of later operands, even when its operand is stable.
+    */
+  private def denotesSameValue(read: Path): Bool = read match
+    case CastPath(operand, _, false) => denotesSameValue(operand)
+    case Value.SimpleRef(_: TempSymbol) => true
+    case Value.MemberRef(_, ts: TermSymbol) if ts.k is syntax.Fun => true
+    case _ => read.isStable
+  
+  /** Adds to `operands` the operand lowered to the path `read`, and returns the statements that evaluate it
+    * followed by `rest`, the statements lowered for the operands that follow it.
+    *
+    * The operands of a call or of an operator are evaluated from left to right, but an operand lowered to a path
+    * is only read when the operands are consumed, after `rest`. Unless `read` denotes the same value at that
+    * point (see [[denotesSameValue]]), it is read into a temporary first; the temporary is only kept if `rest`
+    * can run code (see [[runsCode]]).
+    */
+  private def stabilized[A](operands: collection.mutable.Buffer[A], read: Path)(mk: Path => A)(rest: => Block)
+        (using LoweringCtx): Block =
+    if denotesSameValue(read) then
+      operands += mk(read)
+      rest
+    else
+      val tmp = new TempSymbol(N, read.erasedType, "arg")
+      val index = operands.length
+      operands += mk(tmp.asSimpleRef)
+      val restBlock = rest
+      if runsCode(restBlock) then
+        loweringCtx.collectScopedSym(tmp)
+        Assign(tmp, read, restBlock)
+      else
+        operands(index) = mk(read)
+        restBlock
+  
+  /** Whether running `b`, the statements lowered for some operands, can run code that changes the values of
+    * paths lowered for earlier operands. Defining functions does not, nor does assigning a pure result to a
     * temporary of the lowering, which is a fresh variable.
     */
   private def runsCode(b: Block): Bool = b match
