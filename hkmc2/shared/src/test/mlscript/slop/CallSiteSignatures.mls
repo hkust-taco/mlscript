@@ -224,6 +224,30 @@ useHandler(Handler(x => x + 1))
 //│ = 42
 
 
+// A declared member without a parameter list is a getter. Applying the function that it returns is a
+// separate call, which does not pass the object as the receiver. A declared method lists its parameters.
+class HostObject with
+  fun viaGetter() = this is HostObject
+  fun viaMethod() = this is HostObject
+set globalThis.host = new HostObject
+declare module host with
+  fun viaGetter
+  fun viaMethod(): Bool
+
+:sir
+:siret
+:expect [false, true]
+[host.viaGetter(), host.viaMethod()]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: ?, tmp1: ?, tmp2: Bool⁰;
+//│ set tmp = globalThis⁰.host⁰.viaGetter⁰‹=> ?›;
+//│ set tmp1 = tmp‹(...Array⁰) => ?›();
+//│ set tmp2 = globalThis⁰.host⁰.viaMethod⁰‹() => Bool⁰›();
+//│ return [tmp1, tmp2]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [false, true]
+
+
 // A property that resolution did not identify may be a getter: reading it is a call with an unknown signature.
 :sir
 :siret
