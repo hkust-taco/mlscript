@@ -196,6 +196,34 @@ adder.add(41)
 //│ adder = Adder
 
 
+// A public constructor field takes the signature of its calls from the declared type of its parameter.
+:sir
+:siret
+:expect 42
+class Handler(val run: Int -> Int)
+fun useHandler(h: Handler) = h.run(41)
+useHandler(Handler(x => x + 1))
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda, tmp: Handler⁰;
+//│ define useHandler⁰ as fun useHandler¹(h: Handler⁰): Int⁰ {
+//│   return h.run⁰‹(Int⁰) => Int⁰›(41)
+//│ };
+//│ define Handler¹ as class Handler⁰ {
+//│   val run¹: Function⁰;
+//│   constructor Handler²(run: Function⁰) {
+//│     define run¹ as val run⁰: Function⁰ = run;
+//│     end
+//│   }
+//│ };
+//│ define lambda as fun lambda⁷(x: Int⁰): Int⁰ {
+//│   return +⁰‹(?, ?) => ?›(x, 1)
+//│ };
+//│ set tmp = Handler²‹(Function⁰) => Handler⁰›(lambda⁷);
+//│ return useHandler¹‹(Handler⁰) => Int⁰›(tmp)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+
 // A property that resolution did not identify may be a getter: reading it is a call with an unknown signature.
 :sir
 :siret

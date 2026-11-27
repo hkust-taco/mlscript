@@ -692,10 +692,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     def paramType(decl: Opt[Declaration]): Opt[TypeResolution] = decl match
       case S(param: Param) => param.sign.flatMap(_.typeInterpretation)
       case _ => N
-    def declared(sym: TermSymbol): Opt[TypeResolution] = sym.defn match
-      case S(td) => declaredResultType(td)
-      // * Constructor fields keep their declared type on their parameter.
-      case N => paramType(sym.decl)
+    // * Constructor fields keep their declared type on their parameter. A public one also has a definition,
+    // * which has no signature of its own.
+    def declared(sym: TermSymbol): Opt[TypeResolution] =
+      sym.defn.flatMap(declaredResultType).orElse(paramType(sym.decl))
     // A copy holds the same value as its source. An intersection satisfies the arrow declarations from
     // all its fields, including when a component such as Any imposes no calling convention.
     def fieldTypes(field: RecordFieldSymbol): Iterator[TypeResolution] = field.origins match
