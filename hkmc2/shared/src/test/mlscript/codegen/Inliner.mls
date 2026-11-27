@@ -408,11 +408,17 @@ scope.locally of {
 //│ define B as class B⁰
 //│ module B¹ {
 //│   method bar⁰ = fun bar¹() {
-//│     return A⁴.foo³
+//│     loop loopLabel:
+//│       continue loopLabel
+//│     unreachable /* Rest of abortive labelled block */
 //│   }
 //│ };
 //│ @private
-//│ define lambda as fun lambda⁰() { return A⁴.foo³ };
+//│ define lambda as fun lambda⁰() {
+//│   loop loopLabel:
+//│     continue loopLabel
+//│   unreachable /* Rest of abortive labelled block */
+//│ };
 //│ return lambda⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun

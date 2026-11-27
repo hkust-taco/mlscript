@@ -1975,7 +1975,7 @@ class BlockSimplifier
                 go(receiverPrefix, matchedArgs, Map.empty)
         
         override def applyResult(r: Result)(k: Result => Block): Block = r match
-          case c @ Call(MethodCallQualifier(qual, ts), argss) if m.contains(ts) && argss.nonEmpty =>
+          case c @ Call(MethodCallQualifier(qual, ts), argss) if m.contains(ts) =>
             // `this.method()` calls inside constructors/methods are deliberately left alone:
             // inlining them can bypass runtime checks and resolve forward references too early.
             if qual.isInstanceOf[Value.This] then return super.applyResult(r)(k)
@@ -1985,7 +1985,7 @@ class BlockSimplifier
               case _ => Nil,
             )(k)
 
-          case c @ Call(TermSymbolPath(ts), argss) if m.contains(ts) && argss.nonEmpty =>
+          case c @ Call(TermSymbolPath(ts), argss) if m.contains(ts) =>
             inlineCall(c, ts, argss, Nil)(k)
           case _ => super.applyResult(r)(k)
       

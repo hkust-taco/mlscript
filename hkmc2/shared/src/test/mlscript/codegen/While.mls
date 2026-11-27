@@ -7,7 +7,7 @@ while false do ???
 :ssjs
 while false then ()
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ lbl1: while (true) { if (false === true) { continue lbl1 } break; } block$res2 = runtime.Unit;
+//│ lbl: while (true) { if (false === true) { continue lbl } break; } block$res2 = runtime.Unit;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 () => while true then ()
@@ -51,21 +51,21 @@ f
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f, inlinedVal;
 //│ f = function f() {
-//│   lbl4: while (true) {
+//│   lbl3: while (true) {
 //│     if (x2 === true) {
 //│       Predef.print("Hello World");
 //│       x2 = false;
-//│       continue lbl4
+//│       continue lbl3
 //│     }
 //│     return 42;
 //│   }
 //│ };
 //│ inlinedLbl: {
-//│   lbl4: while (true) {
+//│   lbl3: while (true) {
 //│     if (x2 === true) {
 //│       Predef.print("Hello World");
 //│       x2 = false;
-//│       continue lbl4
+//│       continue lbl3
 //│     }
 //│     inlinedVal = 42;
 //│     break inlinedLbl;
@@ -205,14 +205,14 @@ fun f(ls) =
 //│ f6 = function f(ls) {
 //│   let ls1;
 //│   ls1 = ls;
-//│   lbl9: while (true) {
+//│   lbl7: while (true) {
 //│     let arg$Cons$0$, arg$Cons$1$;
 //│     if (ls1 instanceof Cons1.class) {
 //│       arg$Cons$0$ = ls1.hd;
 //│       arg$Cons$1$ = ls1.tl;
 //│       ls1 = arg$Cons$1$;
 //│       Predef.print(arg$Cons$0$);
-//│       continue lbl9
+//│       continue lbl7
 //│     }
 //│     break;
 //│   }
@@ -256,8 +256,8 @@ let x = 1
 :sjs
 while x is {} do()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ lbl11: while (true) {
-//│   if (x3 instanceof globalThis.Object) { continue lbl11 }
+//│ lbl9: while (true) {
+//│   if (x3 instanceof globalThis.Object) { continue lbl9 }
 //│   break;
 //│ }
 //│ return runtime.Unit

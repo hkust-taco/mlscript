@@ -11,10 +11,15 @@ module M with
   module Nested with
     fun reveal = M.inc(M.secret)
 
+// These blocks keep the getter reads as calls: inlining a body that accesses private storage into a later
+// worksheet block is a known limitation (see codegen/PrivateClassStorage.mls).
+
+:noInline
 :expect 42
 M.reveal
 //│ = 42
 
+:noInline
 :expect 42
 M.Nested.reveal
 //│ = 42

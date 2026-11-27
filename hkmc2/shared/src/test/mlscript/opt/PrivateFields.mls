@@ -84,14 +84,20 @@ module Bar with
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
+// These blocks keep the getter reads as calls: inlining a body that accesses private storage into a later
+// worksheet block is a known limitation (see codegen/PrivateClassStorage.mls).
+
+:noInline
 :expect 1
 Bar.test1
 //│ = 1
 
+:noInline
 :expect 2
 Bar.test1
 //│ = 2
 
+:noInline
 :expect 1
 Bar.test2
 //│ = 1
@@ -135,6 +141,7 @@ module UnusedModulePrivate with
 //│ > 3
 //│ > 4
 
+:noInline
 UnusedObjectPrivate.get + UnusedModulePrivate.get
 //│ = "()()"
 

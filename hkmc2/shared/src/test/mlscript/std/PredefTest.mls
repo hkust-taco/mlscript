@@ -111,7 +111,7 @@ tuple passing(1, 2, 3) of 4, 5, 6
 :sjs
 ???
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return Predef.notImplementedError
+//│ throw runtime.safeCall(globalThis.Error("Not implemented"))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: Not implemented
 

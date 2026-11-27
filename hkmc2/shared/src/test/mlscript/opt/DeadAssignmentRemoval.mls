@@ -85,11 +85,12 @@ let x in
     set x = 2
   finally print(x)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let x, scrut, tmp;
+//│ let x, tmp;
 //│ try
+//│   let inlinedVal;
 //│   set x = 1;
-//│   set scrut = Predef⁰.maybe⁰;
-//│   match scrut
+//│   set inlinedVal = (Predef⁰.hide⁰(true) as! Bool⁰);
+//│   match inlinedVal
 //│     true =>
 //│       throw 42
 //│     else
@@ -127,17 +128,14 @@ let x in
 //│   end;
 //│   return tmp
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let x, tmp;
+//│ let x;
 //│ try
 //│   set x = 1;
-//│   do Predef⁰.notImplementedError⁰;
-//│   set x = 2;
-//│   set tmp = runtime⁰.Unit⁰;
-//│   end
+//│   throw globalThis⁰.Error⁰("Not implemented")
 //│ finally
 //│   do Predef⁰.print⁰(x);
 //│   end;
-//│   return tmp
+//│   return undefined
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 1
 //│ ═══[RUNTIME ERROR] Error: Not implemented

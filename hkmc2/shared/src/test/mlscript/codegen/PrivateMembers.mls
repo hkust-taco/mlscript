@@ -157,6 +157,7 @@ Strange.odd
 //│ ╟── private member declared here
 //│ ║  l.XX: 	  private public fun odd = 2
 //│ ╙──      	                     ^^^
+//│ = 2
 
 
 // * The field compiles to a plain private property

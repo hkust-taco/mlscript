@@ -274,11 +274,11 @@ module ReceiverFactory with
 :expect 1
 ReceiverFactory.fresh.Nested.bump()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp, tmp1;
-//│ set tmp = ReceiverFactory⁰.fresh⁰;
-//│ set tmp1 = +⁰(tmp.count⁰, 1);
-//│ set tmp.count⁰ = tmp1;
-//│ return tmp.count⁰
+//│ let inlinedVal, tmp;
+//│ set inlinedVal = new GeneratedReceiver⁰();
+//│ set tmp = +⁰(inlinedVal.count⁰, 1);
+//│ set inlinedVal.count⁰ = tmp;
+//│ return inlinedVal.count⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
