@@ -34,6 +34,11 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
     */
   def hasErrors: Bool = reporter.hasErrors
 
+  /** Every statement of the program, including the ones that `Statement.subStatements` does not reach
+    * (see SourceDeclarations).
+    */
+  def sourceStatements: Iterator[Statement] = declarations.statements.iterator
+
   /** Checks that lowering uses the same source root whose signatures this instance initialized. */
   def requireCompleted(statement: Statement): Unit =
     assert(root is statement, "Lowering requires completed erasure of this program")
@@ -56,7 +61,7 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
     case application: AppShape => S(
       if !application.isSaturated then ErasedType.Function(S(false))
       else application.applicationHead._1 match
-        case definition: DefnShape => definition.clsDef.fold[ErasedValueType](ErasedType.Unknown)(nominalType)
+        case definition: DefnShape => definition.clsDef.flatMap(constructorCallResult).getOrElse(ErasedType.Unknown)
         case _ => ErasedType.Unknown)
     case definition: DefnShape => S(definition.defn match
       case module: ModuleOrObjectDef => nominalType(module)
@@ -66,14 +71,10 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
     case intro: IntroShape => intro.trm match
       case _: Lam => S(ErasedType.Function(S(false)))
       case UnitVal() => S(ErasedType.Unit)
-      case Lit(_: syntax.Tree.IntLit) => S(ErasedType.Int)
-      case Lit(_: syntax.Tree.DecLit) => S(ErasedType.Num)
-      case Lit(_: syntax.Tree.StrLit) => S(ErasedType.Str)
-      case Lit(_: syntax.Tree.BoolLit) => S(ErasedType.Bool)
       // Undefined places no constraint on the slot's representation. An undefined-only
       // slot still receives the ordinary default representation and keeps it across consumers.
       case Lit(syntax.Tree.UnitLit(false)) => N
-      case Lit(syntax.Tree.UnitLit(true)) => S(ErasedType.Unknown)
+      case Lit(lit) => S(ErasedType.ofLiteral(lit))
     case _: CallableTypeShape => S(ErasedType.Function(S(false)))
     case tuple: TupleShape => S(if tuple.collection.isEmpty then ErasedType.Array else ErasedType.Unknown)
     case view: IntersectionView =>
@@ -89,6 +90,11 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
   private def nominalType(definition: ClassLikeDef): ErasedValueType = definition.sym match
     case symbol: (ClassSymbol | ModuleOrObjectSymbol) => ErasedType.ValueLike(S(false), symbol)
     case _ => ErasedType.Unknown
+
+  // MLscript's constructor companion creates an instance. A foreign class can return a different
+  // value when called as a function, as JavaScript's Date does. Only `new` guarantees an instance.
+  private def constructorCallResult(cls: ClassLikeDef): Opt[ErasedValueType] =
+    Option.when(cls.hasDeclareModifier.isEmpty)(nominalType(cls))
 
   /** The observations that constrain a slot. Erasure checks parameters before results, so an
     * override whose parameters have no representation cannot cause a second error at its base.
@@ -167,6 +173,36 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
       assert(sign.typeInterpretation.isDefined, "Signature was not registered during elaboration")
       S(erase(sign.typeInterpretation.get, Set.empty))
     else ErasedType.eraseSign(sign)
+
+  /** The signature of applying one argument list to a value of the declared function type that `callee`
+    * records. Each position takes the representation of the values of its declared type, as resolution
+    * interprets that type, and is unknown when resolution finds none.
+    *
+    * Following the calling convention of definitions (see `LoweredParamList.callingConvention`), the rest
+    * array receives the arguments of the parameters after a spread, as well as those of the optional
+    * parameters before a spread that other parameters follow.
+    */
+  private def declaredSignature(callee: ResolvedValues.DeclaredCallee): ErasedFuncSignature =
+    def slotType(slot: ResolvedValues.InterfaceSlot): ErasedValueType = inferredType(slot).getOrElse(ErasedType.Unknown)
+    val interface = callee.interface
+    val fixed = if interface.trailing.isEmpty then callee.leading else callee.leading.take(interface.leadingRequired)
+    ErasedFuncSignature.Signature(
+      ErasedParamList(fixed.map(_.map(slotType)), interface.variadic.map(_ => S(ErasedType.Array))) :: Nil,
+      ErasedResult.Direct(S(slotType(callee.result))))
+
+  /** The alternatives of `callees` with a signature for each declared function type among them. */
+  private def erasedCallees(callees: ResolvedValues.Callees): ErasedCallee =
+    val declared = callees.declaredCallees.map(callee => ErasedCallee.Declared(declaredSignature(callee)))
+    val undeclared = Iterator.single(ErasedCallee.Undeclared).filter(_ => callees.hasUndeclaredCallee)
+    val intersections = callees.intersectionCallees.map(components => ErasedCallee.All(components.map(erasedCallees)))
+    ErasedCallee.OneOf((declared ++ undeclared ++ intersections).toList)
+
+  /** The calling conventions of the values that `app` can call, from the callees that resolution of its block
+    * recorded. Only the new resolver records them.
+    */
+  private def erasedCallee(app: App): ErasedCallee =
+    if !config.language.useNewResolution then ErasedCallee.unknown
+    else summon[State].newResolverState.resolvedValues.callees(app).fold(ErasedCallee.unknown)(erasedCallees)
 
   /** An external input that contributed to this slot's inferred representation, if any.
     * Its provenance identifies the exposed interface even when the value flowed into a private helper.
@@ -298,11 +334,11 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
     val result = wrappedResult(td, resultType)
     td.k match
       case syntax.Fun =>
-        val paramLists = td.params.map(LoweredParamList.fixedPrefix(_).map(_.sym.erasedType))
+        val paramLists = td.params.map(LoweredParamList.erasedLayout)
         // Block-level nullary functions take an implicit empty list and references auto-invoke them.
         // Member getters and global declarations denote their result directly.
         val physicalParamLists =
-          if paramLists.isEmpty && td.owner.isEmpty && !declared then Nil :: Nil else paramLists
+          if paramLists.isEmpty && td.owner.isEmpty && !declared then ErasedParamList(Nil, N) :: Nil else paramLists
         if physicalParamLists.isEmpty then S(ErasedGetterSignature.Signature(result))
         else S(ErasedFuncSignature.Signature(physicalParamLists, result))
       case _: syntax.Val => resultType
@@ -470,8 +506,7 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
           if p.flags.mut && p.sign.isEmpty && !p.modulefulness.isModuleful && representationError(p.sym.erasedType).isEmpty
           then inferredType(sym).map(representable(_, p.toLoc, S(sym)))
           else p.sym.erasedType
-    // Constructor companions have no source body. Their physical argument lists
-    // are the class's lists, and a saturated call always produces its instance.
+    // Constructor companions have no source body. Their physical argument lists are the class's lists.
     statements.foreach:
       // Code generation and the InvalML typer can each erase the same elaborated tree.
       case lam: Lam if !lam.resultSlot.isErasureReady =>
@@ -480,11 +515,12 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
           inferredType(slot).map(representable(_, lam.body.toLoc, S(slot)))
       case asc: Asc if !asc.isErasureReady =>
         asc.erasedType = eraseSignature(asc.ty).map(representable(_, asc.ty.toLoc, N))
+      case app: App if !app.calleeSlot.isErasureReady => app.calleeSlot.callee = erasedCallee(app)
       case cls: ClassLikeDef => cls.ctorSym.foreach: symbol =>
         if symbol.needsErasure then symbol.initializeErasure:
           if config.language.useNewResolution then S(ErasedFuncSignature.Signature(
-            (cls.paramsOpt.toList ::: cls.auxParams).map(LoweredParamList.fixedPrefix(_).map(_.sym.erasedType)),
-            ErasedResult.Direct(S(nominalType(cls)))))
+            (cls.paramsOpt.toList ::: cls.auxParams).map(LoweredParamList.erasedLayout),
+            ErasedResult.Direct(constructorCallResult(cls))))
           else N
       case _ => ()
     // Erase inherited results before their overrides, guarding against erroneous inheritance cycles.

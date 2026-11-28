@@ -258,7 +258,7 @@ badParameter(input)
 :siret
 independentBadResult()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ return independentBadResult⁰()
+//│ return independentBadResult⁰‹() => ‹incompatible(Int32, Unknown)››()
 
 :sir
 :siret

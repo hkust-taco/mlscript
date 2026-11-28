@@ -106,14 +106,19 @@ in sx + sy
 //│   },
 //│   [ result⁰, sx⁰, sy⁰ ]
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let old, old1, tmp, tmp1;
+//│ let old, old1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8;
 //│ set old = sx⁰;
 //│ try
 //│   set sx⁰ = 10;
 //│   set old1 = sy⁰;
 //│   try
-//│     set sy⁰ = 23;
-//│     set tmp1 = 33;
+//│     set tmp2 = sx⁰;
+//│     set tmp3 = +⁰(tmp2, 13);
+//│     set sy⁰ = tmp3;
+//│     set tmp4 = sx⁰;
+//│     set tmp5 = sy⁰;
+//│     set tmp6 = +⁰(tmp4, tmp5);
+//│     set tmp1 = tmp6;
 //│     end
 //│   finally
 //│     set sy⁰ = old1;
@@ -124,7 +129,9 @@ in sx + sy
 //│   set sx⁰ = old;
 //│   end;
 //│   set result⁰ = tmp;
-//│ return [tmp, old, sy⁰]
+//│ set tmp7 = sx⁰;
+//│ set tmp8 = sy⁰;
+//│ return [tmp, tmp7, tmp8]
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [33, 1, 2]
 //│ result = 33

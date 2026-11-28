@@ -63,9 +63,10 @@ fun f(x) =
 //│     return new A⁰(tmp, A⁰.this.scope0$cap⁰, tmp1)
 //│   }
 //│   method foo⁰ = fun foo¹() {
-//│     let tmp;
-//│     set tmp = +⁰(A⁰.this.scope0$cap⁰.x$0¹, 1);
-//│     set A⁰.this.scope0$cap⁰.x$0¹ = tmp;
+//│     let tmp, tmp1;
+//│     set tmp = A⁰.this.scope0$cap⁰.x$0¹;
+//│     set tmp1 = +⁰(tmp, 1);
+//│     set A⁰.this.scope0$cap⁰.x$0¹ = tmp1;
 //│     return A⁰.this.scope0$cap⁰.x$0¹
 //│   }
 //│   method getX⁰ = fun getX¹() {
@@ -73,19 +74,24 @@ fun f(x) =
 //│   }
 //│ };
 //│ define f⁰ as fun f¹(x) {
-//│   let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, scope0$cap, A$here;
+//│   let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, scope0$cap, A$here;
 //│   set scope0$cap = new mut Capture$scope0¹(undefined);
 //│   set scope0$cap.x$0¹ = x;
-//│   set tmp = +⁰(scope0$cap.x$0¹, 1);
-//│   set tmp1 = +⁰(scope0$cap.x$0¹, 2);
-//│   set tmp2 = new A⁰(tmp, scope0$cap, tmp1);
-//│   set tmp3 = +⁰(scope0$cap.x$0¹, 1);
-//│   set tmp4 = A$⁰(scope0$cap)(tmp3);
-//│   set tmp5 = +⁰(scope0$cap.x$0¹, 1);
-//│   set tmp6 = +⁰(scope0$cap.x$0¹, 2);
-//│   set tmp7 = new A⁰(tmp5, scope0$cap, tmp6);
+//│   set tmp = scope0$cap.x$0¹;
+//│   set tmp1 = +⁰(tmp, 1);
+//│   set tmp2 = scope0$cap.x$0¹;
+//│   set tmp3 = +⁰(tmp2, 2);
+//│   set tmp4 = new A⁰(tmp1, scope0$cap, tmp3);
+//│   set tmp5 = scope0$cap.x$0¹;
+//│   set tmp6 = +⁰(tmp5, 1);
+//│   set tmp7 = A$⁰(scope0$cap)(tmp6);
+//│   set tmp8 = scope0$cap.x$0¹;
+//│   set tmp9 = +⁰(tmp8, 1);
+//│   set tmp10 = scope0$cap.x$0¹;
+//│   set tmp11 = +⁰(tmp10, 2);
+//│   set tmp12 = new A⁰(tmp9, scope0$cap, tmp11);
 //│   set A$here = A$⁰(scope0$cap);
-//│   return [tmp2, A$here, tmp4, tmp7]
+//│   return [tmp4, A$here, tmp7, tmp12]
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

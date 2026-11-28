@@ -1890,6 +1890,9 @@ class WatBuilder(private val ctx: Ctx, linking: FileCompilation)(using TraceLogg
             r.toLoc,
           )
 
+    // * A member read evaluates its selection, which compiles reads of fields and getters alike.
+    case Call(fun, Nil) => result(fun)
+
     case Call(sel @ Select(qual, _), argss) if sel.symbol.flatMap(predeclaredClassMethodSym).nonEmpty =>
       if argss.length > 1 then
         return errExpr(
@@ -1921,20 +1924,17 @@ class WatBuilder(private val ctx: Ctx, linking: FileCompilation)(using TraceLogg
         case S(intrName) =>
           Ctx.wasmInstrIntrinsics.get(intrName) match
             case S(body) =>
-              val declaredParams = fun.targetSymbol match
-                case S(ts: TermSymbol) =>
-                  ts.erasedSignature.map(_.paramLists)
-                case _ => N
-              val ps = declaredParams match
-                case S(pl :: Nil) => pl
-                // * The prelude declares every `wasm.` intrinsic with exactly one parameter list; a curried (or
-                // * parameterless) one has no meaning as an instruction.
-                case S(_) =>
+              // * `Lowering` attaches the intrinsic's `TermSymbol` to the path it builds, so the call has the
+              // * intrinsic's declared signature.
+              val ps = c.signature match
+                case sig: ErasedFuncSignature => sig.paramLists match
+                  case pl :: Nil => pl.params
+                  // * The prelude declares every `wasm.` intrinsic with exactly one parameter list; a curried one
+                  // * has no meaning as an instruction.
+                  case _ =>
+                    lastWords(s"wasm intrinsic '$intrName' must be declared with exactly one parameter list")
+                case _: ErasedGetterSignature =>
                   lastWords(s"wasm intrinsic '$intrName' must be declared with exactly one parameter list")
-                // * `Lowering` attaches the intrinsic's `TermSymbol` to the path it builds, so an implemented
-                // * intrinsic always has a declared signature here.
-                case N =>
-                  lastWords(s"wasm intrinsic '$intrName' is implemented but has no declared signature")
               if ps.length =/= args.length then
                 return errExpr(
                   Ls(msg"Wasm intrinsic '$intrName' called with incorrect arity (${args.length})" -> c.toLoc),

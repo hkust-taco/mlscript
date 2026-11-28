@@ -131,6 +131,9 @@ class Plain(@js.plainField mut val value: Int)
 :e
 :!js
 1 + "wrong"
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.+1: 	1 + "wrong"
+//│ ╙──      	    ^^^^^^^
 //│ ╔══[COMPILATION ERROR] Type error in string literal with expected type Int
 //│ ║  l.+1: 	1 + "wrong"
 //│ ║        	    ^^^^^^^

@@ -510,15 +510,15 @@ g(1)(2)
 //│ let g$g;
 //│ @private
 //│ define g$g as fun g$g¹(x: Unknown)(eta$0$0: Int⁰): Int⁰ {
-//│   return f¹⁴((x as!! Int⁰))(eta$0$0)
+//│   return f¹⁴‹(Int⁰) => (Int⁰) => Int⁰›((x as!! Int⁰))(eta$0$0)
 //│ };
 //│ @affine(1)
 //│ define f¹⁵ as fun f¹⁴(a: Int⁰)(b: Int⁰): Int⁰ {
-//│   return +⁰(a, b)
+//│   return +⁰‹(?, ?) => ?›(a, b)
 //│ };
 //│ define g¹⁰ as fun g¹¹(x: Unknown)(eta$0$0: Int⁰): Int⁰ {
-//│   return f¹⁴((x as!! Int⁰))(eta$0$0)
+//│   return f¹⁴‹(Int⁰) => (Int⁰) => Int⁰›((x as!! Int⁰))(eta$0$0)
 //│ };
-//│ return g$g¹(1)(2)
+//│ return g$g¹‹(Unknown) => (Int⁰) => Int⁰›(1)(2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3

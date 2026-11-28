@@ -157,6 +157,17 @@ object ErasedType:
   /** The builtin `Int31` reference type. */
   def Int31: ErasedValueType = ErasedType.ValueLike(rsc = S(false), ctx.builtins.Int31)
 
+  /** The runtime representation of a literal. `null` is a reference value. The unspecified value
+    * `undefined` can inhabit any destination representation, including an unboxed primitive.
+    */
+  def ofLiteral(lit: syntax.Literal): ErasedValueType = lit match
+    case _: syntax.Tree.IntLit => Int
+    case _: syntax.Tree.DecLit => Num
+    case _: syntax.Tree.StrLit => Str
+    case _: syntax.Tree.BoolLit => Bool
+    case syntax.Tree.UnitLit(true) => Unknown
+    case syntax.Tree.UnitLit(false) => Nothing
+
   /** The builtin `Function` reference type, used as the value type of a first-class function.
     *
     * - `rsc` is true if this reference is a resource function.
@@ -454,30 +465,48 @@ object ErasedResult:
 /** Immutable result information shared by parameterized definitions and getters.
   * TermSymbol publishes the complete signature once, before lowering or importing it.
   * Copying a source body must rename its payload types along with the parameter types.
+  *
+  * Every IR [[Call]] also carries one of these, describing the callee as seen by that call site.
   */
 sealed abstract class ErasedCallableSignature extends Canonicalizable:
   type Canonical <: ErasedCallableSignature
   val result: ErasedResult[ErasedValueType]
   def ret: Opt[ErasedValueType] = result.callType
 
-  def mapTypes(f: ErasedValueType => ErasedValueType): ErasedCallableSignature = this match
-    case sig: ErasedFuncSignature =>
-      ErasedFuncSignature.Signature(sig.paramLists.map(_.map(_.map(f))), result.map(f))
-    case _: ErasedGetterSignature => ErasedGetterSignature.Signature(result.map(f))
+  /** The number of argument lists that a call can apply at most: none for a getter. */
+  def paramListCount: Int = this match
+    case sig: ErasedFuncSignature => sig.paramLists.length
+    case _: ErasedGetterSignature => 0
+
+  def mapTypes(f: ErasedValueType => ErasedValueType): ErasedCallableSignature
 
 end ErasedCallableSignature
 
 
+/** The erased types of one physical parameter list: its fixed parameters, followed by its rest parameter if it has
+  * one. As with fixed parameters, the type of a rest parameter may be unknown, so `rest` is `N` when the list has no
+  * rest parameter and `S(N)` when it has one of unknown type.
+  */
+final case class ErasedParamList[+T <: ErasedValueType](params: Ls[Opt[T]], rest: Opt[Opt[T]]):
+  def map[U <: ErasedValueType](f: T => U): ErasedParamList[U] =
+    ErasedParamList(params.map(_.map(f)), rest.map(_.map(f)))
+
+object ErasedParamList:
+  /** The physical layout of a lowered parameter list, typed by its parameter symbols. */
+  def of(ps: LoweredParamList): ErasedParamList[ErasedValueType] =
+    ErasedParamList(ps.params.map(_.sym.erasedType), ps.restParam.map(_.sym.erasedType))
+
+
 object ErasedFuncSignature:
   /** The signature of a definition, whose parameter and body-result types may be unknown. */
-  case class Signature(override val paramLists: Ls[Ls[Opt[ErasedValueType]]],
+  case class Signature(override val paramLists: Ls[ErasedParamList[ErasedValueType]],
       override val result: ErasedResult[ErasedValueType]) extends ErasedFuncSignature:
     assertHasParamLists(paramLists)
     type Canonical = CanonicalSignature
     override protected def computeCanonicalize(using Ctx, State): CanonicalSignature =
-      CanonicalSignature(paramLists.map(_.map(_.map(_.canonicalize))), result.map(_.canonicalize))
+      CanonicalSignature(paramLists.map(_.map(_.canonicalize)), result.map(_.canonicalize))
   /** An analogue to `Signature` with canonicalized parameter and result representations. */
-  case class CanonicalSignature(override val paramLists: Ls[Ls[Opt[CanonicalErasedValueType]]],
+  case class CanonicalSignature(override val paramLists: Ls[ErasedParamList[CanonicalErasedValueType]],
       override val result: ErasedResult[CanonicalErasedValueType])(using Ctx, State) extends ErasedFuncSignature:
     assertHasParamLists(paramLists)
     override val ret: Opt[CanonicalErasedValueType] = result.callType.map(_.canonicalize)
@@ -488,8 +517,21 @@ object ErasedFuncSignature:
     *
     * See the documentation of [[ErasedFuncSignature]] for the rationale.
     */
-  def assertHasParamLists(paramLists: Ls[Ls[?]]): Unit =
+  def assertHasParamLists(paramLists: Ls[?]): Unit =
     assert(paramLists.nonEmpty, "a signature must describe at least one parameter list")
+
+  /** The signature of a call whose callee is not known: `listCount` argument lists, each passed to a function value
+    * that accepts any number of arguments of any type, as in `(...Array) => (...Array) => ?` for two lists.
+    *
+    * Lowering applies a single argument list to each callee it knows nothing about, so a call starts with one list;
+    * passes that merge such a call with the call of its result accumulate the lists. `super` calls also take this
+    * form, because the `super` builtin has no fixed signature: its parameters are those of the parent constructor.
+    *
+    * Each use builds its own signature: a signature memoizes its canonical form, which is only meaningful in the
+    * state that computed it.
+    */
+  def dynamic(listCount: Int): Signature =
+    Signature(List.fill(listCount)(ErasedParamList(Nil, S(S(ErasedType.Array)))), ErasedResult.Direct(N))
 
 
 /** The erased signature of a definition with parameter lists.
@@ -506,7 +548,9 @@ object ErasedFuncSignature:
   */
 sealed abstract class ErasedFuncSignature extends ErasedCallableSignature:
   type Canonical <: ErasedFuncSignature.CanonicalSignature
-  val paramLists: Ls[Ls[Opt[ErasedValueType]]]
+  val paramLists: Ls[ErasedParamList[ErasedValueType]]
+  def mapTypes(f: ErasedValueType => ErasedValueType): ErasedFuncSignature =
+    ErasedFuncSignature.Signature(paramLists.map(_.map(f)), result.map(f))
 
 
 object ErasedGetterSignature:
@@ -520,11 +564,18 @@ object ErasedGetterSignature:
     type Canonical = this.type
     override protected def computeCanonicalize(using Ctx, State): this.type = this
 
+  /** The signature of reading a property that resolution did not identify: it may be a plain field or a getter,
+    * and its value is unknown.
+    */
+  def dynamic: Signature = Signature(ErasedResult.Direct(N))
+
 /** A getter evaluates to its call result, without allocating a first-class function.
   * It still needs the body's result descriptor for async payload coercions.
   */
 sealed abstract class ErasedGetterSignature extends ErasedCallableSignature:
   type Canonical <: ErasedGetterSignature.CanonicalSignature
+  def mapTypes(f: ErasedValueType => ErasedValueType): ErasedGetterSignature =
+    ErasedGetterSignature.Signature(result.map(f))
 
 
 /** The canonical form of an [[ErasedValueType]]. */
@@ -576,3 +627,63 @@ trait HasDelayedErasedType[T <: ErasedValueType]:
     assert(!isErasureReady, "Erased type initialized more than once")
     assert(value != null, "An initialized erased type cannot be null")
     assignedErasedType = value
+
+
+/** The calling conventions of the function values that a source application can call, as far as resolution
+  * of its block knows them. Lowering reads them when the callee publishes no signature of its own: it is then
+  * a function value, such as a parameter, a field, a variable, or the result of another call.
+  *
+  * Each signature describes the application of one argument list.
+  */
+enum ErasedCallee:
+  /** A value of a declared function type, whose applications follow `signature`. */
+  case Declared(signature: ErasedFuncSignature)
+  /** A value without a declared calling interface, such as a definition, a lambda, or a dynamic value. */
+  case Undeclared
+  /** A value that satisfies each of `components`, as a value of an intersection type does. */
+  case All(components: Ls[ErasedCallee])
+  /** A value that is one of `alternatives`. Without alternatives, resolution knows nothing about the callee. */
+  case OneOf(alternatives: Ls[ErasedCallee])
+
+  /** The signatures that every possible callee follows, one for each canonical form. A value follows the
+    * signature of its declared type, a value that satisfies several components follows the signatures of them
+    * all, and alternatives only share the signatures that each of them follows.
+    */
+  def sharedSignatures(using Ctx, State): Ls[ErasedFuncSignature] = this match
+    case Declared(signature) => signature :: Nil
+    case Undeclared => Nil
+    case All(components) => components.iterator.flatMap(_.sharedSignatures).distinctBy(_.canonicalize).toList
+    case OneOf(Nil) => Nil
+    case OneOf(first :: others) => others.foldLeft(first.sharedSignatures): (shared, alternative) =>
+      val followed = alternative.sharedSignatures.map(_.canonicalize)
+      shared.filter(signature => followed.contains(signature.canonicalize))
+
+  /** The signatures of all the declared function types among the possible callees. */
+  def declaredSignatures: Iterator[ErasedFuncSignature] = this match
+    case Declared(signature) => Iterator.single(signature)
+    case Undeclared => Iterator.empty
+    case All(components) => components.iterator.flatMap(_.declaredSignatures)
+    case OneOf(alternatives) => alternatives.iterator.flatMap(_.declaredSignatures)
+
+  def mapTypes(f: ErasedValueType => ErasedValueType): ErasedCallee = this match
+    case Declared(signature) => Declared(signature.mapTypes(f))
+    case Undeclared => Undeclared
+    case All(components) => All(components.map(_.mapTypes(f)))
+    case OneOf(alternatives) => OneOf(alternatives.map(_.mapTypes(f)))
+
+object ErasedCallee:
+  /** A callee that resolution knows nothing about. */
+  val unknown: ErasedCallee = OneOf(Nil)
+
+
+/** Holds the possible callees of a source application. Erasure of the program that contains the application
+  * assigns them once, and cloning the application copies them. An application that erasure never visits, such
+  * as one that the desugaring of pattern matching synthesizes, keeps an unknown callee.
+  */
+final class ErasedCalleeSlot:
+  private var assigned: Opt[ErasedCallee] = N
+  def isErasureReady: Bool = assigned.isDefined
+  def callee: ErasedCallee = assigned.getOrElse(ErasedCallee.unknown)
+  def callee_=(value: ErasedCallee): Unit =
+    assert(!isErasureReady, "The callees of an application are erased once")
+    assigned = S(value)

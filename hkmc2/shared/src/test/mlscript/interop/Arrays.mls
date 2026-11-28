@@ -14,20 +14,22 @@ arr.map(=> _ === false)
 :sjs
 arr.map((e, ...) => e === false)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda1;
+//│ let tmp1, lambda1;
+//│ tmp1 = arr;
 //│ lambda1 = (undefined, function (e, ..._) {
 //│   return e === false
 //│ });
-//│ return runtime.safeCall(arr.map(lambda1))
+//│ return runtime.safeCall(tmp1.map(lambda1))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [false, true]
 
 :sjs
 arr.map((_, ...) => 1)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda2;
+//│ let tmp2, lambda2;
+//│ tmp2 = arr;
 //│ lambda2 = (undefined, function (_, ..._1) { return 1 });
-//│ return runtime.safeCall(arr.map(lambda2))
+//│ return runtime.safeCall(tmp2.map(lambda2))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [1, 1]
 

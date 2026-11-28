@@ -54,9 +54,9 @@ captureWord(input32)
 //│   define lambda as fun lambda⁰(): Int32 {
 //│     return n
 //│   };
-//│   return lambda⁰()
+//│   return lambda⁰‹() => Int32›()
 //│ };
-//│ return captureWord¹(input32⁰)
+//│ return captureWord¹‹(Int32) => Int32›(input32⁰)
 
 // Nested lambdas with representable results remain valid.
 :sir
@@ -75,8 +75,8 @@ referenceFactory(42)(1)
 //│ };
 //│ @private
 //│ define referenceFactory⁰ as val referenceFactory¹: Function⁰ = lambda²;
-//│ set callPrefix = referenceFactory¹(42);
-//│ return callPrefix(1)
+//│ set callPrefix = referenceFactory¹‹(...Array⁰) => ?›(42);
+//│ return callPrefix‹(...Array⁰) => ?›(1)
 
 // FIXME: Calling through the function value factory uses an unknown parameter representation for its Int32 argument.
 :fixme
@@ -209,7 +209,7 @@ badReturn()
 //│ define badReturn⁰ as fun badReturn¹(): Int32 {
 //│   throw "This code cannot be run as its compilation yielded an error."
 //│ };
-//│ return badReturn¹()
+//│ return badReturn¹‹() => Int32›()
 
 :soir
 :siret
@@ -217,8 +217,10 @@ private fun laterCaller(): Int32 = badReturn()
 laterCaller()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ @private
-//│ define laterCaller⁰ as fun laterCaller¹(): Int32 { return badReturn¹() };
-//│ return badReturn¹()
+//│ define laterCaller⁰ as fun laterCaller¹(): Int32 {
+//│   return badReturn¹‹() => Int32›()
+//│ };
+//│ return badReturn¹‹() => Int32›()
 
 // Phase failure belongs to one block; the next independent block still compiles and runs.
 :js

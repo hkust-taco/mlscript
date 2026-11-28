@@ -21,10 +21,10 @@ fun foo() =
     0
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define foo² as fun foo³() {
-//│   let x, scrut;
+//│   let x, inlinedVal;
 //│   set x = (Predef⁰.hide⁰(42) as! Int⁰);
-//│   set scrut = Predef⁰.maybe⁰;
-//│   match scrut
+//│   set inlinedVal = (Predef⁰.hide⁰(true) as! Bool⁰);
+//│   match inlinedVal
 //│     true =>
 //│       return x
 //│     else

@@ -25,7 +25,7 @@ let b = Object.create(A!prototype) as dyn
 :sjs
 b is A
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ if (b instanceof A1) { return true } return false;
+//│ let tmp2; tmp2 = b; if (tmp2 instanceof A1) { return true } return false;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = true
 

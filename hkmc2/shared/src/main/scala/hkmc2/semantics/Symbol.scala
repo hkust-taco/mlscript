@@ -10,7 +10,7 @@ import hkmc2.utils.*
 
 import Elaborator.State
 import Tree.Ident
-import hkmc2.codegen.{ErasedType, ErasedResult, ErasedCallableSignature, ErasedFuncSignature, ErasedGetterSignature, ErasedValueType, HasDelayedErasedType}
+import hkmc2.codegen.{ErasedType, ErasedResult, ErasedCallableSignature, ErasedFuncSignature, ErasedGetterSignature, ErasedParamList, ErasedValueType, HasDelayedErasedType}
 import hkmc2.utils.SymbolSubst
 import sourcecode.{FileName, Line}
 
@@ -347,7 +347,7 @@ final class BuiltinSymbol(val nme: Str, val arity: BuiltinSymbol.Arity, val isPu
       case "!" | "==" | "!=" | "===" | "!==" | "<" | "<=" | ">" | ">=" => S(ErasedType.Bool)
       case "typeof" => S(ErasedType.Str)
       case _ => N
-    ErasedFuncSignature.Signature(List(List.fill(count)(N)), ErasedResult.Direct(ret))
+    ErasedFuncSignature.Signature(ErasedParamList(List.fill(count)(N), N) :: Nil, ErasedResult.Direct(ret))
   
   // * A basic approximation of builtin operator types
   lazy val signature : semantics.flow.Producer =
@@ -523,12 +523,19 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
       (isLetOrParamBinding || visibility.exists(_ is Visibility.Private))
   
   /** The erased type of what a reference to this term evaluates to in the current IR (see [[irErasure]]).
+    * Reading a getter produces its call result.
     *
     * A definition with an [[erasedSignature]] evaluates to a closure the compiler builds, i.e. a first-class
-    * `Function`. The signature describes calls to the definition, not the type of that closure.
+    * `Function`. The signature describes calls to the definition.
     */
   def erasedType: Opt[ErasedValueType] = TermSymbol.referenceType(irErasure)
   def sourceErasedType(using codegen.Erasure): Opt[ErasedValueType] = TermSymbol.referenceType(sourceErasure)
+
+  /** The erased type of a bare IR path referring to this term. A getter path only identifies the callee
+    * of a read, so its enclosing nullary `Call` supplies the value type.
+    */
+  def bareReferenceType: Opt[ErasedValueType] =
+    TermSymbol.referenceType(irErasure.filterNot(_.isInstanceOf[ErasedGetterSignature]))
   
   /** The erased signature of a `fun` definition with parameter lists in the current IR, or `N` if it has none. */
   def erasedSignature: Opt[ErasedFuncSignature] = TermSymbol.funcSignature(irErasure)

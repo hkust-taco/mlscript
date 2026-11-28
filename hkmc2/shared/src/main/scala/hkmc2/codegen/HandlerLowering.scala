@@ -65,7 +65,7 @@ object HandlerLowering:
       // An active effect makes the caller ignore this return value. Discard the
       // bookkeeping call's Unit result and return undefined, which fits every
       // payload representation without claiming that Unit has the payload's type.
-      val unwind = Assign(NoSymbol, Call(paths.unwindPath,
+      val unwind = Assign(NoSymbol, Call.of(paths.unwindPath,
           Iterator(
             currentFun, state, loc, debugInfo.debugInfoPath,
             thisPath.getOrElse(unit), intLit(resumeInfo.argLists.length),
@@ -147,7 +147,7 @@ class HandlerLowering(paths: HandlerPaths, opt: Opt[EffectHandlers])(using TL, R
   private def rtThrowMsg(msg: Str) = Throw.error(msg)
   
   object PureCall:
-    def apply(fun: Path, args: List[Path]) = Call(fun, args.map(Arg(N, _)) ne_:: Nil)(CallMetadata.defaultMlsFun, N)
+    def apply(fun: Path, args: List[Path]) = Call.of(fun, args.map(Arg(N, _)) ne_:: Nil)(CallMetadata.defaultMlsFun, N)
     def unapply(res: Result) = res match
       case Call(fun, args :: Nil) => args.foldRight[Opt[List[Path]]](S(Nil)): (arg, acc) =>
           acc.flatMap: acc =>
@@ -242,8 +242,9 @@ class HandlerLowering(paths: HandlerPaths, opt: Opt[EffectHandlers])(using TL, R
 
       val nonTrivialBlockChecker = new BlockDataTransformer(SymbolSubst.Id):
         override def applyBlock(b: Block) = b match
-          // Special handling for tail calls
-          case Return(c @ Call(fun, args)) =>
+          // Special handling for tail calls. A member read, which applies no argument list, is handled like other
+          // results: reading a getter cannot perform effects (see `inGetter`).
+          case Return(c @ Call(fun, _ :: _)) =>
             needsStackSafety = true
             b // Prevents the recursion into applyResult
           case _ => super.applyBlock(b)
@@ -581,7 +582,7 @@ class HandlerLowering(paths: HandlerPaths, opt: Opt[EffectHandlers])(using TL, R
           val length = freshTmp(erasedType = S(ErasedType.Int), "argCount")
           val restLength = rest.sym.asSimpleRef.selSN("length").coerceTo(ErasedType.Int, rest.toLoc)
           SavedArgList(length.asSimpleRef, args :+ Arg(S(syntax.SpreadKind.Eager), rest.sym.asSimpleRef),
-            S(length -> Call(State.builtinOpsMap("+").asSimpleRef,
+            S(length -> Call.of(State.builtinOpsMap("+").asSimpleRef,
               (intLit(pl.params.length).asArg :: restLength.asArg :: Nil) ne_:: Nil)(CallMetadata.defaultFun, N)))
       val newCtx = HandlerCtx.FunctionLike(FunctionCtx(funcPath, thisPath, ResumeInfo(rtArgLists, sortedVars, L(fun.sym)),
         DebugInfo(debugNme, if debugEnabled then debugInfoSym.asSimpleRef else unit), thisPath.isDefined && fun.params.isEmpty, fun.async))
@@ -594,9 +595,9 @@ class HandlerLowering(paths: HandlerPaths, opt: Opt[EffectHandlers])(using TL, R
     val preTransform = new BlockTransformer(SymbolSubst.Id):
       override def applyResult(r: Result)(k: Result => Block): Block = r match
         case Call(Value.MemberRef(sym, _), args) if sym is Elaborator.ctx.builtins.runtime.suspend =>
-          k(Call(paths.mkEffectPath, args)(CallMetadata.mlsFunWithEffect, N))
+          k(Call.of(paths.mkEffectPath, args)(CallMetadata.mlsFunWithEffect, N))
         case Call(Value.MemberRef(sym, _), args) if sym is Elaborator.ctx.builtins.runtime.handle_suspension =>
-          k(Call(paths.enterHandleBlockPath, args)(CallMetadata.mlsFunWithEffect, N))
+          k(Call.of(paths.enterHandleBlockPath, args)(CallMetadata.mlsFunWithEffect, N))
         case _ => super.applyResult(r)(k)
       override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
         case fun: FunDefn =>
@@ -748,7 +749,7 @@ class HandlerLowering(paths: HandlerPaths, opt: Opt[EffectHandlers])(using TL, R
         .scopedVars(Set(getSavedTmp))
     val restoreVars = vars.zipWithIndex.foldLeft(preRestore):
       case (builder, (local, idx)) => builder
-        .assign(getSavedTmp, if idx == 0 then paths.resumeIdx.coerceTo(ErasedType.Int, N) else Call(plus, (getSavedTmp.asSimpleRef.asArg :: intLit(1).asArg :: Nil) ne_:: Nil)(CallMetadata.defaultFun, N))
+        .assign(getSavedTmp, if idx == 0 then paths.resumeIdx.coerceTo(ErasedType.Int, N) else Call.of(plus, (getSavedTmp.asSimpleRef.asArg :: intLit(1).asArg :: Nil) ne_:: Nil)(CallMetadata.defaultFun, N))
         .assign(local, resumeArrIndexed.coerceTo(local.erasedType.getOrElse(ErasedType.Unknown), local.toLoc))
     
     if needsStackSafety then
@@ -757,7 +758,7 @@ class HandlerLowering(paths: HandlerPaths, opt: Opt[EffectHandlers])(using TL, R
         .ifthen(paths.curEffect, Case.Lit(Tree.UnitLit(true)), End(), S(
           ctx.doUnwind(ctx.resumeInfo.currentStackSafetySym.fold(_.toLoc, _.toLoc).fold(unit)(locToStr(_)), 
           if oneState then intLit(-1) else pcVar.asSimpleRef, vars)(using paths)))
-        .assign(curDepth, Call(plus, (paths.stackDepthPath.coerceTo(ErasedType.Int, N).asArg :: intLit(1).asArg :: Nil) ne_:: Nil)(CallMetadata.defaultFun, N))
+        .assign(curDepth, Call.of(plus, (paths.stackDepthPath.coerceTo(ErasedType.Int, N).asArg :: intLit(1).asArg :: Nil) ne_:: Nil)(CallMetadata.defaultFun, N))
         .rest(mainBody)
     
     if !oneState then
@@ -784,10 +785,10 @@ class HandlerLowering(paths: HandlerPaths, opt: Opt[EffectHandlers])(using TL, R
    */
 
   private def postTranslateTopLevelCtx(b: Block)(using HandlerCtx): Block =
-    postTranslateIllegalEffectCtx(b, Call.raw(paths.topLevelEffectPath, (Value.Lit(Tree.BoolLit(debugEnabled))(N).asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, N), stackSafety.map(_.stackLimit))
+    postTranslateIllegalEffectCtx(b, Call.raw(paths.topLevelEffectPath, (Value.Lit(Tree.BoolLit(debugEnabled))(N).asArg :: Nil) :: Nil)(ErasedFuncSignature.dynamic(1), CallMetadata.defaultMlsFun, N), stackSafety.map(_.stackLimit))
 
   private def postTranslateIllegalEffectCtx(b: Block, reason: Str)(using HandlerCtx): Block =
-    postTranslateIllegalEffectCtx(b, Call.raw(paths.illegalEffectPath, (Value.Lit(Tree.StrLit(reason))(N).asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, N), N)
+    postTranslateIllegalEffectCtx(b, Call.raw(paths.illegalEffectPath, (Value.Lit(Tree.StrLit(reason))(N).asArg :: Nil) :: Nil)(ErasedFuncSignature.dynamic(1), CallMetadata.defaultMlsFun, N), N)
 
   /**
     * Translate the block and apply stack safety wrapper if needed. If needsStackSafety is true,
@@ -807,7 +808,7 @@ class HandlerLowering(paths: HandlerPaths, opt: Opt[EffectHandlers])(using TL, R
           blockBuilder
             .scopedVars(Set.single(bodSym))
             .define(bodFun)
-            .assign(l, restored(Call(paths.runStackSafePath, (intLit(stackLimit).asArg :: Value.MemberRef(bodSym, bodFun.dSym)(N).asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, N)))
+            .assign(l, restored(Call.of(paths.runStackSafePath, (intLit(stackLimit).asArg :: Value.MemberRef(bodSym, bodFun.dSym)(N).asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, N)))
         case N =>
           blockBuilder.assign(l, r)
       withStackSafe
@@ -837,7 +838,7 @@ class HandlerLowering(paths: HandlerPaths, opt: Opt[EffectHandlers])(using TL, R
     val transformed = blockBuilder
         .staticif(
           opt.fold(false)(!_.doNotInstrumentTopLevelModCtor),
-          _.assign(NoSymbol, Call(paths.resetEffects, Nil ne_:: Nil)(CallMetadata.defaultMlsFun, N))
+          _.assign(NoSymbol, Call.of(paths.resetEffects, Nil ne_:: Nil)(CallMetadata.defaultMlsFun, N))
         )
         .rest(translateBlock(prog.main, ctx, Set.empty))
     if transformed is prog.main then prog

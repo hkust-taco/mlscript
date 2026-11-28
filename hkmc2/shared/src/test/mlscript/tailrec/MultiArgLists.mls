@@ -179,9 +179,10 @@ fun resume(x)(y) = handleEffects(x)
 //│         set id = 1;
 //│         continue loopLabel
 //│       1 =>
-//│         let tmp;
-//│         set tmp = resume⁰(undefined);
-//│         do sink⁰.push⁰(tmp);
+//│         let tmp, tmp1;
+//│         set tmp = sink⁰;
+//│         set tmp1 = resume⁰(undefined);
+//│         do tmp.push⁰(tmp1);
 //│         set id = 0;
 //│         continue loopLabel
 //│       else
@@ -235,7 +236,7 @@ fun g(n)(m) =
 //│             return [param5, param6]
 //│         end
 //│       1 =>
-//│         let tmp, tmp1, tmp2, tmp3, param1_tmp, param0_tmp, argList, inlinedVal, tmp4;
+//│         let tmp, tmp1, tmp2, tmp3, param1_tmp, param0_tmp, argList, inlinedVal, tmp4, tmp5;
 //│         set tmp = -⁰(param0, 1);
 //│         set tmp1 = [1, 2];
 //│         set tmp2 = [3, 4];
@@ -244,8 +245,9 @@ fun g(n)(m) =
 //│         set param0_tmp = param0;
 //│         set param0 = tmp;
 //│         set argList = [...tmp1, 3, ...tmp2, ...tmp3, 7, param0_tmp];
-//│         set tmp4 = -¹(argList.length⁰, 0);
-//│         set inlinedVal = argList.slice⁰(4, tmp4);
+//│         set tmp4 = argList.length⁰;
+//│         set tmp5 = -¹(tmp4, 0);
+//│         set inlinedVal = argList.slice⁰(4, tmp5);
 //│         set param1 = argList.0;
 //│         do argList.1;
 //│         do argList.2;
@@ -286,10 +288,11 @@ fun f(a)(...z) = if z is
 //│       Array(0) =>
 //│         return a
 //│       Array(1+) =>
-//│         let inlinedVal, tmp1;
+//│         let inlinedVal, tmp1, tmp2;
 //│         do runtime⁰.Tuple⁰.get⁰(z, 0);
-//│         set tmp1 = -¹(z.length¹, 0);
-//│         set inlinedVal = z.slice¹(1, tmp1);
+//│         set tmp1 = z.length¹;
+//│         set tmp2 = -¹(tmp1, 0);
+//│         set inlinedVal = z.slice¹(1, tmp2);
 //│         set xs = (inlinedVal as! Array⁰);
 //│         set tmp = +⁰(a, 1);
 //│         set a = tmp;
@@ -326,7 +329,7 @@ fun f(a)(b) = f(a)(b)
 //│             LoweredParamList: ‹empty›
 //│           erasure = Signature:
 //│             paramLists = Ls of
-//│               Nil
+//│               ErasedParamList: ‹empty›
 //│             result = Direct of N
 //│         body = Label:
 //│           label = label:loopLabel⁰
@@ -351,10 +354,12 @@ fun f(a)(b) = f(a)(b)
 //│                   modulefulness = Modulefulness of N
 //│           erasure = Signature:
 //│             paramLists = Ls of
-//│               Ls of
-//│                 S of Unknown
-//│               Ls of
-//│                 S of Unknown
+//│               ErasedParamList:
+//│                 params = Ls of
+//│                   S of Unknown
+//│               ErasedParamList:
+//│                 params = Ls of
+//│                   S of Unknown
 //│             result = Direct of N
 //│         body = Return of Call:
 //│           fun = MemberRef{disamb=term:f$tailrec²}:
@@ -508,10 +513,11 @@ fun f(n)(a)(...z) =
 //│           Array(0) =>
 //│             return a
 //│           Array(1+) =>
-//│             let tmp2, inlinedVal, tmp3;
+//│             let tmp2, inlinedVal, tmp3, tmp4;
 //│             do runtime⁰.Tuple⁰.get⁰(z, 0);
-//│             set tmp3 = -¹(z.length¹, 0);
-//│             set inlinedVal = z.slice¹(1, tmp3);
+//│             set tmp3 = z.length¹;
+//│             set tmp4 = -¹(tmp3, 0);
+//│             set inlinedVal = z.slice¹(1, tmp4);
 //│             set xs = (inlinedVal as! Array⁰);
 //│             set tmp1 = +⁰(a, 1);
 //│             set tmp2 = mut [...xs];

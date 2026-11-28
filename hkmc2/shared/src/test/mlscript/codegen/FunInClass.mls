@@ -77,7 +77,7 @@ fun test(a) =
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let test2;
 //│ test2 = function test(a) {
-//│   let C12, C22, tmp1, tmp2;
+//│   let C12, C22, tmp3, tmp4;
 //│   C12 = function C1(b) {
 //│     return globalThis.Object.freeze(new C1.class(b));
 //│   };
@@ -86,13 +86,13 @@ fun test(a) =
 //│       C12.class = this
 //│     }
 //│     constructor(b) {
-//│       let tmp3;
+//│       let tmp5;
 //│       this.b = b;
-//│       tmp3 = globalThis.Object.freeze([
+//│       tmp5 = globalThis.Object.freeze([
 //│         a,
 //│         this.b
 //│       ]);
-//│       Predef.print(tmp3);
+//│       Predef.print(tmp5);
 //│     }
 //│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "C1", ["b"]];
@@ -105,20 +105,20 @@ fun test(a) =
 //│       C22.class = this
 //│     }
 //│     constructor(b) {
-//│       let tmp3;
+//│       let tmp5;
 //│       this.b = b;
-//│       tmp3 = globalThis.Object.freeze([
+//│       tmp5 = globalThis.Object.freeze([
 //│         a,
 //│         this.b
 //│       ]);
-//│       Predef.print(tmp3);
+//│       Predef.print(tmp5);
 //│     }
 //│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "C2", ["b"]];
 //│   });
-//│   tmp1 = C12(1);
-//│   tmp2 = C22(2);
-//│   return globalThis.Object.freeze([ tmp1, tmp2 ])
+//│   tmp3 = C12(1);
+//│   tmp4 = C22(2);
+//│   return globalThis.Object.freeze([ tmp3, tmp4 ])
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

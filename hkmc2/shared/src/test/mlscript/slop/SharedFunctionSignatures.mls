@@ -15,25 +15,25 @@ open annotations.{ * }
 private fun partial(unused: Str, value: Int): Int -> Int = add(value)
 [partial("first", 40)(2), partial("second", 41)(2)]
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp: ?, tmp1: ?, partial$partial, partial$partial1;
+//│ let tmp: Int⁰, tmp1: Int⁰, partial$partial, partial$partial1;
 //│ @private @private
 //│ define partial$partial as fun partial$partial⁰(value: Int⁰)(eta$0$0: Int⁰): Int⁰ {
-//│   return add⁰(value)(eta$0$0)
+//│   return add⁰‹(Int⁰) => (Int⁰) => Int⁰›(value)(eta$0$0)
 //│ };
 //│ @private @private
 //│ define partial$partial1 as fun partial$partial¹(value: Int⁰)(eta$0$0: Int⁰): Int⁰ {
-//│   return add⁰(value)(eta$0$0)
+//│   return add⁰‹(Int⁰) => (Int⁰) => Int⁰›(value)(eta$0$0)
 //│ };
 //│ @affine(1)
 //│ define add¹ as fun add⁰(first: Int⁰)(second: Int⁰): Int⁰ {
-//│   return +⁰(first, second)
+//│   return +⁰‹(?, ?) => ?›(first, second)
 //│ };
 //│ @private
 //│ define partial⁰ as fun partial¹(unused: Str⁰, value: Int⁰)(eta$0$0: Int⁰): Int⁰ {
-//│   return add⁰(value)(eta$0$0)
+//│   return add⁰‹(Int⁰) => (Int⁰) => Int⁰›(value)(eta$0$0)
 //│ };
-//│ set tmp = partial$partial⁰(40)(2);
-//│ set tmp1 = partial$partial¹(41)(2);
+//│ set tmp = partial$partial⁰‹(Int⁰) => (Int⁰) => Int⁰›(40)(2);
+//│ set tmp1 = partial$partial¹‹(Int⁰) => (Int⁰) => Int⁰›(41)(2);
 //│ return [tmp, tmp1]
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [42, 43]
@@ -55,32 +55,32 @@ fun makeCountdown(result: Int): Int -> Int =
 let countdown = makeCountdown(42)
 [countdown(3), makeCountdown(43)(4)]
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let countdown, tmp: ?, baseCall: Function⁰, tmp1: ?, countdown$;
+//│ let countdown, tmp: Int⁰, baseCall: Function⁰, tmp1: Int⁰, countdown$;
 //│ @inline
 //│ define countdown$ as fun countdown$⁰(result: Int⁰)(remaining: Int⁰): Int⁰ {
-//│   return countdown⁰(result, remaining)
+//│   return countdown⁰‹(Int⁰, Int⁰) => Int⁰›(result, remaining)
 //│ };
 //│ define countdown as fun countdown⁰(result: Int⁰, remaining: Int⁰): Int⁰ {
 //│   loop loopLabel:
 //│     let scrut: Bool⁰, tmp2: Int⁰;
-//│     set scrut = Predef⁰.equals⁰(remaining, 0);
+//│     set scrut = Predef⁰.equals⁰‹(Unknown, Unknown) => Bool⁰›(remaining, 0);
 //│     match scrut
 //│       true =>
 //│         return result
 //│       else
-//│         set tmp2 = -⁰(remaining, 1);
+//│         set tmp2 = -⁰‹(?, ?) => ?›(remaining, 1);
 //│         set remaining = tmp2;
 //│         continue loopLabel
 //│     end
 //│   unreachable /* Rest of abortive labelled block */
 //│ };
 //│ define makeCountdown⁰ as fun makeCountdown¹(result: Int⁰): Function⁰ {
-//│   return countdown$⁰(result)
+//│   return countdown$⁰‹(Int⁰) => (Int⁰) => Int⁰›(result)
 //│ };
-//│ set countdown¹ = makeCountdown¹(42);
-//│ set tmp = countdown¹(3);
-//│ set baseCall = makeCountdown¹(43);
-//│ set tmp1 = baseCall(4);
+//│ set countdown¹ = makeCountdown¹‹(Int⁰) => Function⁰›(42);
+//│ set tmp = countdown¹‹(Int⁰) => Int⁰›(3);
+//│ set baseCall = makeCountdown¹‹(Int⁰) => Function⁰›(43);
+//│ set tmp1 = baseCall‹(Int⁰) => Int⁰›(4);
 //│ return [tmp, tmp1]
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [42, 43]
@@ -105,30 +105,30 @@ private fun nested(unused: Str, value: Int): Int =
 //│   let inner;
 //│   @private
 //│   define inner as fun inner⁰(n: Int⁰): Int⁰ {
-//│     return +⁰(n, 1)
+//│     return +⁰‹(?, ?) => ?›(n, 1)
 //│   };
-//│   return inner⁰(value)
+//│   return inner⁰‹(Int⁰) => Int⁰›(value)
 //│ };
 //│ @private @private
 //│ define nested$nested1 as fun nested$nested¹(value: Int⁰): Int⁰ {
 //│   let inner;
 //│   @private
 //│   define inner as fun inner¹(n: Int⁰): Int⁰ {
-//│     return +⁰(n, 1)
+//│     return +⁰‹(?, ?) => ?›(n, 1)
 //│   };
-//│   return inner¹(value)
+//│   return inner¹‹(Int⁰) => Int⁰›(value)
 //│ };
 //│ @private
 //│ define nested⁰ as fun nested¹(unused: Str⁰, value: Int⁰): Int⁰ {
 //│   let inner;
 //│   @private
 //│   define inner as fun inner²(n: Int⁰): Int⁰ {
-//│     return +⁰(n, 1)
+//│     return +⁰‹(?, ?) => ?›(n, 1)
 //│   };
-//│   return inner²(value)
+//│   return inner²‹(Int⁰) => Int⁰›(value)
 //│ };
-//│ set tmp = nested$nested⁰(41);
-//│ set tmp1 = nested$nested¹(42);
+//│ set tmp = nested$nested⁰‹(Int⁰) => Int⁰›(41);
+//│ set tmp1 = nested$nested¹‹(Int⁰) => Int⁰›(42);
 //│ return [tmp, tmp1]
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [42, 43]
@@ -149,70 +149,70 @@ private fun backward(unused: Str, count: Int, value: Int): Int =
 //│ let tmp: Int⁰, tmp1: Int⁰, forward$forward, forward$backward, backward$forward, backward$backward, forward$backward1, backward$forward1;
 //│ @private @private
 //│ define forward$forward as fun forward$forward⁰(count: Int⁰, value: Int⁰): Int⁰ {
-//│   return forward$backward⁰(count, value)
+//│   return forward$backward⁰‹(Int⁰, Int⁰) => Int⁰›(count, value)
 //│ };
 //│ @private @private
 //│ define forward$backward as fun forward$backward⁰(count: Int⁰, value: Int⁰): Int⁰ {
 //│   let scrut: Bool⁰, tmp2: Int⁰;
-//│   set scrut = Predef⁰.equals⁰(count, 0);
+//│   set scrut = Predef⁰.equals⁰‹(Unknown, Unknown) => Bool⁰›(count, 0);
 //│   match scrut
 //│     true =>
 //│       return value
 //│     else
-//│       set tmp2 = -⁰(count, 1);
-//│       return forward$forward⁰(tmp2, value)
+//│       set tmp2 = -⁰‹(?, ?) => ?›(count, 1);
+//│       return forward$forward⁰‹(Int⁰, Int⁰) => Int⁰›(tmp2, value)
 //│   end
 //│ };
 //│ @private @private
 //│ define backward$forward as fun backward$forward⁰(count: Int⁰, value: Int⁰): Int⁰ {
-//│   return backward$backward⁰(count, value)
+//│   return backward$backward⁰‹(Int⁰, Int⁰) => Int⁰›(count, value)
 //│ };
 //│ @private @private
 //│ define backward$backward as fun backward$backward⁰(count: Int⁰, value: Int⁰): Int⁰ {
 //│   let scrut: Bool⁰, tmp2: Int⁰;
-//│   set scrut = Predef⁰.equals⁰(count, 0);
+//│   set scrut = Predef⁰.equals⁰‹(Unknown, Unknown) => Bool⁰›(count, 0);
 //│   match scrut
 //│     true =>
 //│       return value
 //│     else
-//│       set tmp2 = -⁰(count, 1);
-//│       return backward$forward⁰(tmp2, value)
+//│       set tmp2 = -⁰‹(?, ?) => ?›(count, 1);
+//│       return backward$forward⁰‹(Int⁰, Int⁰) => Int⁰›(tmp2, value)
 //│   end
 //│ };
 //│ @private @private
 //│ define forward$backward1 as fun forward$backward¹(count: Int⁰, value: Int⁰): Int⁰ {
 //│   let scrut: Bool⁰, tmp2: Int⁰;
-//│   set scrut = Predef⁰.equals⁰(count, 0);
+//│   set scrut = Predef⁰.equals⁰‹(Unknown, Unknown) => Bool⁰›(count, 0);
 //│   match scrut
 //│     true =>
 //│       return value
 //│     else
-//│       set tmp2 = -⁰(count, 1);
-//│       return forward⁰(undefined, tmp2, value)
+//│       set tmp2 = -⁰‹(?, ?) => ?›(count, 1);
+//│       return forward⁰‹(Str⁰, Int⁰, Int⁰) => Int⁰›(undefined, tmp2, value)
 //│   end
 //│ };
 //│ @private @private
 //│ define backward$forward1 as fun backward$forward¹(count: Int⁰, value: Int⁰): Int⁰ {
-//│   return backward⁰(undefined, count, value)
+//│   return backward⁰‹(Str⁰, Int⁰, Int⁰) => Int⁰›(undefined, count, value)
 //│ };
 //│ @private
 //│ define forward¹ as fun forward⁰(unused: Str⁰, count: Int⁰, value: Int⁰): Int⁰ {
-//│   return forward$backward¹(count, value)
+//│   return forward$backward¹‹(Int⁰, Int⁰) => Int⁰›(count, value)
 //│ };
 //│ @private
 //│ define backward¹ as fun backward⁰(unused: Str⁰, count: Int⁰, value: Int⁰): Int⁰ {
 //│   let scrut: Bool⁰, tmp2: Int⁰;
-//│   set scrut = Predef⁰.equals⁰(count, 0);
+//│   set scrut = Predef⁰.equals⁰‹(Unknown, Unknown) => Bool⁰›(count, 0);
 //│   match scrut
 //│     true =>
 //│       return value
 //│     else
-//│       set tmp2 = -⁰(count, 1);
-//│       return backward$forward¹(tmp2, value)
+//│       set tmp2 = -⁰‹(?, ?) => ?›(count, 1);
+//│       return backward$forward¹‹(Int⁰, Int⁰) => Int⁰›(tmp2, value)
 //│   end
 //│ };
-//│ set tmp = forward$forward⁰(2, 42);
-//│ set tmp1 = backward$backward⁰(3, 43);
+//│ set tmp = forward$forward⁰‹(Int⁰, Int⁰) => Int⁰›(2, 42);
+//│ set tmp1 = backward$backward⁰‹(Int⁰, Int⁰) => Int⁰›(3, 43);
 //│ return [tmp, tmp1]
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [42, 43]
@@ -236,11 +236,11 @@ let lifted = capturedVariadic(30)
 //│ let sum, callPrefix: ?, tmp: ?, callPrefix1: ?, tmp1: ?, sum$;
 //│ @inline
 //│ define sum$ as fun sum$⁰(base: Int⁰)(first: Int⁰, ...args: Array⁰): Function⁰ {
-//│   return sum⁰(base, first, ...args)
+//│   return sum⁰‹(Int⁰, Int⁰, ...Array⁰) => (Int⁰) => Int⁰›(base, first, ...args)
 //│ };
 //│ define sum as fun sum⁰(base: Int⁰, first: Int⁰, ...args: Array⁰)(extra: Int⁰): Int⁰ {
-//│   let optional: Unknown, middle: Array⁰, last: Int⁰, tmp2: Int⁰, tmp3: Unknown, tmp4: Unknown, tmp5: Unknown, tmp6: Unknown;
-//│   do runtime⁰.checkVariadicArgs⁰("sum", 2, 1, args);
+//│   let optional: Unknown, middle: Array⁰, last: Int⁰, tmp2: Int⁰, tmp3: Unknown, tmp4: Unknown, tmp5: Int⁰, tmp6: Unknown, tmp7: Unknown;
+//│   do runtime⁰.checkVariadicArgs⁰‹(Str⁰, Int⁰, Int⁰, Array⁰) => Unit⁰›("sum", 2, 1, args);
 //│   match args
 //│     Array(2+) =>
 //│       set optional = args.0;
@@ -248,9 +248,9 @@ let lifted = capturedVariadic(30)
 //│     else
 //│       set optional = null;
 //│       end
-//│   set middle = runtime⁰.Tuple⁰.sliceArray⁰(args, 1, 1);
+//│   set middle = runtime⁰.Tuple⁰.sliceArray⁰‹(Array⁰, Int⁰, Int⁰) => Array⁰›(args, 1, 1);
 //│   set last = (args.-1 as! Int⁰);
-//│   set tmp2 = +⁰(base, first);
+//│   set tmp2 = +⁰‹(?, ?) => ?›(base, first);
 //│   match optional
 //│     Int⁰ =>
 //│       set tmp3 = optional;
@@ -258,19 +258,20 @@ let lifted = capturedVariadic(30)
 //│     else
 //│       set tmp3 = 0;
 //│       end
-//│   set tmp4 = +⁰(tmp2, tmp3);
-//│   set tmp5 = +⁰(tmp4, middle.length⁰);
-//│   set tmp6 = +⁰(tmp5, last);
-//│   return (+⁰(tmp6, extra) as! Int⁰)
+//│   set tmp4 = +⁰‹(?, ?) => ?›(tmp2, tmp3);
+//│   set tmp5 = middle.length⁰;
+//│   set tmp6 = +⁰‹(?, ?) => ?›(tmp4, tmp5);
+//│   set tmp7 = +⁰‹(?, ?) => ?›(tmp6, last);
+//│   return (+⁰‹(?, ?) => ?›(tmp7, extra) as! Int⁰)
 //│ };
 //│ define capturedVariadic⁰ as fun capturedVariadic¹(base: Int⁰): Function⁰ {
-//│   return sum$⁰(base)
+//│   return sum$⁰‹(Int⁰) => (Int⁰, ...Array⁰) => Function⁰›(base)
 //│ };
-//│ set lifted⁰ = capturedVariadic¹(30);
-//│ set callPrefix = lifted⁰(1, 9);
-//│ set tmp = callPrefix(2);
-//│ set callPrefix1 = lifted⁰(1, 2, 0, 9);
-//│ set tmp1 = callPrefix1(2);
+//│ set lifted⁰ = capturedVariadic¹‹(Int⁰) => Function⁰›(30);
+//│ set callPrefix = lifted⁰‹(...Array⁰) => ?›(1, 9);
+//│ set tmp = callPrefix‹(...Array⁰) => ?›(2);
+//│ set callPrefix1 = lifted⁰‹(...Array⁰) => ?›(1, 2, 0, 9);
+//│ set tmp1 = callPrefix1‹(...Array⁰) => ?›(2);
 //│ return [tmp, tmp1]
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [42, 45]
@@ -293,7 +294,7 @@ fun narrow(value: Int): Int = if true then value else value + 1
 //│     true =>
 //│       return value
 //│     else
-//│       return +⁰(value, 1)
+//│       return +⁰‹(?, ?) => ?›(value, 1)
 //│   end
 //│ };
 //│ define narrow⁰ as fun narrow¹(value: Int⁰): Int⁰ {
@@ -301,7 +302,7 @@ fun narrow(value: Int): Int = if true then value else value + 1
 //│     true =>
 //│       return value
 //│     else
-//│       return +⁰(value, 1)
+//│       return +⁰‹(?, ?) => ?›(value, 1)
 //│   end
 //│ };
 //│ match true

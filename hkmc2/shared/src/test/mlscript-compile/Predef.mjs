@@ -39,10 +39,12 @@ lambda1 = (undefined, function (Predef2, b, a, i, ..._) {
   return Predef2.equals(a, tmp)
 });
 lambda = (undefined, function (Predef2, a, b, field) {
-  let scrut, scrut1;
+  let scrut, scrut1, tmp, tmp1;
   scrut = field !== null;
   if (scrut === true) {
-    scrut1 = Predef2.equals(a[field], b[field]);
+    tmp = a[field];
+    tmp1 = b[field];
+    scrut1 = Predef2.equals(tmp, tmp1);
     if (scrut1 === true) {
       return true
     }
@@ -55,14 +57,20 @@ lambda = (undefined, function (Predef2, a, b, field) {
     Predef1 = this
   }
   static {
+    let tmp, tmp1, tmp2;
     (class Symbols {
       static {
         new this
       }
       constructor() {
         Predef.Symbols = this;
-        this.prettyPrint = RuntimeJS.symbols.prettyPrint;
-        this.definitionMetadata = RuntimeJS.symbols.definitionMetadata;
+        let tmp3, tmp4, tmp5, tmp6;
+        tmp3 = RuntimeJS.symbols;
+        tmp4 = tmp3.prettyPrint;
+        this.prettyPrint = tmp4;
+        tmp5 = RuntimeJS.symbols;
+        tmp6 = tmp5.definitionMetadata;
+        this.definitionMetadata = tmp6;
         Object.defineProperty(this, "class", {
           value: Symbols
         });
@@ -106,8 +114,11 @@ lambda = (undefined, function (Predef2, a, b, field) {
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["object", "Refl"];
     });
-    Predef.js_assert = globalThis.console["assert"];
-    Predef.foldl = Predef.fold;
+    tmp = globalThis.console;
+    tmp1 = tmp["assert"];
+    Predef.js_assert = tmp1;
+    tmp2 = Predef.fold;
+    Predef.foldl = tmp2;
     (class meta {
       static {
         Predef.meta = this
@@ -182,7 +193,7 @@ lambda = (undefined, function (Predef2, a, b, field) {
     }
   }
   static equals(a, b) {
-    let scrut, a1, b1, scrut1, scrut2, ac, scrut3, md, scrut4, scrut5, scrut6, scrut7, scrut8, scrut9, lambda$here, lambda$here1;
+    let scrut, a1, b1, scrut1, scrut2, ac, scrut3, md, scrut4, scrut5, scrut6, scrut7, scrut8, scrut9, tmp, tmp1, tmp2, tmp3, lambda$here, lambda$here1;
     scrut = a === b;
     if (scrut === true) {
       return true
@@ -191,7 +202,9 @@ lambda = (undefined, function (Predef2, a, b, field) {
       a1 = a;
       if (b instanceof globalThis.Array) {
         b1 = b;
-        scrut1 = a1.length === b1.length;
+        tmp2 = a1.length;
+        tmp3 = b1.length;
+        scrut1 = tmp2 === tmp3;
         if (scrut1 === true) {
           lambda$here = lambda$1(Predef, b1);
           return runtime.safeCall(a1.every(lambda$here))
@@ -209,13 +222,15 @@ lambda = (undefined, function (Predef2, a, b, field) {
             ac = a["constructor"];
             scrut3 = ac !== undefined;
             if (scrut3 === true) {
-              scrut6 = ac === b["constructor"];
+              tmp = b["constructor"];
+              scrut6 = ac === tmp;
               if (scrut6 === true) {
                 md = ac[Predef.Symbols.definitionMetadata];
                 scrut4 = md !== undefined;
                 if (scrut4 === true) {
+                  tmp1 = md[2];
                   lambda$here1 = lambda$(Predef, a, b);
-                  scrut5 = runtime.safeCall(md[2].every(lambda$here1));
+                  scrut5 = runtime.safeCall(tmp1.every(lambda$here1));
                   if (scrut5 === true) {
                     return true
                   }
@@ -265,16 +280,19 @@ lambda = (undefined, function (Predef2, a, b, field) {
     return Rendering.render;
   }
   static print(...xs) {
-    let callPrefix, tmp;
-    callPrefix = runtime.safeCall(Predef.map(Predef.renderAsStr));
-    tmp = runtime.safeCall(callPrefix(...xs));
-    return runtime.safeCall(globalThis.console.log(...tmp))
+    let tmp, callPrefix, tmp1;
+    tmp = Predef.map;
+    callPrefix = runtime.safeCall(tmp(Predef.renderAsStr));
+    tmp1 = runtime.safeCall(callPrefix(...xs));
+    return runtime.safeCall(globalThis.console.log(...tmp1))
   }
   static renderAsStr(arg) {
+    let tmp;
     if (typeof arg === 'string') {
       return arg
     }
-    return runtime.safeCall(Predef.render(arg));
+    tmp = Predef.render;
+    return runtime.safeCall(tmp(arg));
   }
   static check(...args) {
     return runtime.safeCall(Predef.js_assert(...args))
@@ -342,9 +360,10 @@ lambda = (undefined, function (Predef2, a, b, field) {
     }
   }
   static mkStr(...xs) {
-    let callPrefix, lambda$here;
+    let tmp, callPrefix, lambda$here;
+    tmp = Predef.fold;
     lambda$here = lambda$2(Predef);
-    callPrefix = runtime.safeCall(Predef.fold(lambda$here));
+    callPrefix = runtime.safeCall(tmp(lambda$here));
     return runtime.safeCall(callPrefix(...xs))
   }
   static use(instance) {
@@ -354,7 +373,9 @@ lambda = (undefined, function (Predef2, a, b, field) {
     return runtime.safeCall(runtime.enterHandleBlock(handler, body))
   }
   static raiseUnhandledEffect() {
-    return runtime.safeCall(runtime.mkEffect(runtime.FatalEffect, null))
+    let tmp;
+    tmp = runtime.FatalEffect;
+    return runtime.safeCall(runtime.mkEffect(tmp, null))
   }
   toString() { return runtime.render(this); }
   static [definitionMetadata] = ["class", "Predef"];

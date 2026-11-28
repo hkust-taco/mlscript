@@ -49,14 +49,14 @@ nested(20)
 //│ @private @private
 //│ define nested$nested as fun nested$nested⁰(n: Int⁰): Int⁰ {
 //│   let tmp: Int⁰, tmp1: Int⁰, tmp2: Int⁰;
-//│   set tmp = nested_localField$localField⁰(n);
-//│   set tmp1 = +⁰(n, 1);
-//│   set tmp2 = nested_localMatch$localMatch⁰(tmp1);
-//│   return +⁰(tmp, tmp2)
+//│   set tmp = nested_localField$localField⁰‹(Int⁰) => Int⁰›(n);
+//│   set tmp1 = +⁰‹(?, ?) => ?›(n, 1);
+//│   set tmp2 = nested_localMatch$localMatch⁰‹(Int⁰) => Int⁰›(tmp1);
+//│   return +⁰‹(?, ?) => ?›(tmp, tmp2)
 //│ };
 //│ @private @private
 //│ define nested_localMatch$localMatch as fun nested_localMatch$localMatch⁰(n: Int⁰): Int⁰ {
-//│   return nested_localMatch$box_SchemeBox⁰(n)(undefined, undefined)
+//│   return nested_localMatch$box_SchemeBox⁰‹(Int⁰) => (Int⁰, Int⁰) => Int⁰›(n)(undefined, undefined)
 //│ };
 //│ @private @private
 //│ define nested_localField$localField1 as fun nested_localField$localField¹(n: Int⁰): Int⁰ {
@@ -64,7 +64,7 @@ nested(20)
 //│ };
 //│ @private @private
 //│ define nested_localMatch$localMatch1 as fun nested_localMatch$localMatch¹(n: Int⁰): Int⁰ {
-//│   return nested_localMatch$box_SchemeBox¹(n)(undefined, undefined)
+//│   return nested_localMatch$box_SchemeBox¹‹(Int⁰) => (Int⁰, Int⁰) => Int⁰›(n)(undefined, undefined)
 //│ };
 //│ @affine(1) @private
 //│ define nested_localMatch$box_SchemeBox as fun nested_localMatch$box_SchemeBox⁰(SchemeBox_value: Int⁰)(fv_arg$SchemeBox$0$: Int⁰, fv_value: Int⁰): Int⁰ {
@@ -84,17 +84,17 @@ nested(20)
 //│ };
 //│ @private
 //│ define localMatch⁰ as fun localMatch¹(n: Int⁰): Int⁰ {
-//│   return localMatch$box_SchemeBox⁰(n)(undefined, undefined)
+//│   return localMatch$box_SchemeBox⁰‹(Int⁰) => (Int⁰, Int⁰) => Int⁰›(n)(undefined, undefined)
 //│ };
 //│ @private
 //│ define nested⁰ as fun nested¹(n: Int⁰): Int⁰ {
 //│   let tmp: Int⁰, tmp1: Int⁰, tmp2: Int⁰;
-//│   set tmp = nested_localField$localField¹(n);
-//│   set tmp1 = +⁰(n, 1);
-//│   set tmp2 = nested_localMatch$localMatch¹(tmp1);
-//│   return +⁰(tmp, tmp2)
+//│   set tmp = nested_localField$localField¹‹(Int⁰) => Int⁰›(n);
+//│   set tmp1 = +⁰‹(?, ?) => ?›(n, 1);
+//│   set tmp2 = nested_localMatch$localMatch¹‹(Int⁰) => Int⁰›(tmp1);
+//│   return +⁰‹(?, ?) => ?›(tmp, tmp2)
 //│ };
-//│ return nested$nested⁰(20)
+//│ return nested$nested⁰‹(Int⁰) => Int⁰›(20)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 41
 

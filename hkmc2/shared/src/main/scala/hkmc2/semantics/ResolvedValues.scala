@@ -4,7 +4,7 @@ package semantics
 import scala.collection.mutable
 import hkmc2.utils.*, shorthands.*
 import Term.*
-import ResolvedValues.{InputSlot, InputSymbol}
+import ResolvedValues.{Callees, DeclaredCallee, InputSlot, InputSymbol, InterfaceSlot}
 
 /** Source declarations and writable field copies in an elaborated block.
   * Several declarations are outside subStatements: split bindings, handler parameters,
@@ -118,13 +118,17 @@ private[hkmc2] final class SourceDeclarations(root: Statement):
 
   visit(root)
 
-/** The source values of the declarations of a compilation unit, which erasure reads once resolution of
-  * their block has completed. These observations are local to the resolution of that block: values that a
-  * later block or an importing unit delivers to a declaration are not recorded, and such a unit keeps no
-  * copy of the observations (see `register`). Values from other units enter through the exposed interface,
-  * and interface exposure supplies them as unknown inputs before the block completes (see InterfaceExposure). */
+/** The source values of the declarations of a compilation unit and the callees of its applications, which
+  * erasure reads once resolution of their block has completed. These observations are local to the resolution
+  * of that block: values that a later block or an importing unit delivers to a declaration or to an
+  * application are not recorded, and such a unit keeps no copy of the observations (see `register`). Values
+  * from other units enter through the exposed interface, and interface exposure supplies them as unknown
+  * inputs before the block completes (see InterfaceExposure). */
 private[hkmc2] final class ResolvedValues:
   private val values = mutable.Map.empty[InputSlot, TermShapeHost]
+  // Applications are compared by identity: as case classes, they would otherwise be hashed and compared
+  // through their subterms on every lookup.
+  private val applicationCallees = mutable.Map.empty[Identity[App], Callees]
 
   /** Collect the possible values of the block's declarations and lambda results while resolution
     * finishes. These include values admitted by the public interface and declarations discovered on demand. */
@@ -188,6 +192,54 @@ private[hkmc2] final class ResolvedValues:
       def record(shape: TermShape)(using ResolutionContext): Unit = if observing then host.publish(shape)
       connect(shape => if observing then views(shape, record))
 
+  /** Whether the current unit collects the callees of `app`: it owns the application and resolution of its
+    * block has not completed. The listeners that deliver callees belong to the inference graph, so a later
+    * block or an importing unit runs them too. Such a delivery comes after the application was compiled with
+    * the callees that its own block delivered, like the values of the declarations of that block (see
+    * `register`), and recording it would only grow the graph of the delivering unit.
+    */
+  private def collectsCallees(app: App)(using ResolutionContext): Bool =
+    val targets = app.callableTargets
+    // The unit that first resolves an application owns it (see `Publisher.initialData`).
+    if targets.originalData.owner == null then targets.inferenceHost
+    targets.isOwnedBy(rctx.state) && !targets.originalData.completed
+
+  /** The record of the values that `app` calls, or `N` when the current unit does not collect them (see
+    * `collectsCallees`). */
+  private[semantics] def calleesOf(app: App)(using ResolutionContext): Opt[Callees] =
+    Option.when(collectsCallees(app))(applicationCallees.getOrElseUpdate(Identity(app), new Callees))
+
+  /** `callees`, a record of the callees of `app` or of a component of one of its intersections, while the
+    * current unit collects them. A listener that outlives the block of `app` holds such a record. */
+  private[semantics] def collecting(app: App, callees: Opt[Callees])(using ResolutionContext): Opt[Callees] =
+    callees.filter(_ => collectsCallees(app))
+
+  /** Record in `callees` a callee whose values have the declared function type `callable`, and collect the
+    * values of its leading parameters and of the result of applying its first parameter list.
+    *
+    * Erasure derives the calling convention of the application from these values, so `callable` must describe
+    * the callee as its own code sees it: without the type arguments of the activation that observes the call.
+    * The type parameters of the enclosing definitions and of `callable` itself then stay abstract, and only the
+    * type arguments written in types remain, such as those of `Fn[Int]` or of a field of a `Box[Int]`.
+    */
+  private[semantics] def observeDeclaredCallee(callees: Callees, callable: CallableTypeShape, resolver: NewResolver)
+      (using ResolutionContext): Unit =
+    callees.declared.getOrElseUpdate(ShapeIdentity.key(callable), {
+      val interface = callable.paramLists.head
+      val leading = interface.params.map: param =>
+        param.tpe.map: tpe =>
+          val slot = new InterfaceSlot
+          observeViews(slot, resolver)(publish => publish(resolver.instanceShape(tpe)))
+          slot
+      val result = new InterfaceSlot
+      observeViews(result, resolver)(resolver.listenCallableResult(callable))
+      new DeclaredCallee(interface, leading, result)
+    })
+
+  /** The callees that resolution of the block of `app` found, or `N` when it found none: resolution did not
+    * reach the application, or another unit owns it. */
+  def callees(app: App): Opt[Callees] = applicationCallees.get(Identity(app))
+
   /** Whether resolution prepared this slot in the current compilation unit. */
   def isPrepared(slot: InputSlot): Bool = values.contains(slot)
 
@@ -202,5 +254,35 @@ private[hkmc2] object ResolvedValues:
     * Elaboration temporaries include the saved value restored by a backtracking assignment.
     */
   type InputSymbol = LocalVarSymbol | TermSymbol
-  type InputSlot = InputSymbol | LambdaResultSlot
+  type InputSlot = InputSymbol | LambdaResultSlot | InterfaceSlot
+
+  /** Identifies the values of one position in the interface of a declared callee: those that one of its
+    * parameters accepts, or those that its application returns. */
+  final class InterfaceSlot
+
+  /** A callee whose values have a declared function type. `interface` is the parameter list that the
+    * application supplies. `leading` has a slot for each of `interface.params` that has a declared type, and
+    * `result` holds the values that the application returns.
+    */
+  final class DeclaredCallee(val interface: DeclaredParams, val leading: Ls[Opt[InterfaceSlot]], val result: InterfaceSlot)
+
+  /** The values that an application can call. The callee is one of the alternatives that this record lists:
+    * a value of one of the `declared` function types, a value without a declared calling interface when
+    * `undeclared` is set, such as a definition, a lambda, or a dynamic value, or a value of one of the
+    * `intersections`, which satisfies each component of that intersection.
+    *
+    * Resolution fills this record while it resolves the block of the application (see
+    * `ResolvedValues.calleesOf`). A record without alternatives describes a callee that resolution knows
+    * nothing about.
+    */
+  final class Callees:
+    private[semantics] val declared = mutable.LinkedHashMap.empty[ShapeIdentity.Key, DeclaredCallee]
+    private[semantics] var undeclared: Bool = false
+    private[semantics] val intersections = mutable.LinkedHashMap.empty[ShapeIdentity.Key, Ls[Callees]]
+    def declaredCallees: Iterator[DeclaredCallee] = declared.valuesIterator
+    def hasUndeclaredCallee: Bool = undeclared
+    def intersectionCallees: Iterator[Ls[Callees]] = intersections.valuesIterator
+    /** The records of the components of an intersection of `count` types, which `key` identifies. */
+    private[semantics] def intersection(key: ShapeIdentity.Key, count: Int): Ls[Callees] =
+      intersections.getOrElseUpdate(key, List.fill(count)(new Callees))
 

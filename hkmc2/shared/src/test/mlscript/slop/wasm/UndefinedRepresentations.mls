@@ -250,12 +250,13 @@ let castCalls = 0
 narrow(unsafe.undefined)
 castCalls + 41
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp;
+//│ let tmp, tmp1, tmp2;
 //│ @inline @private
 //│ define narrow⁰ as fun narrow¹(value) {
-//│   let tmp1;
-//│   set tmp1 = +⁰(castCalls⁰, 1);
-//│   set castCalls⁰ = tmp1;
+//│   let tmp3, tmp4;
+//│   set tmp3 = castCalls⁰;
+//│   set tmp4 = +⁰(tmp3, 1);
+//│   set castCalls⁰ = tmp4;
 //│   return (value as! CastTarget⁰)
 //│ };
 //│ @private
@@ -263,9 +264,11 @@ castCalls + 41
 //│   constructor CastTarget²
 //│ };
 //│ set castCalls⁰ = 0;
-//│ set tmp = +⁰(castCalls⁰, 1);
-//│ set castCalls⁰ = tmp;
-//│ return +⁰(castCalls⁰, 41)
+//│ set tmp1 = castCalls⁰;
+//│ set tmp2 = +⁰(tmp1, 1);
+//│ set castCalls⁰ = tmp2;
+//│ set tmp = castCalls⁰;
+//│ return +⁰(tmp, 41)
 //│ Wasm result:
 //│ = 42
 
@@ -313,11 +316,13 @@ let bottomCastCalls = 0
 narrowBottom(bottomForCast())
 bottomCastCalls + 41
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp;
 //│ @noInline @private
 //│ define bottomForCast⁰ as fun bottomForCast¹() {
-//│   let tmp;
-//│   set tmp = +⁰(bottomCastCalls⁰, 1);
-//│   set bottomCastCalls⁰ = tmp;
+//│   let tmp1, tmp2;
+//│   set tmp1 = bottomCastCalls⁰;
+//│   set tmp2 = +⁰(tmp1, 1);
+//│   set bottomCastCalls⁰ = tmp2;
 //│   return undefined
 //│ };
 //│ @inline @private
@@ -330,7 +335,8 @@ bottomCastCalls + 41
 //│ };
 //│ set bottomCastCalls⁰ = 0;
 //│ do bottomForCast¹();
-//│ return +⁰(bottomCastCalls⁰, 41)
+//│ set tmp = bottomCastCalls⁰;
+//│ return +⁰(tmp, 41)
 //│ Wasm result:
 //│ = 42
 

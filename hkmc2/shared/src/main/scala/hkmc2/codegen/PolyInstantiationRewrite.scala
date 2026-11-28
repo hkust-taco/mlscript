@@ -107,10 +107,7 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
   
   final def apply(): Program =
     if !solvers.exists(_.hasWorkToDo) then pre.pgrm
-    else
-      val newBody = mkNewProgramBody
-      if newBody is pre.pgrm.main then pre.pgrm
-      else Program(pre.pgrm.imports, newBody)
+    else pre.pgrm.mapMain(mkNewProgramBody)
   
   lazy val newPolyFnSyms : LinkedHashMap[InstantiationId, Map[TermSymbol, (BlockMemberSymbol, TermSymbol)]] =
     val res = LinkedHashMap.empty[InstantiationId, Map[TermSymbol, (BlockMemberSymbol, TermSymbol)]]
@@ -137,7 +134,7 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
     res
   end newPolyFnSyms
   
-  private def mkNewProgramBody: Block =
+  private def mkNewProgramBody(main: Block): Block =
     
     val newPolyFuns =
       for
@@ -156,10 +153,15 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
     
     val newMainBody = Scoped(
       Set.from(newFuns.map(_.sym)),
-      mkRootRewriter(rewrittenInPlace).applyBlock(pre.pgrm.main))
+      mkRootRewriter(rewrittenInPlace).applyBlock(main))
     
-    newFuns.foldRight(newMainBody): (fdef, rest) =>
+    val result = newFuns.foldRight(newMainBody): (fdef, rest) =>
       Define(fdef, rest)
+    // A generated branch function publishes its result after rewriting its body. Both calls to
+    // generated functions and calls to retyped originals must see their final signatures.
+    val retyped = rewrittenSignatures.iterator.collect:
+      case ((_, sym), sig) if sig.erasure isnt pre.res.funSymToFunDefn(sym).signature.erasure => sym
+    Call.refreshSignatures(result, (retyped ++ newFuns.iterator.map(_.dSym)).toSet)
   
   end mkNewProgramBody
   

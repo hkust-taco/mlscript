@@ -23,8 +23,7 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
   def extraSymbolsToPreserveFrom(prog: Program): Set[ScopedSymbol] = Set.empty
   
   private inline def blockPass(inline pass: Block => Block)(prog: Program): Program =
-    val blk = pass(prog.main)
-    if blk is prog.main then prog else Program(prog.imports, blk)
+    prog.mapMain(pass)
   
   def run(prog: Program, printer: Program => Str, symbolsToPreserve: Set[ScopedSymbol], otl: TL)(using TL): Program =
     var result = prog
@@ -72,6 +71,9 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
       else prog
     runPass("ClassParamFlattener")(ClassParamFlattener.apply)
     runPass("ReflectionInstrumenter")(ReflectionInstrumenter(using summon).apply)
+    // Source lowering groups calls by the written parameter lists, which staged code also reflects.
+    // Optimizers and backends consume the conventions of the completed IR definitions, including imports.
+    runPass("BindCallSignatures")(_.mapMain(FirstClassFunctionTransformer.bindCalls))
     preOptimizeHook(result)
     
     // * We run this pass here first, before inlining so that the @tailrec/@tailcall annotations

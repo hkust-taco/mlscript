@@ -52,7 +52,7 @@ class ClassParamFlattener(using State) extends BlockTransformer(SymbolSubst.Id):
     case s @ Select(qual, name) => S(Select(qual, name)(S(cls), s.toLoc)(s.sanitize))
     case _ => N
 
-  private def saturatedCurriedClassCall(fun: Path, argss: NELs[Ls[Arg]]): Opt[Path] =
+  private def saturatedCurriedClassCall(fun: Path, argss: Ls[Ls[Arg]]): Opt[Path] =
     fun.targetSymbol.collect:
       case sym: TermSymbol => sym
     .flatMap: sym =>
@@ -79,7 +79,8 @@ class ClassParamFlattener(using State) extends BlockTransformer(SymbolSubst.Id):
           else argss2
         k:
           if flatArgss is argss then c
-          else Call(r, flatArgss)(c.metadata, c.toLoc)
+          // * `super` has no fixed signature, so its call keeps the dynamic signature of the flattened lists.
+          else Call.of(r, flatArgss)(c.metadata, c.toLoc)
     case call @ Call(fun, argss) =>
       saturatedCurriedClassCall(fun, argss) match
       case S(cls) =>

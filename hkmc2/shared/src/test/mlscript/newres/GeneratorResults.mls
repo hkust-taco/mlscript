@@ -22,11 +22,11 @@ iterator.next()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ @generator
 //│ define counted⁰ as fun counted¹(): generator Int⁰ {
-//│   do yield⁰(0);
+//│   do yield⁰‹(?) => ?›(0);
 //│   return 1
 //│ };
-//│ set iterator⁰ = counted¹();
-//│ return iterator⁰.next⁰()
+//│ set iterator⁰ = counted¹‹() => generator Int⁰›();
+//│ return iterator⁰.next⁰‹() => Unknown›()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = {value: 0, done: false}
 //│ iterator =  {}

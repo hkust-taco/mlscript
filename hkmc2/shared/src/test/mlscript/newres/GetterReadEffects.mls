@@ -112,3 +112,19 @@ fun test() =
   calls
 test()
 //│ = 1
+
+// Read the getter once before evaluating the argument. The returned closure captures its receiver.
+:noInline
+:checkIR
+:expect [42, 1]
+fun test() =
+  let reads = 0
+  class Adder(val offset: Int) with
+    fun add: Int -> Int =
+      set reads += 1
+      n => this.offset + n
+  let adder = new Adder(41)
+  fun argument() = reads
+  [adder.add(argument()), reads]
+test()
+//│ = [42, 1]

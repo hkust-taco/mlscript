@@ -379,20 +379,10 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     private def signatureInPlace(f: TermSymbol): FunDefn.Signature =
       signatureAt(if pre.res.rootFunDefns.contains(f) then inPlaceInstId(f) else instId, f)
     
-    // The result type that fusion gives to a definition without parameter lists which keeps its symbol,
-    // or `N` when that result keeps its type. The rewritten definition only replaces the current one after
-    // every body is rewritten. Until then, a read through the symbol still has the previous result type,
-    // which the coercion into a retyped slot would take for a value of an unrelated type.
-    private def retypedResultInPlace(f: TermSymbol): Opt[ErasedValueType] =
-      pre.res.funSymToFunDefn.get(f).filter(_.params.isEmpty).flatMap: original =>
-        val planned = signatureInPlace(f)
-        if planned is original.signature then N
-        else S(planned.result.callType.getOrElse(ErasedType.Unknown))
-    
     // calls `fun` with possibly remapped `args`
     def mkCall(fun: Path, args: Ls[LocalVarSymbol])(k: Result => Block): Block =
       applyArgs(args.map(s => Arg(N, s.asPath))): args2 =>
-        k(Call(fun, args2 ne_:: Nil)(CallMetadata.defaultMlsFun, N))
+        k(Call.of(fun, args2 :: Nil)(CallMetadata.defaultMlsFun, N))
     
     def callRest(id: RestFunId)(k: Result => Block): Block =
       mkCall(newRestFuns(id).force_!.asPath, restFnFvs(id))(k)
@@ -437,8 +427,13 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
           val fieldSyms = mkCtorFieldSyms(ctor.uid.concreteId)
           val (branchFunBms, branchFunTSym) = branchFunSyms(ctorWhichBranch(ctor.uid.concreteId))
           fillFieldSyms(fieldSyms, mkCall(branchFunBms.asMemberRef(branchFunTSym), fieldSyms)(k))
+      case c @ Call(fun @ FunRef(f, _), Nil) if pre.res.funSymToFunDefn.contains(f) =>
+        // A read can precede publication of the rewritten getter. Use its planned result for slot coercion.
+        applyPath(fun): path =>
+          val sig = if path.targetSymbol.contains(f) then signatureInPlace(f).erasure else Call.signatureOf(path, 0)
+          k(if (path is fun) && (sig is c.signature) then c else c.copy(fun = path)(sig, c.metadata, c.toLoc))
       case c @ Call(FunRef(f, _), _) => super.applyResult(c):
-        case call2 @ Call(fun2 @ FunRef(f2, _), argss2) =>
+        case call2 @ Call(FunRef(f2, _), argss2) =>
           // In-place rewrites keep the definition symbol. Its current IR signature can
           // already have changed, so compare the saved definition with the planned signature.
           val original = pre.res.funSymToFunDefn.get(f).map(_.signature.erasure)
@@ -452,13 +447,12 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
               val retyped = rewrittenSignature.paramLists
               // Retyping keeps the parameters of a signature, so both signatures have the same
               // parameter lists, of the same lengths.
-              assert(original.corresponds(retyped)(_.sizeCompare(_) == 0),
+              assert(original.corresponds(retyped)((a, b) =>
+                a.params.sizeCompare(b.params) == 0 && a.rest.isDefined == b.rest.isDefined),
                 s"retyping changed the parameter lists of ${f.nme}: $original -> $retyped")
-              val slotss = original.iterator.zip(retyped).map(_.iterator.zip(_))
-              // A partial application leaves the last lists of `slotss` unused. An over-application
-              // passes its remaining argument lists to the function's result, whose parameters this
-              // signature does not describe. An argument list can also be longer than its slots,
-              // when its last arguments go to a rest parameter.
+              val slotss = original.iterator.zip(retyped).map((a, b) => a.params.iterator.zip(b.params))
+              // Partial applications leave the later lists unused. Extra arguments in a list become
+              // elements of the rest array, so its slot representation does not apply to each argument.
               val argss3 = argss2.map: args =>
                 slotss.nextOption() match
                   case S(slots) if args.forall(_.spread.isEmpty) => args.map(_ -> slots.nextOption())
@@ -471,13 +465,9 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
                     Scoped(Set.single(tmp), Assign(tmp, value, k2(Arg(N, tmp.asPath) -> N)))
                 case _ => k2(arg)
               )(_)): argss4 =>
-                val call = Call(fun2, argss4.map(_.map(_._1)).ne_!)(c.metadata, c.toLoc)
-                // Bodies are rewritten before their definitions publish the new signatures.
-                // Record the planned result on a fresh call so slot coercions cannot cache
-                // the old result type through the retained definition symbol.
-                if (f2 is f) && originalSignature.ret != rewrittenSignature.ret && argss4.sizeCompare(rewrittenSignature.paramLists) == 0 then
-                  k(Cast(call, rewrittenSignature.ret.getOrElse(ErasedType.Unknown), check = false)(c.toLoc))
-                else k(call)
+                // A recursive call can precede publication of the rewritten definition. Its consumers
+                // need the planned result representation when coercing it into their own slots.
+                k(call2.copy(argss = argss4.map(_.map(_._1)))(rewrittenSignature, call2.metadata, call2.toLoc))
             case _ => k(call2)
         case c2 => k(c2)
       case _ => super.applyResult(r)(k)
@@ -505,10 +495,6 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
           applyPath(from)(k)
         else
           super.applyPath(s)(k)
-      case ref @ FunRef(f, _) => retypedResultInPlace(f) match
-        // Like the result of a call to a function retyped in place, the read records its planned type.
-        case S(tpe) => super.applyPath(ref)(read => k(Cast.path(read, tpe, check = false)(ref.toLoc)))
-        case N => super.applyPath(ref)(k)
       case _ => super.applyPath(p)(k)
     
     // a free block member symbol of an extracted part becomes an `fv_` parameter, which needs a different node

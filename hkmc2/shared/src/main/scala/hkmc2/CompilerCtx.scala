@@ -189,6 +189,7 @@ class CompilerCtx(
         given Config = artifactConfig
         given ShowCfg = ShowCfg(
           showErasedTypes = false,
+          showCallSignatures = false,
           showExpansionMappings = false,
           showFlowSymbols = true,
           debug = false,
@@ -221,7 +222,8 @@ class CompilerCtx(
           given codegen.Erasure = codegen.Erasure(blk, summon[Raise])(using artifactConfig, prelude, state)
           val low = ltl.givenIn:
             new codegen.Lowering()(using artifactConfig, ltl, summon[Raise], state, prelude, summon[SymbolPrinter])
-          optimize(low.program(blk, Set.empty))
+          // Other files cannot access the local variables of a file.
+          optimize(low.program(blk, Set.empty, sharedLocals = Set.empty))
 
       state.publishCompilationUnitAbi:
         CompilationUnitAbi:

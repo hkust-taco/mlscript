@@ -22,7 +22,12 @@ fun test(x) =
 fun test(x) =
   [globalThis.a, x]
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let test1; test1 = function test(x) { return globalThis.Object.freeze([ globalThis.a, x ]) };
+//│ let test1;
+//│ test1 = function test(x) {
+//│   let tmp;
+//│   tmp = globalThis.a;
+//│   return globalThis.Object.freeze([ tmp, x ])
+//│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :re
@@ -58,8 +63,10 @@ module Test with
 //│     Test.a = 3;
 //│   }
 //│   static test1(x) {
+//│     let tmp3;
+//│     tmp3 = globalThis.a;
 //│     return globalThis.Object.freeze([
-//│       globalThis.a,
+//│       tmp3,
 //│       x
 //│     ])
 //│   }

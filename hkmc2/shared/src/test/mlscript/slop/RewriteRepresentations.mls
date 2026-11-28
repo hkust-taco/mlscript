@@ -36,10 +36,11 @@ count(0)(1, 2, 3)
 //│       Array(0) =>
 //│         return n
 //│       Array(1+) =>
-//│         let inlinedVal, tmp1;
+//│         let inlinedVal, tmp1, tmp2;
 //│         do runtime⁰.Tuple⁰.get⁰(rest1, 0);
-//│         set tmp1 = -⁰(rest1.length⁰, 0);
-//│         set inlinedVal = rest1.slice⁰(1, tmp1);
+//│         set tmp1 = rest1.length⁰;
+//│         set tmp2 = -⁰(tmp1, 0);
+//│         set inlinedVal = rest1.slice⁰(1, tmp2);
 //│         set more = (inlinedVal as! Array⁰);
 //│         set tmp = +⁰(n, 1);
 //│         set n = tmp;
@@ -72,14 +73,14 @@ delay(42).run()
 //│ let lambda, tmp: Thunk⁰, lambda$;
 //│ @inline
 //│ define lambda$ as fun lambda$⁰(value: Int⁰)(): Int⁰ {
-//│   return lambda⁰(value)
+//│   return lambda⁰‹(Int⁰) => Int⁰›(value)
 //│ };
 //│ define lambda as fun lambda⁰(value: Int⁰): Int⁰ {
 //│   return value
 //│ };
 //│ define delay⁰ as fun delay¹(value: Int⁰): Thunk⁰ {
 //│   let lambda$here: Function⁰;
-//│   set lambda$here = lambda$⁰(value);
+//│   set lambda$here = lambda$⁰‹(Int⁰) => () => Int⁰›(value);
 //│   return new Thunk⁰(lambda$here)
 //│ };
 //│ define Thunk¹ as class Thunk⁰ {
@@ -89,8 +90,8 @@ delay(42).run()
 //│     end
 //│   }
 //│ };
-//│ set tmp = delay¹(42);
-//│ return tmp.run¹()
+//│ set tmp = delay¹‹(Int⁰) => Thunk⁰›(42);
+//│ return tmp.run¹‹() => Int⁰›()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
@@ -106,10 +107,10 @@ pattern Lower = "a"..="z"
 //│ define Lower⁰ as pattern Lower¹ {
 //│   method unapply⁰ = fun unapply¹(input: ?): ? {
 //│     let isGreaterThanLower: Bool⁰, isLessThanUpper: Bool⁰;
-//│     set isGreaterThanLower = <=⁰("a", input);
+//│     set isGreaterThanLower = <=⁰‹(?, ?) => Bool⁰›("a", input);
 //│     match isGreaterThanLower
 //│       true =>
-//│         set isLessThanUpper = <=⁰(input, "z");
+//│         set isLessThanUpper = <=⁰‹(?, ?) => Bool⁰›(input, "z");
 //│         match isLessThanUpper
 //│           true =>
 //│             return new runtime⁰.MatchSuccess⁰(input, null)
@@ -121,22 +122,23 @@ pattern Lower = "a"..="z"
 //│     end
 //│   }
 //│   method unapplyStringPrefix⁰ = fun unapplyStringPrefix¹(input: ?): ? {
-//│     let stringHead: Str⁰, stringTail: Str⁰, nonEmpty: Bool⁰, isGreaterThanLower: Bool⁰, isLessThanUpper: Bool⁰, tmp2: Array⁰;
+//│     let stringHead: Str⁰, stringTail: Str⁰, nonEmpty: Bool⁰, isGreaterThanLower: Bool⁰, isLessThanUpper: Bool⁰, tmp2: ?, tmp3: Array⁰;
 //│     match input
 //│       Str⁰ =>
-//│         set nonEmpty = <⁰(0, input.length﹖);
+//│         set tmp2 = input.length﹖‹=> ?›;
+//│         set nonEmpty = <⁰‹(?, ?) => Bool⁰›(0, tmp2);
 //│         match nonEmpty
 //│           true =>
-//│             set stringHead = (runtime⁰.StrOps⁰.get¹((input as! Str⁰), 0) as!! Str⁰);
-//│             set stringTail = runtime⁰.StrOps⁰.leaveOut⁰((input as! Str⁰), 1);
-//│             set isGreaterThanLower = <=⁰("a", stringHead);
+//│             set stringHead = (runtime⁰.StrOps⁰.get¹‹(Str⁰, Int⁰) => Unknown›((input as! Str⁰), 0) as!! Str⁰);
+//│             set stringTail = runtime⁰.StrOps⁰.leaveOut⁰‹(Str⁰, Int⁰) => Str⁰›((input as! Str⁰), 1);
+//│             set isGreaterThanLower = <=⁰‹(?, ?) => Bool⁰›("a", stringHead);
 //│             match isGreaterThanLower
 //│               true =>
-//│                 set isLessThanUpper = <=⁰(stringHead, "z");
+//│                 set isLessThanUpper = <=⁰‹(?, ?) => Bool⁰›(stringHead, "z");
 //│                 match isLessThanUpper
 //│                   true =>
-//│                     set tmp2 = [stringHead, stringTail];
-//│                     return new runtime⁰.MatchSuccess⁰(tmp2, null)
+//│                     set tmp3 = [stringHead, stringTail];
+//│                     return new runtime⁰.MatchSuccess⁰(tmp3, null)
 //│                   else
 //│                     return new runtime⁰.MatchFailure⁰(null)
 //│                 end
@@ -152,7 +154,7 @@ pattern Lower = "a"..="z"
 //│   }
 //│ };
 //│ set scrut = "q";
-//│ set unapplyResult = Lower¹.unapply﹖(scrut);
+//│ set unapplyResult = Lower¹.unapply﹖‹(...Array⁰) => ?›(scrut);
 //│ match unapplyResult
 //│   MatchSuccess⁰ =>
 //│     set output = unapplyResult.output⁰;
@@ -163,7 +165,7 @@ pattern Lower = "a"..="z"
 //│     set tmp = false;
 //│     end
 //│ set scrut1 = "Q";
-//│ set unapplyResult1 = Lower¹.unapply﹖(scrut1);
+//│ set unapplyResult1 = Lower¹.unapply﹖‹(...Array⁰) => ?›(scrut1);
 //│ match unapplyResult1
 //│   MatchSuccess⁰ =>
 //│     set output1 = unapplyResult1.output⁰;

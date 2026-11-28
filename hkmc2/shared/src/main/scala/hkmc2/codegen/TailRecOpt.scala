@@ -310,7 +310,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
       if restParam.isDefined then
         val sliceResSym = TempSymbol(N, initErasedType = S(ErasedType.Array), "sliceRes")
         // runtime.Tuple.sliceArray(tupleSym, paramList.length, 0)
-        val sliceRes = Call(
+        val sliceRes = Call.of(
           State.runtimeSymbol.asSimpleRef.sel(State.tupleSymbol).sel(State.tupleSliceArraySymbol),
           (tupleSym.asSimpleRef.asArg
             :: Value.Lit(Tree.IntLit(paramList.length))(N).asArg
@@ -400,7 +400,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
         val paramRewriter = new BlockTransformer(new SymbolSubst:
           override def mapVarSym(sym: VarSymbol): VarSymbol = paramSymsMap(f.dSym).getOrElse(sym, sym))
         val params = f.params.mapConserve(paramRewriter.applyParamList)
-        if params is f.params then f.signature else FunDefn.Signature.fromParams(params, f.signature.result)
+        if params is f.params then f.signature else f.signature.copy(params = params)
       else
         val initial = paramSyms.map(Param.simple(_))
         val params = LoweredParamList.plain(
@@ -509,7 +509,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
           case Some(pth) => Arg(N, pth)
           case None => Arg(N, Value.Lit(Tree.UnitLit(false))(N))
       val argsWithId = if funsLen > 1 then Value.Lit(Tree.IntLit(dSymIds(callee.dSym)))(N).asArg :: args else args
-      Call(loopDefnPath, argsWithId ne_:: Nil)(CallMetadata.defaultMlsFun, N)
+      Call.of(loopDefnPath, argsWithId :: Nil)(CallMetadata.defaultMlsFun, N)
     
     class FunRewriter(f: FunDefn) extends BlockTransformerShallow(SymbolSubst.Id):
       val params = f.allParamSyms

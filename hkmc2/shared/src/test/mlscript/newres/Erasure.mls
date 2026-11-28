@@ -172,10 +172,10 @@ PrivateBox.make(42).value
 //│ }
 //│ module PrivateBox³ {
 //│   method make⁰ = fun make¹(value1: Int⁰): PrivateBox⁰ {
-//│     return PrivateBox²(value1)
+//│     return PrivateBox²‹(Int⁰) => PrivateBox⁰›(value1)
 //│   }
 //│ };
-//│ set tmp = PrivateBox³.make¹(42);
+//│ set tmp = PrivateBox³.make¹‹(Int⁰) => PrivateBox⁰›(42);
 //│ return tmp.value¹
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
@@ -195,10 +195,10 @@ increment(41)
 //│ let increment;
 //│ @private
 //│ define increment as fun increment⁰(_0: Unknown): Unknown {
-//│   return +⁰(_0, 1)
+//│   return +⁰‹(?, ?) => ?›(_0, 1)
 //│ };
 //│ set increment¹ = increment⁰;
-//│ return increment¹(41)
+//│ return increment¹‹(...Array⁰) => ?›(41)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 //│ increment = fun increment
@@ -215,10 +215,12 @@ apply(41) \ _ + 1
 //│ let lambda;
 //│ @private
 //│ define apply⁰ as fun apply¹(value: Int⁰, f: Function⁰): Int⁰ {
-//│   return (f(value) as! Int⁰)
+//│   return (f‹(...Array⁰) => ?›(value) as! Int⁰)
 //│ };
-//│ define lambda as fun lambda⁰(_0: Int⁰): Int⁰ { return +⁰(_0, 1) };
-//│ return apply¹(41, lambda⁰)
+//│ define lambda as fun lambda⁰(_0: Int⁰): Int⁰ {
+//│   return +⁰‹(?, ?) => ?›(_0, 1)
+//│ };
+//│ return apply¹‹(Int⁰, Function⁰) => Int⁰›(41, lambda⁰)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 

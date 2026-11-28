@@ -111,15 +111,15 @@ modSome(Some(17), 3)
 //│     match x
 //│       Some¹ =>
 //│         set arg$Some$0$ = x.x⁵;
-//│         set scrut = >=⁰(arg$Some$0$, m);
+//│         set scrut = >=⁰‹(?, ?) => Bool⁰›(arg$Some$0$, m);
 //│         match scrut
 //│           true =>
-//│             set tmp = -⁰(arg$Some$0$, m);
-//│             set tmp1 = Some⁰(tmp);
+//│             set tmp = -⁰‹(?, ?) => ?›(arg$Some$0$, m);
+//│             set tmp1 = Some⁰‹(Unknown) => Some¹›(tmp);
 //│             set x = tmp1;
 //│             continue loopLabel
 //│           else
-//│             return Some⁰(arg$Some$0$)
+//│             return Some⁰‹(Unknown) => Some¹›(arg$Some$0$)
 //│         end
 //│       None⁰ =>
 //│         return None⁰
@@ -132,14 +132,14 @@ modSome(Some(17), 3)
 //│ set fv_m = 3;
 //│ block inlinedLbl:
 //│   loop loopLabel:
-//│     set fv_scrut = >=⁰(Some_x, fv_m);
+//│     set fv_scrut = >=⁰‹(?, ?) => Bool⁰›(Some_x, fv_m);
 //│     match fv_scrut
 //│       true =>
-//│         set fv_tmp = -⁰(Some_x, fv_m);
+//│         set fv_tmp = -⁰‹(?, ?) => ?›(Some_x, fv_m);
 //│         set Some_x = fv_tmp;
 //│         continue loopLabel
 //│       else
-//│         set inlinedVal = Some⁰(Some_x);
+//│         set inlinedVal = Some⁰‹(Unknown) => Some¹›(Some_x);
 //│         break inlinedLbl
 //│     end
 //│   unreachable /* Rest of abortive labelled block */

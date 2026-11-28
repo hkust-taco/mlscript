@@ -164,37 +164,6 @@ str
 //│   }
 //│ };
 //│ Handler$h1$perform1 = function Handler$h1$perform(arg, k) {
-//│   let tmp9, tmp10, pc;
-//│   if (runtime.resumePc === -1) {
-//│     pc = 0;
-//│   } else {
-//│     pc = runtime.resumePc /* as! Int */;
-//│     runtime.resumePc = -1;
-//│   }
-//│   switch (pc) {
-//│     case 0:
-//│       tmp9 = str + "A";
-//│       str = tmp9;
-//│       runtime.resumeValue = runtime.safeCall(k(arg));
-//│       if (runtime.curEffect === null) {
-//│         pc = 1;
-//│       } else {
-//│         runtime.unwind(Handler$h1$perform1, 1, "RecursiveHandlers.mls:148:7", null, null, 1, 2, arg, k, 0);
-//│         return runtime.Unit
-//│       }
-//│     case 1:
-//│       runtime.resumeValue;
-//│       tmp10 = str + "A";
-//│       str = tmp10;
-//│       return runtime.Unit;
-//│   }
-//│ };
-//│ Handler$h2$perform$ = function Handler$h2$perform$(arg) {
-//│   return (k) => {
-//│     return Handler$h2$perform(arg, k)
-//│   }
-//│ };
-//│ Handler$h2$perform = function Handler$h2$perform(arg, k) {
 //│   let tmp9, tmp10, tmp11, tmp12, pc;
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
@@ -204,9 +173,44 @@ str
 //│   }
 //│   switch (pc) {
 //│     case 0:
-//│       tmp9 = str + "B";
-//│       tmp10 = str + tmp9;
+//│       tmp9 = str;
+//│       tmp10 = tmp9 + "A";
 //│       str = tmp10;
+//│       runtime.resumeValue = runtime.safeCall(k(arg));
+//│       if (runtime.curEffect === null) {
+//│         pc = 1;
+//│       } else {
+//│         runtime.unwind(Handler$h1$perform1, 1, "RecursiveHandlers.mls:148:7", null, null, 1, 2, arg, k, 0);
+//│         return runtime.Unit
+//│       }
+//│     case 1:
+//│       runtime.resumeValue;
+//│       tmp11 = str;
+//│       tmp12 = tmp11 + "A";
+//│       str = tmp12;
+//│       return runtime.Unit;
+//│   }
+//│ };
+//│ Handler$h2$perform$ = function Handler$h2$perform$(arg) {
+//│   return (k) => {
+//│     return Handler$h2$perform(arg, k)
+//│   }
+//│ };
+//│ Handler$h2$perform = function Handler$h2$perform(arg, k) {
+//│   let tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, pc;
+//│   if (runtime.resumePc === -1) {
+//│     pc = 0;
+//│   } else {
+//│     pc = runtime.resumePc /* as! Int */;
+//│     runtime.resumePc = -1;
+//│   }
+//│   switch (pc) {
+//│     case 0:
+//│       tmp9 = str;
+//│       tmp10 = str;
+//│       tmp11 = tmp10 + "B";
+//│       tmp12 = tmp9 + tmp11;
+//│       str = tmp12;
 //│       runtime.resumeValue = runtime.safeCall(k(arg));
 //│       if (runtime.curEffect === null) {
 //│         pc = 1;
@@ -216,9 +220,11 @@ str
 //│       }
 //│     case 1:
 //│       runtime.resumeValue;
-//│       tmp11 = str + "B";
-//│       tmp12 = str + tmp11;
-//│       str = tmp12;
+//│       tmp13 = str;
+//│       tmp14 = str;
+//│       tmp15 = tmp14 + "B";
+//│       tmp16 = tmp13 + tmp15;
+//│       str = tmp16;
 //│       return runtime.Unit;
 //│   }
 //│ };

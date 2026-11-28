@@ -52,11 +52,21 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
       case ErasedResult.Async(_) => doc"async $payload"
       case ErasedResult.Generator(_) => doc"generator $payload"
 
-  def print(sig: ErasedFuncSignature)(using Scope): Document =
-    val canon = sig.canonicalize
-    // * Curried functions are rendered as `(A) => (B) => R`, one arrow per parameter list.
-    canon.paramLists.foldRight(print(canon.result)): (ps, acc) =>
-      doc"(${ps.map(_.fold(doc"?")(print)).mkDocument(sep = doc", ")}) => $acc"
+  def print(sig: ErasedCallableSignature)(using Scope): Document =
+    def slot(tpe: Opt[ErasedValueType]): Document = tpe.fold(doc"?")(print)
+    sig.canonicalize match
+      // * Curried functions are rendered as `(A) => (B) => R`, one arrow per parameter list.
+      case canon: ErasedFuncSignature =>
+        canon.paramLists.foldRight(print(canon.result)): (ps, acc) =>
+          val params = ps.params.map(slot) ::: ps.rest.map(rest => doc"...${slot(rest)}").toList
+          doc"(${params.mkDocument(sep = doc", ")}) => $acc"
+      // * A getter takes no parameter list, so it is rendered as a by-name result.
+      case canon: ErasedGetterSignature => doc"=> ${print(canon.result)}"
+  
+  /** Renders the signature of a call, between its callee and its arguments. */
+  def callSignatureAnnot(call: Call)(using Scope): Document =
+    if !summon[ShowCfg].showCallSignatures then doc""
+    else doc"‹${print(call.signature)}›"
 
   /** Renders the type annotation for a symbol of erased type `tpe`. */
   def erasedTypeAnnot(tpe: Opt[ErasedValueType])(using Scope): Document =
@@ -248,7 +258,7 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
     result.match
     case call @ Call(fun, argss) =>
       val chainedArgs = argss.map(args => doc"(${args.map(print).mkDocument(", ")})").mkDocument("")
-      doc"${printAnnotations(call.metadata.annotations, doc" ")}${print(fun)}${chainedArgs}"
+      doc"${printAnnotations(call.metadata.annotations, doc" ")}${print(fun)}${callSignatureAnnot(call)}${chainedArgs}"
     case inst @ Instantiate(mut, cls, argss) =>
       val chainedArgs = argss.map(args => doc"(${args.map(print).mkDocument(", ")})").mkDocument("")
       doc"${printAnnotations(inst.metadata.annotations, doc" ")}new ${if mut then "mut " else ""}${print(cls)}${chainedArgs}"

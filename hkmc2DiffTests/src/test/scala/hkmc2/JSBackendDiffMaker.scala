@@ -54,6 +54,10 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
     protected def phaseEnabled(config: Config.Debug): Bool = config.optimizations
     protected def forceTrace(scope: Opt[Str]): Bool = debugOptimizations.isSet
   
+  // The top-level local variables of the blocks processed so far, which every block can assign
+  // (see `Lowering.program`).
+  private var replTopLevelLocals: Set[LocalVarSymbol] = Set.empty
+  
   val replTL = commandLogger(showRepl)
   
   lazy val host =
@@ -117,6 +121,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       lazy val blockPrinter =
         given ShowCfg = ShowCfg(
           showErasedTypes = showIRErasedTypes.isSet,
+          showCallSignatures = showIRErasedTypes.isSet,
           showExpansionMappings = false,
           showFlowSymbols = true,
           debug = debug.isSet,
@@ -129,8 +134,9 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         new codegen.Lowering()(using summon[Config], ltl, summon[Raise], loweringState, curCtx, summon[SymbolPrinter])
           with codegen.LoweringTraceLog(traceJS.isSet)
       
+      replTopLevelLocals ++= blk.stats.iterator.collect { case LetDecl(sym: LocalVarSymbol, _) => sym }
       val lowered = ltl.givenIn:
-        low.program(blk, symbolsToPreserve = symbolsToPreserve)
+        low.program(blk, symbolsToPreserve = symbolsToPreserve, sharedLocals = replTopLevelLocals)
       
       val optimized = ltl.givenIn:
         val customPipeline = new CompilationPipeline:
@@ -296,9 +302,9 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
             import codegen.*
             Assign(
               NoSymbol,
-              Call(
+              Call.of(
                 Elaborator.State.runtimeSymbol.asSimpleRef.selSN("printRaw"),
-                (Arg(N, sym.asPath) :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, N),
+                (Arg(N, sym.asPath) :: Nil) :: Nil)(CallMetadata.defaultMlsFun, N),
               End())
           val je = nestedScp.givenIn:
             jsb.block(le, endSemi = false)

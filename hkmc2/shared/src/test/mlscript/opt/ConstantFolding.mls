@@ -30,26 +30,32 @@ in
 //│ Captured variables: Set()
 //│ !! Change triggered { x⁰ ~> 2 }
 //│ !! Change triggered { y⁰ ~> 2 }
-//│ !! Change triggered { tmp:tmp⁰ ~> 3 }
-//│ !! Change triggered { x¹ ~> 3 }
+//│ !! Change triggered { tmp:tmp⁰ ~> 2 }
+//│ !! Change triggered { tmp:tmp¹ ~> 3 }
 //│ !! Change triggered { y⁰ ~> 3 }
-//│ !! Change triggered { tmp:tmp¹ ~> 6 }
+//│ !! Change triggered { x¹ ~> 3 }
+//│ !! Change triggered { tmp:tmp² ~> 3 }
+//│ !! Change triggered { tmp:tmp³ ~> 6 }
 //│ ▶ VP:
-//│ >  let x, y, x1, tmp, tmp1;
+//│ >  let x, y, x1, tmp, tmp1, tmp2, tmp3;
 //│ >  set x = 2;
 //│ >  set y = 2;
 //│ >  set x1 = 3;
-//│ >  set tmp = 3;
+//│ >  set tmp = 2;
+//│ >  set tmp1 = 3;
 //│ >  set y = 3;
-//│ >  set tmp1 = 6;
+//│ >  set tmp2 = 3;
+//│ >  set tmp3 = 6;
 //│ >  return Predef⁰.print⁰(6)
 //│ ⬤ Simplif. iter. 2
 //│ !! Change triggered { rm x⁰ = 2 }
 //│ !! Change triggered { rm y⁰ = 2 }
 //│ !! Change triggered { rm x¹ = 3 }
-//│ !! Change triggered { rm tmp:tmp⁰ = 3 }
+//│ !! Change triggered { rm tmp:tmp⁰ = 2 }
+//│ !! Change triggered { rm tmp:tmp¹ = 3 }
 //│ !! Change triggered { rm y⁰ = 3 }
-//│ !! Change triggered { rm tmp:tmp¹ = 6 }
+//│ !! Change triggered { rm tmp:tmp² = 3 }
+//│ !! Change triggered { rm tmp:tmp³ = 6 }
 //│ ▶ DCE:
 //│ >  return Predef⁰.print⁰(6)
 //│ Captured variables: Set()

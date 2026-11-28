@@ -56,10 +56,11 @@ fun sum2 = case
 //│     if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length === 0) {
 //│       return 0
 //│     } else if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length >= 2) {
-//│       let inlinedVal, tmp8;
+//│       let inlinedVal, tmp8, tmp9;
 //│       element0$ = runtime.Tuple.get(caseScrut, 0);
-//│       tmp8 = caseScrut.length - 1;
-//│       inlinedVal = runtime.safeCall(caseScrut.slice(1, tmp8));
+//│       tmp8 = caseScrut.length;
+//│       tmp9 = tmp8 - 1;
+//│       inlinedVal = runtime.safeCall(caseScrut.slice(1, tmp9));
 //│       lastElement1$3 = runtime.Tuple.get(caseScrut, -1);
 //│       tmp5 = element0$ + lastElement1$3;
 //│       tmp6 = sum2();
@@ -141,8 +142,8 @@ private fun rest(xs) = if xs is [_, ..ys] then ys
 //│   let ys: Unknown, middleElements: ?, element0$: ?;
 //│   match xs
 //│     Array(1+) =>
-//│       set element0$ = runtime⁰.Tuple⁰.get⁰(xs, 0);
-//│       set middleElements = runtime⁰.Tuple⁰.slice⁰(xs, 1, 0);
+//│       set element0$ = runtime⁰.Tuple⁰.get⁰‹(Unknown, Int⁰) => Unknown›(xs, 0);
+//│       set middleElements = runtime⁰.Tuple⁰.slice⁰‹(Unknown, Int⁰, Int⁰) => Unknown›(xs, 1, 0);
 //│       set ys = middleElements;
 //│       return ys
 //│     else
@@ -151,12 +152,12 @@ private fun rest(xs) = if xs is [_, ..ys] then ys
 //│ };
 //│ set tmp = [1, 2];
 //│ set tmp1 = [0, ...tmp];
-//│ set tmp2 = rest¹(tmp1);
-//│ set tmp3 = globalThis⁰.Array¹.isArray⁰(tmp2);
+//│ set tmp2 = rest¹‹(Unknown) => Unknown›(tmp1);
+//│ set tmp3 = globalThis⁰.Array¹.isArray⁰‹(?) => ?›(tmp2);
 //│ set tmp4 = [1, 2];
 //│ set tmp5 = [0, ...tmp4];
-//│ set tmp6 = rest¹(tmp5);
-//│ set tmp7 = globalThis⁰.Array¹.isArray⁰(tmp6);
+//│ set tmp6 = rest¹‹(Unknown) => Unknown›(tmp5);
+//│ set tmp7 = globalThis⁰.Array¹.isArray⁰‹(?) => ?›(tmp6);
 //│ return [tmp3, tmp7]
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [false, true]

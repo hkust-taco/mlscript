@@ -23,8 +23,8 @@ private fun viaBindings() =
 //│ @private
 //│ define applyBoth⁰ as fun applyBoth¹(f: Function⁰): Array⁰ {
 //│   let tmp2: ?, tmp3: ?;
-//│   set tmp2 = f(1);
-//│   set tmp3 = f("s");
+//│   set tmp2 = f‹(...Array⁰) => ?›(1);
+//│   set tmp3 = f‹(...Array⁰) => ?›("s");
 //│   return [tmp2, tmp3]
 //│ };
 //│ @private
@@ -36,12 +36,12 @@ private fun viaBindings() =
 //│   };
 //│   set f = f⁰;
 //│   set g = f;
-//│   set tmp2 = g(1);
-//│   set tmp3 = g("s");
+//│   set tmp2 = g‹(...Array⁰) => ?›(1);
+//│   set tmp3 = g‹(...Array⁰) => ?›("s");
 //│   return [tmp2, tmp3]
 //│ };
-//│ set tmp = applyBoth¹(ident¹);
-//│ set tmp1 = viaBindings¹();
+//│ set tmp = applyBoth¹‹(Function⁰) => Array⁰›(ident¹);
+//│ set tmp1 = viaBindings¹‹() => Array⁰›();
 //│ return [tmp, tmp1]
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [[1, "s"], [1, "s"]]
@@ -66,9 +66,9 @@ spread()
 //│ define spread⁰ as fun spread¹(): Int⁰ {
 //│   let args: Array⁰;
 //│   set args = [1, "two", true];
-//│   return three¹(...args)
+//│   return three¹‹(Int⁰, Str⁰, Bool⁰) => Int⁰›(...args)
 //│ };
-//│ return spread¹()
+//│ return spread¹‹() => Int⁰›()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -101,8 +101,8 @@ private fun disj(a, b) = a || b
 //│       return true
 //│   end
 //│ };
-//│ set tmp = conj¹(true, 1);
-//│ set tmp1 = disj¹(false, "s");
+//│ set tmp = conj¹‹(Bool⁰, Int⁰) => Unknown›(true, 1);
+//│ set tmp1 = disj¹‹(Bool⁰, Str⁰) => Unknown›(false, "s");
 //│ return [tmp, tmp1]
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [1, "s"]
@@ -119,17 +119,17 @@ nest(2, 0)
 //│ @private
 //│ define nest⁰ as fun nest¹(n: Int⁰, acc: Unknown): Unknown {
 //│   let scrut: Bool⁰, tmp: Int⁰, tmp1: Array⁰;
-//│   set scrut = Predef⁰.equals⁰(n, 0);
+//│   set scrut = Predef⁰.equals⁰‹(Unknown, Unknown) => Bool⁰›(n, 0);
 //│   match scrut
 //│     true =>
 //│       return acc
 //│     else
-//│       set tmp = -⁰(n, 1);
+//│       set tmp = -⁰‹(?, ?) => ?›(n, 1);
 //│       set tmp1 = [acc];
-//│       return nest¹(tmp, tmp1)
+//│       return nest¹‹(Int⁰, Unknown) => Unknown›(tmp, tmp1)
 //│   end
 //│ };
-//│ return nest¹(2, 0)
+//│ return nest¹‹(Int⁰, Unknown) => Unknown›(2, 0)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [[0]]
 
@@ -157,9 +157,9 @@ first([Item(1)]).v
 //│     end
 //│   }
 //│ };
-//│ set tmp = Item²(1);
+//│ set tmp = Item²‹(Int⁰) => Item⁰›(1);
 //│ set tmp1 = [tmp];
-//│ set tmp2 = first¹(tmp1);
+//│ set tmp2 = first¹‹(Array⁰) => Item⁰›(tmp1);
 //│ return tmp2.v¹
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
@@ -193,22 +193,25 @@ mutate()
 //│ @private
 //│ define mutate⁰ as fun mutate¹(): Array⁰ {
 //│   let assigned: Array⁰, shifted: Array⁰, tmp: Entry⁰, tmp1: Entry⁰, tmp2: Unknown, tmp3: Unknown;
-//│   set tmp = Entry¹(1);
+//│   set tmp = Entry¹‹(Int⁰) => Entry⁰›(1);
 //│   set assigned = mut [tmp];
 //│   set assigned.0 = "s";
-//│   set tmp1 = Entry¹(1);
+//│   set tmp1 = Entry¹‹(Int⁰) => Entry⁰›(1);
 //│   set shifted = mut [tmp1];
-//│   do shifted.unshift⁰("s");
-//│   set tmp2 = headOfAssigned¹(assigned);
-//│   set tmp3 = headOfShifted¹(shifted);
+//│   do shifted.unshift⁰‹(...Array⁰) => Int⁰›("s");
+//│   set tmp2 = headOfAssigned¹‹(Array⁰) => Unknown›(assigned);
+//│   set tmp3 = headOfShifted¹‹(Array⁰) => Unknown›(shifted);
 //│   return [tmp2, tmp3]
 //│ };
 //│ @private
 //│ define Entry² as class Entry⁰ {
 //│   val v²: Int⁰;
-//│   constructor Entry¹(v: Int⁰) { define v² as val v³: Int⁰ = v; end }
+//│   constructor Entry¹(v: Int⁰) {
+//│     define v² as val v³: Int⁰ = v;
+//│     end
+//│   }
 //│ };
-//│ return mutate¹()
+//│ return mutate¹‹() => Array⁰›()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = ["s", "s"]
 
@@ -255,9 +258,9 @@ private module Store with
 //│     return Store².this.slot⁰
 //│   }
 //│ };
-//│ set tmp = Memo²();
-//│ set tmp1 = tmp.put¹("s");
-//│ set tmp2 = Store².put³("s");
+//│ set tmp = Memo²‹() => Memo⁰›();
+//│ set tmp1 = tmp.put¹‹(Str⁰) => Unknown›("s");
+//│ set tmp2 = Store².put³‹(Str⁰) => Unknown›("s");
 //│ return [tmp1, tmp2]
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = ["s", "s"]
@@ -277,17 +280,19 @@ deeper(Config(0))
 //│ let tmp: Config⁰;
 //│ @private
 //│ define deeper⁰ as fun deeper¹(c: Config⁰): Array⁰ {
-//│   let inner: Unknown, old: Unknown, tmp1: Unknown;
+//│   let inner: Unknown, old: Unknown, tmp1: Unknown, tmp2: Unknown, tmp3: Unknown;
 //│   set old = c.depth⁰;
 //│   try
 //│     set c.depth⁰ = "deep";
-//│     set tmp1 = c.depth⁰;
+//│     set tmp2 = c.depth⁰;
+//│     set tmp1 = tmp2;
 //│     end
 //│   finally
 //│     set c.depth⁰ = old;
 //│     end;
 //│     set inner = tmp1;
-//│   return [inner, c.depth⁰]
+//│   set tmp3 = c.depth⁰;
+//│   return [inner, tmp3]
 //│ };
 //│ @private
 //│ define Config¹ as class Config⁰ {
@@ -297,8 +302,8 @@ deeper(Config(0))
 //│     end
 //│   }
 //│ };
-//│ set tmp = Config²(0);
-//│ return deeper¹(tmp)
+//│ set tmp = Config²‹(Int⁰) => Config⁰›(0);
+//│ return deeper¹‹(Config⁰) => Array⁰›(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = ["deep", 0]
 
@@ -316,7 +321,7 @@ val table = [stored]
 //│ define stored⁰ as fun stored¹(x: Unknown): Unknown {
 //│   return x
 //│ };
-//│ do stored¹(1);
+//│ do stored¹‹(Unknown) => Unknown›(1);
 //│ set tmp = [stored¹];
 //│ define table⁰ as val table¹: Array⁰ = tmp;
 //│ end
@@ -345,9 +350,9 @@ dynamic(callback)
 //│       return "other"
 //│   end
 //│ };
-//│ do callback¹(1);
-//│ set dynamic⁰ = globalThis⁰.eval﹖("(f => f('str'))");
-//│ return dynamic⁰(callback¹)
+//│ do callback¹‹(Int⁰) => Str⁰›(1);
+//│ set dynamic⁰ = globalThis⁰.eval﹖‹(...Array⁰) => ?›("(f => f('str'))");
+//│ return dynamic⁰‹(...Array⁰) => ?›(callback¹)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = "other"
 //│ dynamic = fun

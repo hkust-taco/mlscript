@@ -37,6 +37,9 @@ x => x
 
 :e
 114 + "514"
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.+1: 	114 + "514"
+//│ ╙──      	      ^^^^^
 //│ ╔══[COMPILATION ERROR] Type error in string literal with expected type Int
 //│ ║  l.+1: 	114 + "514"
 //│ ║        	      ^^^^^
@@ -55,6 +58,9 @@ let x = 1 in let y = 2 in x + y
 
 :e
 let x = 0 in x + "1"
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.+1: 	let x = 0 in x + "1"
+//│ ╙──      	                 ^^^
 //│ ╔══[COMPILATION ERROR] Type error in string literal with expected type Int
 //│ ║  l.+1: 	let x = 0 in x + "1"
 //│ ║        	                 ^^^

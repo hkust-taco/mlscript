@@ -118,8 +118,12 @@ class FlowAnalysisBasedRewrite(
       try thunk
       finally activeEtaArgss = saved
     
-    private def etaCall(base: Path): Result =
-      Call(base, activeEtaArgss.ne_!)(CallMetadata.mlsFunWithEffect, N)
+    /** Returns the result of applying the eta-expanded argument lists to `base`. */
+    private def etaReturn(base: Path, loc: Opt[Loc]): Block =
+      val signature = Call.publishedSignature(base) match
+        case S(sig: ErasedFuncSignature) => sig
+        case _ => ErasedFuncSignature.dynamic(activeEtaArgss.length)
+      Call.chain(base, signature, activeEtaArgss, CallMetadata.mlsFunWithEffect, loc)(Return(_))
     
     
     override def rewriteFunDefn(fun: FunDefn): RewrittenFunDefn =
@@ -160,17 +164,19 @@ class FlowAnalysisBasedRewrite(
           if activeEtaArgss.isEmpty then Return(res2)
           else res2 match
           case p: Path =>
-            Return(etaCall(p).withLocOf(res2))
-          case c @ Call(fun, argss) =>
-            Return(
-              Call(fun, (argss ++ activeEtaArgss).ne_!)(c.metadata.copy(
+            etaReturn(p, res2.toLoc)
+          // * A call with argument lists also applies the eta-expanded ones, as far as its signature allows.
+          case c @ Call(fun, argss) if argss.nonEmpty => c.signature match
+            case sig: ErasedFuncSignature =>
+              Call.chain(fun, sig, argss ++ activeEtaArgss, c.metadata.copy(
                 mayRaiseEffects = true,
-                annotations = c.metadata.annotations.filterNot(_.isInstanceOf[Annot.Pure])), c.toLoc))
+                annotations = c.metadata.annotations.filterNot(_.isInstanceOf[Annot.Pure])), c.toLoc)(Return(_))
+            case _: ErasedGetterSignature => lastWords("A call with argument lists has a function signature")
           case _ =>
             val tmp = TempSymbol(N, initErasedType = N, "eta$res")
             Scoped(
               Set.single(tmp),
-              Assign(tmp, res2, Return(etaCall(tmp.asPath).withLocOf(res2))))
+              Assign(tmp, res2, etaReturn(tmp.asPath, res2.toLoc)))
       case _ => super.applyBlock(b)
     
     override def applyResult(r: Result)(k: Result => Block): Block =
@@ -215,7 +221,7 @@ class FlowAnalysisBasedRewrite(
           rewriteArgss(argss.iterator.zipWithIndex): argss2 =>
             k(
               if (fun2 is fun) && argss2.corresponds(argss)(_ is _) then c
-              else Call(fun2, argss2.ne_!)(c.metadata, c.toLoc)
+              else c.rebuilt(fun2, argss2)
             )
       case i@Instantiate(mut, cls, args :: restArgss) if args.forall(_.spread.isEmpty) =>
         val eliminable = deadParamElimSolver.eliminableCallSiteArgs(ConcreteId((i.uid, 0), instId))

@@ -16,19 +16,19 @@ declare module Object {
   fun getOwnPropertyDescriptor(target, key): Object | ()
   fun getOwnPropertyDescriptors(target): Object
   fun
-    create
-    freeze
-    assign
-    prototype
-    fromEntries
-    getPrototypeOf
-    defineProperty
+    create(prototype, properties?)
+    freeze(value)
+    assign(target, ...sources)
+    fromEntries(entries)
+    getPrototypeOf(target)
+    defineProperty(target, key, descriptor)
+  val prototype
 }
 
 declare class JSON
 declare module JSON {
   fun
-    stringify
+    stringify(value, replacer?, space?)
 }
 
 declare class Number: Num {
@@ -69,9 +69,9 @@ declare class String {
 declare fun String(value?): Str
 declare module String {
   fun
-    fromCharCode
-    fromCodePoint
-    raw
+    fromCharCode(...codes)
+    fromCodePoint(...codePoints)
+    raw(template, ...substitutions)
 }
 
 declare class RegExp {
@@ -308,8 +308,8 @@ declare module Array {
   // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/from
   fun from(items, mapFn?, thisArg?): Array[Any]
   fun
-    concat
-    isArray
+    concat(...items)
+    isArray(value)
   val prototype: Array[Any]
 }
 
@@ -323,7 +323,7 @@ declare module Symbol {
   // A `TermDef` like `for` needs `rhs` to be defined to be recognized as `isMLsFun`.
   // Otherwise, it would be wrapped in `runtime.safeCall`, which accesses the
   // uninitialized `runtime` in the `Rendering` module.
-  fun for: Str -> Symbol = ()
+  fun for(key: Str): Symbol = ()
   @annotations.fresh val iterator: Symbol
 }
 
@@ -347,77 +347,77 @@ declare module Math {
       SQRT1_2: Num
       SQRT2: Num
     fun
-      abs: Num -> Num
-      acos: Num -> Num
-      acosh: Num -> Num
-      asin: Num -> Num
-      asinh: Num -> Num
-      atan: Num -> Num
-      atan2: (Num, Num) -> Num
-      atanh: Num -> Num
-      cbrt: Num -> Num
-      ceil: Num -> Num
-      clz32: Num -> Int
-      cos: Num -> Num
-      cosh: Num -> Num
-      exp: Num -> Num
-      expm1: Num -> Num
-      floor: Num -> Num
-      f16round: Num -> Num
-      fround: Num -> Num
+      abs(_: Num): Num
+      acos(_: Num): Num
+      acosh(_: Num): Num
+      asin(_: Num): Num
+      asinh(_: Num): Num
+      atan(_: Num): Num
+      atan2(vertical: Num, horizontal: Num): Num
+      atanh(_: Num): Num
+      cbrt(_: Num): Num
+      ceil(_: Num): Num
+      clz32(_: Num): Int
+      cos(_: Num): Num
+      cosh(_: Num): Num
+      exp(_: Num): Num
+      expm1(_: Num): Num
+      floor(_: Num): Num
+      f16round(_: Num): Num
+      fround(_: Num): Num
       hypot(...values): Num
-      imul: (Num, Num) -> Int
-      log: Num -> Num
-      log10: Num -> Num
-      log1p: Num -> Num
-      log2: Num -> Num
+      imul(_: Num, _: Num): Int
+      log(_: Num): Num
+      log10(_: Num): Num
+      log1p(_: Num): Num
+      log2(_: Num): Num
       max(...values): Num
       min(...values): Num
-      pow: (Num, Num) -> Num
-      random: () -> Num
-      round: Num -> Num
-      sign: Num -> (-1 | 0 | 1)
-      sin: Num -> Num
-      sinh: Num -> Num
-      sqrt: Num -> Num
-      tan: Num -> Num
-      tanh: Num -> Num
-      trunc: Num -> Num
+      pow(base: Num, exponent: Num): Num
+      random(): Num
+      round(_: Num): Num
+      sign(_: Num): (-1 | 0 | 1)
+      sin(_: Num): Num
+      sinh(_: Num): Num
+      sqrt(_: Num): Num
+      tan(_: Num): Num
+      tanh(_: Num): Num
+      trunc(_: Num): Num
 }
 
 declare module Reflect {
   // Prototype objects may expose arbitrary host properties.
   fun getPrototypeOf(target): dyn
   fun
-    get
-    id"set"
-    has
-    ownKeys
-    apply
-    construct
+    get(target, key, receiver?)
+    id"set"(target, key, value, receiver?)
+    has(target, key)
+    ownKeys(target)
+    apply(target, receiver, args)
+    construct(target, args, newTarget?)
 }
 
 declare module console {
   declare
     fun
-      log
-      debug
-      info
-      warn
-      error
+      log(...args)
+      debug(...args)
+      info(...args)
+      warn(...args)
+      error(...args)
       // assert
-      clear
-      count
-      countReset
-      dir
-      dirxml
-      group
-      groupCollapsed
-      groupEnd
-      table
-      time
-      timeEnd
-      trace
+      clear()
+      count(label?)
+      countReset(label?)
+      dir(item?, options?)
+      dirxml(...args)
+      group(...args)
+      groupCollapsed(...args)
+      groupEnd()
+      table(items?, columns?)
+      time(label?)
+      timeEnd(label?)
+      trace(...args)
 }
 
 declare module process {
@@ -442,13 +442,13 @@ declare object WebAssembly {
   }
   declare module Module {
     fun
-      exports
-      imports
+      exports(moduleObject)
+      imports(moduleObject)
   }
 
   fun
-    instantiate
-    validate
+    instantiate(source, importObject?, compileOptions?)
+    validate(bytes, compileOptions?)
 }
 
 // declare fun typeof: (Any) -> Str
@@ -471,11 +471,11 @@ declare module unsafe {
 
 declare module js {
   fun
-    bitand
-    bitnot
-    bitor
-    shl
-    try_catch
+    bitand(lhs, rhs)
+    bitnot(value)
+    bitor(lhs, rhs)
+    shl(value, shift)
+  fun try_catch(computation, onError)
   object plainField
 }
 
@@ -570,24 +570,24 @@ declare module wasm {
       get_u(i: Int31): Int32
   }
   fun
-    plus_impl
-    minus_impl
-    times_impl
-    div_impl
-    mod_impl
-    eq_impl
-    neq_impl
-    lt_impl
-    le_impl
-    gt_impl
-    ge_impl
-    neg_impl
-    pos_impl
-    not_impl
+    plus_impl(lhs, rhs)
+    minus_impl(lhs, rhs)
+    times_impl(lhs, rhs)
+    div_impl(lhs, rhs)
+    mod_impl(lhs, rhs)
+    eq_impl(lhs, rhs)
+    neq_impl(lhs, rhs)
+    lt_impl(lhs, rhs)
+    le_impl(lhs, rhs)
+    gt_impl(lhs, rhs)
+    ge_impl(lhs, rhs)
+    neg_impl(value)
+    pos_impl(value)
+    not_impl(value)
 }
 
 declare module debug {
-  fun printStack
+  fun printStack(showLocals)
 }
 
 declare module annotations {
@@ -616,8 +616,8 @@ declare module scope {
 
 declare module runtime {
   fun
-    suspend
-    handle_suspension
+    suspend(tag, handlerFun)
+    handle_suspension(tag, bodyFun)
 }
 
 

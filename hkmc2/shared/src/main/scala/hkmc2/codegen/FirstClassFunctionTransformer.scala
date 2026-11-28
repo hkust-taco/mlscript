@@ -27,13 +27,18 @@ class FirstClassFunctionTransformer
       syntax.Tree.Ident("Function$")
     )
     val defSym = new BlockMemberSymbol("Function$", Nil, false)
-    val forwarding = OptionalParams.forwarding(params, fixedArity = false)
+    // The wrapper and the wrapped function each bind their own parameters. Refresh the symbols
+    // before building forwarding arguments so each read refers to the wrapper's binding.
+    val bindings = collection.mutable.Map.empty[Symbol, Symbol]
+    new SymbolRefresherWalker(bindings).refreshParamList(params)
+    val wrapperParams = new SymbolMapTransformer(bindings).applyParamList(params)
+    val forwarding = OptionalParams.forwarding(wrapperParams, fixedArity = false)
     val callDef = FunDefn.withFreshSymbol(Some(clsSym), new BlockMemberSymbol("call", Nil, true), forwarding.params :: Nil, N,
-      Return(Call(p, forwarding.args ne_:: Nil)(CallMetadata.defaultMlsFun, N)))(N, annotations = Nil)
+      Return(Call.of(p, forwarding.args :: Nil)(CallMetadata.defaultMlsFun, N)))(N, annotations = Nil)
     ClsLikeDefn(None, clsSym, defSym, None, syntax.Cls, None, Nil,
       Some(State.globalThisSymbol.asThis.sel(ctx.builtins.Function)),
       callDef :: Nil, Nil, Nil, Assign.discard(
-        Call(State.builtinOpsMap("super").asSimpleRef, Nil ne_:: Nil)(CallMetadata.defaultFun, N),
+        Call.of(State.builtinOpsMap("super").asSimpleRef, Nil :: Nil)(CallMetadata.defaultFun, N),
         End()), End(), None, None, None, methodKeys = Map.empty)(N, annotations = Nil)
 
   private def getParamList(l: BlockMemberSymbol): Option[LoweredParamList] = funDefns.get(l) match
@@ -98,28 +103,27 @@ class FirstClassFunctionTransformer
     if s.k is syntax.Fun then fun else fun.selSN("call")
 
   override def applyResult(r: Result)(k: Result => Block): Block = r match
+    // * A member read applies nothing, so its selection is not a function object.
+    case Call(_, Nil) => super.applyResult(r)(k)
     case c @ Call(fun, argss) => applyListOf(argss, (args, k2) => applyArgs(args)(k2)): argss2 =>
-      def call(f: Path) =
-        if (f is fun) && (argss is argss2)
-        then c
-        else Call(f, argss2.ne_!)(c.metadata, c.toLoc)
+      def call(f: Path): Block = FirstClassFunctionTransformer.bindCall(c, f, argss2)(k)
       fun match
         case ref @ Value.SimpleRef(sym) => sym match
-          case _: VarSymbol |  _: TempSymbol => k(call(ref.selSN("call")))
-          case _ => k(call(fun))
-        case ref @ Value.MemberRef(_, _) => k(call(fun))
+          case _: VarSymbol |  _: TempSymbol => call(ref.selSN("call"))
+          case _ => call(fun)
+        case ref @ Value.MemberRef(_, _) => call(fun)
         case sel: Select => sel.symbol match
-          case Some(s: TermSymbol) => k(call(resolvedCallee(fun, s)))
+          case Some(s: TermSymbol) => call(resolvedCallee(fun, s))
           case _ =>
             raise(ErrorReport(msg"Cannot determine if ${sel.name.name} is a function object." -> fun.toLoc :: Nil,
                 source = Diagnostic.Source.Compilation))
-            k(call(fun))
-        case DynSelect(_, _, DynSelectKind.Member(s)) => k(call(resolvedCallee(fun, s)))
+            call(fun)
+        case DynSelect(_, _, DynSelectKind.Member(s)) => call(resolvedCallee(fun, s))
         case s: DynSelect =>
           raise(ErrorReport(msg"Cannot determine if the dynamic selection is a function object." -> s.toLoc :: Nil,
               source = Diagnostic.Source.Compilation))
-          k(call(fun))
-        case _ => k(call(fun))
+          call(fun)
+        case _ => call(fun)
     case _: Lambda => lastWords("Lambda functions should be rewritten into function definitions first.")
     case _ => super.applyResult(r)(k)
   
@@ -143,3 +147,58 @@ class FirstClassFunctionTransformer
     val desugared = new DesugarMultipleParamList().applyBlock(b)
     new CollectFunDefns().applyBlock(desugared)
     applyBlock(desugared)
+
+object FirstClassFunctionTransformer:
+  /** Binds every call in `block` to the signature that its callee publishes (see [[bindCall]]).
+    *
+    * Lowering groups the argument lists of a call by the parameter lists written for its callee, which staged
+    * code also reflects. The pipeline runs this pass after staging, so that optimizers and backends see calls
+    * that follow the conventions of the completed IR definitions, including imported ones.
+    */
+  def bindCalls(block: Block)(using State): Block =
+    new BlockTransformer(SymbolSubst.Id):
+      override def applyResult(r: Result)(k: Result => Block): Block = r match
+        case c: Call => bindCall(c, c.fun, c.argss)(k)
+        case _ => super.applyResult(r)(k)
+    .applyBlock(block)
+  
+  /** Passes to `k` the call `c`, with `fun` as its callee and `argss` as its argument lists, under the signature
+    * that `fun` publishes. A callee that publishes no signature keeps the signature of `c`.
+    *
+    * The function-object transform is the only pass that removes parameter lists from a definition that keeps its
+    * symbol: the definition retains its first list and returns a function object for the lists that follow. A
+    * callee that publishes fewer parameter lists than `argss` has was therefore transformed, in this compilation
+    * unit or in the one that defines it. The call then applies the first list, and each later list applies the
+    * `call` method of the object that the previous call returned (see [[applyCurried]]).
+    */
+  def bindCall(c: Call, fun: Path, argss: Ls[Ls[Arg]])(k: Result => Block)(using State): Block =
+    Call.publishedSignature(fun).getOrElse(c.signature) match
+      case entry: ErasedFuncSignature if argss.sizeCompare(entry.paramListCount) > 0 =>
+        applyCurried(c, fun, argss, entry)(k)
+      case target =>
+        k(if (fun is c.fun) && (argss is c.argss) && (target is c.signature) then c
+          else Call(fun, argss)(target, c.metadata, c.toLoc))
+  
+  /** Applies `argss` to `fun`, a definition converted to function objects, whose signature `entry` has a single
+    * parameter list. The signature of `c`, which groups the lists as the source definition does, supplies the
+    * parameter and result types of the `call` methods.
+    */
+  private def applyCurried(c: Call, fun: Path, argss: Ls[Ls[Arg]], entry: ErasedFuncSignature)
+        (k: Result => Block)(using State): Block =
+    assert(entry.paramListCount == 1, "A definition converted to function objects takes one parameter list")
+    val source = c.signature match
+      case s: ErasedFuncSignature => s
+      case _ => lastWords("A curried application needs a function signature")
+    def applyLists(callee: Path, signature: ErasedFuncSignature, lists: Ls[Ls[Arg]],
+          remainingParams: Ls[ErasedParamList[ErasedValueType]]): Block = lists match
+      case args :: Nil => k(Call(callee, args :: Nil)(signature, c.metadata, c.toLoc))
+      case args :: rest =>
+        val prefix = Call(callee, args :: Nil)(signature, c.metadata.copy(annotations = Nil), c.toLoc)
+        val tmp = TempSymbol(N, initErasedType = prefix.erasedType, "callPrefix")
+        val result = if remainingParams.tail.isEmpty then source.result
+          else ErasedResult.Direct(S(ErasedType.Function(S(false))))
+        val next = ErasedFuncSignature.Signature(remainingParams.head :: Nil, result)
+        Scoped(Set.single(tmp), Assign(tmp, prefix,
+          applyLists(tmp.asSimpleRef.selSN("call"), next, rest, remainingParams.tail)))
+      case Nil => lastWords("A curried application needs an argument list")
+    applyLists(fun, entry, argss, source.paramLists.tail)

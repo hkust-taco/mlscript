@@ -139,7 +139,7 @@ wideOf(2)
 //│         continue loopLabel
 //│       2 =>
 //│         let scrut: Unknown, w: Wide⁰, tmp: Int⁰;
-//│         set scrut = <=⁰(param0, 0);
+//│         set scrut = <=⁰‹(?, ?) => Bool⁰›(param0, 0);
 //│         match scrut
 //│           true =>
 //│             let exitResult: Wide⁰;
@@ -156,7 +156,7 @@ wideOf(2)
 //│                 return exitResult
 //│             end
 //│           else
-//│             set tmp = -⁰(param0, 1);
+//│             set tmp = -⁰‹(?, ?) => ?›(param0, 1);
 //│             set param0 = tmp;
 //│             set id = 0;
 //│             continue loopLabel
@@ -168,15 +168,15 @@ wideOf(2)
 //│ };
 //│ @inline
 //│ define tipOf⁰ as fun tipOf¹(n: Int⁰): Tip⁰ {
-//│   return (tipOf_midOf_wideOf⁰(0, n) as! Tip⁰)
+//│   return (tipOf_midOf_wideOf⁰‹(Int⁰, ?) => Wide⁰›(0, n) as! Tip⁰)
 //│ };
 //│ @inline
 //│ define midOf⁰ as fun midOf¹(n: Int⁰): Middle⁰ {
-//│   return (tipOf_midOf_wideOf⁰(1, n) as! Middle⁰)
+//│   return (tipOf_midOf_wideOf⁰‹(Int⁰, ?) => Wide⁰›(1, n) as! Middle⁰)
 //│ };
 //│ @inline
 //│ define wideOf⁰ as fun wideOf¹(n: Int⁰): Wide⁰ {
-//│   return tipOf_midOf_wideOf⁰(2, n)
+//│   return tipOf_midOf_wideOf⁰‹(Int⁰, ?) => Wide⁰›(2, n)
 //│ };
 //│ define Wide¹ as class Wide⁰ {
 //│   constructor Wide²
@@ -185,7 +185,7 @@ wideOf(2)
 //│   constructor Middle²
 //│ };
 //│ define Tip¹ as class Tip⁰ extends Middle⁰ { constructor Tip² };
-//│ return wideOf¹(2)
+//│ return wideOf¹‹(Int⁰) => Wide⁰›(2)
 //│ Wasm result:
 //│ = {}
 

@@ -530,6 +530,7 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
       case term @ App(lhs, rhs) =>
         val copy = App(lhs.cloned, rhs.cloned)(term.tree, term.typ, term.resSym)
         copy.callableTargets.shapes.copyFrom(term.callableTargets.shapes)
+        if term.calleeSlot.isErasureReady then copy.calleeSlot.callee = term.calleeSlot.callee.mapTypes(valueType)
         copyResolution(term, copy)
       case term @ TyApp(lhs, targs) => copyResolution(term, TyApp(lhs.cloned, targs.map(_.cloned))(term.typ))
       case term @ Sel(prefix, nme) => copySelection(term, Sel(prefix.cloned, nme)(term.sym.map(_.subst), term.resSym, term.typ, term.originalCtx))

@@ -7,7 +7,7 @@ while false do ???
 :ssjs
 while false then ()
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ lbl1: while (true) { if (false === true) { continue lbl1 } break; } block$res2 = runtime.Unit;
+//│ lbl: while (true) { if (false === true) { continue lbl } break; } block$res2 = runtime.Unit;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 () => while true then ()
@@ -49,29 +49,20 @@ fun f = while x
   else return 42 // TODO: support `break` here
 f
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f, inlinedVal;
+//│ let f;
 //│ f = function f() {
-//│   lbl4: while (true) {
-//│     if (x2 === true) {
+//│   lbl3: while (true) {
+//│     let tmp;
+//│     tmp = x2;
+//│     if (tmp === true) {
 //│       Predef.print("Hello World");
 //│       x2 = false;
-//│       continue lbl4
+//│       continue lbl3
 //│     }
 //│     return 42;
 //│   }
 //│ };
-//│ inlinedLbl: {
-//│   lbl4: while (true) {
-//│     if (x2 === true) {
-//│       Predef.print("Hello World");
-//│       x2 = false;
-//│       continue lbl4
-//│     }
-//│     inlinedVal = 42;
-//│     break inlinedLbl;
-//│   }
-//│ }
-//│ return inlinedVal
+//│ return f()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > Hello World
 //│ = 42
@@ -205,14 +196,14 @@ fun f(ls) =
 //│ f6 = function f(ls) {
 //│   let ls1;
 //│   ls1 = ls;
-//│   lbl9: while (true) {
+//│   lbl5: while (true) {
 //│     let arg$Cons$0$, arg$Cons$1$;
 //│     if (ls1 instanceof Cons1.class) {
 //│       arg$Cons$0$ = ls1.hd;
 //│       arg$Cons$1$ = ls1.tl;
 //│       ls1 = arg$Cons$1$;
 //│       Predef.print(arg$Cons$0$);
-//│       continue lbl9
+//│       continue lbl5
 //│     }
 //│     break;
 //│   }
@@ -256,8 +247,10 @@ let x = 1
 :sjs
 while x is {} do()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ lbl11: while (true) {
-//│   if (x3 instanceof globalThis.Object) { continue lbl11 }
+//│ lbl7: while (true) {
+//│   let tmp11;
+//│   tmp11 = x3;
+//│   if (tmp11 instanceof globalThis.Object) { continue lbl7 }
 //│   break;
 //│ }
 //│ return runtime.Unit

@@ -1,0 +1,282 @@
+:.
+:noInline
+:flowBasedOpt off
+
+
+// The nested positions of the IR only contain stable paths, which yield the same value wherever they are
+// evaluated: the arguments and callees of calls, operands, the prefixes and keys of selections, and the elements
+// of tuples and records. Lowering reads the other paths into temporaries where the source program evaluates
+// them, so subexpressions are evaluated from left to right.
+// See https://github.com/hkust-taco/mlscript/issues/571
+
+
+let counter = 0
+fun bump() =
+  set counter += 1
+  counter
+class Reader with
+  fun next = bump()
+let reader = new Reader
+//│ counter = 0
+//│ reader = Reader
+
+
+// The left operand of an operator is a variable that the right operand assigns.
+:sir
+:expect [true, false]
+set counter = 0
+[counter < bump(), counter === bump()]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
+//│ set counter⁰ = 0;
+//│ set tmp = counter⁰;
+//│ set tmp1 = bump⁰();
+//│ set tmp2 = <⁰(tmp, tmp1);
+//│ set tmp3 = counter⁰;
+//│ set tmp4 = bump⁰();
+//│ set tmp5 = ===⁰(tmp3, tmp4);
+//│ return [tmp2, tmp5]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [true, false]
+
+// Reading a getter runs code, like a call.
+:expect 1
+set counter = 0
+counter + reader.next
+//│ = 1
+
+// Each operator reads its own left operand before its right operand runs.
+:expect 4
+set counter = 0
+counter + (bump() + counter) + bump()
+//│ = 4
+
+// A variable that the program never assigns is stable, like a parameter and a temporary. Reading it needs no
+// temporary of its own.
+:sir
+:expect 8
+fun stableOperands(a, b) =
+  let total = a + b
+  total * 2 + (a + bump())
+set counter = 0
+stableOperands(1, 2)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define stableOperands⁰ as fun stableOperands¹(a, b) {
+//│   let total, tmp, tmp1, tmp2;
+//│   set total = +⁰(a, b);
+//│   set tmp = *⁰(total, 2);
+//│   set tmp1 = bump⁰();
+//│   set tmp2 = +⁰(a, tmp1);
+//│   return +⁰(tmp, tmp2)
+//│ };
+//│ set counter⁰ = 0;
+//│ return stableOperands¹(1, 2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 8
+
+// A variable that a nested function assigns is read where the source program evaluates it.
+fun first(x)(y) = x
+
+:sir
+:expect 1
+fun partial() =
+  let y = 1
+  fun update() =
+    set y = 2
+  let p = first(y)
+  update()
+  p(0)
+partial()
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define partial⁰ as fun partial¹() {
+//│   let update, y, p, tmp;
+//│   define update as fun update⁰() {
+//│     set y = 2;
+//│     return runtime⁰.Unit⁰
+//│   };
+//│   set y = 1;
+//│   set tmp = y;
+//│   set p = first⁰(tmp);
+//│   do update⁰();
+//│   return (p(0) as! Int⁰)
+//│ };
+//│ return partial¹()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1
+
+// A right operand that returns never reaches the operation.
+:sir
+:expect [5, 2]
+fun earlyReturn(a) =
+  let total = a
+  set total = total + 1
+  total + (if a > 0 then return 5 else bump())
+set counter = 0
+[earlyReturn(1), earlyReturn(0)]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp, tmp1;
+//│ define earlyReturn⁰ as fun earlyReturn¹(a) {
+//│   let total, scrut, tmp2, tmp3, tmp4, tmp5;
+//│   set total = a;
+//│   set tmp2 = total;
+//│   set tmp3 = +⁰(tmp2, 1);
+//│   set total = tmp3;
+//│   set tmp4 = total;
+//│   set scrut = >⁰(a, 0);
+//│   match scrut
+//│     true =>
+//│       return 5
+//│     else
+//│       set tmp5 = bump⁰();
+//│       return +⁰(tmp4, tmp5)
+//│   end
+//│ };
+//│ set counter⁰ = 0;
+//│ set tmp = earlyReturn¹(1);
+//│ set tmp1 = earlyReturn¹(0);
+//│ return [tmp, tmp1]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [5, 2]
+
+
+// A mutable field is read before the operands that follow it.
+class Cell(mut val x: Int)
+fun update(cell: Cell) =
+  set cell.x = 3
+  cell
+
+:sir
+:expect 7
+let cell = new Cell(4)
+cell.x + update(cell).x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp, tmp1, tmp2;
+//│ set cell⁰ = new Cell⁰(4);
+//│ set tmp = cell⁰.x⁰;
+//│ set tmp1 = update¹(cell⁰);
+//│ set tmp2 = tmp1.x⁰;
+//│ return +⁰(tmp, tmp2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 7
+//│ cell = Cell(3)
+
+
+// The callee of a call is read before its arguments.
+let callee = x => "old"
+fun swapCallee() =
+  set callee = x => "new"
+  0
+//│ callee = fun callee
+
+:sir
+:expect "old"
+callee(swapCallee())
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp, tmp1; set tmp = callee⁰; set tmp1 = swapCallee⁰(); return tmp(tmp1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = "old"
+
+// The receiver of a method call is read before the arguments.
+class Holder with
+  mut val text: Str = "ab"
+let holder = new mut Holder
+fun replaceText() =
+  set holder.text = "xyz"
+  0
+//│ holder = Holder
+
+:sir
+:expect "a"
+holder.text.charAt(replaceText())
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp, tmp1, tmp2;
+//│ set tmp = holder⁰;
+//│ set tmp1 = tmp.text⁰;
+//│ set tmp2 = replaceText⁰();
+//│ return tmp1.charAt⁰(tmp2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = "a"
+
+// The array of a dynamic selection is read before the index.
+let items = mut [10, 20]
+let others = mut [30, 40]
+fun swapItems() =
+  set items = others
+  1
+//│ items = [10, 20]
+//│ others = [30, 40]
+
+:expect 20
+items.[swapItems()]
+//│ = 20
+
+// The target of an assignment is read before the assigned value.
+let targets = mut [10, 20]
+let spares = mut [30, 40]
+fun swapTargets() =
+  set targets = spares
+  1
+//│ spares = [30, 40]
+//│ targets = [10, 20]
+
+:expect [30, 40]
+set targets.[swapTargets()] = 99
+spares
+//│ = [30, 40]
+
+// A field that holds a function is a value like any other: when it can change, it is read before the arguments.
+class Dispatcher with
+  mut val handle: Int -> Str = n => "old"
+let dispatcher = new mut Dispatcher
+fun swapHandler() =
+  set dispatcher.handle = n => "new"
+  0
+//│ dispatcher = Dispatcher
+
+:sir
+:expect "old"
+dispatcher.handle(swapHandler())
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp, tmp1, tmp2;
+//│ set tmp = dispatcher⁰;
+//│ set tmp1 = tmp.handle⁰;
+//│ set tmp2 = swapHandler⁰();
+//│ return tmp1(tmp2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = "old"
+
+// A member that resolution did not identify can be a method of a foreign object, which needs its receiver.
+// Its selection stays on the call, which reads the member after the arguments.
+:sjs
+:expect "b"
+fun foreign(target: dyn) = target.charAt(1)
+foreign("abc")
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let foreign;
+//│ foreign = function foreign(target) {
+//│   return runtime.safeCall(target.charAt(1))
+//│ };
+//│ return foreign("abc")
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = "b"
+
+
+// Any worksheet block can assign the top-level variables of the others. Such a variable is only stable in
+// the top-level code of the block that declares it.
+let shared = 1
+fun bumpShared() =
+  set shared = shared + 1
+  0
+//│ shared = 1
+
+:sir
+:expect 1
+shared + bumpShared()
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp, tmp1; set tmp = shared⁰; set tmp1 = bumpShared⁰(); return +⁰(tmp, tmp1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1
+
+:expect 2
+shared
+//│ = 2

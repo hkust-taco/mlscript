@@ -55,13 +55,15 @@ data class Baz(z) extends Bar(z * 1) with
 //│     Baz1.class = this
 //│   }
 //│   constructor(z) {
-//│     let tmp;
-//│     tmp = z * 1;
-//│     super(tmp);
+//│     let tmp7;
+//│     tmp7 = z * 1;
+//│     super(tmp7);
 //│     this.z = z;
 //│   }
 //│   get baz() {
-//│     return this.bar * 2;
+//│     let tmp7;
+//│     tmp7 = this.bar;
+//│     return tmp7 * 2;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Baz", ["z"]];

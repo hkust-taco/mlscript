@@ -36,12 +36,28 @@ js.try_catch
 //│ ╙──      	^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
+:e
 :re
 js.try_catch()
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+1: 	js.try_catch()
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── Function 'try_catch' expected 2 arguments, but got 0
+//│ ║  in ../decls/Prelude.mls
+//│ ║  l.XX: 	  fun try_catch(computation, onError)
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: onError is not a function
 
+:e
 :re
 js.try_catch(0)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+1: 	js.try_catch(0)
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ╟── Function 'try_catch' expected 2 arguments, but got 1
+//│ ║  in ../decls/Prelude.mls
+//│ ║  l.XX: 	  fun try_catch(computation, onError)
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: onError is not a function
 
 js.try_catch(0, id)

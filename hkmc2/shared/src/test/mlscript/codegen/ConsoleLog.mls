@@ -16,8 +16,11 @@ console.log("a")
 console.log("b")
 123
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ runtime.safeCall(globalThis.console.log("a"));
-//│ runtime.safeCall(globalThis.console.log("b"));
+//│ let tmp, tmp1;
+//│ tmp = globalThis.console;
+//│ runtime.safeCall(tmp.log("a"));
+//│ tmp1 = globalThis.console;
+//│ runtime.safeCall(tmp1.log("b"));
 //│ return 123
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > a
@@ -27,7 +30,7 @@ console.log("b")
 let l = console.log
 l(123)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let l; l = globalThis.console.log; return runtime.safeCall(globalThis.console.log(123))
+//│ let l, tmp2; tmp2 = globalThis.console; l = tmp2.log; return runtime.safeCall(tmp2.log(123))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 123
 //│ l = fun log
@@ -41,7 +44,7 @@ l(123)
 
 console.log("a")
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return runtime.safeCall(globalThis.console.log("a"))
+//│ let tmp3; tmp3 = globalThis.console; return runtime.safeCall(tmp3.log("a"))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > a
 
@@ -54,12 +57,15 @@ let y = x + 1
 console.log("c")
 y * 2
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let x, y;
-//│ runtime.safeCall(globalThis.console.log("a"));
+//│ let x, y, tmp4, tmp5, tmp6;
+//│ tmp4 = globalThis.console;
+//│ runtime.safeCall(tmp4.log("a"));
 //│ x = 123;
-//│ runtime.safeCall(globalThis.console.log("b"));
+//│ tmp5 = globalThis.console;
+//│ runtime.safeCall(tmp5.log("b"));
 //│ y = 124;
-//│ runtime.safeCall(globalThis.console.log("c"));
+//│ tmp6 = globalThis.console;
+//│ runtime.safeCall(tmp6.log("c"));
 //│ return 248
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > a

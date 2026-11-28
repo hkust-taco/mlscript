@@ -396,18 +396,29 @@ scope.locally of {
 //│ let A, B, lambda;
 //│ define A as class A³
 //│ module A⁴ {
+//│   method foo$tailrec⁰ = fun foo$tailrec¹() {
+//│     loop loopLabel:
+//│       continue loopLabel
+//│     unreachable /* Rest of abortive labelled block */
+//│   }
 //│   method foo² = fun foo³ {
-//│     return A⁴.foo³
+//│     return A⁴.this.foo$tailrec¹()
 //│   }
 //│ };
 //│ define B as class B⁰
 //│ module B¹ {
 //│   method bar⁰ = fun bar¹() {
-//│     return A⁴.foo³
+//│     loop loopLabel:
+//│       continue loopLabel
+//│     unreachable /* Rest of abortive labelled block */
 //│   }
 //│ };
 //│ @private
-//│ define lambda as fun lambda⁰() { return A⁴.foo³ };
+//│ define lambda as fun lambda⁰() {
+//│   loop loopLabel:
+//│     continue loopLabel
+//│   unreachable /* Rest of abortive labelled block */
+//│ };
 //│ return lambda⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun

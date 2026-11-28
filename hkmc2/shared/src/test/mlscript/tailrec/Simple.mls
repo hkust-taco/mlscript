@@ -10,13 +10,29 @@ fun f = f
 //│ let f; f = function f() { loopLabel: while (true) { continue loopLabel; } };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
-:fixme
+// * A member getter reads itself through a call, which is optimized like the nullary function above.
+:sjs
 module Foo with
   @tailrec
   fun bar = bar
-//│ ╔══[WARNING] This function is marked @tailrec but has no direct self-recursion.
-//│ ║  l.+3: 	  fun bar = bar
-//│ ╙──      	      ^^^
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let Foo1;
+//│ (class Foo {
+//│   static {
+//│     Foo1 = this
+//│   }
+//│   static #bar$tailrec() {
+//│     loopLabel: while (true) {
+//│       continue loopLabel;
+//│     }
+//│   }
+//│   static get bar() {
+//│     return Foo.#bar$tailrec();
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo"];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 @tailrec
 fun f() = f()

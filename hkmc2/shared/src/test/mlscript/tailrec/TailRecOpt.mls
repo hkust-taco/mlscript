@@ -173,13 +173,14 @@ fun g(n) =
 //│             return (param5 as! Array⁰)
 //│         end
 //│       1 =>
-//│         let tmp, tmp1, tmp2, argList, inlinedVal, tmp3;
+//│         let tmp, tmp1, tmp2, argList, inlinedVal, tmp3, tmp4;
 //│         set tmp = [1, 2];
 //│         set tmp1 = [3, 4];
 //│         set tmp2 = [5, param0];
 //│         set argList = [param0, ...tmp, 3, ...tmp1, ...tmp2, 7, param0];
-//│         set tmp3 = -¹(argList.length⁰, 0);
-//│         set inlinedVal = argList.slice⁰(5, tmp3);
+//│         set tmp3 = argList.length⁰;
+//│         set tmp4 = -¹(tmp3, 0);
+//│         set inlinedVal = argList.slice⁰(5, tmp4);
 //│         set param0 = argList.0;
 //│         do argList.1;
 //│         do argList.2;
@@ -470,10 +471,10 @@ typedSpread(0, 1, 2, 3, 4)
 //│         return a
 //│       Array(1+) =>
 //│         let argList: Array⁰, optionalArg: Unknown, sliceRes: Array⁰;
-//│         do runtime⁰.Tuple⁰.get⁰(z, 0);
-//│         set middleElements = runtime⁰.Tuple⁰.slice¹(z, 1, 0);
+//│         do runtime⁰.Tuple⁰.get⁰‹(Unknown, Int⁰) => Unknown›(z, 0);
+//│         set middleElements = runtime⁰.Tuple⁰.slice¹‹(Unknown, Int⁰, Int⁰) => Unknown›(z, 1, 0);
 //│         set xs = (middleElements as! Array⁰);
-//│         set tmp = +⁰(a, 1);
+//│         set tmp = +⁰‹(?, ?) => ?›(a, 1);
 //│         set tmp1 = [tmp, b, ...xs];
 //│         set argList = [...tmp1];
 //│         match argList
@@ -483,7 +484,7 @@ typedSpread(0, 1, 2, 3, 4)
 //│           else
 //│             set optionalArg = null;
 //│             end
-//│         set sliceRes = runtime⁰.Tuple⁰.sliceArray⁰(argList, 2, 0);
+//│         set sliceRes = runtime⁰.Tuple⁰.sliceArray⁰‹(Array⁰, Int⁰, Int⁰) => Array⁰›(argList, 2, 0);
 //│         set a = (argList.0 as! Int⁰);
 //│         set b = optionalArg;
 //│         set z = sliceRes;
@@ -493,6 +494,6 @@ typedSpread(0, 1, 2, 3, 4)
 //│     end
 //│   unreachable /* Rest of abortive labelled block */
 //│ };
-//│ return typedSpread¹(0, 1, 2, 3, 4)
+//│ return typedSpread¹‹(Int⁰, Unknown, ...Array⁰) => Int⁰›(0, 1, 2, 3, 4)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3

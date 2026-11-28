@@ -12,3 +12,22 @@ class Element extends HTMLElement with
     this.attachShadow({mode: "open"})
     set this.shadowRoot.innerHTML = text
   }
+
+// Math.log is a unary method. Reading the function value and calling the method have distinct IR forms.
+:js
+:sir
+:siret
+:checkIR
+:expect [0, 1]
+let logarithm = Math.log
+[logarithm(1), Math.log(Math.E)]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: ?, tmp1: Num⁰, tmp2: Num⁰;
+//│ set logarithm⁰ = globalThis⁰.Math⁰.log⁰;
+//│ set tmp = logarithm⁰‹(...Array⁰) => ?›(1);
+//│ set tmp1 = globalThis⁰.Math⁰.E⁰;
+//│ set tmp2 = globalThis⁰.Math⁰.log⁰‹(Num⁰) => Num⁰›(tmp1);
+//│ return [tmp, tmp2]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [0, 1]
+//│ logarithm = fun log

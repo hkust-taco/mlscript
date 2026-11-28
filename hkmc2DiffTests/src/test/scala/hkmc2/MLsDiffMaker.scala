@@ -507,6 +507,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       import semantics.ShowCfg
       given ShowCfg = ShowCfg(
         showErasedTypes = showIRErasedTypes.isSet,
+        showCallSignatures = showIRErasedTypes.isSet,
         showExpansionMappings = true,
         showFlowSymbols = true,
         debug = debug.isSet,
@@ -546,6 +547,7 @@ abstract class MLsDiffMaker extends DiffMaker:
         import semantics.ShowCfg
         given ShowCfg = ShowCfg(
           showErasedTypes = showIRErasedTypes.isSet,
+          showCallSignatures = showIRErasedTypes.isSet,
           showExpansionMappings = true,
           showFlowSymbols = true,
           debug = debug.isSet,

@@ -55,3 +55,8 @@ object LoweredParamList:
       LoweredParamList(ps.flags, fixedPrefix(ps), S(Param.simple(args)))(ps.toLoc)
     case variadic =>
       LoweredParamList(ps.flags, ps.params, variadic.map(_.param))(ps.toLoc)
+  
+  /** The erased types of the `callingConvention` layout, without allocating its fresh rest parameter. */
+  def erasedLayout(ps: ParamList): ErasedParamList[ErasedValueType] = ps.variadic match
+    case S(Variadic(_, _ :: _)) => ErasedParamList(fixedPrefix(ps).map(_.sym.erasedType), S(S(ErasedType.Array)))
+    case variadic => ErasedParamList(ps.params.map(_.sym.erasedType), variadic.map(_.param.sym.erasedType))

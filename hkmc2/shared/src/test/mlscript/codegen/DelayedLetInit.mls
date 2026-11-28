@@ -14,7 +14,8 @@ let x
 
 print(x)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ block$res2 = runtime.checkCall(Predef.print(x));
+//│ let tmp;
+//│ tmp = x; block$res2 = runtime.checkCall(Predef.print(tmp));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > undefined
 

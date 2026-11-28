@@ -420,14 +420,14 @@ class BlockSimplifier
       case sym: ClassLikeSymbol => S(sym)
       case _ => N
   
-  def getCallCtorShape(path: Path, argss: NELs[Ls[Arg]]): Opt[ClassLikeSymbol] =
+  def getCallCtorShape(path: Path, argss: Ls[Ls[Arg]]): Opt[ClassLikeSymbol] =
     path.targetSymbol
       .collect:
         case ccs: ClassCtorSymbol => ccs.associatedCls
       .collect:
         case sym: ClassSymbol if isSaturatedClassCtorCall(sym, argss) => sym
   
-  def isSaturatedClassCtorCall(sym: ClassSymbol, argss: NELs[Ls[Arg]]): Bool =
+  def isSaturatedClassCtorCall(sym: ClassSymbol, argss: Ls[Ls[Arg]]): Bool =
     sym.irClsLikeDefn
     .fold(
         // FIXME: remove this case.
@@ -496,6 +496,11 @@ class BlockSimplifier
           super.applyLam(lam)
         
       end new
+      
+      // * A variable that the program neither scopes nor preserves belongs to another compilation unit, as the
+      // * top-level variables of the previous blocks of a worksheet do. The functions of that unit can read
+      // * and assign it during any call, like the definitions above for the variables they capture.
+      capturedVars ++= prog.main.freeVars.iterator.collect { case v: LocalVar if !symbolsToPreserve(v) => v }
       
       log(dbg"Captured variables: ${capturedVars}")
       
@@ -822,11 +827,15 @@ class BlockSimplifier
         lhs: LocalVar,
         path: Path,
         fun: LocalVar,
-        argss: NELs[Ls[Arg]],
+        argss: Ls[Ls[Arg]],
     ): Bool =
       !inDryRun && (fun is lhs) && !capturedVars(lhs)
         && !path.freeVars(lhs)
         && !argss.iterator.flatten.exists(_.value.freeVars(lhs))
+        // * A definition cannot be called with more argument lists than its signature has.
+        && Call.publishedSignature(path).forall:
+          case sig: ErasedFuncSignature => argss.sizeCompare(sig.paramLists) <= 0
+          case _: ErasedGetterSignature => true
 
     private def applyLocalAssignLhs(lhs: LocalVar): LocalVar =
       applyAssignLhs(lhs) match
@@ -873,7 +882,7 @@ class BlockSimplifier
           registerChange(s"immediate assigned call prefix ${lhs.showDbg} ~> ${path.showDbg}")
           applyPath(path): path2 =>
             val lhs2 = recordAssignmentFact(lhs, path2, ass)
-            val combined = Call(path2, argss)(call.metadata, call.toLoc)
+            val combined = call.rebuilt(path2, argss)
             val res = applyBlock(Assign(nextLhs, combined, rst))
             // * Note that it is incorrect to eliminate the `lhs` assignment even if `!rst.freeVars(lhs)`,
             // * because the assignment may be visible from an outer block
@@ -888,7 +897,7 @@ class BlockSimplifier
           registerChange(s"immediate returned call prefix ${lhs.showDbg} ~> ${path.showDbg}")
           applyPath(path): path2 =>
             val lhs2 = recordAssignmentFact(lhs, path2, ass)
-            val combined = Call(path2, argss)(call.metadata, call.toLoc)
+            val combined = call.rebuilt(path2, argss)
             val res = applyBlock(Return(combined))
             if symbolsToPreserve(lhs) then Assign(lhs2, path2, res) else res
 
@@ -1205,9 +1214,10 @@ class BlockSimplifier
       // * Try to combine pure calls (typically unsaturated calls) assigned to a variable into the current call
       case c @ Call(Value.SimpleRef(loc: LocalVar), argss) if !inDryRun && !capturedVars(loc) =>
         assignedPureCallPrefix(loc) match
-        case S(prefix) =>
+        // * The combined call must not apply more argument lists than the signature of the prefix's callee has.
+        case S(prefix) if (prefix.argss ::: argss).sizeCompare(prefix.signature.paramListCount) <= 0 =>
           registerChange(s"${loc.showDbg} call prefix ~> ${prefix.showDbg}")
-          val combined = Call(prefix.fun, (prefix.argss ::: argss).ne_!)(
+          val combined = Call(prefix.fun, prefix.argss ::: argss)(prefix.signature,
             CallMetadata(
               prefix.metadata.isMlsFun,
               prefix.metadata.mayRaiseEffects || c.metadata.mayRaiseEffects,
@@ -1215,7 +1225,7 @@ class BlockSimplifier
             ),
             c.toLoc)
           super.applyResult(combined)(k)
-        case N => super.applyResult(r)(k)
+        case _ => super.applyResult(r)(k)
       
       // * Remove uses of the strange builtin comma operator
       // * This is not implemented as a smart constructor (unlike usual constant folding)
@@ -1910,7 +1920,7 @@ class BlockSimplifier
         private def inlineCall(
             call: Call,
             callee: TermSymbol,
-            argss: NELs[Ls[Arg]],
+            argss: Ls[Ls[Arg]],
             thisMapping: => Ls[(InnerSymbol, Path)],
         )(k: Result => Block): Block =
           val info = m(callee)
@@ -1960,7 +1970,7 @@ class BlockSimplifier
                       acc(Scoped(Set.single(resSym), newBlk(k(resSym.asSimpleRef))))
                     else
                       acc(Scoped(Set(resSym), newBlk(
-                        k(Call(resSym.asSimpleRef, extraArgss.ne_!)(
+                        k(Call(resSym.asSimpleRef, extraArgss)(ErasedFuncSignature.dynamic(extraArgss.length),
                           call.metadata.copy(
                             annotations = call.metadata.annotations.filterNot(_.isInstanceOf[Annot.TailCall]),
                           ), call.toLoc)))))
@@ -1970,7 +1980,7 @@ class BlockSimplifier
                 go(receiverPrefix, matchedArgs, Map.empty)
         
         override def applyResult(r: Result)(k: Result => Block): Block = r match
-          case c @ Call(MethodCallQualifier(qual, ts), argss) if m.contains(ts) && argss.nonEmpty =>
+          case c @ Call(MethodCallQualifier(qual, ts), argss) if m.contains(ts) =>
             // `this.method()` calls inside constructors/methods are deliberately left alone:
             // inlining them can bypass runtime checks and resolve forward references too early.
             if qual.isInstanceOf[Value.This] then return super.applyResult(r)(k)
@@ -1980,7 +1990,7 @@ class BlockSimplifier
               case _ => Nil,
             )(k)
 
-          case c @ Call(TermSymbolPath(ts), argss) if m.contains(ts) && argss.nonEmpty =>
+          case c @ Call(TermSymbolPath(ts), argss) if m.contains(ts) =>
             inlineCall(c, ts, argss, Nil)(k)
           case _ => super.applyResult(r)(k)
       

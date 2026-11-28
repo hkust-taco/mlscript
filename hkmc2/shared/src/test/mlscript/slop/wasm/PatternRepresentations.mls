@@ -27,9 +27,9 @@ sum(Pair(const(40), const(2)))
 //│       set arg$Pair$1$ = p.snd⁰;
 //│       set b = arg$Pair$1$;
 //│       set a = arg$Pair$0$;
-//│       return wasm⁰.i32⁰.add⁰(a, b)
+//│       return wasm⁰.i32⁰.add⁰‹(Int32, Int32) => Int32›(a, b)
 //│     else
-//│       return wasm⁰.i32⁰.const⁰(0)
+//│       return wasm⁰.i32⁰.const⁰‹(Int⁰) => Int32›(0)
 //│   end
 //│ };
 //│ @private
@@ -42,10 +42,10 @@ sum(Pair(const(40), const(2)))
 //│     end
 //│   }
 //│ };
-//│ set tmp = wasm⁰.i32⁰.const⁰(40);
-//│ set tmp1 = wasm⁰.i32⁰.const⁰(2);
-//│ set tmp2 = Pair²(tmp, tmp1);
-//│ return sum¹(tmp2)
+//│ set tmp = wasm⁰.i32⁰.const⁰‹(Int⁰) => Int32›(40);
+//│ set tmp1 = wasm⁰.i32⁰.const⁰‹(Int⁰) => Int32›(2);
+//│ set tmp2 = Pair²‹(Int32, Int32) => Pair⁰›(tmp, tmp1);
+//│ return sum¹‹(Pair⁰) => Int32›(tmp2)
 //│ Wasm result:
 //│ = 42
 

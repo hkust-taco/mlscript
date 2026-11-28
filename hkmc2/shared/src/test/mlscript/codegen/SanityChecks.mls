@@ -218,7 +218,7 @@ unchecked(M.A(2)).y > 1
 // :ssjs
 :re
 unchecked(M.A(1)).g(0)
-//│ ═══[RUNTIME ERROR] TypeError: tmp8.g is not a function
+//│ ═══[RUNTIME ERROR] TypeError: tmp12.g is not a function
 
 
 
@@ -245,7 +245,11 @@ fun w(txt) =
   // ()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let w;
-//│ w = function w(txt) { return runtime.safeCall(globalThis.fs.writeFileSync(outFilePath, txt)) };
+//│ w = function w(txt) {
+//│   let tmp14;
+//│   tmp14 = globalThis.fs;
+//│   return runtime.safeCall(tmp14.writeFileSync(outFilePath, txt))
+//│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 w("whoops")

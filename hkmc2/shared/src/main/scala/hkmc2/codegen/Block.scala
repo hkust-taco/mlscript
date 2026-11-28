@@ -33,6 +33,22 @@ BufferableTransform and ReflectionInstrumenter temporarily wrap constructor bloc
 function-processing code. These wrappers do not appear as executable functions; any emitted function
 must satisfy the explicit-return invariant.
 
+Every evaluated selection of a known getter occurs as the callee of `Call(path, Nil)` with the getter's
+signature. To apply the function it returns, bind the read before evaluating the arguments, then call
+the bound function with its own signature. A `Case.Cls` for a virtual class holds `runtime.unreachable`
+as its class path. Backends use the class symbol and never read that getter.
+
+Lowering only puts stable paths in the nested positions of the IR: the arguments and callees of calls, operands,
+the prefixes and keys of selections, the elements of tuples and records, and the scrutinees of matches.
+A stable path yields the same value wherever the code that follows evaluates it (see `Lowering.isStable`).
+Lowering reads the other paths, such as the variables that the program assigns with `set` and mutable fields,
+into temporaries where the source program evaluates them, so the IR evaluates subexpressions in source order.
+There are two exceptions. A selection `p.m` in callee position stays on the call when `m` can be a method of a
+foreign object, which needs its receiver: a member that resolution did not identify, or a record field. The
+call reads `m` when it applies it, and only `p` is stable. The named fields of a record written as a block are
+variables of that block, which the record reads once the block has run. A pass that moves or duplicates a
+nested path must preserve the value that it yields.
+
 While the IR is mostly immutable, for easier manipulation and to enable some optimizations,
 we do assume that each DefinitionSymbol coming from the source program is "owned" by at most one IR definition;
 this is implemented by making the `Define` and `ClsLikeDefn` constructors
@@ -70,7 +86,10 @@ also disabled by default for performance reasons.
 case class Program(
   imports: Ls[ImportSymbol -> Str],
   main: Block,
-)
+):
+  def mapMain(f: Block => Block): Program =
+    val result = f(main)
+    if result is main then this else copy(main = result)
 
 
 /** Symbol that can be used in a `SimpleRef`. */
@@ -591,11 +610,11 @@ object HandleBlock:
 
   def suspend(tag: Path, handlerFun: Path)(using Elaborator.Ctx): Result =
     val bms = Elaborator.ctx.builtins.runtime.suspend
-    Call(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: handlerFun.asArg :: Nil) ne_:: Nil)(CallMetadata.mlsFunWithEffect, N)
+    Call.of(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: handlerFun.asArg :: Nil) ne_:: Nil)(CallMetadata.mlsFunWithEffect, N)
 
   def handleSuspension(tag: Path, bodyFun: Path)(using Elaborator.Ctx): Result =
     val bms = Elaborator.ctx.builtins.runtime.handle_suspension
-    Call(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: bodyFun.asArg :: Nil) ne_:: Nil)(CallMetadata.mlsFunWithEffect, N)
+    Call.of(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: bodyFun.asArg :: Nil) ne_:: Nil)(CallMetadata.mlsFunWithEffect, N)
   
   def optTailResumptive(resumeSym: VarSymbol, body: Block)(using Config): Opt[Block] =
     if !config.effectHandlers.exists(_.optTailResumptiveHandlers) then N
@@ -891,18 +910,25 @@ object FunDefn:
     erasure: ErasedCallableSignature,
   ):
     def result: ErasedResult[ErasedValueType] = erasure.result
+
+    /** A wrapper forwards the value seen by callers of the original function. Keep the published signature
+      * when the wrapper already has that result convention, so existing calls retain its identity. */
+    def forWrapper(annotations: Ls[Annot]): Signature =
+      val forwarded = ErasedResult.fromAnnotations(erasure.ret, annotations)
+      if forwarded == result then this else Signature.fromParams(params, forwarded)
   
   object Signature:
     def fromParams(params: Ls[LoweredParamList], result: ErasedResult[ErasedValueType]): Signature =
       val erasure = if params.isEmpty then ErasedGetterSignature.Signature(result)
-        else ErasedFuncSignature.Signature(params.map(_.params.map(_.sym.erasedType)), result)
+        else ErasedFuncSignature.Signature(params.map(ErasedParamList.of), result)
       Signature(params, erasure)
     
     private def matchesParams(erasure: ErasedCallableSignature, params: Ls[LoweredParamList])
         (sameType: (ErasedValueType, ErasedValueType) => Bool): Bool = erasure match
       case sig: ErasedFuncSignature =>
         sig.paramLists.corresponds(params): (types, ps) =>
-          types.corresponds(ps.params)((t, p) => t.corresponds(p.sym.erasedType)(sameType))
+          def sameSlot(t: Opt[ErasedValueType], p: Param) = t.corresponds(p.sym.erasedType)(sameType)
+          types.params.corresponds(ps.params)(sameSlot) && types.rest.corresponds(ps.restParam)(sameSlot)
       case _: ErasedGetterSignature => params.isEmpty
     
     /** Adopt the declaration header once, at the source-to-IR boundary. Legacy erasure may still
@@ -1180,6 +1206,8 @@ sealed abstract class Result extends Located:
       q.isPure && sel.symbol.exists(_.isAccessPure)
     case DynSelect(q, fld, DynSelectKind.Member(sym)) => q.isPure && fld.isPure && sym.isAccessPure
     case sel @ SuperSelect(q, base, key) => q.isPure && base.isPure && key.isPure && sel.symbol.isAccessPure
+    // * A member read is as pure as the selection it reads, which accounts for getters.
+    case Call(fun, Nil) => fun.isPure
     case c @ Call(fun, ass) if c.isKnownUnsaturatedCall =>
       fun.isPure && ass.forall(_.forall(a => a.spread.isEmpty && a.value.isPure))
     case Call(Value.SimpleRef(bs: BuiltinSymbol), ass) if bs.isPure =>
@@ -1233,60 +1261,45 @@ sealed abstract class Result extends Located:
     case Value.Lit(lit) => 0
     case DynSelect(qual, fld, _) => qual.size + fld.size
 
-  /** The erased type of the value produced by this result. */
+  /** The erased type of the value produced by this node, when the IR can supply one.
+    * `N` means the node supplies no value-type information. An unresolved property read, for example,
+    * can produce a value whose representation is unknown. A bare path to a known getter also has `N`
+    * because only the enclosing `Call(path, Nil)` evaluates the getter and carries its result type.
+    *
+    * A node known to use the general reference representation supplies `S(ErasedType.Unknown)`.
+    * [[erasedType_!]] also uses this top reference type as the fallback for `N`. [[ErasedType.Nothing]]
+    * is an explicit bottom type, as on the `undefined` literal.
+    */
   lazy val erasedType: Opt[ErasedValueType] = this match
     case Value.SimpleRef(sym) => sym match
       case l: LocalVarSymbol => l.erasedType
       case sym: BuiltinSymbol => S(sym.erasedType)
-    // * A reference to a class is the class *object* (a `Class`).
-    case Value.MemberRef(_, _: ClassSymbol) => N
-    case Value.MemberRef(_, disamb: ModuleOrObjectSymbol) => disamb.erasedType
-    case Value.MemberRef(bms, disamb: TypeAliasSymbol) =>
-      // * This is not supposed to happen, but could still be reached in ill-formed programs
-      N
-    // * A `val` or `fun` is a block *member*, so its references are `MemberRef`s rather than `SimpleRef`s, and
-    // * its declared type lives on the associated `TermSymbol` - the same shape `Select` reads below.
-    case Value.MemberRef(_, disamb: TermSymbol) => disamb.erasedType
+    // `SimpleRef` covers locals and builtins. A `val` or `fun` is a block member, so its unqualified
+    // references use `MemberRef`. Its declared type lives on the associated `TermSymbol`. A resolved
+    // selection such as `this.field` uses the same symbol to find the field's type.
+    case path @ (_: Value.MemberRef | _: Select | _: SuperSelect | _: DynSelect) => path.targetSymbol match
+      case S(term: TermSymbol) => term.bareReferenceType
+      case S(mod: ModuleOrObjectSymbol) => mod.erasedType
+      // A reference to a class denotes the class object (a `Class`). Class objects and pattern
+      // singletons have no nominal erased type of their own.
+      case S(_: ClassSymbol | _: PatternSymbol) => S(ErasedType.Unknown)
+      // Only an ill-formed program can refer to a type alias as a value. An unresolved
+      // selection (dynamic field access) has no member declaration to supply a type.
+      case S(_: TypeAliasSymbol) | N => N
     case Value.This(cls: ClassSymbol) => S(ErasedType.ValueLike(rsc = S(false), cls))
     case Value.This(mod: ModuleOrObjectSymbol) => mod.erasedType
-    case Value.Lit(_: Tree.IntLit) => S(ErasedType.Int)
-    case Value.Lit(_: Tree.DecLit) => S(ErasedType.Num)
-    case Value.Lit(_: Tree.StrLit) => S(ErasedType.Str)
-    case Value.Lit(_: Tree.BoolLit) => S(ErasedType.Bool)
-    case Value.Lit(Tree.UnitLit(false)) => S(ErasedType.Nothing)
-    // * `null` stays untyped; it does not denote a `Unit` value.
+    // A pattern receiver is its singleton. The host supplies the dynamic global receiver.
+    case Value.This(_: PatternSymbol | _: TopLevelSymbol) => S(ErasedType.Unknown)
+    case Value.Lit(lit) => S(ErasedType.ofLiteral(lit))
     // * WORKAROUND (see `semantics.BuiltinOperatorResults`): dynamic arithmetic signatures do not
     // * express operand-dependent results, which resolution approximates from their representations.
-    case Call(Value.SimpleRef(op: BuiltinSymbol), args :: Nil) if args.forall(_.spread.isEmpty) =>
-      ErasedType.builtinOperatorResult(op.nme, args.map(_.value)).orElse(op.erasedSignature.flatMap(_.ret))
-    case Call(fun, argss) =>
-      val signature = fun match
-        case Value.SimpleRef(bs: BuiltinSymbol) => bs.erasedSignature
-        case _ => fun.targetSymbol.flatMap:
-          case ts: TermSymbol => ts.erasedSignature
-          case _ => N
-      signature match
-        case S(sig) => argss.sizeCompare(sig.paramLists) match
-          // * An exactly-applied call yields the function's result type.
-          case 0 => sig.ret
-          // * An under-applied call yields a closure, not a residual definition signature.
-          case c if c < 0 => S(ErasedType.Function(rsc = S(false)))
-          // * An over-applied call applies arguments to whatever the function returns, which the function's
-          // * signature is oblivious about.
-          case _ => N
-        case N => N
-    // * A resolved selection has the type of the member it refers to (e.g. `this.field`); an
-    // * unresolved selection (dynamic field access) stays unknown.
-    case sel: SuperSelect => sel.symbol.erasedType
-    case DynSelect(_, _, DynSelectKind.Member(sym)) => sym.erasedType
-    case sel @ Select(_, _) => sel.symbol match
-      case S(ts: TermSymbol) => ts.erasedType
-      // * A class reference is the class object, so it stays unknown.
-      case S(_: ClassSymbol) => N
-      case S(d: ModuleOrObjectSymbol) => d.erasedType
-      // * A type alias is not a value; this can only occur in ill-formed programs.
-      case S(_: TypeAliasSymbol) => N
-      case _ => N
+    case c @ Call(Value.SimpleRef(op: BuiltinSymbol), args :: Nil) if args.forall(_.spread.isEmpty) =>
+      ErasedType.builtinOperatorResult(op.nme, args.map(_.value)).orElse(c.signature.ret)
+    // * An exactly-applied call yields the callee's result type, and an under-applied call yields a closure,
+    // * not a residual definition signature. A call never applies more lists than its signature has.
+    case c @ Call(fun, argss) =>
+      if argss.sizeCompare(c.signature.paramListCount) == 0 then c.signature.ret
+      else S(ErasedType.Function(rsc = S(false)))
     case Cast(_, target, _) => S(target)
     // * `Instantiate` always yields an instance of the class, since the constructor is guaranteed to be fully-applied
     // * after lowering.
@@ -1297,8 +1310,9 @@ sealed abstract class Result extends Located:
       clsSym.map(sym => ErasedType.ValueLike(rsc = S(false), sym))
     // A lazy spread calls Tuple.lazyConcat, which constructs a lazy collection.
     case tuple: Tuple => S(if tuple.hasLazySpread then ErasedType.Unknown else ErasedType.Array)
+    // The whole record has the same reference representation regardless of its fields.
+    case _: Record => S(ErasedType.Unknown)
     case _: Lambda => S(ErasedType.Function(rsc = S(false)))
-    case _ => N
 
   /** `undefined` is an unspecified value of any representation, including unboxed primitives.
     * The Cast smart constructor preserves the literal, whose Nothing type leaves the representation unconstrained.
@@ -1430,10 +1444,47 @@ object CallMetadata:
   val defaultMlsFun = CallMetadata(true, false, Nil)
   val defaultFun = CallMetadata(false, false, Nil)
   val mlsFunWithEffect = CallMetadata(true, true, Nil)
+  /** The metadata of a call without argument lists, which reads a member through a getter signature. */
+  val memberRead = CallMetadata(true, false, Nil)
 
 
-case class Call(fun: Path, argss: NELs[Ls[Arg]])(val metadata: CallMetadata, val toLoc: Opt[Loc]) extends Result:
-  def withLoc(loc: Opt[Loc]): Call = if loc == toLoc then this else copy()(metadata, loc)
+/** A call of `fun` applying the argument lists `argss`, described by the callee's erased `signature`.
+  *
+  * A call applies at most as many argument lists as `signature` has parameter lists; it applies fewer for a partial
+  * application. A call with no argument lists reads a member through a getter signature. This includes reads
+  * of properties whose definitions are unknown. A known getter always takes this form, including when another
+  * call applies its result. A method call keeps the receiver on its selection.
+  *
+  * When `fun` refers to a definition that publishes a callable signature, `signature` is that signature.
+  * Any other callee is a function value. Lowering gives its call the signature of the declared function type
+  * that every value resolution found for that application follows (see [[ErasedCallee]]), and otherwise
+  * [[ErasedFuncSignature.dynamic]]. Rewrites that change the callee or the argument lists must provide the
+  * corresponding signature.
+  */
+case class Call(fun: Path, argss: Ls[Ls[Arg]])
+    (val signature: ErasedCallableSignature, val metadata: CallMetadata, val toLoc: Opt[Loc]) extends Result:
+  // A function signature has at least one parameter list, so only getter reads apply no argument list.
+  require(argss.nonEmpty || signature.paramListCount == 0, "A call of a function must apply an argument list")
+  require(argss.sizeCompare(signature.paramListCount) <= 0,
+    s"A call applies ${argss.length} argument lists to a callee with ${signature.paramListCount} parameter lists")
+  /** Rewrites can build forward calls before publishing a new definition under the same symbol. Check the
+    * signature against the completed IR. Calls constructed against a published definition also check it immediately. */
+  def checkTargetSignature(): Unit =
+    assert(Call.publishedSignature(fun).forall(_ is signature),
+      "A call of a definition must use the signature published by that definition")
+  def withLoc(loc: Opt[Loc]): Call = if loc == toLoc then this else copy()(signature, metadata, loc)
+  /** This call, rebuilt by a rewrite that changes how its callee and arguments are expressed, but not which
+    * argument lists it applies to which value. A callee that publishes a signature imposes it, as when renaming a
+    * definition gives it a refreshed signature; other callees keep the signature of this call.
+    */
+  def rebuilt(fun: Path, argss: Ls[Ls[Arg]]): Result =
+    val target = Call.publishedSignature(fun).getOrElse(signature)
+    // A source call can span several lists of an import that the function-object transform has curried.
+    // Substituting its operands preserves the source grouping until `FirstClassFunctionTransformer.bindCall`
+    // emits the intermediate function-object calls.
+    if argss.sizeCompare(target.paramListCount) > 0 && fun.targetSymbol.exists(this.fun.targetSymbol.contains) then
+      copy(fun, argss)(signature, metadata, toLoc)
+    else Call(fun, argss)(target, metadata, toLoc)
   lazy val isKnownUnsaturatedCall: Bool =
     fun.targetSymbol match
     case S(ts: TermSymbol) =>
@@ -1441,23 +1492,26 @@ case class Call(fun: Path, argss: NELs[Ls[Arg]])(val metadata: CallMetadata, val
         case fd: FunDefn => argss.lengthCompare(fd.params.length) < 0
         case _ => false
     case _ => false
-  // `metadata` lives in a secondary constructor list, so case-class equality
-  // would otherwise ignore annotations such as @tailcall.
+  // `signature` and `metadata` live in a secondary constructor list, so case-class equality
+  // would otherwise ignore them, including annotations such as @tailcall.
   override def equals(obj: Any): Bool = obj match
     case that: Call =>
       fun == that.fun &&
         argss == that.argss &&
+        signature == that.signature &&
         metadata == that.metadata
     case _ => false
   override def hashCode: Int =
-    (fun, argss, metadata).hashCode
+    (fun, argss, signature, metadata).hashCode
 
 object Call:
   
-  def raw(fun: Path, argss: NELs[Ls[Arg]])(metadata: CallMetadata, toLoc: Opt[Loc]): Call =
-    new Call(fun, argss)(metadata, toLoc)
+  def raw(fun: Path, argss: Ls[Ls[Arg]])(signature: ErasedCallableSignature, metadata: CallMetadata, toLoc: Opt[Loc]): Call =
+    val call = new Call(fun, argss)(signature, metadata, toLoc)
+    call.checkTargetSignature()
+    call
   
-  def apply(fun: Path, argss: NELs[Ls[Arg]])(metadata: CallMetadata, toLoc: Opt[Loc]): Result =
+  def apply(fun: Path, argss: Ls[Ls[Arg]])(signature: ErasedCallableSignature, metadata: CallMetadata, toLoc: Opt[Loc]): Result =
     fun match
     case Value.SimpleRef(sym: BuiltinSymbol) =>
       argss match
@@ -1467,7 +1521,63 @@ object Call:
         evalBuiltin(sym, arg1)(toLoc)(return _)
       case _ =>
     case _ =>
-    raw(fun, argss)(metadata, toLoc)
+    raw(fun, argss)(signature, metadata, toLoc)
+  
+  /** The signature published by the definition or builtin that `fun` refers to, if any.
+    *
+    * A forward call to a generated symbol can precede both its assigned erasure and its IR definition.
+    */
+  def publishedSignature(fun: Path): Opt[ErasedCallableSignature] = fun match
+    case Value.SimpleRef(bs: BuiltinSymbol) => bs.erasedSignature
+    case _ => fun.targetSymbol match
+      case S(ts: TermSymbol) if ts.isErasureReady || ts.irFunDefn.isDefined => ts.irErasure.collect:
+        case sig: ErasedCallableSignature => sig
+      case _ => N
+  
+  /** A pass can change a definition's signature under its existing symbol. Recursive and forward calls can
+    * precede the new definition, so bind their immutable signatures once the pass has published all its definitions.
+    * Calls through function values retain the signature derived at their use site.
+    */
+  def refreshSignatures(block: Block, changed: collection.Set[TermSymbol]): Block =
+    if changed.isEmpty then block else
+      new BlockTransformer(SymbolSubst.Id):
+        override def applyResult(r: Result)(k: Result => Block): Block = r match
+          case c: Call =>
+            val signature = c.fun.targetSymbol match
+              case S(ts: TermSymbol) if changed(ts) => publishedSignature(c.fun).getOrElse(c.signature)
+              case _ => c.signature
+            k(if signature is c.signature then c else c.copy()(signature, c.metadata, c.toLoc))
+          case _ => super.applyResult(r)(k)
+      .applyBlock(block)
+  
+  /** The signature for applying `listCount` argument lists to `fun` when nothing is known about `fun` beyond its
+    * IR: the signature it publishes, or else a dynamic one.
+    */
+  def signatureOf(fun: Path, listCount: Int): ErasedCallableSignature =
+    publishedSignature(fun).getOrElse:
+      if listCount == 0 then ErasedGetterSignature.dynamic else ErasedFuncSignature.dynamic(listCount)
+  
+  /** A call of `fun` applying `argss`, using [[signatureOf]]. */
+  def of(fun: Path, argss: Ls[Ls[Arg]])(metadata: CallMetadata, toLoc: Opt[Loc]): Result =
+    Call(fun, argss)(signatureOf(fun, argss.length), metadata, toLoc)
+  
+  /** Like [[of]], without folding applications of builtins. */
+  def rawOf(fun: Path, argss: Ls[Ls[Arg]])(metadata: CallMetadata, toLoc: Opt[Loc]): Call =
+    raw(fun, argss)(signatureOf(fun, argss.length), metadata, toLoc)
+  
+  /** Applies `argss` to `fun`, whose signature is `signature`. A single call applies as many argument lists as
+    * the signature has parameter lists; the signature says nothing about the result, so any remaining lists are
+    * applied to it by a call with a dynamic signature, through a fresh temporary.
+    */
+  def chain(fun: Path, signature: ErasedFuncSignature, argss: Ls[Ls[Arg]], metadata: CallMetadata, toLoc: Opt[Loc])
+      (k: Result => Block)(using State): Block =
+    argss.splitAt(signature.paramListCount) match
+      case (now, Nil) => k(Call(fun, now)(signature, metadata, toLoc))
+      case (now, later) =>
+        val call = Call(fun, now)(signature, metadata, toLoc)
+        val prefix = TempSymbol(N, initErasedType = call.erasedType, "callPrefix")
+        Scoped(Set.single(prefix), Assign(prefix, call,
+          k(Call(prefix.asSimpleRef, later)(ErasedFuncSignature.dynamic(later.length), metadata, toLoc))))
   
   private def literalArgValues(args: Ls[Arg]): Opt[Ls[Value]] =
     args.foldRight[Opt[Ls[Value]]](S(Nil)):

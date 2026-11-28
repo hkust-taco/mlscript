@@ -24,7 +24,7 @@ id
 //│ ║  l.+1: 	(x => x + 1) as [A] -> A -> A
 //│ ║        	      ^
 //│ ╙── because: cannot constrain  A  <:  Int
-//│ ╔══[COMPILATION ERROR] Type error in application with expected type A
+//│ ╔══[COMPILATION ERROR] Type error in application of type Int with expected type A
 //│ ║  l.+1: 	(x => x + 1) as [A] -> A -> A
 //│ ║        	      ^^^^^
 //│ ╙── because: cannot constrain  Int  <:  A

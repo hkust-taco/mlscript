@@ -10,9 +10,10 @@ fun nonsense(xs) = if xs is
 //│ let nonsense;
 //│ nonsense = function nonsense(xs) {
 //│   if (runtime.Tuple.isArrayLike(xs) && xs.length >= 0) {
-//│     let tmp;
-//│     tmp = xs.length - 0;
-//│     return runtime.safeCall(xs.slice(0, tmp))
+//│     let tmp, tmp1;
+//│     tmp = xs.length;
+//│     tmp1 = tmp - 0;
+//│     return runtime.safeCall(xs.slice(0, tmp1))
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ };
@@ -33,10 +34,11 @@ fun lead_and_last(xs) = if xs is
 //│ lead_and_last = function lead_and_last(xs) {
 //│   let lastElement1$, element0$;
 //│   if (runtime.Tuple.isArrayLike(xs) && xs.length >= 2) {
-//│     let tmp2;
+//│     let tmp2, tmp3;
 //│     element0$ = runtime.Tuple.get(xs, 0);
-//│     tmp2 = xs.length - 1;
-//│     runtime.safeCall(xs.slice(1, tmp2));
+//│     tmp2 = xs.length;
+//│     tmp3 = tmp2 - 1;
+//│     runtime.safeCall(xs.slice(1, tmp3));
 //│     lastElement1$ = runtime.Tuple.get(xs, -1);
 //│     return element0$ + lastElement1$
 //│   } else if (runtime.Tuple.isArrayLike(xs) && xs.length === 0) {
@@ -68,10 +70,11 @@ fun nested_tuple_patterns(xs) = if xs is
 //│ nested_tuple_patterns = function nested_tuple_patterns(xs) {
 //│   let lastElement1$, element0$, element1$, element0$1, tmp6, tmp7;
 //│   if (runtime.Tuple.isArrayLike(xs) && xs.length >= 2) {
-//│     let inlinedVal, tmp8;
+//│     let inlinedVal, tmp8, tmp9;
 //│     element0$ = runtime.Tuple.get(xs, 0);
-//│     tmp8 = xs.length - 1;
-//│     inlinedVal = runtime.safeCall(xs.slice(1, tmp8));
+//│     tmp8 = xs.length;
+//│     tmp9 = tmp8 - 1;
+//│     inlinedVal = runtime.safeCall(xs.slice(1, tmp9));
 //│     lastElement1$ = runtime.Tuple.get(xs, -1);
 //│     if (runtime.Tuple.isArrayLike(inlinedVal) && inlinedVal.length === 2) {
 //│       element0$1 = runtime.Tuple.get(inlinedVal, 0);

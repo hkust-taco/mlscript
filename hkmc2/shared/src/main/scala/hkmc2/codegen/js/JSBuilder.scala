@@ -367,6 +367,8 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     case Call(s @ Select(_, Elaborator.ctx.builtins.BuiltInOpIdent(jsOp)), (lhs :: rhs :: Nil) :: Nil) =>
       val res = doc"${operand(lhs)} ${jsOp} ${operand(rhs)}"
       if needsParens(jsOp) then doc"(${res})" else res
+    // * A member read is the property access of its selection, which runs a getter if there is one.
+    case Call(fun, Nil) => result(fun)
     case c @ Call(fun: SuperSelect, argss) =>
       val first = argss.head.map(argument)
       val base = doc"${result(fun)}.call(${(result(fun.qual) :: first).mkDocument(", ")})"

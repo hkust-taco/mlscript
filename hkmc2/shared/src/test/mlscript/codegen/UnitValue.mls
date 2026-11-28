@@ -39,7 +39,10 @@ print of foo()
 :sjs
 print of globalThis.console.log("Hello, world!")
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp; tmp = runtime.safeCall(globalThis.console.log("Hello, world!")); return Predef.print(tmp)
+//│ let tmp, tmp1;
+//│ tmp = globalThis.console;
+//│ tmp1 = runtime.safeCall(tmp.log("Hello, world!"));
+//│ return Predef.print(tmp1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > Hello, world!
 //│ > ()

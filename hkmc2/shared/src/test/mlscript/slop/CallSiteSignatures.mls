@@ -1,0 +1,584 @@
+:.
+:noInline
+:flowBasedOpt off
+
+
+// A call of a parameter takes its signature from the parameter's declared function type.
+// The argument is cast to the declared parameter type, and the result keeps the declared result type.
+:sir
+:siret
+:expect "42"
+fun apply(f: Int -> Str, x: Any): Str = f(x)
+apply(n => n.toString(), 42)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda;
+//│ define apply⁰ as fun apply¹(f: Function⁰, x: Unknown): Str⁰ {
+//│   return f‹(Int⁰) => Str⁰›((x as! Int⁰))
+//│ };
+//│ define lambda as fun lambda⁰(n: Int⁰): Str⁰ {
+//│   return n.toString⁰‹(...Array⁰) => Str⁰›()
+//│ };
+//│ return apply¹‹(Function⁰, Unknown) => Str⁰›(lambda⁰, 42)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = "42"
+
+
+// A curried function type describes one argument list at a time.
+:sir
+:siret
+:expect 3
+fun applyCurried(f: Int -> Int -> Int): Int = f(1)(2)
+applyCurried(a => b => a + b)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda;
+//│ define applyCurried⁰ as fun applyCurried¹(f: Function⁰): Int⁰ {
+//│   let callPrefix: Function⁰;
+//│   set callPrefix = f‹(Int⁰) => Function⁰›(1);
+//│   return callPrefix‹(Int⁰) => Int⁰›(2)
+//│ };
+//│ define lambda as fun lambda²(a: Int⁰): Function⁰ {
+//│   let lambda1;
+//│   @private
+//│   define lambda1 as fun lambda¹(b: Int⁰): Int⁰ {
+//│     return +⁰‹(?, ?) => ?›(a, b)
+//│   };
+//│   return lambda¹
+//│ };
+//│ return applyCurried¹‹(Function⁰) => Int⁰›(lambda²)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 3
+
+
+// The remaining argument lists of a call take their signatures from the declared result of the definition.
+:sir
+:siret
+:expect 3
+fun adder(a: Int): Int -> Int = b => a + b
+adder(1)(2)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let baseCall: Function⁰;
+//│ define adder⁰ as fun adder¹(a: Int⁰): Function⁰ {
+//│   let lambda;
+//│   @private
+//│   define lambda as fun lambda³(b: Int⁰): Int⁰ {
+//│     return +⁰‹(?, ?) => ?›(a, b)
+//│   };
+//│   return lambda³
+//│ };
+//│ set baseCall = adder¹‹(Int⁰) => Function⁰›(1);
+//│ return baseCall‹(Int⁰) => Int⁰›(2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 3
+
+
+// A callee without a declared type gets a dynamic signature, and so does the result of its call.
+:sir
+:siret
+:expect 3
+private fun applyDynamic(f) = f(1)(2)
+applyDynamic(a => b => a + b)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda;
+//│ @private
+//│ define applyDynamic⁰ as fun applyDynamic¹(f: Function⁰): Int⁰ {
+//│   let callPrefix: ?;
+//│   set callPrefix = f‹(...Array⁰) => ?›(1);
+//│   return (callPrefix‹(...Array⁰) => ?›(2) as! Int⁰)
+//│ };
+//│ define lambda as fun lambda⁵(a: Int⁰): Function⁰ {
+//│   let lambda1;
+//│   @private
+//│   define lambda1 as fun lambda⁴(b: Int⁰): Int⁰ {
+//│     return +⁰‹(?, ?) => ?›(a, b)
+//│   };
+//│   return lambda⁴
+//│ };
+//│ return applyDynamic¹‹(Function⁰) => Int⁰›(lambda⁵)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 3
+
+
+// Rest parameters are part of the signatures of definitions and function types.
+:sir
+:siret
+:expect 3
+fun count(first: Int, ...rest) = rest.length + 1
+fun applyVariadic(f: (Int, ...Int) -> Int): Int = f(1, 2, 3)
+applyVariadic(count)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define count⁰ as fun count¹(first: Int⁰, ...rest: Array⁰): Int⁰ {
+//│   let tmp: Int⁰;
+//│   set tmp = rest.length⁰;
+//│   return +⁰‹(?, ?) => ?›(tmp, 1)
+//│ };
+//│ define applyVariadic⁰ as fun applyVariadic¹(f: Function⁰): Int⁰ {
+//│   return f‹(Int⁰, ...Array⁰) => Int⁰›(1, 2, 3)
+//│ };
+//│ return applyVariadic¹‹(Function⁰) => Int⁰›(count¹)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 3
+
+
+// Reading a getter is a call of the selection without argument lists, with the getter's signature.
+:sir
+:siret
+:checkIR
+:expect 42
+class Box with
+  fun value: Int = 42
+let box = new Box
+box.value
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define Box⁰ as class Box¹ {
+//│   method value⁰ = fun value¹: Int⁰ {
+//│     return 42
+//│   }
+//│ };
+//│ set box⁰ = new Box¹();
+//│ return box⁰.value¹‹=> Int⁰›
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+//│ box = Box
+
+
+// A foreign constructor's call and its instantiation can return different representations.
+:sir
+:siret
+:checkIR
+:expect ["string", "object"]
+declare class Date()
+private fun callDate() = Date()
+private fun newDate() = new Date()
+[typeof(callDate()), typeof(newDate())]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Unknown, tmp1: Str⁰, tmp2: Date⁰, tmp3: Str⁰;
+//│ @private
+//│ define callDate⁰ as fun callDate¹(): Unknown {
+//│   return globalThis⁰.Date¹‹() => ?›()
+//│ };
+//│ @private
+//│ define newDate⁰ as fun newDate¹(): Date⁰ {
+//│   return new globalThis⁰.Date⁰()
+//│ };
+//│ set tmp = callDate¹‹() => Unknown›();
+//│ set tmp1 = typeof⁰‹(?) => Str⁰›(tmp);
+//│ set tmp2 = newDate¹‹() => Date⁰›();
+//│ set tmp3 = typeof⁰‹(?) => Str⁰›(tmp2);
+//│ return [tmp1, tmp3]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = ["string", "object"]
+
+
+// The getter read and the application of its returned function each carry their own signature.
+:sir
+:siret
+:checkIR
+:expect 42
+class Adder with
+  fun add: Int -> Int = x => x + 1
+let adder = new Adder
+adder.add(41)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Function⁰;
+//│ define Adder⁰ as class Adder¹ {
+//│   method add⁰ = fun add¹: Function⁰ {
+//│     let lambda;
+//│     @private
+//│     define lambda as fun lambda⁶(x: Int⁰): Int⁰ {
+//│       return +⁰‹(?, ?) => ?›(x, 1)
+//│     };
+//│     return lambda⁶
+//│   }
+//│ };
+//│ set adder² = new Adder¹();
+//│ set tmp = adder².add¹‹=> Function⁰›;
+//│ return tmp‹(Int⁰) => Int⁰›(41)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+//│ adder = Adder
+
+
+// A public constructor field takes the signature of its calls from the declared type of its parameter.
+:sir
+:siret
+:expect 42
+class Handler(val run: Int -> Int)
+fun useHandler(h: Handler) = h.run(41)
+useHandler(Handler(x => x + 1))
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda, tmp: Handler⁰;
+//│ define useHandler⁰ as fun useHandler¹(h: Handler⁰): Int⁰ {
+//│   return h.run⁰‹(Int⁰) => Int⁰›(41)
+//│ };
+//│ define Handler¹ as class Handler⁰ {
+//│   val run¹: Function⁰;
+//│   constructor Handler²(run: Function⁰) {
+//│     define run¹ as val run⁰: Function⁰ = run;
+//│     end
+//│   }
+//│ };
+//│ define lambda as fun lambda⁷(x: Int⁰): Int⁰ {
+//│   return +⁰‹(?, ?) => ?›(x, 1)
+//│ };
+//│ set tmp = Handler²‹(Function⁰) => Handler⁰›(lambda⁷);
+//│ return useHandler¹‹(Handler⁰) => Int⁰›(tmp)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+
+// A function value keeps the calling convention of its declared type wherever it flows: resolution tells which
+// values each application can call. Here variables hold the value of the field and the result of a call.
+:sir
+:siret
+:expect [42, 42]
+fun makeIncrement(): Int -> Int = x => x + 1
+fun viaVariables(h: Handler) =
+  let run = h.run
+  let increment = makeIncrement()
+  [run(41), increment(41)]
+viaVariables(Handler(x => x + 1))
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda, tmp: Handler⁰;
+//│ define makeIncrement⁰ as fun makeIncrement¹(): Function⁰ {
+//│   let lambda1;
+//│   @private
+//│   define lambda1 as fun lambda⁸(x: Int⁰): Int⁰ {
+//│     return +⁰‹(?, ?) => ?›(x, 1)
+//│   };
+//│   return lambda⁸
+//│ };
+//│ define viaVariables⁰ as fun viaVariables¹(h: Handler⁰): Array⁰ {
+//│   let run: Function⁰, increment: Function⁰, tmp1: Int⁰, tmp2: Int⁰;
+//│   set run = h.run⁰;
+//│   set increment = makeIncrement¹‹() => Function⁰›();
+//│   set tmp1 = run‹(Int⁰) => Int⁰›(41);
+//│   set tmp2 = increment‹(Int⁰) => Int⁰›(41);
+//│   return [tmp1, tmp2]
+//│ };
+//│ define lambda as fun lambda⁹(x: Int⁰): Int⁰ {
+//│   return +⁰‹(?, ?) => ?›(x, 1)
+//│ };
+//│ set tmp = Handler²‹(Function⁰) => Handler⁰›(lambda⁹);
+//│ return viaVariables¹‹(Handler⁰) => Array⁰›(tmp)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [42, 42]
+
+
+// The type arguments written in a type are part of the declared function type of the callee.
+type Endo[A] = A -> A
+class Wrapper[A](val transform: A -> A)
+
+:sir
+:siret
+:expect [42, 42]
+fun viaAlias(f: Endo[Int], x: Int): Int = f(x)
+fun viaClass(w: Wrapper[Int]): Int = w.transform(41)
+[viaAlias(n => n + 1, 41), viaClass(Wrapper(n => n + 1))]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda, tmp: Int⁰, lambda1, tmp1: Wrapper⁰, tmp2: Int⁰;
+//│ define viaAlias⁰ as fun viaAlias¹(f: Function⁰, x: Int⁰): Int⁰ {
+//│   return f‹(Int⁰) => Int⁰›(x)
+//│ };
+//│ define viaClass⁰ as fun viaClass¹(w: Wrapper⁰): Int⁰ {
+//│   return w.transform⁰‹(Int⁰) => Int⁰›(41)
+//│ };
+//│ define lambda as fun lambda¹⁰(n: Int⁰): Int⁰ {
+//│   return +⁰‹(?, ?) => ?›(n, 1)
+//│ };
+//│ set tmp = viaAlias¹‹(Function⁰, Int⁰) => Int⁰›(lambda¹⁰, 41);
+//│ define lambda1 as fun lambda¹¹(n: Int⁰): Int⁰ {
+//│   return +⁰‹(?, ?) => ?›(n, 1)
+//│ };
+//│ set tmp1 = Wrapper¹‹(Function⁰) => Wrapper⁰›(lambda¹¹);
+//│ set tmp2 = viaClass¹‹(Wrapper⁰) => Int⁰›(tmp1);
+//│ return [tmp, tmp2]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [42, 42]
+
+// The type parameters of the enclosing definition stay abstract in its code, whatever its callers pass.
+:sir
+:siret
+:expect [42, "a"]
+fun viaTypeParameter[A](f: A -> A, x: A): A = f(x)
+fun viaGenericClass[A](w: Wrapper[A], x: A): A = w.transform(x)
+[viaTypeParameter(n => n + 1, 41), viaGenericClass(Wrapper(s => s), "a")]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda, tmp: Unknown, lambda1, tmp1: Wrapper⁰, tmp2: Unknown;
+//│ define viaTypeParameter⁰ as fun viaTypeParameter¹(f: Function⁰, x: Unknown): Unknown {
+//│   return f‹(Unknown) => Unknown›(x)
+//│ };
+//│ define viaGenericClass⁰ as fun viaGenericClass¹(w: Wrapper⁰, x: Unknown): Unknown {
+//│   return w.transform⁰‹(Unknown) => Unknown›(x)
+//│ };
+//│ define lambda as fun lambda¹²(n: Int⁰): Int⁰ {
+//│   return +⁰‹(?, ?) => ?›(n, 1)
+//│ };
+//│ set tmp = viaTypeParameter¹‹(Function⁰, Unknown) => Unknown›(lambda¹², 41);
+//│ define lambda1 as fun lambda¹³(s: Str⁰): Str⁰ {
+//│   return s
+//│ };
+//│ set tmp1 = Wrapper¹‹(Function⁰) => Wrapper⁰›(lambda¹³);
+//│ set tmp2 = viaGenericClass¹‹(Wrapper⁰, Unknown) => Unknown›(tmp1, "a");
+//│ return [tmp, tmp2]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [42, "a"]
+
+
+// An application that can call values of different function types takes the dynamic signature when all their
+// slots hold references. So does one that can also call a value without a declared type, such as a lambda.
+:sir
+:siret
+fun eitherCallee(c: Bool, f: Int -> Int, g: Num -> Num) =
+  let h = if c then f else g
+  h(1)
+fun declaredOrLambda(c: Bool, f: Int -> Int) =
+  let h = if c then f else x => x
+  h(1)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define eitherCallee⁰ as fun eitherCallee¹(c: Bool⁰, f: Function⁰, g: Function⁰): Num⁰ {
+//│   let h: Function⁰, tmp: Function⁰;
+//│   match c
+//│     true =>
+//│       set tmp = f;
+//│       end
+//│     else
+//│       set tmp = g;
+//│       end
+//│   set h = tmp;
+//│   return (h‹(...Array⁰) => ?›(1) as! Num⁰)
+//│ };
+//│ define declaredOrLambda⁰ as fun declaredOrLambda¹(c: Bool⁰, f: Function⁰): Int⁰ {
+//│   let h: Function⁰, tmp: Function⁰;
+//│   match c
+//│     true =>
+//│       set tmp = f;
+//│       end
+//│     else
+//│       let lambda;
+//│       @private
+//│       define lambda as fun lambda¹⁴(x: Int⁰): Int⁰ {
+//│         return x
+//│       };
+//│       set tmp = lambda¹⁴;
+//│       end
+//│   set h = tmp;
+//│   return (h‹(...Array⁰) => ?›(1) as! Int⁰)
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// A dynamic call cannot pass an unboxed value, so the possible callees of such a call must share a signature.
+:ge
+fun unboxedOrLambda(c: Bool, f: Int32 -> Int32, x: Int32) =
+  let h = if c then f else y => y
+  h(x)
+//│ ╔══[COMPILATION ERROR] Cannot determine a common calling convention for the possible function types at this call
+//│ ║  l.+3: 	  h(x)
+//│ ╙──      	   ^^^
+
+// A definition and a lambda have no declared function type: a variable that holds one is called dynamically.
+:sir
+:siret
+:expect [42, 42]
+fun increment(x: Int): Int = x + 1
+fun viaDefinitions() =
+  let named = increment
+  let anonymous = (x: Int) => x + 1
+  [named(41), anonymous(41)]
+viaDefinitions()
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define increment⁰ as fun increment¹(x: Int⁰): Int⁰ {
+//│   return +⁰‹(?, ?) => ?›(x, 1)
+//│ };
+//│ define viaDefinitions⁰ as fun viaDefinitions¹(): Array⁰ {
+//│   let named: Function⁰, anonymous: Function⁰, tmp: ?, tmp1: ?, anonymous1;
+//│   set named = increment¹;
+//│   @private
+//│   define anonymous1 as fun anonymous⁰(x: Int⁰): Int⁰ {
+//│     return +⁰‹(?, ?) => ?›(x, 1)
+//│   };
+//│   set anonymous = anonymous⁰;
+//│   set tmp = named‹(...Array⁰) => ?›(41);
+//│   set tmp1 = anonymous‹(...Array⁰) => ?›(41);
+//│   return [tmp, tmp1]
+//│ };
+//│ return viaDefinitions¹‹() => Array⁰›()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [42, 42]
+
+// A declared member without a parameter list is a getter. Applying the function that it returns is a
+// separate call, which does not pass the object as the receiver. A declared method lists its parameters.
+class HostObject with
+  fun viaGetter() = this is HostObject
+  fun viaMethod() = this is HostObject
+set globalThis.host = new HostObject
+declare module host with
+  fun viaGetter
+  fun viaMethod(): Bool
+
+:sir
+:siret
+:expect [false, true]
+[host.viaGetter(), host.viaMethod()]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: ?, tmp1: ?, tmp2: Bool⁰;
+//│ set tmp = globalThis⁰.host⁰.viaGetter⁰‹=> ?›;
+//│ set tmp1 = tmp‹(...Array⁰) => ?›();
+//│ set tmp2 = globalThis⁰.host⁰.viaMethod⁰‹() => Bool⁰›();
+//│ return [tmp1, tmp2]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [false, true]
+
+// FIXME: A field that holds a function is a value like the result of a getter, so applying it should not pass
+// the object as the receiver either. The IR keeps the selection of a field that cannot change in callee position,
+// and the simplifier moves the read of any field there. The JS backend prints both as method calls, which a
+// foreign function observes.
+let receiverProbe = globalThis.Function("return this === globalThis || this === undefined ? 'none' : 'receiver'")
+class Callback(val run: () -> Str)
+let callback = Callback(receiverProbe)
+//│ callback = Callback(fun anonymous)
+//│ receiverProbe = fun anonymous
+
+:sjs
+:fixme
+:expect "none"
+callback.run()
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let tmp17; tmp17 = callback; return runtime.safeCall(tmp17.run())
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] Expected: '"none"', got: '"receiver"'
+//│ = "receiver"
+
+:sjs
+:fixme
+:expect "none"
+let detached = callback.run
+detached()
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let detached, tmp18; tmp18 = callback; detached = tmp18.run; return runtime.safeCall(tmp18.run())
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] Expected: '"none"', got: '"receiver"'
+//│ = "receiver"
+//│ detached = fun anonymous
+
+
+// A property that resolution did not identify may be a getter: reading it is a call with an unknown signature.
+:sir
+:siret
+:expect 42
+fun readDynamic(r: dyn) = r.value
+readDynamic(value: 42)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let rcd: ?;
+//│ define readDynamic⁰ as fun readDynamic¹(r: Unknown): Unknown {
+//│   return r.value﹖‹=> ?›
+//│ };
+//│ set rcd = { "value": 42 };
+//│ return readDynamic¹‹(Unknown) => Unknown›(rcd)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+
+// Arguments are evaluated from left to right: a path argument whose value can change, such as a mutable
+// variable, is read before a later argument runs code, whether that code is a call or a getter read.
+:expect 0
+let counter = 0
+fun first(a, b) = a
+fun bumpNow() = set counter += 1
+first(counter, bumpNow())
+//│ = 0
+//│ counter = 1
+
+:expect 1
+class Bumper with
+  fun bump = set counter += 1
+let bumper = new Bumper
+first(counter, bumper.bump)
+//│ = 1
+//│ bumper = Bumper
+
+
+// Coercing the first argument to its declared type precedes the call in the second argument.
+:sir
+:expect 42
+fun chooseInt(n: Int, ignored) = n
+fun checkedFirst(value: Any) = chooseInt(value, bumpNow())
+checkedFirst(42)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define chooseInt⁰ as fun chooseInt¹(n, ignored) {
+//│   return n
+//│ };
+//│ define checkedFirst⁰ as fun checkedFirst¹(value) {
+//│   let arg, tmp;
+//│   set arg = (value as! Int⁰);
+//│   set tmp = bumpNow⁰();
+//│   return chooseInt¹(arg, tmp)
+//│ };
+//│ return checkedFirst¹(42)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+
+// Converting a curried definition to function objects keeps its symbol and gives
+// each returned object's call method one of the original parameter lists.
+:ftc
+:checkIR
+:sir
+:siret
+:noInline
+:expect 42
+fun addThree(a: Int)(b: Int)(c: Int): Int = a + b + c
+addThree(10)(12)(20)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda$, lambda$1, Function$, Function$1, callPrefix: ?, callPrefix1: Function⁰;
+//│ define lambda$ as fun lambda$⁰(a: Int⁰, b: Int⁰, c: Int⁰): ? {
+//│   let tmp: Int⁰;
+//│   set tmp = +⁰‹(?, ?) => ?›(a, b);
+//│   return +⁰‹(?, ?) => ?›(tmp, c)
+//│ };
+//│ define Function$ as class Function$⁰ extends globalThis⁰.Function⁰ {
+//│   private val a⁰: Int⁰;
+//│   private val b⁰: Int⁰;
+//│   constructor(a: Int⁰, b: Int⁰) {
+//│     do super⁰‹(...Array⁰) => ?›();
+//│     end;
+//│     set Function$⁰.this.a⁰ = a;
+//│     set Function$⁰.this.b⁰ = b;
+//│     end
+//│   }
+//│   method call⁰ = fun call¹(c: Int⁰): ? {
+//│     return lambda$⁰‹(Int⁰, Int⁰, Int⁰) => ?›(Function$⁰.this.a⁰, Function$⁰.this.b⁰, c)
+//│   }
+//│ };
+//│ define lambda$1 as fun lambda$¹(a: Int⁰, b: Int⁰): ? {
+//│   let tmp: Function$⁰;
+//│   set tmp = new Function$⁰(a, b);
+//│   return tmp
+//│ };
+//│ define Function$1 as class Function$¹ extends globalThis⁰.Function⁰ {
+//│   private val a¹: Int⁰;
+//│   constructor(a: Int⁰) {
+//│     do super⁰‹(...Array⁰) => ?›();
+//│     end;
+//│     set Function$¹.this.a¹ = a;
+//│     end
+//│   }
+//│   method call² = fun call³(b: Int⁰): ? {
+//│     return lambda$¹‹(Int⁰, Int⁰) => ?›(Function$¹.this.a¹, b)
+//│   }
+//│ };
+//│ define addThree⁰ as fun addThree¹(a: Int⁰): ? {
+//│   let tmp: Function$¹;
+//│   set tmp = new Function$¹(a);
+//│   return tmp
+//│ };
+//│ set callPrefix = addThree¹‹(Int⁰) => ?›(10);
+//│ set callPrefix1 = callPrefix.call﹖‹(Int⁰) => Function⁰›(12);
+//│ return callPrefix1.call﹖‹(Int⁰) => Int⁰›(20)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+// A later worksheet block calls the same function through its published, single-list entry point.
+:expect 42
+addThree(20)(12)(10)
+//│ = 42

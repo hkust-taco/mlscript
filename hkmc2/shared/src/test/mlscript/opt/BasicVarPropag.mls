@@ -96,7 +96,7 @@ print(x)
 //│ set x¹ = tmp;
 //│ return Predef⁰.print⁰(x¹)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ do Predef⁰.maybe⁰; set x¹ = 1; return Predef⁰.print⁰(1)
+//│ do (Predef⁰.hide⁰(true) as! Bool⁰); set x¹ = 1; return Predef⁰.print⁰(1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 1
 //│ x = 1
@@ -106,7 +106,7 @@ print(x)
 let x = if maybe then 1 else 1
 in print(x)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ do Predef⁰.maybe⁰; return Predef⁰.print⁰(1)
+//│ do (Predef⁰.hide⁰(true) as! Bool⁰); return Predef⁰.print⁰(1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 1
 
@@ -115,9 +115,9 @@ in print(x)
 let x = if maybe then 1 else 2
 print(x)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let scrut, tmp;
-//│ set scrut = Predef⁰.maybe⁰;
-//│ match scrut
+//│ let tmp, inlinedVal;
+//│ set inlinedVal = (Predef⁰.hide⁰(true) as! Bool⁰);
+//│ match inlinedVal
 //│   true =>
 //│     set tmp = 1;
 //│     end
@@ -135,9 +135,9 @@ print(x)
 let x = if maybe then 1 else 2
 in print(x)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let scrut;
-//│ set scrut = Predef⁰.maybe⁰;
-//│ match scrut
+//│ let inlinedVal;
+//│ set inlinedVal = (Predef⁰.hide⁰(true) as! Bool⁰);
+//│ match inlinedVal
 //│   true =>
 //│     return Predef⁰.print⁰(1)
 //│   else
@@ -158,7 +158,7 @@ let x = if maybe
     z
 print(x)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ do Predef⁰.maybe⁰; set x³ = 1; return Predef⁰.print⁰(1)
+//│ do (Predef⁰.hide⁰(true) as! Bool⁰); set x³ = 1; return Predef⁰.print⁰(1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 1
 //│ x = 1
@@ -174,9 +174,9 @@ let x = if maybe
     z
 print(x)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let scrut, tmp;
-//│ set scrut = Predef⁰.maybe⁰;
-//│ match scrut
+//│ let tmp, inlinedVal;
+//│ set inlinedVal = (Predef⁰.hide⁰(true) as! Bool⁰);
+//│ match inlinedVal
 //│   true =>
 //│     set tmp = 1;
 //│     end
@@ -298,19 +298,17 @@ let res = if maybe
 // hide of hide of hide of hide of print(res)
 print(res)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let scrut, tmp;
-//│ set scrut = Predef⁰.maybe⁰;
-//│ match scrut
+//│ let inlinedVal;
+//│ set inlinedVal = (Predef⁰.hide⁰(true) as! Bool⁰);
+//│ match inlinedVal
 //│   true =>
 //│     let y;
 //│     set y = x⁸;
-//│     set tmp = y;
-//│     end
+//│     set res⁰ = y;
+//│     return Predef⁰.print⁰(y)
 //│   else
-//│     set tmp = Predef⁰.notImplementedError⁰;
-//│     end
-//│ set res⁰ = tmp;
-//│ return Predef⁰.print⁰(tmp)
+//│     throw globalThis⁰.Error⁰("Not implemented")
+//│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 1
 //│ res = 1
@@ -339,17 +337,16 @@ print(res)
 //│     return Predef⁰.print⁰(res¹)
 //│ end
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let scrut;
-//│ set scrut = Predef⁰.maybe⁰;
-//│ match scrut
+//│ let inlinedVal;
+//│ set inlinedVal = (Predef⁰.hide⁰(true) as! Bool⁰);
+//│ match inlinedVal
 //│   true =>
 //│     let y;
 //│     set y = (Predef⁰.hide⁰(1) as! Int⁰);
 //│     set res¹ = y;
 //│     return Predef⁰.print⁰(y)
 //│   else
-//│     do Predef⁰.notImplementedError⁰;
-//│     return Predef⁰.print⁰(res¹)
+//│     throw globalThis⁰.Error⁰("Not implemented")
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 1
@@ -378,31 +375,28 @@ hide of print(res)
 //│ set tmp = Predef⁰.print⁰(res²);
 //│ return Predef⁰.hide⁰(tmp)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let scrut, tmp;
-//│ set scrut = Predef⁰.maybe⁰;
-//│ match scrut
+//│ let tmp, inlinedVal;
+//│ set inlinedVal = (Predef⁰.hide⁰(true) as! Bool⁰);
+//│ match inlinedVal
 //│   true =>
 //│     let y;
 //│     set y = (Predef⁰.hide⁰(1) as! Int⁰);
 //│     set res² = y;
-//│     end
+//│     set tmp = Predef⁰.print⁰(y);
+//│     return Predef⁰.hide⁰(tmp)
 //│   else
-//│     do Predef⁰.notImplementedError⁰;
-//│     end
-//│ set tmp = Predef⁰.print⁰(res²);
-//│ return Predef⁰.hide⁰(tmp)
+//│     throw globalThis⁰.Error⁰("Not implemented")
+//│ end
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let res2, scrut5, tmp3;
-//│ scrut5 = Predef.maybe;
-//│ if (scrut5 === true) {
+//│ let res2, tmp2, inlinedVal5;
+//│ inlinedVal5 = runtime.checkCall(Predef.hide(true)) /* as! Bool */;
+//│ if (inlinedVal5 === true) {
 //│   let y3;
 //│   y3 = runtime.checkCall(Predef.hide(1)) /* as! Int */;
 //│   res2 = y3;
-//│ } else {
-//│   Predef.notImplementedError;
-//│ }
-//│ tmp3 = runtime.checkCall(Predef.print(res2));
-//│ block$res23 = runtime.checkCall(Predef.hide(tmp3));
+//│   tmp2 = runtime.checkCall(Predef.print(y3));
+//│   block$res23 = runtime.checkCall(Predef.hide(tmp2));
+//│ } else { throw runtime.safeCall(globalThis.Error("Not implemented")) }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 1
 //│ res = 1

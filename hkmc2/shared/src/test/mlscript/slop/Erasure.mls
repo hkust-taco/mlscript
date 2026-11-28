@@ -30,9 +30,9 @@ GeneratorChild().generate("payload").next()
 //│     return value
 //│   }
 //│ };
-//│ set tmp = GeneratorChild²();
-//│ set tmp1 = tmp.generate³("payload");
-//│ return tmp1.next⁰()
+//│ set tmp = GeneratorChild²‹() => GeneratorChild⁰›();
+//│ set tmp1 = tmp.generate³‹(Unknown) => generator Unknown›("payload");
+//│ return tmp1.next⁰‹() => Unknown›()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = {value: "payload", done: true}
 

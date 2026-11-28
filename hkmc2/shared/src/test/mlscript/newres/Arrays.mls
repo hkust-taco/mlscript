@@ -250,7 +250,7 @@ class Item(val value: Int)
 //│ ║  l.+2: 	(new Item(1)).[0]
 //│ ║        	 ^^^^^^^^^^^
 //│ ╙── Use '![...]' for a dynamic access.
-//│ ═══[RUNTIME ERROR] TypeError: tmp49.at is not a function
+//│ ═══[RUNTIME ERROR] TypeError: tmp60.at is not a function
 
 // A dynamic access authorizes dynamic operations on its result; a checked index does not.
 :e

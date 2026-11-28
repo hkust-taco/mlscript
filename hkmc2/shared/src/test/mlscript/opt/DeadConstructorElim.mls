@@ -319,7 +319,7 @@ private fun s(y) =
   2
 s(new O)
 //│ dead-constructor-elim > >>> dead-constructor-elim results >>>
-//│ dead-constructor-elim > eliminable: Call(member:A²‹term:A⁰›, [[Select(y⁰, Ident(x))]])
+//│ dead-constructor-elim > eliminable: Call(member:A²‹term:A⁰›, [[tmp:tmp¹]])
 //│ dead-constructor-elim > <<< dead-constructor-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let tmp; @private define s⁰ as fun s¹(y) { do y.x¹; return 2 }; set tmp = new O⁰(); return s¹(tmp)
@@ -336,7 +336,7 @@ private fun t(y) =
   2
 t(new O)
 //│ dead-constructor-elim > >>> dead-constructor-elim results >>>
-//│ dead-constructor-elim > eliminable: Tuple(false, [Select(y¹, Ident(z)), 1, Select(y¹, Ident(x)), DynSelect(y¹, "z", Unknown)])
+//│ dead-constructor-elim > eliminable: Tuple(false, [tmp:tmp², 1, tmp:tmp³, tmp:tmp⁴])
 //│ dead-constructor-elim > <<< dead-constructor-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let tmp;
@@ -359,7 +359,7 @@ private fun u(y) =
   if b is A then 1 else 0
 u(new O)
 //│ dead-constructor-elim > >>> dead-constructor-elim results >>>
-//│ dead-constructor-elim > eliminable: Tuple(false, [Select(y², Ident(z)), Select(y², Ident(x))])
+//│ dead-constructor-elim > eliminable: Tuple(false, [tmp:tmp⁵, tmp:tmp⁶])
 //│ dead-constructor-elim > <<< dead-constructor-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let tmp;
@@ -392,7 +392,16 @@ v(new O)
 //│ dead-constructor-elim > >>> dead-constructor-elim results >>>
 //│ dead-constructor-elim > <<< dead-constructor-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp; @private define v⁰ as fun v¹(y) { return [y.z⁰, y.x¹] }; set tmp = new O⁰(); return v¹(tmp)
+//│ let tmp;
+//│ @private
+//│ define v⁰ as fun v¹(y) {
+//│   let tmp1, tmp2;
+//│   set tmp1 = y.z⁰;
+//│   set tmp2 = y.x¹;
+//│   return [tmp1, tmp2]
+//│ };
+//│ set tmp = new O⁰();
+//│ return v¹(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > get z
 //│ > get x
@@ -412,8 +421,9 @@ w(new O)
 //│ let tmp;
 //│ @private
 //│ define w⁰ as fun w¹(y) {
-//│   let b, element1$;
-//│   set b = [y.z⁰, 1];
+//│   let b, tmp1, element1$;
+//│   set tmp1 = y.z⁰;
+//│   set b = [tmp1, 1];
 //│   match b
 //│     Array(2) =>
 //│       do runtime⁰.Tuple⁰.get⁰(b, 0);

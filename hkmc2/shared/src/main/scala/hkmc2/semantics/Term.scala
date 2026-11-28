@@ -638,8 +638,10 @@ extension (self: Blk)
     Blk(self.stats, f(self.res))
 
 
+/** `showCallSignatures` shows the erased signature of each IR call, which `showErasedTypes` does not imply. */
 case class ShowCfg(
   showErasedTypes: Bool,
+  showCallSignatures: Bool,
   showExpansionMappings: Bool,
   showFlowSymbols: Bool,
   debug: Bool,
@@ -654,6 +656,8 @@ object ShowCfg:
   // their owner states and resolver graphs, and lets parallel displays mutate the same set.
   def internal: ShowCfg = ShowCfg(
     showErasedTypes = true,
+    // * Internal traces print calls in many places, where a signature at each call would mostly be noise.
+    showCallSignatures = false,
     showFlowSymbols = true,
     showExpansionMappings = false,
     debug = false,

@@ -62,7 +62,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
 
   // isMlsFun is probably always true?
   def call(fun: Path, args: Ls[ArgWrappable], isMlsFun: Bool = true, symName: Str = "tmp")(k: Path => Block): Block =
-    assign(Call(fun, args.map(asArg) ne_:: Nil)(CallMetadata(isMlsFun, false, Nil), N), symName)(k)
+    assign(Call.of(fun, args.map(asArg) :: Nil)(CallMetadata(isMlsFun, false, Nil), N), symName)(k)
 
   // helpers for instrumenting Block
 
@@ -241,6 +241,8 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
         case _ => N
 
       argss match
+        // * Staged code represents a member read by its selection, which reads fields and getters alike.
+        case Nil => transformPath(fun)(k)
         case args :: Nil =>
           val newFun = stagedFunPath.getOrElse(fun)
           transformPath(newFun): fun =>

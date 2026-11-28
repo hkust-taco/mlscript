@@ -36,6 +36,26 @@ object Thrw extends TailOp(transfersControl = true):
   def apply(r: Result): Block = Throw(r, annotations = Nil)
 
 
+/** What lowering knows about the local variables of the compilation unit it lowers, to tell whether reading one
+  * of them always yields the same value (see `Lowering.isStable`).
+  *
+  * @param reassigned the local variables that the unit assigns with `set`
+  * @param shared the local variables that other compilation units can access, and can thus assign. Only the
+  *   blocks of a worksheet or REPL session share local variables: their top-level ones.
+  * @param ownTopLevel the top-level local variables that the unit declares. Other units only access these
+  *   once the top-level code of the unit has run.
+  */
+final case class LoweringUnit(
+  reassigned: Set[LocalVarSymbol],
+  shared: Set[LocalVarSymbol],
+  ownTopLevel: Set[LocalVarSymbol],
+):
+  /** Whether reading `sym` always yields the same value. `deferred` tells whether the read is in code that can
+    * run after the top-level code of the unit, interleaved with the code of other units (see `LoweringCtx.deferred`).
+    */
+  def isStable(sym: LocalVarSymbol, deferred: Bool): Bool =
+    !reassigned(sym) && (!shared(sym) || !deferred && ownTopLevel(sym))
+
 class LoweringCtx(
   val localVals: Map[TermSymbol, VarSymbol],
   val symbolsToPreserve: Set[ScopedSymbol],
@@ -43,9 +63,14 @@ class LoweringCtx(
   private val definedSymsDuringLowering: collection.mutable.Set[ScopedSymbol], // used to create Scoped blocks
   val returnType: Opt[ErasedValueType], // the declared return type of the enclosing function, used to coerce `return`s
   val superBases: Map[InnerSymbol, Path], // evaluated parents of the enclosing class definitions
+  val unit: LoweringUnit,
+  // Whether the code being lowered can run after the top-level code of the compilation unit, as the bodies of
+  // functions, lambdas, and class-like definitions can.
+  val deferred: Bool,
 ):
   def withLocalVals(syms: IterableOnce[TermSymbol -> VarSymbol]): LoweringCtx =
-    LoweringCtx(localVals ++ syms, symbolsToPreserve, mayRet, definedSymsDuringLowering, returnType, superBases)
+    LoweringCtx(localVals ++ syms, symbolsToPreserve, mayRet, definedSymsDuringLowering, returnType, superBases,
+      unit, deferred)
   def collectScopedSym(s: ScopedSymbol) = definedSymsDuringLowering.add(s)
   def collectScopedSyms(s: ScopedSymbol*) = definedSymsDuringLowering.addAll(s)
   def registerTempSymbol(trm: Option[Term], erasedType: Opt[ErasedValueType], dbgNme: Str = "tmp")(using State) =
@@ -59,15 +84,19 @@ class LoweringCtx(
     case _ => v
 object LoweringCtx:
   def loweringCtx(using sub: LoweringCtx): LoweringCtx = sub
-  def empty(symbolsToPreserve: Set[ScopedSymbol]) =
+  def empty(symbolsToPreserve: Set[ScopedSymbol], unit: LoweringUnit) =
     LoweringCtx(Map.empty, symbolsToPreserve, mayRet = false, collection.mutable.Set.empty, returnType = N,
-      superBases = Map.empty)
+      superBases = Map.empty, unit, deferred = false)
   def nestFunc(returnType: Opt[ErasedValueType])(using sub: LoweringCtx): LoweringCtx =
-    LoweringCtx(sub.localVals, sub.symbolsToPreserve, mayRet = true, sub.definedSymsDuringLowering, returnType, sub.superBases)
+    LoweringCtx(sub.localVals, sub.symbolsToPreserve, mayRet = true, sub.definedSymsDuringLowering, returnType, sub.superBases,
+      sub.unit, deferred = true)
   def nestScoped(using sub: LoweringCtx): LoweringCtx =
-    LoweringCtx(sub.localVals, sub.symbolsToPreserve, sub.mayRet, collection.mutable.Set.empty, sub.returnType, sub.superBases)
+    LoweringCtx(sub.localVals, sub.symbolsToPreserve, sub.mayRet, collection.mutable.Set.empty, sub.returnType, sub.superBases,
+      sub.unit, sub.deferred)
+  // The bodies of class-like definitions use this context. Their constructors can run after the top-level code.
   def withSuperBase(owner: InnerSymbol, parent: Path)(using sub: LoweringCtx): LoweringCtx =
-    LoweringCtx(sub.localVals, sub.symbolsToPreserve, sub.mayRet, sub.definedSymsDuringLowering, sub.returnType, sub.superBases + (owner -> parent))
+    LoweringCtx(sub.localVals, sub.symbolsToPreserve, sub.mayRet, sub.definedSymsDuringLowering, sub.returnType,
+      sub.superBases + (owner -> parent), sub.unit, deferred = true)
 end LoweringCtx
 
 import LoweringCtx.loweringCtx
@@ -299,7 +328,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         case R(_) => wat("RcdField in non-Rcd context", res)
         case L((mut, flds, loc)) =>
           subTerm(lhs): l =>
-            subTerm_nonTail(rhs): r =>
+            def add(r: Path): Block =
               // JavaScript can only freeze an object as a whole, so one `mut` field makes the allocated
               // record mutable. Its other fields are then assignable at run time, while resolution reads
               // them as their initializers (see RecordMember). `assignNamedField` rejects the
@@ -307,6 +336,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
               // record type making the field mutable, or through a computed key, remain: see
               // slop/strictres/MixedRecords.mls.
               continueBlock(stats, L((mut || field.mut, RcdArg(S(l), r) :: flds, loc)))
+            term_nonTail(rhs):
+              // A field written with a name is a variable of the record's block. The record reads the variable
+              // once the block has run, so the statements that follow the field can still assign it
+              // (see codegen/InterleavedRecords.mls). The path stays as it is for that reason.
+              case variable @ Value.SimpleRef(_: VarSymbol) => add(variable)
+              case r => stablePath(r)(add)
       case (decl @ LetDecl(sym, annotations)) :: stats =>
         reportAnnotations(decl, annotations)
         if sym.asTrm.forall(_.owner.isEmpty) then
@@ -572,8 +607,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     * so handlers can keep argument evaluation outside their generated constructor. */
   def lowerSuperCtorCall(ctorParamLists: ConstructorParams, args: Ls[Term], loc: Opt[Loc])(k: Call => Block)(using LoweringCtx): Block =
     def call(argss: Ls[Ls[Arg]]): Block =
-      val nonEmpty = if argss.isEmpty then Nil ne_:: Nil else argss.ne_!
-      k(Call.raw(State.builtinOpsMap("super").asSimpleRef, nonEmpty)(CallMetadata.mlsFunWithEffect, loc))
+      val nonEmpty = if argss.isEmpty then Nil :: Nil else argss
+      k(Call.rawOf(State.builtinOpsMap("super").asSimpleRef, nonEmpty)(CallMetadata.mlsFunWithEffect, loc))
     def zipArgs(remainingParamss: Ls[ParamList], args: Ls[Term], acc: Ls[Ls[Arg]]): Block = (remainingParamss, args) match
       case (ps :: remainingParamss2, arg :: remainingArgs) => lowerConstructorArgs(arg, ps, ctorParamLists.isMls): as =>
         zipArgs(remainingParamss2, remainingArgs, as :: acc)
@@ -597,45 +632,89 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   /** Lower a call with multiple argument lists into `Call` nodes,
     * trying to group as many as possible into a single one
     * when they correspond to parameter lists of the same callee. */
-  def lowerMultiCall(fr: Path, isMlsFun: Bool, annotations: Ls[Annot], args: Ls[Term], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
-    val isConstructor = fr.targetSymbol.exists:
+  def lowerMultiCall(fr: Path, isMlsFun: Bool, annotations: Ls[Annot], args: Ls[ArgumentList], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
+    val (target, definition) = fr.targetSymbol match
+      case S(fs: TermSymbol) => (S(fs), fs.defn)
+      case _ => (N, N)
+    val isConstructor = target.exists:
       case _: ClassCtorSymbol => true
       case _ => false
-    def zipArgs(remainingParamss: Ls[ParamList], remainingArgss: Ls[Term], acc: Ls[Ls[Arg]], mayRaiseEffects: Bool): Block =
+    // Source calls group the written parameter lists. A previous compilation unit can already have
+    // rewritten the same symbol's IR definition; the pipeline binds its physical signature after staging.
+    lazy val groupedSignature: ErasedFuncSignature = target.flatMap(_.sourceErasure) match
+      case S(sig: ErasedFuncSignature) => sig
+      case N if isConstructor =>
+        // A constructor imported from a legacy unit has written parameters but no published signature.
+        ErasedFuncSignature.Signature(definition.get.params.map(LoweredParamList.erasedLayout), ErasedResult.Direct(N))
+      case sig => lastWords(s"A definition with parameter lists has no function signature (${sig})")
+    def zipArgs(remainingParamss: Ls[ParamList], remainingArgss: Ls[ArgumentList], acc: Ls[Ls[Arg]], mayRaiseEffects: Bool): Block =
       (remainingParamss, remainingArgss) match
-      case (ps :: remainingParams, args :: remainingArgs) =>
+      case (ps :: remainingParams, ArgumentList(args, _) :: remainingArgs) =>
         def next(as: Ls[Arg]): Block = zipArgs(remainingParams, remainingArgs, as :: acc, mayRaiseEffects)
         if isConstructor then lowerConstructorArgs(args, ps, isMlsFun)(next)
         else lowerArgs(args, expectedParamTypes(ps, args))(next)
       case (Nil, Nil) =>
-        k(Call(fr, acc.reverse.ne_!)(CallMetadata(isMlsFun, mayRaiseEffects, annotations), loc))
+        k(new Call(fr, acc.reverse)(groupedSignature, CallMetadata(isMlsFun, mayRaiseEffects, annotations), loc))
       case (Nil, args :: remainingArgss) =>
         acc.reverse match
-        case Nil => lowerRemainingCalls(fr, args, remainingArgss, annotations, loc)(k)
-        case acc: NELs[Ls[Arg]] =>
-          val call = Call(fr, acc)(CallMetadata(isMlsFun, mayRaiseEffects, Nil), loc)
+        case Nil =>
+          // The callee is a function value: the result of a getter, a field, a variable, or another expression.
+          // It is evaluated before the arguments, like any operand.
+          def applied(callee: Path): Block =
+            lowerRemainingCalls(callee, args, remainingArgss, annotations, loc)(k)
+          getterRead(fr) match
+            case callee: Path if mayBeForeignMethod(callee) => applied(callee)
+            case read => stablePath(read)(applied)
+        case acc =>
+          val call = new Call(fr, acc)(groupedSignature, CallMetadata(isMlsFun, mayRaiseEffects, Nil), loc)
           val tmp = loweringCtx.registerTempSymbol(N, erasedType = call.erasedType, "baseCall")
           Assign(tmp, call, lowerRemainingCalls(tmp.asSimpleRef, args, remainingArgss, annotations, loc)(k))
       case (_ :: _, Nil) =>
-        k(Call(fr, acc.reverse.ne_!)(CallMetadata(isMlsFun, mayRaiseEffects, annotations), loc))
-    fr.targetSymbol match
-    case S(fs: TermSymbol) =>
-      fs.defn match
+        k(new Call(fr, acc.reverse)(groupedSignature, CallMetadata(isMlsFun, mayRaiseEffects, annotations), loc))
+    target match
+    case S(fs) =>
+      definition match
       case S(td: TermDefinition) =>
         zipArgs(td.params, args, Nil, fs.mayRaiseEffects)
       case _ => zipArgs(Nil, args, Nil, fs.mayRaiseEffects)
-    case _ => zipArgs(Nil, args, Nil, true)
+    case N => zipArgs(Nil, args, Nil, true)
   
-  def lowerRemainingCalls(base: Path, args: Term, remainingArgss: Ls[Term], annotations: Ls[Annot], loc: Opt[Loc])
-        (k: Result => Block)(using LoweringCtx): Block =
-    lowerArgs(args, Nil): as =>
-      val call = Call(base, as ne_:: Nil)(CallMetadata(false, true, annotations), loc)
+  /** An argument list of a source call, with the calling conventions of the values that it is applied to, as
+    * far as resolution knows them. Only the application of a function value reads `callee`: a definition
+    * with parameter lists publishes its own signature.
+    */
+  case class ArgumentList(args: Term, callee: ErasedCallee)
+
+  /** Lower the application of each argument list in turn, starting with a call of `base` on `first`. Each
+    * callee is a function value, unless `base` is a definition without source parameter lists that publishes
+    * a function signature. When every value that the application can call follows one signature, which a
+    * declared function type provides, the call takes it. Any other call takes a dynamic signature.
+    */
+  private def lowerRemainingCalls(base: Path, first: ArgumentList, remainingArgss: Ls[ArgumentList],
+        annotations: Ls[Annot], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
+    val signature = Call.publishedSignature(base) match
+      case S(sig: ErasedFuncSignature) => sig
+      case _ => first.callee.sharedSignatures match
+        case signature :: Nil => signature
+        // A dynamic call passes and returns reference values. A callee that declares an unboxed slot cannot
+        // use that convention, even if the arguments at this call happen to be references.
+        case _ if first.callee.declaredSignatures.forall(allowsDynamicCall) => ErasedFuncSignature.dynamic(1)
+        case _ => return fail(ErrorReport(
+          msg"Cannot determine a common calling convention for the possible function types at this call" ->
+            first.args.toLoc.orElse(loc) :: Nil, source = Diagnostic.Source.Compilation))
+    lowerArgs(first.args, signature.paramLists.head.params): as =>
+      val call = Call(base, as :: Nil)(signature, CallMetadata(false, true, annotations), loc)
       remainingArgss match
       case Nil => k(call)
-      case args :: remainingArgss =>
+      case next :: remainingArgss =>
         val tmp = loweringCtx.registerTempSymbol(N, erasedType = call.erasedType, "callPrefix")
         Assign(tmp, call,
-          lowerRemainingCalls(tmp.asSimpleRef, args, remainingArgss, annotations, loc)(k))
+          lowerRemainingCalls(tmp.asSimpleRef, next, remainingArgss, annotations, loc)(k))
+
+  private def allowsDynamicCall(sig: ErasedFuncSignature): Bool =
+    def fitsReference(slot: Opt[ErasedValueType]): Bool =
+      slot.forall(tpe => ErasedType.needsCast(tpe.canonicalize, ErasedType.Unknown).contains(false))
+    fitsReference(sig.ret) && sig.paramLists.forall(ps => ps.params.forall(fitsReference) && ps.rest.forall(fitsReference))
   
   /** Lower an instantiation with multiple argument lists into `Instantiate` and `Call` nodes,
     * trying to group as many as possible into a single `Instantiate`
@@ -643,6 +722,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     * If fewer argument lists are provided than constructor parameter lists, eta-expands
     * the missing ones with fresh lambdas (avoiding reliance on mutable JS class curry semantics). */
   def lowerMultiInstantiate(mut: Bool, cls: Path, ctorParamLists: ConstructorParams, args: Ls[Term], annotations: Ls[Annot], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
+    // An argument list that follows those of the constructor is applied to the new object. No application
+    // term describes that call, so resolution records no callee for it.
+    def extraArgumentList(args: Term): ArgumentList = ArgumentList(args, ErasedCallee.unknown)
     // Nullary instantiations are represented with one empty argument list, matching existing `Instantiate` usage.
     def buildInstantiate(argss: Ls[Ls[Arg]]): Instantiate =
       Instantiate(mut, cls, if argss.isEmpty then Nil :: Nil else argss)(InstantiateMetadata(annotations), loc)
@@ -660,7 +742,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         val inst = buildInstantiate(acc.reverse)
         val tmp = loweringCtx.registerTempSymbol(N, erasedType = inst.erasedType, "baseInst")
         Assign(tmp, inst,
-          lowerRemainingCalls(tmp.asSimpleRef, args, remainingArgss, annotations, N)(k))
+          lowerRemainingCalls(tmp.asSimpleRef, extraArgumentList(args), remainingArgss.map(extraArgumentList), annotations, N)(k))
       case (remainingParamss, Nil) =>
         // * Eta-expand missing argument lists by creating lambdas for each remaining param list.
         // * This makes partial `new C(args...)` explicit instead of relying on the JS class curry.
@@ -694,7 +776,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             val inst = buildInstantiate(as :: Nil)
             val tmp = loweringCtx.registerTempSymbol(N, erasedType = inst.erasedType, "baseInst")
             Assign(tmp, inst,
-              lowerRemainingCalls(tmp.asSimpleRef, remainingArgss.head, remainingArgss.tail, annotations, N)(k))
+              lowerRemainingCalls(tmp.asSimpleRef, extraArgumentList(remainingArgss.head),
+                remainingArgss.tail.map(extraArgumentList), annotations, N)(k))
     else zipArgs(ctorParamLists.lists, args, Nil)
   
   /** Materialize omitted MLscript constructor parameters as null before optimizers
@@ -1035,7 +1118,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       warnStmt
       sym.erasedSignature match
       case S(sig) =>
-        val params = sig.paramLists.head.zipWithIndex.map: (erasedType, i) =>
+        val params = sig.paramLists.head.params.zipWithIndex.map: (erasedType, i) =>
           val id = new Tree.Ident(if sym.unary then "arg" else s"arg${i + 1}")
           Param(FldFlags.empty, VarSymbol(id, erasedType = erasedType, mut = false), N, Modulefulness.none, Nil)(id.toLoc)
         val ps = PlainParamList(params)(N)
@@ -1063,7 +1146,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         // * and are lowered to functions with an empty parameter list
         // * (non-local functions are compiled into getter methods selected on some prefix)
         if isImplicitNullaryCall(td.tsym) then
-          return k(Call(
+          return k(Call.of(
               bs.asMemberRef(disamb.get).withLocOf(ref), Nil ne_:: Nil
             )(CallMetadata(isMlsFun = true, mayRaiseEffects = true, annots), ref.toLoc))
       case S(td: TermDefinition) =>
@@ -1086,7 +1169,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case S(owner) =>
         warnStmt
         val sel = Select(owner.asThis, sym.id)(S(sym), ref.toLoc)(false)
-        return k(sel)
+        return k(getterRead(sel))
       case N => ()
     case _ => ()
     warnStmt
@@ -1117,7 +1200,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           syntax.Fun,
           N,
           ident,
-          erasure = S(ErasedFuncSignature.Signature(paramLists = Nil :: Nil, result = ErasedResult.Direct(N))),
+          erasure = S(ErasedFuncSignature.Signature(paramLists = ErasedParamList(Nil, N) :: Nil, result = ErasedResult.Direct(N))),
         )
         val td: TermDefinition = TermDefinition(
           syntax.Fun,
@@ -1185,7 +1268,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
               r,
               Assign(
                 isContinue,
-                Call(
+                Call.of(
                   State.builtinOpsMap("===").asSimpleRef,
                   (bodyResult.asSimpleRef.asArg :: State.runtimeSymbol.asSimpleRef.selSN("Continue").asArg :: Nil) ne_:: Nil,
                 )(CallMetadata.defaultMlsFun, trm.toLoc),
@@ -1264,7 +1347,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             msg"Builtin '${sym.nme}' is not a unary operator" -> t.toLoc :: Nil, S(arg),
             source = Diagnostic.Source.Compilation)
         subTerm(arg): ar =>
-          k(Call(sym.asSimpleRef.withLocOf(ref), (Arg(N, ar) :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, trm.toLoc))
+          k(Call.of(sym.asSimpleRef.withLocOf(ref), (Arg(N, ar) :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, trm.toLoc))
       case st.Tup(Fld(FldFlags.benign(), arg1, N) :: Fld(FldFlags.benign(), arg2, N) :: Nil) =>
         if !sym.binary then raise:
           ErrorReport(
@@ -1294,8 +1377,17 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           case State.andSymbol => mkBooleanMatch(true)
           case State.orSymbol => mkBooleanMatch(false)
           case _ =>
-            subTerm_nonTail(arg2): ar2 =>
-              k(Call(sym.asSimpleRef.withLocOf(ref), (Arg(N, ar1) :: Arg(N, ar2) :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, trm.toLoc))
+            // * Like an argument that precedes others, the left operand is evaluated before the code of the
+            // * right operand runs (see `inOrder`).
+            val operands = collection.mutable.Buffer.empty[Arg]
+            val evaluation = inOrder(operands, ar1)(Arg(N, _)):
+              subTerm_nonTail(arg2): ar2 =>
+                operands += Arg(N, ar2)
+                End()
+            // * A right operand that aborts has no path, and the operation is never reached.
+            if operands.sizeIs < 2 then evaluation
+            else Begin(evaluation,
+              k(Call.of(sym.asSimpleRef.withLocOf(ref), operands.toList :: Nil)(CallMetadata.defaultMlsFun, trm.toLoc)))
       case _ => fail:
         ErrorReport(
           msg"Unexpected arguments for builtin symbol '${sym.nme}'" -> arg.toLoc :: Nil, S(arg),
@@ -1306,18 +1398,19 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       
       // Collect chains of App nodes: `f(a)(b)(c)` → (f, [a, b, c])
       // This allows lowering curried calls as a single `Call` with multiple arg lists.
+      def argumentList(app: st.App): ArgumentList = ArgumentList(app.rhs, app.calleeSlot.callee)
       @tailrec
-      def collectAppChain(expr: st, args: Ls[Term]): (st, Ls[Term]) =
+      def collectAppChain(expr: st, args: Ls[ArgumentList]): (st, Ls[ArgumentList]) =
         expr.instantiated match
         // * Applications of builtin operators, such as `- x` in `(- x)(2)`, are lowered as primitive
         // * operations by the dedicated case above, so they cannot be part of a curried call chain;
         // * otherwise, the operator would be lowered as a function value and curried-call handling could
         // * mistake application of the primitive's result for a partial application of the operator.
         case app @ st.App(BuiltinRef(_), _) => (app, args)
-        case st.App(inner, innerArg) => collectAppChain(inner, innerArg :: args)
+        case inner: st.App => collectAppChain(inner.lhs, argumentList(inner) :: args)
         case st.TyApp(inner, _) => collectAppChain(inner, args) // type args are erased
         case expr => (expr, args)
-      val (baseF, allArgs) = collectAppChain(f, arg :: Nil)
+      val (baseF, allArgs) = collectAppChain(f, argumentList(app) :: Nil)
       
       val isMlsFun = baseF.resolvedSym.fold(baseF.isInstanceOf[st.Lam]):
         case _: sem.BuiltinSymbol => true
@@ -1372,7 +1465,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           case S(SpecialBuiltin.ScopeLocally) => return
             // scope.locally only applies to the innermost call; extra args are applied on top
             if allArgs.length > 1 then
-              subTerm(baseF)(conclude)
+              calleeTerm(baseF)(conclude)
             else
               arg match
               case Tup(Fld(FldFlags.benign(), body, N) :: Nil) =>
@@ -1391,8 +1484,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case N =>
       
       instantiated match
-      // * Due to whacky JS semantics, we need to make sure that selections leading to a call
-      // * are preserved in the call and not moved to a temporary variable.
+      // Pass the selection to lowerMultiCall so it can read a known getter or call a method on its receiver.
       case sup: st.Super => superReference(sup)(conclude)
       case sel: NewSel if sel.isClassValue => classOf(sel.prefix, sel)((p, _) => conclude(p))
       case sel: NewSel => newSelection(sel): (prefix, name, target) =>
@@ -1413,7 +1505,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case Resolved(sel @ SelProj(prefix, _, nme), sym) =>
         subTerm(prefix): p =>
           conclude(Select(p, definitionIdent(nme, sym))(S(sym), trm.toLoc)(false).withLocOf(sel))
-      case _ => subTerm(baseF)(conclude)
+      case _ => calleeTerm(baseF)(conclude)
     case h @ Handle(lhs, rhs, as, cls, defs, bod) =>
       if config.effectHandlers.isEmpty then
         return fail:
@@ -1562,7 +1654,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     case whltrm: st.SynthWhile => ucs.Normalization(this)(whltrm)(k)
       
     case sel: NewSel if sel.isClassValue => classOf(sel.prefix, sel)((p, _) => k(p))
-    case sup: st.Super => superReference(sup)(k)
+    case sup: st.Super => superReference(sup)(p => k(getterRead(p)))
     case sel: NewSel => newSelection(sel): (prefix, name, target) =>
       if sel.tupleIndex.nonEmpty then subTerm_nonTail(prefix)(p => selectionPath(sel, p, name, target)(k))
       else setupNamedSelection(prefix, name, target, sel.keyAccess, sel.toLoc)(k)
@@ -1582,20 +1674,20 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       // * definition when one exists. Do not use this fallback for ordinary `Sel`
       // * lowering unless that convention is changed at the source.
       subTerm(prefix): p =>
-        k(Select(p, memberIdent(nme, sel.sym))(sel.sym.flatMap:
+        k(getterRead(Select(p, memberIdent(nme, sel.sym))(sel.sym.flatMap:
           case s: DefinitionSymbol[?] => S(s)
           case bms: BlockMemberSymbol => bms.asTrm // TODO: clean up logic
           case err: ErrorSymbol => N
-        , trm.toLoc)(false))
+        , trm.toLoc)(false)))
     case Resolved(sel @ SynthSel(prefix, nme), sym) =>
       // * Not using `setupSelection` as these selections are not meant to be sanity-checked
       subTerm(prefix): p =>
-        k(Select(p, definitionIdent(nme, sym))(S(sym), trm.toLoc)(false))
+        k(getterRead(Select(p, definitionIdent(nme, sym))(S(sym), trm.toLoc)(false)))
     
     case DynSel(prefix, fld, ai, _) =>
       subTerm(prefix): p =>
         subTerm_nonTail(fld): f =>
-          k(DynSelect(p, f, dynSelectKind(ai))(trm.toLoc))
+          k(propertyRead(DynSelect(p, f, dynSelectKind(ai))(trm.toLoc)))
       
       
     case DynNew(cls, args) =>
@@ -1744,10 +1836,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       setupTerm("Builtin", Value.Lit(Tree.StrLit(sym.nme))(N) :: Nil)(k)
     case Resolved(Ref(sym), disamb) =>
       sym match
-        case sym: BlockMemberSymbol => k(loweringCtx(sym.asMemberRef(disamb)))
+        case sym: BlockMemberSymbol => k(getterRead(loweringCtx(sym.asMemberRef(disamb))))
         case sym: SimpleSymbol => k(sym.asSimpleRef)
         case sym => lastWords(s"Unexpected symbol kind ${sym.getClass.getSimpleName}: $sym")
-    case Ref(sym: ValueSymbol) => k(loweringCtx(sym.asPath))
+    case Ref(sym: ValueSymbol) => k(getterRead(loweringCtx(sym.asPath)))
     case SimpleRef(sym: LocalVarSymbol) => k(loweringCtx(sym.asSimpleRef))
     case Ref(sym) => lastWords(s"Unexpected symbol kind ${sym.getClass.getSimpleName}: $sym")
     case SynthSel(Ref(sym: ModuleOrObjectSymbol), name) => // Module/object cross-stage references
@@ -1886,11 +1978,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           rec(as, Arg(spd, ar) :: asr)
     rec(as, Nil)
     */
-    var asr: Ls[Arg] = Nil
-    var fsr: Ls[RcdArg] = Nil
+    val asr = collection.mutable.Buffer.empty[Arg]
+    val fsr = collection.mutable.Buffer.empty[RcdArg]
+    type Elems = Ls[(Term -> Term) \/ (Opt[SpreadKind] -> st)]
     // * `expected` tracks the erased types of the not-yet-consumed positional parameters.
     // * A spread or named argument breaks positional alignment, so remaining arguments pass through uncast.
-    def rec(as: Ls[(Term -> Term) \/ (Opt[SpreadKind] -> st)], expected: Ls[Opt[ErasedValueType]]): Block = as match
+    def rec(as: Elems, expected: Ls[Opt[ErasedValueType]]): Block = as match
       case Nil => End()
       case R((spd, a)) :: as =>
         subTerm_nonTail(a):
@@ -1901,29 +1994,68 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                   case e :: es => (e, es)
                   case Nil => (N, Nil)
                 castPathTo(ar, expTy, a.toLoc): value =>
-                  asr ::= Arg(N, value)
-                  rec(as, expRest)
+                  inOrder(asr, value)(Arg(N, _))(rec(as, expRest))
               case S(_) =>
-                asr ::= Arg(spd, ar)
-                rec(as, Nil)
+                inOrder(asr, ar)(Arg(spd, _))(rec(as, Nil))
       case L((idx, t)) :: as =>
         subTerm_nonTail(idx): ir =>
           subTerm_nonTail(t):
             ensureOnce: (tr: Path) =>
-              fsr ::= RcdArg(S(ir), tr)
-              rec(as, Nil)
+              inOrder(fsr, tr)(RcdArg(S(ir), _))(rec(as, Nil))
     val b = rec(as, expectedTypes)
     if fsr.isEmpty then
-      Begin(b, k(asr.reverse))
+      Begin(b, k(asr.toList))
     else
       val rcdSym = loweringCtx.registerTempSymbol(N, erasedType = N, "rcd")
       Begin(
         b,
         Assign(
           rcdSym,
-          Record(mut = false, fsr.reverse)(N),
-          k((Arg(N, rcdSym.asSimpleRef) :: asr).reverse)))
+          Record(mut = false, fsr.toList)(N),
+          k(asr.toList :+ Arg(N, rcdSym.asSimpleRef))))
       
+  
+  /** Whether evaluating `read` can fail on a checked cast. */
+  private def hasCheckedCast(read: Path): Bool = read match
+    case CastPath(operand, _, check) => check || hasCheckedCast(operand)
+    case _ => false
+  
+  /** Adds to `operands` the operand lowered to the stable path `read`, and returns the statements that evaluate it
+    * followed by `rest`, the statements lowered for the operands that follow it.
+    *
+    * The operands of a call or of an operator are evaluated from left to right. A stable path yields the same
+    * value when the operands are consumed, after `rest` (see [[isStable]]). A checked cast of one can fail
+    * though, and its failure has to precede the effects of `rest`: it is read into a temporary first, which is
+    * only kept if `rest` can run code (see [[runsCode]]).
+    */
+  private def inOrder[A](operands: collection.mutable.Buffer[A], read: Path)(mk: Path => A)(rest: => Block)
+        (using LoweringCtx): Block =
+    if !hasCheckedCast(read) then
+      operands += mk(read)
+      rest
+    else
+      val tmp = new TempSymbol(N, read.erasedType, "arg")
+      val index = operands.length
+      operands += mk(tmp.asSimpleRef)
+      val restBlock = rest
+      if runsCode(restBlock) then
+        loweringCtx.collectScopedSym(tmp)
+        Assign(tmp, read, restBlock)
+      else
+        operands(index) = mk(read)
+        restBlock
+  
+  /** Whether running `b`, the statements lowered for some operands, can run code, whose effects the failure of
+    * an earlier operand must precede. Defining functions does not, nor does assigning a pure result to a
+    * temporary of the lowering, which is a fresh variable.
+    */
+  private def runsCode(b: Block): Bool = b match
+    case End(_) => false
+    case Define(_: FunDefn, rest) => runsCode(rest)
+    case Assign(_: TempSymbol, rhs, rest) if rhs.isPure => runsCode(rest)
+    case Scoped(_, body) => runsCode(body)
+    case Begin(sub, rest) => runsCode(sub) || runsCode(rest)
+    case _ => true
   
   inline def plainArgs(ts: Ls[st])(k: Ls[Arg] => Block)(using LoweringCtx): Block =
     subTerms(ts)(asr => k(asr.map(Arg(N, _))))
@@ -1941,17 +2073,100 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     subTerm(t, inStmtPos = inStmtPos)(k)
   
   inline def subTerm(t: st, inStmtPos: Bool = false)(k: Path => Block)(using LoweringCtx): Block =
-    term(t, inStmtPos = inStmtPos):
-      case v: Value => k(v)
-      case p: Path => k(p)
-      case lam @ Lambda(params, body) =>
-        val lamSym = BlockMemberSymbol("lambda", Nil, false)
-        loweringCtx.collectScopedSym(lamSym)
-        val lamDef = FunDefn.withFreshSymbol(N, lamSym, params :: Nil, lam.bodyType, body)(configOverride = N, annotations = lam.annot)
-        Define(lamDef, k(lamDef.asPath))
-      case r =>
-        val l = loweringCtx.registerTempSymbol(N, erasedType = r.erasedType)
-        Assign(l, r, k(l.asSimpleRef))
+    term(t, inStmtPos = inStmtPos)(stablePath(_)(k))
+  
+  /** Lowers the callee of an application, retaining a selected member's path. [[lowerMultiCall]] uses
+    * its target to tell a method from a getter or a field, and to type the application of a function value.
+    * The operands of the selection are stable, like those of every selection that lowering builds.
+    */
+  def calleeTerm(t: st)(k: Path => Block)(using LoweringCtx): Block =
+    term_nonTail(t):
+      case Call(path, Nil) => k(path)
+      case sel: (Select | DynSelect) => k(sel)
+      case r => stablePath(r)(k)
+  
+  /** Whether `callee` selects a member that can be a method of a foreign object, which needs its receiver.
+    * The selection then stays on the call, which reads the member when it applies it, after the arguments.
+    *
+    * This holds for a member that resolution did not identify, and for a record field: a record type describes
+    * any object that has its fields, including a foreign one whose fields are methods, as `Indexable` does for
+    * arrays and strings.
+    *
+    * Any other member that resolution identified is either a method, whose selection is a stable callee, or a
+    * value, which is read like any other operand: before the arguments when it can change.
+    */
+  private def mayBeForeignMethod(callee: Path)(using LoweringCtx): Bool =
+    def structural(member: Opt[DefinitionSymbol[?]]): Bool = member match
+      case N | S(_: (RecordFieldSymbol | RecordFieldAlternativesSymbol)) => true
+      case S(_) => false
+    callee match
+      case sel: Select if structural(sel.symbol) =>
+        softAssert(isStable(sel.qual), "The prefix of a selection in callee position must be stable")
+        true
+      case sel @ DynSelect(qual, key, DynSelectKind.Unknown | DynSelectKind.Member(_)) if structural(sel.targetSymbol) =>
+        softAssert(isStable(qual) && isStable(key), "The operands of a selection in callee position must be stable")
+        true
+      case _ => false
+  
+  /** Whether evaluating `p` yields the same value wherever the code that follows evaluates it. Lowering only
+    * puts such paths in the nested positions of the IR: the arguments and callees of calls, operands,
+    * the prefixes and keys of selections, the elements of tuples and records, and the scrutinees of matches
+    * (see [[stablePath]]). Evaluating a stable path can still fail, as when it selects a field of `null`.
+    *
+    * This differs from [[Path.isStable]], which the passes that follow lowering use: that property also
+    * requires repeated reads to yield the same object, which references to functions do not guarantee, and it
+    * has no access to the assignments of the source program.
+    */
+  private def isStable(p: Path)(using LoweringCtx): Bool = p match
+    case _: Value.Lit | _: Value.This => true
+    case Value.SimpleRef(_: BuiltinSymbol) => true
+    // Lowering assigns each of its temporaries before the code that reads it, and nothing assigns them again.
+    case Value.SimpleRef(_: TempSymbol) => true
+    case Value.SimpleRef(sym: VarSymbol) => !sym.mut || loweringCtx.unit.isStable(sym, loweringCtx.deferred)
+    case Value.MemberRef(_, disamb) => isStableMember(disamb)
+    case sel: Select => isStable(sel.qual) && sel.symbol.exists(isStableMember)
+    case sel: SuperSelect =>
+      isStable(sel.qual) && isStable(sel.base) && isStable(sel.key) && isStableMember(sel.symbol)
+    // An array or an object reached by a computed key can be mutated.
+    case _: DynSelect => false
+    case CastPath(value, _, _) => isStable(value)
+  
+  /** Whether a reference to `sym`, or its selection from a stable prefix, always yields the same value.
+    * Classes, modules, objects, patterns, functions with parameter lists, and immutable values do.
+    *
+    * An assignment can still reach an immutable value: `@unsafe set` skips the check, and so does a write
+    * through a receiver that also has a mutable candidate for the field (see `assignNamedField`). Such an
+    * assignment initializes the value, and reading the value before its last assignment is undefined behavior,
+    * like reading a variable before its initialization.
+    *
+    * `let` bindings and `mut val`s can be reassigned, a getter runs on each access, foreign code can modify the
+    * fields of foreign (`declare`d) definitions, and a read-only record field can alias a mutable one.
+    */
+  private def isStableMember(sym: DefinitionSymbol[?]): Bool = sym match
+    case _: (ClassLikeSymbol | PatternSymbol) => true
+    case sym: TermSymbol => sym.k match
+      case syntax.ImmutVal => sym.defn.forall(!Inheritance.isExternal(_))
+      case syntax.Ins | syntax.ParamBind => true
+      // Functions that lowering generates have no source definition, and they all take parameters.
+      case syntax.Fun => sym.defn.forall(_.params.nonEmpty)
+      case _ => false
+    case _: TypeAliasSymbol => false
+  
+  /** Makes the lowered result `r` available to `k` as a stable path (see [[isStable]]). A path whose value can
+    * change is read into a temporary here, which is where the source program evaluates it: the path that `k`
+    * receives can then be evaluated after the code of the operands that follow it. Lambdas are defined and other
+    * results are bound to temporaries.
+    */
+  private def stablePath(r: Result)(k: Path => Block)(using LoweringCtx): Block = r match
+    case p: Path if isStable(p) => k(p)
+    case lam @ Lambda(params, body) =>
+      val lamSym = BlockMemberSymbol("lambda", Nil, false)
+      loweringCtx.collectScopedSym(lamSym)
+      val lamDef = FunDefn.withFreshSymbol(N, lamSym, params :: Nil, lam.bodyType, body)(configOverride = N, annotations = lam.annot)
+      Define(lamDef, k(lamDef.asPath))
+    case r =>
+      val l = loweringCtx.registerTempSymbol(N, erasedType = r.erasedType)
+      Assign(l, r, k(l.asSimpleRef))
 
   /** Lowers the flow of the lowered result `r` into a slot of erased type `expected`, where `k` builds the code
     * that stores the value it receives into that slot.
@@ -2017,7 +2232,30 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         layout.expectedTypes(count)
 
 
-  def program(main: st.Blk, symbolsToPreserve: Set[ScopedSymbol]): Program =
+  /** The local variables that the program assigns with `set`, including from nested definitions.
+    * Reading the other local variables of the program is stable (see [[isStable]]).
+    */
+  private def reassignedLocals: Set[LocalVarSymbol] =
+    summon[Erasure].sourceStatements.collect:
+      case Assgn(lhs, _) =>
+        // This follows how the `Assgn` case of `term` finds the assigned symbol.
+        val target = lhs.withoutCaptures.instantiated match
+          case Resolved(inner, _) => inner
+          case target => target
+        target match
+          case SimpleRef(sym: LocalVarSymbol) => S(sym)
+          case Ref(sym: LocalVarSymbol) => S(sym)
+          case _ => N
+    .flatten.toSet
+  
+  /** Lowers the compilation unit `main`.
+    *
+    * @param symbolsToPreserve the symbols of the unit that the returned program leaves unscoped
+    * @param sharedLocals the local variables that other compilation units can access and assign. The blocks of
+    *   a worksheet or REPL session share their top-level variables, so each block passes those of all the
+    *   blocks so far, itself included. A unit that shares no variables passes the empty set.
+    */
+  def program(main: st.Blk, symbolsToPreserve: Set[ScopedSymbol], sharedLocals: Set[LocalVarSymbol]): Program =
     summon[Erasure].requireCompleted(main)
     
     val (imps, funs, rest) = splitBlock(main.stats, Nil, Nil, Nil)
@@ -2028,8 +2266,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     inline def topLevelVals = rest.iterator.collect:
         case td: TermDefinition if td.k.isInstanceOf[syntax.Val] => td.sym
     
+    val unit = LoweringUnit(
+      reassigned = reassignedLocals,
+      shared = sharedLocals,
+      ownTopLevel = main.stats.iterator.collect { case LetDecl(sym: LocalVarSymbol, _) => sym }.toSet,
+    )
     val blk =
-      inScopedBlockExcept(symbolsToPreserve)(using LoweringCtx.empty(symbolsToPreserve ++ topLevelVals)):
+      inScopedBlockExcept(symbolsToPreserve)(using LoweringCtx.empty(symbolsToPreserve ++ topLevelVals, unit)):
         block(funs ::: rest, R(main.res))(ImplctRet)
     
     Program(
@@ -2048,7 +2291,26 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         !disamb.isDefined
         // * ^ We assume that resolved selections are well-behaved (will not yield undefined or debind a method)
         // || disamb.exists(_.defn.exists(_.hasDeclareModifier.isEmpty)) // * This checks `declare` members, which is normally unwanted
-      )(k)
+      )(sel => k(propertyRead(sel)))
+  
+  /** Reads the member that `path` selects. Reading a getter runs its body, so the read is an explicit call with
+    * the getter's signature. Other members, such as fields, methods, and modules, are read through the path itself.
+    *
+    * Effects cannot be performed in getters (see `HandlerLowering`), so a getter read raises none.
+    */
+  private def getterRead(path: Path): Result = Call.publishedSignature(path) match
+    case S(sig: ErasedGetterSignature) => Call(path, Nil)(sig, CallMetadata.memberRead, path.toLoc)
+    case _ => path
+  
+  /** Reads a property selected in the source. Under new resolution, a selection without a resolved target reads a
+    * property that may be implemented by a getter, so the read is an explicit call with an unknown getter signature.
+    * Legacy resolution leaves many selections of known fields without a target, so it reads them through their path.
+    */
+  private def propertyRead(path: Path): Result = path match
+    case DynSelect(_, _, DynSelectKind.ArrayIdx) => path
+    case _: (Select | DynSelect) if newResolution && path.targetSymbol.isEmpty =>
+      Call(path, Nil)(ErasedGetterSignature.dynamic, CallMetadata.memberRead, path.toLoc)
+    case _ => getterRead(path)
   
   final def setupFunctionOrByNameDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str], returnType: Opt[ErasedValueType])
       (using LoweringCtx): (List[LoweredParamList], Block) =
@@ -2087,11 +2349,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       val tupleSlice = State.runtimeSymbol.asSimpleRef.sel(State.tupleSymbol).sel(State.tupleSliceArraySymbol)
       // * `Tuple.sliceArray(xs, i, j)` drops the first `i` and the last `j` elements of `xs`.
       def slice(xs: Path, i: Int, j: Int): Result =
-        Call(tupleSlice, (xs :: int(i) :: int(j) :: Nil).map(_.asArg) ne_:: Nil)(CallMetadata.defaultMlsFun, N)
+        Call.of(tupleSlice, (xs :: int(i) :: int(j) :: Nil).map(_.asArg) ne_:: Nil)(CallMetadata.defaultMlsFun, N)
       // * The sanity check emitted by the code generator only knows about the lowered parameter list,
       // * so we check that the arguments of the trailing parameters are present here.
       val check = Option.when(config.sanityChecks.isDefined):
-        Call(State.runtimeSymbol.asSimpleRef.sel(State.checkVariadicArgsSymbol),
+        Call.of(State.runtimeSymbol.asSimpleRef.sel(State.checkVariadicArgsSymbol),
           (Value.Lit(Tree.StrLit(name.getOrElse("")))(N) :: int(layout.minimumCount) :: int(layout.required.length) :: args :: Nil)
             .map(_.asArg) ne_:: Nil)(CallMetadata.defaultMlsFun, N)
       val prologue: LoweringCtx ?=> Block => Block = body =>
@@ -2204,7 +2466,7 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
       case ((sym, res), acc) => Assign(sym, res, acc)
   
   private def pureCall(fn: Path, args: Ls[Arg]): Result =
-    Call(fn, args ne_:: Nil)(CallMetadata.defaultMlsFun, N)
+    Call.of(fn, args :: Nil)(CallMetadata.defaultMlsFun, N)
   
   extension (k: Block => Block)
     def |>: (b: Block): Block = k(b)

@@ -24,6 +24,8 @@ class WorkerWrapper
   extends BlockTransformer(SymbolSubst.Id):
   import tl.*
 
+  private val generatorWrappers = collection.mutable.Set.empty[TermSymbol]
+
   private def withInline(annotations: Ls[Annot]): Ls[Annot] =
     if annotations.exists(_.isInstanceOf[Annot.Inline]) then annotations else Annot.Inline()(N) :: annotations
   
@@ -71,7 +73,7 @@ class WorkerWrapper
     val workerSym = new BlockMemberSymbol(s"${fun.sym.nme}$$worker", Nil, nameIsMeaningful = true)
     val workerBody = rewriteParams(body, paramMapping)
     val workerSignature = FunDefn.Signature.fromParams(workerParams :: Nil, fun.signature.result)
-    val workerDSym = TermSymbol(syntax.Fun, N, syntax.Tree.Ident(workerSym.nme))
+    val workerDSym = TermSymbol(syntax.Fun, N, syntax.Tree.Ident(workerSym.nme), S(workerSignature.erasure))
     workerSym.tsym = S(workerDSym)
     val worker = FunDefn(
       N,
@@ -83,17 +85,15 @@ class WorkerWrapper
     val workerArgs = fun.params.flatMap(_.params).map: param =>
       Arg(N, param.sym.asSimpleRef)
     val wrapperBody = Return(
-      Call(worker.asPath, workerArgs ne_:: Nil)(CallMetadata.mlsFunWithEffect, N),
+      Call.of(worker.asPath, workerArgs :: Nil)(CallMetadata.mlsFunWithEffect, N),
     )
     // The generator body now belongs to the worker. The wrapper returns its Iterator directly
     // under the same symbol, whose source erasure keeps the payload for later source cloning.
     val wrapperAnnotations = withInline(fun.annotations.filter:
       case Annot.NoInline() | Annot.Generator() => false
       case _ => true)
-    val wrapperSignature =
-      if fun.generator then FunDefn.Signature.fromParams(fun.params,
-        ErasedResult.fromAnnotations(fun.signature.erasure.ret, wrapperAnnotations))
-      else fun.signature
+    val wrapperSignature = if fun.generator then fun.signature.forWrapper(wrapperAnnotations) else fun.signature
+    if wrapperSignature isnt fun.signature then generatorWrappers += fun.dSym
     val wrapper = FunDefn(
       fun.owner,
       fun.sym,
@@ -110,7 +110,7 @@ class WorkerWrapper
     else fun.copy(fun.owner, fun.sym, fun.dSym, fun.signature, body)(fun.configOverride, annotations)
   
   override def applyProgram(prog: Program): Program =
-    val res = super.applyProgram(prog)
+    val res = super.applyProgram(prog).mapMain(Call.refreshSignatures(_, generatorWrappers))
     if res isnt prog then log("▶ Worker-wrapper:\n" + printer(res))
     res
   

@@ -188,7 +188,7 @@ fun f(x) =
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f7;
 //│ f7 = function f(x1) {
-//│   let while1, tmp1, tmp2;
+//│   let while1, tmp2, tmp3;
 //│   while1 = (undefined, function () {
 //│     if (x1 === true) {
 //│       Predef.print(x1);
@@ -196,9 +196,9 @@ fun f(x) =
 //│     }
 //│     return runtime.LoopEnd;
 //│   });
-//│   tmp1 = while1();
-//│   tmp2 = tmp1 !== runtime.LoopEnd;
-//│   if (tmp2 === true) { return tmp1 }
+//│   tmp2 = while1();
+//│   tmp3 = tmp2 !== runtime.LoopEnd;
+//│   if (tmp3 === true) { return tmp2 }
 //│   return runtime.Unit;
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -222,9 +222,9 @@ data class Baz(z) extends Bar(z * 1) with
 //│     Baz1.class = this
 //│   }
 //│   constructor(z) {
-//│     let tmp1;
-//│     tmp1 = z * 1;
-//│     super(tmp1);
+//│     let tmp2;
+//│     tmp2 = z * 1;
+//│     super(tmp2);
 //│     this.z = z;
 //│     this.k = 6;
 //│   }

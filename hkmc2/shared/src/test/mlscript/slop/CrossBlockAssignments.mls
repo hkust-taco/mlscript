@@ -1,0 +1,55 @@
+:.
+
+
+// A function assigns a variable of its own worksheet block. Later blocks see both.
+let counter = 0
+fun bump() =
+  set counter += 1
+  counter
+//│ counter = 0
+
+
+// The call of `bump` assigns `counter` between the assignment and the read below. The simplifier does not see
+// the definition of `bump` in this block. It treats the variable as captured because the block neither scopes
+// nor preserves it, so it does not propagate the constant assigned here past the call.
+:noInline
+:soir
+:expect 2
+set counter = 0
+let bumped = bump()
+bumped + counter
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp; set counter⁰ = 0; set bumped⁰ = bump⁰(); set tmp = counter⁰; return +⁰(bumped⁰, tmp)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 2
+//│ bumped = 1
+
+// The same holds when the call is inlined.
+:soir
+:expect 2
+set counter = 0
+let inlined = bump()
+inlined + counter
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp, inlinedVal, tmp1, tmp2;
+//│ set counter⁰ = 0;
+//│ set tmp1 = counter⁰;
+//│ set tmp2 = +⁰(tmp1, 1);
+//│ set counter⁰ = tmp2;
+//│ set inlinedVal = counter⁰;
+//│ set inlined⁰ = inlinedVal;
+//│ set tmp = counter⁰;
+//│ return +⁰(inlinedVal, tmp)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 2
+//│ inlined = 1
+
+// A function body reads the variable at each use, because the variable is free in it.
+:noInline
+:expect 2
+fun inFunction() =
+  set counter = 0
+  let bumped = bump()
+  bumped + counter
+inFunction()
+//│ = 2

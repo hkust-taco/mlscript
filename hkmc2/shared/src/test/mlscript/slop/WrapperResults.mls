@@ -25,17 +25,17 @@ Promise.all([asPromise(answer(true, 42)), asPromise(answer(false, 43))])
 //│         return (value as! Int⁰)
 //│     end
 //│   };
-//│   return (runtime⁰.toJsAsync﹖(answer¹) as! Promise⁰)
+//│   return (runtime⁰.toJsAsync﹖‹(...Array⁰) => ?›(answer¹) as! Promise⁰)
 //│ };
 //│ define asPromise⁰ as fun asPromise¹(value: Promise⁰): Promise⁰ {
 //│   return value
 //│ };
-//│ set tmp = answer²(true, 42);
-//│ set tmp1 = asPromise¹(tmp);
-//│ set tmp2 = answer²(false, 43);
-//│ set tmp3 = asPromise¹(tmp2);
+//│ set tmp = answer²‹(Bool⁰, Unknown) => Promise⁰›(true, 42);
+//│ set tmp1 = asPromise¹‹(Promise⁰) => Promise⁰›(tmp);
+//│ set tmp2 = answer²‹(Bool⁰, Unknown) => Promise⁰›(false, 43);
+//│ set tmp3 = asPromise¹‹(Promise⁰) => Promise⁰›(tmp2);
 //│ set tmp4 = [tmp1, tmp3];
-//│ return globalThis⁰.Promise¹.all⁰(tmp4)
+//│ return globalThis⁰.Promise¹.all⁰‹(Array⁰) => Promise⁰›(tmp4)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [42, 43]
 
@@ -67,9 +67,9 @@ GeneratorChild().generate("payload").next()
 //│     return value
 //│   }
 //│ };
-//│ set tmp = GeneratorChild²();
-//│ set tmp1 = tmp.generate³("payload");
-//│ return tmp1.next⁰()
+//│ set tmp = GeneratorChild²‹() => GeneratorChild⁰›();
+//│ set tmp1 = tmp.generate³‹(Unknown) => generator Unknown›("payload");
+//│ return tmp1.next⁰‹() => Unknown›()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = {value: "payload", done: true}
 
@@ -85,11 +85,11 @@ fun curried: Int -> Int -> Int
 //│ let curried$worker;
 //│ @inline
 //│ define curried⁰ as fun curried¹(x: Int⁰)(y: Int⁰): Unknown {
-//│   return curried$worker⁰(x, y)
+//│   return curried$worker⁰‹(Int⁰, Int⁰) => generator Int⁰›(x, y)
 //│ };
 //│ @generator
 //│ define curried$worker as fun curried$worker⁰(x: Int⁰, y: Int⁰): generator Int⁰ {
-//│   do yield⁰(x);
+//│   do yield⁰‹(?) => ?›(x);
 //│   return y
 //│ };
 //│ end
@@ -146,7 +146,7 @@ class ResultGetters(value: Any) with
 let results = new ResultGetters(42)
 Promise.all([results.wrapped, results.direct, results.ordinary()])
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp: Promise⁰, tmp1: Array⁰;
+//│ let tmp: Promise⁰, tmp1: Promise⁰, tmp2: Promise⁰, tmp3: Array⁰;
 //│ define ResultGetters⁰ as class ResultGetters² {
 //│   private val value⁰: Unknown;
 //│   constructor ResultGetters¹(value: Unknown) {
@@ -159,19 +159,21 @@ Promise.all([results.wrapped, results.direct, results.ordinary()])
 //│     define wrapped$async as fun wrapped¹(): Int⁰ {
 //│       return (ResultGetters².this.value⁰ as! Int⁰)
 //│     };
-//│     return (runtime⁰.toJsAsync﹖(wrapped¹) as! Promise⁰)
+//│     return (runtime⁰.toJsAsync﹖‹(...Array⁰) => ?›(wrapped¹) as! Promise⁰)
 //│   }
 //│   method direct⁰ = fun direct¹: Promise⁰ {
-//│     return globalThis⁰.Promise¹.resolve⁰(43)
+//│     return globalThis⁰.Promise¹.resolve⁰‹(Unknown) => Promise⁰›(43)
 //│   }
 //│   method ordinary⁰ = fun ordinary¹(): Promise⁰ {
-//│     return globalThis⁰.Promise¹.resolve⁰(44)
+//│     return globalThis⁰.Promise¹.resolve⁰‹(Unknown) => Promise⁰›(44)
 //│   }
 //│ };
 //│ set results⁰ = new ResultGetters²(42);
-//│ set tmp = results⁰.ordinary¹();
-//│ set tmp1 = [results⁰.wrapped², results⁰.direct¹, tmp];
-//│ return globalThis⁰.Promise¹.all⁰(tmp1)
+//│ set tmp = results⁰.wrapped²‹=> Promise⁰›;
+//│ set tmp1 = results⁰.direct¹‹=> Promise⁰›;
+//│ set tmp2 = results⁰.ordinary¹‹() => Promise⁰›();
+//│ set tmp3 = [tmp, tmp1, tmp2];
+//│ return globalThis⁰.Promise¹.all⁰‹(Array⁰) => Promise⁰›(tmp3)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [42, 43, 44]
 //│ results = ResultGetters(_)
@@ -189,35 +191,35 @@ Promise.all([results.wrapped, results.direct, results.ordinary()])
 let recursiveIterator = forward()
 [recursiveIterator.next(), recursiveIterator.next(), recursiveIterator.next()]
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp: ?, tmp1: ?, tmp2: ?, recursive$worker;
+//│ let tmp: Unknown, tmp1: Unknown, tmp2: Unknown, recursive$worker;
 //│ @noInline
 //│ define forward⁰ as fun forward¹(): Unknown {
-//│   return recursive$worker⁰(1, 42)
+//│   return recursive$worker⁰‹(Int⁰, Int⁰) => generator Int⁰›(1, 42)
 //│ };
 //│ @inline
 //│ define recursive⁰ as fun recursive¹(count: Int⁰)(result: Int⁰): Unknown {
-//│   return recursive$worker⁰(count, result)
+//│   return recursive$worker⁰‹(Int⁰, Int⁰) => generator Int⁰›(count, result)
 //│ };
 //│ @generator
 //│ define recursive$worker as fun recursive$worker⁰(count: Int⁰, result: Int⁰): generator Int⁰ {
 //│   let scrut: Bool⁰, tmp3: Int⁰;
-//│   do yield⁰(count);
-//│   set scrut = >⁰(count, 0);
+//│   do yield⁰‹(?) => ?›(count);
+//│   set scrut = >⁰‹(?, ?) => Bool⁰›(count, 0);
 //│   match scrut
 //│     true =>
 //│       let inlinedVal: Unknown;
-//│       set tmp3 = -⁰(count, 1);
-//│       set inlinedVal = recursive$worker⁰(tmp3, result);
-//│       do yield*⁰(inlinedVal);
+//│       set tmp3 = -⁰‹(?, ?) => ?›(count, 1);
+//│       set inlinedVal = recursive$worker⁰‹(Int⁰, Int⁰) => generator Int⁰›(tmp3, result);
+//│       do yield*⁰‹(?) => ?›(inlinedVal);
 //│       return result
 //│     else
 //│       return result
 //│   end
 //│ };
-//│ set recursiveIterator⁰ = forward¹();
-//│ set tmp = recursiveIterator⁰.next⁰();
-//│ set tmp1 = recursiveIterator⁰.next⁰();
-//│ set tmp2 = recursiveIterator⁰.next⁰();
+//│ set recursiveIterator⁰ = forward¹‹() => Unknown›();
+//│ set tmp = recursiveIterator⁰.next⁰‹() => Unknown›();
+//│ set tmp1 = recursiveIterator⁰.next⁰‹() => Unknown›();
+//│ set tmp2 = recursiveIterator⁰.next⁰‹() => Unknown›();
 //│ return [tmp, tmp1, tmp2]
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [{value: 1, done: false}, {value: 0, done: false}, {value: 42, done: true}]

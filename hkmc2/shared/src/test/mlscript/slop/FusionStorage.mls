@@ -57,9 +57,9 @@ read(Holder(Box(42), 1), true)
 //│     end
 //│   }
 //│ };
-//│ set tmp = Box²(42);
-//│ set tmp1 = Holder²(tmp, 1);
-//│ return read¹(tmp1, true)
+//│ set tmp = Box²‹(Int⁰) => Box⁰›(42);
+//│ set tmp1 = Holder²‹(Box⁰, Int⁰) => Holder⁰›(tmp, 1);
+//│ return read¹‹(Holder⁰, Bool⁰) => Int⁰›(tmp1, true)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
@@ -85,7 +85,7 @@ read(Holder(Box(42), 1), true)
 //│ };
 //│ @private
 //│ define $scrut_rest as fun $scrut_rest⁰(): Unknown {
-//│   return $choose_rest⁰()
+//│   return $choose_rest⁰‹() => Unknown›()
 //│ };
 //│ @private
 //│ define $choose_rest as fun $choose_rest⁰(): Unknown {
@@ -97,7 +97,7 @@ read(Holder(Box(42), 1), true)
 //│   match choose
 //│     true =>
 //│       set scrut = (holder.box² as! Function⁰);
-//│       return (scrut(arg$Box$0$, value) as! Int⁰)
+//│       return (scrut‹(...Array⁰) => ?›(arg$Box$0$, value) as! Int⁰)
 //│     else
 //│       return holder.other²
 //│   end
@@ -113,9 +113,9 @@ read(Holder(Box(42), 1), true)
 //│   }
 //│ };
 //│ set Box_value = 42;
-//│ set tmp1 = $scrut_Box⁰(Box_value);
-//│ set tmp = Holder⁵(tmp1, 1);
-//│ return read³(tmp, true)
+//│ set tmp1 = $scrut_Box⁰‹(Int⁰) => (Int⁰, Int⁰) => Int⁰›(Box_value);
+//│ set tmp = Holder⁵‹(Unknown, Int⁰) => Holder³›(tmp1, 1);
+//│ return read³‹(Holder³, Bool⁰) => Int⁰›(tmp, true)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
@@ -156,7 +156,7 @@ readOuter(Outer(Inner(Box(42), 1), 2), true)
 //│ define readOuter⁰ as fun readOuter¹(container: Outer⁰, choose: Bool⁰): Int⁰ {
 //│   match choose
 //│     true =>
-//│       return readInner¹(container.inner⁰, choose)
+//│       return readInner¹‹(Inner⁰, Bool⁰) => Int⁰›(container.inner⁰, choose)
 //│     else
 //│       return container.other⁵
 //│   end
@@ -181,9 +181,9 @@ readOuter(Outer(Inner(Box(42), 1), 2), true)
 //│     end
 //│   }
 //│ };
-//│ set tmp = Box²(42);
-//│ set tmp1 = Inner²(tmp, 1);
-//│ set tmp2 = Outer²(tmp1, 2);
-//│ return readOuter¹(tmp2, true)
+//│ set tmp = Box²‹(Int⁰) => Box⁰›(42);
+//│ set tmp1 = Inner²‹(Box⁰, Int⁰) => Inner⁰›(tmp, 1);
+//│ set tmp2 = Outer²‹(Inner⁰, Int⁰) => Outer⁰›(tmp1, 2);
+//│ return readOuter¹‹(Outer⁰, Bool⁰) => Int⁰›(tmp2, true)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42

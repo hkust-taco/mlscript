@@ -37,10 +37,10 @@ g(null, null)
 //│   return a
 //│ };
 //│ define g² as fun g³(o, p) {
-//│   let arg;
-//│   set arg = o.x﹖;
+//│   let tmp;
+//│   set tmp = o.x﹖;
 //│   do p.y﹖;
-//│   return f³(arg)
+//│   return f³(tmp)
 //│ };
 //│ return g³(null, null)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -48,6 +48,7 @@ g(null, null)
 
 // pure args before it are evaluated first too: `bump` sets `n`, so passing `n` must still give 0
 :soir
+:expect 0
 let n = 0
 class A with
   fun bump = set n = 1
@@ -65,10 +66,10 @@ g(new A)
 //│ };
 //│ @private
 //│ define g⁴ as fun g⁵(o) {
-//│   let arg;
-//│   set arg = n⁰;
+//│   let tmp1;
+//│   set tmp1 = n⁰;
 //│   do o.bump⁰;
-//│   return f⁵(arg)
+//│   return f⁵(tmp1)
 //│ };
 //│ set n⁰ = 0;
 //│ define A⁰ as class A¹ {

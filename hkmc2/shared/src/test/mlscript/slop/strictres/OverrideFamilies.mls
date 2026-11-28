@@ -29,10 +29,10 @@ private class Counter() extends Visitor() with
 //│     return 1
 //│   }
 //│ };
-//│ set tmp = Visitor²();
-//│ set tmp1 = tmp.visit¹(0);
-//│ set tmp2 = Counter²();
-//│ set tmp3 = tmp2.visit³("leaf");
+//│ set tmp = Visitor²‹() => Visitor⁰›();
+//│ set tmp1 = tmp.visit¹‹(Unknown) => Unknown›(0);
+//│ set tmp2 = Counter²‹() => Counter⁰›();
+//│ set tmp3 = tmp2.visit³‹(Unknown) => Unknown›("leaf");
 //│ return [tmp1, tmp3]
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [(), 1]
@@ -61,13 +61,13 @@ private class Inheriting() extends Declared() with
 //│ define Inheriting¹ as class Inheriting⁰ extends Declared⁰ {
 //│   constructor Inheriting²
 //│   method size² = fun size³(x: Int⁰): Int⁰ {
-//│     return +⁰(x, 1)
+//│     return +⁰‹(?, ?) => ?›(x, 1)
 //│   }
 //│ };
-//│ set tmp = Declared²();
-//│ set tmp1 = tmp.size¹(1);
-//│ set tmp2 = Inheriting²();
-//│ set tmp3 = tmp2.size³(1);
+//│ set tmp = Declared²‹() => Declared⁰›();
+//│ set tmp1 = tmp.size¹‹(Int⁰) => Int⁰›(1);
+//│ set tmp2 = Inheriting²‹() => Inheriting⁰›();
+//│ set tmp3 = tmp2.size³‹(Int⁰) => Int⁰›(1);
 //│ return [tmp1, tmp3]
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [1, 2]
@@ -148,10 +148,10 @@ private class Wide() extends Narrow() with
 //│     return x
 //│   }
 //│ };
-//│ set tmp = Narrow²();
-//│ set tmp1 = tmp.echo¹(1);
-//│ set tmp2 = Wide²();
-//│ set tmp3 = tmp2.echo³("s");
+//│ set tmp = Narrow²‹() => Narrow⁰›();
+//│ set tmp1 = tmp.echo¹‹(Int⁰) => Unknown›(1);
+//│ set tmp2 = Wide²‹() => Wide⁰›();
+//│ set tmp3 = tmp2.echo³‹(Unknown) => Unknown›("s");
 //│ return [tmp1, tmp3]
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [1, "s"]
@@ -183,10 +183,10 @@ private class Optional() extends Required() with
 //│     return x
 //│   }
 //│ };
-//│ set tmp = Required²();
-//│ set tmp1 = tmp.pass¹(1);
-//│ set tmp2 = Optional²();
-//│ set tmp3 = tmp2.pass³();
+//│ set tmp = Required²‹() => Required⁰›();
+//│ set tmp1 = tmp.pass¹‹(Unknown) => Unknown›(1);
+//│ set tmp2 = Optional²‹() => Optional⁰›();
+//│ set tmp3 = tmp2.pass³‹(Unknown) => Unknown›();
 //│ return [tmp1, tmp3]
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [1, null]
@@ -208,7 +208,7 @@ fetch(Loader())
 //│ let tmp: Loader⁰;
 //│ @private
 //│ define fetch⁰ as fun fetch¹(loader: Loader⁰): Int⁰ {
-//│   return (loader.load⁰() as! Int⁰)
+//│   return (loader.load⁰‹() => Unknown›() as! Int⁰)
 //│ };
 //│ @private
 //│ define Loader¹ as class Loader⁰ {
@@ -226,11 +226,11 @@ fetch(Loader())
 //│     define load$async as fun load³(): Int⁰ {
 //│       return 2
 //│     };
-//│     return (runtime⁰.toJsAsync﹖(load³) as! Promise⁰)
+//│     return (runtime⁰.toJsAsync﹖‹(...Array⁰) => ?›(load³) as! Promise⁰)
 //│   }
 //│ };
-//│ set tmp = Loader²();
-//│ return fetch¹(tmp)
+//│ set tmp = Loader²‹() => Loader⁰›();
+//│ return fetch¹‹(Loader⁰) => Int⁰›(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 

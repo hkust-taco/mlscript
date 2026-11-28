@@ -100,13 +100,16 @@ let xs = FingerTreeList.mk(1, 2, 3)
 if xs is
   [a, ...ls] then [a, ls]
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let element0$;
-//│ if (runtime.Tuple.isArrayLike(xs2) && xs2.length >= 1) {
-//│   let xs3, inlinedVal27, tmp16;
-//│   element0$ = runtime.Tuple.get(xs2, 0);
-//│   xs3 = xs2;
-//│   tmp16 = xs3.length - 0;
-//│   inlinedVal27 = runtime.safeCall(xs3.slice(1, tmp16));
+//│ let element0$, tmp59, tmp60, tmp61;
+//│ tmp59 = xs1;
+//│ if (runtime.Tuple.isArrayLike(tmp59) && tmp59.length >= 1) {
+//│   let inlinedVal27, tmp62, tmp63;
+//│   tmp60 = xs1;
+//│   element0$ = runtime.Tuple.get(tmp60, 0);
+//│   tmp61 = xs1;
+//│   tmp62 = tmp61.length;
+//│   tmp63 = tmp62 - 0;
+//│   inlinedVal27 = runtime.safeCall(tmp61.slice(1, tmp63));
 //│   return globalThis.Object.freeze([
 //│     element0$,
 //│     inlinedVal27
@@ -140,19 +143,19 @@ fun popByIndex(start, end, acc, lft: Indexable) =
 //│ let popByIndex;
 //│ popByIndex = function popByIndex(start, end, acc, lft) {
 //│   loopLabel: while (true) {
-//│     let scrut, tmp16, tmp17, tmp18;
+//│     let scrut, tmp63, tmp64, tmp65;
 //│     scrut = start >= end;
 //│     if (scrut === true) {
 //│       return acc
 //│     }
-//│     tmp16 = start + 1;
-//│     tmp17 = runtime.safeCall(lft.at(start));
-//│     tmp18 = globalThis.Object.freeze([
+//│     tmp63 = start + 1;
+//│     tmp64 = runtime.safeCall(lft.at(start /* as! Int */));
+//│     tmp65 = globalThis.Object.freeze([
 //│       ...acc,
-//│       tmp17
+//│       tmp64
 //│     ]);
-//│     start = tmp16;
-//│     acc = tmp18;
+//│     start = tmp63;
+//│     acc = tmp65;
 //│     continue loopLabel;
 //│   }
 //│ };

@@ -1,0 +1,26 @@
+:.
+
+
+module Config with
+  fun limit = 10
+  fun scale = n => n * limit
+  fun scaled(n) = n * limit
+
+
+// Reading a getter is a call without argument lists, which the inliner replaces by the getter's body.
+:soir
+:expect 10
+Config.limit
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ return 10
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 10
+
+// The same holds inside the body of another member, and for a getter whose result is applied.
+:soir
+:expect [20, 30]
+[Config.scaled(2), Config.scale(3)]
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ return [20, 30]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [20, 30]

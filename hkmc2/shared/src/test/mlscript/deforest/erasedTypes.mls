@@ -68,8 +68,8 @@ fun selected(n: Int, k: Str) =
 //│ define selected⁰ as fun selected¹(n: Int⁰, k: Str⁰): Array⁰ {
 //│   let x: Int⁰, arg$Box$0$: Int⁰, b: Function⁰, Box_v: Int⁰;
 //│   set Box_v = n;
-//│   set b = selected$b_Box⁰(Box_v);
-//│   return (b(arg$Box$0$, x, k) as! Array⁰)
+//│   set b = selected$b_Box⁰‹(Int⁰) => (Int⁰, Int⁰, Str⁰) => Array⁰›(Box_v);
+//│   return (b‹(...Array⁰) => ?›(arg$Box$0$, x, k) as! Array⁰)
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -96,7 +96,7 @@ fun withRest(n: Int, k: Str) =
 //│   set fv_arg$Box$0$ = Box_v;
 //│   set fv_x = fv_arg$Box$0$;
 //│   set fv_tmp = fv_x;
-//│   return withRest$b_rest⁰(fv_r, fv_tmp, fv_k)
+//│   return withRest$b_rest⁰‹(Int⁰, Int⁰, Str⁰) => Array⁰›(fv_r, fv_tmp, fv_k)
 //│ };
 //│ @private
 //│ define withRest$b_rest as fun withRest$b_rest⁰(fv_r: Int⁰, fv_tmp: Int⁰, fv_k: Str⁰): Array⁰ {
@@ -106,8 +106,8 @@ fun withRest(n: Int, k: Str) =
 //│ define withRest⁰ as fun withRest¹(n: Int⁰, k: Str⁰): Array⁰ {
 //│   let r: Int⁰, x: Int⁰, arg$Box$0$: Int⁰, tmp: Int⁰, b: Function⁰, Box_v: Int⁰;
 //│   set Box_v = n;
-//│   set b = withRest$b_Box⁰(Box_v);
-//│   return (b(arg$Box$0$, x, tmp, r, k) as! Array⁰)
+//│   set b = withRest$b_Box⁰‹(Int⁰) => (Int⁰, Int⁰, Int⁰, Int⁰, Str⁰) => Array⁰›(Box_v);
+//│   return (b‹(...Array⁰) => ?›(arg$Box$0$, x, tmp, r, k) as! Array⁰)
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -137,8 +137,8 @@ fun noFields(n: Int, s: Str) =
 //│   let p: Function⁰, Pair_a: Int⁰, Pair_b: Str⁰;
 //│   set Pair_a = n;
 //│   set Pair_b = s;
-//│   set p = noFields$p_Pair⁰(Pair_a, Pair_b);
-//│   return (p() as! Int⁰)
+//│   set p = noFields$p_Pair⁰‹(Int⁰, Str⁰) => () => Int⁰›(Pair_a, Pair_b);
+//│   return (p‹(...Array⁰) => ?›() as! Int⁰)
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -170,24 +170,24 @@ consume(produce(2))
 //│ @private
 //│ define produce⁰ as fun produce¹(n: Int⁰): Function⁰ {
 //│   let scrut: Bool⁰, tmp1: Int⁰;
-//│   set scrut = Predef⁰.equals⁰(n, 0);
+//│   set scrut = Predef⁰.equals⁰‹(Unknown, Unknown) => Bool⁰›(n, 0);
 //│   match scrut
 //│     true =>
 //│       let Box_v: Int⁰;
 //│       set Box_v = 42;
-//│       return $box_Box⁰(Box_v)
+//│       return $box_Box⁰‹(Int⁰) => (Int⁰, Int⁰) => Int⁰›(Box_v)
 //│     else
-//│       set tmp1 = -⁰(n, 1);
-//│       return (produce¹(tmp1) as!! Function⁰)
+//│       set tmp1 = -⁰‹(?, ?) => ?›(n, 1);
+//│       return produce¹‹(Int⁰) => Function⁰›(tmp1)
 //│   end
 //│ };
 //│ @private
 //│ define consume⁰ as fun consume¹(box: Function⁰): Int⁰ {
 //│   let value: Int⁰, arg$Box$0$: Int⁰;
-//│   return (box(arg$Box$0$, value) as! Int⁰)
+//│   return (box‹(...Array⁰) => ?›(arg$Box$0$, value) as! Int⁰)
 //│ };
-//│ set tmp = (produce¹(2) as!! Function⁰);
-//│ return consume¹(tmp)
+//│ set tmp = produce¹‹(Int⁰) => Function⁰›(2);
+//│ return consume¹‹(Function⁰) => Int⁰›(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
@@ -209,7 +209,7 @@ pass(Box(42)).v
 //│ };
 //│ set Box_v = 42;
 //│ set tmp = Box_v;
-//│ set tmp1 = (pass¹(tmp) as!! Int⁰);
+//│ set tmp1 = pass¹‹(Int⁰) => Int⁰›(tmp);
 //│ return tmp1
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
@@ -239,8 +239,8 @@ projectOpaqueBox(makeOpaqueBox())
 //│ define projectOpaqueBox⁰ as fun projectOpaqueBox¹(box: Int⁰): Int⁰ {
 //│   return box
 //│ };
-//│ set tmp = (makeOpaqueBox¹() as!! Int⁰);
-//│ return projectOpaqueBox¹(tmp)
+//│ set tmp = makeOpaqueBox¹‹() => Int⁰›();
+//│ return projectOpaqueBox¹‹(Int⁰) => Int⁰›(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
@@ -262,12 +262,12 @@ mixedBox(Box(1)) + mixedBox(hide(Box(42)))
 //│   set b = (x as! Box²);
 //│   return b.v¹
 //│ };
-//│ set tmp = Box¹(1);
-//│ set tmp1 = mixedBox¹(tmp);
-//│ set tmp2 = Box¹(42);
-//│ set tmp3 = Predef⁰.hide⁰(tmp2);
-//│ set tmp4 = mixedBox¹(tmp3);
-//│ return +⁰(tmp1, tmp4)
+//│ set tmp = Box¹‹(Int⁰) => Box²›(1);
+//│ set tmp1 = mixedBox¹‹(Unknown) => Int⁰›(tmp);
+//│ set tmp2 = Box¹‹(Int⁰) => Box²›(42);
+//│ set tmp3 = Predef⁰.hide⁰‹(Unknown) => Unknown›(tmp2);
+//│ set tmp4 = mixedBox¹‹(Unknown) => Int⁰›(tmp3);
+//│ return +⁰‹(?, ?) => ?›(tmp1, tmp4)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 43
 
@@ -296,11 +296,11 @@ isO(O)
 //│ };
 //│ @private
 //│ define isO⁰ as fun isO¹(x: Function⁰): Int⁰ {
-//│   return (x() as! Int⁰)
+//│   return (x‹(...Array⁰) => ?›() as! Int⁰)
 //│ };
 //│ define O¹ as object O⁰;
-//│ set deforest$lam = $x_O⁰();
-//│ return isO¹(deforest$lam)
+//│ set deforest$lam = $x_O⁰‹() => () => Int⁰›();
+//│ return isO¹‹(Function⁰) => Int⁰›(deforest$lam)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -345,9 +345,9 @@ get(H(Box(42), 1), true)
 //│     end
 //│   }
 //│ };
-//│ set tmp = Box¹(42);
-//│ set tmp1 = H²(tmp, 1);
-//│ return get¹(tmp1, true)
+//│ set tmp = Box¹‹(Int⁰) => Box²›(42);
+//│ set tmp1 = H²‹(Box², Int⁰) => H⁰›(tmp, 1);
+//│ return get¹‹(H⁰, Bool⁰) => Int⁰›(tmp1, true)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
@@ -373,7 +373,7 @@ get(H(Box(42), 1), true)
 //│ };
 //│ @private
 //│ define $scrut_rest as fun $scrut_rest⁰(): Unknown {
-//│   return $c_rest⁰()
+//│   return $c_rest⁰‹() => Unknown›()
 //│ };
 //│ @private
 //│ define $c_rest as fun $c_rest⁰(): Unknown {
@@ -385,7 +385,7 @@ get(H(Box(42), 1), true)
 //│   match c
 //│     true =>
 //│       set scrut = (h.b⁶ as! Function⁰);
-//│       return (scrut(arg$Box$0$, v) as! Int⁰)
+//│       return (scrut‹(...Array⁰) => ?›(arg$Box$0$, v) as! Int⁰)
 //│     else
 //│       return h.n⁵
 //│   end
@@ -401,9 +401,9 @@ get(H(Box(42), 1), true)
 //│   }
 //│ };
 //│ set Box_v = 42;
-//│ set tmp1 = $scrut_Box⁰(Box_v);
-//│ set tmp = H⁵(tmp1, 1);
-//│ return get³(tmp, true)
+//│ set tmp1 = $scrut_Box⁰‹(Int⁰) => (Int⁰, Int⁰) => Int⁰›(Box_v);
+//│ set tmp = H⁵‹(Unknown, Int⁰) => H³›(tmp1, 1);
+//│ return get³‹(H³, Bool⁰) => Int⁰›(tmp, true)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
@@ -427,7 +427,7 @@ get(idpoly(Box(42)))
 //│ @private @private
 //│ define get$get as fun get$get⁰(b: Function⁰): Int⁰ {
 //│   let v: Int⁰, arg$Box$0$: Int⁰;
-//│   return (b(arg$Box$0$, v) as! Int⁰)
+//│   return (b‹(...Array⁰) => ?›(arg$Box$0$, v) as! Int⁰)
 //│ };
 //│ @private @private
 //│ define idpoly$idpoly as fun idpoly$idpoly⁰(x: Function⁰): Function⁰ {
@@ -460,9 +460,9 @@ get(idpoly(Box(42)))
 //│   end
 //│ };
 //│ set Box_v = 42;
-//│ set tmp = get$b_Box⁰(Box_v);
-//│ set tmp1 = idpoly$idpoly⁰(tmp);
-//│ return get$get⁰(tmp1)
+//│ set tmp1 = get$b_Box⁰‹(Int⁰) => (Int⁰, Int⁰) => Int⁰›(Box_v);
+//│ set tmp = idpoly$idpoly⁰‹(Function⁰) => Function⁰›(tmp1);
+//│ return get$get⁰‹(Function⁰) => Int⁰›(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
@@ -480,11 +480,11 @@ get(idpoly(Box(42))) + idpoly(Box(1)).v
 //│ deforest > 	select: v
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp: Int⁰, get$b_Box, get$b_rest, get$get, tmp1: Function⁰, tmp2: Function⁰, tmp3: Int⁰, tmp4: Int⁰, idpoly$idpoly, idpoly$idpoly1, Box_v: Int⁰, Box_v1: Int⁰;
+//│ let tmp: Int⁰, get$b_Box, get$b_rest, get$get, tmp1: Function⁰, tmp2: Int⁰, tmp3: Function⁰, tmp4: Int⁰, idpoly$idpoly, idpoly$idpoly1, Box_v: Int⁰, Box_v1: Int⁰;
 //│ @private @private
 //│ define get$get as fun get$get¹(b: Function⁰): Int⁰ {
 //│   let v: Int⁰, arg$Box$0$: Int⁰;
-//│   return (b(arg$Box$0$, v) as! Int⁰)
+//│   return (b‹(...Array⁰) => ?›(arg$Box$0$, v) as! Int⁰)
 //│ };
 //│ @private @private
 //│ define idpoly$idpoly as fun idpoly$idpoly¹(x: Function⁰): Function⁰ {
@@ -521,13 +521,13 @@ get(idpoly(Box(42))) + idpoly(Box(1)).v
 //│   end
 //│ };
 //│ set Box_v = 42;
-//│ set tmp2 = get$b_Box¹(Box_v);
-//│ set tmp1 = idpoly$idpoly¹(tmp2);
-//│ set tmp = get$get¹(tmp1);
+//│ set tmp1 = get$b_Box¹‹(Int⁰) => (Int⁰, Int⁰) => Int⁰›(Box_v);
+//│ set tmp3 = idpoly$idpoly¹‹(Function⁰) => Function⁰›(tmp1);
+//│ set tmp = get$get¹‹(Function⁰) => Int⁰›(tmp3);
 //│ set Box_v1 = 1;
 //│ set tmp4 = Box_v1;
-//│ set tmp3 = idpoly$idpoly²(tmp4);
-//│ return +⁰(tmp, tmp3)
+//│ set tmp2 = idpoly$idpoly²‹(Int⁰) => Int⁰›(tmp4);
+//│ return +⁰‹(?, ?) => ?›(tmp, tmp2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 43
 
@@ -550,13 +550,13 @@ get(idTwice(Box(42)))
 //│ @private @private
 //│ define get$get as fun get$get²(b: Function⁰): Int⁰ {
 //│   let v: Int⁰, arg$Box$0$: Int⁰;
-//│   return (b(arg$Box$0$, v) as! Int⁰)
+//│   return (b‹(...Array⁰) => ?›(arg$Box$0$, v) as! Int⁰)
 //│ };
 //│ @private @private
 //│ define idTwice$idTwice as fun idTwice$idTwice⁰(x: Function⁰): Function⁰ {
 //│   let tmp2: Function⁰;
-//│   set tmp2 = idTwice_idpoly$idpoly⁰(x);
-//│   return idTwice_idpoly$idpoly¹(tmp2)
+//│   set tmp2 = idTwice_idpoly$idpoly⁰‹(Function⁰) => Function⁰›(x);
+//│   return idTwice_idpoly$idpoly¹‹(Function⁰) => Function⁰›(tmp2)
 //│ };
 //│ @private @private
 //│ define idTwice_idpoly$idpoly as fun idTwice_idpoly$idpoly⁰(x: Function⁰): Function⁰ {
@@ -583,8 +583,8 @@ get(idTwice(Box(42)))
 //│ @private
 //│ define idTwice⁰ as fun idTwice¹(x: Box²): Box² {
 //│   let tmp2: Box²;
-//│   set tmp2 = idpoly⁵(x);
-//│   return idpoly⁵(tmp2)
+//│   set tmp2 = idpoly⁵‹(Box²) => Box²›(x);
+//│   return idpoly⁵‹(Box²) => Box²›(tmp2)
 //│ };
 //│ @private
 //│ define get⁸ as fun get⁹(b: Box²): Int⁰ {
@@ -599,9 +599,9 @@ get(idTwice(Box(42)))
 //│   end
 //│ };
 //│ set Box_v = 42;
-//│ set tmp = get$b_Box²(Box_v);
-//│ set tmp1 = idTwice$idTwice⁰(tmp);
-//│ return get$get²(tmp1)
+//│ set tmp1 = get$b_Box²‹(Int⁰) => (Int⁰, Int⁰) => Int⁰›(Box_v);
+//│ set tmp = idTwice$idTwice⁰‹(Function⁰) => Function⁰›(tmp1);
+//│ return get$get²‹(Function⁰) => Int⁰›(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
@@ -635,10 +635,10 @@ get(O(Box(42)))
 //│     end
 //│   }
 //│ };
-//│ set tmp = Box¹(42);
+//│ set tmp = Box¹‹(Int⁰) => Box²›(42);
 //│ set O_b = tmp;
 //│ set tmp1 = O_b;
-//│ return get$get³(tmp1)
+//│ return get$get³‹(Box²) => Object⁰›(tmp1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = Box(42)
 
@@ -673,11 +673,11 @@ test(false, true)
 //│ define test$test as fun test$test⁰(c: Bool⁰, d: Bool⁰): Int⁰ {
 //│   let notFused: Box², fused: Function⁰, tmp: Object⁰, Box_v: Int⁰;
 //│   set Box_v = 0;
-//│   set fused = test_cons$x_Box⁰(Box_v);
-//│   set notFused = Box¹(1);
+//│   set fused = test_cons$x_Box⁰‹(Int⁰) => (Int⁰, Int⁰) => Int⁰›(Box_v);
+//│   set notFused = Box¹‹(Int⁰) => Box²›(1);
 //│   match c
 //│     true =>
-//│       return test_cons$cons⁰(fused)
+//│       return test_cons$cons⁰‹(Function⁰) => Int⁰›(fused)
 //│     else
 //│       match d
 //│         true =>
@@ -686,19 +686,19 @@ test(false, true)
 //│         else
 //│           set tmp = notFused;
 //│           end
-//│       do test_g$g⁰(tmp);
+//│       do test_g$g⁰‹(Object⁰) => Object⁰›(tmp);
 //│       return 1
 //│   end
 //│ };
 //│ @private @private
 //│ define test_cons$cons as fun test_cons$cons⁰(x: Function⁰): Int⁰ {
 //│   let v: Int⁰, arg$Box$0$: Int⁰;
-//│   return (x(arg$Box$0$, v) as! Int⁰)
+//│   return (x‹(...Array⁰) => ?›(arg$Box$0$, v) as! Int⁰)
 //│ };
 //│ @private @private
 //│ define test_cons$cons1 as fun test_cons$cons¹(x: Function⁰): Int⁰ {
 //│   let v: Int⁰, arg$Box$0$: Int⁰;
-//│   return (x(arg$Box$0$, v) as! Int⁰)
+//│   return (x‹(...Array⁰) => ?›(arg$Box$0$, v) as! Int⁰)
 //│ };
 //│ @private @private
 //│ define test_g$g as fun test_g$g⁰(x: Object⁰): Object⁰ {
@@ -748,11 +748,11 @@ test(false, true)
 //│ define test⁰ as fun test¹(c: Bool⁰, d: Bool⁰): Int⁰ {
 //│   let notFused: Box², fused: Function⁰, tmp: Object⁰, Box_v: Int⁰;
 //│   set Box_v = 0;
-//│   set fused = test_cons$x_Box¹(Box_v);
-//│   set notFused = Box¹(1);
+//│   set fused = test_cons$x_Box¹‹(Int⁰) => (Int⁰, Int⁰) => Int⁰›(Box_v);
+//│   set notFused = Box¹‹(Int⁰) => Box²›(1);
 //│   match c
 //│     true =>
-//│       return test_cons$cons¹(fused)
+//│       return test_cons$cons¹‹(Function⁰) => Int⁰›(fused)
 //│     else
 //│       match d
 //│         true =>
@@ -761,11 +761,11 @@ test(false, true)
 //│         else
 //│           set tmp = notFused;
 //│           end
-//│       do test_g$g¹(tmp);
+//│       do test_g$g¹‹(Object⁰) => Object⁰›(tmp);
 //│       return 1
 //│   end
 //│ };
-//│ return test$test⁰(false, true)
+//│ return test$test⁰‹(Bool⁰, Bool⁰) => Int⁰›(false, true)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -803,14 +803,14 @@ test(false, true)
 //│ @private @private
 //│ define test$test as fun test$test¹(c: Bool⁰, d: Bool⁰): Unknown {
 //│   let notFused: Object⁰, tmp: A⁰, tmp1: A⁰, fused: A⁰, tmp2: A⁰, O_b: A⁰;
-//│   set tmp = A¹(0);
+//│   set tmp = A¹‹(Int⁰) => A⁰›(0);
 //│   set O_b = tmp;
 //│   set fused = O_b;
-//│   set tmp1 = A¹(1);
-//│   set notFused = up⁰(tmp1);
+//│   set tmp1 = A¹‹(Int⁰) => A⁰›(1);
+//│   set notFused = up⁰‹(Object⁰) => Object⁰›(tmp1);
 //│   match c
 //│     true =>
-//│       return test_get$get⁰(fused)
+//│       return test_get$get⁰‹(A⁰) => A⁰›(fused)
 //│     else
 //│       match d
 //│         true =>
@@ -819,7 +819,7 @@ test(false, true)
 //│         else
 //│           set tmp2 = (notFused as! A⁰);
 //│           end
-//│       do test_g$g²(tmp2);
+//│       do test_g$g²‹(A⁰) => A⁰›(tmp2);
 //│       return 1
 //│   end
 //│ };
@@ -850,14 +850,14 @@ test(false, true)
 //│ @private
 //│ define test² as fun test³(c: Bool⁰, d: Bool⁰): Unknown {
 //│   let notFused: Object⁰, tmp: A⁰, tmp1: A⁰, fused: A⁰, tmp2: A⁰, O_b: A⁰;
-//│   set tmp = A¹(0);
+//│   set tmp = A¹‹(Int⁰) => A⁰›(0);
 //│   set O_b = tmp;
 //│   set fused = O_b;
-//│   set tmp1 = A¹(1);
-//│   set notFused = up⁰(tmp1);
+//│   set tmp1 = A¹‹(Int⁰) => A⁰›(1);
+//│   set notFused = up⁰‹(Object⁰) => Object⁰›(tmp1);
 //│   match c
 //│     true =>
-//│       return test_get$get¹(fused)
+//│       return test_get$get¹‹(A⁰) => A⁰›(fused)
 //│     else
 //│       match d
 //│         true =>
@@ -866,7 +866,7 @@ test(false, true)
 //│         else
 //│           set tmp2 = (notFused as! A⁰);
 //│           end
-//│       do test_g$g³(tmp2);
+//│       do test_g$g³‹(A⁰) => A⁰›(tmp2);
 //│       return 1
 //│   end
 //│ };
@@ -881,9 +881,12 @@ test(false, true)
 //│ @data
 //│ define O⁷ as class O⁶ {
 //│   val b¹⁴: A⁰;
-//│   constructor O⁵(b: A⁰) { define b¹⁴ as val b¹³: A⁰ = b; end }
+//│   constructor O⁵(b: A⁰) {
+//│     define b¹⁴ as val b¹³: A⁰ = b;
+//│     end
+//│   }
 //│ };
-//│ return test$test¹(false, true)
+//│ return test$test¹‹(Bool⁰, Bool⁰) => Unknown›(false, true)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -906,9 +909,9 @@ f(A, A)
 //│ define f$f as fun f$f⁰(a: A³, b: Function⁰): Int⁰ {
 //│   match a
 //│     AA⁰ =>
-//│       return f$f⁰(a, undefined)
+//│       return f$f⁰‹(A³, Function⁰) => Int⁰›(a, undefined)
 //│     else
-//│       return (b() as! Int⁰)
+//│       return (b‹(...Array⁰) => ?›() as! Int⁰)
 //│   end
 //│ };
 //│ @affine(1) @private
@@ -917,7 +920,7 @@ f(A, A)
 //│ };
 //│ @private
 //│ define f$b_rest as fun f$b_rest⁰(): Unknown {
-//│   return f$a_rest⁰()
+//│   return f$a_rest⁰‹() => Unknown›()
 //│ };
 //│ @private
 //│ define f$a_rest as fun f$a_rest⁰(): Unknown {
@@ -927,7 +930,7 @@ f(A, A)
 //│ define f⁰ as fun f¹(a: A³, b: A³): Int⁰ {
 //│   match a
 //│     AA⁰ =>
-//│       return f¹(a, a.x²)
+//│       return f¹‹(A³, A³) => Int⁰›(a, a.x²)
 //│     else
 //│       match b
 //│         A³ =>
@@ -946,8 +949,8 @@ f(A, A)
 //│     end
 //│   }
 //│ };
-//│ set deforest$lam = f$b_A⁰();
-//│ return f$f⁰(A³, deforest$lam)
+//│ set deforest$lam = f$b_A⁰‹() => () => Int⁰›();
+//│ return f$f⁰‹(A³, Function⁰) => Int⁰›(A³, deforest$lam)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
@@ -974,29 +977,29 @@ private fun f(a) = if a is A then 0 else 1
 //│ define g$g as fun g$g⁰(c: Bool⁰): Function⁰ {
 //│   match c
 //│     true =>
-//│       return f$a_A⁰()
+//│       return f$a_A⁰‹() => () => Int⁰›()
 //│     else
-//│       do fail⁰();
+//│       do fail⁰‹() => A⁵›();
 //│       return undefined
 //│   end
 //│ };
 //│ @private @private
 //│ define f$f as fun f$f¹(a: Function⁰): Int⁰ {
-//│   return (a() as! Int⁰)
+//│   return (a‹(...Array⁰) => ?›() as! Int⁰)
 //│ };
 //│ @private @private
 //│ define g$g1 as fun g$g¹(c: Bool⁰): Function⁰ {
 //│   match c
 //│     true =>
-//│       return f$a_A¹()
+//│       return f$a_A¹‹() => () => Int⁰›()
 //│     else
-//│       do fail⁰();
+//│       do fail⁰‹() => A⁵›();
 //│       return undefined
 //│   end
 //│ };
 //│ @private @private
 //│ define f$f1 as fun f$f²(a: Function⁰): Int⁰ {
-//│   return (a() as! Int⁰)
+//│   return (a‹(...Array⁰) => ?›() as! Int⁰)
 //│ };
 //│ @affine(1) @private
 //│ define f$a_A as fun f$a_A⁰()(): Int⁰ {
@@ -1016,7 +1019,7 @@ private fun f(a) = if a is A then 0 else 1
 //│ };
 //│ @private
 //│ define fail¹ as fun fail⁰(): A⁵ {
-//│   throw globalThis⁰.Error¹("error")
+//│   throw globalThis⁰.Error¹‹(Unknown, Unknown) => Error⁰›("error")
 //│ };
 //│ @private
 //│ define g⁴ as fun g⁵(c: Bool⁰): A⁵ {
@@ -1024,7 +1027,7 @@ private fun f(a) = if a is A then 0 else 1
 //│     true =>
 //│       return A⁵
 //│     else
-//│       return fail⁰()
+//│       return fail⁰‹() => A⁵›()
 //│   end
 //│ };
 //│ @private
@@ -1037,10 +1040,10 @@ private fun f(a) = if a is A then 0 else 1
 //│   end
 //│ };
 //│ define A⁶ as object A⁵;
-//│ set tmp2 = g$g⁰(true);
-//│ set tmp = f$f¹(tmp2);
-//│ set tmp3 = g$g¹(false);
-//│ set tmp1 = f$f²(tmp3);
+//│ set tmp2 = g$g⁰‹(Bool⁰) => Function⁰›(true);
+//│ set tmp = f$f¹‹(Function⁰) => Int⁰›(tmp2);
+//│ set tmp3 = g$g¹‹(Bool⁰) => Function⁰›(false);
+//│ set tmp1 = f$f²‹(Function⁰) => Int⁰›(tmp3);
 //│ return [tmp, tmp1]
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: error

@@ -102,9 +102,10 @@ set state += 1
 module Foo with
   val res = Foo().foo
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let Foo1, tmp;
-//│ tmp = state + 1;
-//│ state = tmp;
+//│ let Foo1, tmp, tmp1;
+//│ tmp = state;
+//│ tmp1 = tmp + 1;
+//│ state = tmp1;
 //│ Foo1 = function Foo() {
 //│   return globalThis.Object.freeze(new Foo.class());
 //│ };
@@ -113,9 +114,10 @@ module Foo with
 //│     Foo1.class = this
 //│   }
 //│   static {
-//│     let tmp1;
-//│     tmp1 = Foo1();
-//│     Foo.res = tmp1.foo;
+//│     let tmp2, tmp3;
+//│     tmp2 = Foo1();
+//│     tmp3 = tmp2.foo;
+//│     Foo.res = tmp3;
 //│   }
 //│   get foo() {
 //│     return state;

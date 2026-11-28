@@ -33,16 +33,16 @@ wasm.ref.i31(f(wasm.i32.const(42)))
 //│ @private
 //│ define f⁰ as fun f¹(n: Int32): Int32 {
 //│   let b: Function⁰;
-//│   set b = $b_Empty⁰();
-//│   return b(n)
+//│   set b = $b_Empty⁰‹() => (Int32) => Int32›();
+//│   return b‹(...Array⁰) => ?›(n)
 //│ };
 //│ @data
 //│ define Empty¹ as class Empty² {
 //│   constructor Empty⁰
 //│ };
-//│ set tmp = wasm⁰.i32⁰.const⁰(42);
-//│ set tmp1 = f¹(tmp);
-//│ return wasm⁰.ref⁰.i31⁰(tmp1)
+//│ set tmp = wasm⁰.i32⁰.const⁰‹(Int⁰) => Int32›(42);
+//│ set tmp1 = f¹‹(Int32) => Int32›(tmp);
+//│ return wasm⁰.ref⁰.i31⁰‹(Int32) => Int31⁰›(tmp1)
 //│ Wasm result:
 //│ = 42
 
@@ -70,11 +70,11 @@ wasm.ref.i31(project(Unboxed(wasm.i32.const(1))))
 //│     end
 //│   }
 //│ };
-//│ set tmp = wasm⁰.i32⁰.const⁰(1);
+//│ set tmp = wasm⁰.i32⁰.const⁰‹(Int⁰) => Int32›(1);
 //│ set Unboxed_p = tmp;
 //│ set tmp2 = Unboxed_p;
-//│ set tmp1 = project¹(tmp2);
-//│ return wasm⁰.ref⁰.i31⁰(tmp1)
+//│ set tmp1 = project¹‹(Int32) => Int32›(tmp2);
+//│ return wasm⁰.ref⁰.i31⁰‹(Int32) => Int31⁰›(tmp1)
 //│ Wasm result:
 //│ = 1
 
@@ -99,26 +99,29 @@ mixed(true)
 //│ @private
 //│ define mixed⁰ as fun mixed¹(c: Bool⁰): Int⁰ {
 //│   let b: Unboxed², o: Reference⁰, tmp: Int32, tmp1: Object⁰;
-//│   set tmp = wasm⁰.i32⁰.const⁰(1);
-//│   set b = Unboxed⁰(tmp);
-//│   set o = Reference¹(2);
+//│   set tmp = wasm⁰.i32⁰.const⁰‹(Int⁰) => Int32›(1);
+//│   set b = Unboxed⁰‹(Int32) => Unboxed²›(tmp);
+//│   set o = Reference¹‹(Int⁰) => Reference⁰›(2);
 //│   match c
 //│     true =>
-//│       return wasm⁰.ref⁰.i31⁰(b.p¹)
+//│       return wasm⁰.ref⁰.i31⁰‹(Int32) => Int31⁰›(b.p¹)
 //│     true =>
 //│       set tmp1 = b;
-//│       return ignore¹(tmp1)
+//│       return ignore¹‹(Unknown) => Int⁰›(tmp1)
 //│     else
 //│       set tmp1 = o;
-//│       return ignore¹(tmp1)
+//│       return ignore¹‹(Unknown) => Int⁰›(tmp1)
 //│   end
 //│ };
 //│ @data
 //│ define Reference² as class Reference⁰ {
 //│   val n⁰: Int⁰;
-//│   constructor Reference¹(n: Int⁰) { define n⁰ as val n¹: Int⁰ = n; end }
+//│   constructor Reference¹(n: Int⁰) {
+//│     define n⁰ as val n¹: Int⁰ = n;
+//│     end
+//│   }
 //│ };
-//│ return mixed¹(true)
+//│ return mixed¹‹(Bool⁰) => Int⁰›(true)
 //│ Wasm result:
 //│ = 1
 
@@ -150,17 +153,17 @@ viaResult(true, "unknown")
 //│ @private
 //│ define viaResult⁰ as fun viaResult¹(c: Bool⁰, o: Unknown): Int⁰ {
 //│   let b: Unboxed², tmp: Int32, tmp1: Unknown;
-//│   set tmp = wasm⁰.i32⁰.const⁰(1);
-//│   set b = Unboxed⁰(tmp);
+//│   set tmp = wasm⁰.i32⁰.const⁰‹(Int⁰) => Int32›(1);
+//│   set b = Unboxed⁰‹(Int32) => Unboxed²›(tmp);
 //│   match c
 //│     true =>
-//│       return wasm⁰.ref⁰.i31⁰(b.p¹)
+//│       return wasm⁰.ref⁰.i31⁰‹(Int32) => Int31⁰›(b.p¹)
 //│     else
-//│       set tmp1 = choose¹(c, b, o);
-//│       return sink¹(tmp1)
+//│       set tmp1 = choose¹‹(Bool⁰, Unboxed², Unknown) => Unknown›(c, b, o);
+//│       return sink¹‹(Unknown) => Int⁰›(tmp1)
 //│   end
 //│ };
-//│ return viaResult¹(true, "unknown")
+//│ return viaResult¹‹(Bool⁰, Unknown) => Int⁰›(true, "unknown")
 //│ Wasm result:
 //│ = 1
 
@@ -184,20 +187,20 @@ same(false)
 //│   match c
 //│     true =>
 //│       let Unboxed_p: Int32;
-//│       set tmp = wasm⁰.i32⁰.const⁰(1);
+//│       set tmp = wasm⁰.i32⁰.const⁰‹(Int⁰) => Int32›(1);
 //│       set Unboxed_p = tmp;
 //│       set tmp2 = Unboxed_p;
 //│       end
 //│     else
 //│       let Unboxed_p: Int32;
-//│       set tmp1 = wasm⁰.i32⁰.const⁰(2);
+//│       set tmp1 = wasm⁰.i32⁰.const⁰‹(Int⁰) => Int32›(2);
 //│       set Unboxed_p = tmp1;
 //│       set tmp2 = Unboxed_p;
 //│       end
 //│   set b = tmp2;
-//│   return wasm⁰.ref⁰.i31⁰(b)
+//│   return wasm⁰.ref⁰.i31⁰‹(Int32) => Int31⁰›(b)
 //│ };
-//│ return same¹(false)
+//│ return same¹‹(Bool⁰) => Int⁰›(false)
 //│ Wasm result:
 //│ = 2
 
@@ -222,33 +225,33 @@ together(true)
 //│ };
 //│ @private
 //│ define read⁰ as fun read¹(b: Unboxed²): Int⁰ {
-//│   return wasm⁰.ref⁰.i31⁰(b.p¹)
+//│   return wasm⁰.ref⁰.i31⁰‹(Int32) => Int31⁰›(b.p¹)
 //│ };
 //│ @private
 //│ define together⁰ as fun together¹(c: Bool⁰): Int⁰ {
 //│   let b: Unboxed², o: Reference⁰, first: Int⁰, tmp: Int32, tmp1: Int⁰, tmp2: Object⁰, tmp3: Int32, tmp4: Unboxed², tmp5: Int⁰;
-//│   set tmp = wasm⁰.i32⁰.const⁰(1);
-//│   set b = Unboxed⁰(tmp);
-//│   set o = Reference¹(2);
+//│   set tmp = wasm⁰.i32⁰.const⁰‹(Int⁰) => Int32›(1);
+//│   set b = Unboxed⁰‹(Int32) => Unboxed²›(tmp);
+//│   set o = Reference¹‹(Int⁰) => Reference⁰›(2);
 //│   match c
 //│     true =>
-//│       set tmp1 = read¹(b);
+//│       set tmp1 = read¹‹(Unboxed²) => Int⁰›(b);
 //│       end
 //│     true =>
 //│       set tmp2 = b;
-//│       set tmp1 = discard¹(tmp2);
+//│       set tmp1 = discard¹‹(Unknown) => Int⁰›(tmp2);
 //│       end
 //│     else
 //│       set tmp2 = o;
-//│       set tmp1 = discard¹(tmp2);
+//│       set tmp1 = discard¹‹(Unknown) => Int⁰›(tmp2);
 //│       end
 //│   set first = tmp1;
-//│   set tmp3 = wasm⁰.i32⁰.const⁰(2);
-//│   set tmp4 = Unboxed⁰(tmp3);
-//│   set tmp5 = read¹(tmp4);
-//│   return +⁰(first, tmp5)
+//│   set tmp3 = wasm⁰.i32⁰.const⁰‹(Int⁰) => Int32›(2);
+//│   set tmp4 = Unboxed⁰‹(Int32) => Unboxed²›(tmp3);
+//│   set tmp5 = read¹‹(Unboxed²) => Int⁰›(tmp4);
+//│   return +⁰‹(?, ?) => ?›(first, tmp5)
 //│ };
-//│ return together¹(true)
+//│ return together¹‹(Bool⁰) => Int⁰›(true)
 //│ Wasm result:
 //│ = 3
 
@@ -274,36 +277,36 @@ instances(true)
 //│ let instances_get$get, instances$instances, instances_get$get1;
 //│ @private @private
 //│ define instances_get$get as fun instances_get$get⁰(b: Int32): Int⁰ {
-//│   return wasm⁰.ref⁰.i31⁰(b)
+//│   return wasm⁰.ref⁰.i31⁰‹(Int32) => Int31⁰›(b)
 //│ };
 //│ @private @private
 //│ define instances$instances as fun instances$instances⁰(c: Bool⁰): Int⁰ {
 //│   let b: Unboxed², o: Reference⁰, first: Int⁰, tmp: Int32, tmp1: Int⁰, tmp2: Object⁰, tmp3: Int32, tmp4: Int⁰, tmp5: Int32, Unboxed_p: Int32;
-//│   set tmp = wasm⁰.i32⁰.const⁰(1);
-//│   set b = Unboxed⁰(tmp);
-//│   set o = Reference¹(2);
+//│   set tmp = wasm⁰.i32⁰.const⁰‹(Int⁰) => Int32›(1);
+//│   set b = Unboxed⁰‹(Int32) => Unboxed²›(tmp);
+//│   set o = Reference¹‹(Int⁰) => Reference⁰›(2);
 //│   match c
 //│     true =>
-//│       set tmp1 = get⁰(b);
+//│       set tmp1 = get⁰‹(Unboxed²) => Int⁰›(b);
 //│       end
 //│     true =>
 //│       set tmp2 = b;
-//│       set tmp1 = skip⁰(tmp2);
+//│       set tmp1 = skip⁰‹(Unknown) => Int⁰›(tmp2);
 //│       end
 //│     else
 //│       set tmp2 = o;
-//│       set tmp1 = skip⁰(tmp2);
+//│       set tmp1 = skip⁰‹(Unknown) => Int⁰›(tmp2);
 //│       end
 //│   set first = tmp1;
-//│   set tmp3 = wasm⁰.i32⁰.const⁰(2);
+//│   set tmp3 = wasm⁰.i32⁰.const⁰‹(Int⁰) => Int32›(2);
 //│   set Unboxed_p = tmp3;
 //│   set tmp5 = Unboxed_p;
-//│   set tmp4 = instances_get$get⁰(tmp5);
-//│   return +⁰(first, tmp4)
+//│   set tmp4 = instances_get$get⁰‹(Int32) => Int⁰›(tmp5);
+//│   return +⁰‹(?, ?) => ?›(first, tmp4)
 //│ };
 //│ @private @private
 //│ define instances_get$get1 as fun instances_get$get¹(b: Int32): Int⁰ {
-//│   return wasm⁰.ref⁰.i31⁰(b)
+//│   return wasm⁰.ref⁰.i31⁰‹(Int32) => Int31⁰›(b)
 //│ };
 //│ @private
 //│ define skip¹ as fun skip⁰(x: Unknown): Int⁰ {
@@ -311,34 +314,34 @@ instances(true)
 //│ };
 //│ @private
 //│ define get¹ as fun get⁰(b: Unboxed²): Int⁰ {
-//│   return wasm⁰.ref⁰.i31⁰(b.p¹)
+//│   return wasm⁰.ref⁰.i31⁰‹(Int32) => Int31⁰›(b.p¹)
 //│ };
 //│ @private
 //│ define instances⁰ as fun instances¹(c: Bool⁰): Int⁰ {
 //│   let b: Unboxed², o: Reference⁰, first: Int⁰, tmp: Int32, tmp1: Int⁰, tmp2: Object⁰, tmp3: Int32, tmp4: Int⁰, tmp5: Int32, Unboxed_p: Int32;
-//│   set tmp = wasm⁰.i32⁰.const⁰(1);
-//│   set b = Unboxed⁰(tmp);
-//│   set o = Reference¹(2);
+//│   set tmp = wasm⁰.i32⁰.const⁰‹(Int⁰) => Int32›(1);
+//│   set b = Unboxed⁰‹(Int32) => Unboxed²›(tmp);
+//│   set o = Reference¹‹(Int⁰) => Reference⁰›(2);
 //│   match c
 //│     true =>
-//│       set tmp1 = get⁰(b);
+//│       set tmp1 = get⁰‹(Unboxed²) => Int⁰›(b);
 //│       end
 //│     true =>
 //│       set tmp2 = b;
-//│       set tmp1 = skip⁰(tmp2);
+//│       set tmp1 = skip⁰‹(Unknown) => Int⁰›(tmp2);
 //│       end
 //│     else
 //│       set tmp2 = o;
-//│       set tmp1 = skip⁰(tmp2);
+//│       set tmp1 = skip⁰‹(Unknown) => Int⁰›(tmp2);
 //│       end
 //│   set first = tmp1;
-//│   set tmp3 = wasm⁰.i32⁰.const⁰(2);
+//│   set tmp3 = wasm⁰.i32⁰.const⁰‹(Int⁰) => Int32›(2);
 //│   set Unboxed_p = tmp3;
 //│   set tmp5 = Unboxed_p;
-//│   set tmp4 = instances_get$get¹(tmp5);
-//│   return +⁰(first, tmp4)
+//│   set tmp4 = instances_get$get¹‹(Int32) => Int⁰›(tmp5);
+//│   return +⁰‹(?, ?) => ?›(first, tmp4)
 //│ };
-//│ return instances$instances⁰(true)
+//│ return instances$instances⁰‹(Bool⁰) => Int⁰›(true)
 //│ Wasm result:
 //│ = 3
 
@@ -378,16 +381,16 @@ wasm.ref.i31(readWord(makeWord(wasm.i32.const(42))))
 //│ @private
 //│ define makeWord⁰ as fun makeWord¹(n: Int32): Int32 {
 //│   let tmp3: Int32, flag: Function⁰;
-//│   set flag = $flag_Empty⁰();
-//│   return flag(n)
+//│   set flag = $flag_Empty⁰‹() => (Int32) => Int32›();
+//│   return flag‹(...Array⁰) => ?›(n)
 //│ };
 //│ @private
 //│ define readWord⁰ as fun readWord¹(x: Int32): Int32 {
 //│   return x
 //│ };
-//│ set tmp = wasm⁰.i32⁰.const⁰(42);
-//│ set tmp2 = (makeWord¹(tmp) as!! Int32);
-//│ set tmp1 = readWord¹(tmp2);
-//│ return wasm⁰.ref⁰.i31⁰(tmp1)
+//│ set tmp = wasm⁰.i32⁰.const⁰‹(Int⁰) => Int32›(42);
+//│ set tmp2 = makeWord¹‹(Int32) => Int32›(tmp);
+//│ set tmp1 = readWord¹‹(Int32) => Int32›(tmp2);
+//│ return wasm⁰.ref⁰.i31⁰‹(Int32) => Int31⁰›(tmp1)
 //│ Wasm result:
 //│ = 42

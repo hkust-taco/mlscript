@@ -20,6 +20,7 @@ import hkmc2.Config.EffectHandlers
 class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
   
   private class Rewriter extends BlockTransformer(SymbolSubst.Id):
+    val wrappers = collection.mutable.Set.empty[TermSymbol]
     var inAsyncFun: Bool = false
     
     inline def wrapAwait[T](innerAllowAwait: Bool)(inline thunk: => T): T =
@@ -48,9 +49,9 @@ class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
         wrapAwait(true)(applyFunBodyLikeBlock(fun.body)))(fun.configOverride, bodyAnnotations)
       // Keep the wrapper's definition symbol so imported and recursive calls see
       // its current IR signature. The source erasure retains the async body result.
-      val wrapperSignature = FunDefn.Signature.fromParams(fun.params,
-        ErasedResult.fromAnnotations(fun.signature.erasure.ret, noAsync))
-      val wrapped = Call(Value.SimpleRef(State.runtimeSymbol)(N).selSN("toJsAsync"),
+      val wrapperSignature = fun.signature.forWrapper(noAsync)
+      if wrapperSignature isnt fun.signature then wrappers += fun.dSym
+      val wrapped = Call.of(Value.SimpleRef(State.runtimeSymbol)(N).selSN("toJsAsync"),
         (body.asPath.asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, N)
       // The dynamic runtime helper has no result annotation. Reestablish the wrapper's
       // return representation here so it survives both ordinary returns and inlining.
@@ -70,4 +71,7 @@ class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
         case _ =>
           super.applyPath(p)(k)
   
-  def transform(prog: Program): Program = new Rewriter().applyProgram(prog)
+  def transform(prog: Program): Program =
+    val rewriter = new Rewriter
+    val result = rewriter.applyProgram(prog)
+    result.mapMain(Call.refreshSignatures(_, rewriter.wrappers))

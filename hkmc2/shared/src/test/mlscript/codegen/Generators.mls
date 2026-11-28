@@ -93,14 +93,14 @@ fun traverse(tree) =
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let traverse;
 //│ traverse = function* traverse(tree) {
-//│   let element1$, element0$, tmp5, tmp6;
+//│   let element1$, element0$, tmp7, tmp8;
 //│   if (runtime.Tuple.isArrayLike(tree) && tree.length === 2) {
 //│     element0$ = runtime.Tuple.get(tree, 0);
 //│     element1$ = runtime.Tuple.get(tree, 1);
-//│     tmp5 = traverse(element0$);
-//│     yield* tmp5;
-//│     tmp6 = traverse(element1$);
-//│     return yield* tmp6
+//│     tmp7 = traverse(element0$);
+//│     yield* tmp7;
+//│     tmp8 = traverse(element1$);
+//│     return yield* tmp8
 //│   }
 //│   return yield tree;
 //│ };
@@ -126,9 +126,9 @@ fun curried(x)(y) =
 //│   }
 //│ };
 //│ curried$worker = function* curried$worker(x, y) {
-//│   let tmp9;
-//│   tmp9 = globalThis.Object.freeze([ x, y ]);
-//│   return yield tmp9
+//│   let tmp11;
+//│   tmp11 = globalThis.Object.freeze([ x, y ]);
+//│   return yield tmp11
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -153,9 +153,9 @@ fun locallyUnoptimizedCurried(x)(y)(z) =
 //│ locallyUnoptimizedCurried = function locallyUnoptimizedCurried(x) {
 //│   return (y) => {
 //│     return (function* (z) {
-//│       let tmp9;
-//│       tmp9 = globalThis.Object.freeze([ x, y, z ]);
-//│       return yield tmp9
+//│       let tmp11;
+//│       tmp11 = globalThis.Object.freeze([ x, y, z ]);
+//│       return yield tmp11
 //│     }).bind(this)
 //│   }
 //│ };
@@ -176,9 +176,9 @@ fun unoptimizedCurried(x)(y) =
 //│ let unoptimizedCurried;
 //│ unoptimizedCurried = function unoptimizedCurried(x) {
 //│   return (function* (y) {
-//│     let tmp10;
-//│     tmp10 = globalThis.Object.freeze([ x, y ]);
-//│     return yield tmp10
+//│     let tmp12;
+//│     tmp12 = globalThis.Object.freeze([ x, y ]);
+//│     return yield tmp12
 //│   }).bind(this)
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

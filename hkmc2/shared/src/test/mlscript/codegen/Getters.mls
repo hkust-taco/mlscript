@@ -75,10 +75,13 @@ module T with
 //│     T1 = this
 //│   }
 //│   static {
+//│     let tmp, tmp1;
 //│     T.a = T.t;
 //│     T.b = T.t;
-//│     T.c = T.p;
-//│     T.d = T.p;
+//│     tmp = T.p;
+//│     T.c = tmp;
+//│     tmp1 = T.p;
+//│     T.d = tmp1;
 //│   }
 //│   static t() {
 //│     return 1

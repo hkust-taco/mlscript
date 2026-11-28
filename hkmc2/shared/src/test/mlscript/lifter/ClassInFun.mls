@@ -134,11 +134,13 @@ f().foo()
 //│     end
 //│   }
 //│   method foo⁰ = fun foo¹() {
-//│     let tmp1, tmp2;
+//│     let tmp1, tmp2, tmp3, tmp4;
 //│     set Good¹.this.scope0$cap⁰.z$0¹ = 100;
 //│     set tmp1 = +⁰(Good¹.this.x¹, Good¹.this.y²);
-//│     set tmp2 = +⁰(tmp1, Good¹.this.scope0$cap⁰.z$0¹);
-//│     return +⁰(tmp2, Good¹.this.scope0$cap⁰.w$1¹)
+//│     set tmp2 = Good¹.this.scope0$cap⁰.z$0¹;
+//│     set tmp3 = +⁰(tmp1, tmp2);
+//│     set tmp4 = Good¹.this.scope0$cap⁰.w$1¹;
+//│     return +⁰(tmp3, tmp4)
 //│   }
 //│ };
 //│ define Bad as class Bad¹ {
@@ -295,7 +297,7 @@ fun main() =
 //│   }
 //│ };
 //│ define main⁰ as fun main¹() {
-//│   let c, d, e;
+//│   let c, d, e, tmp, tmp1, tmp2, tmp3;
 //│   set c = new mut C²(123);
 //│   set c.a﹖ = 0;
 //│   set c.b﹖ = "hi";
@@ -303,7 +305,11 @@ fun main() =
 //│   set d.a﹖ = 0;
 //│   set e = C¹(789);
 //│   set e.a﹖ = 0;
-//│   return [c.a﹖, c.b﹖, d.a﹖, e.a﹖]
+//│   set tmp = c.a﹖;
+//│   set tmp1 = c.b﹖;
+//│   set tmp2 = d.a﹖;
+//│   set tmp3 = e.a﹖;
+//│   return [tmp, tmp1, tmp2, tmp3]
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -356,7 +362,7 @@ fun main(x) =
 //│   }
 //│ };
 //│ define main² as fun main³(x) {
-//│   let c, d, e;
+//│   let c, d, e, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
 //│   set c = new mut C⁴(123, x);
 //│   set c.a﹖ = 0;
 //│   set c.b﹖ = "hi";
@@ -364,7 +370,14 @@ fun main(x) =
 //│   set d.a﹖ = 0;
 //│   set e = new C⁴(789, x);
 //│   set e.a﹖ = 0;
-//│   return [c.a﹖, c.b﹖, d.a﹖, e.a﹖, c.get﹖, d.get﹖, e.get﹖]
+//│   set tmp = c.a﹖;
+//│   set tmp1 = c.b﹖;
+//│   set tmp2 = d.a﹖;
+//│   set tmp3 = e.a﹖;
+//│   set tmp4 = c.get﹖;
+//│   set tmp5 = d.get﹖;
+//│   set tmp6 = e.get﹖;
+//│   return [tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6]
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -464,9 +477,10 @@ fun f(x, y, z) =
 //│     return C⁶.this.scope0$cap².y$0¹
 //│   }
 //│   method setY⁰ = fun setY¹ {
-//│     let tmp;
-//│     set tmp = +⁰(C⁶.this.scope0$cap².y$0¹, 1);
-//│     set C⁶.this.scope0$cap².y$0¹ = tmp;
+//│     let tmp, tmp1;
+//│     set tmp = C⁶.this.scope0$cap².y$0¹;
+//│     set tmp1 = +⁰(tmp, 1);
+//│     set C⁶.this.scope0$cap².y$0¹ = tmp1;
 //│     return runtime⁰.Unit⁰
 //│   }
 //│ };
@@ -474,7 +488,9 @@ fun f(x, y, z) =
 //│   private val scope0$cap³;
 //│   private val x⁴;
 //│   constructor(scope0$cap, x) {
-//│     do super⁰(scope0$cap.y$0¹, scope0$cap, x);
+//│     let tmp;
+//│     set tmp = scope0$cap.y$0¹;
+//│     do super⁰(tmp);
 //│     end;
 //│     set D⁰.this.scope0$cap³ = scope0$cap;
 //│     set D⁰.this.x⁴ = x;
@@ -553,9 +569,10 @@ fun f(x, y, z) =
 //│     return C⁸.this.scope0$cap⁴.y$0³
 //│   }
 //│   method setY² = fun setY³ {
-//│     let tmp;
-//│     set tmp = +⁰(C⁸.this.scope0$cap⁴.y$0³, 1);
-//│     set C⁸.this.scope0$cap⁴.y$0³ = tmp;
+//│     let tmp, tmp1;
+//│     set tmp = C⁸.this.scope0$cap⁴.y$0³;
+//│     set tmp1 = +⁰(tmp, 1);
+//│     set C⁸.this.scope0$cap⁴.y$0³ = tmp1;
 //│     return runtime⁰.Unit⁰
 //│   }
 //│ };

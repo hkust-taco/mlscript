@@ -46,6 +46,7 @@ object DebugOutputHandler:
       (display: (Str, Str, Config.DebugOutput) => Unit)(using utils.Scope, Raise): Unit =
     given semantics.ShowCfg = semantics.ShowCfg(
       showErasedTypes = false,
+      showCallSignatures = false,
       showExpansionMappings = true,
       showFlowSymbols = true, // Also disambiguates symbols that share a name.
       debug = false,
