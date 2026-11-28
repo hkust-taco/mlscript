@@ -74,12 +74,9 @@ type OptionalFn = (Int?) -> Int
 :e
 private fun aliased: OptionalFn
 fun aliased(x) = x
-//│ ╔══[COMPILATION ERROR] Resolution error in function literal
+//│ ╔══[COMPILATION ERROR] Parameter list does not match its declared function type.
 //│ ║  l.+2: 	fun aliased(x) = x
-//│ ║        	           ^^^^^^^
-//│ ╟── Callback parameter list does not match its declared function type.
-//│ ║  l.+2: 	fun aliased(x) = x
-//│ ║        	           ^^^^^^^
+//│ ║        	           ^^^
 //│ ╟── The expected function type is declared here.
 //│ ║  l.XX: 	type OptionalFn = (Int?) -> Int
 //│ ╙──      	                  ^^^^^^^^^^^^^
@@ -140,12 +137,9 @@ length("abc")
 private fun binary: ForwardSignature[(Int, Int) -> Int]
 fun binary(x) = x
 type ForwardSignature[A] = A
-//│ ╔══[COMPILATION ERROR] Resolution error in function literal
+//│ ╔══[COMPILATION ERROR] Parameter list does not match its declared function type.
 //│ ║  l.+2: 	fun binary(x) = x
-//│ ║        	          ^^^^^^^
-//│ ╟── Callback parameter list does not match its declared function type.
-//│ ║  l.+2: 	fun binary(x) = x
-//│ ║        	          ^^^^^^^
+//│ ║        	          ^^^
 //│ ╟── The expected function type is declared here.
 //│ ║  l.+1: 	private fun binary: ForwardSignature[(Int, Int) -> Int]
 //│ ╙──      	                                     ^^^^^^^^^^^^^^^^^
@@ -157,12 +151,9 @@ class Signatures[T] with
 val signatures: Signatures[(Int, Int) -> Int] = new Signatures[(Int, Int) -> Int]
 private fun selected: signatures.Fn
 fun selected(x) = x
-//│ ╔══[COMPILATION ERROR] Resolution error in function literal
+//│ ╔══[COMPILATION ERROR] Parameter list does not match its declared function type.
 //│ ║  l.+5: 	fun selected(x) = x
-//│ ║        	            ^^^^^^^
-//│ ╟── Callback parameter list does not match its declared function type.
-//│ ║  l.+5: 	fun selected(x) = x
-//│ ║        	            ^^^^^^^
+//│ ║        	            ^^^
 //│ ╟── The expected function type is declared here.
 //│ ║  l.+3: 	val signatures: Signatures[(Int, Int) -> Int] = new Signatures[(Int, Int) -> Int]
 //│ ╙──      	                           ^^^^^^^^^^^^^^^^^
@@ -173,15 +164,24 @@ fun selected(x) = x
 type Next = (Int?) -> Int
 private fun curried: Int -> Next
 fun curried(x)(y) = x
-//│ ╔══[COMPILATION ERROR] Resolution error in function literal
+//│ ╔══[COMPILATION ERROR] Parameter list does not match its declared function type.
 //│ ║  l.+3: 	fun curried(x)(y) = x
-//│ ║        	              ^^^^^^^
-//│ ╟── Callback parameter list does not match its declared function type.
-//│ ║  l.+3: 	fun curried(x)(y) = x
-//│ ║        	              ^^^^^^^
+//│ ║        	              ^^^
 //│ ╟── The expected function type is declared here.
 //│ ║  l.+1: 	type Next = (Int?) -> Int
 //│ ╙──      	            ^^^^^^^^^^^^^
+
+// A list written further after those of the signature is reported at that list.
+:e
+type NextTwo = Int -> ((Int, Int) -> Int)
+private fun curriedTwice: Int -> NextTwo
+fun curriedTwice(x)(y)(z) = x
+//│ ╔══[COMPILATION ERROR] Parameter list does not match its declared function type.
+//│ ║  l.+3: 	fun curriedTwice(x)(y)(z) = x
+//│ ║        	                      ^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  l.+1: 	type NextTwo = Int -> ((Int, Int) -> Int)
+//│ ╙──      	                       ^^^^^^^^^^^^^^^^^
 
 
 // *** Variadic and curried signature inputs ***
@@ -251,12 +251,9 @@ class Right(val value: Int)
 :e
 private fun unionAmbiguous: (Left -> Int) | ((Right, Int) -> Int)
 fun unionAmbiguous(x) = x.value
-//│ ╔══[COMPILATION ERROR] Resolution error in function literal
+//│ ╔══[COMPILATION ERROR] Parameter list does not match its declared function type.
 //│ ║  l.+2: 	fun unionAmbiguous(x) = x.value
-//│ ║        	                  ^^^^^^^^^^^^^
-//│ ╟── Callback parameter list does not match its declared function type.
-//│ ║  l.+2: 	fun unionAmbiguous(x) = x.value
-//│ ║        	                  ^^^^^^^^^^^^^
+//│ ║        	                  ^^^
 //│ ╟── The expected function type is declared here.
 //│ ║  l.+1: 	private fun unionAmbiguous: (Left -> Int) | ((Right, Int) -> Int)
 //│ ╙──      	                                             ^^^^^^^^^^^^^^^^^^^
@@ -273,12 +270,9 @@ fun unionAmbiguous(x) = x.value
 :e
 private fun intersectionAmbiguous: (Left -> Int) & ((Right, Int) -> Int)
 fun intersectionAmbiguous(x) = x.value
-//│ ╔══[COMPILATION ERROR] Resolution error in function literal
+//│ ╔══[COMPILATION ERROR] Parameter list does not match its declared function type.
 //│ ║  l.+2: 	fun intersectionAmbiguous(x) = x.value
-//│ ║        	                         ^^^^^^^^^^^^^
-//│ ╟── Callback parameter list does not match its declared function type.
-//│ ║  l.+2: 	fun intersectionAmbiguous(x) = x.value
-//│ ║        	                         ^^^^^^^^^^^^^
+//│ ║        	                         ^^^
 //│ ╟── The expected function type is declared here.
 //│ ║  l.+1: 	private fun intersectionAmbiguous: (Left -> Int) & ((Right, Int) -> Int)
 //│ ╙──      	                                                    ^^^^^^^^^^^^^^^^^^^

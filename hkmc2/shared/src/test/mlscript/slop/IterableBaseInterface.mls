@@ -141,9 +141,9 @@ private fun extraCallbackParameter(xs: Iter.IterableBase[Int]) = xs.map((x, i, a
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.+1: 	private fun extraCallbackParameter(xs: Iter.IterableBase[Int]) = xs.map((x, i, a, extra) => x)
 //│ ║        	                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Callback parameter list does not match its declared function type.
+//│ ╟── Parameter list does not match its declared function type.
 //│ ║  l.+1: 	private fun extraCallbackParameter(xs: Iter.IterableBase[Int]) = xs.map((x, i, a, extra) => x)
-//│ ║        	                                                                        ^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	                                                                        ^^^^^^^^^^^^^^^^
 //│ ╟── The expected function type is declared here.
 //│ ║  in ../../mlscript-compile/Iter.mls
 //│ ║  l.XX: 	  fun map[B](f: (A, drop Int, drop Array[A]) -> B, thisArg?): Array[B] =

@@ -37,9 +37,9 @@ app((x, y?) => [x, y])
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.+1: 	[1, 2, 3].map((a, b, c, d) => a)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Callback parameter list does not match its declared function type.
+//│ ╟── Parameter list does not match its declared function type.
 //│ ║  l.+1: 	[1, 2, 3].map((a, b, c, d) => a)
-//│ ║        	              ^^^^^^^^^^^^^^^^^
+//│ ║        	              ^^^^^^^^^^^^
 //│ ╟── The expected function type is declared here.
 //│ ║  in ../../decls/Prelude.mls
 //│ ║  l.XX: 	  fun map[U](f: (T, drop Int, drop Array[T]) -> U, thisArg?): Array[U]
@@ -53,9 +53,9 @@ app((x, y) => [x, y])
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.+2: 	app((x, y) => [x, y])
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Callback parameter list does not match its declared function type.
+//│ ╟── Parameter list does not match its declared function type.
 //│ ║  l.+2: 	app((x, y) => [x, y])
-//│ ║        	    ^^^^^^^^^^^^^^^^
+//│ ║        	    ^^^^^^
 //│ ╟── The expected function type is declared here.
 //│ ║  l.+1: 	fun app(f: (Int, Int?) -> Any) = f(1)
 //│ ╙──      	           ^^^^^^^^^^^^^^^^^^
@@ -68,9 +68,9 @@ app(x => x)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.+2: 	app(x => x)
 //│ ║        	^^^^^^^^^^^
-//│ ╟── Callback parameter list does not match its declared function type.
+//│ ╟── Parameter list does not match its declared function type.
 //│ ║  l.+2: 	app(x => x)
-//│ ║        	    ^^^^^^
+//│ ║        	    ^
 //│ ╟── The expected function type is declared here.
 //│ ║  l.+1: 	fun app(f: (Int, Int?) -> Any) = f(1)
 //│ ╙──      	           ^^^^^^^^^^^^^^^^^^
@@ -82,9 +82,9 @@ app(x => x)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.+2: 	app(x => x)
 //│ ║        	^^^^^^^^^^^
-//│ ╟── Callback parameter list does not match its declared function type.
+//│ ╟── Parameter list does not match its declared function type.
 //│ ║  l.+2: 	app(x => x)
-//│ ║        	    ^^^^^^
+//│ ║        	    ^
 //│ ╟── The expected function type is declared here.
 //│ ║  l.+1: 	fun app(f: (Int, Int) -> Any) = f(1, 2)
 //│ ╙──      	           ^^^^^^^^^^^^^^^^^
@@ -119,9 +119,9 @@ app(x => x)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.+2: 	app(x => x)
 //│ ║        	^^^^^^^^^^^
-//│ ╟── Callback parameter list does not match its declared function type.
+//│ ╟── Parameter list does not match its declared function type.
 //│ ║  l.+2: 	app(x => x)
-//│ ║        	    ^^^^^^
+//│ ║        	    ^
 //│ ╟── The expected function type is declared here.
 //│ ║  l.+1: 	fun app(f: (Int, ...Array[Int]) -> Int) = f(1, 2, 3)
 //│ ╙──      	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -156,9 +156,9 @@ private fun needsFour(a, b, c, d) = a
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.+2: 	[1].map(needsFour)
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ╟── Callback parameter list does not match its declared function type.
+//│ ╟── Parameter list does not match its declared function type.
 //│ ║  l.+1: 	private fun needsFour(a, b, c, d) = a
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	                     ^^^^^^^^^^^^
 //│ ╟── The expected function type is declared here.
 //│ ║  in ../../decls/Prelude.mls
 //│ ║  l.XX: 	  fun map[U](f: (T, drop Int, drop Array[T]) -> U, thisArg?): Array[U]
@@ -172,7 +172,7 @@ val typed: ((Int, Int, Array[Int], Int) -> Int) = (a, b, c, d) => a
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.+2: 	[1].map(typed)
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── Callback parameter list does not match its declared function type.
+//│ ╟── Parameter list does not match its declared function type.
 //│ ║  l.+1: 	val typed: ((Int, Int, Array[Int], Int) -> Int) = (a, b, c, d) => a
 //│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The expected function type is declared here.
@@ -189,9 +189,9 @@ acceptsRecord({ callback: x => x })
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.+2: 	acceptsRecord({ callback: x => x })
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Callback parameter list does not match its declared function type.
+//│ ╟── Parameter list does not match its declared function type.
 //│ ║  l.+2: 	acceptsRecord({ callback: x => x })
-//│ ║        	                          ^^^^^^
+//│ ║        	                          ^
 //│ ╟── The expected function type is declared here.
 //│ ║  l.+1: 	fun acceptsRecord(r: { callback: (Int?) -> Int }) = 0
 //│ ╙──      	                                 ^^^^^^^^^^^^^
@@ -204,9 +204,9 @@ let bad = required as ((Int?) -> Int)
 //│ ╔══[COMPILATION ERROR] Resolution error in member reference
 //│ ║  l.+2: 	let bad = required as ((Int?) -> Int)
 //│ ║        	          ^^^^^^^^
-//│ ╟── Callback parameter list does not match its declared function type.
+//│ ╟── Parameter list does not match its declared function type.
 //│ ║  l.+1: 	private fun required(x) = x
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	                    ^^^
 //│ ╟── The expected function type is declared here.
 //│ ║  l.+2: 	let bad = required as ((Int?) -> Int)
 //│ ╙──      	                       ^^^^^^^^^^^^^
@@ -219,9 +219,9 @@ requiredTrailing(() => 0)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.+2: 	requiredTrailing(() => 0)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Callback parameter list does not match its declared function type.
+//│ ╟── Parameter list does not match its declared function type.
 //│ ║  l.+2: 	requiredTrailing(() => 0)
-//│ ║        	                 ^^^^^^^
+//│ ║        	                 ^^
 //│ ╟── The expected function type is declared here.
 //│ ║  l.+1: 	private fun requiredTrailing(f: (drop ...Array[Int], Str) -> Int) = f("tail")
 //│ ╙──      	                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -242,7 +242,7 @@ genericTrailing("tail", noInputs)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.+4: 	genericTrailing("tail", noInputs)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Callback parameter list does not match its declared function type.
+//│ ╟── Parameter list does not match its declared function type.
 //│ ║  l.+3: 	val noInputs: (() -> Int) = () => 0
 //│ ║        	               ^^^^^^^^^
 //│ ╟── The expected function type is declared here.
@@ -265,9 +265,9 @@ mixedTrailing((first, second) => first)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.+2: 	mixedTrailing((first, second) => first)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Callback parameter list does not match its declared function type.
+//│ ╟── Parameter list does not match its declared function type.
 //│ ║  l.+2: 	mixedTrailing((first, second) => first)
-//│ ║        	              ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	              ^^^^^^^^^^^^^^^
 //│ ╟── The expected function type is declared here.
 //│ ║  l.+1: 	private fun mixedTrailing(f: (Int, drop ...Array[Int], drop Str, Str) -> Int) = f(1, "drop", "keep")
 //│ ╙──      	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -295,9 +295,9 @@ variadicTrailing((x, s) => s)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.+1: 	variadicTrailing((x, s) => s)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Callback parameter list does not match its declared function type.
+//│ ╟── Parameter list does not match its declared function type.
 //│ ║  l.+1: 	variadicTrailing((x, s) => s)
-//│ ║        	                 ^^^^^^^^^^^
+//│ ║        	                 ^^^^^^
 //│ ╟── The expected function type is declared here.
 //│ ║  l.XX: 	fun variadicTrailing(f: (Int, ...Array[Int], Str) -> Str) = f(1, 2, 3, "a")
 //│ ╙──      	                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -351,12 +351,9 @@ invokeMissingRest((x, s?) => s.length)
 :!js
 :e
 fun publicFactory(unused): Int -> Int = (x, y) => 0
-//│ ╔══[COMPILATION ERROR] Resolution error in function literal
+//│ ╔══[COMPILATION ERROR] Parameter list does not match its declared function type.
 //│ ║  l.+1: 	fun publicFactory(unused): Int -> Int = (x, y) => 0
-//│ ║        	                                        ^^^^^^^^^^^
-//│ ╟── Callback parameter list does not match its declared function type.
-//│ ║  l.+1: 	fun publicFactory(unused): Int -> Int = (x, y) => 0
-//│ ║        	                                        ^^^^^^^^^^^
+//│ ║        	                                        ^^^^^^
 //│ ╟── The expected function type is declared here.
 //│ ║  l.+1: 	fun publicFactory(unused): Int -> Int = (x, y) => 0
 //│ ╙──      	                           ^^^^^^^^^^
@@ -364,12 +361,9 @@ fun publicFactory(unused): Int -> Int = (x, y) => 0
 :!js
 :e
 private fun privateFactory(unused): Int -> Int = (x, y) => 0
-//│ ╔══[COMPILATION ERROR] Resolution error in function literal
+//│ ╔══[COMPILATION ERROR] Parameter list does not match its declared function type.
 //│ ║  l.+1: 	private fun privateFactory(unused): Int -> Int = (x, y) => 0
-//│ ║        	                                                 ^^^^^^^^^^^
-//│ ╟── Callback parameter list does not match its declared function type.
-//│ ║  l.+1: 	private fun privateFactory(unused): Int -> Int = (x, y) => 0
-//│ ║        	                                                 ^^^^^^^^^^^
+//│ ║        	                                                 ^^^^^^
 //│ ╟── The expected function type is declared here.
 //│ ║  l.+1: 	private fun privateFactory(unused): Int -> Int = (x, y) => 0
 //│ ╙──      	                                    ^^^^^^^^^^

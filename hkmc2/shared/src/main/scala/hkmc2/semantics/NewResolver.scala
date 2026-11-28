@@ -2598,11 +2598,24 @@ class NewResolver:
   private[semantics] def constrainFunction(expected: DeclaredType, source: TermShape, marks: Ls[Marks],
       site: Opt[Term])(using ResolutionContext): Unit =
     val ShapeParts(actual, instances, _) = shapeParts(source)
-    def arityError(expected: DeclaredType)(using ResolutionContext): Unit =
+    // `mismatched` is the location of the parameter list that does not fit `expected`. The function that
+    // writes this list can be a callback or a function that a definition returns for a parameter list
+    // written after those of its signature, so the message names neither.
+    def arityError(expected: DeclaredType, mismatched: Opt[Loc])(using ResolutionContext): Unit =
       val messages =
-        msg"Callback parameter list does not match its declared function type." -> actual.toLoc ::
+        msg"Parameter list does not match its declared function type." -> mismatched ::
         msg"The expected function type is declared here." -> expected.resolution.source.toLoc :: Nil
-      site match
+      // A use site tells where a function meets its expected type, as an argument for example. When the site
+      // is the function literal that writes the mismatched list, directly or as one of its curried lists, there
+      // is no other use to report, and `mismatched` locates the list. This is the case of a definition body
+      // checked against its signature, including the lists that `fun f(x)(y)` writes after those of the signature.
+      val function = actual.applicationHead._1 match
+        case intro: IntroShape => S(intro.trm)
+        case _ => N
+      def writes(literal: Term): Bool = function.exists(_ is literal) || (literal match
+        case Lam(_, body) => writes(body)
+        case _ => false)
+      site.filterNot(writes) match
         case S(use) => resolError(use, messages)
         case N => rctx.report(ErrorReport(messages))
     actual match
@@ -2626,7 +2639,7 @@ class NewResolver:
           case (params, _) :: tail =>
             val declared = callable.paramLists.head
             if callbackArityMismatch(Arity(params), declared) then
-              arityError(expected)
+              arityError(expected, params.toLoc.orElse(actual.toLoc))
             // Diagnostics must not disconnect parameter or result constraints.
             val allParams = params.allParams
             zipCallbackArguments(context, Arity(params), declared, callable.source, expectedContext)(
@@ -2659,7 +2672,7 @@ class NewResolver:
             val domain = givenType.paramLists.head
             val expectedDomain = wanted.paramLists.head
             if callbackArityMismatch(Arity(domain), expectedDomain) then
-              arityError(expected)
+              arityError(expected, actual.toLoc)
             val allParams = domain.allParams
             zipCallbackArguments(actualContext :: Nil, Arity(domain), expectedDomain, wanted.source, expectedContext)(
               (index, shape) => allParams(index).tpe.foreach: tpe =>
