@@ -738,7 +738,7 @@ object RcdField:
     val sym = new BlockMemberSymbol(name, Nil)
     val tsym = new RecordFieldSymbol(id, mutable, origin)
     sym.tsym = S(tsym)
-    tsym.defn = S(TermDefinition(RecordField, sym, tsym, Nil, N, signature, N, TermDefFlags.empty,
+    tsym.defn = S(TermDefinition(RecordField, sym, tsym, Nil, N, Nil, signature, N, TermDefFlags.empty,
       Modulefulness.none, annotations, N)(loc, loc, N))
     sym.complete()
     tsym
@@ -764,7 +764,7 @@ object RcdField:
     sym.tsym = S(tsym)
     // Field lookup removes this initializer's capture mark, leaving enclosing call-site marks intact.
     val body = initializer.map(Term.Capture(_, tsym))
-    tsym.defn = S(TermDefinition(RecordField, sym, tsym, Nil, N, signature, body, TermDefFlags.empty,
+    tsym.defn = S(TermDefinition(RecordField, sym, tsym, Nil, N, Nil, signature, body, TermDefFlags.empty,
       Modulefulness.none, symbol.toList.map(Annot.JsSymbol(_)(field.toLoc)), N)(field.toLoc, field.toLoc, N))
     sym.complete()
     RcdField(field, rhs, sym)(mut, symbol.orElse(field match
@@ -854,6 +854,9 @@ final case class TermDefinition(
     tsym: TermSymbol,
     params: Ls[ParamList],
     tparams: Opt[Ls[Param]],
+    // Additional local binders when the implementation repeats its separate signature's type parameters.
+    // Calls instantiate tparams, and the resolver reads the signature in these local binders to check the body.
+    implementationTypeParams: Ls[Param],
     sign: Opt[Term],
     body: Opt[Term],
     flags: TermDefFlags,
@@ -865,6 +868,7 @@ final case class TermDefinition(
   val scope: Opt[SrcScope],
 ) extends CompanionValue:
   require(k is tsym.k)
+  require(implementationTypeParams.isEmpty || tparams.exists(_.length == implementationTypeParams.length))
   def bsym: BlockMemberSymbol = sym
   val owner = tsym.owner
   /** Only function bodies are wrapped by AsyncLowering; annotations on other

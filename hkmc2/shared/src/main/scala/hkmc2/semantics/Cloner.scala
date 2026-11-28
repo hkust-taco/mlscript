@@ -253,7 +253,9 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
     val copy = Param(source.flags, source.sym.subst, source.sign.map(term), modulefulness(source.modulefulness),
       source.annotations.map(annotation))(source.toLoc)
     copy.fldSym = source.fldSym.map(_.subst)
-    copy.sym.decl = S(copy)
+    source.sym.decl match
+      case S(tp: TyParam) => typeParameter(tp)
+      case _ => copy.sym.decl = S(copy)
     source.fldSym.toList.flatMap:
       case s: TermSymbol => s :: Nil
       case s: BlockMemberSymbol => s.tsym.toList
@@ -278,8 +280,10 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
     val scope = nested
     scope.bindParameters(source.params)
     source.tparams.foreach(_.foreach(p => scope.bindLocal(p.sym)))
+    source.implementationTypeParams.foreach(p => scope.bindLocal(p.sym))
     val copy = source.copy(sym = source.sym.subst, tsym = source.tsym.subst,
       params = source.params.map(scope.parameterList), tparams = source.tparams.map(_.map(scope.parameter)),
+      implementationTypeParams = source.implementationTypeParams.map(scope.parameter),
       sign = source.sign.map(scope.term), body = source.body.map(scope.term),
       modulefulness = modulefulness(source.modulefulness), annotations = source.annotations.map(scope.annotation),
       companion = source.companion.map(mapType))(source.toLoc, source.headerLoc, source.scope)

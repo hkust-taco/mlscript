@@ -1644,8 +1644,10 @@ class NewResolver:
   // Register these before its body is elaborated, so observed calls can never
   // publish inferred alternatives for parameters behind this boundary.
   private def signatureParameters(using rs: ResolutionContext) = rs.state.signatureParameters
-  def registerParameterSignature(paramLists: Ls[ParamList], sign: Term)(using ResolutionContext): Unit =
-    paramLists.flatMap(_.allParams).filter(_.sign.isEmpty).foreach: param =>
+  def registerParameterSignature(paramLists: Ls[ParamList], sign: Term, checking: TypeSubstitution)(using ResolutionContext): Unit =
+    // When the headers bind different symbols, calls and overrides need the signature's
+    // domain even for an annotated parameter. Only the body reads it in the local binders.
+    paramLists.iterator.flatMap(_.allParams).filter(p => p.sign.isEmpty || checking.nonEmpty).foreach: param =>
       // Aliases can supply additional callable components after this parameter is observed.
       // Keep one accumulating union whose template can mention any component's quantified binders.
       val resolution = new TypeResolution(sign, messages => resolError(sign, messages))
@@ -1655,15 +1657,13 @@ class NewResolver:
       resolution.publish(TypeShape.Bottom)
       val tpe = declaredType(resolution, Map.empty)
       signatureParameters(param.sym) = tpe
-      listenTypeInstances(tpe): shape =>
+      if param.sign.isEmpty then listenTypeInstances(tpe.instantiate(checking)): shape =>
         if param.sym.currentShapes.add(shape) then param.sym.notifyShapeListeners(shape)
     matchParameterTypes(sign, paramLists): (param, component) =>
-      if param.sign.isEmpty then
-        signatureParameters.get(param.sym).get.resolution.publish(TypeShape.Combined(TypeFormula.atom(component)))
-      else
-        // An inline annotation keeps its interface, but its inferred type arguments still
-        // receive constraints from the separate signature.
-        constrainParameter(param, instanceShape(component), Nil)
+      signatureParameters.get(param.sym).foreach(_.resolution.publish(TypeShape.Combined(TypeFormula.atom(component))))
+      param.sign.foreach: inlineType =>
+        val expected = declaredType(typeResolution(inlineType), Map.empty).instantiate(rctx.instances)
+        inferTypeArguments(expected, instanceShape(component.instantiate(checking)), Nil, N)
 
   /** The written type of a member, including a separate function signature or a constructor field's parameter type. */
   private[semantics] def writtenSignature(td: TermDefinition): Opt[Term] = td.tsym.decl match
@@ -2046,13 +2046,13 @@ class NewResolver:
     * type for its overrides. A returned closure receives its declared parameter types even without
     * a call, and an abstract field supplies its type even without an assignment.
     */
-  def registerResultSignature(definition: TermDefinition)(using ResolutionContext): Unit =
+  def registerResultSignature(definition: TermDefinition, checking: TypeSubstitution)(using ResolutionContext): Unit =
     memberSignature(definition).foreach: sign =>
       lazy val signature = declaredType(typeResolution(sign), Map.empty)
       if definition.k is syntax.MutVal then
         listenTypeInstances(signature)(publishActivated(rctx.memberVariable(definition.tsym), _))
       definition.body.foreach: body =>
-        listenSignatureResult(definition, signature, TypeView.Required): result =>
+        listenSignatureResult(definition, signature.instantiate(checking), TypeView.Required): result =>
           listenResult(body)(value => inferTypeArguments(result.instantiate(rctx.instances), value, Nil, S(body)))
 
   def checkAscription(body: Term, sign: Term)(using ResolutionContext): Unit =
@@ -2255,7 +2255,7 @@ class NewResolver:
       // A legacy producer stores its full signature in the AST. Interpret its domains
       // in the consumer using the same parameter correspondence as a local signature.
       td.sign.filter(_ => !td.flags.hasResultAnnotation && !rctx.state.isOwnedSym(td.tsym)).flatMap: full =>
-        registerParameterSignature(td.params, full)(using rctx.state.context)
+        registerParameterSignature(td.params, full, TypeSubstitution.empty)(using rctx.state.context)
         parameterSignature(p)
 
   /** The site that reads a member's signature independently of calls to its implementation. */
@@ -2283,12 +2283,27 @@ class NewResolver:
       // One selection can reach two overrides of the same base. Each binds the base's
       // parameters in its own method scope, even when the caller supplies the same argument.
       val binders = union(lexicalBinders(overriding.tsym).map(_ ++ own), rctx.siteBindersOf(site))
-      val group = rctx.instantiateTypeParameters((base.tsym, overriding.tsym), site, parameters, binders)
       val path = ExitMark(ResolutionBoundary(base.tsym), methodSite(base), NoMarks) ::
         (marks :+ EntryMark(ResolutionBoundary(overriding.tsym), N, NoMarks))
-      val arguments = own.map(p => TypeArgument.invariant(parameterType(rctx.typeParameter(p))))
-      bindTypeArguments(parameters.map(p => rctx.typeParameter(group(p))), path, arguments)
-      instances.withOverrides(group)
+      instances.withOverrides(instantiateSignatureParameters((base.tsym, overriding.tsym), parameters, own, site, binders, path))
+
+  /** Read a separate signature in the implementation's type parameters. Both headers
+    * belong to the same member scope, so their correspondence crosses no value boundary.
+    */
+  def instantiateSplitSignature(member: TermSymbol, formals: Ls[Param], own: Ls[Param])
+      (using State, ResolutionContext): TypeSubstitution =
+    assert(formals.length == own.length)
+    val parameters = own.map(_.sym)
+    instantiateSignatureParameters((member, member), formals.map(_.sym), parameters, FlowSymbol("signature check"),
+      lexicalBinders(member).map(_ ++ parameters), Nil)
+
+  private def instantiateSignatureParameters(methods: (TermSymbol, TermSymbol),
+      formals: Ls[VarSymbol], own: Ls[VarSymbol], site: FlowSymbol, binders: Binders, path: Ls[Marks])
+      (using ResolutionContext): TypeSubstitution =
+    val group = rctx.instantiateTypeParameters(methods, site, formals, binders)
+    val arguments = own.map(p => TypeArgument.invariant(parameterType(rctx.typeParameter(p))))
+    bindTypeArguments(formals.map(p => rctx.typeParameter(group(p))), path, arguments)
+    group
 
   /** Find the type a member declares or inherits for a parameter, a field, or a method result.
     * Start at `td` and use the nearest matching annotation on each override path. Parameters
@@ -3180,13 +3195,13 @@ class NewResolver:
         receive(tpe.map(transportType(_, EntryMark(scope, selection, NoMarks) :: Nil)))
     case _ => receive(N)
 
-  /** The type declared for a parameter by its inline annotation or the enclosing function's
-    * separate signature, or `N` if neither supplies one.
+  /** The parameter type used at calls and inherited by overrides. A separate signature
+    * expresses it in the member's public binders, even when the body declares its own.
     */
   private[semantics] def parameterSignature(p: Param)(using ResolutionContext): Opt[DeclaredType] =
-    p.sign.map(sign => declaredType(typeResolution(sign), Map.empty)).orElse:
-      signatureParameters.get(p.sym)
-        .orElse(p.sym.getState.newResolverState.signatureParameters.get(p.sym)(using p.sym.getState.newResolverState.context))
+    signatureParameters.get(p.sym)
+      .orElse(p.sym.getState.newResolverState.signatureParameters.get(p.sym)(using p.sym.getState.newResolverState.context))
+      .orElse(p.sign.map(sign => declaredType(typeResolution(sign), Map.empty)))
 
   /** The number of arguments a parameter list accepts, with `leading` parameters, of which
     * `leadingRequired` are required, and, if `hasRest`, a variadic parameter followed by `trailing` ones. */

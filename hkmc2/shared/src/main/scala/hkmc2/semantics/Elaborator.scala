@@ -1067,6 +1067,7 @@ extends Importer:
         tsym,
         PlainParamList(valueSym.fold(Nil)(sym => Param.simple(sym) :: Nil))(N) :: Nil,
         N,
+        Nil,
         N,
         S(spec.methodBody(valueSym)),
         TermDefFlags.empty.copy(isMethod = true),
@@ -1884,13 +1885,13 @@ extends Importer:
       case trm => raise(WarningReport(msg"Terms in handler block do nothing" -> trm.toLoc :: Nil))
       
       val tds = elabed.stats.map {
-          case td @ TermDefinition(Fun, sym, tsym, params, tparams, sign, body, flags, mf, annotations, comp) =>
-            params.reverse match
+          case td @ TermDefinition(k = Fun) =>
+            td.params.reverse match
               case ParamList(_, value :: Nil, _) :: newParams =>
                 if newParams.isEmpty then
                   raise(ErrorReport(msg"Handler function must have a parameter list before its continuation parameter list" -> td.toLoc :: Nil))
-                val newTd = TermDefinition(Fun, sym, tsym, newParams.reverse, tparams, sign, body, flags, mf, Nil, comp)(td.toLoc, td.headerLoc, td.scope)
-                S(HandlerTermDefinition(value.sym, newTd, annotations))
+                val newTd = td.copy(params = newParams.reverse, annotations = Nil)(td.toLoc, td.headerLoc, td.scope)
+                S(HandlerTermDefinition(value.sym, newTd, td.annotations))
               case _ =>
                 raise(ErrorReport(msg"Handler function is missing resumption parameter" -> td.toLoc :: Nil))
                 None
@@ -2653,7 +2654,7 @@ extends Importer:
     // * Type parameters written only on the definition would be out of scope in the signature.
     (impl.typeParams, sig.typeParams) match
     case (S(own), N) =>
-      // * Other shapes are reported by `typeParamNames`; `…` stands for them, since `...` is the spread syntax.
+      // * Other shapes are reported by `typeParams`; `…` stands for them, since `...` is the spread syntax.
       val names = own.tys.iterator.collect { case p: Ident => p.name }.toList
       val ownNames = (if own.tys.lengthIs > names.length then names :+ "…" else names).mkString(", ")
       raise:
@@ -3072,16 +3073,10 @@ extends Importer:
               given Ctx = headerCtx
               
               log(dbg"Processing term definition $nme")
-              val names = td.typeParams.map(typeParamNames)
-              val formals = separate.flatMap(_.tparams)
-              val tps = formals.orElse(names.map(_.map(typeParam)))
-              if newResolution && formals.isEmpty then tps.foreach(ps => registerTypeParameters(tsym, ps.map(_.sym)))
-              // Each header introduces its own names. Lower both spellings of a type argument
-              // to the same position in the member's callable interface.
-              var newCtx = names.fold(headerCtx): ids =>
-                val ps = tps.get
-                assert(ids.length == ps.length)
-                headerCtx ++ ids.lazyZip(ps).iterator.map((id, p) => id.name -> p.sym)
+              val tps = td.typeParams.map(typeParams)
+              val own = tps.getOrElse(Nil)
+              if newResolution then registerTypeParameters(tsym, own.map(_.sym))
+              var newCtx = headerCtx ++ own.iterator.map(p => p.sym.name -> p.sym)
               val pss = paramLists.map: ps =>
                 val (res, newCtx2) = funParams(ps)(using newCtx)
                 newCtx = newCtx2
@@ -3093,9 +3088,14 @@ extends Importer:
                 .orElse(separate.flatMap(sig => sig.sign.map(_ -> sig.modulefulness)))
               val s = signature.map(_._1)
               
+              val formals = separate.flatMap(_.tparams)
+              val implementationTypeParams = if formals.isDefined then own else Nil
+              val checking = if newResolution && implementationTypeParams.nonEmpty then
+                instantiateSplitSignature(tsym, formals.get, implementationTypeParams)
+              else TypeSubstitution.empty
               if td.annotatedResultType.isEmpty then
                 s.foreach: sign =>
-                  if newResolution then registerParameterSignature(pss, sign)
+                  if newResolution then registerParameterSignature(pss, sign, checking)
                   else checkSignatureOptionality(pss, sign)
               pss.foreach(seedRestParameter)
               
@@ -3120,7 +3120,8 @@ extends Importer:
               
               val mfn = signature.fold(Modulefulness.none)(_._2)
               
-              val tdf = TermDefinition(definition.k, sym, tsym, pss, tps.filter(_ => compatible), s, body,
+              val tdf = TermDefinition(definition.k, sym, tsym, pss, formals.orElse(tps).filter(_ => compatible),
+                implementationTypeParams, s, body,
                 TermDefFlags.empty.copy(isMethod = isMethod, hasResultAnnotation = td.annotatedResultType.isDefined), mfn, defnAnnotations, N)(
                 statementLoc, definitionHeaderLoc(td, annotations, statementLoc), S(bindingScope))
               
@@ -3132,7 +3133,7 @@ extends Importer:
                 if newResolution then s.foreach(registerSignature)
                 sym.tsym = S(tsym)
                 tsym.defn = S(tdf)
-                if newResolution then registerResultSignature(tdf)
+                if newResolution then registerResultSignature(tdf, checking)
                 completeIfReady(sym)
                 tdf :: acc
             
@@ -3235,7 +3236,7 @@ extends Importer:
               tsym.k,
               fsym,
               tsym,
-              Nil, N, N,
+              Nil, N, Nil, N,
               if newResolution
                 then S(Term.Capture(Term.SimpleRef(p.sym)(N), tsym))
                 else S(p.sym.ref())
@@ -3450,6 +3451,7 @@ extends Importer:
                     ctsym,
                     allCtorPss,
                     S(tps.map(tp => Param(FldFlags.empty, tp.sym, N, Modulefulness.none, Nil)(tp.toLoc))),
+                    Nil,
                     S(resultType),
                     N,
                     TermDefFlags.empty,
@@ -4017,16 +4019,14 @@ extends Importer:
         Pattern.Wildcard()
     go(t)
   
-  private def typeParamNames(t: TyTup): Ls[Ident] = t.tys.flatMap:
-    case id: Ident => id :: Nil
+  private def typeParams(t: TyTup): Ls[Param] = t.tys.flatMap:
+    case id: Ident =>
+      val sym = VarSymbol(id, erasedType = N, mut = false)
+      sym.decl = S(TyParam(FldFlags.empty, N, sym)(id.toLoc))
+      Param.simple(sym) :: Nil
     case t =>
       raise(ErrorReport(msg"Unsupported type parameter shape: ${t.describe}" -> t.toLoc :: Nil))
       Nil
-  
-  private def typeParam(id: Ident): Param =
-    val sym = VarSymbol(id, erasedType = N, mut = false)
-    sym.decl = S(TyParam(FldFlags.empty, N, sym)(id.toLoc))
-    Param.simple(sym)
   
   def importFrom(sts: Block, exports: Ls[BlockMemberSymbol]): Ctxl[(Blk, Ctx)] =
     given UnderCtx = UnderCtx.none

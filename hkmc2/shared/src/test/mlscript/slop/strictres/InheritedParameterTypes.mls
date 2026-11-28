@@ -58,6 +58,31 @@ new SwappedNames().first(Item(7), 0).n
 //│ = 7
 
 
+// An override inherits the positions from the base's separate signature, including
+// when the base implementation repeats them under different names.
+:expect 9
+private class SplitBase with
+  open fun first[A, B]: (A, B) -> A
+  fun first[X, Y](x: X, y) = x
+private class SplitChild extends SplitBase with
+  override fun first[P, Q](x, y): P = x
+new SplitChild().first(Item(9), 0).n
+//│ = 9
+
+
+// The unannotated argument is checked against the implementation's first type parameter.
+:e
+private fun inspect[A, B]: (A, B) -> Int
+private fun inspect[X, Y](x, y) = x.n
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	private fun inspect[X, Y](x, y) = x.n
+//│ ║        	                                  ^^^
+//│ ╟── Cannot resolve member 'n' of a value with unknown shape.
+//│ ╟── Type parameter 'X' does not specify a member interface.
+//│ ║  l.+2: 	private fun inspect[X, Y](x, y) = x.n
+//│ ╙──      	                    ^
+
+
 // A base type parameter without a counterpart in the override remains opaque in its body.
 :e
 private class TwoParameters with

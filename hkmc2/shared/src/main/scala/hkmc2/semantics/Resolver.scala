@@ -359,9 +359,8 @@ class Resolver(tl: TraceLogger)
   def traverseDefn(defn: Definition)(using ICtx): ICtx =
   trace(dbg"Resolving definition: $defn"):
     def traverseTermDef(tdf: TermDefinition) =
-      val TermDefinition(_k, _sym, _tsym, 
-        pss, tps, sign, body, TermDefFlags(isMethod, _), modulefulness, annotations, comp
-      ) = tdf
+      val TermDefinition(params = pss, tparams = tps, sign = sign, body = body,
+        flags = TermDefFlags(isMethod, _), modulefulness = modulefulness, annotations = annotations) = tdf
       /** 
        * Add the contextual parameters in pss to the ICtx so that they
        * can later be referred (be resolved to) in the body of the term
