@@ -716,7 +716,7 @@ fun outerAlias() =
   fun f(x: A) = y => y
   f[Str](1)("ok")
 outerAlias()
-//│ Elab: { fun member:outerAlias⁰() = { type type:A⁰ = member:Int⁰^term:outerAlias¹; fun member:f⁰[List(A¹)](x⁰: member:A²^term:f¹): member:Int⁰^term:outerAlias¹^term:f¹ -> A¹ -> A¹ = λ(y⁰). y⁰; member:f⁰[member:Str⁰^term:outerAlias¹](1)("ok") }; member:outerAlias⁰() }
+//│ Elab: { fun member:outerAlias⁰() = { type type:A⁰ = member:Int⁰^term:outerAlias¹; fun member:f⁰[List(A¹)]: member:Int⁰^term:outerAlias¹^term:f¹ -> A¹ -> A¹; fun member:f⁰(x⁰: member:A²^term:f¹) = λ(y⁰). y⁰; member:f⁰[member:Str⁰^term:outerAlias¹](1)("ok") }; member:outerAlias⁰() }
 //│ = "ok"
 
 // With no outer binding, the implementation's parameter annotation is unbound.
@@ -737,14 +737,14 @@ sameTypeParams(1)
 fun typeParamNamedLikeParam[A]: A -> A
 fun typeParamNamedLikeParam[A](A) = A
 typeParamNamedLikeParam(1)
-//│ Elab: { fun member:typeParamNamedLikeParam⁰[List(A³)]: A³ -> A³; fun member:typeParamNamedLikeParam⁰[A⁴](A⁵) = A⁵; member:typeParamNamedLikeParam⁰(1) }
+//│ Elab: { fun member:typeParamNamedLikeParam⁰[List(A³)]: A³ -> A³; fun member:typeParamNamedLikeParam⁰[List(A⁴)](A⁵) = A⁵; member:typeParamNamedLikeParam⁰(1) }
 //│ = 1
 
 :el
 fun adoptedNamedLikeParam[A]: A -> A
 fun adoptedNamedLikeParam(A) = A
 adoptedNamedLikeParam(1)
-//│ Elab: { fun member:adoptedNamedLikeParam⁰[List(A⁶)](A⁷): A⁶ -> A⁶ = A⁷; member:adoptedNamedLikeParam⁰(1) }
+//│ Elab: { fun member:adoptedNamedLikeParam⁰[List(A⁶)]: A⁶ -> A⁶; fun member:adoptedNamedLikeParam⁰(A⁷) = A⁷; member:adoptedNamedLikeParam⁰(1) }
 //│ = 1
 
 // Swapping the written names preserves the positions of the two type arguments.
@@ -754,7 +754,7 @@ fun positional[A, B]: (A, B) -> [A, B]
 fun positional[B, A](first: B, second: A) = [first, second]
 let pair = positional[LeftField, RightField](LeftField(1), RightField(2))
 [pair.0.left, pair.1.right]
-//│ Elab: { fun member:positional⁰[List(A⁸, B⁰)]: A⁸, B⁰ -> [A⁸, B⁰]; fun member:positional⁰[B¹, A⁹](first⁰: B¹, second⁰: A⁹) = [first⁰, second⁰]; let pair⁰; pair⁰ = member:positional⁰[member:LeftField⁰, member:RightField⁰](member:LeftField⁰(1), member:RightField⁰(2)); [pair⁰.0.left‹term:LeftField¹/left⁰›, pair⁰.1.right‹term:RightField¹/right⁰›] }
+//│ Elab: { fun member:positional⁰[List(A⁸, B⁰)]: A⁸, B⁰ -> [A⁸, B⁰]; fun member:positional⁰[List(B¹, A⁹)](first⁰: B¹, second⁰: A⁹) = [first⁰, second⁰]; let pair⁰; pair⁰ = member:positional⁰[member:LeftField⁰, member:RightField⁰](member:LeftField⁰(1), member:RightField⁰(2)); [pair⁰.0.left‹term:LeftField¹/left⁰›, pair⁰.1.right‹term:RightField¹/right⁰›] }
 //│ = [1, 2]
 //│ pair = [LeftField(1), RightField(2)]
 
@@ -777,6 +777,16 @@ fun inferFirst[A, B]: (A, B) -> A
 fun inferFirst[X, Y](x: X, y) = x
 [inferFirst(LeftField(5), RightField(0)).left, inferFirst(RightField(6), LeftField(0)).right]
 //│ = [5, 6]
+
+// Only the header binder is repeated in the implementation. The signature also
+// quantifies B, so callers supply two type arguments.
+:expect [7, 8]
+fun splitQuantified[A]: [B] -> (A, B) -> [A, B]
+fun splitQuantified[X](x: X, y) = [x, y]
+let mixed = splitQuantified[LeftField, RightField](LeftField(7), RightField(8))
+[mixed.0.left, mixed.1.right]
+//│ = [7, 8]
+//│ mixed = [LeftField(7), RightField(8)]
 
 // A different number of parameters is an error even when the names overlap.
 :e

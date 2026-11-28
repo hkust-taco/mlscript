@@ -277,18 +277,21 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
     copy
 
   private def termDefinition(source: TermDefinition): TermDefinition =
-    val scope = nested
-    scope.bindParameters(source.params)
-    source.tparams.foreach(_.foreach(p => scope.bindLocal(p.sym)))
-    source.implementationTypeParams.foreach(p => scope.bindLocal(p.sym))
-    val copy = source.copy(sym = source.sym.subst, tsym = source.tsym.subst,
-      params = source.params.map(scope.parameterList), tparams = source.tparams.map(_.map(scope.parameter)),
-      implementationTypeParams = source.implementationTypeParams.map(scope.parameter),
-      sign = source.sign.map(scope.term), body = source.body.map(scope.term),
-      modulefulness = modulefulness(source.modulefulness), annotations = source.annotations.map(scope.annotation),
-      companion = source.companion.map(mapType))(source.toLoc, source.headerLoc, source.scope)
+    def copyHeader(source: TermDefinition): TermDefinition =
+      val scope = nested
+      scope.bindParameters(source.params)
+      source.tparams.foreach(_.foreach(p => scope.bindLocal(p.sym)))
+      val copy = source.copy(sym = source.sym.subst, tsym = source.tsym.subst,
+        params = source.params.map(scope.parameterList), tparams = source.tparams.map(_.map(scope.parameter)),
+        writtenType = source.writtenType.map(scope.term), body = source.body.map(scope.term),
+        modulefulness = modulefulness(source.modulefulness), annotations = source.annotations.map(scope.annotation),
+        companion = source.companion.map(mapType))(source.toLoc, source.headerLoc, source.scope)
+      copy.isErroneous = source.isErroneous
+      copy
+    val symbol = source.tsym.subst
+    source.tsym.termDeclaration.foreach(decl => symbol.decl = S(copyHeader(decl)))
+    val copy = copyHeader(source)
     copy.tsym.defn = S(copy)
-    copy.isErroneous = source.isErroneous
     copy
 
   private def knownDefinition(source: Definition): Opt[Definition] =

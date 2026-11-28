@@ -1125,7 +1125,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           dsym,
           sem.ParamList(sem.ParamListFlags.empty, Nil, N)(N) :: Nil,
           N,
-          Nil,
           N,
           S(trm),
           TermDefFlags.empty,

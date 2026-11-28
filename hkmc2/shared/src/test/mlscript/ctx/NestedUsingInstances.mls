@@ -30,7 +30,7 @@ module Ex with
 //│             k = Ins
 //│             sym = member:instance$Ident(Int)⁰
 //│             tsym = term:instance$Ident(Int)¹
-//│             sign = S of Capture:
+//│             writtenType = S of Capture:
 //│               base = Resolved{sym=class:Int⁰}:
 //│                 t = Ref{sym=member:Int¹} of member:Int¹
 //│                 sym = class:Int⁰

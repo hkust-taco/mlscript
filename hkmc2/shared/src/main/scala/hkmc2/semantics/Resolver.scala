@@ -359,7 +359,7 @@ class Resolver(tl: TraceLogger)
   def traverseDefn(defn: Definition)(using ICtx): ICtx =
   trace(dbg"Resolving definition: $defn"):
     def traverseTermDef(tdf: TermDefinition) =
-      val TermDefinition(params = pss, tparams = tps, sign = sign, body = body,
+      val TermDefinition(params = pss, tparams = tps, body = body,
         flags = TermDefFlags(isMethod, _), modulefulness = modulefulness, annotations = annotations) = tdf
       /** 
        * Add the contextual parameters in pss to the ICtx so that they
@@ -382,7 +382,7 @@ class Resolver(tl: TraceLogger)
       
       pss.foreach(_.allParams.foreach(traverseParam(_)))
       tps.getOrElse(Nil).flatMap(_.subTerms).foreach(traverse(_, expect = NonModule(N)))
-      sign.foreach(traverseSign(_,
+      tdf.sign.foreach(traverseSign(_,
         expect = if modulefulness.modified
           then Module(S(msg"${tdf.k.desc.capitalize} marked as returning a 'module' must have a module return type."))
           else NonModule(S(msg"${tdf.k.desc.capitalize} must be marked as returning a 'module' in order to have a module return type."))
@@ -422,11 +422,11 @@ class Resolver(tl: TraceLogger)
     defn match
     
     // Case: instance definition. Add the instance to the context.
-    case defn @ TermDefinition(k = Ins, sym = sym, tsym = tsym, flags = TermDefFlags(isMethod, _), sign = sign) =>
+    case defn @ TermDefinition(k = Ins, sym = sym, tsym = tsym, flags = TermDefFlags(isMethod, _)) =>
       softAssert(defn.owner.isEmpty)
       log(dbg"Resolving instance definition ${defn.showDbg}")
       traverseTermDef(defn)
-      sign match
+      defn.sign match
         case N =>
           // By the syntax of instance defintiion, the type signature should be present.
           lastWords(s"No type signature for instance definition ${defn.showDbg} at ${defn.toLoc}")

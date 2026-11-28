@@ -1900,13 +1900,13 @@ class NewResolver:
             val Marked(interface, context) = shape
             val generic = interface match
               case callable: CallableTypeShape if !isByName(td) =>
-                val parameters = td.tparams.toList.flatten.map(p => declaredParameter(p.sym)) ::: callable.tparams
+                val parameters = td.signatureHeader.tparams.toList.flatten.map(p => declaredParameter(p.sym)) ::: callable.tparams
                 CallableTypeShape(callable.source, callable.paramLists, callable.result,
                   if parameters.isEmpty then N else S(TypeScheme(td.tsym, parameters)), callable.supplied,
                   S(CallableDeclaration(td, td.params, TypeSubstitution.empty)),
                   td.resultWrapperAnnotation.map(WrappedResult(_, td.params.length)))
               case instance: InstanceShape if !isByName(td) =>
-                instanceShape(quantifiedType(instance.tpe, td.tparams.toList.flatten.map(_.sym)))
+                instanceShape(quantifiedType(instance.tpe, td.signatureHeader.typeParamSymbols))
               case _ => interface
             // Constructor fields keep their parameter scope; structural fields
             // follow their written type directly. Other members leave their own
@@ -2270,40 +2270,21 @@ class NewResolver:
       else ExitMark(ResolutionBoundary(td.tsym), site, NoMarks) :: marks
     transportType(tpe.instantiate(instances), path)
 
-  /** Interpret a generic method's signature in an override. Pair its type parameters by
-    * position so that an override of `id[A](x: A)` written as `id[B](x)` uses `B` for `x`.
-    * A selection can infer a base parameter for which the override has no corresponding binder.
+  /** Instantiate a signature with the implementation's type parameters in order. A class
+    * override supplies the path between method scopes. A split signature shares the member's
+    * scope with its implementation. Unpaired signature parameters remain available for inference.
     */
-  private def instantiateOverriddenMethod(base: TermDefinition, overriding: TermDefinition, marks: Ls[Marks],
-      instances: TypeSubstitution, methodSite: TermDefinition => Opt[FlowSymbol])(using ResolutionContext): TypeSubstitution =
-    val parameters = definitionBinders(base)
-    if parameters.isEmpty then return instances
-    methodSite(overriding).fold(instances): site =>
-      val own = definitionBinders(overriding)
-      // One selection can reach two overrides of the same base. Each binds the base's
-      // parameters in its own method scope, even when the caller supplies the same argument.
-      val binders = union(lexicalBinders(overriding.tsym).map(_ ++ own), rctx.siteBindersOf(site))
-      val path = ExitMark(ResolutionBoundary(base.tsym), methodSite(base), NoMarks) ::
-        (marks :+ EntryMark(ResolutionBoundary(overriding.tsym), N, NoMarks))
-      instances.withOverrides(instantiateSignatureParameters((base.tsym, overriding.tsym), parameters, own, site, binders, path))
-
-  /** Read a separate signature in the implementation's type parameters. Both headers
-    * belong to the same member scope, so their correspondence crosses no value boundary.
-    */
-  def instantiateSplitSignature(member: TermSymbol, formals: Ls[Param], own: Ls[Param])
-      (using State, ResolutionContext): TypeSubstitution =
-    assert(formals.length == own.length)
-    val parameters = own.map(_.sym)
-    instantiateSignatureParameters((member, member), formals.map(_.sym), parameters, FlowSymbol("signature check"),
-      lexicalBinders(member).map(_ ++ parameters), Nil)
-
-  private def instantiateSignatureParameters(methods: (TermSymbol, TermSymbol),
-      formals: Ls[VarSymbol], own: Ls[VarSymbol], site: FlowSymbol, binders: Binders, path: Ls[Marks])
-      (using ResolutionContext): TypeSubstitution =
-    val group = rctx.instantiateTypeParameters(methods, site, formals, binders)
-    val arguments = own.map(p => TypeArgument.invariant(parameterType(rctx.typeParameter(p))))
-    bindTypeArguments(formals.map(p => rctx.typeParameter(group(p))), path, arguments)
-    group
+  def instantiateMethodSignature(base: TermDefinition, formals: Ls[VarSymbol], implementation: TermSymbol,
+      own: => Ls[VarSymbol], methodSite: => Opt[FlowSymbol], path: => Ls[Marks])(using ResolutionContext): TypeSubstitution =
+    if formals.isEmpty then return TypeSubstitution.empty
+    methodSite.fold(TypeSubstitution.empty): site =>
+      val parameters = own
+      val binders = union(lexicalBinders(implementation).map(_ ++ parameters), rctx.siteBindersOf(site))
+      // One selection can reach several implementations of the same generic base.
+      val group = rctx.instantiateTypeParameters((base.tsym, implementation), site, formals, binders)
+      val arguments = parameters.map(p => TypeArgument.invariant(parameterType(rctx.typeParameter(p))))
+      bindTypeArguments(formals.map(p => rctx.typeParameter(group(p))), path, arguments)
+      group
 
   /** Find the type a member declares or inherits for a parameter, a field, or a method result.
     * Start at `td` and use the nearest matching annotation on each override path. Parameters
@@ -2327,8 +2308,10 @@ class NewResolver:
           def inherit(parent: TermDefinition, path: Ls[Marks], substitution: TypeSubstitution,
               nominal: Opt[Map[VarSymbol, TypeArgument]])(using ResolutionContext): Unit =
             def fromSlot(slot: MemberSlot): Unit =
-              val parentInstances = instantiateOverriddenMethod(parent, td, path, substitution, methodSite)
-              visit(parent, slot, path, parentInstances, seen + td.tsym): (origin, tpe) =>
+              val group = instantiateMethodSignature(parent, definitionBinders(parent), td.tsym, definitionBinders(td), methodSite(td),
+                ExitMark(ResolutionBoundary(parent.tsym), methodSite(parent), NoMarks) ::
+                  (path :+ EntryMark(ResolutionBoundary(td.tsym), N, NoMarks)))
+              visit(parent, slot, path, substitution.withOverrides(group), seen + td.tsym): (origin, tpe) =>
                 emit(origin, tpe.map(t => transportType(t.instantiate(instances), marks)))
             slot match
               case MemberSlot.FieldWrite(_) => fromSlot(MemberSlot.FieldWrite(nominal))
@@ -5061,7 +5044,7 @@ class NewResolver:
     * annotation instead belongs to the returned value and remains unconsumed.
     */
   private def definitionBinders(td: TermDefinition): Ls[VarSymbol] =
-    td.tparams.toList.flatten.map(_.sym) ::: definitionQuantifiers(td).map(_.sym)
+    td.signatureHeader.typeParamSymbols ::: definitionQuantifiers(td).map(_.sym)
 
   private def definitionQuantifiers(td: TermDefinition): Ls[QuantVar] =
     def signatureQuantifiers(sign: Term): Ls[QuantVar] = sign match
@@ -5137,14 +5120,14 @@ class NewResolver:
           val callerInstances = rctx.instances
           val instances = if isByName(td) then instantiateByName(td, resSym,
             ExitMark(ResolutionBoundary(td.tsym), S(resSym), NoMarks) :: markss, specialization, Map.empty)
-            else callerInstances.without(td.tparams.toList.flatten.map(_.sym))
+            else callerInstances.without(td.signatureHeader.typeParamSymbols)
           def receive(shape: TermShape)(using ResolutionContext): Unit =
             wrappedListener(instantiateShape(shape, instances))(using rctx.withInstances(callerInstances))
           if td.asyncAnnotation.nonEmpty then listenDefinitionResult(td, instances)(receive)
           else memberSignature(td) match
             case S(sign) =>
               val result = declaredType(typeResolution(sign), Map.empty).instantiate(instances)
-              val tpe = if isByName(td) then result else quantifiedType(result, td.tparams.toList.flatten.map(_.sym))
+              val tpe = if isByName(td) then result else quantifiedType(result, td.signatureHeader.typeParamSymbols)
               listenTypeInstances(tpe): shape =>
                 td.tsym.decl match
                   case S(_: Param) => receive(MarkedShape.enter(shape, ResolutionBoundary(td.tsym), N))

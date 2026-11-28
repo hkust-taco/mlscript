@@ -1067,7 +1067,6 @@ extends Importer:
         tsym,
         PlainParamList(valueSym.fold(Nil)(sym => Param.simple(sym) :: Nil))(N) :: Nil,
         N,
-        Nil,
         N,
         S(spec.methodBody(valueSym)),
         TermDefFlags.empty.copy(isMethod = true),
@@ -2748,9 +2747,6 @@ extends Importer:
       ):
     
     val members = blk.definedSymbols.toMap
-    // Interleaved declarations can leave several signatures waiting for their bodies.
-    // Each definition consumes its entry without exposing an incomplete TermDefinition to resolution.
-    val pendingSignatures = mutable.Map.empty[BlockMemberSymbol, TermDefinition]
     // A qualified annotation can need a preceding val's receiver before the
     // enclosing block finishes. Publish a member once all its overloads have
     // definitions; waiting for unrelated later statements needlessly hides that
@@ -3034,9 +3030,9 @@ extends Importer:
                 return go(sts, Nil, acc)(N)
               case impl => impl.filter(_ => td.isSeparateSignature)
             // Multiple declarations have already been diagnosed. Only the first supplies the signature.
-            if signatureFor.nonEmpty && pendingSignatures.contains(sym) then return go(sts, Nil, acc)(N)
+            val separate = sym.tsym.filter(_.defn.isEmpty).flatMap(_.termDeclaration)
+            if rhs.isEmpty && separate.isDefined then return go(sts, Nil, acc)(N)
             val compatible = signatureFor.forall(checkSeparateSignature(id.name, td, _))
-            val separate = if rhs.isDefined then pendingSignatures.remove(sym) else N
             val defnAnnotations = separate.fold(annotations): sig =>
               mergeSignatureAnnotations(id.name, sig.annotations, sig.toLoc, annotations, statementLoc)
             val definition = signatureFor.getOrElse(td)
@@ -3085,18 +3081,13 @@ extends Importer:
               val signature = td.annotatedResultType
                 .filter(_ => compatible && signatureFor.forall(_.annotatedResultType.isEmpty))
                 .map(elaborateResultType(_)(using newCtx))
-                .orElse(separate.flatMap(sig => sig.sign.map(_ -> sig.modulefulness)))
-              val s = signature.map(_._1)
-              
-              val formals = separate.flatMap(_.tparams)
-              val implementationTypeParams = if formals.isDefined then own else Nil
-              val checking = if newResolution && implementationTypeParams.nonEmpty then
-                instantiateSplitSignature(tsym, formals.get, implementationTypeParams)
-              else TypeSubstitution.empty
-              if td.annotatedResultType.isEmpty then
-                s.foreach: sign =>
-                  if newResolution then registerParameterSignature(pss, sign, checking)
-                  else checkSignatureOptionality(pss, sign)
+              val checking = separate match
+                case S(decl) if newResolution && own.nonEmpty && decl.writtenType.nonEmpty =>
+                  instantiateMethodSignature(decl, decl.typeParamSymbols, tsym, own.map(_.sym), S(rctx.fieldProjectionSite(sym)), Nil)
+                case _ => TypeSubstitution.empty
+              separate.flatMap(_.writtenType).foreach: sign =>
+                if newResolution then registerParameterSignature(pss, sign, checking)
+                else checkSignatureOptionality(pss, sign)
               pss.foreach(seedRestParameter)
               
               val body: Opt[Term] = rhs match
@@ -3118,20 +3109,19 @@ extends Importer:
                         b,
                       )
               
-              val mfn = signature.fold(Modulefulness.none)(_._2)
+              val mfn = signature.map(_._2).orElse(separate.map(_.modulefulness)).getOrElse(Modulefulness.none)
               
-              val tdf = TermDefinition(definition.k, sym, tsym, pss, formals.orElse(tps).filter(_ => compatible),
-                implementationTypeParams, s, body,
-                TermDefFlags.empty.copy(isMethod = isMethod, hasResultAnnotation = td.annotatedResultType.isDefined), mfn, defnAnnotations, N)(
+              val tdf = TermDefinition(definition.k, sym, tsym, pss, tps, signature.map(_._1), body,
+                TermDefFlags.empty.copy(isMethod = isMethod, hasResultAnnotation = signatureFor.isEmpty && td.annotatedResultType.isDefined), mfn, defnAnnotations, N)(
                 statementLoc, definitionHeaderLoc(td, annotations, statementLoc), S(bindingScope))
               
+              sym.tsym = S(tsym)
               if signatureFor.nonEmpty then
-                pendingSignatures(sym) = tdf
+                tsym.decl = S(tdf)
                 acc
               else
                 val r = FlowSymbol(s"‹result of ${sym}›")
-                if newResolution then s.foreach(registerSignature)
-                sym.tsym = S(tsym)
+                if newResolution then tdf.sign.foreach(registerSignature)
                 tsym.defn = S(tdf)
                 if newResolution then registerResultSignature(tdf, checking)
                 completeIfReady(sym)
@@ -3236,7 +3226,7 @@ extends Importer:
               tsym.k,
               fsym,
               tsym,
-              Nil, N, Nil, N,
+              Nil, N, N,
               if newResolution
                 then S(Term.Capture(Term.SimpleRef(p.sym)(N), tsym))
                 else S(p.sym.ref())
@@ -3451,7 +3441,6 @@ extends Importer:
                     ctsym,
                     allCtorPss,
                     S(tps.map(tp => Param(FldFlags.empty, tp.sym, N, Modulefulness.none, Nil)(tp.toLoc))),
-                    Nil,
                     S(resultType),
                     N,
                     TermDefFlags.empty,

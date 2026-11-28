@@ -268,7 +268,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     case Deref(term) => Vector.single(term)
     case td: TermDefinition =>
       td.params.toVector.flatMap(_.subTerms) ++ td.tparams.iterator.flatten.flatMap(_.subTerms) ++
-        td.implementationTypeParams.iterator.flatMap(_.subTerms) ++ td.sign ++ td.body ++ td.annotations.iterator.flatMap(_.subTerms)
+        td.sign ++ td.body ++ td.annotations.iterator.flatMap(_.subTerms)
     case cls: ClassDef =>
       (cls.paramsOpt.toVector.flatMap(_.subTerms) :+ cls.body.blk) ++ cls.annotations.flatMap(_.subTerms).toVector
     case mod: ModuleOrObjectDef =>
@@ -389,10 +389,11 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
         val name = doc"${td.k.str} ${td.bsym.showName}::${td.tsym.showName}"
         val header = name :: td.tparams.fold(doc"")(ps => doc"[${ps.map(_.sym.showName).mkDocument(", ")}]")
         val params = td.params.map(_.show).mkDocument()
-        val sign = td.sign.fold(doc"")(s => doc": ${s.show}")
-        val declaration = if td.implementationTypeParams.isEmpty then header :: params :: sign
-          else header :: sign :: doc"; # $name[${td.implementationTypeParams.map(_.sym.showName).mkDocument(", ")}]" :: params
-        annotations :: declaration
+        val sign = td.writtenType.fold(doc"")(s => doc": ${s.show}")
+        val declaration = if td.body.isEmpty then doc"" else td.tsym.termDeclaration.fold(doc""): decl =>
+          name :: decl.tparams.fold(doc"")(ps => doc"[${ps.map(_.sym.showName).mkDocument(", ")}]")
+          :: decl.writtenType.fold(doc"")(s => doc": ${s.show}") :: doc"; # "
+        annotations :: declaration :: header :: params :: sign
         :: (if summon[ShowCfg].showFlowSymbols then doc" ‹${td.bsym.flow.showName}›" else doc"")
         :: td.body.fold(doc"")(b => doc" = ${b.show}")
       case cld: ClassLikeDef =>
@@ -581,13 +582,10 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     case CtxTup(fields) => fields.map(_.showDbg).mkString("‹using›[", ", ", "]")
     case td: TermDefinition =>
       val head = s"${td.flags.showDbg}${td.k.str} ${td.sym.showDbg}"
-      val public = head + td.tparams.map(_.map(_.showDbg)).mkStringOr(", ", "[", "]")
-      val implementation = td.implementationTypeParams.map(_.showDbg).mkStringOr(", ", "[", "]")
-      val params = td.params.map(_.showDbg).mkString("")
-      val sign = td.sign.fold("")(": " + _.showDbg)
-      val body = td.body.fold("")(" = " + _.showDbg)
-      if implementation.isEmpty then public + params + sign + body
-      else s"$public$sign; $head$implementation$params$body"
+      val declaration = if td.body.isEmpty then "" else td.tsym.termDeclaration.fold("")(_.showPlain + "; ")
+      val header = head + td.tparams.map(_.map(_.showDbg)).mkStringOr(", ", "[", "]")
+      declaration + header + td.params.map(_.showDbg).mkString("") + td.writtenType.fold("")(": " + _.showDbg) +
+        td.body.fold("")(" = " + _.showDbg)
     case cls: ClassLikeDef =>
       s"${cls.kind} ${cls.sym.showDbg}${
         cls.tparams.map(_.showDbg).mkStringOr(", ", "[", "]")}${
