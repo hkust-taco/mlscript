@@ -115,6 +115,50 @@ fun separateOnOwnLine =
 [onOwnLine(1), nestedOnOwnLine(1)(2), caseOnOwnLine(0), caseOnOwnLine(3), implicitOnOwnLine(1, 2), separateOnOwnLine(4)]
 //│ = [2, 3, 0, 1, 3, 8]
 
+// Braces delimit the same block as indentation, so the literal can stand in braces.
+:expect [2, 3, 3, 0, 1, 8]
+fun braced: Int -> Int = { x => x + 1 }
+fun bracedImplicit: (Int, Int) -> Int = { => _ + _ }
+fun bracedCurried: Int -> Int -> Int = {
+  x => y => x + y
+}
+fun bracedCase: Int -> Int = { case
+  0 then 0
+  _ then 1
+}
+fun bracedSeparate: Int -> Int
+fun bracedSeparate = { x => x * 2 }
+[braced(1), bracedImplicit(1, 2), bracedCurried(1)(2), bracedCase(0), bracedCase(3), bracedSeparate(4)]
+//│ = [2, 3, 3, 0, 1, 8]
+
+// A parenthesized literal is an ordinary expression, which writes no list.
+:e
+fun parenthesized: Int -> Int = (x => x + 1)
+//│ ╔══[COMPILATION ERROR] Implementation of 'parenthesized' must preserve the number of parameter lists
+//│ ║  l.+1: 	fun parenthesized: Int -> Int = (x => x + 1)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The signature is declared here
+//│ ║  l.+1: 	fun parenthesized: Int -> Int = (x => x + 1)
+//│ ║        	                   ^^^^^^^^^^
+//│ ╙── The body can write the missing lists as an immediate function literal. Parenthesize the result type to return a function value.
+
+:e
+fun parenthesizedSeparate: Int -> Int
+fun parenthesizedSeparate = (x => x + 1)
+//│ ╔══[COMPILATION ERROR] Implementation of 'parenthesizedSeparate' must preserve the number of parameter lists
+//│ ║  l.+2: 	fun parenthesizedSeparate = (x => x + 1)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The signature is declared here
+//│ ║  l.+1: 	fun parenthesizedSeparate: Int -> Int
+//│ ║        	                           ^^^^^^^^^^
+//│ ╙── The body can write the missing lists as an immediate function literal. Parenthesize the result type to return a function value.
+
+// Such a literal is the body of a function value, whose type is parenthesized as well.
+:expect 2
+fun parenthesizedValue: (Int -> Int) = (x => x + 1)
+parenthesizedValue(1)
+//│ = 2
+
 // The function takes the literal's parameter list, which the signature types.
 :sir
 :siret

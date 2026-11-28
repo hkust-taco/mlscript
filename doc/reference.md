@@ -507,8 +507,9 @@ An implementation must write the parameter lists that its signature spells out. 
 them as an immediate function literal: `fun add: (Int, Int) -> Int = (x, y) => x + y` is
 `fun add(x, y) = x + y`, and so is `fun add = (x, y) => x + y` following a separate
 `fun add: (Int, Int) -> Int`. Curried lambdas, implicit lambdas (`=> _ + _`), and `case` functions
-write lists in the same way, and the literal can stand on an indented line of its own.
-Any other body is an error unless the function type is parenthesized,
+write lists in the same way, and the literal can stand on an indented line of its own or in braces,
+as in `fun inc: Int -> Int = { x => x + 1 }`. A parenthesized literal is an ordinary expression,
+which writes no list. Any other body is an error unless the function type is parenthesized,
 as in `fun adder: (Int -> Int) = ...`, which returns the function value that its body computes.
 A split definition can write additional parameter lists as shorthand for returned lambdas.
 For example, given `type Unary = Int -> Int`, both `fun f(x) = x` and `fun f = x => x`
