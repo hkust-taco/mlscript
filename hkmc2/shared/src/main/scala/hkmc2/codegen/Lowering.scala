@@ -658,13 +658,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case (Nil, args :: remainingArgss) =>
         acc.reverse match
         case Nil =>
-          // A getter runs before the arguments of the returned function. Its declaration supplies
-          // that function's type even after binding the read to a temporary.
+          // The callee is a function value: the result of a getter, a field, a variable, or another expression.
+          // It is evaluated before the arguments, like any operand. Its declaration supplies its type even
+          // after the read is bound to a temporary.
           def applied(callee: Path): Block =
             lowerRemainingCalls(callee, declaredCalleeTypes(fr), args, remainingArgss, annotations, loc)(k)
           getterRead(fr) match
-            // Any other callee stays as it is: a selection determines the receiver of the call.
-            case callee: Path => applied(callee)
+            case callee: Path if mayBeForeignMethod(callee) => applied(callee)
             case read => stablePath(read)(applied)
         case acc =>
           val call = new Call(fr, acc)(groupedSignature, CallMetadata(isMlsFun, mayRaiseEffects, Nil), loc)
@@ -2113,24 +2113,37 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     term(t, inStmtPos = inStmtPos)(stablePath(_)(k))
   
   /** Lowers the callee of an application, retaining a selected member's path. [[lowerMultiCall]] uses
-    * its target to recognize a getter and type the application of its result. An unresolved member
-    * may be a method and needs its receiver at the call.
-    *
-    * The selection is part of the call, which reads the member when it applies it. Only the operands of
-    * the selection are made stable, so a member whose value can change is read after the arguments.
+    * its target to tell a method from a getter or a field, and to type the application of a function value.
+    * The operands of the selection are stable, like those of every selection that lowering builds.
     */
   def calleeTerm(t: st)(k: Path => Block)(using LoweringCtx): Block =
-    def selection(sel: Path): Block = sel match
-      case sel @ Select(qual, name) => stablePath(qual): q =>
-        k(if q is qual then sel else Select(q, name)(sel.symbol, sel.toLoc)(sel.sanitize))
-      case sel @ DynSelect(qual, fld, kind) => stablePath(qual): q =>
-        stablePath(fld): f =>
-          k(if (q is qual) && (f is fld) then sel else DynSelect(q, f, kind)(sel.toLoc))
-      case path => k(path)
     term_nonTail(t):
-      case Call(path, Nil) => selection(path)
-      case sel: (Select | DynSelect) => selection(sel)
+      case Call(path, Nil) => k(path)
+      case sel: (Select | DynSelect) => k(sel)
       case r => stablePath(r)(k)
+  
+  /** Whether `callee` selects a member that can be a method of a foreign object, which needs its receiver.
+    * The selection then stays on the call, which reads the member when it applies it, after the arguments.
+    *
+    * This holds for a member that resolution did not identify, and for a record field: a record type describes
+    * any object that has its fields, including a foreign one whose fields are methods, as `Indexable` does for
+    * arrays and strings.
+    *
+    * Any other member that resolution identified is either a method, whose selection is a stable callee, or a
+    * value, which is read like any other operand: before the arguments when it can change.
+    */
+  private def mayBeForeignMethod(callee: Path)(using LoweringCtx): Bool =
+    def structural(member: Opt[DefinitionSymbol[?]]): Bool = member match
+      case N | S(_: (RecordFieldSymbol | RecordFieldAlternativesSymbol)) => true
+      case S(_) => false
+    callee match
+      case sel: Select if structural(sel.symbol) =>
+        softAssert(isStable(sel.qual), "The prefix of a selection in callee position must be stable")
+        true
+      case sel @ DynSelect(qual, key, DynSelectKind.Unknown | DynSelectKind.Member(_)) if structural(sel.targetSymbol) =>
+        softAssert(isStable(qual) && isStable(key), "The operands of a selection in callee position must be stable")
+        true
+      case _ => false
   
   /** Whether evaluating `p` yields the same value wherever the code that follows evaluates it. Lowering only
     * puts such paths in the nested positions of the IR: the arguments and callees of calls, operands,

@@ -224,8 +224,7 @@ set targets.[swapTargets()] = 99
 spares
 //│ = [30, 40]
 
-// The selection of a method stays on its call, which reads the member when it applies it. A member that an
-// argument assigns is therefore read after that argument.
+// A field that holds a function is a value like any other: when it can change, it is read before the arguments.
 class Dispatcher with
   mut val handle: Int -> Str = n => "old"
 let dispatcher = new mut Dispatcher
@@ -235,12 +234,31 @@ fun swapHandler() =
 //│ dispatcher = Dispatcher
 
 :sir
-:expect "new"
+:expect "old"
 dispatcher.handle(swapHandler())
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp, tmp1; set tmp = dispatcher⁰; set tmp1 = swapHandler⁰(); return tmp.handle⁰(tmp1)
+//│ let tmp, tmp1, tmp2;
+//│ set tmp = dispatcher⁰;
+//│ set tmp1 = tmp.handle⁰;
+//│ set tmp2 = swapHandler⁰();
+//│ return tmp1(tmp2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = "new"
+//│ = "old"
+
+// A member that resolution did not identify can be a method of a foreign object, which needs its receiver.
+// Its selection stays on the call, which reads the member after the arguments.
+:sjs
+:expect "b"
+fun foreign(target: dyn) = target.charAt(1)
+foreign("abc")
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let foreign;
+//│ foreign = function foreign(target) {
+//│   return runtime.safeCall(target.charAt(1))
+//│ };
+//│ return foreign("abc")
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = "b"
 
 
 // Any worksheet block can assign the top-level variables of the others. Such a variable is only stable in

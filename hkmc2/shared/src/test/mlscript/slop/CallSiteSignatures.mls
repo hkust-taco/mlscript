@@ -249,6 +249,38 @@ declare module host with
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [false, true]
 
+// FIXME: A field that holds a function is a value like the result of a getter, so applying it should not pass
+// the object as the receiver either. The IR keeps the selection of a field that cannot change in callee position,
+// and the simplifier moves the read of any field there. The JS backend prints both as method calls, which a
+// foreign function observes.
+let receiverProbe = globalThis.Function("return this === globalThis || this === undefined ? 'none' : 'receiver'")
+class Callback(val run: () -> Str)
+let callback = Callback(receiverProbe)
+//│ callback = Callback(fun anonymous)
+//│ receiverProbe = fun anonymous
+
+:sjs
+:fixme
+:expect "none"
+callback.run()
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let tmp10; tmp10 = callback; return runtime.safeCall(tmp10.run())
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] Expected: '"none"', got: '"receiver"'
+//│ = "receiver"
+
+:sjs
+:fixme
+:expect "none"
+let detached = callback.run
+detached()
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let detached, tmp11; tmp11 = callback; detached = tmp11.run; return runtime.safeCall(tmp11.run())
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] Expected: '"none"', got: '"receiver"'
+//│ = "receiver"
+//│ detached = fun anonymous
+
 
 // A property that resolution did not identify may be a getter: reading it is a call with an unknown signature.
 :sir

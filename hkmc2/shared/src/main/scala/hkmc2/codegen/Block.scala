@@ -43,10 +43,11 @@ the prefixes and keys of selections, the elements of tuples and records, and the
 A stable path yields the same value wherever the code that follows evaluates it (see `Lowering.isStable`).
 Lowering reads the other paths, such as the variables that the program assigns with `set` and mutable fields,
 into temporaries where the source program evaluates them, so the IR evaluates subexpressions in source order.
-There are two exceptions. A selection `p.m` in callee position stays on the call, which reads `m` when it
-applies it, and only `p` is stable. The named fields of a record written as a block are variables of that block,
-which the record reads once the block has run. A pass that moves or duplicates a nested path must preserve
-the value that it yields.
+There are two exceptions. A selection `p.m` in callee position stays on the call when `m` can be a method of a
+foreign object, which needs its receiver: a member that resolution did not identify, or a record field. The
+call reads `m` when it applies it, and only `p` is stable. The named fields of a record written as a block are
+variables of that block, which the record reads once the block has run. A pass that moves or duplicates a
+nested path must preserve the value that it yields.
 
 While the IR is mostly immutable, for easier manipulation and to enable some optimizations,
 we do assume that each DefinitionSymbol coming from the source program is "owned" by at most one IR definition;
