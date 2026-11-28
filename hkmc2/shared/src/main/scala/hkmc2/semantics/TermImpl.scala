@@ -266,8 +266,9 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     case SetRef(lhs, rhs) => Vector.double(lhs, rhs)
     case Drop(term) => Vector.single(term)
     case Deref(term) => Vector.single(term)
-    case TermDefinition(_, _, _, pss, tps, sign, body, _, _, annotations, _) =>
-      pss.toVector.flatMap(_.subTerms) ++ tps.getOrElse(Nil).flatMap(_.subTerms).toVector ++ sign.toVector ++ body.toVector ++ annotations.flatMap(_.subTerms).toVector
+    case td: TermDefinition =>
+      td.params.toVector.flatMap(_.subTerms) ++ td.tparams.iterator.flatten.flatMap(_.subTerms) ++
+        td.typeAnnotations ++ td.body ++ td.annotations.iterator.flatMap(_.subTerms)
     case cls: ClassDef =>
       (cls.paramsOpt.toVector.flatMap(_.subTerms) :+ cls.body.blk) ++ cls.annotations.flatMap(_.subTerms).toVector
     case mod: ModuleOrObjectDef =>
@@ -384,14 +385,17 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
       case df: DefineVar =>
         doc"${df.sym.showName} = ${df.rhs.show}"
       case td: TermDefinition =>
-          td.annotations.map(_.show :: " ").mkDocument()
-          :: doc"${td.k.str} ${td.bsym.showName}::${td.tsym.showName}"
-          :: (if td.tparams.isEmpty then doc""
-            else doc"[${td.tparams.get.map(_.sym.showName).mkDocument(", ")}]")
-          :: td.params.map(_.show).mkDocument()
-          :: td.sign.fold(doc"")(s => doc": ${s.show}")
-          :: (if summon[ShowCfg].showFlowSymbols then doc" ‹${td.bsym.flow.showName}›" else doc"")
-          :: td.body.fold(doc"")(b => doc" = ${b.show}")
+        val annotations = td.annotations.map(_.show :: " ").mkDocument()
+        val name = doc"${td.k.str} ${td.bsym.showName}::${td.tsym.showName}"
+        val header = name :: td.tparams.fold(doc"")(ps => doc"[${ps.map(_.sym.showName).mkDocument(", ")}]")
+        val params = td.params.map(_.show).mkDocument()
+        val sign = td.writtenType.fold(doc"")(s => doc": ${s.show}")
+        val declaration = if td.body.isEmpty then doc"" else td.tsym.termDeclaration.fold(doc""): decl =>
+          name :: decl.tparams.fold(doc"")(ps => doc"[${ps.map(_.sym.showName).mkDocument(", ")}]")
+          :: decl.writtenType.fold(doc"")(s => doc": ${s.show}") :: doc"; # "
+        annotations :: declaration :: header :: params :: sign
+        :: (if summon[ShowCfg].showFlowSymbols then doc" ‹${td.bsym.flow.showName}›" else doc"")
+        :: td.body.fold(doc"")(b => doc" = ${b.show}")
       case cld: ClassLikeDef =>
           cld.annotations.map(_.show :: " ").mkDocument()
           :: doc"${cld.ctorSym.fold(doc"")("fun "::_.showName::doc" # ")}${cld.kind.str} ${cld.bsym.showName}::${cld.sym.showName}"
@@ -576,16 +580,12 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     case Tup(fields) => fields.map(_.showDbg).mkString("[", ", ", "]")
     case Mut(und) => s"mut ${und.showDbg}"
     case CtxTup(fields) => fields.map(_.showDbg).mkString("‹using›[", ", ", "]")
-    case TermDefinition(k, sym, tsym, pss, tps, sign, body, flags, _, _, _) =>
-      s"${flags.showDbg}${k.str} ${sym.showDbg}${
-        tps.map(_.map(_.showDbg)).mkStringOr(", ", "[", "]")
-      }${
-        pss.map(_.showDbg).mkString("")
-      }${sign.fold("")(": "+_.showDbg)}${
-        body match
-          case S(x) => " = " + x.showDbg
-          case N => ""
-        }"
+    case td: TermDefinition =>
+      val head = s"${td.flags.showDbg}${td.k.str} ${td.sym.showDbg}"
+      val declaration = if td.body.isEmpty then "" else td.tsym.termDeclaration.fold("")(_.showPlain + "; ")
+      val header = head + td.tparams.map(_.map(_.showDbg)).mkStringOr(", ", "[", "]")
+      declaration + header + td.params.map(_.showDbg).mkString("") + td.writtenType.fold("")(": " + _.showDbg) +
+        td.body.fold("")(" = " + _.showDbg)
     case cls: ClassLikeDef =>
       s"${cls.kind} ${cls.sym.showDbg}${
         cls.tparams.map(_.showDbg).mkStringOr(", ", "[", "]")}${

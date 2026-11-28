@@ -99,10 +99,10 @@ pair(Left(8), Right(9))
 // intentionally provide no Array members to the implementation.
 :ge
 private fun opaque: (...Any) -> Int
-private fun opaque(...xs) = xs.length
+fun opaque(...xs) = xs.length
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.+2: 	private fun opaque(...xs) = xs.length
-//│ ║        	                            ^^^^^^^^^
+//│ ║  l.+2: 	fun opaque(...xs) = xs.length
+//│ ║        	                    ^^^^^^^^^
 //│ ╟── Value with an empty interface does not contain member 'length'
 //│ ║  l.+1: 	private fun opaque: (...Any) -> Int
 //│ ║        	                        ^^^

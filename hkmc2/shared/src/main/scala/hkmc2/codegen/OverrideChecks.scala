@@ -96,16 +96,12 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
     * other units override.
     */
   def checkExposedSignatures(): Unit =
-    // A separate signature, as in `fun f: (Int) -> Int` followed by `fun f(x) = x`, types every written
-    // parameter; a result annotation describes only the result.
-    def hasFullSignature(td: TermDefinition): Bool =
-      td.sign.isDefined && !td.flags.hasResultAnnotation && td.params.nonEmpty
     /** Whether `base`, overridden from `td`, specifies a part; `visiting` stops at inheritance cycles. */
     def inheritedSpecifies(td: TermDefinition, base: TermDefinition, visiting: Set[TermSymbol])(
         specifies: Set[TermSymbol] => Bool): Bool =
       (base.tsym.getState isnt td.tsym.getState) || (!visiting(base.tsym) && specifies(visiting + base.tsym))
     def parameterSpecified(td: TermDefinition, param: Param, visiting: Set[TermSymbol]): Bool =
-      param.sign.isDefined || hasFullSignature(td) || locally:
+      param.sign.isDefined || td.fullSignature.nonEmpty || locally:
         val inherited = baseEdges(td).flatMap: edge =>
           edge.parameters.collect { case (actual, inherited) if actual.sym is param.sym => edge.inherited -> inherited }
         // Erasure joins every corresponding inherited representation, so each must be specified.

@@ -228,13 +228,13 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
     */
   private def declaredType(td: TermDefinition)(using ctx: InvalCtx, cctx: CCtx): GeneralType =
     given InvalCtx = ctx.nextLevel
-    val tvars = td.tparams.toList.flatten.map(p => p.sym.uid -> freshVar(p.sym))
+    val tvars = td.signatureHeader.tparams.toList.flatten.map(p => p.sym.uid -> freshVar(p.sym))
     given Map[Uid[Symbol], TypeArg] = tvars.toMap
     def signature(t: Term): GeneralType = typeAndSubstType(t, pol = true)
-    val ty = td.sign match
-      case S(sign) if !td.flags.hasResultAnnotation => signature(sign)
-      case sign =>
-        td.params.foldRight(sign.fold[GeneralType](Top)(signature)): (ps, ret) =>
+    val ty = td.fullSignature match
+      case S(sign) => signature(sign)
+      case N =>
+        td.params.foldRight(td.writtenType.fold[GeneralType](Top)(signature)): (ps, ret) =>
           if ps.variadic.nonEmpty then
             error(msg"InvalML does not support variadic foreign function signatures." -> td.toLoc :: Nil)
           else
@@ -322,10 +322,16 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
     case _ =>
       (error(msg"Cannot quote ${code.toString}" -> code.toLoc :: Nil), Bot, Bot)
 
-  private def typeFunDef(sym: Symbol, lam: Term, sig: Opt[Term])(using ctx: InvalCtx, cctx: CCtx, scope: Scope) = lam match
-    case Term.Lam(params, body) => sig match
-      case S(sig) =>
-        val sigTy = typeType(sig)(using ctx)
+  /** Checks a function body against its written signature or infers its type. */
+  private def typeFunDef(td: TermDefinition, lam: Term)(using ctx: InvalCtx, cctx: CCtx, scope: Scope) = lam match
+    case Term.Lam(params, body) =>
+      val sym = td.sym
+      // Separate signatures enter the block's context before its bodies.
+      val signature = td.fullSignature match
+        case S(_) => S(ctx.get(sym).getOrElse(die))
+        case N => td.writtenType.map(typeType)
+      signature match
+      case S(sigTy) =>
         ctx += sym -> sigTy
         ascribe(lam, sigTy)
         ()
@@ -339,7 +345,7 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
         given CCtx = CCtx.init(lam, N)
         constrain(funTy, funTyV)(using ctx)
         ctx += sym -> PolyType.generalize(funTy, S(outer), ctx.lvl + 1)
-    case _ => error(msg"Function definition shape not yet supported for ${sym.nme}" -> lam.toLoc :: Nil)
+    case _ => error(msg"Function definition shape not yet supported for ${td.sym.nme}" -> lam.toLoc :: Nil)
 
   // Check if a given matching expression is matching on an ADT.
   // An `if` expression can only matching on one ADT and patterns can only carry variables so far.
@@ -674,15 +680,13 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
             effBuff += eff
             ctx += sym -> rhsTy
             goStats(stats)
-          case (td @ TermDefinition(k = Fun, params = ps :: Nil, sign = sig, body = S(body))) :: stats =>
-            typeFunDef(td.sym, Term.Lam(ps, body), sig)
+          case (td @ TermDefinition(k = Fun, params = ps :: Nil, body = S(body))) :: stats =>
+            typeFunDef(td, Term.Lam(ps, body))
             goStats(stats)
-          case (td @ TermDefinition(k = Fun, params = Nil, sign = sig, body = S(body))) :: stats =>
-            typeFunDef(td.sym, body, sig)  // * may be a case expressions
+          case (td @ TermDefinition(k = Fun, params = Nil, body = S(body))) :: stats =>
+            typeFunDef(td, body)  // * may be a case expressions
             goStats(stats)
-          case (td1 @ TermDefinition(k = Fun, sign = S(sig), body = None)) :: (td2 @ TermDefinition(k = Fun, body = S(body))) :: stats
-            if td1.sym === td2.sym => goStats(td2 :: stats) // * avoid type check signatures twice
-          case (td @ TermDefinition(k = Fun, sign = S(sig), body = None)) :: stats =>
+          case (td @ TermDefinition(k = Fun, writtenType = S(sig), body = None)) :: stats =>
             ctx += td.sym -> typeType(sig)
             goStats(stats)
           case (clsDef: ClassDef) :: stats =>
@@ -698,6 +702,11 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
             goStats(stats) // TODO:
           case stat :: _ =>
             TODO(stat)
+        // Mutually recursive functions can call each other through their separate signatures.
+        stats.foreach:
+          case td @ TermDefinition(k = Fun, body = S(_)) =>
+            td.fullSignature.foreach(sig => ctx += td.sym -> typeType(sig))
+          case _ => ()
         goStats(stats)
         val (ty, eff) = typeCheck(res)
         (ty, effBuff.foldLeft(eff)((res, e) => res | e))

@@ -279,8 +279,8 @@ new Implementation().inspect({value: 1})
 
 // The receiver's type arguments also apply to parameters specified by a separate signature.
 private class SignedService[T] with
-  fun inspect: T -> Str
-  open fun inspect(x) = ""
+  open fun inspect: T -> Str
+  fun inspect(x) = ""
 private class SignedImplementation extends SignedService[Argument] with
   override fun inspect(x) = x.word
 fun signedService(): SignedService[Argument] = new SignedImplementation
@@ -727,8 +727,8 @@ new ClosedReader().read({only: 7})
 // The first application retains the second parameter list of a separately declared signature.
 :e
 private class CurriedBase with
-  fun inspect: Any -> Any -> Int
-  open fun inspect(first)(second) = 0
+  open fun inspect: Any -> Any -> Int
+  fun inspect(first)(second) = 0
 private class CurriedChild extends CurriedBase with
   override fun inspect(first)(second) = second.only
 fun detachedTail() = new CurriedBase().inspect(0)
@@ -737,8 +737,8 @@ new CurriedChild().inspect(0)({only: 7})
 //│ ║  l.+5: 	  override fun inspect(first)(second) = second.only
 //│ ║        	                                        ^^^^^^^^^^^
 //│ ╟── Value with an empty interface does not contain member 'only'
-//│ ║  l.+2: 	  fun inspect: Any -> Any -> Int
-//│ ║        	                      ^^^
+//│ ║  l.+2: 	  open fun inspect: Any -> Any -> Int
+//│ ║        	                           ^^^
 //│ ╟── Type 'Any' is declared without a member interface.
 //│ ║  in ../../decls/Prelude.mls
 //│ ║  l.XX: 	declare type Any

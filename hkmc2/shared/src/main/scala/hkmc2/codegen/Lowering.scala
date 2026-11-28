@@ -2115,7 +2115,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         case N => WarningReport(msg"This annotation has no effect." -> annot.toLoc :: Nil)
     annotations.foreach:
       case Annot.Untyped() => ()
-      case a @ (Annot.TailRec() | Annot.Inline() | Annot.NoInline() | Annot.Generator() | Annot.Async() | Annot.RaiseEffects()) =>
+      case a: Annot.RequiresFunctionBody =>
         warn(a, S(msg"This annotation has no effect on handler methods."))
       case annot => warn(annot)
   
@@ -2126,17 +2126,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         case N => WarningReport(msg"This annotation has no effect." -> annot.toLoc :: Nil)
     annotations.foreach:
       case Annot.Untyped() => ()
-      case a @ (Annot.TailRec() | Annot.Inline() | Annot.NoInline() | Annot.Generator() | Annot.Async() | Annot.RaiseEffects()) =>
-        val annot = a match
-          case Annot.TailRec() => "@tailrec"
-          case Annot.Inline() => "@inline"
-          case Annot.NoInline() => "@noInline"
-          case Annot.Generator() => "@generator"
-          case Annot.Async() => "@async"
-          case Annot.RaiseEffects() => "@raiseEffects"
+      case a: Annot.RequiresFunctionBody =>
         target match
           case TermDefinition(body = S(bod), k = syntax.Fun) => ()
-          case TermDefinition(k = syntax.Fun) => warn(a, S(msg"Only functions with a body may be marked as $annot."))
+          case TermDefinition(k = syntax.Fun) => warn(a, S(msg"Only functions with a body may be marked as ${a.spelling}."))
           case _ => warn(a)
       case Annot.Modifier(syntax.Keyword.`public` | syntax.Keyword.`private` | syntax.Keyword.`virtual`) => ()
       case Annot.Modifier(syntax.Keyword("staged")) => ()

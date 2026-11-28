@@ -242,7 +242,7 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
     case sc: SetConfig => sc
 
   def annotation(source: Annot): Annot = source match
-    case Annot.Trm(t) => Annot.Trm(term(t))(source.toLoc)
+    case a @ Annot.Trm(t) => Annot.Trm(term(t))(a.symbol.map(_.subst), a.toLoc)
     case Annot.JsSymbol(key) => Annot.JsSymbol(key.copy(path = key.path.map(_.subst))(term(key.term)))(source.toLoc)
     case _ => source
 
@@ -253,7 +253,9 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
     val copy = Param(source.flags, source.sym.subst, source.sign.map(term), modulefulness(source.modulefulness),
       source.annotations.map(annotation))(source.toLoc)
     copy.fldSym = source.fldSym.map(_.subst)
-    copy.sym.decl = S(copy)
+    source.sym.decl match
+      case S(tp: TyParam) => typeParameter(tp)
+      case _ => copy.sym.decl = S(copy)
     source.fldSym.toList.flatMap:
       case s: TermSymbol => s :: Nil
       case s: BlockMemberSymbol => s.tsym.toList
@@ -275,16 +277,21 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
     copy
 
   private def termDefinition(source: TermDefinition): TermDefinition =
-    val scope = nested
-    scope.bindParameters(source.params)
-    source.tparams.foreach(_.foreach(p => scope.bindLocal(p.sym)))
-    val copy = source.copy(sym = source.sym.subst, tsym = source.tsym.subst,
-      params = source.params.map(scope.parameterList), tparams = source.tparams.map(_.map(scope.parameter)),
-      sign = source.sign.map(scope.term), body = source.body.map(scope.term),
-      modulefulness = modulefulness(source.modulefulness), annotations = source.annotations.map(scope.annotation),
-      companion = source.companion.map(mapType))(source.toLoc, source.headerLoc, source.scope)
+    def copyHeader(source: TermDefinition): TermDefinition =
+      val scope = nested
+      scope.bindParameters(source.params)
+      source.tparams.foreach(_.foreach(p => scope.bindLocal(p.sym)))
+      val copy = source.copy(sym = source.sym.subst, tsym = source.tsym.subst,
+        params = source.params.map(scope.parameterList), tparams = source.tparams.map(_.map(scope.parameter)),
+        writtenType = source.writtenType.map(scope.term), body = source.body.map(scope.term),
+        writtenModulefulness = modulefulness(source.writtenModulefulness), annotations = source.annotations.map(scope.annotation),
+        companion = source.companion.map(mapType))(source.toLoc, source.headerLoc, source.scope)
+      copy.isErroneous = source.isErroneous
+      copy
+    val symbol = source.tsym.subst
+    source.tsym.termDeclaration.foreach(decl => symbol.decl = S(copyHeader(decl)))
+    val copy = copyHeader(source)
     copy.tsym.defn = S(copy)
-    copy.isErroneous = source.isErroneous
     copy
 
   private def knownDefinition(source: Definition): Opt[Definition] =

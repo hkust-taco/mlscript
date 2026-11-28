@@ -887,7 +887,7 @@ final case class CallableTypeShape(source: Term, paramLists: NELs[DeclaredParams
     declaration: Opt[CallableDeclaration], wrappedResult: Opt[WrappedResult]) extends CoreHeadShape:
   def tparams: Ls[DeclaredTypeParameter] = scheme.toList.flatMap(_.parameters)
   def describe: Str = declaration.fold("function with a declared signature")(d => s"function '${d.definition.bsym.nme}'")
-  def toLoc: Opt[Loc] = declaration.fold(source.toLoc)(_.definition.headerLoc)
+  def toLoc: Opt[Loc] = declaration.fold(source.toLoc)(_.definition.signatureHeader.headerLoc)
   protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup = MemberLookup.Missing
 
 /** Why observing a type did not expose a member interface. Keep this evidence

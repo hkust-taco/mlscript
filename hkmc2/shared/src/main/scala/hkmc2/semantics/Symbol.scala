@@ -510,6 +510,8 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
   override def prefix: Str = s"term:${owner.map(o => s"${o.nme}/").getOrElse("")}"
   override def showPrefix(using Scope, ShowCfg, Raise): Str =
     "term:" + owner.map(_.showName + "/").getOrElse("")
+  /** The separately written signature of this member, elaborated in its declaration scope. */
+  def termDeclaration: Opt[TermDefinition] = decl.collect { case td: TermDefinition => td }
   def isExplicitlyPrivate: Bool = defn.exists(_.visibility is Visibility.Private)
   def isLetOrParamBinding: Bool = (k is LetBind) || (k is ParamBind)
   def isPrivate: Bool =
@@ -741,7 +743,9 @@ sealed trait DefinitionSymbol[Defn <: Definition] extends MemberSymbol:
     defnListeners.foreach(_(d.value))
     defnListeners = null // free memory and prevent further listening
   
-  var decl: Opt[Declaration] = N // NOTE: currently only assigned for class params and only used by deforestation; may want to just remove it once deforestation is improved
+  // A term member can have a separate signature, or originate from a constructor parameter.
+  // Publishing its declaration does not complete the member or notify definition listeners.
+  var decl: Opt[Declaration] = N
   
   // * The following accessors read the current IR definition, which owns this symbol once lowering
   // * or a later rewrite has produced it (see `irDefn`), and otherwise the source definition: before

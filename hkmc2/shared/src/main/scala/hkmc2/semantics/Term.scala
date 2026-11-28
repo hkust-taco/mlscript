@@ -31,16 +31,18 @@ enum Annot extends Located:
   case Unsafe()(val toLoc: Opt[Loc])
   case PlainField()(val toLoc: Opt[Loc])
   case Modifier(mod: Keyword)(val toLoc: Opt[Loc])
-  case Trm(trm: Term)(val toLoc: Opt[Loc])
+  // Annotation lookup also accepts wildcard imports and selections through values.
+  // Keep the recognized head for comparisons between a signature and its definition.
+  case Trm(trm: Term)(override val symbol: Opt[Symbol], val toLoc: Opt[Loc])
   // NOTE: The presence of TailRec and TailCall annotations does not affect whether a function is optimized or not;
   // it only affects whether a warning is thrown if the function/call is not actually tail-recursive.
-  case TailRec()(val toLoc: Opt[Loc])
+  case TailRec()(val toLoc: Opt[Loc]) extends Annot, Annot.RequiresFunctionBody("@tailrec")
   case TailCall()(val toLoc: Opt[Loc])
-  case Inline()(val toLoc: Opt[Loc])
-  case NoInline()(val toLoc: Opt[Loc])
-  case Generator()(val toLoc: Opt[Loc])
-  case Async()(val toLoc: Opt[Loc])
-  case RaiseEffects()(val toLoc: Opt[Loc])
+  case Inline()(val toLoc: Opt[Loc]) extends Annot, Annot.RequiresFunctionBody("@inline")
+  case NoInline()(val toLoc: Opt[Loc]) extends Annot, Annot.RequiresFunctionBody("@noInline")
+  case Generator()(val toLoc: Opt[Loc]) extends Annot, Annot.RequiresFunctionBody("@generator")
+  case Async()(val toLoc: Opt[Loc]) extends Annot, Annot.RequiresFunctionBody("@async")
+  case RaiseEffects()(val toLoc: Opt[Loc]) extends Annot, Annot.RequiresFunctionBody("@raiseEffects")
   // * EffectAnalysis Annotations
   // @pure: overriding annotation indicating that the function is pure.
   case Pure()(val toLoc: Opt[Loc])
@@ -60,9 +62,7 @@ enum Annot extends Located:
   //   `f` is one-shot and each function value produced by `f(a)` is also one-shot.
   case Affine(whichParamList: Int)(val toLoc: Opt[Loc])
   
-  def symbol: Opt[Symbol] = this match
-    case Trm(trm) => trm.symbol
-    case _ => N
+  def symbol: Opt[Symbol] = N
   
   def subTerms: Vector[Term] = this match
     case Trm(trm) => Vector.single(trm)
@@ -72,16 +72,11 @@ enum Annot extends Located:
   
   def show(using Scope, ShowCfg, Raise): Document = this match
     case JsSymbol(key) => doc"@jsSymbol(${key.term.show})"
+    case a: Annot.RequiresFunctionBody => doc"${a.spelling}"
     case Fresh() => doc"@annotations.fresh"
     case Untyped() => doc"@untyped"
     case Unsafe() => doc"@unsafe"
     case PlainField() => doc"@js.plainField"
-    case Inline() => doc"@inline"
-    case NoInline() => doc"@noInline"
-    case Generator() => doc"@generator"
-    case Async() => doc"@async"
-    case RaiseEffects() => doc"@raiseEffects"
-    case TailRec() => doc"@tailrec"
     case TailCall() => doc"@tailcall"
     case Affine(n) => doc"@affine($n)"
     case Modifier(mod) => doc"@${mod.name}"
@@ -100,6 +95,24 @@ object Annot:
   /** The `declare` modifier in `annotations`, if present. */
   def declareModifierOf(annotations: Ls[Annot]): Opt[Annot.Modifier] = annotations.collectFirst:
     case mod @ Annot.Modifier(Keyword.`declare`) => mod
+  
+  /** An annotation whose effect requires a function body. `spelling` names it in source and diagnostics. */
+  sealed trait RequiresFunctionBody(val spelling: Str)
+  
+  /** Where an annotation belongs on a member that has both a separate signature (`fun f: T`) and a definition. */
+  enum Placement:
+    /** Affects only how the body is compiled. */
+    case Definition
+    /** Affects what callers see. */
+    case Signature
+    /** Fits either side. */
+    case Either
+  
+  object Placement:
+    def of(annot: Annot): Placement = annot match
+      case TailRec() | Inline() | NoInline() | Config(_) | Debug(_) | RaiseEffects() => Definition
+      case Pure() | JsSymbol(_) | Affine(_) | PlainField() | Fresh() => Signature
+      case _ => Either
   
 end Annot
 
@@ -254,9 +267,9 @@ object Resolvable:
       case defn: TermDefinition => S(CallableDefinition(
         defn.sym,
         defn.params,
-        defn.tparams,
+        defn.signatureHeader.tparams,
         defn.sign,
-        defn.flags,
+        defn.signatureHeader.flags,
         defn.modulefulness,
         defn,
       ))
@@ -619,7 +632,7 @@ object Term:
   private[semantics] def termDefFreeVars(td: TermDefinition): Set[Str] =
     val paramNames = td.params.iterator.flatMap(_.allParams).map(_.sym.nme).toSet
     val bodyFree = td.body.iterator.flatMap(_.freeVars).toSet
-    val signFree = td.sign.iterator.flatMap(_.freeVars).toSet
+    val signFree = td.typeAnnotations.flatMap(_.freeVars).toSet
     (bodyFree ++ signFree) -- paramNames
   
   /** Free vars of a ClassLikeDef body, with constructor params subtracted. */
@@ -780,10 +793,12 @@ enum Visibility:
   case Public, Private
 
 object Visibility:
-  def of(annotations: Ls[Annot]): Visibility = annotations.collectFirst:
-      case Annot.Modifier(Keyword.`private`) => Visibility.Private
-      case Annot.Modifier(Keyword.`public`) => Visibility.Public
-    .getOrElse(Visibility.Public)
+  /** The visibility written among `annotations`, if any. */
+  def written(annotations: Ls[Annot]): Opt[Visibility] = annotations.collectFirst:
+    case Annot.Modifier(Keyword.`private`) => Visibility.Private
+    case Annot.Modifier(Keyword.`public`) => Visibility.Public
+  
+  def of(annotations: Ls[Annot]): Visibility = written(annotations).getOrElse(Visibility.Public)
 
 /** `isMethod` distinguishes methods from functions. `hasResultAnnotation` records whether a
   * signature describes just the result; erasure consumes leading arrows only for full signatures.
@@ -839,10 +854,10 @@ final case class TermDefinition(
     tsym: TermSymbol,
     params: Ls[ParamList],
     tparams: Opt[Ls[Param]],
-    sign: Opt[Term],
+    writtenType: Opt[Term],
     body: Opt[Term],
     flags: TermDefFlags,
-    modulefulness: Modulefulness,
+    writtenModulefulness: Modulefulness,
     annotations: Ls[Annot],
     companion: Opt[CompanionSymbol],
 )(val toLoc: Opt[Loc], val headerLoc: Opt[Loc],
@@ -852,6 +867,20 @@ final case class TermDefinition(
   require(k is tsym.k)
   def bsym: BlockMemberSymbol = sym
   val owner = tsym.owner
+  /** Type parameters introduced by this header, in declaration order. */
+  def typeParamSymbols: Ls[VarSymbol] = tparams.iterator.flatten.map(_.sym).toList
+  /** The header supplying the public type and its binders. */
+  def signatureHeader: TermDefinition = tsym.termDeclaration.getOrElse(this)
+  /** The public type supplied by the declaration or written on this definition. */
+  def sign: Opt[Term] = signatureHeader.writtenType
+  /** The public type when it describes the whole member, including any parameter lists. */
+  def fullSignature: Opt[Term] =
+    val header = signatureHeader
+    if header.flags.hasResultAnnotation then N else header.writtenType
+  /** Types written on the declaration and definition, in source order. */
+  def typeAnnotations: Iterator[Term] =
+    tsym.termDeclaration.iterator.filterNot(_ is this).flatMap(_.writtenType) ++ writtenType
+  def modulefulness: Modulefulness = signatureHeader.writtenModulefulness
   /** Only function bodies are wrapped by AsyncLowering; annotations on other
     * definitions are ignored with a warning and must not change their interface.
     */
@@ -881,9 +910,7 @@ final case class TermDefinition(
       case (Term.Forall(_, _, body), _) => strip(body, count)
       case (Term.FunTy(_, rhs, _), n) if n > 0 => strip(rhs, n - 1)
       case _ => sign
-    sign.map: sign =>
-      if (k is syntax.Fun) && !flags.hasResultAnnotation then strip(sign, params.length)
-      else sign
+    if k is syntax.Fun then fullSignature.map(strip(_, params.length)).orElse(writtenType) else sign
   lazy val mayRaiseEffects: Bool =
     annotations.forall:
       case Annot.Pure() => false
