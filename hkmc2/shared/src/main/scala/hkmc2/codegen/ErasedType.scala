@@ -535,8 +535,8 @@ object ErasedFuncSignature:
     * that accepts any number of arguments of any type, as in `(...Array) => (...Array) => ?` for two lists.
     *
     * Lowering applies a single argument list to each callee it knows nothing about, so a call starts with one list;
-    * passes that merge such a call with the call of its result accumulate the lists. `super` calls also take this
-    * form, because the `super` builtin has no fixed signature: its parameters are those of the parent constructor.
+    * passes that merge such a call with the call of its result accumulate the lists. A `super` call whose parent
+    * class is unknown takes these parameter lists as well.
     *
     * Each use builds its own signature: a signature memoizes its canonical form, which is only meaningful in the
     * state that computed it.
@@ -720,9 +720,10 @@ enum ErasedCallee:
     case OneOf(alternatives) => OneOf(alternatives.map(_.mapTypes(f)))
 
 
-/** Holds the possible callees of a source application. Erasure of the program that contains the application
-  * assigns them once, and cloning the application copies them. An application that erasure never visits, such
-  * as one that the desugaring of pattern matching synthesizes, keeps an unknown callee.
+/** Holds the possible callees of an application. Erasure of the program that contains the application assigns
+  * them once, and cloning the application copies them. A compiler that synthesizes an application after erasure
+  * has run assigns the callee itself (see `TermSynthesizer.call`). An application that neither assigns keeps an
+  * unknown callee.
   */
 final class ErasedCalleeSlot:
   private var assigned: Opt[ErasedCallee] = N
