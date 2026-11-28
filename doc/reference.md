@@ -503,14 +503,18 @@ fun binary: ((Int, Int) -> Int)    // no parameter list: `binary` is a function 
 fun id: [A] -> A -> A              // a generic method with one parameter list
 ```
 
-This applies in the signature of an implementation too. `fun mk: Int -> Int = x => x + 1`
-defines a method with one parameter list, whose body is applied to the arguments of the lists
-it does not write; so does `fun mk = x => x + 1` following a separate `fun mk: Int -> Int`.
+An implementation must write the parameter lists that its signature spells out. Its body can write
+them as an immediate function literal: `fun add: (Int, Int) -> Int = (x, y) => x + y` is
+`fun add(x, y) = x + y`, and so is `fun add = (x, y) => x + y` following a separate
+`fun add: (Int, Int) -> Int`. Curried lambdas, implicit lambdas (`=> _ + _`), and `case` functions
+write lists in the same way. Any other body is an error unless the function type is parenthesized,
+as in `fun adder: (Int -> Int) = ...`, which returns the function value that its body computes.
 An implementation can also write more parameter lists than its signature spells out, when the
 type of the signature supplies them, as in `fun f: Unary[Int, Int]` followed by `fun f(x) = x`.
-An async or generator function must write all the parameter lists that its signature spells out.
 A result annotation following written parameter lists is the type of their result:
 `fun f(x): Int -> Int` takes one parameter list and returns a function.
+A value cannot have parameter lists, so the function type of a `val` must be parenthesized,
+as in `val inc: (Int -> Int) = x => x + 1`.
 These rules apply under new resolution; the legacy 0.2.x language reads arrows in signatures as
 the types of function values.
 

@@ -75,11 +75,11 @@ identity()
 // Function values need a Wasm callable representation independently of optional arguments.
 :fixme
 :expect 11
-val indirect: (Int, Int?) -> Anything = choose
+val indirect: ((Int, Int?) -> Anything) = choose
 indirect(11)
 //│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `(ref $choose)` to `(ref null any)` in a different type hierarchy
-//│ ║  l.+1: 	val indirect: (Int, Int?) -> Anything = choose
-//│ ╙──      	                                        ^^^^^^
+//│ ║  l.+1: 	val indirect: ((Int, Int?) -> Anything) = choose
+//│ ╙──      	                                          ^^^^^^
 //│ ╔══[COMPILATION ERROR] Expected static function reference in Call(...) expression
 //│ ║  l.+2: 	indirect(11)
 //│ ╙──      	^^^^^^^^

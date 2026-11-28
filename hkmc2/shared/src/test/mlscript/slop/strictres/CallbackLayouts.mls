@@ -167,14 +167,14 @@ private fun needsFour(a, b, c, d) = a
 
 // Typed callbacks have the same diagnostic location as inferred callbacks.
 :e
-val typed: (Int, Int, Array[Int], Int) -> Int = (a, b, c, d) => a
+val typed: ((Int, Int, Array[Int], Int) -> Int) = (a, b, c, d) => a
 [1].map(typed)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.+2: 	[1].map(typed)
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── Callback parameter list does not match its declared function type.
-//│ ║  l.+1: 	val typed: (Int, Int, Array[Int], Int) -> Int = (a, b, c, d) => a
-//│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	val typed: ((Int, Int, Array[Int], Int) -> Int) = (a, b, c, d) => a
+//│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The expected function type is declared here.
 //│ ║  in ../../decls/Prelude.mls
 //│ ║  l.XX: 	  fun map[U](f: (T, drop Int, drop Array[T]) -> U, thisArg?): Array[U]
@@ -237,14 +237,14 @@ private fun collectTrailing(f: (drop ...Array[Int], Str) -> Int) = f("tail")
 :e
 type RequiredTail[A] = (drop ...Array[Int], A) -> Int
 private fun genericTrailing[A](tail: A, f: RequiredTail[A]) = f(tail)
-val noInputs: () -> Int = () => 0
+val noInputs: (() -> Int) = () => 0
 genericTrailing("tail", noInputs)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.+4: 	genericTrailing("tail", noInputs)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Callback parameter list does not match its declared function type.
-//│ ║  l.+3: 	val noInputs: () -> Int = () => 0
-//│ ║        	              ^^^^^^^^^
+//│ ║  l.+3: 	val noInputs: (() -> Int) = () => 0
+//│ ║        	               ^^^^^^^^^
 //│ ╟── The expected function type is declared here.
 //│ ║  l.+1: 	type RequiredTail[A] = (drop ...Array[Int], A) -> Int
 //│ ╙──      	                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

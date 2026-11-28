@@ -48,97 +48,152 @@ private fun useIdentity(identity: Identity) = [identity.id("a"), identity.id(1)]
 useIdentity(PlainIdentity())
 //│ = ["a", 1]
 
+// Diagnostics refer to an unlabeled parameter of a signature by its position, and to a labeled one by its label.
+:ge
+private abstract class Pair() with
+  fun pick: (Int, Int) -> Int
+  fun pickLabeled: (first: Int, second: Int) -> Int
+private class FirstOnly() extends Pair() with
+  fun pick(x) = x
+  fun pickLabeled(x) = x
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the arguments bound to inherited parameter 2
+//│ ║  l.+5: 	  fun pick(x) = x
+//│ ║        	          ^^^
+//│ ╟── The overridden member 'pick' is defined here
+//│ ║  l.+2: 	  fun pick: (Int, Int) -> Int
+//│ ╙──      	      ^^^^
+//│ ╔══[COMPILATION ERROR] Overriding member 'pickLabeled' must preserve the arguments bound to inherited parameter 'second'
+//│ ║  l.+6: 	  fun pickLabeled(x) = x
+//│ ║        	                 ^^^
+//│ ╟── The overridden member 'pickLabeled' is defined here
+//│ ║  l.+3: 	  fun pickLabeled: (first: Int, second: Int) -> Int
+//│ ╙──      	      ^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-// *** Bodies written for fewer parameter lists ***
 
-// A body written without the lists that the signature spells out is applied to their arguments.
-// Each call evaluates it, whereas a reference to the function does not.
-:expect [2, 3, 4]
-let evaluations = 0
-fun inc: Int -> Int =
-  set evaluations = evaluations + 1
-  x => x + 1
-let incRef = inc
-[inc(1), inc(2), incRef(3)]
-//│ = [2, 3, 4]
-//│ evaluations = 3
-//│ incRef = fun inc
+// *** Bodies written as function literals ***
 
-:expect 3
-evaluations
-//│ = 3
+// A body can write the lists that its signature spells out as an immediate function literal, including a
+// curried lambda, an implicit lambda, and a `case` function.
+:expect [3, 3, 7, 0, 1]
+fun add: (Int, Int) -> Int = (x, y) => x + y
+fun sum: (Int, Int) -> Int = => _ + _
+fun curried: Int -> Int -> Int = x => y => x * 2 + y
+fun sign: Int -> Int = case
+  0 then 0
+  _ then 1
+[add(1, 2), sum(1, 2), curried(3)(1), sign(0), sign(5)]
+//│ = [3, 3, 7, 0, 1]
 
-// The function takes the physical parameter list, typed by the signature, and applies the body to its argument.
+// The function takes the literal's parameter list, which the signature types.
 :sir
 :siret
-fun scaled: Int -> Int = (x: Int) => x * 2
+fun scaled: Int -> Int = x => x * 2
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define scaled⁰ as fun scaled¹(arg1: Int⁰): Int⁰ {
-//│   let lambda, etaResult: Int⁰;
-//│   define lambda as fun lambda⁰(x: Int⁰): Int⁰ {
-//│     return *⁰(x, 2)
-//│   };
-//│   set etaResult = lambda⁰(arg1);
-//│   return etaResult
-//│ };
-//│ end
+//│ define scaled⁰ as fun scaled¹(x: Int⁰): Int⁰ { return *⁰(x, 2) }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
-// A separate signature has the same effect, including after written lists.
+// So can the implementation of a separate signature, including after its written lists.
 :expect [6, 3]
 fun twice: (Int) -> Int
 fun twice = x => x * 2
-fun add: Int -> Int -> Int
-fun add(x) = y => x + y
-[twice(3), add(1)(2)]
+fun addTo: Int -> Int -> Int
+fun addTo(x) = y => x + y
+[twice(3), addTo(1)(2)]
 //│ = [6, 3]
 
-// Optional and variadic parameters forward their arguments to the body.
+// Optional and variadic parameters work as written ones do.
 :expect [[1, null], [1, 2], [1, [2, 3], "z"]]
 fun optional: (Int, Int?) -> Any = (x, y?) => [x, y]
 fun variadic: (Int, ...Array[Int], Str) -> Any = (x, ...ys, z) => [x, ys, z]
 [optional(1), optional(1, 2), variadic(1, 2, 3, "z")]
 //│ = [[1, null], [1, 2], [1, [2, 3], "z"]]
 
-// A `return` in the body returns the body's value, which the function then applies.
-:expect [1, 2]
-let early = true
-fun pick: Int -> Int =
-  if early do return x => x
-  x => x + 1
-let first = pick(1)
-set early = false
-[first, pick(1)]
-//│ = [1, 2]
-//│ early = false
-//│ first = 1
+// A `return` in the literal's body returns from the function.
+:expect [1, 6]
+fun pick: (Bool, Int) -> Int = (first, n) =>
+  if first do return 1
+  n + 1
+[pick(true, 5), pick(false, 5)]
+//│ = [1, 6]
 
-// Resolution models the definition as written: a stored reference shares one evaluation of the body
-// and one instance of its type parameter, although each call evaluates the body at run time. This rejects
-// a program that would return `Second(2)`.
-:e // TODO: allow?
+// An async function wraps the result of all these lists.
+:await
+:expect 4
+@annotations.async
+fun later: (Int) -> Int = x => x + 1
+later(3)
+//│ = 4
+
+// Generic definitions are methods, as when they write their parameters, so a stored reference
+// instantiates its type parameter separately on each call.
+:expect [1, 2]
 class First(val first: Int)
 class Second(val second: Int)
 private fun make[A]: A -> A = (value: A) => value
 private val shared = make
-shared(First(1))
-shared(Second(2)).second
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.+6: 	shared(Second(2)).second
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Instance of class 'First' does not contain member 'second'
-//│ ║  l.+5: 	shared(First(1))
-//│ ╙──      	       ^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+[shared(First(1)).first, shared(Second(2)).second]
+//│ = [1, 2]
 //│ shared = fun make
 
-// An async or generator function wraps the result of its written lists, so it must write them all.
+// The literal's parameters must agree with the signature's.
 :e
-@annotations.async
-fun later: (Int) -> Int = x => x
-//│ ╔══[COMPILATION ERROR] An async function must write all the parameter lists that its signature spells out
-//│ ║  l.+2: 	fun later: (Int) -> Int = x => x
-//│ ╙──      	           ^^^^^^^^^^^^
+fun mismatched: (Int, Int?) -> Int = (x, y) => x
+//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its signature.
+//│ ║  l.+1: 	fun mismatched: (Int, Int?) -> Int = (x, y) => x
+//│ ║        	                                     ^^^^^^
+//│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
+//│ ║  l.+1: 	fun mismatched: (Int, Int?) -> Int = (x, y) => x
+//│ ╙──      	                ^^^^^^^^^^^^^^^^^^
+
+// Any other body must write the lists itself; a parenthesized function type declares a function value.
+:e
+fun computed: Int -> Int =
+  let offset = 1
+  x => x + offset
+//│ ╔══[COMPILATION ERROR] Function 'computed' writes fewer parameter lists than its signature spells out
+//│ ║  l.+1: 	fun computed: Int -> Int =
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This signature spells out 1 parameter list
+//│ ║  l.+1: 	fun computed: Int -> Int =
+//│ ║        	              ^^^^^^^^^^
+//│ ╙── The body can write the missing lists as an immediate function literal. A parenthesized function type declares a function that returns a function value.
+
+:e
+fun separate: (Int) -> Int
+fun separate = if true then x => x else x => x + 1
+//│ ╔══[COMPILATION ERROR] Function 'separate' writes fewer parameter lists than its signature spells out
+//│ ║  l.+2: 	fun separate = if true then x => x else x => x + 1
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── This signature spells out 1 parameter list
+//│ ║  l.+1: 	fun separate: (Int) -> Int
+//│ ║        	              ^^^^^^^^^^^^
+//│ ╙── The body can write the missing lists as an immediate function literal. A parenthesized function type declares a function that returns a function value.
+
+:expect 3
+fun computedValue: (Int -> Int) =
+  let offset = 1
+  x => x + offset
+computedValue(2)
+//│ = 3
+
+
+// *** Values ***
+
+// A value cannot have parameter lists, so its function type must be parenthesized.
+:e
+val inc: Int -> Int = x => x + 1
+//│ ╔══[COMPILATION ERROR] A value cannot have parameter lists
+//│ ║  l.+1: 	val inc: Int -> Int = x => x + 1
+//│ ║        	         ^^^^^^^^^^
+//│ ╙── A parenthesized function type declares a value that holds a function.
+//│ inc = fun
+
+:expect 2
+val incValue: (Int -> Int) = x => x + 1
+incValue(1)
+//│ = 2
+//│ incValue = fun
 
 
 // *** Record types ***
@@ -157,10 +212,10 @@ private fun read(source: Source) = source.next()
 // A mutable field cannot be a method; a parenthesized function type makes it hold a function value.
 :e
 type Step = { mut step: Int -> Int }
-//│ ╔══[COMPILATION ERROR] A mutable record field cannot be a method
+//│ ╔══[COMPILATION ERROR] A mutable record field cannot have parameter lists
 //│ ║  l.+1: 	type Step = { mut step: Int -> Int }
 //│ ║        	                        ^^^^^^^^^^
-//│ ╙── A parenthesized function type declares a field that holds a function value.
+//│ ╙── A parenthesized function type declares a mutable record field that holds a function.
 
 :expect 6
 let counter = mut { step: (x: Int) => x + 1 }

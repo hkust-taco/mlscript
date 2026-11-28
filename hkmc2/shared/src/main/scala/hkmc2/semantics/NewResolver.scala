@@ -2646,7 +2646,7 @@ class NewResolver:
             case _ => false)
           if check && Arity(params) != Arity(declared) then
             rctx.report(ErrorReport(
-              msg"Implementation parameter list does not match its separate signature." -> params.toLoc ::
+              msg"Implementation parameter list does not match its signature." -> params.toLoc ::
               msg"The signature has different required, optional, variadic, or trailing parameter positions." -> signature.toLoc :: Nil))
           val all = params.allParams
           zipDeclaredParameters(Arity(params), declared): (index, tpe) =>

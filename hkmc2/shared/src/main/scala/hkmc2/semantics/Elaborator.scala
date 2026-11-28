@@ -2952,30 +2952,55 @@ extends Importer:
               // * In new resolution, a signature written without parameter lists, either inline or separately,
               // * spells out parameter lists with its unparenthesized arrows (see `TermDefinition`).
               // * An annotation following written parameter lists is the type of their result.
-              val spelledParams = (st, s) match
-                case (S(TypeDef(Mod, _, N)), _) => Nil
+              val signature = (st, s) match
+                case (S(TypeDef(Mod, _, N)), _) => N
                 case (S(tree), S(sign)) if newResolution && (k is Fun) && (td.annotatedResultType.isEmpty || pss.isEmpty) =>
-                  signatureParamLists(tree, sign, pss.length)
+                  S(tree -> sign)
+                case _ => N
+              val missingLists = signature.fold(0)((tree, _) => spelledParamListCount(tree) - pss.length)
+              if newResolution && k.isInstanceOf[Val] then st.foreach(rejectParamLists(_, k.desc))
+              // * A body must write the lists that the signature spells out, which it can do as an immediate
+              // * function literal: `fun f: (Int) -> Int = x => x` is `fun f(x) = x`.
+              val literal = (rhs, signature) match
+                case (S(body), S((tree, sign))) if missingLists > 0 =>
+                  val literal = literalParamLists(body, missingLists)
+                  val spelled = spelledParamListCount(tree)
+                  if literal.isEmpty then raise(ErrorReport(
+                    msg"Function '${id.name}' writes fewer parameter lists than its signature spells out" ->
+                      definitionHeaderLoc(td, annotations, statementLoc) ::
+                    msg"This signature spells out ${spelled.toString} parameter ${"list".pluralized(spelled)}" -> sign.toLoc ::
+                    msg"The body can write the missing lists as an immediate function literal. A parenthesized function type declares a function that returns a function value." -> N ::
+                    Nil))
+                  literal
+                case _ => N
+              val literalPss = literal.fold(Nil)(_.params).map: ps =>
+                val (res, newCtx2) = funParams(ps)(using newCtx)
+                newCtx = newCtx2
+                res
+              // * The scrutinee of a `case` function is its parameter. The parameters of an implicit lambda are its
+              // * placeholders, which elaborating its body determines.
+              val caseParams = literal.flatMap(_.last).collect:
+                case _: Case => PlainParamList(Param.simple(VarSymbol(Ident("caseScrut"), mut = false)) :: Nil)(N)
+              val placeholders = literal.flatMap(_.last).collect:
+                case _: PrefixApp => mutable.ArrayBuffer.empty[VarSymbol]
+              softTODO(placeholders.isEmpty || (ctx.mode is Mode.Full),
+                "Lightweight elaboration cannot determine the parameters of an implicit lambda without its body")
+              val writtenBeforeBody = pss ::: literalPss ::: caseParams.toList
+              // * Only a declaration without a body takes the lists that its signature spells out as they are.
+              val sigParams = (rhs, signature) match
+                case (N, S((tree, sign))) => signatureParamLists(tree, sign, pss.length)
                 case _ => Nil
-              // * Resolution models the definition as written, with a result wrapped once its written lists are
-              // * applied, so lowering cannot apply such a wrapped result to the further lists.
-              val wrapper = if rhs.isEmpty then N else annotations.collectFirst:
-                case _: Annot.Async => "An async"
-                case _: Annot.Generator => "A generator"
-              val sigParams = (wrapper, s) match
-                case (S(kind), S(sign)) if spelledParams.nonEmpty =>
-                  raise(ErrorReport(
-                    msg"${kind} function must write all the parameter lists that its signature spells out" -> sign.toLoc :: Nil))
-                  Nil
-                case _ => spelledParams
               
-              if td.annotatedResultType.isEmpty then
-                s.foreach: sign =>
-                  if newResolution then registerParameterSignature(pss ::: sigParams, sign)
-                  else checkSignatureOptionality(pss, sign)
-              else if sigParams.nonEmpty then
-                s.foreach(registerParameterSignature(sigParams, _))
-              (pss ::: sigParams).foreach(seedRestParameter)
+              // * A separate signature types the definition's lists, and so does an inline one when the definition
+              // * takes the lists that it spells out; otherwise, an inline annotation is the type of the result.
+              def registerFullSignature(lists: Ls[ParamList]): Unit =
+                if td.annotatedResultType.isEmpty then
+                  s.foreach: sign =>
+                    if newResolution then registerParameterSignature(lists, sign)
+                    else checkSignatureOptionality(lists, sign)
+                else if literal.isDefined || sigParams.nonEmpty then s.foreach(registerParameterSignature(lists, _))
+              if placeholders.isEmpty then registerFullSignature(writtenBeforeBody ::: sigParams)
+              (writtenBeforeBody ::: sigParams).foreach(seedRestParameter)
               
               val body: Opt[Term] = rhs match
                 case N => N
@@ -2984,10 +3009,17 @@ extends Importer:
                   val nonLocalRetHandler = TempSymbol(N, initErasedType = N, s"nonLocalRetHandler$$${id.name}")
                   val hasGeneratorAnnotation = annotations.exists(_.isInstanceOf[Annot.Generator])
                   val hasAsyncAnnotation = annotations.exists(_.isInstanceOf[Annot.Async])
-                  if pss.isEmpty && hasGeneratorAnnotation then
+                  val hasParamLists = writtenBeforeBody.nonEmpty || placeholders.nonEmpty
+                  if !hasParamLists && hasGeneratorAnnotation then
                     raise(ErrorReport(msg"Generators are not supported on functions without a parameter list" -> statementLoc :: Nil))
-                  newCtx.nest(OuterCtx.Function(nonLocalRetHandler, S(tsym))(pss.nonEmpty && hasGeneratorAnnotation, hasAsyncAnnotation)).givenIn: newCtx ?=>
-                    val b = term(rhs, Trm)(using newCtx)
+                  newCtx.nest(OuterCtx.Function(nonLocalRetHandler, S(tsym))(hasParamLists && hasGeneratorAnnotation, hasAsyncAnnotation)).givenIn: newCtx ?=>
+                    val b = literal match
+                      case S(FunctionLiteral(_, caseTree: Case, S(_))) => caseSplit(caseParams.get.params.head.sym, caseTree)
+                      case S(FunctionLiteral(_, PrefixApp(_, body), S(_))) =>
+                        given UnderCtx = UnderCtx(placeholders)
+                        subterm(body, Trm)(using newCtx)
+                      case S(FunctionLiteral(_, body, _)) => term(body, Trm)(using newCtx)
+                      case N => term(rhs, Trm)(using newCtx)
                     if nonLocalRetHandler.directRefs.isEmpty then b else
                       mkEffectHandleAbortive(
                         nonLocalRetHandler,
@@ -3006,10 +3038,17 @@ extends Importer:
                 case _ =>
                   Modulefulness.none
               
+              val placeholderParams = placeholders.map(ps => PlainParamList(ps.iterator.map(Param.simple).toList)(N))
+              placeholderParams.foreach: ps =>
+                registerFullSignature(writtenBeforeBody ::: ps :: Nil)
+                seedRestParameter(ps)
+              
               // Erasure reads the physical parameter and result types from the parts of the signature.
               if newResolution then s.foreach(registerSignature)
-              val tdf = TermDefinition(k, sym, tsym, pss, sigParams, tps, s, body,
-                TermDefFlags.empty.copy(isMethod = isMethod, hasResultAnnotation = td.annotatedResultType.isDefined), mfn, annotations, N)(
+              val tdf = TermDefinition(k, sym, tsym, writtenBeforeBody ::: placeholderParams.toList, sigParams, tps, s, body,
+                // An inline signature whose lists a function literal writes is a full signature, not a result annotation.
+                TermDefFlags.empty.copy(isMethod = isMethod, hasResultAnnotation = td.annotatedResultType.isDefined && literal.isEmpty),
+                mfn, annotations, N)(
                 statementLoc, definitionHeaderLoc(td, annotations, statementLoc), S(bindingScope))
               sym.tsym = S(tsym)
               tsym.defn = S(tdf)
@@ -3583,17 +3622,34 @@ extends Importer:
         "An elaborated signature must retain the arrows that its tree spells out")
       Nil
   
+  /** A body written as an immediate function literal, which writes parameter lists of the definition (see
+    * [[literalParamLists]]): the parameter lists of its leading lambdas, followed by its rest `body`. When `last`
+    * is defined, `body` is a `case` function or an implicit lambda `=> ...`, which writes the last list. */
+  private case class FunctionLiteral(params: Ls[Tup], body: Tree, last: Opt[Case | PrefixApp])
+  
+  /** The `count` parameter lists that the definition body `body` writes as an immediate function literal, or `N`
+    * if it is no such literal. A literal writes the parameter lists of its leading `=>` lambdas, as in `x => y => x`,
+    * and those of the `case` function or implicit lambda (`=> _ + _`) that may end them. */
+  private def literalParamLists(body: Tree, count: Int): Opt[FunctionLiteral] = body match
+    case _ if count == 0 => S(FunctionLiteral(Nil, body, N))
+    case InfixApp(params: Tup, Keywrd(Keyword.`=>`), rest) =>
+      literalParamLists(rest, count - 1).map(literal => literal.copy(params = params :: literal.params))
+    case last: Case if count == 1 => S(FunctionLiteral(Nil, last, S(last)))
+    case last @ PrefixApp(Keywrd(Keyword.`=>`), _) if count == 1 && lang.newUnderscoreAndApplicationSyntax =>
+      S(FunctionLiteral(Nil, last, S(last)))
+    case _ => N
+  
   /** The parameter list described by the domain `domain` of a function type, elaborated as `domainTerm`
-    * by `funTyParams`. A labeled parameter type, as in `(x: Int) -> Int`, names its parameter;
-    * the others are named after their positions. */
+    * by `funTyParams`. A labeled parameter type, as in `(x: Int) -> Int`, names its parameter; the others
+    * have the empty name, which no source name can be, and diagnostics refer to them by their positions. */
   private def signatureParamList(domain: Tree, domainTerm: Term)(using State): ParamList =
     def label(field: Tree): Opt[Ident] = field match
       case PrefixApp(Keywrd(Keyword.`drop`), field) => label(field)
       case InfixApp(Optional(id: Ident), Keywrd(Keyword.`:`), _) => S(id)
       case InfixApp(id: Ident, Keywrd(Keyword.`:`), _) => S(id)
       case _ => N
-    def param(flags: FldFlags, field: Tree, position: Int): Param =
-      val id = label(field).getOrElse(new Ident(s"arg$position").withLocOf(field))
+    def param(flags: FldFlags, field: Tree): Param =
+      val id = label(field).getOrElse(new Ident("").withLocOf(field))
       val sym = VarSymbol(id, mut = false)
       val p = Param(flags, sym, N, Modulefulness.none, Nil)(field.toLoc)
       sym.decl = S(p)
@@ -3602,32 +3658,33 @@ extends Importer:
     case (Tup(fields), Term.Tup(elems)) =>
       // `funTyParams` elaborates each field into one element.
       softAssert(fields.sizeCompare(elems) == 0, "A function type domain has one element per field")
-      val params = fields.iterator.zip(elems).zipWithIndex.map:
-        case ((field, Fld(flags, _, _)), index) =>
-          L(param(FldFlags.empty.copy(opt = flags.opt, droppable = flags.droppable), field, index + 1))
-        case ((field, spd: Spd), index) =>
-          R(param(FldFlags.empty.copy(droppable = spd.droppable), field, index + 1))
-      .toList
+      val params = fields.lazyZip(elems).map:
+        case (field, Fld(flags, _, _)) => L(param(FldFlags.empty.copy(opt = flags.opt, droppable = flags.droppable), field))
+        case (field, spd: Spd) => R(param(FldFlags.empty.copy(droppable = spd.droppable), field))
       // `funTyParams` reports any spread after the first one; such a spread is kept as a trailing parameter.
       val (leading, rest) = params.span(_.isLeft)
       val variadic = rest match
         case R(rest) :: trailing => S(Variadic(rest, trailing.map(_.merge)))
         case _ => N
       ParamList(ParamListFlags.empty, leading.map(_.merge), variadic)(domain.toLoc)
-    case _ => ParamList(ParamListFlags.empty, param(FldFlags.empty, domain, 1) :: Nil, N)(domain.toLoc)
+    case _ => ParamList(ParamListFlags.empty, param(FldFlags.empty, domain) :: Nil, N)(domain.toLoc)
   
   /** The parameter lists of a record type field whose type is `tree`, elaborated as `tpe`. A field whose
     * type spells out parameter lists is a method (see TermDefinition). A method cannot be assigned, so
     * a `mutable` field must parenthesize its function type to hold a function value.
     */
   private def recordFieldParamLists(tree: Tree, tpe: Term, mutable: Bool)(using State): Ls[ParamList] =
-    if spelledParamListCount(tree) == 0 then Nil
-    else if mutable then
-      raise(ErrorReport(
-        msg"A mutable record field cannot be a method" -> tree.toLoc ::
-        msg"A parenthesized function type declares a field that holds a function value." -> N :: Nil))
+    if mutable then
+      rejectParamLists(tree, "mutable record field")
       Nil
     else signatureParamLists(tree, tpe, 0)
+  
+  /** Report the parameter lists that the type `tree` of a `kind`, such as a `val` definition or a mutable record
+    * field, spells out: values cannot have parameter lists, so their function types must be parenthesized. */
+  private def rejectParamLists(tree: Tree, kind: Str): Unit =
+    if spelledParamListCount(tree) > 0 then raise(ErrorReport(
+      msg"A ${kind} cannot have parameter lists" -> tree.toLoc ::
+      msg"A parenthesized function type declares a ${kind} that holds a function." -> N :: Nil))
   
   def funParams(t: Tree): Ctxl[(ParamList, Ctx)] =
     val ps_ctx = params(t, inDataClass = false, inPattern = false, inFunction = true, inConstructor = false)

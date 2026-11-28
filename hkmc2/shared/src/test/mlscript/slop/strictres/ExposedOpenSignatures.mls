@@ -59,7 +59,7 @@ class Family[T] with
 val family: Family[in Dog out Animal] = new Family[Animal]
 open class Reader with
   open fun tagOf(next: () -> family.Element): Int = 0
-  open mut val nextPet: () -> family.Element = () => Dog(1)
+  open mut val nextPet: (() -> family.Element) = () => Dog(1)
 class DogReader extends Reader with
   override fun tagOf(next) = next().tag
   override mut val nextPet = () => Dog(2)

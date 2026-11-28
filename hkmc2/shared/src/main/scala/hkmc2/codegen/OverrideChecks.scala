@@ -194,11 +194,11 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
           val baseType = inherited.sym.erasedType
           if !representable(actualType, baseType) then ()
           else if !within(baseType, actualType) then report(base,
-            msg"${OverrideLayout.label(param).capitalize} of overriding member '${td.tsym.nme}' is represented as '${describe(actualType)
+            msg"${OverrideLayout.label(param, td.physicalParams).capitalize} of overriding member '${td.tsym.nme}' is represented as '${describe(actualType)
               }', which cannot hold the values represented as '${describe(baseType)}' that the member it overrides accepts",
             param.toLoc)
           else if isWasm && targetFailure.isEmpty && !within(actualType, baseType) then report(base,
-            msg"${OverrideLayout.label(param).capitalize} of overriding member '${td.tsym.nme}' receives values represented as '${
+            msg"${OverrideLayout.label(param, td.physicalParams).capitalize} of overriding member '${td.tsym.nme}' receives values represented as '${
               describe(actualType)}', but Wasm calls it through the signature of the member it overrides, whose parameter is represented as '${
               describe(baseType)}'",
             param.toLoc)

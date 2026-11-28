@@ -50,7 +50,7 @@ fun sig(x, y?) = x
 :e
 fun sig2: (Int, Int?) -> Int
 fun sig2(x, y) = x
-//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its separate signature.
+//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its signature.
 //│ ║  l.+2: 	fun sig2(x, y) = x
 //│ ║        	        ^^^^^^
 //│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
@@ -74,7 +74,7 @@ type OptionalFn = (Int?) -> Int
 :e
 private fun aliased: OptionalFn
 private fun aliased(x) = x
-//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its separate signature.
+//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its signature.
 //│ ║  l.+2: 	private fun aliased(x) = x
 //│ ║        	                   ^^^
 //│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
@@ -84,7 +84,7 @@ private fun aliased(x) = x
 :e
 private fun tooFew: (Int, Int) -> Int
 private fun tooFew(x) = x
-//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its separate signature.
+//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its signature.
 //│ ║  l.+2: 	private fun tooFew(x) = x
 //│ ║        	                  ^^^
 //│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
@@ -94,7 +94,7 @@ private fun tooFew(x) = x
 :e
 private fun tooMany: Int -> Int
 private fun tooMany(x, y?) = x
-//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its separate signature.
+//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its signature.
 //│ ║  l.+2: 	private fun tooMany(x, y?) = x
 //│ ║        	                   ^^^^^^^
 //│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
@@ -104,7 +104,7 @@ private fun tooMany(x, y?) = x
 :e
 private fun missingRest: (Int, ...Array[Int], Str) -> Str
 private fun missingRest(x, y?) = y
-//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its separate signature.
+//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its signature.
 //│ ║  l.+2: 	private fun missingRest(x, y?) = y
 //│ ║        	                       ^^^^^^^
 //│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
@@ -114,7 +114,7 @@ private fun missingRest(x, y?) = y
 :e
 private fun misplacedRest: (Int, ...Array[Int], Str) -> Str
 private fun misplacedRest(x, y, ...rest) = "ok"
-//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its separate signature.
+//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its signature.
 //│ ║  l.+2: 	private fun misplacedRest(x, y, ...rest) = "ok"
 //│ ║        	                         ^^^^^^^^^^^^^^^
 //│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
@@ -124,7 +124,7 @@ private fun misplacedRest(x, y, ...rest) = "ok"
 :e
 private fun extraRest: Int -> Int
 private fun extraRest(x, ...rest) = x
-//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its separate signature.
+//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its signature.
 //│ ║  l.+2: 	private fun extraRest(x, ...rest) = x
 //│ ║        	                     ^^^^^^^^^^^^
 //│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
@@ -144,7 +144,7 @@ length("abc")
 private fun binary: ForwardSignature[(Int, Int) -> Int]
 private fun binary(x) = x
 type ForwardSignature[A] = A
-//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its separate signature.
+//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its signature.
 //│ ║  l.+2: 	private fun binary(x) = x
 //│ ║        	                  ^^^
 //│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
@@ -158,7 +158,7 @@ class Signatures[T] with
 val signatures: Signatures[(Int, Int) -> Int] = new Signatures[(Int, Int) -> Int]
 private fun selected: signatures.Fn
 private fun selected(x) = x
-//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its separate signature.
+//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its signature.
 //│ ║  l.+5: 	private fun selected(x) = x
 //│ ║        	                    ^^^
 //│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
@@ -171,7 +171,7 @@ private fun selected(x) = x
 type Next = (Int?) -> Int
 private fun curried: Int -> Next
 private fun curried(x)(y) = x
-//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its separate signature.
+//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its signature.
 //│ ║  l.+3: 	private fun curried(x)(y) = x
 //│ ║        	                      ^^^
 //│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.

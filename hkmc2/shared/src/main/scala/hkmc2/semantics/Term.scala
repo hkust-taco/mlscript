@@ -840,14 +840,15 @@ object Modulefulness:
 
 /** A `fun`, `val`, record field, or other term-level definition.
   *
-  * `params` are the parameter lists written in the definition's header. Its signature can spell out further
-  * lists with unparenthesized arrows: in new resolution, `fun f: (Int, Int) -> Int` declares a method with one
-  * `(Int, Int)` parameter list, and so does the record type field `f: (Int, Int) -> Int`, whereas
-  * `fun f: ((Int, Int) -> Int)` returns a function value. `signatureParams` holds the lists that the signature
-  * spells out after the written ones. Their parameters have no inline annotations: the signature types them.
-  * Resolution models calls of the definition as written, so its body is the result of applying the written
-  * lists, while override checks, erasure, and lowering use the [[physicalParams]], with which callers call it.
-  * Lowering applies the body to the arguments of `signatureParams` (see `Lowering.setupTermDefinition`).
+  * `params` are the parameter lists that the definition writes, in its header or, when its signature spells
+  * them out, as an immediate function literal in its body. In new resolution, a signature spells out parameter
+  * lists with its unparenthesized arrows: `fun f: (Int, Int) -> Int` declares a method with one `(Int, Int)`
+  * parameter list, and so does the record type field `f: (Int, Int) -> Int`, whereas `fun f: ((Int, Int) -> Int)`
+  * returns a function value. A body must write the lists that its signature spells out, so only a declaration
+  * without a body, such as an abstract or `declare`d member or a record type field, has `signatureParams`:
+  * the lists that its signature spells out after its written ones. Their parameters have no inline annotations,
+  * since the signature types them. Resolution models such a declaration as written, while override checks,
+  * erasure, and calls use its [[physicalParams]].
   */
 final case class TermDefinition(
     k: TermDefKind, // * The only reason we store it here in addition to tsym.k is for refining patmats
@@ -868,6 +869,7 @@ final case class TermDefinition(
 ) extends CompanionValue:
   require(k is tsym.k)
   require(signatureParams.isEmpty || sign.nonEmpty, "Signature parameter lists come from a signature")
+  require(signatureParams.isEmpty || body.isEmpty, "A body writes the lists that its signature spells out")
   def bsym: BlockMemberSymbol = sym
   val owner = tsym.owner
   /** The parameter lists with which callers call the definition: its written lists, followed by

@@ -31,9 +31,9 @@ invoke(wideResult().get())
 :e
 private fun narrowField(x: Narrow) = x.only
 private class WideField with
-  open val callback: Any -> Int = x => 0
+  open val callback: (Any -> Int) = x => 0
 private class NarrowField extends WideField with
-  override val callback: Narrow -> Int = narrowField
+  override val callback: (Narrow -> Int) = narrowField
 fun wideField(): WideField = new NarrowField
 
 :fixme

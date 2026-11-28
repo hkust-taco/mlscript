@@ -8,7 +8,7 @@ open annotations.{ * }
 :siret
 :checkIR
 :expect 42
-val increment: Int -> Int = (value: Int) => value + 1
+val increment: (Int -> Int) = (value: Int) => value + 1
 increment(41)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let lambda;

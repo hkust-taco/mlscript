@@ -127,8 +127,8 @@ heldCallback({only: 1})
 //│ ║        	                              ^^^^^^
 //│ ╟── Value with an empty interface does not contain member 'only'
 //│ ║  in InheritedOperationBase.mls
-//│ ║  l.XX: 	    open val held: Any -> Int = x => 0
-//│ ║        	                   ^^^
+//│ ║  l.XX: 	    open val held: (Any -> Int) = x => 0
+//│ ║        	                    ^^^
 //│ ╟── Type 'Any' is declared without a member interface.
 //│ ║  in ../../decls/Prelude.mls
 //│ ║  l.XX: 	declare type Any

@@ -927,7 +927,7 @@ fun test: Function = new Object()
 fun applyF(f: Int -> Int): Int = f(1)
 applyF((x: Int) => x)
 fun mk: (Int -> Int) = (x: Int) => x
-val g: Int -> Int = (x: Int) => x
+val g: (Int -> Int) = (x: Int) => x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let lambda, lambda1;
 //│ define applyF⁰ as fun applyF¹(f: Function⁰): Int⁰ {

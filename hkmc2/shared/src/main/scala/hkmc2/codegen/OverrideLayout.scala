@@ -27,8 +27,14 @@ object OverrideLayout:
   /** A reason and source location for rejecting an override's argument correspondence. */
   final case class Failure(message: Message, toLoc: Opt[Loc])
   
-  /** How diagnostics refer to a parameter. */
-  def label(param: Param): Str = s"parameter '${param.sym.nme}'"
+  /** How diagnostics refer to `param`, a parameter of one of `lists`. A parameter that a signature spells out
+    * without a label has no name (see `Elaborator.signatureParamList`), so diagnostics refer to it by its position
+    * in its list. */
+  def label(param: Param, lists: Ls[ParamList]): Str =
+    if param.sym.nme.nonEmpty then s"parameter '${param.sym.nme}'"
+    else lists.iterator.map(_.allParams.indexWhere(_.sym is param.sym)).find(_ >= 0) match
+      case S(index) => s"parameter ${(index + 1).toString}"
+      case N => lastWords("A parameter must belong to one of the lists that describe it")
   
   /** Describes where a parameter's value comes from for a particular argument count.
     * Argument indices are zero-based and slice ends are exclusive. The symbolic variants describe
@@ -94,7 +100,7 @@ object OverrideLayout:
       val matches = expected.map(binding => actualPositions.getOrElse(binding, -1))
       val missing = inherited.allParams.zip(matches).collectFirst:
         case (param, -1) if !param.flags.droppable =>
-          Failure(msg"must preserve the arguments bound to inherited ${label(param)}", overriding.toLoc)
+          Failure(msg"must preserve the arguments bound to inherited ${label(param, inherited :: Nil)}", overriding.toLoc)
       missing match
         case S(failure) => Left(failure)
         case N =>
@@ -103,7 +109,8 @@ object OverrideLayout:
             case ((param, binding), index) if !matched(index) && binding.exists {
               case Binding.Default | Binding.EmptySlice => false
               case _ => true
-            } => Failure(msg"${label(param)} would receive arguments assigned to a different inherited parameter", param.toLoc)
+            } => Failure(msg"${label(param, overriding :: Nil)} would receive arguments assigned to a different inherited parameter",
+              param.toLoc)
           extra match
             case S(failure) => Left(failure)
             case N => Right(inherited.allParams.zip(matches).collect:

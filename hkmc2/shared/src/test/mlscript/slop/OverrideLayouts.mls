@@ -316,8 +316,8 @@ private class MethodOverAbstractValue() extends AbstractFunctionValue() with
 //│ ╙──      	      ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-// A signature that spells out a parameter list makes a method even with a body that is a function
-// value: the method applies that value to its arguments. Overrides can thus write the list themselves.
+// A signature that spells out a parameter list makes a method, whose body can write the list as an
+// immediate function literal. Overrides can thus write the list in either way.
 :expect [7, 8]
 private class FunctionGetter() with
   open fun get: (Int) -> Int = (value: Int) => value
