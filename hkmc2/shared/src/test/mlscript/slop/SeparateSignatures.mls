@@ -747,22 +747,22 @@ adoptedNamedLikeParam(1)
 //│ Elab: { fun member:adoptedNamedLikeParam⁰[List(A⁵)](A⁶): A⁵ -> A⁵ = A⁶; member:adoptedNamedLikeParam⁰(1) }
 //│ = 1
 
-// After a type parameter mismatch, the signature is ignored, so its names cause no further errors.
-:e
-fun differentTypeParams[A]: A -> A
-fun differentTypeParams[B](x) = x
-//│ ╔══[COMPILATION ERROR] The signature and the definition of 'differentTypeParams' must have the same type parameters
-//│ ╟── signature's type parameters
-//│ ║  l.+1: 	fun differentTypeParams[A]: A -> A
-//│ ║        	                        ^
-//│ ╟── definition's type parameters
-//│ ║  l.+2: 	fun differentTypeParams[B](x) = x
-//│ ╙──      	                        ^
+// Swapping the written names preserves the positions of the two type arguments.
+:el
+:expect [1, 2]
+fun positional[A, B]: (A, B) -> [A, B]
+fun positional[B, A](first: B, second: A) = [first, second]
+let pair = positional[LeftField, RightField](LeftField(1), RightField(2))
+[pair.0.left, pair.1.right]
+//│ Elab: { fun member:positional⁰[List(A⁷, B⁰)](first⁰: A⁷, second⁰: B⁰): A⁷, B⁰ -> [A⁷, B⁰] = [first⁰, second⁰]; let pair⁰; pair⁰ = member:positional⁰[member:LeftField⁰, member:RightField⁰](member:LeftField⁰(1), member:RightField⁰(2)); [pair⁰.0.left‹term:LeftField¹/left⁰›, pair⁰.1.right‹term:RightField¹/right⁰›] }
+//│ = [1, 2]
+//│ pair = [LeftField(1), RightField(2)]
 
+// A different number of parameters is an error even when the names overlap.
 :e
 fun moreTypeParams[A]: A -> A
 fun moreTypeParams[A, B](x) = x
-//│ ╔══[COMPILATION ERROR] The signature and the definition of 'moreTypeParams' must have the same type parameters
+//│ ╔══[COMPILATION ERROR] The signature and the definition of 'moreTypeParams' must have the same number of type parameters
 //│ ╟── signature's type parameters
 //│ ║  l.+1: 	fun moreTypeParams[A]: A -> A
 //│ ║        	                   ^

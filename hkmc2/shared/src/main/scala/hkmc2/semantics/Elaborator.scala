@@ -1015,19 +1015,12 @@ extends Importer:
     case Term.TyApp(base, _) => legacyAnnotSymbol(base)
     case t => t.symbol
   
-  /** Whether two annotations are the same kind:
-    *
-    * - `@config`, `@dbg` and `@jsSymbol` are the same regardless of their arguments;
-    * - User annotations are the same if they refer to the same symbol; and
-    * - Otherwise, two annotations are the same if they are equal.
-    *
-    * A user annotation whose main symbol is unknown is never the same as another.
-    */
-  private def sameAnnotTarget(a: Annot, b: Annot): Bool = (a, b) match
-    case (a: Annot.Trm, b: Annot.Trm) => a.symbol.exists(b.symbol.contains)
-    case (_: Annot.Config, _: Annot.Config) | (_: Annot.Debug, _: Annot.Debug)
-      | (_: Annot.JsSymbol, _: Annot.JsSymbol) => true
-    case _ => a == b
+  /** The identity used to diagnose a repeated annotation across a split definition. */
+  private def annotationKey(a: Annot): Opt[Symbol | Annot | Int] = a match
+    case t: Annot.Trm => t.symbol
+    // These annotations configure one property even when their arguments differ.
+    case _: Annot.Config | _: Annot.Debug | _: Annot.JsSymbol => S(a.ordinal)
+    case _ => S(a)
   
   private final case class EffectHandlerMethodSpec(
       methodName: Str,
@@ -2604,29 +2597,6 @@ extends Importer:
     MutVal -> Mod,
   )
   
-  /** Symbols identifying a function or value and its type parameters for instantiation. */
-  private final case class TermBinders(sym: TermSymbol, typeParams: Opt[Ls[Param]]):
-    /** Opens the member's scope at this header. Each header binds only the names it declares. */
-    def scopeFor(header: TermDef)(using outer: Ctx): Ctx =
-      val nested = outer.nest(OuterCtx.NonReturnContext(S(sym)))
-      if header.typeParams.isEmpty then nested
-      else nested ++ typeParams.get.iterator.map(p => p.sym.name -> p.sym)
-  
-  private def termBinders(td: TermDef, params: Opt[TyTup])(using Ctx): TermBinders =
-    // * Instance declarations are not meant to be exported as externally-available members,
-    // * even when declared within some class or module.
-    val owner = if td.k is Ins then N else ctx.outer.inner
-    val sym = TermSymbol(td.k, owner, td.name.getOrElse(die))
-    // Recorded before the definition's own type parameters enter scope.
-    rctx.state.lexicalTypeBinders(sym) = ctx.typeBinders
-    val tps = params.map(typeParams)
-    if newResolution then tps.foreach(ps => registerTypeParameters(sym, ps.map(_.sym)))
-    TermBinders(sym, tps)
-  
-  /** A signature elaborated where it occurs, retained until the matching definition is visited. */
-  private final case class SeparateSignature(binders: TermBinders, signature: Opt[(Term, Modulefulness)],
-      annotations: Ls[Annot], loc: Opt[Loc])
-  
   /** Elaborates a written type and records whether it marks the result as a module. */
   private def elaborateResultType(t: Tree): Ctxl[(Term, Modulefulness)] =
     val sign = t match
@@ -2651,7 +2621,7 @@ extends Importer:
             -> N
           :: Nil
   
-  /** Checks the two headers and returns whether the signature's type parameters agree with the definition's. */
+  /** Checks the two headers and returns whether their type parameter lists can be matched by position. */
   private def checkSeparateSignature(name: Str, sig: TermDef, impl: TermDef): Bool =
     if impl.annotatedResultType.isDefined then raise:
       ErrorReport:
@@ -2683,7 +2653,7 @@ extends Importer:
     // * Type parameters written only on the definition would be out of scope in the signature.
     (impl.typeParams, sig.typeParams) match
     case (S(own), N) =>
-      // * Other shapes are reported by `typeParams`; `…` stands for them, since `...` is the spread syntax.
+      // * Other shapes are reported by `typeParamNames`; `…` stands for them, since `...` is the spread syntax.
       val names = own.tys.iterator.collect { case p: Ident => p.name }.toList
       val ownNames = (if own.tys.lengthIs > names.length then names :+ "…" else names).mkString(", ")
       raise:
@@ -2693,14 +2663,17 @@ extends Importer:
           :: msg"Write them on the signature, as in `${sig.k.str} $name[${ownNames}]: …`" -> N
           :: Nil
       false
-    case (S(own), S(sigTps)) if !sameTypeParamNames(own, sigTps) =>
+    case (S(own), S(sigTps)) if own.tys.length != sigTps.tys.length =>
       raise:
         ErrorReport:
-          msg"The signature and the definition of '$name' must have the same type parameters" -> N
+          msg"The signature and the definition of '$name' must have the same number of type parameters" -> N
           :: msg"signature's type parameters" -> sigTps.toLoc
           :: msg"definition's type parameters" -> own.toLoc
           :: Nil
       false
+    case (S(own), S(sigTps)) =>
+      // Malformed binders are diagnosed at their own headers and cannot be paired.
+      own.tys.forall(_.isInstanceOf[Ident]) && sigTps.tys.forall(_.isInstanceOf[Ident])
     case _ => true
   
   /** Combines the annotations in source order so the definition's `@config` and `@dbg` settings take precedence.
@@ -2709,6 +2682,8 @@ extends Importer:
       annotations: Ls[Annot], statementLoc: Opt[Loc]): Ls[Annot] =
     def warn(annot: Annot, problem: Message, other: Message -> Opt[Loc]): Unit =
       raise(WarningReport(problem -> annot.toLoc :: other :: Nil))
+    // Keep the first occurrence for diagnostic locations.
+    val onDefinition = annotations.reverseIterator.flatMap(a => annotationKey(a).map(_ -> a)).toMap
     sigAnnotations.foreach: a =>
       a match
       case Annot.Modifier(Keyword.`declare`) => raise:
@@ -2721,7 +2696,7 @@ extends Importer:
         if Annot.Placement.of(a) is Annot.Placement.Definition then
           warn(a, msg"This annotation belongs on the definition of '$name', not on its signature",
             msg"definition here" -> statementLoc)
-        annotations.find(sameAnnotTarget(a, _)).foreach: other =>
+        annotationKey(a).flatMap(onDefinition.get).foreach: other =>
           a match
           // * The member is installed under only one key.
           case _: Annot.JsSymbol => raise:
@@ -2736,17 +2711,17 @@ extends Importer:
       if Annot.Placement.of(a) is Annot.Placement.Signature then
         warn(a, msg"This annotation belongs on the signature of '$name', not on its definition",
           msg"signature here" -> sigLoc)
-    // * Modifiers, visibility included, belong on the signature, which declares the member's interface. One
-    // * written only on the definition warns, except `staged`, which fits either side; repeating one there is
-    // * silent. Contradicting visibilities are an error rather than misplaced.
     val sigVisibility = Visibility.written(sigAnnotations)
-    annotations.foreach:
-      case Annot.Modifier(Keyword.`declare` | Keyword.`staged`) => ()
-      case Annot.Modifier(Keyword.`private` | Keyword.`public`) if sigVisibility.isDefined => ()
-      case m: Annot.Modifier if !sigAnnotations.contains(m) =>
+    val sigModifiers = sigAnnotations.iterator.collect { case Annot.Modifier(mod) => mod }.toSet
+    val extras = annotations.filter:
+      case Annot.Modifier(Keyword.`private` | Keyword.`public`) if sigVisibility.nonEmpty => false
+      case Annot.Modifier(mod) if sigModifiers(mod) => false
+      case Annot.Modifier(Keyword.`declare` | Keyword.`staged`) => true
+      case m: Annot.Modifier =>
         warn(m, msg"This modifier belongs on the signature of '$name', not on its definition",
           msg"signature here" -> sigLoc)
-      case _ => ()
+        true
+      case _ => true
     (sigVisibility, Visibility.written(annotations)) match
       case (S(sigVis), S(defnVis)) if sigVis isnt defnVis => raise:
         ErrorReport:
@@ -2755,15 +2730,10 @@ extends Importer:
           :: msg"definition here" -> statementLoc
           :: Nil
       case _ => ()
-    // * Duplicates are kept, as when written twice on one side, except for modifiers: the member gets the
-    // * signature's, then those written only on the definition. The signature's visibility wins.
-    sigAnnotations.filter:
-      case Annot.Modifier(Keyword.`declare`) => false
-      case _ => true
-    ++ annotations.filter:
-      case Annot.Modifier(Keyword.`private` | Keyword.`public`) if sigVisibility.isDefined => false
-      case m: Annot.Modifier => !sigAnnotations.contains(m)
-      case _ => true
+    sigAnnotations.filterNot:
+      case Annot.Modifier(Keyword.`declare`) => true
+      case _ => false
+    ::: extras
   
   // * Some blocks do not have a meaningful result,
   // * e.g., constructor blocks or top-level blocks (in MLscript files and diff-tests);
@@ -2779,7 +2749,7 @@ extends Importer:
     val members = blk.definedSymbols.toMap
     // Interleaved declarations can leave several signatures waiting for their bodies.
     // Each definition consumes its entry without exposing an incomplete TermDefinition to resolution.
-    val pendingSignatures = mutable.Map.empty[BlockMemberSymbol, SeparateSignature]
+    val pendingSignatures = mutable.Map.empty[BlockMemberSymbol, TermDefinition]
     // A qualified annotation can need a preceding val's receiver before the
     // enclosing block finishes. Publish a member once all its overloads have
     // definitions; waiting for unrelated later statements needlessly hides that
@@ -3057,35 +3027,27 @@ extends Importer:
         td.name match
           case R(id) =>
             val sym = members.getOrElse(id.name, die)
-            if rhs.isEmpty then sym.trmImplTree match
+            val signatureFor = if rhs.nonEmpty then N else sym.trmImplTree match
               case S(impl) if sym.trees.iterator.takeWhile(_ isnt td).exists(_ is impl) =>
                 reportLateDeclaration(id.name, td, impl)
                 return go(sts, Nil, acc)(N)
-              case S(impl) if td.isSeparateSignature =>
-                // Multiple declarations have already been diagnosed. Only the first supplies the signature.
-                if !pendingSignatures.contains(sym) then
-                  val compatible = checkSeparateSignature(id.name, td, impl)
-                  // Recover from mismatched parameters using the definition's binders for its body.
-                  val binders = termBinders(impl, if compatible then td.typeParams else impl.typeParams)
-                  val sign = if compatible && impl.annotatedResultType.isEmpty then debugElaboration(annotations):
-                    td.annotatedResultType.map(elaborateResultType(_)(using binders.scopeFor(td)))
-                  else N
-                  pendingSignatures(sym) = SeparateSignature(binders, sign, annotations, statementLoc)
-                return go(sts, Nil, acc)(N)
-              case _ => ()
+              case impl => impl.filter(_ => td.isSeparateSignature)
+            // Multiple declarations have already been diagnosed. Only the first supplies the signature.
+            if signatureFor.nonEmpty && pendingSignatures.contains(sym) then return go(sts, Nil, acc)(N)
+            val compatible = signatureFor.forall(checkSeparateSignature(id.name, td, _))
             val separate = if rhs.isDefined then pendingSignatures.remove(sym) else N
             val defnAnnotations = separate.fold(annotations): sig =>
-              mergeSignatureAnnotations(id.name, sig.annotations, sig.loc, annotations, statementLoc)
-            val binders = separate.fold(termBinders(td, td.typeParams))(_.binders)
-            val TermBinders(tsym, tps) = binders
-            val owner = tsym.owner
-            if (k is MutVal) && owner.isEmpty then
+              mergeSignatureAnnotations(id.name, sig.annotations, sig.toLoc, annotations, statementLoc)
+            val definition = signatureFor.getOrElse(td)
+            // Instances are local even inside a class or module.
+            val owner = if definition.k is Ins then N else ctx.outer.inner
+            if signatureFor.isEmpty && (k is MutVal) && owner.isEmpty then
               raise:
                 ErrorReport:
                   msg"Mutable 'val' definitions are only valid as members of a module, object, or class definition" -> statementLoc
                   :: Nil
               return go(sts, Nil, acc)(N)
-            if owner.isDefined && !identifierPattern.matches(id.name) then
+            if signatureFor.isEmpty && owner.isDefined && !identifierPattern.matches(id.name) then
               raise:
                 ErrorReport:
                   msg"Illegal ${k.desc} member name: '${id.name}'" -> nme.toLoc
@@ -3101,20 +3063,34 @@ extends Importer:
               case pss => pss
             val isMethod = owner.exists(_.isInstanceOf[ClassSymbol])
             
+            val tsym = separate.fold(TermSymbol(definition.k, owner, definition.name.getOrElse(die)))(_.tsym)
             val bindingScope = ctx.scope
+            if separate.isEmpty then rctx.state.lexicalTypeBinders(tsym) = ctx.typeBinders
             
-            val elaborateDefinition: Ctx ?=> TermDefinition = headerCtx ?=>
+            val headerCtx = ctx.nest(OuterCtx.NonReturnContext(S(tsym)))
+            val newAcc = debugElaboration(defnAnnotations):
+              given Ctx = headerCtx
               
               log(dbg"Processing term definition $nme")
-              // * Add parameters to context
-              var newCtx = headerCtx
+              val names = td.typeParams.map(typeParamNames)
+              val formals = separate.flatMap(_.tparams)
+              val tps = formals.orElse(names.map(_.map(typeParam)))
+              if newResolution && formals.isEmpty then tps.foreach(ps => registerTypeParameters(tsym, ps.map(_.sym)))
+              // Each header introduces its own names. Lower both spellings of a type argument
+              // to the same position in the member's callable interface.
+              var newCtx = names.fold(headerCtx): ids =>
+                val ps = tps.get
+                assert(ids.length == ps.length)
+                headerCtx ++ ids.lazyZip(ps).iterator.map((id, p) => id.name -> p.sym)
               val pss = paramLists.map: ps =>
                 val (res, newCtx2) = funParams(ps)(using newCtx)
                 newCtx = newCtx2
                 res
               
-              val signature = td.annotatedResultType.map(elaborateResultType(_)(using newCtx))
-                .orElse(separate.flatMap(_.signature))
+              val signature = td.annotatedResultType
+                .filter(_ => compatible && signatureFor.forall(_.annotatedResultType.isEmpty))
+                .map(elaborateResultType(_)(using newCtx))
+                .orElse(separate.flatMap(sig => sig.sign.map(_ -> sig.modulefulness)))
               val s = signature.map(_._1)
               
               if td.annotatedResultType.isEmpty then
@@ -3141,26 +3117,26 @@ extends Importer:
                         EffectHandlerMethodSpec("ret", S("value"), requireEffectMethodValue("ret", _)) :: Nil,
                         b,
                       )
-              val r = FlowSymbol(s"‹result of ${sym}›")
               
               val mfn = signature.fold(Modulefulness.none)(_._2)
               
-              // Retain the source signature's meaning; Erasure decides which arrows are physical parameters.
-              if newResolution then s.foreach(registerSignature)
-              val tdf = TermDefinition(k, sym, tsym, pss, tps, s, body, 
+              val tdf = TermDefinition(definition.k, sym, tsym, pss, tps.filter(_ => compatible), s, body,
                 TermDefFlags.empty.copy(isMethod = isMethod, hasResultAnnotation = td.annotatedResultType.isDefined), mfn, defnAnnotations, N)(
                 statementLoc, definitionHeaderLoc(td, annotations, statementLoc), S(bindingScope))
-              sym.tsym = S(tsym)
-              tsym.defn = S(tdf)
-              if newResolution then registerResultSignature(tdf)
               
-              tdf
+              if signatureFor.nonEmpty then
+                pendingSignatures(sym) = tdf
+                acc
+              else
+                val r = FlowSymbol(s"‹result of ${sym}›")
+                if newResolution then s.foreach(registerSignature)
+                sym.tsym = S(tsym)
+                tsym.defn = S(tdf)
+                if newResolution then registerResultSignature(tdf)
+                completeIfReady(sym)
+                tdf :: acc
             
-            val tdf = debugElaboration(defnAnnotations):
-              binders.scopeFor(td).givenIn(elaborateDefinition)
-            
-            completeIfReady(sym)
-            go(sts, Nil, tdf :: acc)(N)
+            go(sts, Nil, newAcc)(N)
           case L(d) =>
             reportUnusedAnnotations
             raise(d)
@@ -4041,23 +4017,16 @@ extends Importer:
         Pattern.Wildcard()
     go(t)
   
-  /** Whether two type parameter lists name the same parameters in the same order. A shape that `typeParams`
-    * rejects matches nothing.
-    */
-  private def sameTypeParamNames(t1: TyTup, t2: TyTup): Bool = t1.tys.corresponds(t2.tys):
-    case (id1: Ident, id2: Ident) => id1.name === id2.name
-    // * Recovery uses the definition's binders, so the mismatch also diagnoses malformed signature binders.
-    case _ => false
+  private def typeParamNames(t: TyTup): Ls[Ident] = t.tys.flatMap:
+    case id: Ident => id :: Nil
+    case t =>
+      raise(ErrorReport(msg"Unsupported type parameter shape: ${t.describe}" -> t.toLoc :: Nil))
+      Nil
   
-  private def typeParams(t: TyTup): Ls[Param] =
-    t.tys.flatMap:
-      case id: Ident =>
-        val sym = VarSymbol(id, erasedType = N, mut = false)
-        sym.decl = S(TyParam(FldFlags.empty, N, sym)(id.toLoc))
-        Param.simple(sym) :: Nil
-      case t =>
-        raise(ErrorReport(msg"Unsupported type parameter shape: ${t.describe}" -> t.toLoc :: Nil))
-        Nil
+  private def typeParam(id: Ident): Param =
+    val sym = VarSymbol(id, erasedType = N, mut = false)
+    sym.decl = S(TyParam(FldFlags.empty, N, sym)(id.toLoc))
+    Param.simple(sym)
   
   def importFrom(sts: Block, exports: Ls[BlockMemberSymbol]): Ctxl[(Blk, Ctx)] =
     given UnderCtx = UnderCtx.none
