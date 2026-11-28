@@ -232,7 +232,7 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
     given Map[Uid[Symbol], TypeArg] = tvars.toMap
     def signature(t: Term): GeneralType = typeAndSubstType(t, pol = true)
     val ty = td.sign match
-      case S(sign) if !td.flags.hasResultAnnotation => signature(sign)
+      case S(sign) if !td.signatureHeader.flags.hasResultAnnotation => signature(sign)
       case sign =>
         td.params.foldRight(sign.fold[GeneralType](Top)(signature)): (ps, ret) =>
           if ps.variadic.nonEmpty then
@@ -327,7 +327,7 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
     case Term.Lam(params, body) =>
       val sym = td.sym
       val signature = td.sign.map: sign =>
-        if td.flags.hasResultAnnotation then typeType(sign)
+        if td.signatureHeader.flags.hasResultAnnotation then typeType(sign)
         else ctx.get(sym).getOrElse(die) // Separate signatures enter the block's context before its bodies.
       signature match
       case S(sigTy) =>
@@ -703,7 +703,7 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
             TODO(stat)
         // Mutually recursive functions can call each other through their separate signatures.
         stats.foreach:
-          case td @ TermDefinition(k = Fun, body = S(_)) if !td.flags.hasResultAnnotation =>
+          case td @ TermDefinition(k = Fun, body = S(_)) if !td.signatureHeader.flags.hasResultAnnotation =>
             td.sign.foreach(sig => ctx += td.sym -> typeType(sig))
           case _ => ()
         goStats(stats)

@@ -269,7 +269,7 @@ object Resolvable:
         defn.params,
         defn.signatureHeader.tparams,
         defn.sign,
-        defn.flags,
+        defn.signatureHeader.flags,
         defn.modulefulness,
         defn,
       ))
@@ -632,7 +632,7 @@ object Term:
   private[semantics] def termDefFreeVars(td: TermDefinition): Set[Str] =
     val paramNames = td.params.iterator.flatMap(_.allParams).map(_.sym.nme).toSet
     val bodyFree = td.body.iterator.flatMap(_.freeVars).toSet
-    val signFree = td.sign.iterator.flatMap(_.freeVars).toSet
+    val signFree = td.typeAnnotations.flatMap(_.freeVars).toSet
     (bodyFree ++ signFree) -- paramNames
   
   /** Free vars of a ClassLikeDef body, with constructor params subtracted. */
@@ -869,11 +869,13 @@ final case class TermDefinition(
   val owner = tsym.owner
   /** Type parameters introduced by this header, in declaration order. */
   def typeParamSymbols: Ls[VarSymbol] = tparams.iterator.flatten.map(_.sym).toList
-  /** The header supplying the public type and its binders. A declaration with an invalid
-    * signature leaves the implementation's header available for error recovery. */
-  def signatureHeader: TermDefinition = tsym.termDeclaration.filter(_.writtenType.nonEmpty).getOrElse(this)
+  /** The header supplying the public type and its binders. */
+  def signatureHeader: TermDefinition = tsym.termDeclaration.getOrElse(this)
   /** The public type supplied by the declaration or written on this definition. */
   def sign: Opt[Term] = signatureHeader.writtenType
+  /** Types written on the declaration and definition, in source order. */
+  def typeAnnotations: Iterator[Term] =
+    tsym.termDeclaration.iterator.filterNot(_ is this).flatMap(_.writtenType) ++ writtenType
   def modulefulness: Modulefulness = signatureHeader.writtenModulefulness
   /** Only function bodies are wrapped by AsyncLowering; annotations on other
     * definitions are ignored with a warning and must not change their interface.
@@ -905,7 +907,7 @@ final case class TermDefinition(
       case (Term.FunTy(_, rhs, _), n) if n > 0 => strip(rhs, n - 1)
       case _ => sign
     sign.map: sign =>
-      if (k is syntax.Fun) && !flags.hasResultAnnotation then strip(sign, params.length)
+      if (k is syntax.Fun) && !signatureHeader.flags.hasResultAnnotation then strip(sign, params.length)
       else sign
   lazy val mayRaiseEffects: Bool =
     annotations.forall:

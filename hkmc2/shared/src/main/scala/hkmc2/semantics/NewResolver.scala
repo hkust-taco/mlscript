@@ -1640,12 +1640,11 @@ class NewResolver:
                 publish(OpaqueTypeShape(source)(TypeInterfaceReason.Unavailable(current.resolution.source)))
         withCanonicalType(tpe)(follow(_, noTypeArguments, Set.empty, tpe.resolution.source, host.publish))
 
-  // A separate full signature also annotates the implementation's parameters.
-  // Register these before its body is elaborated, so observed calls can never
-  // publish inferred alternatives for parameters behind this boundary.
+  // Calls and overrides read the domains of the separate signature, including for
+  // parameters whose implementation annotations describe a different type.
   private def signatureParameters(using rs: ResolutionContext) = rs.state.signatureParameters
-  /** Give implementation parameters their declared domains before elaborating the body.
-    * Return the same substitution for checking its result in the implementation's binders.
+  /** Register the public domains and supply them to implementation parameters that lack annotations.
+    * Return the binder substitution for an implementation that also inherits its result type.
     */
   def registerParameterSignature(declaration: TermDefinition, paramLists: Ls[ParamList], own: Ls[VarSymbol])
       (using ResolutionContext): TypeSubstitution =
@@ -1654,9 +1653,7 @@ class NewResolver:
       case N => return TypeSubstitution.empty
     val checking = if own.isEmpty then TypeSubstitution.empty else
       instantiateMethodSignature(declaration, declaration.tsym, own, signatureSite(declaration), Nil, checkingBody = true)
-    // An inline annotation can use a binder local to the implementation, even for
-    // a monomorphic signature. Calls and overrides read the public domain.
-    paramLists.iterator.flatMap(_.allParams).filter(p => p.sign.isEmpty || own.nonEmpty).foreach: param =>
+    paramLists.iterator.flatMap(_.allParams).foreach: param =>
       // Aliases can supply additional callable components after this parameter is observed.
       // Keep one accumulating union whose template can mention any component's quantified binders.
       val resolution = new TypeResolution(sign, messages => resolError(sign, messages))
@@ -1669,10 +1666,7 @@ class NewResolver:
       if param.sign.isEmpty then listenTypeInstances(tpe.instantiate(checking)): shape =>
         if param.sym.currentShapes.add(shape) then param.sym.notifyShapeListeners(shape)
     matchParameterTypes(sign, paramLists): (param, component) =>
-      signatureParameters.get(param.sym).foreach(_.resolution.publish(TypeShape.Combined(TypeFormula.atom(component))))
-      param.sign.foreach: inlineType =>
-        val expected = declaredType(typeResolution(inlineType), Map.empty).instantiate(rctx.instances)
-        inferTypeArguments(expected, instanceShape(component.instantiate(checking)), Nil, N)
+      signatureParameters.get(param.sym).get.resolution.publish(TypeShape.Combined(TypeFormula.atom(component)))
     checking
 
   /** The written type of a member, including a separate function signature or a constructor field's parameter type. */
@@ -1931,7 +1925,7 @@ class NewResolver:
             val tpe = declaredType(typeResolution(sign), capturedBindings, polarity)
             if isByName(td) then tpe.instantiate(instances) else tpe
           def result = memberSignature(td).map(signature(_, polarity = true))
-          if td.sign.nonEmpty && (td.k is syntax.Fun) && !td.flags.hasResultAnnotation && !isByName(td) then
+          if td.sign.nonEmpty && (td.k is syntax.Fun) && !td.signatureHeader.flags.hasResultAnnotation && !isByName(td) then
             listenTypeViews(signature(td.sign.get, polarity = true))(publish)
           else td.params match
             case params: NELs[ParamList] => publish(CallableTypeShape(source,
@@ -2062,14 +2056,18 @@ class NewResolver:
       if definition.k is syntax.MutVal then
         listenTypeInstances(signature)(publishActivated(rctx.memberVariable(definition.tsym), _))
       definition.body.foreach: body =>
-        // The method matcher already opened the signature's leading quantifiers. Opening
-        // them again while consuming its arrows would shadow the implementation's substitution.
-        @tailrec def checkedType(t: Term): DeclaredType = t match
-          case Forall(_, _, inner) => checkedType(inner)
-          case _ => declaredType(typeResolution(t), Map.empty).instantiate(checking)
-        val expected = if checking.isEmpty then signature else checkedType(sign)
-        listenSignatureResult(definition, expected, TypeView.Required): result =>
+        def checkResult(result: DeclaredType)(using ResolutionContext): Unit =
           listenResult(body)(value => inferTypeArguments(result.instantiate(rctx.instances), value, Nil, S(body)))
+        definition.writtenType match
+          case S(result) => checkResult(declaredType(typeResolution(result), Map.empty))
+          case N =>
+            // The method matcher already opened the signature's leading quantifiers. Opening
+            // them again while consuming its arrows would shadow the implementation's substitution.
+            @tailrec def checkedType(t: Term): DeclaredType = t match
+              case Forall(_, _, inner) => checkedType(inner)
+              case _ => declaredType(typeResolution(t), Map.empty).instantiate(checking)
+            val expected = if checking.isEmpty then signature else checkedType(sign)
+            listenSignatureResult(definition, expected, TypeView.Required)(checkResult)
 
   def checkAscription(body: Term, sign: Term)(using ResolutionContext): Unit =
     val resolution = typeResolution(sign)
@@ -2270,7 +2268,7 @@ class NewResolver:
     case MemberSlot.Parameter(p) => parameterSignature(p).orElse:
       // A legacy producer stores its full signature in the AST. Interpret its domains
       // in the consumer using the same parameter correspondence as a local signature.
-      if td.flags.hasResultAnnotation || rctx.state.isOwnedSym(td.tsym) then N
+      if td.signatureHeader.flags.hasResultAnnotation || rctx.state.isOwnedSym(td.tsym) then N
       else
         registerParameterSignature(td.signatureHeader, td.params, Nil)(using rctx.state.context)
         parameterSignature(p)
@@ -2820,7 +2818,7 @@ class NewResolver:
         case Marked(callable: CallableTypeShape, marks) =>
           callable.result.foreach(ret => loop(transportType(ret, marks :: Nil), count - 1))
         case _ => ()
-    loop(signature, if td.flags.hasResultAnnotation then 0 else td.params.length)
+    loop(signature, if td.signatureHeader.flags.hasResultAnnotation then 0 else td.params.length)
 
   private def tupleArrayParents(using rs: ResolutionContext) = rs.state.tupleArrayParents
   /** The Array interface for a positional layout has the union of its field shapes as its element type.
@@ -5082,7 +5080,7 @@ class NewResolver:
     def signatureQuantifiers(sign: Term): Ls[QuantVar] = sign match
       case Forall(parameters, _, body) => parameters ::: signatureQuantifiers(body)
       case _ => Nil
-    if td.flags.hasResultAnnotation then Nil else td.sign.toList.flatMap(signatureQuantifiers)
+    if td.signatureHeader.flags.hasResultAnnotation then Nil else td.sign.toList.flatMap(signatureQuantifiers)
 
   /** Instantiate a by-name definition at `site`: the reference, selection,
     * constructor pattern, or structural projection invoking it, unless an

@@ -268,7 +268,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     case Deref(term) => Vector.single(term)
     case td: TermDefinition =>
       td.params.toVector.flatMap(_.subTerms) ++ td.tparams.iterator.flatten.flatMap(_.subTerms) ++
-        td.sign ++ td.body ++ td.annotations.iterator.flatMap(_.subTerms)
+        td.typeAnnotations ++ td.body ++ td.annotations.iterator.flatMap(_.subTerms)
     case cls: ClassDef =>
       (cls.paramsOpt.toVector.flatMap(_.subTerms) :+ cls.body.blk) ++ cls.annotations.flatMap(_.subTerms).toVector
     case mod: ModuleOrObjectDef =>

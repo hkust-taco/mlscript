@@ -276,15 +276,11 @@ fun declared(x) = x
 //│ ║  l.+2: 	fun declared(x) = x
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^
 
-:e
+:expect 42
 fun annotatedResult: Int -> Int
 fun annotatedResult(x): Int = x
-//│ ╔══[COMPILATION ERROR] The definition of 'annotatedResult' cannot annotate its result type, as it has a separate signature
-//│ ║  l.+2: 	fun annotatedResult(x): Int = x
-//│ ║        	                        ^^^
-//│ ╟── signature here
-//│ ║  l.+1: 	fun annotatedResult: Int -> Int
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+annotatedResult(42)
+//│ = 42
 
 open annotations.{ * }
 

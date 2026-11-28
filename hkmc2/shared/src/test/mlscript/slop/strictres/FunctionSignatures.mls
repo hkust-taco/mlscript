@@ -277,8 +277,79 @@ private fun domains[A, B](a: A, b: B) =
   fun apply(f, padding?) = f({first: 1, second: "two"})
   [a.first, b.second]
 
-// An inline annotation receives constraints without exposing additional members.
+// A separate domain supplies no evidence for an explicitly annotated implementation parameter.
+:e
 private fun explicit[A](a: A) =
   private fun read: Str -> Int
   fun read(s: A) = s.length
   a.length
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+3: 	  fun read(s: A) = s.length
+//│ ║        	                   ^^^^^^^^
+//│ ╟── Cannot resolve member 'length' of a value with unknown shape.
+//│ ║  l.+3: 	  fun read(s: A) = s.length
+//│ ║        	              ^
+//│ ╟── Type parameter 'A' does not specify a member interface.
+//│ ║  l.+1: 	private fun explicit[A](a: A) =
+//│ ╙──      	                     ^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+4: 	  a.length
+//│ ║        	  ^^^^^^^^
+//│ ╟── Cannot resolve member 'length' of a value with unknown shape.
+//│ ║  l.+1: 	private fun explicit[A](a: A) =
+//│ ║        	                           ^
+//│ ╟── Type parameter 'A' does not specify a member interface.
+//│ ║  l.+1: 	private fun explicit[A](a: A) =
+//│ ╙──      	                     ^
+
+// The body resolves its parameter and its returned lambda using the implementation annotations.
+// Callers see the domain and result written on the declaration.
+:expect 9
+class Face(val field: Int)
+class Detail(val detail: Int) extends Face(detail)
+fun reader: Face -> (Face -> Face)
+fun reader(x: Detail): Detail -> Detail = y => Detail(x.detail + y.detail)
+reader(Detail(4))(Detail(5)).field
+//│ = 9
+
+:e
+reader(Detail(4))(Detail(5)).detail
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	reader(Detail(4))(Detail(5)).detail
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Value of type 'Face' does not contain member 'detail'
+//│ ║  l.XX: 	fun reader: Face -> (Face -> Face)
+//│ ╙──      	                             ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A caller's callback receives the publicly declared argument type.
+:e
+fun consume: (Face -> Int) -> Int
+fun consume(f: Detail -> Int) = f(Detail(7))
+consume(x => x.detail)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+3: 	consume(x => x.detail)
+//│ ║        	             ^^^^^^^^
+//│ ╟── Value of type 'Face' does not contain member 'detail'
+//│ ║  l.+1: 	fun consume: (Face -> Int) -> Int
+//│ ╙──      	              ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// The incoming argument occupies the public parameter slot.
+:expect 7
+fun ignoreArgument: Int -> Int
+fun ignoreArgument(x: Str): Int = 7
+ignoreArgument(42)
+//│ = 7
+
+// Unrelated annotations alone are valid. A throwing body needs no return slot conversion.
+private fun disagree: Int -> Str
+fun disagree(x: Str): Int = throw "unused"
+
+// A value returned normally must fit the public return slot.
+:e
+private fun badReturn: Int -> Str
+fun badReturn(x): Int = 1
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Str'
+//│ ║  l.+2: 	fun badReturn(x): Int = 1
+//│ ╙──      	                        ^

@@ -133,7 +133,12 @@ private[hkmc2] final class ResolvedValues:
     val declarations = new SourceDeclarations(root)
     def variable(sym: LocalVarSymbol): Unit =
       observeSymbol(sym, resolver)(resolver.listenTerm(SimpleRef(sym)(N)))
-    declarations.parameters.values.foreach(p => variable(p.sym))
+    declarations.parameters.values.foreach: p =>
+      rctx.state.signatureParameters.get(p.sym) match
+        // Erasure needs the incoming argument's representation even when the body
+        // resolves uses of the parameter through a different inline annotation.
+        case S(domain) => observeSymbol(p.sym, resolver)(resolver.listenTypeInstances(domain))
+        case N => variable(p.sym)
     declarations.variables.foreach:
       case sym: LocalVarSymbol => variable(sym)
       case sym: TermSymbol => observeSymbol(sym, resolver)(resolver.listenMemberVariable(sym))

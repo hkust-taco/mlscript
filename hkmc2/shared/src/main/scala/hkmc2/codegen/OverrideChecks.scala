@@ -99,7 +99,7 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
     // A separate signature, as in `fun f: (Int) -> Int` followed by `fun f(x) = x`, types every written
     // parameter; a result annotation describes only the result.
     def hasFullSignature(td: TermDefinition): Bool =
-      td.sign.isDefined && !td.flags.hasResultAnnotation && td.params.nonEmpty
+      td.sign.isDefined && !td.signatureHeader.flags.hasResultAnnotation && td.params.nonEmpty
     /** Whether `base`, overridden from `td`, specifies a part; `visiting` stops at inheritance cycles. */
     def inheritedSpecifies(td: TermDefinition, base: TermDefinition, visiting: Set[TermSymbol])(
         specifies: Set[TermSymbol] => Bool): Bool =

@@ -2613,15 +2613,8 @@ extends Importer:
             -> N
           :: Nil
   
-  /** Diagnose conflicting headers and select the separately written type unless
-    * the implementation supplies its own result annotation for error recovery. */
-  private def checkSeparateSignature(name: Str, sig: TermDef, impl: TermDef): Opt[Tree] =
-    if impl.annotatedResultType.isDefined then raise:
-      ErrorReport:
-        msg"The definition of '$name' cannot annotate its result type, as it has a separate signature"
-          -> impl.annotatedResultType.flatMap(_.toLoc)
-        :: msg"signature here" -> sig.toLoc
-        :: Nil
+  /** Check the member kind and symbolic name shared by the two headers. */
+  private def checkSeparateSignature(name: Str, sig: TermDef, impl: TermDef): Unit =
     if sig.k isnt impl.k then raise:
       ErrorReport:
         msg"The signature and the definition of '$name' must be of the same kind" -> N
@@ -2643,7 +2636,6 @@ extends Importer:
         :: msg"signature here" -> sig.toLoc
         :: Nil
     case _ => ()
-    sig.annotatedResultType.filter(_ => impl.annotatedResultType.isEmpty)
   
   /** Combines the annotations in source order so the definition's `@config` and `@dbg` settings take precedence.
     * Reports misplaced annotations at their source and preserves their effect on the member. */
@@ -2994,7 +2986,7 @@ extends Importer:
             // Multiple declarations have already been diagnosed. Only the first supplies the signature.
             val separate = sym.tsym.filter(_.defn.isEmpty).flatMap(_.termDeclaration)
             if rhs.isEmpty && separate.isDefined then return go(sts, Nil, acc)(N)
-            val resultType = signatureFor.fold(td.annotatedResultType)(checkSeparateSignature(id.name, td, _))
+            signatureFor.foreach(checkSeparateSignature(id.name, td, _))
             val defnAnnotations = separate.fold(annotations)(mergeSignatureAnnotations(_, annotations, statementLoc))
             val definition = signatureFor.getOrElse(td)
             // Instances are local even inside a class or module.
@@ -3041,7 +3033,7 @@ extends Importer:
                 newCtx = newCtx2
                 res
               
-              val sign = resultType.map:
+              val sign = td.annotatedResultType.map:
                 case TypeDef(Mod, st, N) => term(st, Tpe)(using newCtx)
                 case st => term(st, Tpe)(using newCtx)
               val checking = separate.fold(TypeSubstitution.empty): decl =>
@@ -3070,7 +3062,7 @@ extends Importer:
                         b,
                       )
               
-              val mfn = if resultType.exists(_.isModified(Mod)) then Modulefulness.ofSign(sign)(true) else Modulefulness.none
+              val mfn = if td.annotatedResultType.exists(_.isModified(Mod)) then Modulefulness.ofSign(sign)(true) else Modulefulness.none
               
               val tdf = TermDefinition(definition.k, sym, tsym, pss, tps, sign, body,
                 TermDefFlags.empty.copy(isMethod = isMethod, hasResultAnnotation = signatureFor.isEmpty && td.annotatedResultType.isDefined), mfn, defnAnnotations, N)(

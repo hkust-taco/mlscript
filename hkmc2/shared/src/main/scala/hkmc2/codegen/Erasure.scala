@@ -223,22 +223,15 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
       case S(msym) => S(ErasedType.ValueLike(rsc = S(false), msym))
       case N => sign.flatMap(eraseSignature)
 
-  /** The representation a parameter declares through an inline annotation, a module requirement,
-    * or a separate function signature. Parameters without a declared interface return `N`.
+  /** The parameter's public representation. A separate signature supplies its domain, otherwise
+    * the parameter can declare its representation with an inline type or a module requirement.
     */
   private def declaredParameterType(parameter: Param): Opt[ErasedValueType] =
-    declaredType(parameter.sign, parameter.modulefulness).orElse:
-      if !config.language.useNewResolution then N
-      else
-        val resolver = parameter.sym.getState.newResolverState
-        if resolver.signatureParameters.get(parameter.sym)(using resolver.context).isEmpty then N
-        else
-          // In `fun f: (Int) -> Int; fun f(x) = ...`, x has no inline annotation.
-          // The resolver records the signature's Int in x's observed shapes and excludes argument types
-          // supplied by callers. Thus inferredType reads the separately declared representation here.
-          // Treat it as declared so inherited types and calls to overrides cannot change it.
-          // If the signature supplies no value shapes, S(Unknown) still prevents fallback to family inference.
-          S(inferredType(parameter.sym).getOrElse(ErasedType.Unknown))
+    val resolver = parameter.sym.getState.newResolverState
+    if config.language.useNewResolution && resolver.signatureParameters.get(parameter.sym)(using resolver.context).nonEmpty then
+      val domain = resolver.resolvedValues.observations(parameter.sym)
+      S(joined(domain.flatMap(valueType).toList).getOrElse(ErasedType.Unknown))
+    else declaredType(parameter.sign, parameter.modulefulness)
 
   /** The result representation that `td` declares, with a result annotation or with a separate full
     * signature such as `fun f: (Int) -> Int`, whose arrows describe the written parameter lists.
@@ -255,7 +248,7 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
         case TypeShape.Function(_, ret) :: Nil => fullResult(ret, count - 1, seen + res)
         case _ => ErasedType.Unknown
     if config.language.useNewResolution && td.sign.nonEmpty && (td.k is syntax.Fun)
-        && !td.flags.hasResultAnnotation && td.params.nonEmpty && !td.modulefulness.isModuleful
+        && !td.signatureHeader.flags.hasResultAnnotation && td.params.nonEmpty && !td.modulefulness.isModuleful
     then S(fullResult(td.sign.get.typeInterpretation.get, td.params.length, Set.empty))
     else declaredType(td.resultSignature, td.modulefulness)
 
