@@ -1953,6 +1953,9 @@ As in function signatures, a field type that spells out parameter lists declares
 `{ next: () -> Int }` has a method `next` with an empty parameter list, whereas
 `{ next: (() -> Int) }` has a field holding a function value. A mutable field cannot be a method,
 so its function type must be parenthesized, as in `{ mut f: (Int -> Int) }`.
+With `#config(funcToCls: true)`, selecting a structural method such as `next` is a compilation
+error when the receiver could supply either a class method or a field holding a function.
+Function-to-class conversion calls these two implementations differently.
 A mutable record field can use the same forms as a type argument. A plain `T` supplies both bounds,
 `in S` has the output bound `Any`, and `out T` has the input bound `Nothing`.
 For `type Cell[A] = mut { f: A }`, `Cell[in S out T]` is equivalent to `mut { f: in S out T }`.

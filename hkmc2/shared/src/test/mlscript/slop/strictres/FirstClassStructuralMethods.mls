@@ -1,0 +1,42 @@
+:.
+
+// Both implementations satisfy this signature. Calling the native method via Function.prototype.call
+// would consume its first argument as the receiver and bind the second parameter to null.
+:ftc
+:ge
+private class ClassPair with
+  fun pick(x?, y?) = if y is null then 0 else 5
+private fun throughRecord(p: { pick: (Int, Int) -> Int }) = p.pick(2, 3)
+[throughRecord({ pick: (x, y) => x + y }), throughRecord(new ClassPair)]
+//│ ╔══[COMPILATION ERROR] Function-to-class conversion cannot determine the calling convention of structural member 'pick'.
+//│ ║  l.+3: 	private fun throughRecord(p: { pick: (Int, Int) -> Int }) = p.pick(2, 3)
+//│ ║        	                                                            ^^^^^^
+//│ ╟── This signature can be implemented by a method or by a field holding a function.
+//│ ║  l.+3: 	private fun throughRecord(p: { pick: (Int, Int) -> Int }) = p.pick(2, 3)
+//│ ╙──      	                               ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Taking a method as a value needs the same distinction, including for a symbol-keyed selection
+// whose declarations come from two intersected record types.
+:ftc
+:ge
+module Keys { @annotations.fresh val pick = Symbol("pick") }
+type Left = { @annotations.jsSymbol(Keys.pick) pick: Int -> Int, left: Int }
+type Right = { @annotations.jsSymbol(Keys.pick) pick: Int -> Int, right: Int }
+private fun capture(p: Left & Right) = p.pick
+//│ ╔══[COMPILATION ERROR] Function-to-class conversion cannot determine the calling convention of structural member 'pick'.
+//│ ║  l.+4: 	private fun capture(p: Left & Right) = p.pick
+//│ ║        	                                       ^^^^^^
+//│ ╟── This signature can be implemented by a method or by a field holding a function.
+//│ ║  l.+2: 	type Left = { @annotations.jsSymbol(Keys.pick) pick: Int -> Int, left: Int }
+//│ ╙──      	                                               ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A concrete method and a field explicitly declared to hold a function each have a known convention.
+:ftc
+:checkIR
+:expect [5, 6]
+private class Adder { fun add(x, y) = x + y }
+private fun read(p: { add: ((Int, Int) -> Int) }) = p.add(2, 4)
+[(new Adder).add(2, 3), read({ add: (x, y) => x + y })]
+//│ = [5, 6]
