@@ -18,7 +18,7 @@ fun asynchronous() = 2
 //│   asynchronous$async = function asynchronous$async() {
 //│     return 2
 //│   };
-//│   return runtime.toJsAsync(asynchronous$async) /* as! Promise */
+//│   return runtime.toJsAsync(asynchronous$async)
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

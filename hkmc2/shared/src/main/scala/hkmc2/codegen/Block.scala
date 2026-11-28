@@ -608,11 +608,11 @@ object Begin:
 
 object HandleBlock:
 
-  def suspend(tag: Path, handlerFun: Path)(using Elaborator.Ctx): Result =
+  def suspend(tag: Path, handlerFun: Path)(using Elaborator.Ctx, State): Result =
     val bms = Elaborator.ctx.builtins.runtime.suspend
     Call.of(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: handlerFun.asArg :: Nil) ne_:: Nil)(CallMetadata.mlsFunWithEffect, N)
 
-  def handleSuspension(tag: Path, bodyFun: Path)(using Elaborator.Ctx): Result =
+  def handleSuspension(tag: Path, bodyFun: Path)(using Elaborator.Ctx, State): Result =
     val bms = Elaborator.ctx.builtins.runtime.handle_suspension
     Call.of(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: bodyFun.asArg :: Nil) ne_:: Nil)(CallMetadata.mlsFunWithEffect, N)
   
@@ -1553,19 +1553,34 @@ object Call:
           case _ => super.applyResult(r)(k)
       .applyBlock(block)
   
-  /** The signature for applying `listCount` argument lists to `fun` when nothing is known about `fun` beyond its
-    * IR: the signature it publishes, or else a dynamic one.
+  /** The signature of the function of the runtime module that `fun` selects by name, when `fun` is such a
+    * selection and the runtime defines a function with at least `listCount` parameter lists under that name.
+    *
+    * Passes that generate calls of runtime functions select some of them by name, without their symbol, which
+    * keeps later passes from inlining or analyzing these functions. The selection then publishes no signature,
+    * while the function that it reaches is known: its calls follow the signature of its definition.
     */
-  def signatureOf(fun: Path, listCount: Int): ErasedCallableSignature =
-    publishedSignature(fun).getOrElse:
+  private def runtimeFunctionSignature(fun: Path, listCount: Int)(using State): Opt[ErasedFuncSignature] = fun match
+    case sel @ Select(Value.SimpleRef(module), name) if sel.symbol.isEmpty && (module is State.runtimeSymbol) =>
+      State.runtimeTermSymbol(name.name).filter(ts => ts.isErasureReady || ts.irFunDefn.isDefined)
+        .flatMap(_.irErasure).collect:
+          case sig: ErasedFuncSignature if listCount >= 1 && listCount <= sig.paramListCount => sig
+    case _ => N
+  
+  /** The signature for applying `listCount` argument lists to `fun` when nothing is known about `fun` beyond its
+    * IR: the signature it publishes, that of the runtime function that it selects by name (see
+    * `runtimeFunctionSignature`), or else a dynamic one.
+    */
+  def signatureOf(fun: Path, listCount: Int)(using State): ErasedCallableSignature =
+    publishedSignature(fun).orElse(runtimeFunctionSignature(fun, listCount)).getOrElse:
       if listCount == 0 then ErasedGetterSignature.dynamic else ErasedFuncSignature.dynamic(listCount)
   
   /** A call of `fun` applying `argss`, using [[signatureOf]]. */
-  def of(fun: Path, argss: Ls[Ls[Arg]])(metadata: CallMetadata, toLoc: Opt[Loc]): Result =
+  def of(fun: Path, argss: Ls[Ls[Arg]])(metadata: CallMetadata, toLoc: Opt[Loc])(using State): Result =
     Call(fun, argss)(signatureOf(fun, argss.length), metadata, toLoc)
   
   /** Like [[of]], without folding applications of builtins. */
-  def rawOf(fun: Path, argss: Ls[Ls[Arg]])(metadata: CallMetadata, toLoc: Opt[Loc]): Call =
+  def rawOf(fun: Path, argss: Ls[Ls[Arg]])(metadata: CallMetadata, toLoc: Opt[Loc])(using State): Call =
     raw(fun, argss)(signatureOf(fun, argss.length), metadata, toLoc)
   
   private def literalArgValues(args: Ls[Arg]): Opt[Ls[Value]] =

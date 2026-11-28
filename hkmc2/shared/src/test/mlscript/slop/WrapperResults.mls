@@ -25,7 +25,7 @@ Promise.all([asPromise(answer(true, 42)), asPromise(answer(false, 43))])
 //│         return (value as! Int⁰)
 //│     end
 //│   };
-//│   return (runtime⁰.toJsAsync﹖‹(...Array⁰) => ?›(answer¹) as! Promise⁰)
+//│   return runtime⁰.toJsAsync﹖‹(Function⁰) => Promise⁰›(answer¹)
 //│ };
 //│ define asPromise⁰ as fun asPromise¹(value: Promise⁰): Promise⁰ {
 //│   return value
@@ -159,7 +159,7 @@ Promise.all([results.wrapped, results.direct, results.ordinary()])
 //│     define wrapped$async as fun wrapped¹(): Int⁰ {
 //│       return (ResultGetters².this.value⁰ as! Int⁰)
 //│     };
-//│     return (runtime⁰.toJsAsync﹖‹(...Array⁰) => ?›(wrapped¹) as! Promise⁰)
+//│     return runtime⁰.toJsAsync﹖‹(Function⁰) => Promise⁰›(wrapped¹)
 //│   }
 //│   method direct⁰ = fun direct¹: Promise⁰ {
 //│     return globalThis⁰.Promise¹.resolve⁰‹(Unknown) => Promise⁰›(43)

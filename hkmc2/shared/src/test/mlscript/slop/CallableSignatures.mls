@@ -219,7 +219,7 @@ capturedAsyncFunction(40)(2)
 //│   define add$async as fun add³(): Int⁰ {
 //│     return +⁰‹(?, ?) => ?›(value, n)
 //│   };
-//│   return (runtime⁰.toJsAsync﹖‹(...Array⁰) => ?›(add³) as! Promise⁰)
+//│   return runtime⁰.toJsAsync﹖‹(Function⁰) => Promise⁰›(add³)
 //│ };
 //│ define capturedAsyncFunction⁰ as fun capturedAsyncFunction¹(value: Int⁰): Function⁰ {
 //│   return add$⁰‹(Int⁰) => (Int⁰) => Promise⁰›(value)
@@ -254,7 +254,7 @@ capturedCurriedAsyncFunction(39)(1)(2)
 //│     set tmp = +⁰‹(?, ?) => ?›(value, first);
 //│     return +⁰‹(?, ?) => ?›(tmp, second)
 //│   };
-//│   return (runtime⁰.toJsAsync﹖‹(...Array⁰) => ?›(add⁵) as! Promise⁰)
+//│   return runtime⁰.toJsAsync﹖‹(Function⁰) => Promise⁰›(add⁵)
 //│ };
 //│ define capturedCurriedAsyncFunction⁰ as fun capturedCurriedAsyncFunction¹(value: Int⁰): Function⁰ {
 //│   return add$¹‹(Int⁰) => (Int⁰) => Function⁰›(value)

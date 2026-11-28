@@ -61,7 +61,7 @@ object HandlerLowering:
   // currentFun: path to the current function for resumption
   // thisPath: path to `this` binding if the function is a method, `this` will be rebinded on resumption
   private case class FunctionCtx(currentFun: Path, thisPath: Option[Path], resumeInfo: ResumeInfo, debugInfo: DebugInfo, inGetter: Bool, inAsync: Bool):
-    def doUnwind(loc: Value, state: Path, restoreList: List[LocalVarSymbol])(using paths: HandlerPaths): Block =
+    def doUnwind(loc: Value, state: Path, restoreList: List[LocalVarSymbol])(using paths: HandlerPaths, elaboration: Elaborator.State): Block =
       // An active effect makes the caller ignore this return value. Discard the
       // bookkeeping call's Unit result and return undefined, which fits every
       // payload representation without claiming that Unit has the payload's type.
@@ -785,10 +785,10 @@ class HandlerLowering(paths: HandlerPaths, opt: Opt[EffectHandlers])(using TL, R
    */
 
   private def postTranslateTopLevelCtx(b: Block)(using HandlerCtx): Block =
-    postTranslateIllegalEffectCtx(b, Call.raw(paths.topLevelEffectPath, (Value.Lit(Tree.BoolLit(debugEnabled))(N).asArg :: Nil) :: Nil)(ErasedFuncSignature.dynamic(1), CallMetadata.defaultMlsFun, N), stackSafety.map(_.stackLimit))
+    postTranslateIllegalEffectCtx(b, Call.rawOf(paths.topLevelEffectPath, (Value.Lit(Tree.BoolLit(debugEnabled))(N).asArg :: Nil) :: Nil)(CallMetadata.defaultMlsFun, N), stackSafety.map(_.stackLimit))
 
   private def postTranslateIllegalEffectCtx(b: Block, reason: Str)(using HandlerCtx): Block =
-    postTranslateIllegalEffectCtx(b, Call.raw(paths.illegalEffectPath, (Value.Lit(Tree.StrLit(reason))(N).asArg :: Nil) :: Nil)(ErasedFuncSignature.dynamic(1), CallMetadata.defaultMlsFun, N), N)
+    postTranslateIllegalEffectCtx(b, Call.rawOf(paths.illegalEffectPath, (Value.Lit(Tree.StrLit(reason))(N).asArg :: Nil) :: Nil)(CallMetadata.defaultMlsFun, N), N)
 
   /**
     * Translate the block and apply stack safety wrapper if needed. If needsStackSafety is true,

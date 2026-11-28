@@ -648,6 +648,8 @@ object Elaborator:
       matchSuccessTrm: TermSymbol,
       matchFailureCls: ClassSymbol,
       matchFailureTrm: TermSymbol,
+      /** The term members of the runtime module, by name. */
+      terms: Map[Str, TermSymbol],
   )
 
   object RuntimeSymbols:
@@ -702,6 +704,7 @@ object Elaborator:
         matchSuccessTrm = term("MatchSuccess"),
         matchFailureCls = cls("MatchFailure"),
         matchFailureTrm = term("MatchFailure"),
+        terms = members.iterator.flatMap((name, member) => member.asTrm.map(name -> _)).toMap,
       )
 
   /** Immutable semantic metadata published before a compilation unit is optimized. */
@@ -776,6 +779,9 @@ object Elaborator:
       cachedRuntimeSymbols.getOrElse:
         lastWords("Runtime symbols have not been initialized from Runtime.mls.")
     def runtimeModuleSymbol: BlockMemberSymbol = runtimeSymbols.module
+    /** The term member `name` of the runtime module, when the runtime's symbols are available and the module
+      * has such a member. The compiler selects some runtime functions by name (see `Call.signatureOf`). */
+    def runtimeTermSymbol(name: Str): Opt[TermSymbol] = cachedRuntimeSymbols.flatMap(_.terms.get(name))
     def unitSymbol: ModuleOrObjectSymbol = runtimeSymbols.unit
     def loopEndSymbol: ModuleOrObjectSymbol = runtimeSymbols.loopEnd
     def tupleSymbol: ModuleOrObjectSymbol = runtimeSymbols.tuple

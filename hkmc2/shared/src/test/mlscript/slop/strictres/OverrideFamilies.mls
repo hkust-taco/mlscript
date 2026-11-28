@@ -226,7 +226,7 @@ fetch(Loader())
 //│     define load$async as fun load³(): Int⁰ {
 //│       return 2
 //│     };
-//│     return (runtime⁰.toJsAsync﹖‹(...Array⁰) => ?›(load³) as! Promise⁰)
+//│     return runtime⁰.toJsAsync﹖‹(Function⁰) => Promise⁰›(load³)
 //│   }
 //│ };
 //│ set tmp = Loader²‹() => Loader⁰›();
