@@ -50,7 +50,7 @@ test(1, 2)
 :re
 1 ++ 1
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp1; tmp1 = test(); return runtime.safeCall(tmp1(1, 1))
+//│ return runtime.safeCall(test(1, 1))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] TypeError: test is not a function
 

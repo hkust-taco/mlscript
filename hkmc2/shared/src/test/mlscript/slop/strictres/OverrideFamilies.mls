@@ -91,9 +91,9 @@ SeparateChild().take("s")
 // Aliases and later curried parameter lists retain the same declared boundary.
 :ge
 :noInline
-type CurriedContract = (Int) -> (Str) -> Int
+type CurriedLabel = Str
 private class CurriedBase() with
-  open fun take: CurriedContract
+  open fun take: Int -> CurriedLabel -> Int
   fun take(x)(label) = x
 private class CurriedChild() extends CurriedBase() with
   override fun take(x)(label) = x
@@ -112,9 +112,9 @@ private class SeparateNarrow() extends InferredBase() with
   override fun take: (Str) -> Int
   fun take(x) = 0
 InferredBase().take(1)
-//│ ╔══[COMPILATION ERROR] Parameter 'x' of overriding member 'take' is represented as 'Str', which cannot hold the values represented as 'Int' that the member it overrides accepts
-//│ ║  l.+5: 	  fun take(x) = 0
-//│ ║        	           ^
+//│ ╔══[COMPILATION ERROR] Parameter 1 of overriding member 'take' is represented as 'Str', which cannot hold the values represented as 'Int' that the member it overrides accepts
+//│ ║  l.+4: 	  override fun take: (Str) -> Int
+//│ ║        	                      ^^^
 //│ ╟── The overridden member 'take' is defined here
 //│ ║  l.+2: 	  open fun take(x) = 0
 //│ ╙──      	           ^^^^

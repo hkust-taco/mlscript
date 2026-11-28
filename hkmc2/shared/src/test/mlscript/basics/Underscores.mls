@@ -76,9 +76,7 @@ filtering of [], _ =>
 let test = (=> _.f(0, _, 2)) as (({f: (Int, Int, Int) -> ()}, Int) -> ())
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let test, test1;
-//│ test1 = function test(_0, _1) {
-//│   return runtime.safeCall(_0.f(0, _1, 2)) /* as! Runtime.Unit */
-//│ };
+//│ test1 = function test(_0, _1) { return runtime.safeCall(_0.f(0, _1, 2)) };
 //│ test = test1;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ test = fun test

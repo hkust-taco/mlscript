@@ -240,7 +240,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     case IfLike(_, _, split) => split.subTerms
     case SynthIf(split) => split.subTerms
     case SynthWhile(split) => split.subTerms
-    case Lam(params, body) => params.allParams.iterator.flatMap(_.sign).toVector :+ body
+    case lam @ Lam(params, body) => (params.allParams.iterator.flatMap(_.sign) ++ lam.declaredResult).toVector :+ body
     case Blk(stats, res) => stats.flatMap(_.subTerms).toVector :+ res
     case Rcd(mut, stats) => stats.flatMap(_.subTerms).toVector
     case Quoted(term) => Vector.single(term)

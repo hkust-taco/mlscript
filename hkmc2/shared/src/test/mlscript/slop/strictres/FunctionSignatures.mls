@@ -50,10 +50,10 @@ fun sig(x, y?) = x
 :e
 fun sig2: (Int, Int?) -> Int
 fun sig2(x, y) = x
-//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its separate signature.
+//│ ╔══[COMPILATION ERROR] Implementation of 'sig2' requires at least 2 arguments, but the declared parameter list permits 1
 //│ ║  l.+2: 	fun sig2(x, y) = x
 //│ ║        	        ^^^^^^
-//│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
+//│ ╟── The signature is declared here
 //│ ║  l.+1: 	fun sig2: (Int, Int?) -> Int
 //│ ╙──      	          ^^^^^^^^^^^^^^^^^^
 
@@ -74,62 +74,55 @@ type OptionalFn = (Int?) -> Int
 :e
 private fun aliased: OptionalFn
 fun aliased(x) = x
-//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its separate signature.
+//│ ╔══[COMPILATION ERROR] Parameter list does not match its declared function type.
 //│ ║  l.+2: 	fun aliased(x) = x
 //│ ║        	           ^^^
-//│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
-//│ ║  l.+1: 	private fun aliased: OptionalFn
-//│ ╙──      	                     ^^^^^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  l.XX: 	type OptionalFn = (Int?) -> Int
+//│ ╙──      	                  ^^^^^^^^^^^^^
 
 :e
 private fun tooFew: (Int, Int) -> Int
 fun tooFew(x) = x
-//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its separate signature.
+//│ ╔══[COMPILATION ERROR] Implementation of 'tooFew' must preserve the arguments bound to parameter 2
 //│ ║  l.+2: 	fun tooFew(x) = x
 //│ ║        	          ^^^
-//│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
+//│ ╟── The signature is declared here
 //│ ║  l.+1: 	private fun tooFew: (Int, Int) -> Int
 //│ ╙──      	                    ^^^^^^^^^^^^^^^^^
 
-:e
-private fun tooMany: Int -> Int
-fun tooMany(x, y?) = x
-//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its separate signature.
-//│ ║  l.+2: 	fun tooMany(x, y?) = x
-//│ ║        	           ^^^^^^^
-//│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
-//│ ║  l.+1: 	private fun tooMany: Int -> Int
-//│ ╙──      	                     ^^^^^^^^^^
+// An additional optional parameter receives its default on every declared call.
+:expect 4
+private fun withDefault: Int -> Int
+fun withDefault(x, y?) = if y is null then x else 0
+withDefault(4)
+//│ = 4
 
 :e
 private fun missingRest: (Int, ...Array[Int], Str) -> Str
 fun missingRest(x, y?) = y
-//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its separate signature.
+//│ ╔══[COMPILATION ERROR] Implementation of 'missingRest' must preserve the arguments bound to parameter 2
 //│ ║  l.+2: 	fun missingRest(x, y?) = y
 //│ ║        	               ^^^^^^^
-//│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
+//│ ╟── The signature is declared here
 //│ ║  l.+1: 	private fun missingRest: (Int, ...Array[Int], Str) -> Str
 //│ ╙──      	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 private fun misplacedRest: (Int, ...Array[Int], Str) -> Str
 fun misplacedRest(x, y, ...rest) = "ok"
-//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its separate signature.
+//│ ╔══[COMPILATION ERROR] Implementation of 'misplacedRest' must preserve the arguments bound to parameter 2
 //│ ║  l.+2: 	fun misplacedRest(x, y, ...rest) = "ok"
 //│ ║        	                 ^^^^^^^^^^^^^^^
-//│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
+//│ ╟── The signature is declared here
 //│ ║  l.+1: 	private fun misplacedRest: (Int, ...Array[Int], Str) -> Str
 //│ ╙──      	                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-:e
+:expect 0
 private fun extraRest: Int -> Int
-fun extraRest(x, ...rest) = x
-//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its separate signature.
-//│ ║  l.+2: 	fun extraRest(x, ...rest) = x
-//│ ║        	             ^^^^^^^^^^^^
-//│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
-//│ ║  l.+1: 	private fun extraRest: Int -> Int
-//│ ╙──      	                       ^^^^^^^^^^
+fun extraRest(x, ...rest) = rest.length
+extraRest(1)
+//│ = 0
 
 // A matching generic alias retains its parameter annotations.
 :expect 3
@@ -144,12 +137,12 @@ length("abc")
 private fun binary: ForwardSignature[(Int, Int) -> Int]
 fun binary(x) = x
 type ForwardSignature[A] = A
-//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its separate signature.
+//│ ╔══[COMPILATION ERROR] Parameter list does not match its declared function type.
 //│ ║  l.+2: 	fun binary(x) = x
 //│ ║        	          ^^^
-//│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
+//│ ╟── The expected function type is declared here.
 //│ ║  l.+1: 	private fun binary: ForwardSignature[(Int, Int) -> Int]
-//│ ╙──      	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	                                     ^^^^^^^^^^^^^^^^^
 
 // The receiver of a type member can also supply the arrow.
 :e
@@ -158,12 +151,12 @@ class Signatures[T] with
 val signatures: Signatures[(Int, Int) -> Int] = new Signatures[(Int, Int) -> Int]
 private fun selected: signatures.Fn
 fun selected(x) = x
-//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its separate signature.
+//│ ╔══[COMPILATION ERROR] Parameter list does not match its declared function type.
 //│ ║  l.+5: 	fun selected(x) = x
 //│ ║        	            ^^^
-//│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
-//│ ║  l.+4: 	private fun selected: signatures.Fn
-//│ ╙──      	                      ^^^^^^^^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  l.+3: 	val signatures: Signatures[(Int, Int) -> Int] = new Signatures[(Int, Int) -> Int]
+//│ ╙──      	                           ^^^^^^^^^^^^^^^^^
 //│ signatures = Signatures
 
 // Check each written curried list, including aliases of later arrows.
@@ -171,12 +164,24 @@ fun selected(x) = x
 type Next = (Int?) -> Int
 private fun curried: Int -> Next
 fun curried(x)(y) = x
-//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its separate signature.
+//│ ╔══[COMPILATION ERROR] Parameter list does not match its declared function type.
 //│ ║  l.+3: 	fun curried(x)(y) = x
 //│ ║        	              ^^^
-//│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
-//│ ║  l.+2: 	private fun curried: Int -> Next
-//│ ╙──      	                     ^^^^^^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  l.+1: 	type Next = (Int?) -> Int
+//│ ╙──      	            ^^^^^^^^^^^^^
+
+// A list written further after those of the signature is reported at that list.
+:e
+type NextTwo = Int -> ((Int, Int) -> Int)
+private fun curriedTwice: Int -> NextTwo
+fun curriedTwice(x)(y)(z) = x
+//│ ╔══[COMPILATION ERROR] Parameter list does not match its declared function type.
+//│ ║  l.+3: 	fun curriedTwice(x)(y)(z) = x
+//│ ║        	                      ^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  l.+1: 	type NextTwo = Int -> ((Int, Int) -> Int)
+//│ ╙──      	                       ^^^^^^^^^^^^^^^^^
 
 
 // *** Variadic and curried signature inputs ***
@@ -246,6 +251,12 @@ class Right(val value: Int)
 :e
 private fun unionAmbiguous: (Left -> Int) | ((Right, Int) -> Int)
 fun unionAmbiguous(x) = x.value
+//│ ╔══[COMPILATION ERROR] Parameter list does not match its declared function type.
+//│ ║  l.+2: 	fun unionAmbiguous(x) = x.value
+//│ ║        	                  ^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  l.+1: 	private fun unionAmbiguous: (Left -> Int) | ((Right, Int) -> Int)
+//│ ╙──      	                                             ^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] This selection of member 'value' is ambiguous, as it has multiple resolved targets
 //│ ║  l.+2: 	fun unionAmbiguous(x) = x.value
 //│ ║        	                        ^^^^^^^
@@ -259,6 +270,12 @@ fun unionAmbiguous(x) = x.value
 :e
 private fun intersectionAmbiguous: (Left -> Int) & ((Right, Int) -> Int)
 fun intersectionAmbiguous(x) = x.value
+//│ ╔══[COMPILATION ERROR] Parameter list does not match its declared function type.
+//│ ║  l.+2: 	fun intersectionAmbiguous(x) = x.value
+//│ ║        	                         ^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  l.+1: 	private fun intersectionAmbiguous: (Left -> Int) & ((Right, Int) -> Int)
+//│ ╙──      	                                                    ^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] This selection of member 'value' is ambiguous, as it has multiple resolved targets
 //│ ║  l.+2: 	fun intersectionAmbiguous(x) = x.value
 //│ ║        	                               ^^^^^^^

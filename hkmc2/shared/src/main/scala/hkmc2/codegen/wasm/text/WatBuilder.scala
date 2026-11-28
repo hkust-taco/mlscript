@@ -800,9 +800,10 @@ class WatBuilder(private val ctx: Ctx, linking: FileCompilation)(using TraceLogg
       case Annot.Modifier(syntax.Keyword.`virtual` | syntax.Keyword.`open`) => true
       case _ => false
 
-  /** The declared Wasm parameter types of `methodDef`, excluding `this`. */
+  /** The declared Wasm parameter types of `methodDef`, excluding `this`. An abstract method declared by
+    * a signature takes the parameter list that its signature spells out (see TermDefinition). */
   private def declaredParamTypes(methodDef: TermDefinition): Seq[ValType] =
-    methodDef.params.headOption.fold(Nil)(_.params).map(_.sym.paramType)
+    methodDef.physicalParams.headOption.fold(Nil)(_.params).map(_.sym.paramType)
 
   /** Whether a method declaring `actual` may occupy a virtual slot declared as `expected`.
     *
@@ -1906,7 +1907,7 @@ class WatBuilder(private val ctx: Ctx, linking: FileCompilation)(using TraceLogg
       else lowerClassMethodCall(sel.qual, sel.symbol, argss.head, virtual = false).mergeAsBlock_!
 
     case sel: SuperSelect =>
-      if sel.symbol.defn.exists(_.params.isEmpty) then
+      if sel.symbol.defn.exists(_.physicalParams.isEmpty) then
         lowerClassMethodCall(sel.qual, sel.symbol, Nil, virtual = false).mergeAsBlock_!
       else errExpr(Ls(msg"Super method values are not supported by WASM" -> sel.toLoc))
 
@@ -2024,7 +2025,7 @@ class WatBuilder(private val ctx: Ctx, linking: FileCompilation)(using TraceLogg
         case S(selSym) if predeclaredClassMethodSym(selSym).nonEmpty =>
           val methodSym = predeclaredClassMethodSym(selSym).get
           methodSym.defn match
-            case S(defn: TermDefinition) if defn.params.isEmpty =>
+            case S(defn: TermDefinition) if defn.physicalParams.isEmpty =>
               lowerClassMethodCall(qual, methodSym, Nil, virtual = true).mergeAsBlock_!
             case _ =>
               errExpr(

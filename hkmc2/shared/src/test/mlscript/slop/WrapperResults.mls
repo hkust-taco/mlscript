@@ -189,7 +189,7 @@ Promise.all([results.wrapped, results.direct, results.ordinary()])
 let recursiveIterator = forward()
 [recursiveIterator.next(), recursiveIterator.next(), recursiveIterator.next()]
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp: ?, tmp1: ?, tmp2: ?, recursive$worker;
+//│ let tmp: Unknown, tmp1: Unknown, tmp2: Unknown, recursive$worker;
 //│ @noInline
 //│ define forward⁰ as fun forward¹(): Unknown {
 //│   return recursive$worker⁰(1, 42)

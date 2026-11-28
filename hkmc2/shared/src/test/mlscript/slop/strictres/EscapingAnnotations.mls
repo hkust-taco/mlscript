@@ -16,7 +16,7 @@ private class Sink[T](f: T -> Str) with
 // The annotation of a private binding.
 :e
 private fun readBound(box) = box.contents.word
-private val bound: Box -> Str = readBound
+private val bound: (Box -> Str) = readBound
 fun boundReader() = bound
 readBound(Box(Argument("local")))
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
@@ -24,8 +24,8 @@ readBound(Box(Argument("local")))
 //│ ║        	                             ^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'word' of a value with unknown shape.
 //│ ╟── Type argument 'T' is omitted here and admits values of unknown shape.
-//│ ║  l.+2: 	private val bound: Box -> Str = readBound
-//│ ║        	                   ^^^
+//│ ║  l.+2: 	private val bound: (Box -> Str) = readBound
+//│ ║        	                    ^^^
 //│ ╟── This value is returned here.
 //│ ║  l.+3: 	fun boundReader() = bound
 //│ ║        	                    ^^^^^
@@ -83,7 +83,7 @@ readAscribed(Box(Argument("local")))
 :e
 private fun readField(box) = box.contents.word
 private class Holder with
-  val read: Box -> Str = readField
+  val read: (Box -> Str) = readField
 fun fieldReader() = new Holder().read
 readField(Box(Argument("local")))
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
@@ -91,8 +91,8 @@ readField(Box(Argument("local")))
 //│ ║        	                             ^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'word' of a value with unknown shape.
 //│ ╟── Type argument 'T' is omitted here and admits values of unknown shape.
-//│ ║  l.+3: 	  val read: Box -> Str = readField
-//│ ║        	            ^^^
+//│ ║  l.+3: 	  val read: (Box -> Str) = readField
+//│ ║        	             ^^^
 //│ ╟── This value is returned here.
 //│ ║  l.+4: 	fun fieldReader() = new Holder().read
 //│ ║        	                    ^^^^^^^^^^^^^^^^^

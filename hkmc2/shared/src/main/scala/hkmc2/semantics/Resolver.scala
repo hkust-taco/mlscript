@@ -759,7 +759,7 @@ class Resolver(tl: TraceLogger)
                   Spd(SpreadKind.Eager, v.param.sym.ref().dontResolve, false) :: v.trailing.map(arg)
               //   val as = ps.params.map(p => Fld(p.flags, p.sym.ref().resolve, N))
                 val newLam = (t: Term) => 
-                  lam(Term.Lam(ps, t))
+                  lam(Term.Lam(ps, t)(N))
                 val newBod = (t: Term) =>
                   Term.App(bod(t), Term.Tup(as)(DummyTup))(DummyApp, N, FlowSymbol("implicit app")).dontResolve
                 expand(pss, newLam, newBod)

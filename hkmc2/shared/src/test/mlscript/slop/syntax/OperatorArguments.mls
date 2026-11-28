@@ -100,7 +100,7 @@ id((2, 3))
 //│ = 5
 
 :expect 5
-val add: (Int, Int) -> Int = (x, y) => x + y
+val add: ((Int, Int) -> Int) = (x, y) => x + y
 add(2, 3)
 //│ = 5
 //│ add = fun

@@ -80,6 +80,7 @@ private[hkmc2] final class SourceDeclarations(root: Statement):
     statement match
       case td: TermDefinition =>
         td.params.foreach(_.foreach(parameter))
+        td.signatureHeader.signatureParams.foreach(_.foreach(parameter))
         td.tparams.foreach(_.foreach(parameter))
         td.tsym.termDeclaration.foreach(_.tparams.foreach(_.foreach(parameter)))
       case cls: ClassLikeDef =>
@@ -144,7 +145,9 @@ private[hkmc2] final class ResolvedValues:
       case sym: TermSymbol => observeSymbol(sym, resolver)(resolver.listenMemberVariable(sym))
     declarations.statements.foreach:
       case td: TermDefinition => observeDefinition(td, resolver)
-      case lam: Lam => observeViews(lam.resultSlot, resolver)(resolver.listenTerm(lam.body))
+      // The function that a split definition returns for the parameter lists written after those of its
+      // signature has that definition's body, including its explicit returns (see Elaborator).
+      case lam: Lam => observeViews(lam.resultSlot, resolver)(resolver.listenResult(lam.body))
       case _ => ()
 
     // Interface exposure can discover new fields, and observing a field can in turn expose a value.

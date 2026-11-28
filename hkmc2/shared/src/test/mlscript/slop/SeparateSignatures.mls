@@ -720,7 +720,7 @@ fun outerAlias() =
   fun f(x: A) = y => y
   f[Str](1)("ok")
 outerAlias()
-//│ Elab: { fun member:outerAlias⁰() = { type type:A⁰ = member:Int⁰^term:outerAlias¹; fun member:f⁰[List(A¹)]: member:Int⁰^term:outerAlias¹^term:f¹ -> A¹ -> A¹; fun member:f⁰(x⁰: member:A²^term:f¹) = λ(y⁰). y⁰; member:f⁰[member:Str⁰^term:outerAlias¹](1)("ok") }; member:outerAlias⁰() }
+//│ Elab: { fun member:outerAlias⁰() = { type type:A⁰ = member:Int⁰^term:outerAlias¹; fun member:f⁰[List(A¹)]: member:Int⁰^term:outerAlias¹^term:f¹ -> A¹ -> A¹; fun member:f⁰(x⁰: member:A²^term:f¹)(y⁰) = y⁰; member:f⁰[member:Str⁰^term:outerAlias¹](1)("ok") }; member:outerAlias⁰() }
 //│ = "ok"
 
 // With no outer binding, the implementation's parameter annotation is unbound.
@@ -767,7 +767,7 @@ let pair = positional[LeftField, RightField](LeftField(1), RightField(2))
 fun first[A, B]: (A, B) -> A
 fun first[X, Y] = (x: X, y: Y) => x
 abstract class Projection { fun get[A, B]: (A, B) -> A }
-let projection = new Projection with { fun get[X, Y] = (x: X, y: Y) => x }
+let projection = new Projection with { fun get[X, Y](x: X, y: Y) = x }
 [first[LeftField, RightField](LeftField(1), RightField(0)).left,
  first[RightField, LeftField](RightField(2), LeftField(0)).right,
  projection.get[LeftField, RightField](LeftField(3), RightField(0)).left,

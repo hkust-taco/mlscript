@@ -622,7 +622,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     case S(fs: TermSymbol) =>
       fs.defn match
       case S(td: TermDefinition) =>
-        zipArgs(td.params, args, Nil, fs.mayRaiseEffects)
+        zipArgs(td.publicParams, args, Nil, fs.mayRaiseEffects)
       case _ => zipArgs(Nil, args, Nil, fs.mayRaiseEffects)
     case _ => zipArgs(Nil, args, Nil, true)
   
@@ -805,7 +805,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   
   private def isImplicitNullaryCall(defnSym: DefinitionSymbol[?]): Bool =
     defnSym.defn.exists:
-      case td: TermDefinition => (td.k is syntax.Fun) && td.params.isEmpty
+      case td: TermDefinition => (td.k is syntax.Fun) && td.physicalParams.isEmpty
       case _ => false
   
   /** Consume wildcard lookup results, retaining the receiver selected by resolution. */
@@ -1124,6 +1124,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           bms,
           dsym,
           sem.ParamList(sem.ParamListFlags.empty, Nil, N)(N) :: Nil,
+          Nil,
           N,
           N,
           S(trm),

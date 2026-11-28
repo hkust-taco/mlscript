@@ -488,6 +488,45 @@ fun foo: Int -> Int         // declares signature only
 declare fun parseInt(str: Str, radix: Int): Int
 ```
 
+### Function Signatures
+
+A signature written without parameter lists, as in `fun f: (Int, Int) -> Int`, spells out the
+parameter lists of `f`: each unparenthesized arrow, including the arrows of its result, is a
+parameter list, while a quantifier such as `[A] ->` is not. Parentheses end the lists, and so do
+type aliases and other type operators, such as unions:
+
+```mlscript
+fun add: (Int, Int) -> Int         // a method with one `(Int, Int)` parameter list
+fun curried: Int -> Int -> Int     // two parameter lists, as in `fun curried(x)(y)`
+fun adder: Int -> (Int -> Int)     // one parameter list, returning a function
+fun binary: ((Int, Int) -> Int)    // no parameter list: `binary` is a function value
+fun id: [A] -> A -> A              // a generic method with one parameter list
+```
+
+An implementation must write the parameter lists that its signature spells out. Its body can write
+them as an immediate function literal: `fun add: (Int, Int) -> Int = (x, y) => x + y` is
+`fun add(x, y) = x + y`, and so is `fun add = (x, y) => x + y` following a separate
+`fun add: (Int, Int) -> Int`. Curried lambdas, implicit lambdas (`=> _ + _`), and `case` functions
+write lists in the same way, and the literal can stand on an indented line of its own or in braces,
+as in `fun inc: Int -> Int = { x => x + 1 }`. A parenthesized literal is an ordinary expression,
+which writes no list. Any other body is an error unless the function type is parenthesized,
+as in `fun adder: (Int -> Int) = ...`, which returns the function value that its body computes.
+A split definition can write additional parameter lists as shorthand for returned lambdas.
+For example, given `type Unary = Int -> Int`, both `fun f(x) = x` and `fun f = x => x`
+implement `fun f: Unary` as a getter. Likewise, after `fun f: Int -> (Int -> Int)`,
+`fun f(x)(y) = x + y` means `fun f(x) = y => x + y`. Overrides see one method parameter list.
+A `return` in the body of such a definition returns from the application of its last written list.
+A result annotation on such a definition, as in `fun f(x)(y): Int = x + y`, declares the result of
+that application: the values that the body returns, including those of its `return`s, must have this type.
+Without the annotation, the result of the returned function is inferred from its body and is not
+checked against the function type that the signature declares, as for any other function value.
+A result annotation following written parameter lists is the type of their result:
+`fun f(x): Int -> Int` takes one parameter list and returns a function.
+A value cannot have parameter lists, so the function type of a `val` must be parenthesized,
+as in `val inc: (Int -> Int) = x => x + 1`.
+These rules apply under new resolution; the legacy 0.2.x language reads arrows in signatures as
+the types of function values.
+
 ### Operator Functions
 
 Define a function with a symbolic name:
@@ -763,8 +802,9 @@ be omitted only when this leaves the other parameters' bindings unchanged. Addit
 parameters are permitted only when they cannot consume arguments belonging to inherited parameters.
 Equal parameter counts alone do not establish compatibility: moving a trailing parameter or changing
 where a rest slice begins can change which argument a parameter receives. A member's parameter lists
-are the ones it writes: an abstract or `declare`d `fun f: (Int) -> Int` has none and holds a function
-value, so only a member without parameter lists can override it, while `fun f(x: Int): Int` has one.
+come from its public signature when it has one (see Function Signatures). An
+abstract or `declare`d `fun f: (Int) -> Int` and `fun f(x: Int): Int` both have one, so either can
+override the other, while an abstract `fun f: ((Int) -> Int)` has none and holds a function value.
 
 An override must accept the runtime representations of the inherited parameters, and its results
 must fit the inherited result representation. Unannotated parameters inherit their representations;
@@ -1908,6 +1948,14 @@ type CursorView = { mut position: in Int out (Int | Str), label: Str }
 
 `CursorView` accepts an `Int` on writes to `position` and exposes `Int | Str` on reads.
 Its `label` field supplies a read-only `Str`.
+
+As in function signatures, a field type that spells out parameter lists declares a method:
+`{ next: () -> Int }` has a method `next` with an empty parameter list, whereas
+`{ next: (() -> Int) }` has a field holding a function value. A mutable field cannot be a method,
+so its function type must be parenthesized, as in `{ mut f: (Int -> Int) }`.
+With `#config(funcToCls: true)`, selecting a structural method such as `next` is a compilation
+error when the receiver could supply either a class method or a field holding a function.
+Function-to-class conversion calls these two implementations differently.
 A mutable record field can use the same forms as a type argument. A plain `T` supplies both bounds,
 `in S` has the output bound `Any`, and `out T` has the input bound `Nothing`.
 For `type Cell[A] = mut { f: A }`, `Cell[in S out T]` is equivalent to `mut { f: in S out T }`.
@@ -1975,7 +2023,8 @@ app(x => x)              // error: the optional parameter is not droppable
 ```
 
 A separate signature, as in `fun f: (Int, Int?) -> Int` followed by `fun f(x, y?) = x`,
-must agree with the definition on which parameters are required, optional, and variadic.
+spells out the method parameter lists (see Function Signatures). The implementation must bind
+arguments compatibly with those lists under the same positional rules as a method override.
 
 ### `forall` (Universal Quantification)
 
@@ -2615,9 +2664,9 @@ Option.unsafe.get(opt)
 
 ### Iter Module
 
-The prelude's `Iterator[T]` is a structural interface with
-`next: () -> ({ value: T, done: Bool })`. Classes and records can implement it
-without inheriting from a runtime class. Generator calls expose `Iterator[Any]`;
+The prelude's `Iterator[T]` is a structural interface with a method
+`next: () -> ({ value: T, done: Bool })`. Classes can implement it with a method, and records
+with a field holding a function, without inheriting from a runtime class. Generator calls expose `Iterator[Any]`;
 the resolver does not yet track their yielded element types.
 
 ```mlscript

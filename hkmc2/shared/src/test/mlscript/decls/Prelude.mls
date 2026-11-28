@@ -323,7 +323,7 @@ declare module Symbol {
   // A `TermDef` like `for` needs `rhs` to be defined to be recognized as `isMLsFun`.
   // Otherwise, it would be wrapped in `runtime.safeCall`, which accesses the
   // uninitialized `runtime` in the `Rendering` module.
-  fun for: Str -> Symbol = ()
+  fun for(key: Str): Symbol = ()
   @annotations.fresh val iterator: Symbol
 }
 

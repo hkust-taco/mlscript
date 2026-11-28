@@ -344,7 +344,7 @@ unchecked({only: 5})
 :e
 private fun assigned(x) = x.only
 private class CallbackStore with
-  open mut val callback: Any -> Int = x => 0
+  open mut val callback: (Any -> Int) = x => 0
 private class LocalStore extends CallbackStore with
   override mut val callback = x => 1
 private val localStore = new mut LocalStore
@@ -355,8 +355,8 @@ assigned({only: 7})
 //│ ║  l.+1: 	private fun assigned(x) = x.only
 //│ ║        	                          ^^^^^^
 //│ ╟── Value with an empty interface does not contain member 'only'
-//│ ║  l.+3: 	  open mut val callback: Any -> Int = x => 0
-//│ ║        	                         ^^^
+//│ ║  l.+3: 	  open mut val callback: (Any -> Int) = x => 0
+//│ ║        	                          ^^^
 //│ ╟── Type 'Any' is declared without a member interface.
 //│ ║  in ../../decls/Prelude.mls
 //│ ║  l.XX: 	declare type Any
@@ -472,7 +472,7 @@ private class Factory with
   open fun get: FactoryFor[Int, Keyed]
   fun get(n) = x => x.key
 private class ReaderFactory extends Factory with
-  override fun get(n) = x => x.key + n
+  override fun get = n => x => x.key + n
 fun factory(): Factory = new ReaderFactory
 factory().get(2)(Keyed(40))
 //│ = 42
@@ -483,11 +483,11 @@ private class AnyFactory with
   open fun get: FactoryFor[Keyed, Any]
   fun get(n) = x => n.key
 private class UnsafeFactory extends AnyFactory with
-  override fun get(n) = x => x.key
+  override fun get = n => x => x.key
 fun anyFactory(): AnyFactory = new UnsafeFactory
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.+5: 	  override fun get(n) = x => x.key
-//│ ║        	                             ^^^^^
+//│ ║  l.+5: 	  override fun get = n => x => x.key
+//│ ║        	                               ^^^^^
 //│ ╟── Value with an empty interface does not contain member 'key'
 //│ ║  l.+2: 	  open fun get: FactoryFor[Keyed, Any]
 //│ ║        	                                  ^^^

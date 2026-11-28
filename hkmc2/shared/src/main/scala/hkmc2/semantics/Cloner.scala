@@ -249,8 +249,10 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
   private def modulefulness(source: Modulefulness): Modulefulness =
     Modulefulness(source.msym.map(_.subst))(source.modified)
 
-  private def parameter(source: Param): Param =
-    val copy = Param(source.flags, source.sym.subst, source.sign.map(term), modulefulness(source.modulefulness),
+  private def parameter(source: Param): Param = parameterWithType(source, source.sign.map(term))
+
+  private def parameterWithType(source: Param, sign: Opt[Term]): Param =
+    val copy = Param(source.flags, source.sym.subst, sign, modulefulness(source.modulefulness),
       source.annotations.map(annotation))(source.toLoc)
     copy.fldSym = source.fldSym.map(_.subst)
     source.sym.decl match
@@ -276,14 +278,36 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
     copy.sym.decl = S(copy)
     copy
 
+  /** Copy arrow parameters with the domain terms of the cloned signature. A domain can refer to
+    * a quantifier inside the signature, whose fresh binder does not belong to the header scope. */
+  private def signatureParameters(lists: Ls[ParamList], original: Term, copied: Term): Ls[ParamList] =
+    if lists.isEmpty then Nil else (original, copied) match
+      case (Forall(_, _, body), Forall(_, _, fresh)) => signatureParameters(lists, body, fresh)
+      case (FunTy(domain, result, _), FunTy(fresh, rest, _)) =>
+        val list = lists.head
+        val domains = fresh match
+          case Tup(fields) if !list.allParams.headOption.exists(_.sign.exists(_ is domain)) =>
+            fields.iterator.map(_.term)
+          case single => Iterator.single(single)
+        def copy(p: Param): Param = parameterWithType(p, S(domains.next()))
+        val params = list.copy(params = list.params.map(copy), variadic = list.variadic.map(_.map(copy)))(list.toLoc)
+        assert(!domains.hasNext, "Each arrow parameter must have one domain")
+        params :: signatureParameters(lists.tail, result, rest)
+      case _ => lastWords("A signature parameter list must come from an arrow")
+
   private def termDefinition(source: TermDefinition): TermDefinition =
     def copyHeader(source: TermDefinition): TermDefinition =
       val scope = nested
       scope.bindParameters(source.params)
+      scope.bindParameters(source.signatureParams)
       source.tparams.foreach(_.foreach(p => scope.bindLocal(p.sym)))
+      val writtenType = source.writtenType.map(scope.term)
+      val signatureParams = if source.signatureParams.isEmpty then Nil
+        else scope.signatureParameters(source.signatureParams, source.writtenType.get, writtenType.get)
       val copy = source.copy(sym = source.sym.subst, tsym = source.tsym.subst,
-        params = source.params.map(scope.parameterList), tparams = source.tparams.map(_.map(scope.parameter)),
-        writtenType = source.writtenType.map(scope.term), body = source.body.map(scope.term),
+        params = source.params.map(scope.parameterList), signatureParams = signatureParams,
+        tparams = source.tparams.map(_.map(scope.parameter)),
+        writtenType = writtenType, body = source.body.map(scope.term),
         writtenModulefulness = modulefulness(source.writtenModulefulness), annotations = source.annotations.map(scope.annotation),
         companion = source.companion.map(mapType))(source.toLoc, source.headerLoc, source.scope)
       copy.isErroneous = source.isErroneous
@@ -560,7 +584,9 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
       case lam @ Lam(params, body) =>
         val scope = nested
         scope.bindParameters(params :: Nil)
-        Term.erasedLambda(scope.parameterList(params), scope.term(body), lam.resultSlot.erasedType.map(scope.valueType))
+        val copy = Lam(scope.parameterList(params), scope.term(body))(lam.declaredResult.map(scope.term))
+        copy.resultSlot.erasedType = lam.resultSlot.erasedType.map(scope.valueType)
+        copy
       case FunTy(lhs, rhs, eff) => FunTy(lhs.cloned, rhs.cloned, eff.map(_.cloned))
       case Forall(tvs, outer, body) =>
         val scope = nested

@@ -38,7 +38,7 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
       base.defn.toList.filterNot(Inheritance.changesMemberKind(td, _)).flatMap: inherited =>
         // A handler member traversed by erasure has no resumption parameter list, unlike its symbol's
         // declaration, so the overriding side's lists come from `td`.
-        OverrideLayout.correspondingParameters(td.params, inherited.params) match
+        OverrideLayout.correspondingParameters(td.publicParams, inherited.publicParams) match
           case Left(failure) =>
             invalid(base, failure)
             Nil
@@ -80,7 +80,7 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
     edges.filter(edge => Inheritance.isOpen(edge.inherited)).flatMap: edge =>
       edge.parameters.collect:
         case (actual, base) if unannotated(actual) && unannotated(base)
-          && !edge.inherited.params.exists(_.variadic.exists(_.param.sym is base.sym)) => base.sym -> actual.sym
+          && !edge.inherited.publicParams.exists(_.variadic.exists(_.param.sym is base.sym)) => base.sym -> actual.sym
     .toList.groupMap(_._1)(_._2)
 
   /** Reports overridable members that [[InterfaceExposure]] found reachable from this compilation unit's
@@ -114,7 +114,7 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
     definitions.foreach: td =>
       td.tsym.getState.newResolverState.exposedOpenMember(td.tsym).foreach: path =>
         val visiting = Set.single(td.tsym)
-        val missing = td.params.iterator.flatMap(_.allParams).filterNot(parameterSpecified(td, _, visiting)).toList
+        val missing = td.publicParams.iterator.flatMap(_.allParams).filterNot(parameterSpecified(td, _, visiting)).toList
         val missingResult = !resultSpecified(td, visiting)
         val required = (missingResult, missing.nonEmpty) match
           case (true, true) => S("its result type and the types of its parameters")
@@ -135,16 +135,14 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
     * lists, each source parameter occupies one slot, including optional and `drop` parameters, so the override
     * must preserve every list's length even when its source bindings permit adding or dropping inputs.
     */
-  private def wasmLayoutFailure(edge: Edge): Opt[OverrideLayout.Failure] =
-    val actual = edge.overriding.params
-    val inherited = edge.inherited.params
+  private def wasmLayoutFailure(actual: Ls[ParamList], inherited: Ls[ParamList], loc: Opt[Loc]): Opt[OverrideLayout.Failure] =
     actual.iterator.flatMap(_.variadic).nextOption() match
       case S(rest) => S(OverrideLayout.Failure(
-        msg"cannot use a variadic signature on the Wasm target", rest.param.toLoc.orElse(edge.overriding.headerLoc)))
+        msg"cannot use a variadic signature on the Wasm target", rest.param.toLoc.orElse(loc)))
       case N if inherited.exists(_.variadic.nonEmpty) => S(OverrideLayout.Failure(
-        msg"overrides a variadic signature, which the Wasm target does not support", edge.overriding.headerLoc))
+        msg"overrides a variadic signature, which the Wasm target does not support", loc))
       case N if actual.map(_.params.length) != inherited.map(_.params.length) => S(OverrideLayout.Failure(
-        msg"must preserve the number of parameters in each parameter list on the Wasm target", edge.overriding.headerLoc))
+        msg"must preserve the number of parameters in each parameter list on the Wasm target", loc))
       case N => N
   
   /** Reports source and target incompatibilities for declaration pairs that passed binding checks.
@@ -164,6 +162,14 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
     * has no reliable signature to compare with its counterpart.
     */
   def checkSignatures(): Unit =
+    val isWasm = config.target is CompilationTarget.Wasm
+    if isWasm then definitions.foreach: td =>
+      // JavaScript can ignore dropped arguments and supply defaults. Wasm calls need the
+      // same fixed slots in the signature and in the function that receives the arguments.
+      if td.body.nonEmpty && td.signatureHeader.signatureParams.nonEmpty then
+        wasmLayoutFailure(td.physicalParams, td.publicParams, td.headerLoc).foreach: failure =>
+          raise(ErrorReport(msg"Implementation of '${td.tsym.nme}' ${failure.message}" -> failure.toLoc ::
+            msg"The signature is declared here" -> td.sign.flatMap(_.toLoc) :: Nil, source = Diagnostic.Source.Compilation))
     edges.foreach: edge =>
       val td = edge.overriding
       val base = edge.inherited.tsym
@@ -181,8 +187,7 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
             msg"Overriding mutable field '${td.tsym.nme}' with representation '${describe(actualType)
               }' must accept writes through the inherited field with representation '${describe(baseType)}'",
             td.tsym.toLoc)
-        val isWasm = config.target is CompilationTarget.Wasm
-        val targetFailure = if isWasm then wasmLayoutFailure(edge) else N
+        val targetFailure = if isWasm then wasmLayoutFailure(td.publicParams, edge.inherited.publicParams, td.headerLoc) else N
         targetFailure.foreach: failure =>
           report(base, msg"Overriding member '${td.tsym.nme}' ${failure.message}", failure.toLoc)
         edge.parameters.foreach: (param, inherited) =>
@@ -190,11 +195,11 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
           val baseType = inherited.sym.erasedType
           if !representable(actualType, baseType) then ()
           else if !within(baseType, actualType) then report(base,
-            msg"${OverrideLayout.label(param).capitalize} of overriding member '${td.tsym.nme}' is represented as '${describe(actualType)
+            msg"${OverrideLayout.label(param, td.publicParams).capitalize} of overriding member '${td.tsym.nme}' is represented as '${describe(actualType)
               }', which cannot hold the values represented as '${describe(baseType)}' that the member it overrides accepts",
             param.toLoc)
           else if isWasm && targetFailure.isEmpty && !within(actualType, baseType) then report(base,
-            msg"${OverrideLayout.label(param).capitalize} of overriding member '${td.tsym.nme}' receives values represented as '${
+            msg"${OverrideLayout.label(param, td.publicParams).capitalize} of overriding member '${td.tsym.nme}' receives values represented as '${
               describe(actualType)}', but Wasm calls it through the signature of the member it overrides, whose parameter is represented as '${
               describe(baseType)}'",
             param.toLoc)
@@ -225,5 +230,5 @@ object OverrideChecks:
   /** Reports an override incompatibility at `loc` and points at the overridden member's declaration. */
   private def report(base: TermSymbol, message: Message, loc: Opt[Loc])(using Raise): Unit =
     raise(ErrorReport(
-      (message -> loc) :: (msg"The overridden member '${base.nme}' is defined here" -> base.toLoc) :: Nil,
+      (message -> loc) :: (msg"The overridden member '${base.nme}' is defined here" -> base.termDeclaration.flatMap(_.headerLoc).orElse(base.toLoc)) :: Nil,
       source = Diagnostic.Source.Compilation))

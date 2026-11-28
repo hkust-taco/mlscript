@@ -1,0 +1,31 @@
+:.
+
+// A signature that spells out a parameter list declares a method with that physical list, so an
+// override can write it, and calls through the base use the method's calling convention.
+:expect 7
+abstract class Shape() { fun area: (Int) -> Int }
+class Square() extends Shape() { fun area(side) = side * side - 2 }
+fun measure(shape: Shape) = shape.area(3)
+measure(Square())
+//│ Wasm result:
+//│ = 7
+
+// A body written without that list is applied to its argument.
+:expect 5
+fun inc: (Int) -> Int = x => x + 1
+inc(4)
+//│ Wasm result:
+//│ = 5
+
+// Wasm requires the same fixed slots even when every declared call supplies an optional parameter's default.
+:ge
+fun widened: Int -> Int
+fun widened(x, extra?) = x
+//│ ╔══[COMPILATION ERROR] Implementation of 'widened' must preserve the number of parameters in each parameter list on the Wasm target
+//│ ║  l.+2: 	fun widened(x, extra?) = x
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The signature is declared here
+//│ ║  l.+1: 	fun widened: Int -> Int
+//│ ╙──      	             ^^^^^^^^^^
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

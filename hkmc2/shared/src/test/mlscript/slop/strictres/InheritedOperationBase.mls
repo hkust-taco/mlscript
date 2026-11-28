@@ -9,4 +9,4 @@ module InheritedOperationBase with
     open override mut val item = seed
   open class Producer with
     open fun get(): Any -> Int = x => 0
-    open val held: Any -> Int = x => 0
+    open val held: (Any -> Int) = x => 0

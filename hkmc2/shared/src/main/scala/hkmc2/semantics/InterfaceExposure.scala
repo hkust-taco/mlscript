@@ -330,10 +330,10 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
           case _ => parameters(shape.unappliedParams, path, N)
         ds.clsDef.foreach(exposeClassInterface)
       case intro: IntroShape => intro.trm match
-        case Lam(_, body) =>
+        case lam @ Lam(_, body) =>
           parameters(shape.unappliedParams, path, N)
           watch((body, marks, instances, "result"))(
-            listener => resolver.listenResult(body)(listener)(using rctx.withInstances(instances))): shape =>
+            listener => resolver.listenLambdaResult(lam)(listener)(using rctx.withInstances(instances))): shape =>
               emit(resolver.instantiateShape(shape, instances).exit(marks),
                 path.via(msg"This value is returned here." -> body.toLoc))
         case _ => ()

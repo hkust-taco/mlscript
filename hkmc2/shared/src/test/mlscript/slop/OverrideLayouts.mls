@@ -52,7 +52,7 @@ private class OptionalBase() with
   open fun pick(value?: Any): Any = value
 private class RequiredOverride() extends OptionalBase() with
   override fun pick(value: Any): Any = value
-//│ ╔══[COMPILATION ERROR] Overriding member 'pick' requires at least 1 argument, but the overridden member permits 0
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' requires at least 1 argument, but the declared parameter list permits 0
 //│ ║  l.+4: 	  override fun pick(value: Any): Any = value
 //│ ║        	                   ^^^^^^^^^^^^
 //│ ╟── The overridden member 'pick' is defined here
@@ -66,7 +66,7 @@ private class LeadingBase() with
   open fun pick(first: Any, second?: Any): Any = second
 private class ReboundTail() extends LeadingBase() with
   override fun pick(...middle: Array[Any], last: Any): Any = last
-//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the arguments bound to inherited parameter 'first'
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the arguments bound to parameter 'first'
 //│ ║  l.+4: 	  override fun pick(...middle: Array[Any], last: Any): Any = last
 //│ ║        	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The overridden member 'pick' is defined here
@@ -80,7 +80,7 @@ private class RestBase() with
   open fun collect(...values: Array[Any]): Any = values
 private class StolenRest() extends RestBase() with
   override fun collect(first?: Any, ...values: Array[Any]): Any = values
-//│ ╔══[COMPILATION ERROR] Overriding member 'collect' must preserve the arguments bound to inherited parameter 'values'
+//│ ╔══[COMPILATION ERROR] Overriding member 'collect' must preserve the arguments bound to parameter 'values'
 //│ ║  l.+4: 	  override fun collect(first?: Any, ...values: Array[Any]): Any = values
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The overridden member 'collect' is defined here
@@ -92,7 +92,7 @@ private class StolenRest() extends RestBase() with
 :ge
 private class StolenMiddle() extends LayoutBase() with
   override fun collect(first: Any, optional?: Any, extra?: Any, ...middle: Array[Any], last: Any): Any = middle
-//│ ╔══[COMPILATION ERROR] Overriding member 'collect' must preserve the arguments bound to inherited parameter 'middle'
+//│ ╔══[COMPILATION ERROR] Overriding member 'collect' must preserve the arguments bound to parameter 'middle'
 //│ ║  l.+2: 	  override fun collect(first: Any, optional?: Any, extra?: Any, ...middle: Array[Any], last: Any): Any = middle
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The overridden member 'collect' is defined here
@@ -117,7 +117,7 @@ private class DropMiddle() with
   open fun pick(first: Any, drop ignored: Any, last: Any): Any = last
 private class ShiftedAfterDrop() extends DropMiddle() with
   override fun pick(first: Any, last: Any): Any = last
-//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the arguments bound to inherited parameter 'last'
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the arguments bound to parameter 'last'
 //│ ║  l.+4: 	  override fun pick(first: Any, last: Any): Any = last
 //│ ║        	                   ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The overridden member 'pick' is defined here
@@ -141,7 +141,7 @@ private class DropMiddleRest() with
   open fun pick(first: Any, drop ...ignored: Array[Any], last: Any): Any = last
 private class ShiftedAfterRest() extends DropMiddleRest() with
   override fun pick(first: Any, last: Any): Any = last
-//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the arguments bound to inherited parameter 'last'
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the arguments bound to parameter 'last'
 //│ ║  l.+4: 	  override fun pick(first: Any, last: Any): Any = last
 //│ ║        	                   ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The overridden member 'pick' is defined here
@@ -153,7 +153,7 @@ private class ShiftedAfterRest() extends DropMiddleRest() with
 :ge
 private class LostInput() extends FixedPair() with
   override fun pair(first: Any): Any = first
-//│ ╔══[COMPILATION ERROR] Overriding member 'pair' must preserve the arguments bound to inherited parameter 'second'
+//│ ╔══[COMPILATION ERROR] Overriding member 'pair' must preserve the arguments bound to parameter 'second'
 //│ ║  l.+2: 	  override fun pair(first: Any): Any = first
 //│ ║        	                   ^^^^^^^^^^^^
 //│ ╟── The overridden member 'pair' is defined here
@@ -181,7 +181,7 @@ private abstract class AbstractLayout() with
   fun pick(value?: Any): Any
 private abstract class AbstractNarrowing() extends AbstractLayout() with
   override fun pick(value: Any): Any
-//│ ╔══[COMPILATION ERROR] Overriding member 'pick' requires at least 1 argument, but the overridden member permits 0
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' requires at least 1 argument, but the declared parameter list permits 0
 //│ ║  l.+4: 	  override fun pick(value: Any): Any
 //│ ║        	                   ^^^^^^^^^^^^
 //│ ╟── The overridden member 'pick' is defined here
@@ -198,7 +198,7 @@ declare class DeclaredBase {
 declare class DeclaredRebinding extends DeclaredBase {
   declare override fun pick(...middle: Array[Any], last: Any): Any
 }
-//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the arguments bound to inherited parameter 'first'
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the arguments bound to parameter 'first'
 //│ ║  l.+5: 	  declare override fun pick(...middle: Array[Any], last: Any): Any
 //│ ║        	                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The overridden member 'pick' is defined here
@@ -249,14 +249,53 @@ private class ParameterlessOverDeclared() extends DeclaredTypedBase with
 //│ ╙──      	              ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-private abstract class AbstractFunctionValue() with
+private abstract class AbstractMethod() with
   fun pick: (Int) -> Int
 
-// The arrows in the type of a declared or abstract member without parameter lists describe
-// the function value it holds; they are not parameter lists, so a method cannot override it.
+// The unparenthesized arrow in the type of a declared or abstract member spells out its
+// parameter list, so a method overrides it, and calls through the base pass their arguments to it.
+:noInline
+:expect 4
+declare class DeclaredMethod {
+  declare fun pick: (Int) -> Int
+}
+declare class MethodOverDeclared extends DeclaredMethod {
+  declare override fun pick(value: Int): Int
+}
+private class MethodOverAbstract() extends AbstractMethod() with
+  override fun pick(value: Int): Int = value
+private fun throughMethod(base: AbstractMethod) = base.pick(4)
+throughMethod(MethodOverAbstract())
+//│ = 4
+
+// A member holding a function value has no parameter list, so it cannot implement such a method.
+:ge
+private class ValueOverAbstractMethod() extends AbstractMethod() with
+  fun pick = (value: Int) => value * 10
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the number of parameter lists
+//│ ║  l.+2: 	  fun pick = (value: Int) => value * 10
+//│ ║        	      ^^^^
+//│ ╟── The overridden member 'pick' is defined here
+//│ ║  l.XX: 	  fun pick: (Int) -> Int
+//│ ╙──      	      ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A parenthesized function type declares a member holding a function value. A member without
+// parameter lists implements it, and calls apply that value.
+private abstract class AbstractFunctionValue() with
+  fun pick: ((Int) -> Int)
+
+:noInline
+:expect 40
+private class ValueOverAbstractValue() extends AbstractFunctionValue() with
+  fun pick = (value: Int) => value * 10
+private fun throughValue(base: AbstractFunctionValue) = base.pick(4)
+throughValue(ValueOverAbstractValue())
+//│ = 40
+
 :ge
 declare class DeclaredFunctionValue {
-  declare fun pick: (Int) -> Int
+  declare fun pick: ((Int) -> Int)
 }
 declare class MethodOverDeclaredValue extends DeclaredFunctionValue {
   declare override fun pick(value: Int): Int
@@ -267,33 +306,35 @@ private class MethodOverAbstractValue() extends AbstractFunctionValue() with
 //│ ║  l.+5: 	  declare override fun pick(value: Int): Int
 //│ ║        	                           ^^^^^^^^^^^^
 //│ ╟── The overridden member 'pick' is defined here
-//│ ║  l.+2: 	  declare fun pick: (Int) -> Int
+//│ ║  l.+2: 	  declare fun pick: ((Int) -> Int)
 //│ ╙──      	              ^^^^
 //│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the number of parameter lists
 //│ ║  l.+8: 	  override fun pick(value: Int): Int = value
 //│ ║        	                   ^^^^^^^^^^^^
 //│ ╟── The overridden member 'pick' is defined here
-//│ ║  l.XX: 	  fun pick: (Int) -> Int
+//│ ║  l.XX: 	  fun pick: ((Int) -> Int)
 //│ ╙──      	      ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-// A member holding a function value implements such a member, and calls apply that value.
-:noInline
-:expect 40
-private class ValueOverAbstractValue() extends AbstractFunctionValue() with
-  fun pick = (value: Int) => value * 10
-private fun throughValue(base: AbstractFunctionValue) = base.pick(4)
-throughValue(ValueOverAbstractValue())
-//│ = 40
-
-// A function without parameter lists returns its whole annotated function value;
-// the arrows of that value are not parameter lists of the member itself.
-:expect 7
+// A signature that spells out a parameter list makes a method, whose body can write the list as an
+// immediate function literal. Overrides can thus write the list in either way.
+:expect [7, 8]
 private class FunctionGetter() with
   open fun get: (Int) -> Int = (value: Int) => value
 private class RenamedGetter() extends FunctionGetter() with
   override fun get: (Int) -> Int = (renamed: Int) => renamed
-RenamedGetter().get(7)
+private class WrittenGetter() extends FunctionGetter() with
+  override fun get(written: Int) = written + 1
+[RenamedGetter().get(7), WrittenGetter().get(7)]
+//│ = [7, 8]
+
+// With a parenthesized function type, the members return their whole function value.
+:expect 7
+private class FunctionValueGetter() with
+  open fun get: ((Int) -> Int) = (value: Int) => value
+private class RenamedValueGetter() extends FunctionValueGetter() with
+  override fun get: ((Int) -> Int) = (renamed: Int) => renamed
+RenamedValueGetter().get(7)
 //│ = 7
 
 
@@ -303,7 +344,7 @@ private class DropBeforeOptional() with
   open fun pick(first: Any, drop ignored: Any, last?: Any): Any = last
 private class FilledAbsentOptional() extends DropBeforeOptional() with
   override fun pick(first: Any, last?: Any): Any = last
-//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the arguments bound to inherited parameter 'last'
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the arguments bound to parameter 'last'
 //│ ║  l.+4: 	  override fun pick(first: Any, last?: Any): Any = last
 //│ ║        	                   ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The overridden member 'pick' is defined here

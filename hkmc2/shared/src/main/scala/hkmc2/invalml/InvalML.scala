@@ -681,7 +681,7 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
             ctx += sym -> rhsTy
             goStats(stats)
           case (td @ TermDefinition(k = Fun, params = ps :: Nil, body = S(body))) :: stats =>
-            typeFunDef(td, Term.Lam(ps, body))
+            typeFunDef(td, Term.Lam(ps, body)(N))
             goStats(stats)
           case (td @ TermDefinition(k = Fun, params = Nil, body = S(body))) :: stats =>
             typeFunDef(td, body)  // * may be a case expressions

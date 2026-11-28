@@ -221,9 +221,7 @@ class NewResolver:
         registerSignature(body)
       case FunTy(lhs, rhs, _) =>
         lhs match
-          case Tup(fields) => fields.foreach:
-            case Fld(_, term, _) => registerSignature(term)
-            case _ => ()
+          case Tup(fields) => fields.foreach(field => registerSignature(field.term))
           case single => registerSignature(single)
         registerSignature(rhs)
       case _ => ()
@@ -1645,25 +1643,35 @@ class NewResolver:
   private def signatureParameters(using rs: ResolutionContext) = rs.state.signatureParameters
   /** Install the implementation's parameter types before its body is elaborated. Once the body
     * is available, resolve its result using the same correspondence between method binders. */
-  def registerDefinitionSignature(symbol: TermSymbol, paramLists: Ls[ParamList], own: Ls[VarSymbol])
-      (using ResolutionContext): Unit =
+  def registerDefinitionSignature(symbol: TermSymbol, paramLists: Ls[ParamList], own: Ls[VarSymbol],
+      declared: Ls[ParamList], sign: Term, headerLoc: Opt[Loc])(using ResolutionContext): Unit =
     val checking = symbol.termDeclaration.fold(TypeSubstitution.empty): decl =>
-      val instances = instantiateMethodSignature(decl, symbol, own, signatureSite(decl), Nil, checkingBody = true)
-      registerParameterDomains(decl.writtenType.get, paramLists, instances)
-      instances
+      instantiateMethodSignature(decl, symbol, own, signatureSite(decl), Nil, checkingBody = true)
+    if symbol.termDeclaration.nonEmpty || declared.nonEmpty then
+      codegen.OverrideLayout.correspondingParameters(paramLists, declared) match
+        case Right(pairs) => pairs.foreach: (target, formal) =>
+          val domain = declaredType(typeResolution(formal.sign.get), Map.empty, positive = false)
+          signatureParameters(target.sym) = domain
+          if target.sign.isEmpty then listenTypeInstances(domain.instantiate(checking))(publishParameter(target.sym, _))
+        case Left(failure) =>
+          val hint = Option.when(paramLists.lengthIs < declared.length)(
+            msg"The body can write the missing lists as an immediate function literal. Parenthesize the result type to return a function value." -> N)
+          rctx.report(ErrorReport(
+            msg"Implementation of '${symbol.nme}' ${failure.message}" -> failure.toLoc.orElse(headerLoc) ::
+            msg"The signature is declared here" -> sign.toLoc :: hint.toList))
     symbol.whenDefined: definition =>
       if definition.k is syntax.MutVal then writtenSignature(definition).foreach: sign =>
         listenTypeInstances(sign)(publishActivated(rctx.memberVariable(symbol), _))
       definition.body.foreach: body =>
-        def check(result: DeclaredType)(using ResolutionContext): Unit =
-          listenResult(body)(value => inferTypeArguments(result.instantiate(rctx.instances), value, Nil, S(body)))
-        definition.writtenType match
-          case S(result) => check(declaredType(typeResolution(result), Map.empty))
-          case N => listenDeclaredSlot(definition, MemberSlot.Result, _.instantiate(checking))(_.foreach(check))
+        val ownResult = symbol.termDeclaration.flatMap(_ => definition.writtenType)
+        ownResult.orElse(memberSignature(definition)).foreach: result =>
+          val expected = declaredType(typeResolution(result), Map.empty)
+            .instantiate(if ownResult.nonEmpty then TypeSubstitution.empty else checking)
+          listenResult(body)(value => inferTypeArguments(expected.instantiate(rctx.instances), value, Nil, S(body)))
 
-  /** Associate the domains of a full signature with the definition's written parameters.
-    * Callers use the public domains. Unannotated parameters use them in the body's binders. */
-  private def registerParameterDomains(sign: Term, paramLists: Ls[ParamList], checking: TypeSubstitution)
+  /** Recover parameter types when importing a legacy unit. Its declaration has only the
+    * full type, and an alias can supply a callable domain after the import is resolved. */
+  private def registerLegacyParameterDomains(sign: Term, paramLists: Ls[ParamList])
       (using ResolutionContext): Unit =
     paramLists.iterator.flatMap(_.allParams).foreach: param =>
       // Aliases can supply additional callable components after this parameter is observed.
@@ -1675,7 +1683,7 @@ class NewResolver:
       resolution.publish(TypeShape.Bottom)
       val tpe = declaredType(resolution, Map.empty)
       signatureParameters(param.sym) = tpe
-      if param.sign.isEmpty then listenTypeInstances(tpe.instantiate(checking))(publishParameter(param.sym, _))
+      if param.sign.isEmpty then listenTypeInstances(tpe)(publishParameter(param.sym, _))
     matchParameterTypes(sign, paramLists): (param, component) =>
       signatureParameters.get(param.sym).get.resolution.publish(TypeShape.Combined(TypeFormula.atom(component)))
 
@@ -1684,12 +1692,24 @@ class NewResolver:
     case S(p: Param) => p.sign
     case _ => td.sign
 
-  /** The member's type in the scope of its public binders. A separate function declaration
-    * has no written value parameters, so its result retains all arrows. Its leading quantifiers
-    * are method binders and have already been opened by the caller or implementation. */
+  /** A split method imported from a legacy unit can take physical arguments from an alias.
+    * Its producer retained the full type and the implementation's lists, without a declared layout. */
+  private def importedLegacySignature(td: TermDefinition)(using ResolutionContext): Opt[Term] =
+    if td.params.isEmpty || rctx.state.isOwnedSym(td.tsym) then N
+    else td.tsym.termDeclaration.filter(_.signatureParams.isEmpty).flatMap(_.writtenType)
+
+  /** Read an imported legacy method's result after its written lists have been applied. */
+  private def listenLegacyResult(tpe: DeclaredType, lists: Ls[ParamList], view: TypeView)
+      (receive: ShapeListener[DeclaredType])(using ResolutionContext): Unit = lists match
+    case Nil => receive(tpe)
+    case _ :: rest => listenTypeViews(tpe, view):
+      case Marked(callable: CallableTypeShape, marks) =>
+        callable.result.foreach(ret => listenLegacyResult(transportType(ret, marks :: Nil), rest, view)(receive))
+      case _ => ()
+
+  /** The public result in the member's binders. Reading a field exposes its entire read type. */
   private[semantics] def memberSignature(td: TermDefinition): Opt[Term] =
-    val header = td.signatureHeader
-    if header.params.isEmpty && (td.k is syntax.Fun) then header.resultSignature else writtenSignature(td)
+    if td.k is syntax.Fun then td.resultSignature else writtenSignature(td)
 
   /** Normalize paths with ordinary value transport. An unobserved bottom instance
     * is a reusable carrier that retains scope exits, unlike self-contained shapes.
@@ -1788,10 +1808,14 @@ class NewResolver:
     * Inferred values retain their lexical endpoint until callers leave the scope.
     */
   private[semantics] def listenDefinitionResult(td: TermDefinition, instances: TypeSubstitution)(listener: Listener)(using ResolutionContext): Unit =
-    def bodyResult(listener: Listener): Unit = memberSignature(td) match
-      case S(sign) => listenSignatureResult(td, declaredType(typeResolution(sign), Map.empty).instantiate(instances), TypeView.Provided)(
-        listenTypeInstances(_)(listener))
-      case N => td.body.foreach(body => listenResult(body)(listener))
+    def bodyResult(listener: Listener): Unit =
+      val legacy = importedLegacySignature(td)
+      legacy.orElse(memberSignature(td)) match
+        case S(sign) =>
+          val result = declaredType(typeResolution(sign), Map.empty).instantiate(instances)
+          if legacy.isEmpty then listenTypeInstances(result)(listener)
+          else listenLegacyResult(result, td.params, TypeView.Provided)(listenTypeInstances(_)(listener))
+        case N => td.body.foreach(body => listenResult(body)(listener))
     td.resultWrapperAnnotation match
       case S(annotation: Annot.Async) =>
         val source = td.sign.orElse(td.body).get
@@ -1919,8 +1943,8 @@ class NewResolver:
                 val parameters = td.signatureHeader.tparams.toList.flatten.map(p => declaredParameter(p.sym)) ::: callable.tparams
                 CallableTypeShape(callable.source, callable.paramLists, callable.result,
                   if parameters.isEmpty then N else S(TypeScheme(td.tsym, parameters)), callable.supplied,
-                  S(CallableDeclaration(td, td.params, TypeSubstitution.empty)),
-                  td.resultWrapperAnnotation.map(WrappedResult(_, td.params.length)))
+                  S(CallableDeclaration(td, td.publicParams, TypeSubstitution.empty)),
+                  td.resultWrapperAnnotation.map(WrappedResult(_, td.publicParams.length)))
               case instance: InstanceShape if !isByName(td) =>
                 instanceShape(quantifiedType(instance.tpe, td.signatureHeader.typeParamSymbols))
               case _ => interface
@@ -2060,11 +2084,27 @@ class NewResolver:
           instantiated
 
   def checkAscription(body: Term, sign: Term)(using ResolutionContext): Unit =
+    constrainBy(sign, body)(listenTerm(body))
+
+  /** Constrain the values that the function body `body` returns, including those of its explicit returns,
+    * by the result type `sign` that its function declares. */
+  def checkDeclaredResult(body: Term, sign: Term)(using ResolutionContext): Unit =
+    constrainBy(sign, body)(listenResult(body))
+
+  /** Register the written type `sign` and constrain by it each value that `values` delivers to its argument.
+    * `site` is the term that produces these values, where diagnostics report them. */
+  private def constrainBy(sign: Term, site: Term)(values: Listener => Unit)(using ResolutionContext): Unit =
     val resolution = typeResolution(sign)
     sign.typeInterpretation = S(resolution)
     val expected = declaredType(resolution, Map.empty)
-    listenTerm(body): shape =>
-      inferTypeArguments(expected.instantiate(rctx.instances), shape, Nil, S(body))
+    values(shape => inferTypeArguments(expected.instantiate(rctx.instances), shape, Nil, S(site)))
+
+  /** The results that callers of the function `lam` observe: instances of its declared result type, which is
+    * an abstraction boundary as a definition's result annotation is, or the values that its body returns. */
+  private[semantics] def listenLambdaResult(lam: Lam)(listener: Listener)(using ResolutionContext): Unit =
+    lam.declaredResult match
+      case S(sign) => listenTypeInstances(sign)(listener)
+      case N => listenResult(lam.body)(listener)
 
   /** The lower endpoint is an ordinary observed value. inferTypeArguments installs
     * the edge before following either endpoint, including still-unbounded parameters.
@@ -2200,7 +2240,9 @@ class NewResolver:
                 else nominalParent(nominal).foreach(parent)
               case tuple: TupleShape => parent(tuple.runtimeParent)
               case _ => ()
-          constrainNominal(value)
+          // The ancestry traversal relates corresponding type arguments. A monomorphic target
+          // has no such constraints, including when it is one alternative of a nominal union.
+          if arguments.nonEmpty then constrainNominal(value)
         case TypeShape.Alias(_, N) => observeNamespaces
         case TypeShape.Top => ()
         case _ => value match
@@ -2256,19 +2298,18 @@ class NewResolver:
     case MemberSlot.FieldWrite(bindings) =>
       writtenSignature(td).map(t => declaredType(typeResolution(t), bindings.getOrElse(Map.empty), positive = false))
     case MemberSlot.Parameter(p) => parameterSignature(p).orElse:
-      // A legacy producer stores its full signature in the AST. Interpret its domains
-      // in the consumer using the same parameter correspondence as a local signature.
-      td.fullSignature.filter(_ => !rctx.state.isOwnedSym(td.tsym)).flatMap: full =>
-        registerParameterDomains(full, td.params, TypeSubstitution.empty)(using rctx.state.context)
+      importedLegacySignature(td).flatMap: full =>
+        registerLegacyParameterDomains(full, td.params)(using rctx.state.context)
         parameterSignature(p)
 
-  /** Read a declared slot in the requested scope. For a result, consume one arrow of a full
-    * signature per written parameter list after projecting its receiver and method arguments. */
+  /** Read the slot in the receiver and method scope where its type is needed. */
   private def listenDeclaredSlot(td: TermDefinition, slot: MemberSlot, project: DeclaredType => DeclaredType)
       (receive: ShapeListener[Opt[DeclaredType]])(using ResolutionContext): Unit =
-    slotSignature(td, slot).map(project) match
-      case S(tpe) if slot == MemberSlot.Result => listenSignatureResult(td, tpe, TypeView.Required)(r => receive(S(r)))
-      case declared => receive(declared)
+    val legacy = if slot == MemberSlot.Result then importedLegacySignature(td) else N
+    legacy match
+      case S(full) =>
+        listenLegacyResult(project(declaredType(typeResolution(full), Map.empty)), td.params, TypeView.Required)(r => receive(S(r)))
+      case N => receive(slotSignature(td, slot).map(project))
 
   /** The site that reads a member's signature independently of calls to its implementation. */
   private def signatureSite(td: TermDefinition)(using ResolutionContext): Opt[FlowSymbol] =
@@ -2338,7 +2379,7 @@ class NewResolver:
               case MemberSlot.FieldWrite(_) => fromSlot(MemberSlot.FieldWrite(nominal))
               case MemberSlot.Result => fromSlot(MemberSlot.Result)
               case MemberSlot.Parameter(p) =>
-                val source = codegen.OverrideLayout.correspondingParameters(td.params, parent.params).toOption
+                val source = codegen.OverrideLayout.correspondingParameters(td.publicParams, parent.publicParams).toOption
                   .flatMap(_.collectFirst { case (target, inherited) if target.sym is p.sym => inherited })
                 source.fold(emit(td, N))(p => fromSlot(MemberSlot.Parameter(p)))
           def inherited(lookup: MemberLookup)(using ResolutionContext): Unit =
@@ -2415,7 +2456,7 @@ class NewResolver:
                 // The override inherits the public domain in its own method scope.
                 admit(instanceShape(transportType(tpe.instantiate(checking), baseExit)))
               case N =>
-                val rest = base.params.exists(_.variadic.exists(_.param.sym is inherited.sym))
+                val rest = base.publicParams.exists(_.variadic.exists(_.param.sym is inherited.sym))
                 def foreignArgument =
                   InterfaceExposure.parameterInput(inherited, rest, inheritedExposure(base))(this)._2
                 forwardInputs(inherited.sym, slot, foreignArgument)(admit)
@@ -2557,11 +2598,24 @@ class NewResolver:
   private[semantics] def constrainFunction(expected: DeclaredType, source: TermShape, marks: Ls[Marks],
       site: Opt[Term])(using ResolutionContext): Unit =
     val ShapeParts(actual, instances, _) = shapeParts(source)
-    def arityError(expected: DeclaredType)(using ResolutionContext): Unit =
+    // `mismatched` is the location of the parameter list that does not fit `expected`. The function that
+    // writes this list can be a callback or a function that a definition returns for a parameter list
+    // written after those of its signature, so the message names neither.
+    def arityError(expected: DeclaredType, mismatched: Opt[Loc])(using ResolutionContext): Unit =
       val messages =
-        msg"Callback parameter list does not match its declared function type." -> actual.toLoc ::
+        msg"Parameter list does not match its declared function type." -> mismatched ::
         msg"The expected function type is declared here." -> expected.resolution.source.toLoc :: Nil
-      site match
+      // A use site tells where a function meets its expected type, as an argument for example. When the site
+      // is the function literal that writes the mismatched list, directly or as one of its curried lists, there
+      // is no other use to report, and `mismatched` locates the list. This is the case of a definition body
+      // checked against its signature, including the lists that `fun f(x)(y)` writes after those of the signature.
+      val function = actual.applicationHead._1 match
+        case intro: IntroShape => S(intro.trm)
+        case _ => N
+      def writes(literal: Term): Bool = function.exists(_ is literal) || (literal match
+        case Lam(_, body) => writes(body)
+        case _ => false)
+      site.filterNot(writes) match
         case S(use) => resolError(use, messages)
         case N => rctx.report(ErrorReport(messages))
     actual match
@@ -2572,7 +2626,7 @@ class NewResolver:
     val context = actual.applicationHead._2
     def results(listener: Listener)(using ResolutionContext): Unit = actual.applicationHead._1 match
       case intro: IntroShape => intro.trm match
-        case Lam(_, body) => listenResult(body)(shape => listener(instantiateShape(shape, instances)))(using rctx.withInstances(instances))
+        case lam: Lam => listenLambdaResult(lam)(shape => listener(instantiateShape(shape, instances)))(using rctx.withInstances(instances))
         case _ => ()
       case ds: DefnShape => ds.defn match
         case td: TermDefinition => listenDefinitionResult(td, instances)(shape =>
@@ -2585,7 +2639,7 @@ class NewResolver:
           case (params, _) :: tail =>
             val declared = callable.paramLists.head
             if callbackArityMismatch(Arity(params), declared) then
-              arityError(expected)
+              arityError(expected, params.toLoc.orElse(actual.toLoc))
             // Diagnostics must not disconnect parameter or result constraints.
             val allParams = params.allParams
             zipCallbackArguments(context, Arity(params), declared, callable.source, expectedContext)(
@@ -2618,7 +2672,7 @@ class NewResolver:
             val domain = givenType.paramLists.head
             val expectedDomain = wanted.paramLists.head
             if callbackArityMismatch(Arity(domain), expectedDomain) then
-              arityError(expected)
+              arityError(expected, actual.toLoc)
             val allParams = domain.allParams
             zipCallbackArguments(actualContext :: Nil, Arity(domain), expectedDomain, wanted.source, expectedContext)(
               (index, shape) => allParams(index).tpe.foreach: tpe =>
@@ -2797,20 +2851,6 @@ class NewResolver:
       zipDeclaredParameters(arity, declared): (index, tpe) =>
         listenTypeInstances(tpe)(shape => publish(index, shape.exit(marks).enter(mss)))
   
-  /** Find a member's result type before async or generator wrapping. A separate signature
-    * supplies one arrow per parameter list. Use the required view when checking a body and
-    * the provided view when observing a call. These can differ when the signature names a
-    * callable through a receiver with bounded type arguments. */
-  private[semantics] def listenSignatureResult(td: TermDefinition, signature: DeclaredType, view: TypeView)
-      (listener: ShapeListener[DeclaredType])(using ResolutionContext): Unit =
-    def loop(tpe: DeclaredType, count: Int)(using ResolutionContext): Unit =
-      if count == 0 then listener(tpe)
-      else listenTypeViews(tpe, view):
-        case Marked(callable: CallableTypeShape, marks) =>
-          callable.result.foreach(ret => loop(transportType(ret, marks :: Nil), count - 1))
-        case _ => ()
-    loop(signature, if td.fullSignature.nonEmpty then td.params.length else 0)
-
   private def tupleArrayParents(using rs: ResolutionContext) = rs.state.tupleArrayParents
   /** The Array interface for a positional layout has the union of its field shapes as its element type.
     * Eager tuples use this as their runtime parent. Lazy tuples can use its element type for indexing.
@@ -4015,7 +4055,7 @@ class NewResolver:
           softAssert(rctx.hasError(res))
       case intro: IntroShape =>
         intro.trm match
-        case Lam(_, body) => listenResult(body)(returned)
+        case lam: Lam => listenLambdaResult(lam)(returned)
         case _ =>
           softAssert(rctx.hasError(res))
       case _ =>
@@ -4989,7 +5029,7 @@ class NewResolver:
                   for
                     inherited <- target.defn if newResolution && Inheritance.isOpen(inherited)
                     overriding <- own.defn if !Inheritance.changesMemberKind(overriding, inherited)
-                    parameters <- codegen.OverrideLayout.correspondingParameters(overriding.params, inherited.params).toOption
+                    parameters <- codegen.OverrideLayout.correspondingParameters(overriding.publicParams, inherited.publicParams).toOption
                   do
                     inheritMemberSignature(inherited, overriding, parameters, marks, instances)
                     if writtenSignature(inherited).isEmpty then
@@ -5058,7 +5098,7 @@ class NewResolver:
   // convention from the signature. An ordinary parameterless function executes
   // at its reference, before any returned callable receives term arguments.
   private def isByName(td: TermDefinition): Bool =
-    (td.k is syntax.Fun) && td.params.isEmpty && Annot.declareModifierOf(td.annotations).isEmpty
+    (td.k is syntax.Fun) && td.physicalParams.isEmpty && Annot.declareModifierOf(td.annotations).isEmpty
 
   /** A separate signature quantifies the definition. A quantified result
     * annotation instead belongs to the returned value and remains unconsumed.
@@ -5135,7 +5175,7 @@ class NewResolver:
               else log(dbg"PUSH ${sh.shwDbg}")
               listener(sh)
         sym.defn match
-        case S(td: TermDefinition) if td.params.isEmpty =>
+        case S(td: TermDefinition) if td.physicalParams.isEmpty || (td.k is syntax.RecordField) =>
           log(dbg"listenTerm: td.body = ${td.body.fold("N")(_.showDbg)}")
           val callerInstances = rctx.instances
           val instances = if isByName(td) then instantiateByName(td, resSym,

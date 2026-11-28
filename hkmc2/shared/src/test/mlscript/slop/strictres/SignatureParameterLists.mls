@@ -1,0 +1,516 @@
+:.
+
+
+// *** Members declared by signatures ***
+
+// The unparenthesized arrows of a signature spell out parameter lists, including those of its result.
+// A parenthesized arrow ends the lists: `adder` takes one list and returns a function value.
+:expect [2, 12, 5]
+private abstract class Ops() with
+  fun scale: (Int) -> Int
+  fun combine: Int -> Int -> Int
+  fun adder: Int -> (Int -> Int)
+private class IntOps() extends Ops() with
+  fun scale(x) = x * 2
+  fun combine(x)(y) = x * 10 + y
+  fun adder(x) = y => x + y
+private fun useOps(ops: Ops) = [ops.scale(1), ops.combine(1)(2), ops.adder(2)(3)]
+useOps(IntOps())
+//│ = [2, 12, 5]
+
+// An override must take the lists that the signature spells out.
+:ge
+private class CurriedValues() extends Ops() with
+  fun scale(x) = x
+  fun combine(x) = y => x + y
+  fun adder(x)(y) = x + y
+//│ ╔══[COMPILATION ERROR] Overriding member 'combine' must preserve the number of parameter lists
+//│ ║  l.+3: 	  fun combine(x) = y => x + y
+//│ ║        	             ^^^
+//│ ╟── The overridden member 'combine' is defined here
+//│ ║  l.XX: 	  fun combine: Int -> Int -> Int
+//│ ╙──      	      ^^^^^^^
+//│ ╔══[COMPILATION ERROR] Overriding member 'adder' must preserve the number of parameter lists
+//│ ║  l.+4: 	  fun adder(x)(y) = x + y
+//│ ║        	           ^^^
+//│ ╟── The overridden member 'adder' is defined here
+//│ ║  l.XX: 	  fun adder: Int -> (Int -> Int)
+//│ ╙──      	      ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A quantifier spells out no parameter list.
+:expect ["a", 1]
+private abstract class Identity() with
+  fun id: [A] -> A -> A
+private class PlainIdentity() extends Identity() with
+  fun id(x) = x
+private fun useIdentity(identity: Identity) = [identity.id("a"), identity.id(1)]
+useIdentity(PlainIdentity())
+//│ = ["a", 1]
+
+// Diagnostics refer to an unlabeled parameter of a signature by its position, and to a labeled one by its label.
+:ge
+private abstract class Pair() with
+  fun pick: (Int, Int) -> Int
+  fun pickLabeled: (first: Int, second: Int) -> Int
+private class FirstOnly() extends Pair() with
+  fun pick(x) = x
+  fun pickLabeled(x) = x
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the arguments bound to parameter 2
+//│ ║  l.+5: 	  fun pick(x) = x
+//│ ║        	          ^^^
+//│ ╟── The overridden member 'pick' is defined here
+//│ ║  l.+2: 	  fun pick: (Int, Int) -> Int
+//│ ╙──      	      ^^^^
+//│ ╔══[COMPILATION ERROR] Overriding member 'pickLabeled' must preserve the arguments bound to parameter 'second'
+//│ ║  l.+6: 	  fun pickLabeled(x) = x
+//│ ║        	                 ^^^
+//│ ╟── The overridden member 'pickLabeled' is defined here
+//│ ║  l.+3: 	  fun pickLabeled: (first: Int, second: Int) -> Int
+//│ ╙──      	      ^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A handler implements an effect method that a signature declares, after which it takes the resumption.
+:effectHandlers
+:lift
+:expect 11
+private abstract class Scale with
+  fun scale: Int -> Int
+private fun scaled(effect: Scale) = effect.scale(1) + 1
+handle effect = Scale with
+  fun scale(x)(resume) = resume(x * 10)
+scaled(effect)
+//│ = 11
+
+
+// *** Bodies written as function literals ***
+
+// A body can write the lists that its signature spells out as an immediate function literal, including a
+// curried lambda, an implicit lambda, and a `case` function.
+:expect [3, 3, 7, 0, 1]
+fun add: (Int, Int) -> Int = (x, y) => x + y
+fun sum: (Int, Int) -> Int = => _ + _
+fun curried: Int -> Int -> Int = x => y => x * 2 + y
+fun sign: Int -> Int = case
+  0 then 0
+  _ then 1
+[add(1, 2), sum(1, 2), curried(3)(1), sign(0), sign(5)]
+//│ = [3, 3, 7, 0, 1]
+
+// The literal can stand on an indented line of its own, and so can each of its nested lambdas.
+:expect [2, 3, 0, 1, 3, 8]
+fun onOwnLine: Int -> Int =
+  x => x + 1
+fun nestedOnOwnLine: Int -> Int -> Int = x =>
+  y => x + y
+fun caseOnOwnLine: Int -> Int =
+  case
+    0 then 0
+    _ then 1
+fun implicitOnOwnLine: (Int, Int) -> Int =
+  => _ + _
+fun separateOnOwnLine: Int -> Int
+fun separateOnOwnLine =
+  x => x * 2
+[onOwnLine(1), nestedOnOwnLine(1)(2), caseOnOwnLine(0), caseOnOwnLine(3), implicitOnOwnLine(1, 2), separateOnOwnLine(4)]
+//│ = [2, 3, 0, 1, 3, 8]
+
+// Braces delimit the same block as indentation, so the literal can stand in braces.
+:expect [2, 3, 3, 0, 1, 8]
+fun braced: Int -> Int = { x => x + 1 }
+fun bracedImplicit: (Int, Int) -> Int = { => _ + _ }
+fun bracedCurried: Int -> Int -> Int = {
+  x => y => x + y
+}
+fun bracedCase: Int -> Int = { case
+  0 then 0
+  _ then 1
+}
+fun bracedSeparate: Int -> Int
+fun bracedSeparate = { x => x * 2 }
+[braced(1), bracedImplicit(1, 2), bracedCurried(1)(2), bracedCase(0), bracedCase(3), bracedSeparate(4)]
+//│ = [2, 3, 3, 0, 1, 8]
+
+// A parenthesized literal is an ordinary expression, which writes no list.
+:e
+fun parenthesized: Int -> Int = (x => x + 1)
+//│ ╔══[COMPILATION ERROR] Implementation of 'parenthesized' must preserve the number of parameter lists
+//│ ║  l.+1: 	fun parenthesized: Int -> Int = (x => x + 1)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The signature is declared here
+//│ ║  l.+1: 	fun parenthesized: Int -> Int = (x => x + 1)
+//│ ║        	                   ^^^^^^^^^^
+//│ ╙── The body can write the missing lists as an immediate function literal. Parenthesize the result type to return a function value.
+
+:e
+fun parenthesizedSeparate: Int -> Int
+fun parenthesizedSeparate = (x => x + 1)
+//│ ╔══[COMPILATION ERROR] Implementation of 'parenthesizedSeparate' must preserve the number of parameter lists
+//│ ║  l.+2: 	fun parenthesizedSeparate = (x => x + 1)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The signature is declared here
+//│ ║  l.+1: 	fun parenthesizedSeparate: Int -> Int
+//│ ║        	                           ^^^^^^^^^^
+//│ ╙── The body can write the missing lists as an immediate function literal. Parenthesize the result type to return a function value.
+
+// Such a literal is the body of a function value, whose type is parenthesized as well.
+:expect 2
+fun parenthesizedValue: (Int -> Int) = (x => x + 1)
+parenthesizedValue(1)
+//│ = 2
+
+// The function takes the literal's parameter list, which the signature types.
+:sir
+:siret
+fun scaled: Int -> Int = x => x * 2
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define scaled⁰ as fun scaled¹(x: Int⁰): Int⁰ { return *⁰(x, 2) }; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// So can the implementation of a separate signature, including after its written lists.
+:expect [6, 3]
+fun twice: (Int) -> Int
+fun twice = x => x * 2
+fun addTo: Int -> Int -> Int
+fun addTo(x) = y => x + y
+[twice(3), addTo(1)(2)]
+//│ = [6, 3]
+
+// A split implementation can write the parameters of its returned lambda in its header.
+// Overrides and calls through the base see the getter or the single method list in the signature.
+:expect [4, 9, 6, 12]
+type UnaryOp = Int -> Int
+private class Operations with
+  open fun getter: UnaryOp
+  fun getter(x): Int = x + 1
+  open fun add: Int -> (Int -> Int)
+  fun add(x)(y) = x + y
+private class Changed extends Operations with
+  override fun getter = x => x * 2
+  override fun add(x) = y => x * y
+private fun evaluate(o: Operations) = [o.getter(3), o.add(3)(6)]
+[evaluate(new Operations).0, evaluate(new Operations).1, evaluate(new Changed).0, (new Changed).add(3)(4)]
+//│ = [4, 9, 6, 12]
+
+// The shorthand does not give the getter a method parameter list.
+:ge
+private class WrongGetter extends Operations with
+  override fun getter(x) = x
+//│ ╔══[COMPILATION ERROR] Overriding member 'getter' must preserve the number of parameter lists
+//│ ║  l.+2: 	  override fun getter(x) = x
+//│ ║        	                     ^^^
+//│ ╟── The overridden member 'getter' is defined here
+//│ ║  l.XX: 	  open fun getter: UnaryOp
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A `return` in the body of a split implementation returns from the application of its last written list,
+// including when that list belongs to the returned lambda.
+:checkIR
+:expect [1, 2, 7, 0, 3, 5, 2]
+fun early: UnaryOp
+fun early(x) =
+  if x > 0 do return 1
+  2
+fun earlyAdd: Int -> (Int -> Int)
+fun earlyAdd(x)(y) =
+  if y > 0 do return x + y
+  0
+private class Limit(val limit: Int) with
+  fun over: Int -> (Int -> Int)
+  fun over(x)(y) =
+    if x > limit do return x
+    if y > limit do return y
+    limit
+[early(5), early(0), earlyAdd(3)(4), earlyAdd(3)(0), Limit(2).over(3)(0), Limit(2).over(0)(5), Limit(2).over(0)(0)]
+//│ = [1, 2, 7, 0, 3, 5, 2]
+
+// The returned lambda has the results of these returns.
+:sir
+:siret
+fun earlyResult: Int -> (Int -> Any)
+fun earlyResult(x)(y) =
+  if y > 0 do return "early"
+  x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define earlyResult⁰ as fun earlyResult¹(x: Int⁰): Function⁰ {
+//│   let lambda;
+//│   @private
+//│   define lambda as fun lambda⁰(y: Int⁰): Unknown {
+//│     let scrut: Bool⁰;
+//│     set scrut = >⁰(y, 0);
+//│     match scrut
+//│       true =>
+//│         return "early"
+//│       else
+//│         return x
+//│     end
+//│   };
+//│   return lambda⁰
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// A `return` in a lambda nested in that body also returns from the application of the last written list.
+// The iteration is written in MLscript: an effect cannot leave a native loop such as `Array.forEach`.
+:effectHandlers
+:lift
+:expect [3, 0]
+fun each(xs: Array[Int], f: Int -> ()) =
+  let i = 0
+  while i < xs.length do
+    f(xs.[i])
+    set i += 1
+fun firstOver: Int -> (Array[Int] -> Int)
+fun firstOver(limit)(xs) =
+  each(xs, x => if x > limit do return x)
+  0
+[firstOver(2)([1, 2, 3, 4]), firstOver(9)([1, 2, 3])]
+//│ = [3, 0]
+
+// A result annotation follows the last written list, so it declares the result of the function that takes
+// this list. The returned function has this result type.
+:sir
+:siret
+fun declared: Int -> (Int -> Num)
+fun declared(x)(y): Num =
+  if y > 0 do return x
+  y
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define declared⁰ as fun declared¹(x: Int⁰): Function⁰ {
+//│   let lambda;
+//│   @private
+//│   define lambda as fun lambda¹(y: Int⁰): Num⁰ {
+//│     let scrut: Bool⁰;
+//│     set scrut = >⁰(y, 0);
+//│     match scrut
+//│       true =>
+//│         return x
+//│       else
+//│         return y
+//│     end
+//│   };
+//│   return lambda¹
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect [1, 0, 7]
+class Declared(k: Int) with
+  fun scale: Int -> (Int -> Num)
+  fun scale(x)(y): Num =
+    if y > 0 do return k * x + y
+    y
+type Unary = Int -> Int
+fun declaredGetter: Unary
+fun declaredGetter(x): Int = x + 1
+[declared(1)(2), declared(1)(0), Declared(2).scale(3)(1)]
+//│ = [1, 0, 7]
+
+:expect 3
+declaredGetter(2)
+//│ = 3
+
+// The module modifier belongs to the result of the last written list.
+:checkIR
+:expect 9
+module Answer { val n = 9 }
+fun answer: Int -> (Int -> Answer)
+fun answer(x)(y): module Answer = Answer
+answer(1)(2).n
+//│ = 9
+
+// The values that the body returns must have the declared type, including those of explicit returns.
+:e
+fun misdeclared: Int -> (Int -> Int)
+fun misdeclared(x)(y): Int = "s"
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.+2: 	fun misdeclared(x)(y): Int = "s"
+//│ ╙──      	                             ^^^
+
+:e
+fun misreturned: Int -> (Int -> Int)
+fun misreturned(x)(y): Int =
+  if y > 0 do return "s"
+  x
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.+3: 	  if y > 0 do return "s"
+//│ ╙──      	                     ^^^
+
+:e
+fun misdeclaredInner: Int -> (Int -> (Int -> Int))
+fun misdeclaredInner(x)(y)(z): Int = "s"
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.+2: 	fun misdeclaredInner(x)(y)(z): Int = "s"
+//│ ╙──      	                                     ^^^
+
+:e
+fun misdeclaredGetter: Unary
+fun misdeclaredGetter(x): Int = "s"
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.+2: 	fun misdeclaredGetter(x): Int = "s"
+//│ ╙──      	                                ^^^
+
+// A dropped public argument remains available to a subclass implementing the full declaration.
+:expect [3, 7]
+private class Project with
+  open fun pick: (Int, drop Int) -> Int
+  fun pick(x) = x
+private class Add extends Project with
+  override fun pick(x, y) = x + y
+private fun run(p: Project) = p.pick(3, 4)
+[run(new Project), run(new Add)]
+//│ = [3, 7]
+
+// Optional and variadic parameters work as written ones do.
+:expect [[1, null], [1, 2], [1, [2, 3], "z"]]
+fun optional: (Int, Int?) -> Any = (x, y?) => [x, y]
+fun variadic: (Int, ...Array[Int], Str) -> Any = (x, ...ys, z) => [x, ys, z]
+[optional(1), optional(1, 2), variadic(1, 2, 3, "z")]
+//│ = [[1, null], [1, 2], [1, [2, 3], "z"]]
+
+// A `return` in the literal's body returns from the function.
+:expect [1, 6]
+fun pick: (Bool, Int) -> Int = (first, n) =>
+  if first do return 1
+  n + 1
+[pick(true, 5), pick(false, 5)]
+//│ = [1, 6]
+
+// An async function wraps the result of all these lists.
+:await
+:expect 4
+@annotations.async
+fun later: (Int) -> Int = x => x + 1
+later(3)
+//│ = 4
+
+// Generic definitions are methods, as when they write their parameters, so a stored reference
+// instantiates its type parameter separately on each call.
+:expect [1, 2]
+class First(val first: Int)
+class Second(val second: Int)
+private fun make[A]: A -> A = (value: A) => value
+private val shared = make
+[shared(First(1)).first, shared(Second(2)).second]
+//│ = [1, 2]
+//│ shared = fun make
+
+// The literal's parameters must agree with the signature's.
+:e
+fun mismatched: (Int, Int?) -> Int = (x, y) => x
+//│ ╔══[COMPILATION ERROR] Implementation of 'mismatched' requires at least 2 arguments, but the declared parameter list permits 1
+//│ ║  l.+1: 	fun mismatched: (Int, Int?) -> Int = (x, y) => x
+//│ ║        	                                     ^^^^^^
+//│ ╟── The signature is declared here
+//│ ║  l.+1: 	fun mismatched: (Int, Int?) -> Int = (x, y) => x
+//│ ╙──      	                ^^^^^^^^^^^^^^^^^^
+
+// Any other body must write the lists itself; a parenthesized function type declares a function value.
+:e
+fun computed: Int -> Int =
+  let offset = 1
+  x => x + offset
+//│ ╔══[COMPILATION ERROR] Implementation of 'computed' must preserve the number of parameter lists
+//│ ║  l.+1: 	fun computed: Int -> Int =
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The signature is declared here
+//│ ║  l.+1: 	fun computed: Int -> Int =
+//│ ║        	              ^^^^^^^^^^
+//│ ╙── The body can write the missing lists as an immediate function literal. Parenthesize the result type to return a function value.
+
+:e
+fun separate: (Int) -> Int
+fun separate = if true then x => x else x => x + 1
+//│ ╔══[COMPILATION ERROR] Implementation of 'separate' must preserve the number of parameter lists
+//│ ║  l.+2: 	fun separate = if true then x => x else x => x + 1
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── The signature is declared here
+//│ ║  l.+1: 	fun separate: (Int) -> Int
+//│ ║        	              ^^^^^^^^^^^^
+//│ ╙── The body can write the missing lists as an immediate function literal. Parenthesize the result type to return a function value.
+
+:expect 3
+fun computedValue: (Int -> Int) =
+  let offset = 1
+  x => x + offset
+computedValue(2)
+//│ = 3
+
+
+// *** Copied definitions ***
+
+// Compiling a pattern copies its transformation for each use, along with the definitions it contains,
+// their signatures, the parameter lists that these signatures spell out, and the result type that a
+// definition declares for the function it returns.
+:checkIR
+:noOpt
+:expect [25, 29]
+pattern Scaled = x =>
+  fun body() =
+    fun scale: (Int, Int?) -> Int = (y, z?) => y * 2
+    fun curried: [A] -> Int -> A -> Int
+    fun curried(a)(b) = a + 1
+    fun tupled: ([Int, Int]) -> Int = p => p.0
+    fun rest: (Int, ...Array[Int], Int) -> Int = (a, ...bs, c) => a + c
+    fun shorthand: Int -> (Int -> Int)
+    fun shorthand(a)(b): Int =
+      if b > 0 do return a
+      b
+    scale(x) + curried(0)("s") + tupled([0, 1]) + rest(1, 2, 3, 4) + shorthand(1)(1)
+  body()
+fun scaledTwice(x) =
+  if x is (@annotations.compile Scaled) as first then
+    if first is (@annotations.compile Scaled) as second then second else 0
+  else 0
+[scaledTwice(1), scaledTwice(2)]
+//│ = [25, 29]
+
+
+// *** Values ***
+
+// A value cannot have parameter lists, so its function type must be parenthesized.
+:e
+val inc: Int -> Int = x => x + 1
+//│ ╔══[COMPILATION ERROR] A value cannot have parameter lists
+//│ ║  l.+1: 	val inc: Int -> Int = x => x + 1
+//│ ║        	         ^^^^^^^^^^
+//│ ╙── A parenthesized function type declares a value that holds a function.
+//│ inc = fun
+
+:expect 2
+val incValue: (Int -> Int) = x => x + 1
+incValue(1)
+//│ = 2
+//│ incValue = fun
+
+
+// *** Record types ***
+
+// A record type field whose type spells out parameter lists is a method. Classes implement it with a
+// method and records with a field holding a function.
+:expect [1, 2, 3]
+type Source = { next: () -> Int, nextValue: (() -> Int) }
+private class Counter(val n: Int) with
+  fun next() = n
+  fun nextValue = () => n + 1
+private fun read(source: Source) = source.next()
+[read({ next: () => 1, nextValue: () => 0 }), read(Counter(2)), Counter(2).nextValue()]
+//│ = [1, 2, 3]
+
+// A mutable field cannot be a method; a parenthesized function type makes it hold a function value.
+:e
+type Step = { mut step: Int -> Int }
+//│ ╔══[COMPILATION ERROR] A mutable record field cannot have parameter lists
+//│ ║  l.+1: 	type Step = { mut step: Int -> Int }
+//│ ║        	                        ^^^^^^^^^^
+//│ ╙── A parenthesized function type declares a mutable record field that holds a function.
+
+:expect 6
+let counter = mut { step: (x: Int) => x + 1 }
+private fun stepped(steps: mut { step: (Int -> Int) }) =
+  set steps.step = x => x * 2
+  steps.step(3)
+stepped(counter)
+//│ = 6
+//│ counter = {step: fun}

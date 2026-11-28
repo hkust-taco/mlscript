@@ -1,0 +1,55 @@
+:.
+
+// Elements and arguments must be evaluated from left to right, including reads of a mutable variable
+// that a later element assigns.
+
+// FIXME: the calls are evaluated into temporaries first, and `n` is only read when building the array.
+:fixme
+:expect [1, 1, 2, 2]
+fun inArray() =
+  let n = 0
+  fun bump() =
+    set n = n + 1
+    n
+  [bump(), n, bump(), n]
+inArray()
+//│ ═══[RUNTIME ERROR] Expected: '[1, 1, 2, 2]', got: '[1, 2, 2, 2]'
+//│ = [1, 2, 2, 2]
+
+// FIXME: a read that precedes the call is affected too.
+:fixme
+:expect [0, 1]
+fun readFirst() =
+  let n = 0
+  fun bump() =
+    set n = n + 1
+    n
+  [n, bump()]
+readFirst()
+//│ ═══[RUNTIME ERROR] Expected: '[0, 1]', got: '[1, 1]'
+//│ = [1, 1]
+
+// FIXME: the same happens to call arguments.
+:fixme
+:expect [1, 1, 2]
+fun inCall() =
+  let n = 0
+  fun bump() =
+    set n = n + 1
+    n
+  fun triple(a, b, c) = [a, b, c]
+  triple(bump(), n, bump())
+inCall()
+//│ ═══[RUNTIME ERROR] Expected: '[1, 1, 2]', got: '[1, 2, 2]'
+//│ = [1, 2, 2]
+
+// Record literals bind their fields in order.
+:expect {a: 1, b: 1, c: 2}
+fun inRecord() =
+  let n = 0
+  fun bump() =
+    set n = n + 1
+    n
+  {a: bump(), b: n, c: bump()}
+inRecord()
+//│ = {a: 1, b: 1, c: 2}
