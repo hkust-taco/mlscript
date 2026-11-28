@@ -69,7 +69,7 @@ fun selected(n: Int, k: Str) =
 //│   let x: Int⁰, arg$Box$0$: Int⁰, b: Function⁰, Box_v: Int⁰;
 //│   set Box_v = n;
 //│   set b = selected$b_Box⁰‹(Int⁰) => (Int⁰, Int⁰, Str⁰) => Array⁰›(Box_v);
-//│   return (b‹(...Array⁰) => ?›(arg$Box$0$, x, k) as! Array⁰)
+//│   return b‹(Int⁰, Int⁰, Str⁰) => Array⁰›(arg$Box$0$, x, k)
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -107,7 +107,7 @@ fun withRest(n: Int, k: Str) =
 //│   let r: Int⁰, x: Int⁰, arg$Box$0$: Int⁰, tmp: Int⁰, b: Function⁰, Box_v: Int⁰;
 //│   set Box_v = n;
 //│   set b = withRest$b_Box⁰‹(Int⁰) => (Int⁰, Int⁰, Int⁰, Int⁰, Str⁰) => Array⁰›(Box_v);
-//│   return (b‹(...Array⁰) => ?›(arg$Box$0$, x, tmp, r, k) as! Array⁰)
+//│   return b‹(Int⁰, Int⁰, Int⁰, Int⁰, Str⁰) => Array⁰›(arg$Box$0$, x, tmp, r, k)
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -138,7 +138,7 @@ fun noFields(n: Int, s: Str) =
 //│   set Pair_a = n;
 //│   set Pair_b = s;
 //│   set p = noFields$p_Pair⁰‹(Int⁰, Str⁰) => () => Int⁰›(Pair_a, Pair_b);
-//│   return (p‹(...Array⁰) => ?›() as! Int⁰)
+//│   return p‹() => Int⁰›()
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -184,7 +184,7 @@ consume(produce(2))
 //│ @private
 //│ define consume⁰ as fun consume¹(box: Function⁰): Int⁰ {
 //│   let value: Int⁰, arg$Box$0$: Int⁰;
-//│   return (box‹(...Array⁰) => ?›(arg$Box$0$, value) as! Int⁰)
+//│   return box‹(Int⁰, Int⁰) => Int⁰›(arg$Box$0$, value)
 //│ };
 //│ set tmp = produce¹‹(Int⁰) => Function⁰›(2);
 //│ return consume¹‹(Function⁰) => Int⁰›(tmp)
@@ -208,9 +208,9 @@ pass(Box(42)).v
 //│   return box
 //│ };
 //│ set Box_v = 42;
-//│ set tmp = Box_v;
-//│ set tmp1 = pass¹‹(Int⁰) => Int⁰›(tmp);
-//│ return tmp1
+//│ set tmp1 = Box_v;
+//│ set tmp = pass¹‹(Int⁰) => Int⁰›(tmp1);
+//│ return tmp
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
@@ -296,7 +296,7 @@ isO(O)
 //│ };
 //│ @private
 //│ define isO⁰ as fun isO¹(x: Function⁰): Int⁰ {
-//│   return (x‹(...Array⁰) => ?›() as! Int⁰)
+//│   return x‹() => Int⁰›()
 //│ };
 //│ define O¹ as object O⁰;
 //│ set deforest$lam = $x_O⁰‹() => () => Int⁰›();
@@ -385,7 +385,7 @@ get(H(Box(42), 1), true)
 //│   match c
 //│     true =>
 //│       set scrut = (h.b⁶ as! Function⁰);
-//│       return (scrut‹(...Array⁰) => ?›(arg$Box$0$, v) as! Int⁰)
+//│       return scrut‹(Int⁰, Int⁰) => Int⁰›(arg$Box$0$, v)
 //│     else
 //│       return h.n⁵
 //│   end
@@ -427,7 +427,7 @@ get(idpoly(Box(42)))
 //│ @private @private
 //│ define get$get as fun get$get⁰(b: Function⁰): Int⁰ {
 //│   let v: Int⁰, arg$Box$0$: Int⁰;
-//│   return (b‹(...Array⁰) => ?›(arg$Box$0$, v) as! Int⁰)
+//│   return b‹(Int⁰, Int⁰) => Int⁰›(arg$Box$0$, v)
 //│ };
 //│ @private @private
 //│ define idpoly$idpoly as fun idpoly$idpoly⁰(x: Function⁰): Function⁰ {
@@ -460,9 +460,9 @@ get(idpoly(Box(42)))
 //│   end
 //│ };
 //│ set Box_v = 42;
-//│ set tmp1 = get$b_Box⁰‹(Int⁰) => (Int⁰, Int⁰) => Int⁰›(Box_v);
-//│ set tmp = idpoly$idpoly⁰‹(Function⁰) => Function⁰›(tmp1);
-//│ return get$get⁰‹(Function⁰) => Int⁰›(tmp)
+//│ set tmp = get$b_Box⁰‹(Int⁰) => (Int⁰, Int⁰) => Int⁰›(Box_v);
+//│ set tmp1 = idpoly$idpoly⁰‹(Function⁰) => Function⁰›(tmp);
+//│ return get$get⁰‹(Function⁰) => Int⁰›(tmp1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
@@ -480,11 +480,11 @@ get(idpoly(Box(42))) + idpoly(Box(1)).v
 //│ deforest > 	select: v
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp: Int⁰, get$b_Box, get$b_rest, get$get, tmp1: Function⁰, tmp2: Int⁰, tmp3: Function⁰, tmp4: Int⁰, idpoly$idpoly, idpoly$idpoly1, Box_v: Int⁰, Box_v1: Int⁰;
+//│ let tmp: Int⁰, get$b_Box, get$b_rest, get$get, tmp1: Int⁰, tmp2: Function⁰, tmp3: Int⁰, tmp4: Function⁰, idpoly$idpoly, idpoly$idpoly1, Box_v: Int⁰, Box_v1: Int⁰;
 //│ @private @private
 //│ define get$get as fun get$get¹(b: Function⁰): Int⁰ {
 //│   let v: Int⁰, arg$Box$0$: Int⁰;
-//│   return (b‹(...Array⁰) => ?›(arg$Box$0$, v) as! Int⁰)
+//│   return b‹(Int⁰, Int⁰) => Int⁰›(arg$Box$0$, v)
 //│ };
 //│ @private @private
 //│ define idpoly$idpoly as fun idpoly$idpoly¹(x: Function⁰): Function⁰ {
@@ -521,13 +521,13 @@ get(idpoly(Box(42))) + idpoly(Box(1)).v
 //│   end
 //│ };
 //│ set Box_v = 42;
-//│ set tmp1 = get$b_Box¹‹(Int⁰) => (Int⁰, Int⁰) => Int⁰›(Box_v);
-//│ set tmp3 = idpoly$idpoly¹‹(Function⁰) => Function⁰›(tmp1);
-//│ set tmp = get$get¹‹(Function⁰) => Int⁰›(tmp3);
+//│ set tmp2 = get$b_Box¹‹(Int⁰) => (Int⁰, Int⁰) => Int⁰›(Box_v);
+//│ set tmp4 = idpoly$idpoly¹‹(Function⁰) => Function⁰›(tmp2);
+//│ set tmp = get$get¹‹(Function⁰) => Int⁰›(tmp4);
 //│ set Box_v1 = 1;
-//│ set tmp4 = Box_v1;
-//│ set tmp2 = idpoly$idpoly²‹(Int⁰) => Int⁰›(tmp4);
-//│ return +⁰‹(?, ?) => ?›(tmp, tmp2)
+//│ set tmp3 = Box_v1;
+//│ set tmp1 = idpoly$idpoly²‹(Int⁰) => Int⁰›(tmp3);
+//│ return +⁰‹(?, ?) => ?›(tmp, tmp1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 43
 
@@ -550,7 +550,7 @@ get(idTwice(Box(42)))
 //│ @private @private
 //│ define get$get as fun get$get²(b: Function⁰): Int⁰ {
 //│   let v: Int⁰, arg$Box$0$: Int⁰;
-//│   return (b‹(...Array⁰) => ?›(arg$Box$0$, v) as! Int⁰)
+//│   return b‹(Int⁰, Int⁰) => Int⁰›(arg$Box$0$, v)
 //│ };
 //│ @private @private
 //│ define idTwice$idTwice as fun idTwice$idTwice⁰(x: Function⁰): Function⁰ {
@@ -599,9 +599,9 @@ get(idTwice(Box(42)))
 //│   end
 //│ };
 //│ set Box_v = 42;
-//│ set tmp1 = get$b_Box²‹(Int⁰) => (Int⁰, Int⁰) => Int⁰›(Box_v);
-//│ set tmp = idTwice$idTwice⁰‹(Function⁰) => Function⁰›(tmp1);
-//│ return get$get²‹(Function⁰) => Int⁰›(tmp)
+//│ set tmp = get$b_Box²‹(Int⁰) => (Int⁰, Int⁰) => Int⁰›(Box_v);
+//│ set tmp1 = idTwice$idTwice⁰‹(Function⁰) => Function⁰›(tmp);
+//│ return get$get²‹(Function⁰) => Int⁰›(tmp1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
@@ -693,12 +693,12 @@ test(false, true)
 //│ @private @private
 //│ define test_cons$cons as fun test_cons$cons⁰(x: Function⁰): Int⁰ {
 //│   let v: Int⁰, arg$Box$0$: Int⁰;
-//│   return (x‹(...Array⁰) => ?›(arg$Box$0$, v) as! Int⁰)
+//│   return x‹(Int⁰, Int⁰) => Int⁰›(arg$Box$0$, v)
 //│ };
 //│ @private @private
 //│ define test_cons$cons1 as fun test_cons$cons¹(x: Function⁰): Int⁰ {
 //│   let v: Int⁰, arg$Box$0$: Int⁰;
-//│   return (x‹(...Array⁰) => ?›(arg$Box$0$, v) as! Int⁰)
+//│   return x‹(Int⁰, Int⁰) => Int⁰›(arg$Box$0$, v)
 //│ };
 //│ @private @private
 //│ define test_g$g as fun test_g$g⁰(x: Object⁰): Object⁰ {
@@ -911,7 +911,7 @@ f(A, A)
 //│     AA⁰ =>
 //│       return f$f⁰‹(A³, Function⁰) => Int⁰›(a, undefined)
 //│     else
-//│       return (b‹(...Array⁰) => ?›() as! Int⁰)
+//│       return b‹() => Int⁰›()
 //│   end
 //│ };
 //│ @affine(1) @private
@@ -985,7 +985,7 @@ private fun f(a) = if a is A then 0 else 1
 //│ };
 //│ @private @private
 //│ define f$f as fun f$f¹(a: Function⁰): Int⁰ {
-//│   return (a‹(...Array⁰) => ?›() as! Int⁰)
+//│   return a‹() => Int⁰›()
 //│ };
 //│ @private @private
 //│ define g$g1 as fun g$g¹(c: Bool⁰): Function⁰ {
@@ -999,7 +999,7 @@ private fun f(a) = if a is A then 0 else 1
 //│ };
 //│ @private @private
 //│ define f$f1 as fun f$f²(a: Function⁰): Int⁰ {
-//│   return (a‹(...Array⁰) => ?›() as! Int⁰)
+//│   return a‹() => Int⁰›()
 //│ };
 //│ @affine(1) @private
 //│ define f$a_A as fun f$a_A⁰()(): Int⁰ {

@@ -50,7 +50,7 @@ private fun uncalled(n: Int, c: Bool): Box =
 //│   set x = $x_Box⁰‹(Int⁰) => (Int⁰, Int⁰, Int⁰) => Box¹›(Box_v);
 //│   match c
 //│     true =>
-//│       return (x‹(...Array⁰) => ?›(arg$Box$0$, v, tmp) as! Object⁰)
+//│       return x‹(Int⁰, Int⁰, Int⁰) => Object⁰›(arg$Box$0$, v, tmp)
 //│     else
 //│       return x
 //│   end
@@ -97,7 +97,7 @@ Mono.read
 //│   method read⁰ = fun read¹: Int⁰ {
 //│     let v: Int⁰, arg$Box$0$: Int⁰, scrut: Function⁰;
 //│     set scrut = Mono².this.boxed¹‹=> Function⁰›;
-//│     return (scrut‹(...Array⁰) => ?›(arg$Box$0$, v) as! Int⁰)
+//│     return scrut‹(Int⁰, Int⁰) => Int⁰›(arg$Box$0$, v)
 //│   }
 //│ };
 //│ return Mono².read¹‹=> Int⁰›
@@ -138,7 +138,7 @@ Poly.read()
 //│ define read$read as fun read$read⁰(): Int⁰ {
 //│   let v: Int⁰, arg$Box$0$: Int⁰, scrut: Function⁰;
 //│   set scrut = read_boxed$boxed⁰‹=> Function⁰›;
-//│   return (scrut‹(...Array⁰) => ?›(arg$Box$0$, v) as! Int⁰)
+//│   return scrut‹(Int⁰, Int⁰) => Int⁰›(arg$Box$0$, v)
 //│ };
 //│ @private @private
 //│ define read_boxed$boxed1 as fun read_boxed$boxed¹: Function⁰ {
@@ -174,7 +174,7 @@ Poly.read()
 //│   method read² = fun read³(): Int⁰ {
 //│     let v: Int⁰, arg$Box$0$: Int⁰, scrut: Function⁰;
 //│     set scrut = read_boxed$boxed¹‹=> Function⁰›;
-//│     return (scrut‹(...Array⁰) => ?›(arg$Box$0$, v) as! Int⁰)
+//│     return scrut‹(Int⁰, Int⁰) => Int⁰›(arg$Box$0$, v)
 //│   }
 //│ };
 //│ return read$read⁰‹() => Int⁰›()
@@ -409,7 +409,7 @@ arrived(route(true, true, 1))
 //│       block σ:
 //│         match c
 //│           true =>
-//│             return (s‹(...Array⁰) => ?›(arg$Step$0$, x, scrut) as! Function⁰)
+//│             return s‹(Int⁰, Int⁰, Bool⁰) => Function⁰›(arg$Step$0$, x, scrut)
 //│           else
 //│             return $σ_rest⁰‹() => Nothing›()
 //│         end
@@ -419,7 +419,7 @@ arrived(route(true, true, 1))
 //│ };
 //│ @private
 //│ define arrived⁰ as fun arrived¹(a: Function⁰): Int⁰ {
-//│   return (a‹(...Array⁰) => ?›() as! Int⁰)
+//│   return a‹() => Int⁰›()
 //│ };
 //│ define Away¹ as object Away⁰;
 //│ @data
@@ -499,7 +499,7 @@ nested(1)
 //│   set fv_tmp = +⁰‹(?, ?) => ?›(fv_x, 1);
 //│   set Box_v1 = fv_tmp;
 //│   set fv_b = $b_Box⁰‹(Int⁰) => (Int⁰, Int⁰) => Int⁰›(Box_v1);
-//│   return (fv_b‹(...Array⁰) => ?›(fv_arg$Box$0$1, fv_y) as! Int⁰)
+//│   return fv_b‹(Int⁰, Int⁰) => Int⁰›(fv_arg$Box$0$1, fv_y)
 //│ };
 //│ @affine(1) @private
 //│ define $b_Box as fun $b_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: Int⁰, fv_y: Int⁰): Int⁰ {
@@ -517,10 +517,10 @@ nested(1)
 //│ };
 //│ @private
 //│ define nested⁰ as fun nested¹(n: Int⁰): Int⁰ {
-//│   let x: Int⁰, y: Int⁰, arg$Box$0$: Int⁰, tmp: Int⁰, arg$Box$0$1: Int⁰, a: Function⁰, b: Function⁰, Box_v: Int⁰;
+//│   let x: Int⁰, y: Int⁰, arg$Box$0$: Int⁰, tmp: Int⁰, arg$Box$0$1: Int⁰, b: Function⁰, a: Function⁰, Box_v: Int⁰;
 //│   set Box_v = n;
 //│   set a = $a_Box⁰‹(Int⁰) => (Int⁰, Int⁰, Int⁰, Function⁰, Int⁰, Int⁰) => Int⁰›(Box_v);
-//│   return (a‹(...Array⁰) => ?›(arg$Box$0$, x, tmp, b, arg$Box$0$1, y) as! Int⁰)
+//│   return a‹(Int⁰, Int⁰, Int⁰, Function⁰, Int⁰, Int⁰) => Int⁰›(arg$Box$0$, x, tmp, b, arg$Box$0$1, y)
 //│ };
 //│ return nested¹‹(Int⁰) => Int⁰›(1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -564,7 +564,7 @@ Methods.read(3)
 //│   method read⁴ = fun read⁵(n: Int⁰): Int⁰ {
 //│     let v: Int⁰, arg$Box$0$: Int⁰, scrut: Function⁰;
 //│     set scrut = Methods².this.make¹‹(Int⁰) => Function⁰›(n);
-//│     return (scrut‹(...Array⁰) => ?›(arg$Box$0$, v) as! Int⁰)
+//│     return scrut‹(Int⁰, Int⁰) => Int⁰›(arg$Box$0$, v)
 //│   }
 //│ };
 //│ return Methods².read⁵‹(Int⁰) => Int⁰›(3)

@@ -406,6 +406,31 @@ viaConstructor()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
 
+// An instantiation that lacks its argument lists is a function with the parameter lists of the constructor
+// function, which returns an instance of the class.
+:sir
+:siret
+:expect 3
+fun viaInstantiation() =
+  let make = new Pair
+  let pair = make(1, 2)
+  pair.first + pair.second
+viaInstantiation()
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define viaInstantiation⁰ as fun viaInstantiation¹(): Int⁰ {
+//│   let make: Function⁰, pair: Pair⁰, make1;
+//│   @private
+//│   define make1 as fun make⁰(first: Int⁰, second: Int⁰): Pair⁰ {
+//│     return new Pair⁰(first, second)
+//│   };
+//│   set make = make⁰;
+//│   set pair = make‹(Int⁰, Int⁰) => Pair⁰›(1, 2);
+//│   return +⁰‹(?, ?) => ?›(pair.first⁰, pair.second⁰)
+//│ };
+//│ return viaInstantiation¹‹() => Int⁰›()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 3
+
 // The method of an object is a definition too, including through the declared type of the object.
 class Counter(val start: Int) with
   fun plus(n: Int): Int = start + n

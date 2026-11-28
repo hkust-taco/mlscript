@@ -749,21 +749,27 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case (remainingParamss, Nil) =>
         // * Eta-expand missing argument lists by creating lambdas for each remaining param list.
         // * This makes partial `new C(args...)` explicit instead of relying on the JS class curry.
+        // * Each lambda takes the types of the constructor parameters that it stands for, and returns the
+        // * next lambda or the instance, as the signature of its calls says (see `Erasure.definedSignature`).
         def etaExpand(remainingParamss: Ls[ParamList], accArgss: Ls[Ls[Arg]]): Result =
           remainingParamss match
           case Nil => buildInstantiate(accArgss)
           case ps :: rest =>
-            val freshSyms = ps.params.map(p => new VarSymbol(p.sym.id, erasedType = N, mut = false))
+            // * A class of a unit that this process did not erase has parameters without representations.
+            val freshSyms = ps.params.map: p =>
+              new VarSymbol(p.sym.id, erasedType = if p.sym.isErasureReady then p.sym.erasedType else N, mut = false)
             softTODO(ps.variadic.isEmpty, "Eta expanding rest parameters in constructor definitions is not yet supported")
-            val freshParams = (ps.params zip freshSyms).map((p, s) => Param(p.flags, s, N, p.modulefulness, p.annotations)(p.toLoc))
+            // * The fresh symbols are built from `ps.params`, so both lists have the same length.
+            val freshParams = ps.params.lazyZip(freshSyms).map((p, s) => Param(p.flags, s, N, p.modulefulness, p.annotations)(p.toLoc))
             val freshParamList = LoweredParamList(ps.flags, freshParams, N)(ps.toLoc)
             if ctorParamLists.isMls then
               val freshArgs = freshSyms.map(s => Arg(N, s.asSimpleRef))
-              Lambda(freshParamList, Return(etaExpand(rest, accArgss :+ freshArgs)))(N, Nil, loc)
+              val body = etaExpand(rest, accArgss :+ freshArgs)
+              Lambda(freshParamList, Return(body))(body.erasedType, Nil, loc)
             else
               val forwarding = OptionalParams.forwarding(freshParamList, fixedArity = true)
-              Lambda(forwarding.params,
-                Return(etaExpand(rest, accArgss :+ forwarding.args)))(N, Nil, loc)
+              val body = etaExpand(rest, accArgss :+ forwarding.args)
+              Lambda(forwarding.params, Return(body))(body.erasedType, Nil, loc)
         k(etaExpand(remainingParamss, acc.reverse))
     if ctorParamLists.lists.isEmpty then
       // * Need to specially handle no-param classes

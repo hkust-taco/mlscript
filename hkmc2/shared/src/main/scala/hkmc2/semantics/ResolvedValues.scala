@@ -269,8 +269,12 @@ private[hkmc2] object ResolvedValues:
   /** A callee that is a function definition, which includes the constructor function of a class, or a lambda,
     * of which earlier applications already supplied the first `applied` parameter lists. The application
     * supplies the next one.
+    *
+    * `instantiated` is the class that the callee instantiates when it is an instantiation with `new` that lacks
+    * argument lists, as in `new C`. `function` is then the constructor function of that class, which has the
+    * same parameter lists. The callee differs from it by its result, which is always an instance of the class.
     */
-  final class DefinedCallee(val function: TermDefinition | Lam, val applied: Int)
+  final class DefinedCallee(val function: TermDefinition | Lam, val applied: Int, val instantiated: Opt[ClassLikeDef])
 
   /** The values that an application can call. The callee is one of the alternatives that this record lists:
     * a value of one of the `declared` function types, one of the `defined` functions, a value of which
@@ -284,15 +288,16 @@ private[hkmc2] object ResolvedValues:
   final class Callees:
     private[semantics] val declared = mutable.LinkedHashMap.empty[ShapeIdentity.Key, DeclaredCallee]
     // Definitions and lambdas are compared by identity, like applications (see `applicationCallees`).
-    private val defined = mutable.LinkedHashMap.empty[(Identity[TermDefinition | Lam], Int), DefinedCallee]
+    private val defined = mutable.LinkedHashMap.empty[(Identity[TermDefinition | Lam], Int, Bool), DefinedCallee]
     private[semantics] var unknown: Bool = false
     private[semantics] val intersections = mutable.LinkedHashMap.empty[ShapeIdentity.Key, Ls[Callees]]
     def declaredCallees: Iterator[DeclaredCallee] = declared.valuesIterator
     def definedCallees: Iterator[DefinedCallee] = defined.valuesIterator
     def hasUnknownCallee: Bool = unknown
     def intersectionCallees: Iterator[Ls[Callees]] = intersections.valuesIterator
-    private[semantics] def define(function: TermDefinition | Lam, applied: Int): Unit =
-      defined.getOrElseUpdate((Identity(function), applied), new DefinedCallee(function, applied))
+    private[semantics] def define(function: TermDefinition | Lam, applied: Int, instantiated: Opt[ClassLikeDef]): Unit =
+      defined.getOrElseUpdate((Identity(function), applied, instantiated.isDefined),
+        new DefinedCallee(function, applied, instantiated))
     /** The records of the components of an intersection of `count` types, which `key` identifies. */
     private[semantics] def intersection(key: ShapeIdentity.Key, count: Int): Ls[Callees] =
       intersections.getOrElseUpdate(key, List.fill(count)(new Callees))

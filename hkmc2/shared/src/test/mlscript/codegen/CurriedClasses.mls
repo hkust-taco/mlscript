@@ -45,7 +45,7 @@ h.y
 :expect 2
 A(1)(2).y
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp1; tmp1 = globalThis.Object.freeze(new A1.class(1, 2)); return tmp1.y
+//│ let tmp; tmp = globalThis.Object.freeze(new A1.class(1, 2)); return tmp.y
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 
@@ -64,15 +64,15 @@ h.y
 :expect 5
 new A(...[4])(...[5]).y
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp4, tmp5, tmp6;
-//│ tmp4 = globalThis.Object.freeze([
+//│ let tmp2, tmp3, tmp4;
+//│ tmp2 = globalThis.Object.freeze([
 //│   4
 //│ ]);
-//│ tmp5 = globalThis.Object.freeze([
+//│ tmp3 = globalThis.Object.freeze([
 //│   5
 //│ ]);
-//│ tmp6 = globalThis.Object.freeze(new A1.class(...tmp4, ...tmp5));
-//│ return tmp6.y
+//│ tmp4 = globalThis.Object.freeze(new A1.class(...tmp2, ...tmp3));
+//│ return tmp4.y
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 5
 

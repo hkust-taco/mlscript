@@ -71,8 +71,8 @@ nested(20)
 //│   return SchemeBox_value
 //│ };
 //│ @affine(1) @private
-//│ define localMatch$box_SchemeBox as fun localMatch$box_SchemeBox⁰(SchemeBox_value: Int⁰)(fv_arg$SchemeBox$0$: Int⁰, fv_value: Int⁰): Int⁰ {
-//│   return SchemeBox_value
+//│ define localMatch$box_SchemeBox as fun localMatch$box_SchemeBox⁰()(): Int⁰ {
+//│   return undefined
 //│ };
 //│ @affine(1) @private
 //│ define nested_localMatch$box_SchemeBox1 as fun nested_localMatch$box_SchemeBox¹(SchemeBox_value: Int⁰)(fv_arg$SchemeBox$0$: Int⁰, fv_value: Int⁰): Int⁰ {
@@ -84,7 +84,7 @@ nested(20)
 //│ };
 //│ @private
 //│ define localMatch⁰ as fun localMatch¹(n: Int⁰): Int⁰ {
-//│   return localMatch$box_SchemeBox⁰‹(Int⁰) => (Int⁰, Int⁰) => Int⁰›(n)(undefined, undefined)
+//│   return localMatch$box_SchemeBox⁰‹() => () => Int⁰›()()
 //│ };
 //│ @private
 //│ define nested⁰ as fun nested¹(n: Int⁰): Int⁰ {

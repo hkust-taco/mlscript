@@ -97,7 +97,7 @@ read(Holder(Box(42), 1), true)
 //│   match choose
 //│     true =>
 //│       set scrut = (holder.box² as! Function⁰);
-//│       return (scrut‹(...Array⁰) => ?›(arg$Box$0$, value) as! Int⁰)
+//│       return scrut‹(Int⁰, Int⁰) => Int⁰›(arg$Box$0$, value)
 //│     else
 //│       return holder.other²
 //│   end

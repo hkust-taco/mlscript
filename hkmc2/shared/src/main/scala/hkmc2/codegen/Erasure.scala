@@ -192,8 +192,9 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
 
   /** The signature that a function definition or a lambda presents to an application of its value, which
     * supplies the parameter list after the `applied` first ones: the signature of the whole function without
-    * those lists. Returns `N` for a function whose signature erasure has not assigned, as in a program that
-    * this process did not erase.
+    * those lists. An instantiation that lacks argument lists has the parameter lists of the constructor function
+    * and returns an instance of its class. Returns `N` for a function whose signature erasure has not assigned,
+    * as in a program that this process did not erase.
     */
   private def definedSignature(callee: ResolvedValues.DefinedCallee): Opt[ErasedFuncSignature] =
     val whole: Opt[ErasedFuncSignature] = callee.function match
@@ -203,7 +204,9 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
         Option.when(lam.resultSlot.isErasureReady && lam.params.allParams.forall(_.sym.isErasureReady)):
           ErasedFuncSignature.Signature(LoweredParamList.erasedLayout(lam.params) :: Nil,
             ErasedResult.Direct(lam.resultSlot.erasedType))
-    whole.flatMap(_.afterLists(callee.applied))
+    whole.flatMap(_.afterLists(callee.applied)).map: signature =>
+      callee.instantiated.fold(signature): cls =>
+        ErasedFuncSignature.Signature(signature.paramLists, ErasedResult.Direct(S(nominalType(cls))))
 
   /** The alternatives of `callees`, with the signature of each declared function type and of each function
     * definition among them. */

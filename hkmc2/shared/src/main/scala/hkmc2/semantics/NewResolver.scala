@@ -3878,39 +3878,39 @@ class NewResolver:
     * whenever it is one: a function or a method with written parameter lists left to apply, including through a
     * declared interface, whose annotations can leave parameters out, a lambda, and the constructor function of
     * a class, which a class with parameters defines next to itself and which a reference to the class as a
-    * value denotes.
-    *
-    * An instantiation that lacks argument lists, as in `new C`, is a different function: lowering expands it
-    * into lambdas that instantiate the class (see `Lowering.lowerMultiInstantiate`), and it is not recorded as
-    * the constructor function.
+    * value denotes. An instantiation that lacks argument lists, as in `new C`, takes the parameter lists of that
+    * constructor function and returns an instance of the class.
     */
   private def recordCallee(callee: TermShape, callees: ResolvedValues.Callees)(using ResolutionContext): Unit =
-    def function(td: TermDefinition, remaining: Int): Unit =
+    // `remaining` is the number of parameter lists of `td` that are left to apply.
+    def function(td: TermDefinition, remaining: Int, instantiated: Opt[ClassLikeDef]): Unit =
       val applied = td.params.length - remaining
-      if (td.k is syntax.Fun) && remaining > 0 && applied >= 0 then callees.define(td, applied)
+      if (td.k is syntax.Fun) && remaining > 0 && applied >= 0 then callees.define(td, applied, instantiated)
       else callees.unknown = true
-    def instantiates(shape: TermShape): Bool = shape match
-      case MarkedShape(inner, _) => instantiates(inner)
-      case application: AppShape => instantiates(application.receiver)
-      case _: NewShape => true
-      case _ => false
+    def constructor(cls: ClassLikeDef, instantiated: Bool): Unit = cls.ctorSym.flatMap(_.defn) match
+      case S(td) => function(td, callee.unappliedParams.length, Option.when(instantiated)(cls))
+      case N => callees.unknown = true
+    def instantiation(shape: TermShape): Opt[NewShape] = shape match
+      case MarkedShape(inner, _) => instantiation(inner)
+      case application: AppShape => instantiation(application.receiver)
+      case instance: NewShape => S(instance)
+      case _ => N
     callee match
       case Marked(callable: CallableTypeShape, _) => callable.declaration match
-        case S(method) if method.remaining.nonEmpty => function(method.definition, method.remaining.length)
+        case S(method) if method.remaining.nonEmpty => function(method.definition, method.remaining.length, N)
         case _ => rctx.state.resolvedValues.observeDeclaredCallee(callees, withoutActivation(callable), this)(
           using rctx.withInstances(TypeSubstitution.empty))
-      case _ if instantiates(callee) => callees.unknown = true
-      case _ => callee.applicationHead._1 match
-        case definition: DefnShape => definition.defn match
-          case td: TermDefinition => function(td, callee.unappliedParams.length)
-          case cls: ClassDef => cls.ctorSym.flatMap(_.defn) match
-            case S(constructor) => function(constructor, callee.unappliedParams.length)
-            case N => callees.unknown = true
+      case _ => instantiation(callee) match
+        case S(instance) => constructor(ClassValueShape.definitionOf(instance.classTarget), instantiated = true)
+        case N => callee.applicationHead._1 match
+          case definition: DefnShape => definition.defn match
+            case td: TermDefinition => function(td, callee.unappliedParams.length, N)
+            case cls: ClassDef => constructor(cls, instantiated = false)
+            case _ => callees.unknown = true
+          case intro: IntroShape => intro.trm match
+            case lam: Lam if callee.unappliedParams.nonEmpty => callees.define(lam, 0, N)
+            case _ => callees.unknown = true
           case _ => callees.unknown = true
-        case intro: IntroShape => intro.trm match
-          case lam: Lam if callee.unappliedParams.nonEmpty => callees.define(lam, 0)
-          case _ => callees.unknown = true
-        case _ => callees.unknown = true
 
   private def applyValue(source: ShapeObserver.Value, args: Term, res: App, checked: Bool,
       recorded: Opt[ResolvedValues.Callees])(using ResolutionContext): Unit =

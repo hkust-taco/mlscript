@@ -307,12 +307,15 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
       params.lazyZip(types).foreach(_.erasedType = _)
   }
 
+  // the representation that the free variable `s` of an extracted body has after fusion, in instance `instId`
+  private def captureType(instId: InstantiationId, s: LocalVarSymbol): Opt[ErasedValueType] =
+    retypedVariables.get(instId -> s).orElse(retypedVariables.get(Nil -> s)).orElse(s.erasedType)
+  
   private def captureParams(instId: InstantiationId, fvs: Ls[LocalVarSymbol]): LoweredParamList =
     // Parameters replace the extracted body's free variables. Preserve mutability and use the
     // representation after fusion, so the copied body's reads and assignments remain valid.
     fvs.map: s =>
-      val tpe = retypedVariables.get(instId -> s).orElse(retypedVariables.get(Nil -> s)).orElse(s.erasedType)
-      new VarSymbol(Tree.Ident(s"fv_${s.nme}"), erasedType = tpe, mut = s.mut)
+      new VarSymbol(Tree.Ident(s"fv_${s.nme}"), erasedType = captureType(instId, s), mut = s.mut)
     .asParamList
   
   // Fusion applies only the first parameter list of each branch function. Recursive partial
@@ -357,8 +360,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
       else FunDefn(owner, sym, dSym, signature, body)(fun.configOverride, annotations)
     
     // The call replaces returns of the enclosing function, so its value goes into the result slot
-    // of that function. A call through a Function local has no result signature and always needs
-    // the coercion; a call to a continuation needs it when the continuation's result is wider.
+    // of that function. A call to a continuation needs the coercion when the continuation's result is wider.
     private def returnCall(call: Result): Block = Return(returnType.retyped.fold(call)(call.coerceTo(_, N)))
     
     // a slot that fusion retypes takes the type the flow gives it
@@ -386,6 +388,22 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     
     def callRest(id: RestFunId)(k: Result => Block): Block =
       mkCall(newRestFuns(id).force_!.asPath, restFnFvs(id))(k)
+    
+    /** Calls `closure`, which stands for the scrutinee of the fused match `dtorId`: a branch function of that
+      * match, applied to the fields of the constructor that reaches it. The call supplies the second parameter
+      * list of the branch function, which binds the free variables of the branches (see `branchParams`), so its
+      * signature has their representations.
+      *
+      * Every branch function of the match returns for the function that contains the match, whose code is
+      * being rewritten, so its values go into the result slot of that function (see `extractedFun`). The call
+      * returns values of the type of that slot.
+      */
+    private def callBranchClosure(closure: Path, dtorId: CtorDtorId)(k: Result => Block): Block =
+      val fvs = dtorBranchFnFvs(dtorId)
+      val signature = ErasedFuncSignature.Signature(
+        ErasedParamList(fvs.map(captureType(dtorId.instId, _)), N) :: Nil, ErasedResult.Direct(returnType.retyped))
+      applyArgs(fvs.map(s => Arg(N, s.asPath))): args =>
+        k(Call(closure, args :: Nil)(signature, CallMetadata.defaultMlsFun, N))
     
     override def applyResult(r: Result)(k: Result => Block): Block =
       r match
@@ -509,7 +527,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
       b match
       case m@Match(scrut, _, _, _) if solver.finalDtorSrcs.isDefinedAt(scrut.uid.concreteId) =>
         applyPath(scrut): newScrut =>
-          mkCall(newScrut, dtorBranchFnFvs(scrut.uid.concreteId))(returnCall)
+          callBranchClosure(newScrut, scrut.uid.concreteId)(returnCall)
       case Assign(l: LocalVarSymbol, r, rst) =>
         applyResult(r): r2 =>
           val l2 = applyAssignLhs(l)

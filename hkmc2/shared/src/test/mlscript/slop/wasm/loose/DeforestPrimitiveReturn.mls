@@ -6,9 +6,8 @@
 
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ import "..." as Predef; end
-// Replacing a fused match with a call must preserve its unboxed result representation.
-// The generated call currently has an unknown result, which cannot be coerced to Int32.
-:fixme
+// Replacing a fused match with a call preserves its unboxed result representation: the call of the branch
+// closure returns values of the result type of the function that contains the match.
 :expect 42
 data class Empty()
 private fun f(n: Int32): Int32 =
@@ -19,7 +18,6 @@ wasm.ref.i31(f(wasm.i32.const(42)))
 //│ deforest > Empty⁰() ->
 //│ deforest > 	match: b⁰
 //│ deforest > <<< fusing <<<
-//│ ═══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let tmp: Int32, tmp1: Int32, $b_Empty, $b_rest;
 //│ @affine(1) @private
@@ -34,7 +32,7 @@ wasm.ref.i31(f(wasm.i32.const(42)))
 //│ define f⁰ as fun f¹(n: Int32): Int32 {
 //│   let b: Function⁰;
 //│   set b = $b_Empty⁰‹() => (Int32) => Int32›();
-//│   return b‹(...Array⁰) => ?›(n)
+//│   return b‹(Int32) => Int32›(n)
 //│ };
 //│ @data
 //│ define Empty¹ as class Empty² {
@@ -347,9 +345,8 @@ instances(true)
 
 
 // Projecting the result of makeWord changes its return type from Unboxed to Int32.
-// The extracted match branch must return that word to the caller.
-// FIXME: flag has erased type Function, so calling it loses the extracted branch's Int32 result type.
-:fixme
+// The extracted match branch returns that word to the caller: the call of the branch closure `flag` has the
+// retyped result of makeWord.
 :deforest mono
 :expect 42
 private fun makeWord(n: Int32): Unboxed =
@@ -365,7 +362,6 @@ wasm.ref.i31(readWord(makeWord(wasm.i32.const(42))))
 //│ deforest > Unboxed⁰(tmp⁴) ->
 //│ deforest > 	select: p
 //│ deforest > <<< fusing <<<
-//│ ═══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let tmp: Int32, tmp1: Int32, $flag_Empty, $flag_rest, tmp2: Int32;
 //│ @affine(1) @private
@@ -382,7 +378,7 @@ wasm.ref.i31(readWord(makeWord(wasm.i32.const(42))))
 //│ define makeWord⁰ as fun makeWord¹(n: Int32): Int32 {
 //│   let tmp3: Int32, flag: Function⁰;
 //│   set flag = $flag_Empty⁰‹() => (Int32) => Int32›();
-//│   return flag‹(...Array⁰) => ?›(n)
+//│   return flag‹(Int32) => Int32›(n)
 //│ };
 //│ @private
 //│ define readWord⁰ as fun readWord¹(x: Int32): Int32 {

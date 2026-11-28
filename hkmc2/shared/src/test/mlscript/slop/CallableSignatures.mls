@@ -295,7 +295,7 @@ singleton(42)
 //│ define singleton⁰ as fun singleton¹(value: Int⁰): Int⁰ {
 //│   let empty: Function⁰;
 //│   set empty = $empty_Empty⁰‹() => (Int⁰) => Int⁰›();
-//│   return (empty‹(...Array⁰) => ?›(value) as! Int⁰)
+//│   return empty‹(Int⁰) => Int⁰›(value)
 //│ };
 //│ @data
 //│ define Empty¹ as class Empty² { constructor Empty⁰ };
@@ -340,7 +340,7 @@ continuation(42, "done")
 //│   let ignored: Int⁰, x: Int⁰, arg$Item$0$: Int⁰, tmp: Int⁰, item: Function⁰, Item_value: Int⁰;
 //│   set Item_value = value;
 //│   set item = $item_Item⁰‹(Int⁰) => (Int⁰, Int⁰, Int⁰, Int⁰, Str⁰) => Str⁰›(Item_value);
-//│   return (item‹(...Array⁰) => ?›(arg$Item$0$, x, tmp, ignored, result) as! Str⁰)
+//│   return item‹(Int⁰, Int⁰, Int⁰, Int⁰, Str⁰) => Str⁰›(arg$Item$0$, x, tmp, ignored, result)
 //│ };
 //│ @data
 //│ define Item¹ as class Item² {
