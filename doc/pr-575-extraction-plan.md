@@ -38,9 +38,8 @@ or a field that a record type does not make mutable, unless the assignment is
 marked `@unsafe`.
 E34 leaves the remaining enforcement of read-only record fields to the type
 checker. `slop/strictres/MixedRecords.mls` records the assignments that are still
-accepted: through a frozen copy of a `mut` field, through a record type that
-requires a `mut` field of a record that declares it read-only, or through a
-computed key. The full `hkmc2AllTests/test` suite passed all 1,401 tests on the
+accepted: through a record type that requires a `mut` field of a record that
+declares it read-only, or through a computed key. The full `hkmc2AllTests/test` suite passed all 1,401 tests on the
 E34 implementation commit `e1ef51bd6`.
 
 ### Related follow-ups

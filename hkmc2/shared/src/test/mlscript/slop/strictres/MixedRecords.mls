@@ -116,18 +116,32 @@ val replacedField = {mut size: 0, ...replacingSource}
 //│ replacedField = {size: undefined}
 //│ replacingSource = {size: undefined}
 
-// An assignment to the replaced field is rejected for the same reason.
+// Each read-only field points to the spread that supplied it, even when a sibling field remains writable.
 :ge
 private fun assignReplacedField() =
   let other = {item: 1}
-  let record = {mut item: 0, ...other}
+  let record = {mut item: 0, ...other, ...{label: "old"}, mut count: 0}
+  set record.count = 1
   set record.item = 2
+  set record.label = "new"
 //│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'item'
-//│ ║  l.+4: 	  set record.item = 2
+//│ ║  l.+5: 	  set record.item = 2
 //│ ║        	            ^^^^^
-//│ ╟── Defined here:
+//│ ╟── This spread copies the field as read-only:
+//│ ║  l.+3: 	  let record = {mut item: 0, ...other, ...{label: "old"}, mut count: 0}
+//│ ║        	                             ^^^^^^^^
+//│ ╟── The copied field is defined here:
 //│ ║  l.+2: 	  let other = {item: 1}
 //│ ╙──      	               ^^^^
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'label'
+//│ ║  l.+6: 	  set record.label = "new"
+//│ ║        	            ^^^^^^
+//│ ╟── This spread copies the field as read-only:
+//│ ║  l.+3: 	  let record = {mut item: 0, ...other, ...{label: "old"}, mut count: 0}
+//│ ║        	                                       ^^^^^^^^^^^^^^^^^
+//│ ╟── The copied field is defined here:
+//│ ║  l.+3: 	  let record = {mut item: 0, ...other, ...{label: "old"}, mut count: 0}
+//│ ╙──      	                                           ^^^^^
 
 
 // A record type can require a `mut` field next to a read-only one. A class instance supplies both.
@@ -178,13 +192,16 @@ overwriteFrozen()
 //│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'count'
 //│ ║  l.+5: 	  set copied.count = 2
 //│ ║        	            ^^^^^^
-//│ ╟── Defined here:
+//│ ╟── This spread copies the field as read-only:
+//│ ║  l.+3: 	  let copied = {...record}
+//│ ║        	                ^^^^^^^^^
+//│ ╟── The copied field is defined here:
 //│ ║  l.+2: 	  let record = {count: 0}
 //│ ╙──      	                ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Eager resolution rejects an assignment if any of the records that reach it leaves the field read-only.
-// The mutable copy below reuses the field of the record that it copies, so the assignment has one target.
+// The source and its mutable copy share a field declaration, but only the copy permits the write.
 :ge
 private fun bump(record) = set record.count = record.count + 1
 private fun bumpCopy() =
@@ -233,19 +250,225 @@ relabelled.label
 //│ = "changed"
 //│ relabelled = {count: 0, label: "changed"}
 
-// A copy of a `mut` field is read-only unless the copy is mutable as a whole. Both copies below reuse the
-// field of their source, and resolution does not tell them apart.
-// TODO: the type checker should reject the assignment to the first copy.
+// A record has a field of its own for each field that it copies. A copy of a `mut` field is read-only unless
+// the copying record is mutable as a whole, so the first assignment below is rejected.
+:ge
 let source = {mut count: 0}
 let frozen = {...source}
-let unfrozen = mut {...source}
 set frozen.count = 1
-set unfrozen.count = 2
-[source.count, frozen.count, unfrozen.count]
-//│ = [0, 0, 2]
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'count'
+//│ ║  l.+3: 	set frozen.count = 1
+//│ ║        	          ^^^^^^
+//│ ╟── This spread copies the field as read-only:
+//│ ║  l.+2: 	let frozen = {...source}
+//│ ║        	              ^^^^^^^^^
+//│ ╟── The copied field is defined here:
+//│ ║  l.+1: 	let source = {mut count: 0}
+//│ ╙──      	                  ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ frozen = {count: 0}
 //│ source = {count: 0}
+
+// An assignment to the copy of a mutable record does not change the record that it copies.
+:expect [0, 2]
+let original = {mut count: 0}
+let unfrozen = mut {...original}
+set unfrozen.count = 2
+[original.count, unfrozen.count]
+//│ = [0, 2]
+//│ original = {count: 0}
 //│ unfrozen = {count: 2}
+
+// An assignment to a copy is no input of the record that it copies. The selection of `a` below resolves,
+// although the copy then holds a record without that field.
+:expect 1
+private fun separateFromSource() =
+  let declared = {mut item: {a: 1}}
+  let copied = mut {...declared}
+  set copied.item = {b: 2}
+  declared.item.a
+separateFromSource()
+//│ = 1
+
+// Neither is it an input of the other copies of that record.
+:expect 1
+private fun separateCopies() =
+  let fixed = {item: {a: 1}}
+  let first = mut {...fixed}
+  let second = mut {...fixed}
+  set first.item = {b: 2}
+  second.item.a
+separateCopies()
+//│ = 1
+
+// Separate calls allocate separate copies, even when they spread the same argument.
+:expect 4
+private fun duplicate(record) = mut {...record}
+private fun writeOneCopy() =
+  let source = {item: {a: 4}}
+  let first = duplicate(source)
+  let second = duplicate(source)
+  set first.item = {b: 5}
+  second.item.a
+writeOneCopy()
+//│ = 4
+
+// A later spread of the assigned copy can read the new value.
+:e
+private fun readAssignedCopy() =
+  let source = {item: {a: 4}}
+  let first = mut {...source}
+  set first.item = {b: 5}
+  duplicate(first).item.a
+readAssignedCopy()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+5: 	  duplicate(first).item.a
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Record literal does not contain member 'a'
+//│ ║  l.+4: 	  set first.item = {b: 5}
+//│ ╙──      	                    ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A copy holds what the field that it copies held when the copy was made. A read of the copy thus also
+// returns the values assigned to that field.
+:e
+private fun copyAfterAssignment() =
+  let declared = {mut item: {a: 1}}
+  set declared.item = {b: 2}
+  let copied = {...declared}
+  copied.item.a
+copyAfterAssignment()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+5: 	  copied.item.a
+//│ ║        	  ^^^^^^^^^^^^^
+//│ ╟── Record literal does not contain member 'a'
+//│ ║  l.+3: 	  set declared.item = {b: 2}
+//│ ╙──      	                       ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Resolution does not order a copy and the assignments to the field that it copies (no flow sensitivity).
+// The copy below thus also reads the value that its source is assigned after the copy was made.
+:e
+private fun assignmentAfterCopy() =
+  let declared = {mut item: {a: 1}}
+  let copied = {...declared}
+  set declared.item = {b: 2}
+  copied.item.a
+assignmentAfterCopy()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+5: 	  copied.item.a
+//│ ║        	  ^^^^^^^^^^^^^
+//│ ╟── Record literal does not contain member 'a'
+//│ ║  l.+4: 	  set declared.item = {b: 2}
+//│ ╙──      	                       ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A spread does not convert the values that it copies, so a copy has the representation of the field that it
+// copies. That representation includes the values assigned to the copy.
+:ge
+private fun assignOtherRepresentation() =
+  let fixed = {count: input}
+  let copied = mut {...fixed}
+  set copied.count = "many"
+  copied.count
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
+//│ ║  l.+1: 	private fun assignOtherRepresentation() =
+//│ ╙──      	            ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
+//│ ║  l.+2: 	  let fixed = {count: input}
+//│ ╙──      	               ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Each call writes through the copy with its own type argument. The original field starts
+// undefined, so the conflict comes entirely from the two writes.
+:ge
+private fun writeCopy[T](record, value: T) =
+  let copy = mut {...record}
+  set copy.item = value
+private fun writeBoth() =
+  let original = {item: unsafe.undefined}
+  writeCopy[Int32](original, input)
+  writeCopy[Str](original, "many")
+writeBoth()
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
+//│ ║  l.+5: 	  let original = {item: unsafe.undefined}
+//│ ╙──      	                  ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A copy of a copy is a field of its own too. The error shows the record whose copy is assigned and the
+// field that the copies come from.
+:ge
+private fun assignNestedCopy() =
+  let declared = {mut count: 0}
+  let nested = {...mut {...declared}}
+  set nested.count = 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'count'
+//│ ║  l.+4: 	  set nested.count = 1
+//│ ║        	            ^^^^^^
+//│ ╟── This spread copies the field as read-only:
+//│ ║  l.+3: 	  let nested = {...mut {...declared}}
+//│ ║        	                ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The copied field is defined here:
+//│ ║  l.+2: 	  let declared = {mut count: 0}
+//│ ╙──      	                      ^^^^^
+
+// A record and its copy share the original field declaration, so a selection that both reach has one target under strict
+// resolution, and an assignment that both permit is accepted.
+:expect [2, 1]
+private fun count(record) = record.count
+private fun bumpMutable(record) = set record.count = record.count + 1
+private fun sameMember() =
+  let declared = {mut count: 0}
+  let copied = mut {...declared, label: "copy"}
+  bumpMutable(declared)
+  bumpMutable(copied)
+  [count(declared) + count(copied), declared.count]
+sameMember()
+//│ = [2, 1]
+
+// A wildcard open names one receiver, whose fields are then selected like `record.total`: the receiver can be
+// a record or its copy, for a read and for an assignment.
+:expect [1, 5]
+private fun openEither(flag) =
+  let declared = mut {total: 1}
+  let record = if flag then declared else mut {...declared}
+  open record.{ * }
+  let before = total
+  set total = 5
+  [before, record.total]
+openEither(false)
+//│ = [1, 5]
+
+// Each spread has its own copies, including two spreads of the same record in one literal.
+:expect [0, 1]
+private fun spreadTwice() =
+  let declared = {mut count: 0}
+  let copied = mut {...declared, ...declared}
+  set copied.count = 1
+  [declared.count, copied.count]
+spreadTwice()
+//│ = [0, 1]
+
+// An assignment through a record type that makes the field mutable reaches the copy alone, like a direct one.
+:expect 1
+private fun replaceTyped(target: {mut item: {a: Int} | {b: Int}}) = set target.item = {b: 2}
+private fun typedCopy() =
+  let declared = {item: {a: 1}}
+  let copied = mut {...declared}
+  replaceTyped(copied)
+  declared.item.a
+typedCopy()
+//│ = 1
+
+// The record that a tuple packs its named fields into is copied like a record literal.
+:expect 1
+private fun copyNamedFields() =
+  let tuple = [item: {a: 1}, other: 2]
+  let copied = mut {...tuple.0}
+  set copied.item = {b: 3}
+  tuple.0.item.a
+copyNamedFields()
+//│ = 1
 
 // An assignment through a field that a record type does not make mutable is rejected as well: the records
 // that the type describes receive no input for that field.
@@ -290,6 +513,119 @@ writeBoth(both)
 both.count
 //│ = 1
 //│ both = {count: 1, label: "count"}
+
+// The intersection has a field of its own for the two that its components declare, whichever of them makes
+// it mutable.
+:expect 2
+private fun writeBothReversed(target: {count: Int, label: Str} & {mut count: Int}) = set target.count = 2
+let reversed = mut {count: 0, label: "count"}
+writeBothReversed(reversed)
+reversed.count
+//│ = 2
+//│ reversed = {count: 2, label: "count"}
+
+// It is immutable if none of them does.
+:ge
+private fun writeNone(target: {count: Int, label: Str} & {count: Int}) = set target.count = 3
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'count'
+//│ ║  l.+1: 	private fun writeNone(target: {count: Int, label: Str} & {count: Int}) = set target.count = 3
+//│ ║        	                                                                                   ^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	private fun writeNone(target: {count: Int, label: Str} & {count: Int}) = set target.count = 3
+//│ ║        	                               ^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	private fun writeNone(target: {count: Int, label: Str} & {count: Int}) = set target.count = 3
+//│ ╙──      	                                                          ^^^^^
+
+// Reordering and regrouping the same field declarations in a union keeps the read and write unambiguous.
+:expect 9
+type Counter = {mut count: Int}
+type LabelledCounter = {count: Int, label: Str}
+type TimedCounter = {count: Int, time: Int}
+type EitherCounter = ((Counter & LabelledCounter) & TimedCounter & {left: Int})
+  | (TimedCounter & (LabelledCounter & Counter) & {right: Int})
+private fun updateCount(target: EitherCounter) =
+  set target.count = 9
+  target.count
+updateCount({mut count: 0, label: "count", time: 0, left: 1})
+//│ = 9
+
+// The components of a union can also intersect different record types. The declarations that all of them
+// share identify the field, so the read and the write have one target.
+:expect 7
+private fun updateShared(target: (Counter & LabelledCounter) | (Counter & LabelledCounter & TimedCounter)) =
+  set target.count = 7
+  target.count
+updateShared(mut {count: 0, label: "count"})
+//│ = 7
+
+// No component needs to be the intersection of the shared record types.
+:expect 8
+type OtherCounter = {count: Int, other: Int}
+private fun updateSharedPart(target: (Counter & LabelledCounter & OtherCounter)
+    | (Counter & LabelledCounter & TimedCounter)) =
+  set target.count = 8
+  target.count
+updateSharedPart(mut {count: 0, label: "count", other: 1})
+//│ = 8
+
+// An intersection shares no declaration with a record type that declares the field separately. The error
+// shows which declarations make up each candidate.
+:ge
+private fun readSeparate(target: (Counter & LabelledCounter) | {count: Int, other: Int}) = target.count
+//│ ╔══[COMPILATION ERROR] This selection of member 'count' is ambiguous, as it has multiple resolved targets
+//│ ║  l.+1: 	private fun readSeparate(target: (Counter & LabelledCounter) | {count: Int, other: Int}) = target.count
+//│ ║        	                                                                                           ^^^^^^^^^^^^
+//│ ╟── target: record field 'count'
+//│ ║  l.+1: 	private fun readSeparate(target: (Counter & LabelledCounter) | {count: Int, other: Int}) = target.count
+//│ ║        	                                                                ^^^^^
+//│ ╟── target: record field 'count'
+//│ ║  l.XX: 	type Counter = {mut count: Int}
+//│ ║        	                    ^^^^^
+//│ ╟── This target also includes this declaration.
+//│ ║  l.XX: 	type LabelledCounter = {count: Int, label: Str}
+//│ ╙──      	                        ^^^^^
+
+// Here every pair of alternatives shares a declaration. Only the complete groups distinguish the three targets.
+:ge
+private fun overlapping(target: (Counter & LabelledCounter) | (Counter & TimedCounter)
+    | (LabelledCounter & TimedCounter)) = target.count
+//│ ╔══[COMPILATION ERROR] This selection of member 'count' is ambiguous, as it has multiple resolved targets
+//│ ║  l.+2: 	    | (LabelledCounter & TimedCounter)) = target.count
+//│ ║        	                                          ^^^^^^^^^^^^
+//│ ╟── target: record field 'count'
+//│ ║  l.XX: 	type LabelledCounter = {count: Int, label: Str}
+//│ ║        	                        ^^^^^
+//│ ╟── This target also includes this declaration.
+//│ ║  l.XX: 	type TimedCounter = {count: Int, time: Int}
+//│ ║        	                     ^^^^^
+//│ ╟── target: record field 'count'
+//│ ║  l.XX: 	type Counter = {mut count: Int}
+//│ ║        	                    ^^^^^
+//│ ╟── This target also includes this declaration.
+//│ ║  l.XX: 	type TimedCounter = {count: Int, time: Int}
+//│ ║        	                     ^^^^^
+//│ ╟── target: record field 'count'
+//│ ║  l.XX: 	type Counter = {mut count: Int}
+//│ ║        	                    ^^^^^
+//│ ╟── This target also includes this declaration.
+//│ ║  l.XX: 	type LabelledCounter = {count: Int, label: Str}
+//│ ╙──      	                        ^^^^^
+
+// The assignment is rejected if a component of the union has the field immutable, like for a union of
+// record types without intersections.
+:ge
+private fun writeShared(target: (LabelledCounter & TimedCounter) | (Counter & LabelledCounter & TimedCounter)) =
+  set target.count = 7
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'count'
+//│ ║  l.+2: 	  set target.count = 7
+//│ ║        	            ^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.XX: 	type LabelledCounter = {count: Int, label: Str}
+//│ ║        	                        ^^^^^
+//│ ╟── Defined here:
+//│ ║  l.XX: 	type TimedCounter = {count: Int, time: Int}
+//│ ╙──      	                     ^^^^^
 
 // A record type that requires a `mut` field is not checked against the records that reach it. A union
 // constrains a record against each of its components, and the record below is a valid value of the union.

@@ -67,6 +67,22 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
     */
   val inheritedParameters: Map[VarSymbol, Ls[Param]] = edges.flatMap(_.parameters).toList.groupMap(_._1.sym)(_._2)
   
+  /** The local implementations of each virtual member with compatible parameter lists. */
+  val overridingMembers: Map[TermSymbol, Ls[TermDefinition]] =
+    edges.filter(edge => Inheritance.isOpen(edge.inherited)).toList.groupMap(_.inherited.tsym)(_.overriding)
+
+  /** The parameters whose direct calls contribute values to an unannotated inherited parameter.
+    * A written parameter type fixes its own representation, and a rest parameter packs its arguments into an array. */
+  val overridingParameters: Map[VarSymbol, Ls[VarSymbol]] =
+    def unannotated(p: Param): Bool =
+      val state = p.sym.getState.newResolverState
+      p.sign.isEmpty && state.signatureParameters.get(p.sym)(using state.context).isEmpty
+    edges.filter(edge => Inheritance.isOpen(edge.inherited)).flatMap: edge =>
+      edge.parameters.collect:
+        case (actual, base) if unannotated(actual) && unannotated(base)
+          && !edge.inherited.params.exists(_.variadic.exists(_.param.sym is base.sym)) => base.sym -> actual.sym
+    .toList.groupMap(_._1)(_._2)
+
   /** Reports overridable members that [[InterfaceExposure]] found reachable from this compilation unit's
     * exports, in classes and objects that other units may extend, when their signatures leave a parameter
     * or the result unspecified. Overrides in other units inherit these members' representations, which

@@ -190,8 +190,8 @@ fun ambiguous(a: Public | Other) = set a.value = 1
 //│ ║  l.+2: 	fun ambiguous(a: Public | Other) = set a.value = 1
 //│ ║        	                                        ^^^^^^
 //│ ╟── Defined here:
-//│ ║  l.+1: 	class Other(val value)
-//│ ╙──      	                ^^^^^
+//│ ║  l.XX: 	class Public(val value)
+//│ ╙──      	                 ^^^^^
 
 
 // One candidate that permits the write suffices.

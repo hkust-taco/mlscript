@@ -679,48 +679,85 @@ sealed trait Statement extends StatementImpl
 
 final case class LetDecl(sym: LocalVarSymbol | TermSymbol, annotations: Ls[Annot])(val toLoc: Opt[Loc]) extends Statement
 
-/** A field in a record literal or structural record type. Its member symbol identifies the
+/** A field of a record literal or of a structural record type. Its member symbol identifies the
   * property independently of local bindings in its initializer and survives cloning. A computed
-  * field can be selected statically once its key is known. The `mut` flag marks a field declared
-  * writable independently of its enclosing record.
+  * field can be selected statically once its key is known. The `mut` flag tells whether the field is
+  * written with `mut`. Whether it can be assigned also depends on its record: see `tsym.mutable`.
+  * Resolution also creates the fields that a record or a record type derives from others
+  * (see RecordFieldSymbol). Such a field is no statement of any record literal.
   */
 final case class RcdField(field: Term, rhs: Term, sym: BlockMemberSymbol)(val mut: Bool, val key: Opt[MemberKey]) extends Statement, AutoLocated:
   // Fresh fields have a completed member definition. Lowering clones reuse its symbols.
-  val tsym: TermSymbol = sym.tsym.get
-  require((tsym.k is RecordField) && tsym.owner.isEmpty && tsym.defn.exists(_.sym is sym))
+  val tsym: RecordFieldSymbol = sym.tsym match
+    case S(tsym: RecordFieldSymbol) => tsym
+    case _ => lastWords(s"Record field '${sym.nme}' has no field symbol")
+  require(tsym.owner.isEmpty && tsym.defn.exists(_.sym is sym))
   field match
     case Term.Lit(Tree.StrLit(name)) => require(sym.nme == name)
     case _ => ()
 
 object RcdField:
-  /** Construct a generated value field whose symbol does not participate in source erasure. */
+  /** Construct a generated value field of an immutable record, whose symbol does not participate in source erasure. */
   def apply(field: Term, rhs: Term)(using State): RcdField =
-    make(field, rhs, signature = N, initializer = S(rhs), source = false, mut = false, symbol = N)
-  def source(field: Term, rhs: Term, mut: Bool)(using State): RcdField =
-    make(field, rhs, signature = N, initializer = S(rhs), source = true, mut = mut, symbol = N)
+    make(field, rhs, signature = N, initializer = S(rhs), source = false, mut = false, mutable = false, symbol = N)
+  /** Construct a field that a record literal declares with the value `rhs`. It is written with `mut` if `mut`,
+    * and its record is written with `mut` if `mutableRecord`. */
+  def source(field: Term, rhs: Term, mut: Bool, mutableRecord: Bool)(using State): RcdField =
+    make(field, rhs, signature = N, initializer = S(rhs), source = true, mut = mut, mutable = mut || mutableRecord, symbol = N)
   /** Declare a structural field with the given type or bounds. Its term symbol carries the
-    * read type for erasure. The field retains the written bounds for reads and assignments. */
-  def signature(field: Term, bounds: Term, mut: Bool, symbol: Opt[SymbolKey])(using State, Ctx): RcdField =
+    * read type for erasure. The field retains the written bounds for reads and assignments.
+    * `mut` and `mutableRecord` are those of `source`. */
+  def signature(field: Term, bounds: Term, mut: Bool, mutableRecord: Bool, symbol: Opt[SymbolKey])(using State, Ctx): RcdField =
     val readType = bounds match
       case Term.WildcardTy(_, output) =>
         output.getOrElse(ctx.builtins.Any.ref(new Tree.Ident("Any").withLocOf(bounds)))
       case tpe => tpe
-    make(field, bounds, signature = S(readType), initializer = N, source = true, mut = mut, symbol = symbol)
+    make(field, bounds, signature = S(readType), initializer = N, source = true, mut = mut, mutable = mut || mutableRecord,
+      symbol = symbol)
+  /** Create the field that `spread` copies from `origin`. The field name retains its declaration site.
+    * The spread identifies the copy in the receiving record, whose mutability determines whether it can be assigned.
+    * Resolution reads its initial value through the field's `root`, so its definition has no body. */
+  def copied(origin: RcdField, mutableRecord: Bool, spread: RcdSpread)(using State): RcdField =
+    val definition = origin.tsym.defn.get
+    val tsym = derivedSymbol(origin.sym.nme, RecordFieldSymbol.Origin.Copied(origin.tsym)(spread.toLoc), mutableRecord,
+      definition.sign, definition.annotations, origin.tsym.toLoc)
+    RcdField(origin.field, origin.rhs, tsym.member)(false, origin.key)
+  /** Create the shared property of record types that declare the same runtime key. Its bounds come from
+    * all the declarations. A symbol key retains its runtime access path even if the source names differ. */
+  def mergedSymbol(key: MemberKey, declarations: Ls[RecordFieldSymbol], source: Term)(using State): RecordFieldSymbol =
+    require(declarations.sizeIs >= 2)
+    val (name, annotations) = key match
+      case name: Str => (name, Nil)
+      case key: SymbolKey => (key.name, Annot.JsSymbol(key)(key.term.toLoc) :: Nil)
+    derivedSymbol(name, RecordFieldSymbol.Origin.Merged(declarations), declarations.exists(_.mutable),
+      N, annotations, source.toLoc)
+  private def derivedSymbol(name: Str, origin: RecordFieldSymbol.Origin, mutable: Bool,
+      signature: Opt[Term], annotations: Ls[Annot], loc: Opt[Loc])(using State): RecordFieldSymbol =
+    val id = new Tree.Ident(name)
+    id.withLoc(loc)
+    val sym = new BlockMemberSymbol(name, Nil)
+    val tsym = new RecordFieldSymbol(id, mutable, origin)
+    sym.tsym = S(tsym)
+    tsym.defn = S(TermDefinition(RecordField, sym, tsym, Nil, N, signature, N, TermDefFlags.empty,
+      Modulefulness.none, annotations, N)(loc, loc, N))
+    sym.complete()
+    tsym
   /** Create a record property with a fresh member symbol so that selection can identify its definition.
     * The field retains `rhs`, a value expression or structural field bounds. Its member definition
     * takes its declared read type from `signature` and its body from `initializer` independently.
     * `source` indicates that source erasure will assign the symbol's representation.
+    * `mut` tells whether the field is written with `mut`, and `mutable` whether it can be assigned.
     * `symbol` supplies the property key for an `@jsSymbol` field.
     */
   private def make(field: Term, rhs: Term, signature: Opt[Term], initializer: Opt[Term],
-      source: Bool, mut: Bool, symbol: Opt[SymbolKey])(using State): RcdField =
+      source: Bool, mut: Bool, mutable: Bool, symbol: Opt[SymbolKey])(using State): RcdField =
     val name = field match
       case Term.Lit(Tree.StrLit(name)) => name
       case _ => "computed field"
     val id = new Tree.Ident(name)
     id.withLocOf(field)
     val sym = new BlockMemberSymbol(name, Nil)
-    val tsym = TermSymbol(RecordField, N, id)
+    val tsym = new RecordFieldSymbol(id, mutable, RecordFieldSymbol.Origin.Declared)
     // Source erasure skips symbols whose erasure is already initialized. Fields outside
     // that pass need an initialized, unknown representation before consumers can query it.
     if !source then tsym.initializeErasure(N)

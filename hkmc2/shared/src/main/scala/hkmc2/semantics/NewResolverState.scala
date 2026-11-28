@@ -69,7 +69,9 @@ object NewResolverState:
 final class NewResolverState(val owner: Elaborator.State):
   import NewResolverState.{Cache, Seen}
 
-  private[hkmc2] val erasureInputs = new ErasureInputs
+  private[hkmc2] val resolvedValues = new ResolvedValues
+  private[semantics] val memberResults = mutable.Map.empty[TermSymbol, MemberResults]
+  private[semantics] val discoveredFields = new DiscoveredFields
   val context: ResolutionContext = new ResolutionContext(this, N, N, TypeSubstitution.empty)
   def isOwnedSym(symbol: Symbol): Bool = symbol.getState is owner
   private[semantics] val contexts = mutable.Map.empty[(ResolutionContext, TypeSubstitution), ResolutionContext]
@@ -316,6 +318,18 @@ final class NewResolverState(val owner: Elaborator.State):
   // through the tuple's original graph rather than allocated per spread candidate.
   val namedTupleRecords: Cache[Tup | CtxTup, Rcd] =
     new Cache(_.namedTupleRecords, identity)
+  // A record has a field of its own for each field that it copies from a record that it spreads, and an
+  // intersection of record types has one for two fields that its components declare under the same key
+  // (see RecordFieldSymbol). Like named tuple fields, they have stable property identities, shared with
+  // consumers through the original graph of the record literal or record type that has them.
+  val copiedFields: Cache[(Rcd, RcdSpread, RecordFieldSymbol), RcdField] =
+    new Cache(_.copiedFields, identity)
+  val mergedFields: Cache[Set[RecordFieldSymbol], RecordFieldSymbol] =
+    new Cache(_.mergedFields, identity)
+  // The target of a selection that reads one of several fields that are the same member (see
+  // RecordFieldAlternativesSymbol). The set of these fields identifies it.
+  val alternativeFields: Cache[Set[RecordFieldSymbol], RecordFieldAlternativesSymbol] =
+    new Cache(_.alternativeFields, identity)
   val aggregateProducers: Seen[Tup | CtxTup | Rcd] =
     new Seen(_.aggregateProducers)
   // Whether a binder is supplied is fixed by its authoritative syntactic site.
@@ -725,6 +739,30 @@ final class ResolutionContext private[semantics] (
     canonical(key._1, _.tupleShapes, key)(shapeView(key._3)(make))
   def canonicalRecord(key: (Term.Rcd, Ls[RecordShape.Element], TypeSubstitution))(make: => RecordShape): RecordShape =
     canonical(key._1, _.recordShapes, key)(shapeView(key._3)(make))
+  /** The field that the record literal `record` has for its copy of `origin`, a field of a record that it
+    * spreads (see RcdField.copied). The unit that first looks the copy up creates it in its own tables, unless
+    * the unit of `record` already has it: a completed unit gets no new symbol.
+    */
+  def copiedField(record: Term.Rcd, spread: RcdSpread, origin: RcdField): RcdField =
+    canonical(record, _.copiedFields, (record, spread, origin.tsym)):
+      val copy = RcdField.copied(origin, record.mut, spread)(using owner)
+      // A copied field's declaration is read in the scope where its original was written.
+      definitionBindersOf(origin.tsym).foreach(state.lexicalTypeBinders.update(copy.tsym, _)(using state.context))
+      if copy.tsym.mutable then state.discoveredFields.add(copy.tsym)(using state.context)
+      copy
+  /** The property denoted by `key` in a structural record view. Intersections with the same declarations
+    * denote the same property regardless of their order or grouping. */
+  def recordTypeField(source: Term, key: MemberKey, fields: Vector[RcdField]): RecordFieldSymbol =
+    if fields.sizeIs == 1 then fields.head.tsym else
+      val declarations = fields.iterator.map(_.tsym).toList
+      canonical(source, _.mergedFields, declarations.toSet)(RcdField.mergedSymbol(key, declarations, source)(using owner))
+  /** The target of a selection whose receiver has one of `fields`, several fields that are the same member
+    * (see RecordFieldAlternativesSymbol). The set of these fields identifies it.
+    * Lowering asks for it once resolution is complete, and the unit that lowers the selection keeps it:
+    * the fields can come from several units.
+    */
+  def alternativeField(fields: Ls[RecordFieldSymbol]): RecordFieldAlternativesSymbol =
+    canonical(null, _.alternativeFields, fields.toSet)(new RecordFieldAlternativesSymbol(fields)(using owner))
   def canonicalInstance(tpe: DeclaredType)(make: => InstanceShape): InstanceShape =
     canonical(tpe.resolution, _.instanceShapes, tpe)(shapeView(tpe.instances)(make))
   def spreadFlow(spread: Term)(make: => IterationFlow): IterationFlow =
@@ -918,6 +956,46 @@ private[semantics] enum NamespaceWitness:
   def toLoc: Opt[Loc] = this match
     case Written(tpe) => tpe.toLoc
     case Instance(cls, site) => site.orElse(cls.headerLoc)
+
+/** Reports the named-tuple properties and writable spread copies created while resolving one block.
+  * These fields have no declaration in the written block. Some exist before source-value observation
+  * starts, and exposing an exported value can create more. Each needs observation in its declaring
+  * scope before resolution finishes; erasure later needs the field symbols belonging to this block. */
+private[semantics] final class DiscoveredFields:
+  private val entries = mutable.ArrayBuffer.empty[(RecordFieldSymbol, ResolutionContext)]
+  private var observer: Opt[(RecordFieldSymbol, ResolutionContext) => Unit] = N
+
+  def add(field: RecordFieldSymbol)(using scope: ResolutionContext): Unit =
+    // One declaration covers every invocation, including when a generic caller first discovers it.
+    val declaration = scope.withInstances(TypeSubstitution.empty)
+    // Both producers report a freshly allocated symbol on a lookup miss.
+    entries += field -> declaration
+    observer.foreach(_(field, declaration))
+
+  /** Visit existing fields and those discovered during `resolve`, returning their symbols in discovery order. */
+  def collect(visit: (RecordFieldSymbol, ResolutionContext) => Unit)(resolve: => Unit): Ls[RecordFieldSymbol] =
+    require(observer.isEmpty, "Field discovery already has an observer for this block")
+    observer = S(visit)
+    try
+      // Visiting an entry can create another field. add delivers it immediately, so replay only the initial range.
+      (0 until entries.size).foreach: i =>
+        val (field, scope) = entries(i)
+        visit(field, scope)
+      resolve
+      entries.iterator.map(_._1).toList
+    finally
+      observer = N
+      entries.clear()
+
+/** Values that a virtual member can return, retaining the implementation that returned each value
+  * so interface exposure can follow it in its defining scope. */
+private[semantics] final case class MemberResult(member: TermDefinition, value: TermShape)
+private[semantics] object MemberResult:
+  given CandidateKey[MemberResult] with
+    def apply(result: MemberResult)(using ResolutionContext): Any = (result.member.tsym, ShapeIdentity.key(result.value))
+
+private[semantics] final class MemberResults extends Host[MemberResult]:
+  def showDbg(using DebugPrinter): Str = "override results"
 
 private[semantics] final class TermShapeHost extends Host[TermShape]:
   def showDbg(using DebugPrinter): Str = "instance views"

@@ -145,10 +145,9 @@ mutableRecord.answer
 //│ mutableRecord = {answer: 20}
 
 // Reading a mutable field returns the values assigned to it, but also its initializer, as resolution is not
-// flow-sensitive. Since `changing` is exposed, other compilation units can also assign values of unknown shape.
-// TODO: The initializer must not determine static targets after an assignment
-// (even if another receiver has that member).
-:fixme
+// flow-sensitive (by design, see doc/new-resolution-design.md). The selection is thus rightly rejected for
+// the initializer. Since `changing` is exposed, other compilation units can also assign values of unknown shape.
+:e
 let changing = mut {value: {before: 0}}
 set changing.value = {after: 21}
 changing.value.after
@@ -252,6 +251,20 @@ choose(true).answer
 //│ ╙──      	                                 ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
+// One spread can copy either declaration. The error identifies both original fields.
+:e
+{...choose(true)}.answer
+//│ ╔══[COMPILATION ERROR] This selection of member 'answer' is ambiguous, as it has multiple resolved targets
+//│ ║  l.+1: 	{...choose(true)}.answer
+//│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── target: record field 'answer'
+//│ ║  l.XX: 	fun choose(flag) = if flag then {answer: 1} else {answer: 2}
+//│ ║        	                                                  ^^^^^^
+//│ ╟── target: record field 'answer'
+//│ ║  l.XX: 	fun choose(flag) = if flag then {answer: 1} else {answer: 2}
+//│ ╙──      	                                 ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
 // Recursive spreads must converge even as their candidate graph grows.
 // TODO: Resolve fields through widened recursive spreads.
 :fixme
@@ -350,9 +363,9 @@ set mutableCopy.value = 32
 //│ stableRecord = {value: 31}
 
 // The unchanged stableNested.value.before must remain resolvable. Reading mutableNested.value returns the value
-// assigned to it, but also the initializer of the field it copies, as resolution is not flow-sensitive.
-// TODO: Do not assume that mutableNested.value still contains `before` after the assignment.
-:fixme
+// assigned to it, but also the initializer of the field it copies, as resolution is not flow-sensitive
+// (by design, see doc/new-resolution-design.md). The selection of `after` is thus rightly rejected.
+:e
 let stableNested = {value: {before: 33}}
 let mutableNested = mut {...stableNested}
 set mutableNested.value = {after: 34}
@@ -367,6 +380,9 @@ set mutableNested.value = {after: 34}
 //│ ╟── Field 'value' admits assigned values of unknown shape.
 //│ ║  l.+1: 	let stableNested = {value: {before: 33}}
 //│ ║        	                    ^^^^^
+//│ ╟── This spread creates a writable copy of the field.
+//│ ║  l.+2: 	let mutableNested = mut {...stableNested}
+//│ ║        	                         ^^^^^^^^^^^^^^^
 //│ ╟── This value is exposed by this compilation unit.
 //│ ║  l.+2: 	let mutableNested = mut {...stableNested}
 //│ ╙──      	                            ^^^^^^^^^^^^
@@ -374,29 +390,30 @@ set mutableNested.value = {after: 34}
 //│ mutableNested = {value: {after: 34}}
 //│ stableNested = {value: {before: 33}}
 
-// Both opened records define `shared`, so the reference is ambiguous. The error
-// must point to each field definition and the corresponding open statement.
+// Both opened records have a `shared` field. Locate each declaration and the corresponding open,
+// including when an opened record copies its field from another record.
 :e
 fun ambiguousRecordOpen() =
-  let firstRecord = {shared: 1}
+  let original = {shared: 1}
+  let firstRecord = {...original}
   let secondRecord = {shared: 2}
   open firstRecord.{ * }
   open secondRecord.{ * }
   shared
 ambiguousRecordOpen()
 //│ ╔══[COMPILATION ERROR] Wildcard-open reference 'shared' is ambiguous
-//│ ║  l.+6: 	  shared
+//│ ║  l.+7: 	  shared
 //│ ║        	  ^^^^^^
 //│ ╟── candidate: record field 'shared' defined here
-//│ ║  l.+2: 	  let firstRecord = {shared: 1}
-//│ ║        	                     ^^^^^^
+//│ ║  l.+2: 	  let original = {shared: 1}
+//│ ║        	                  ^^^^^^
 //│ ╟── Opened here
-//│ ║  l.+4: 	  open firstRecord.{ * }
+//│ ║  l.+5: 	  open firstRecord.{ * }
 //│ ║        	       ^^^^^^^^^^^
 //│ ╟── candidate: record field 'shared' defined here
-//│ ║  l.+3: 	  let secondRecord = {shared: 2}
+//│ ║  l.+4: 	  let secondRecord = {shared: 2}
 //│ ║        	                      ^^^^^^
 //│ ╟── Opened here
-//│ ║  l.+5: 	  open secondRecord.{ * }
+//│ ║  l.+6: 	  open secondRecord.{ * }
 //│ ╙──      	       ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

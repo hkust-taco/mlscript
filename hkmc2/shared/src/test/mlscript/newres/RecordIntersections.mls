@@ -30,9 +30,15 @@ fun missing(value: Choice) = value.left
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+1: 	fun missing(value: Choice) = value.left
 //│ ║        	                             ^^^^^^^^^^
-//│ ╟── Record type does not contain member 'left'
+//│ ╟── Intersection of record types does not contain member 'left'
+//│ ║  l.+1: 	fun missing(value: Choice) = value.left
+//│ ║        	                   ^^^^^^
+//│ ╟── This record type contributes to the intersection.
 //│ ║  l.XX: 	type Choice = ({left: Str} | {right: Int}) & {tag: Str, common: Int}
-//│ ╙──      	                              ^^^^^^^^^^
+//│ ║        	                              ^^^^^^^^^^
+//│ ╟── This record type contributes to the intersection.
+//│ ║  l.XX: 	type Choice = ({left: Str} | {right: Int}) & {tag: Str, common: Int}
+//│ ╙──      	                                              ^^^^^^^^^^^^^^^^^^^^^
 
 // Common fields may themselves contain unions of record intersections.
 :expect "YES"
@@ -63,8 +69,12 @@ hidden(a: 1, b: 2, extra: 3)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+1: 	fun hidden(value: A & B) = value.extra
 //│ ║        	                           ^^^^^^^^^^^
-//│ ╟── Record type does not contain member 'extra'
+//│ ╟── Intersection of record types does not contain member 'extra'
+//│ ╟── This record type contributes to the intersection.
 //│ ║  l.XX: 	type A = {a: Int}
+//│ ║        	          ^^^^^^
+//│ ╟── This record type contributes to the intersection.
+//│ ║  l.XX: 	type B = {b: Int}
 //│ ╙──      	          ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -74,6 +84,23 @@ fun opened(value: {shared: Int} & {shared: Int, extra: Bool}) =
   open value.{ * }
   shared
 opened(shared: 7, extra: true)
+//│ = 7
+
+// A single wildcard receiver has the same shared field as an explicit selection.
+type Count = {count: Int}
+type NamedCount = {count: Int, name: Str}
+type EitherCount = (Count & NamedCount & {count: Int, left: Int}) | (Count & NamedCount & {count: Int, right: Int})
+
+:expect 7
+fun readCount(value: EitherCount) = value.count
+readCount(count: 7, name: "seven", left: 0)
+//│ = 7
+
+:expect 7
+fun openCount(value: EitherCount) =
+  open value.{ * }
+  count
+openCount(count: 7, name: "seven", left: 0)
 //│ = 7
 
 // Intersection constraints infer generic fields and check callback parameters.

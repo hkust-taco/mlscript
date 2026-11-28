@@ -47,22 +47,44 @@ object Inheritance:
           (msg"Class '${parent.sym.nme}' is defined here; declare it 'open' or 'abstract' to allow external subclasses" -> parent.toLoc) :: Nil,
         source = Diagnostic.Source.Compilation))
 
-  /** An ancestor may itself be a target (one receiver overrides a member, another inherits it).
-    * Discard less-specific common ancestors, so a chain of overrides is not an ambiguity.
+  /** The member that all of `targets` denote, if there is one: the most specific definition that each of
+    * them is, overrides, or derives from. An ancestor may itself be a target (one receiver overrides a
+    * member, another inherits it). Discard less-specific common ancestors, so a chain of overrides is
+    * not an ambiguity.
+    *
+    * Record fields are the same member if they derive from a common declaration: a field and its copies,
+    * or the fields of intersections that share a record type, as in `(A & B) | (A & C)`. A field and its
+    * copies hold the same values in the same representation, so the field stands for them. Other fields
+    * can differ in representation from the declarations that they share: if `A` declares `item: Any` and
+    * `B` and `C` declare `item: Int32`, both intersections store an `Int32`, which the declaration of `A`
+    * alone does not tell. Their member is then the symbol that stands for one of these targets, whose
+    * representation is the join of theirs (see RecordFieldAlternativesSymbol).
     */
-  def commonMember(targets: Ls[DefinitionSymbol[?]])(using Erasure): Opt[DefinitionSymbol[?]] =
+  def commonMember(targets: Ls[DefinitionSymbol[?]])(using Erasure, Elaborator.State): Opt[DefinitionSymbol[?]] =
     def ancestors(sym: DefinitionSymbol[?]): Set[DefinitionSymbol[?]] =
       val seen = mutable.Set.empty[DefinitionSymbol[?]]
       def visit(current: DefinitionSymbol[?]): Unit = if seen.add(current) then
         current.overriddenMembers.foreach(visit)
+        // A record field that resolution derives from others is the same member as its origins: a record
+        // and its copy, or an intersection and its components, share them (see RecordFieldSymbol).
+        current match
+          case field: RecordFieldSymbol => field.origins.foreach(visit)
+          case _ => ()
       visit(sym)
       seen.toSet
     targets.distinct match
       case Nil => N
       case target :: Nil => S(target)
-      case first :: rest =>
+      case distinct @ (first :: rest) =>
         val common = rest.foldLeft(ancestors(first))((acc, sym) => acc intersect ancestors(sym))
-        common.filterNot(base => common.exists(other => (other isnt base) && ancestors(other)(base))).toList match
+        val fields = distinct.collect { case field: RecordFieldSymbol => field.root }
+        if common.isEmpty then N
+        else if fields.nonEmpty then
+          assert(fields.sizeCompare(distinct) == 0, "Record fields only share ancestors with other record fields")
+          fields.distinct match
+            case field :: Nil => S(field)
+            case alternatives => S(summon[Elaborator.State].newResolverState.context.alternativeField(alternatives))
+        else common.filterNot(base => common.exists(other => (other isnt base) && ancestors(other)(base))).toList match
           case target :: Nil => S(target)
           case _ => N
 

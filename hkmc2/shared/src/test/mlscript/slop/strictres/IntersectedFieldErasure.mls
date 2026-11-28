@@ -1,0 +1,201 @@
+:.
+
+class Parent
+class Child extends Parent
+type Wide = {item: Parent}
+type Narrow = {item: Child}
+
+// Reading either spelling of the intersection already produces a Child.
+:sir
+:siret
+fun wideFirst(r: Wide & Narrow): Child = r.item
+fun narrowFirst(r: Narrow & Wide): Child = r.item
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define wideFirst⁰ as fun wideFirst¹(r: Unknown): Child⁰ {
+//│   return r.item⁰
+//│ };
+//│ define narrowFirst⁰ as fun narrowFirst¹(r: Unknown): Child⁰ { return r.item⁰ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// Distinct unboxed representations have no common value. Reading this field in an unreachable
+// function body must not require a conversion from either primitive to Str.
+fun disjoint(r: {item: Int32} & {item: Int64}): Str = r.item
+fun disjointReversed(r: {item: Int64} & {item: Int32}): Str = r.item
+
+// The parameter, the result inferred from returning it, and the written field type all erase to Child.
+:sir
+:siret
+type Both = Parent & Child
+fun annotated(value: Child & Parent): Both = value
+fun inferred(value: Both) = value
+fun writtenField(r: {item: Parent & Child}): Child = r.item
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define annotated⁰ as fun annotated¹(value: Child⁰): Child⁰ {
+//│   return value
+//│ };
+//│ define inferred⁰ as fun inferred¹(value: Child⁰): Child⁰ {
+//│   return value
+//│ };
+//│ define writtenField⁰ as fun writtenField¹(r: Unknown): Child⁰ { return r.item¹ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// A record type places no constraint on the representation, and the join of a union is refined by the other
+// component. Unrelated classes have no common instance, so their intersection has the bottom representation.
+:sir
+:siret
+class Other
+fun withRecord(value: Child & {tag: Int}) = value
+fun withUnion(value: (Parent | Other) & Child) = value
+fun unrelated(value: Parent & Other) = value
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define withRecord⁰ as fun withRecord¹(value: Child⁰): Child⁰ {
+//│   return value
+//│ };
+//│ define withUnion⁰ as fun withUnion¹(value: Child⁰): Child⁰ {
+//│   return value
+//│ };
+//│ define unrelated⁰ as fun unrelated¹(value: Nothing): Nothing {
+//│   return value
+//│ };
+//│ define Other⁰ as class Other¹;
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// Components of a union that intersect different record types have the same field if they share a record type.
+// A read of it has the join of their representations, whatever the order of their declarations: both reads
+// produce a Child.
+:sir
+:siret
+type Tagged = {item: Parent, tag: Int}
+type WideAgain = {item: Parent}
+type NarrowAgain = {item: Child}
+fun sharedWideFirst(r: (Wide & Narrow) | (Wide & Narrow & Tagged)): Child = r.item
+fun sharedNarrowFirst(r: (NarrowAgain & WideAgain) | (NarrowAgain & WideAgain & Tagged)): Child = r.item
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define sharedWideFirst⁰ as fun sharedWideFirst¹(r: Unknown): Child⁰ {
+//│   return r.item²
+//│ };
+//│ define sharedNarrowFirst⁰ as fun sharedNarrowFirst¹(r: Unknown): Child⁰ { return r.item³ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+type LooseLeft = {item: Any, left: Int}
+type LooseRight = {item: Any, right: Int}
+type Counted = {item: Int32, count: Int}
+type TaggedCount = {item: Int32, tag: Int}
+type EitherCount = (LooseLeft & LooseRight & Counted) | (LooseLeft & LooseRight & TaggedCount)
+
+// Each alternative stores an Int32, including when their declaration of the primitive field differs. The record
+// types that the alternatives share do not tell this representation, which a read through the union keeps.
+fun readCount(r: LooseLeft & LooseRight & Counted): Int32 = r.item
+
+fun readEitherCount(r: EitherCount): Int32 = r.item
+
+// An unboxed field cannot be returned through a reference slot.
+:ge
+fun boxedCount(r: LooseLeft & LooseRight & Counted): Any = r.item
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
+//│ ║  l.+1: 	fun boxedCount(r: LooseLeft & LooseRight & Counted): Any = r.item
+//│ ╙──      	                                                           ^^^^^^
+
+:ge
+fun boxedEitherCount(r: EitherCount): Any = r.item
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
+//│ ║  l.+1: 	fun boxedEitherCount(r: EitherCount): Any = r.item
+//│ ╙──      	                                            ^^^^^^
+
+// A union can also mix representations: one alternative stores an unboxed Int32 and the other a reference.
+// No representation fits a read of the field through the union.
+:ge
+type Boxed = {item: Any}
+type Unboxed = {item: Int32}
+fun readMixed(r: (Boxed & Unboxed) | Boxed): Int32 = r.item
+//│ ╔══[COMPILATION ERROR] Types 'Unknown' and 'Int32' have no common representation
+//│ ║  l.+3: 	fun readMixed(r: (Boxed & Unboxed) | Boxed): Int32 = r.item
+//│ ╙──      	                                                     ^^^^^^
+
+// Both fields have a reference representation, but neither can store a Bool.
+type WithItem = {item: Any}
+type IntItem = WithItem & {mut item: Int, left: Int}
+type StrItem = WithItem & {mut item: Str, right: Int}
+
+:ge
+fun putIntItem(r: IntItem, b: Bool) = set r.item = b
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Bool' at an unrelated type 'Int'
+//│ ║  l.+1: 	fun putIntItem(r: IntItem, b: Bool) = set r.item = b
+//│ ╙──      	                                          ^^^^^^
+
+:ge
+fun putStrItem(r: StrItem, b: Bool) = set r.item = b
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Bool' at an unrelated type 'Str'
+//│ ║  l.+1: 	fun putStrItem(r: StrItem, b: Bool) = set r.item = b
+//│ ╙──      	                                          ^^^^^^
+
+:ge
+fun putEitherItem(r: IntItem | StrItem, b: Bool) = set r.item = b
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Bool' at an unrelated type 'Int'
+//│ ║  l.+1: 	fun putEitherItem(r: IntItem | StrItem, b: Bool) = set r.item = b
+//│ ╙──      	                                                       ^^^^^^
+
+:ge
+fun putOpenedItem(r: IntItem | StrItem, b: Bool) =
+  open r.{ * }
+  set item = b
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Bool' at an unrelated type 'Int'
+//│ ║  l.+3: 	  set item = b
+//│ ╙──      	      ^^^^
+
+// An Int fits only one destination. An Any could be narrowed to either field separately, but no
+// single cast can produce an ordinary value that fits both. An already-bottom value fits both slots.
+:ge
+fun putOneArm(r: StrItem | IntItem, n: Int) = set r.item = n
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Str'
+//│ ║  l.+1: 	fun putOneArm(r: StrItem | IntItem, n: Int) = set r.item = n
+//│ ╙──      	                                                  ^^^^^^
+
+:ge
+fun putUnknown(r: IntItem | StrItem, x: Any) = set r.item = x
+//│ ╔══[COMPILATION ERROR] Cannot write a value of type 'Unknown' to all possible destinations of this field ('Int', 'Str').
+//│ ║  l.+1: 	fun putUnknown(r: IntItem | StrItem, x: Any) = set r.item = x
+//│ ╙──      	                                                   ^^^^^^
+
+fun clearEither(r: IntItem | StrItem) = set r.item = unsafe.undefined
+
+// A Parent must be narrowed once for the Child destination. A Child already fits both fields.
+:sir
+:siret
+type ParentSlot = {mut item: Parent}
+type ChildSlot = ParentSlot & {item: Child}
+fun putParent(r: ParentSlot | ChildSlot, x: Parent) = set r.item = x
+fun putChild(r: ChildSlot | ParentSlot, x: Child) =
+  open r.{ * }
+  set item = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define putParent⁰ as fun putParent¹(r: Unknown, x: Parent⁰): Unit⁰ {
+//│   set r.item⁴ = (x as! Child⁰);
+//│   return runtime⁰.Unit⁰
+//│ };
+//│ define putChild⁰ as fun putChild¹(r: Unknown, x: Child⁰): Unit⁰ {
+//│   set r.item⁴ = x;
+//│   return runtime⁰.Unit⁰
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// Erasure treats Any as a reference slot here. An Int32 cannot be written to it even though the
+// other destination holds Int32.
+:ge
+type AnySlot = {mut item: Any}
+fun putMixed(r: (AnySlot & Unboxed) | AnySlot, n: Int32) = set r.item = n
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
+//│ ║  l.+2: 	fun putMixed(r: (AnySlot & Unboxed) | AnySlot, n: Int32) = set r.item = n
+//│ ╙──      	                                                               ^^^^^^
+
+// A dynamic alternative leaves the runtime target open. The known field still requires an Int.
+:ge
+fun putDynamic(r: IntItem | dyn, b: Bool) = set r.item = b
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Bool' at an unrelated type 'Int'
+//│ ║  l.+1: 	fun putDynamic(r: IntItem | dyn, b: Bool) = set r.item = b
+//│ ╙──      	                                                ^^^^^^
