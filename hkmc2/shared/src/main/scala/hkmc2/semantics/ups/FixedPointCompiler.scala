@@ -646,8 +646,9 @@ class FixedPointCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, 
 
   private def intPattern(value: Int): FlatPattern = FlatPattern.Lit(IntLit(BigInt(value)))
 
+  // Every matcher function of a machine takes the value to match as its single parameter.
   private def callMatcher(matcher: LocalVarSymbol, argument: Term, label: Str): Term =
-    app(matcher.safeRef, tup(fld(argument)), label)
+    call(matcher.safeRef, tup(fld(argument)), label, positionalSignature(1))
 
   private def refEq(left: Term, right: Term): Term =
     app(State.builtinOpsMap("===").safeRef, tup(fld(left), fld(right)), "reference equality")

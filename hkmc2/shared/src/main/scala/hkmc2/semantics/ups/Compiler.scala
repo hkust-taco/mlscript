@@ -208,7 +208,7 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
       /** Shorthands for the result of the matcher branch. */
       def makeResult(fieldSymbol: LocalVarSymbol) = matcherResult(
           fieldSymbol.safeRef,
-          app(subMatcherSymbol.safeRef, tup(fld(fieldSymbol.safeRef)), "result"))
+          call(subMatcherSymbol.safeRef, tup(fld(fieldSymbol.safeRef)), "result", positionalSignature(1)))
       val result = knownFields.get(field) match
         case S(fieldSymbol) => makeResult(fieldSymbol)
         case N =>
@@ -283,7 +283,8 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
     case S(transform) =>
       val resultSymbol = TempSymbol(N, initErasedType = N, "transformResult")
       val bindingsTerm = nullifyEmptyBindings(bindings)
-      val transformTerm = app(transform.safeRef, tup(fld(bindingsTerm)), "the transform's result")
+      val transformTerm = call(transform.safeRef, tup(fld(bindingsTerm)), "the transform's result",
+        positionalSignature(1))
       Split.Let(resultSymbol, transformTerm, Split.Else(
         makeMatchSuccess(resultSymbol.safeRef)))
   
@@ -540,8 +541,8 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
             //                vvvvvvvvvvvv
             makeConsequent = (outputSymbol, bindings) =>
               // Apply the transform to the bindings.
-              val transformTerm = app(transformSymbol.safeRef,
-                tup(fld(bindings.use)), "the transform's result")
+              val transformTerm = call(transformSymbol.safeRef,
+                tup(fld(bindings.use)), "the transform's result", generatedSignature(params))
               // Bind the transformation result to a new output symbol.
               val resultSymbol = TempSymbol(N, initErasedType = N, "transformResult")
               // Don't forget that current pattern may also have aliases which are

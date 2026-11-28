@@ -587,7 +587,8 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
       val wrapPatternArgumentDefinitions = buildPatternArguments(patternBindings, _)
       // Then, we can call the `unapply` method.
       val unapplyArguments = patternBindings.map(_._1.safeRef |> fld) :+ fld(scrutinee())
-      val unapplyCall = app(sel(patternTerm, "unapply"), tup(unapplyArguments*), s"result of unapply")
+      val unapplyCall = call(sel(patternTerm, "unapply"), tup(unapplyArguments*), s"result of unapply",
+        patternMethodSignature(defn, patternBindings.length))
       val unapplyResult = TempSymbol(N, initErasedType = N, "unapplyResult")
       val wrapUnapply = Split.Let(unapplyResult, unapplyCall, _)
       // Then, we need to destruct the produced `MatchSuccess`.
@@ -659,7 +660,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
       parameterTerm, parameterSymbol, arguments, patternLoc, RejectSplit
     ): (makeConsequent, alternative) =>
       val unapplyTerm = sel(parameterTerm, "unapply")
-      val unapplyCall = app(unapplyTerm, tup(fld(scrutinee())), s"result of unapply")
+      val unapplyCall = call(unapplyTerm, tup(fld(scrutinee())), s"result of unapply", positionalSignature(1))
       tempLet(s"matchSuccess_${parameterSymbol.name}", unapplyCall): matchSuccessSymbol =>
         val outputSymbol = TempSymbol(N, initErasedType = N, "output").toScrut
         val bindingsSymbol = TempSymbol(N, initErasedType = N, "bindings").toScrut
@@ -845,6 +846,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
             case (_, parameterSymbol) =>
               Param.simple(parameterSymbol)
           val lambdaSymbol = new TempSymbol(N, initErasedType = N, "transform")
+          val lambdaParams = PlainParamList(params)(N)
           // Next, we need to elaborate the pattern into a split. Note that
           // `makeMatchSplit` returns a function that takes a split as the
           // consequence. `makeMatchSplit` also takes a list of symbols so that
@@ -852,7 +854,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
           // consequence split.
           (makeConsequent, alternative) => Split.Let(
             sym = lambdaSymbol,
-            term = Term.erasedLambda(PlainParamList(params)(N), transform, N).mkClone,
+            term = Term.erasedLambda(lambdaParams, transform, N).mkClone,
             // Declare the lambda function at the outermost level. Even if there
             // are multiple disjunctions in the consequent, we will not need to
             // repeat the `transform` term.
@@ -861,7 +863,8 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
               // term can only access the matched values by bindings.
               (_output, bindings) =>
                 val arguments = symbols.iterator.map(bindings).map(_() |> fld).toSeq
-                val resultTerm = app(lambdaSymbol.safeRef, tup(arguments*), "the transform's result")
+                val resultTerm = call(lambdaSymbol.safeRef, tup(arguments*), "the transform's result",
+                  generatedSignature(lambdaParams))
                 val resultSymbol = TempSymbol(N, initErasedType = N, "transformResult")
                 Split.Let(resultSymbol, resultTerm, makeConsequent(resultSymbol.toScrut, SeqMap.empty)),
               alternative))
@@ -919,7 +922,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
       val unapplyCall =
         val method = "unapplyStringPrefix"
         val args = tup(patternBindings.map(_._1.safeRef) :+ scrutinee())
-        app(sel(patternTerm, method), args, s"result of $method")
+        call(sel(patternTerm, method), args, s"result of $method", patternMethodSignature(defn, patternBindings.length))
       val split = tempLet("unapplyResult", unapplyCall): matchSuccessSymbol =>
         val outputPairSymbol = TempSymbol(N, initErasedType = N, "outputPair")
         val bindingsSymbol = TempSymbol(N, initErasedType = N, "bindings")
@@ -944,7 +947,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
       parameterTerm, parameterSymbol, arguments, patternLoc, RejectPrefixSplit
     ): (makeConsequent, alternative) =>
       val unapplyTerm = sel(parameterTerm, "unapplyStringPrefix")
-      val unapplyCall = app(unapplyTerm, tup(fld(scrutinee())), s"result of unapply")
+      val unapplyCall = call(unapplyTerm, tup(fld(scrutinee())), s"result of unapply", positionalSignature(1))
       tempLet(s"matchSuccess_${parameterSymbol.name}", unapplyCall): matchSuccessSymbol =>
         // Destruct the `MatchSuccess` produced by the `unapply` method.
         val outputPairSymbol = TempSymbol(N, initErasedType = N, "outputPair").toScrut
@@ -1133,15 +1136,17 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
           case (_, parameterSymbol) =>
             Param.simple(parameterSymbol)
         val lambdaSymbol = new TempSymbol(N, initErasedType = N, "transform")
+        val lambdaParams = PlainParamList(params)(N)
         (makeConsequent, alternative) => Split.Let(
           sym = lambdaSymbol,
-          term = Term.erasedLambda(PlainParamList(params)(N), transform, N),
+          term = Term.erasedLambda(lambdaParams, transform, N),
           tail = make(
             // Note that the output is not used. Semantically, the `transform`
             // term can only access the matched values by bindings.
             (_output, remains, bindings) =>
               val arguments = symbols.iterator.map(bindings).map(_() |> fld).toSeq
-              val resultTerm = app(lambdaSymbol.safeRef, tup(arguments*), "the transform's result")
+              val resultTerm = call(lambdaSymbol.safeRef, tup(arguments*), "the transform's result",
+                generatedSignature(lambdaParams))
               val resultSymbol = TempSymbol(N, initErasedType = N, "transformResult")
               Split.Let(resultSymbol, resultTerm, makeConsequent(resultSymbol.toScrut, remains, SeqMap.empty)),
             alternative))
@@ -1220,7 +1225,8 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
     val matcherSymbol = TempSymbol(N, initErasedType = N, "fixedPointMatcher")
     val matcherBody = Term.Blk(
       machine.prelude :+ Term.SynthWhile(machine.loop), machine.result)
-    val callTerm = app(matcherSymbol.safeRef, tup(fld(scrutinee())), "fixed-point match result")
+    val callTerm = call(matcherSymbol.safeRef, tup(fld(scrutinee())), "fixed-point match result",
+      generatedSignature(machine.params))
     Split.Let(matcherSymbol, Term.erasedLambda(machine.params, matcherBody, N),
       tempLet("fixedPointResult", callTerm): resultSymbol =>
         val outputSymbol = TempSymbol(N, initErasedType = N, "output").toScrut
@@ -1267,13 +1273,15 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
     val innermostSplit = resultMode match
       case ResultMode.MatchOnly =>
         val resultSymbol = TempSymbol(N, initErasedType = S(ErasedType.Bool), "matchSuccess")
-        val resultTerm = app(matcherSymbol.safeRef, tup(fld(scrutinee())), "result of matcher function")
+        val resultTerm = call(matcherSymbol.safeRef, tup(fld(scrutinee())), "result of matcher function",
+          positionalSignature(1))
         Split.Let(resultSymbol, resultTerm,
           Branch(resultSymbol.safeRef, makeConsequent(scrutinee, SeqMap.empty)) ~: alternative)
       case ResultMode.Full =>
         // 1. Bind the call result to a variable.
         val recordSymbol = TempSymbol(N, initErasedType = N, "matchRecord")
-        val recordTerm = app(matcherSymbol.safeRef, tup(fld(scrutinee())), "result of matcher function")
+        val recordTerm = call(matcherSymbol.safeRef, tup(fld(scrutinee())), "result of matcher function",
+          positionalSignature(1))
         val f1 = Split.Let(recordSymbol, recordTerm, _)
         // 2. Check if the direct result is a `MatchSuccess` and bind the output.
         val outputSymbol = TempSymbol(N, initErasedType = N, "patternOutput")
@@ -1305,6 +1313,17 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
     * @param scrut the symbol of the input value
     * @param topmost the topmost split
     */
+  /** The signature of the `unapply` and `unapplyStringPrefix` methods that `makeMethod` generates for the
+    * pattern definition `defn`: its pattern parameters, followed by the scrutinee, whose representation is
+    * unknown like that of the result. `suppliedPatterns` is the number of pattern arguments of the call. A call
+    * that an earlier error leaves with another number of them takes one unknown slot for each argument.
+    */
+  private def patternMethodSignature(defn: PatternDef, suppliedPatterns: Int): codegen.ErasedFuncSignature =
+    if defn.patternParams.sizeCompare(suppliedPatterns) != 0 then positionalSignature(suppliedPatterns + 1)
+    else
+      val scrutinee = Param.simple(VarSymbol(Ident("input"), erasedType = N, mut = false))
+      generatedSignature(PlainParamList(defn.patternParams :+ scrutinee)(N))
+  
   private def makeMethod(
       name: Str,
       patternParameters: List[Param],

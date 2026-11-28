@@ -4,6 +4,7 @@ package ucs
 
 import hkmc2.utils.*, shorthands.*
 import syntax.Tree, Tree.*, Elaborator.{Ctx, State, ctx}
+import hkmc2.codegen.{ErasedCallee, ErasedFuncSignature, ErasedParamList, ErasedResult, LoweredParamList}
 
 /** Build matcher terms after resolution. Nominal references carry their known
   * targets; accesses to generated records and pattern protocols use structural
@@ -39,6 +40,30 @@ trait TermSynthesizer(using State):
   protected final def app(l: Term, r: Term, label: Str): Term.App = app(l, r, FlowSymbol(label))
   protected final def app(l: Term, r: Term, s: FlowSymbol): Term.App =
     Term.App(l, r)(App(Dummy, Dummy), N, s)
+  
+  /** An application of `l` to `r` like `app`, of a function whose calls follow `signature`.
+    *
+    * Erasure assigns the possible callees of the applications of the source program (see [[ErasedCallee]]). It
+    * does not visit the applications that these compilers synthesize after it has run. Such an application
+    * calls a function that its compiler generates, or a method of the pattern protocol, so the compiler
+    * supplies the signature itself. Lowering uses it when the callee publishes no signature of its own.
+    */
+  protected final def call(l: Term, r: Term, label: Str, signature: ErasedFuncSignature): Term.App =
+    val application = app(l, r, label)
+    application.calleeSlot.callee = ErasedCallee.Known(signature)
+    application
+  
+  /** The signature of a function that these compilers generate with the parameter list `params` and a body
+    * whose result has no known representation (see `Term.erasedLambda`). */
+  protected final def generatedSignature(params: ParamList): ErasedFuncSignature =
+    ErasedFuncSignature.Signature(LoweredParamList.erasedLayout(params) :: Nil, ErasedResult.Direct(N))
+  
+  /** The signature of a function with `arity` parameters, of which neither the parameters nor the result have a
+    * known representation: a matcher function that these compilers generate, whose parameters are symbols
+    * that they create, or a method of the pattern protocol applied to a pattern object of unknown definition.
+    */
+  protected final def positionalSignature(arity: Int): ErasedFuncSignature =
+    ErasedFuncSignature.Signature(ErasedParamList(List.fill(arity)(N), N) :: Nil, ErasedResult.Direct(N))
   protected final def `new`(cls: Term, args: Ls[Term], label: Str): Term.New = 
     Term.New(cls, args, N)(FlowSymbol.neww(), N)
   protected final def rcd(fields: RcdField*): Term.Rcd = Term.Rcd(false, fields.toList)
@@ -134,8 +159,9 @@ trait TermSynthesizer(using State):
       localPatternSymbol: LocalVarSymbol,
       inner: => Split,
   )(fallback: Split): Split =
-    val call = app(localPatternSymbol.safeRef, tup(fld(scrut)), s"result of ${localPatternSymbol.nme}")
-    tempLet("matchSuccess", call): resultSymbol =>
+    val result = call(localPatternSymbol.safeRef, tup(fld(scrut)), s"result of ${localPatternSymbol.nme}",
+      positionalSignature(1))
+    tempLet("matchSuccess", result): resultSymbol =>
       Branch(resultSymbol.safeRef, matchSuccessPattern(N), inner) ~: fallback
   
   protected final def makeTupleBranch(

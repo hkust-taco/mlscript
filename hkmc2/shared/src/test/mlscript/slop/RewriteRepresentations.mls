@@ -154,7 +154,7 @@ pattern Lower = "a"..="z"
 //│   }
 //│ };
 //│ set scrut = "q";
-//│ set unapplyResult = Lower¹.unapply﹖‹(...Array⁰) => ?›(scrut);
+//│ set unapplyResult = Lower¹.unapply﹖‹(?) => ?›(scrut);
 //│ match unapplyResult
 //│   MatchSuccess⁰ =>
 //│     set output = unapplyResult.output⁰;
@@ -165,7 +165,7 @@ pattern Lower = "a"..="z"
 //│     set tmp = false;
 //│     end
 //│ set scrut1 = "Q";
-//│ set unapplyResult1 = Lower¹.unapply﹖‹(...Array⁰) => ?›(scrut1);
+//│ set unapplyResult1 = Lower¹.unapply﹖‹(?) => ?›(scrut1);
 //│ match unapplyResult1
 //│   MatchSuccess⁰ =>
 //│     set output1 = unapplyResult1.output⁰;

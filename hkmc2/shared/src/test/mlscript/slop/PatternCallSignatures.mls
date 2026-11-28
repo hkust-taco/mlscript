@@ -1,0 +1,134 @@
+:.
+:js
+:noInline
+
+
+// The pattern compilers synthesize their calls after erasure has run, so they supply the signatures of these
+// calls themselves: each callee is a function that they generate, or a method of the pattern protocol.
+
+data class Pair[A, B](first: A, second: B)
+
+// The `unapply` method of a pattern applies the transformation of the pattern, a function of the variables
+// that the pattern binds.
+:sir
+:siret
+pattern SumPair = Pair(a, b) => a + b
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define SumPair⁰ as pattern SumPair¹ {
+//│   method unapply⁰ = fun unapply¹(input: ?): ? {
+//│     let transform: ?, arg$Pair$0$: Unknown, arg$Pair$1$: Unknown, transformResult: ?, lambda;
+//│     @private
+//│     define lambda as fun lambda⁰(a: ?, b: ?): ? {
+//│       return +⁰‹(?, ?) => ?›(a, b)
+//│     };
+//│     set transform = lambda⁰;
+//│     match input
+//│       Pair⁰ =>
+//│         set arg$Pair$0$ = input.first⁰;
+//│         set arg$Pair$1$ = input.second⁰;
+//│         set transformResult = transform‹(?, ?) => ?›(arg$Pair$0$, arg$Pair$1$);
+//│         return new runtime⁰.MatchSuccess⁰(transformResult, null)
+//│       else
+//│         return new runtime⁰.MatchFailure⁰(null)
+//│     end
+//│   }
+//│   method unapplyStringPrefix⁰ = fun unapplyStringPrefix¹(input: ?): ? {
+//│     return new runtime⁰.MatchFailure⁰(null)
+//│   }
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// A match on a pattern definition calls its `unapply` method with the scrutinee.
+:sir
+:siret
+:expect 3
+fun sum(p) = if p is SumPair as total then total else 0
+sum(Pair(1, 2))
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Pair⁰;
+//│ define sum⁰ as fun sum¹(p: Unknown): Int⁰ {
+//│   let total: ?, unapplyResult: ?, output: ?, bindings: ?;
+//│   set unapplyResult = SumPair¹.unapply﹖‹(?) => ?›(p);
+//│   match unapplyResult
+//│     MatchSuccess⁰ =>
+//│       set output = unapplyResult.output⁰;
+//│       set bindings = unapplyResult.bindings⁰;
+//│       set total = output;
+//│       return (total as! Int⁰)
+//│     else
+//│       return 0
+//│   end
+//│ };
+//│ set tmp = Pair¹‹(Unknown, Unknown) => Pair⁰›(1, 2);
+//│ return sum¹‹(Unknown) => Int⁰›(tmp)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 3
+
+// A pattern parameter is a pattern object of unknown definition, whose `unapply` method takes the scrutinee.
+:sir
+:siret
+pattern Twice(pattern P) = [P, P]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define Twice⁰ as pattern Twice¹ {
+//│   method unapply² = fun unapply³(P: ?, input: ?): ? {
+//│     let element1$: ?, element0$: ?, matchSuccess_P: ?, output: ?, bindings: ?, matchSuccess_P1: ?, output1: ?, bindings1: ?;
+//│     match input
+//│       Array(2) =>
+//│         set element0$ = runtime⁰.Tuple⁰.get⁰‹(Unknown, Int⁰) => Unknown›(input, 0);
+//│         set element1$ = runtime⁰.Tuple⁰.get⁰‹(Unknown, Int⁰) => Unknown›(input, 1);
+//│         set matchSuccess_P = P.unapply﹖‹(?) => ?›(element0$);
+//│         match matchSuccess_P
+//│           MatchSuccess⁰ =>
+//│             set output = matchSuccess_P.output⁰;
+//│             set bindings = matchSuccess_P.bindings⁰;
+//│             set matchSuccess_P1 = P.unapply﹖‹(?) => ?›(element1$);
+//│             match matchSuccess_P1
+//│               MatchSuccess⁰ =>
+//│                 set output1 = matchSuccess_P1.output⁰;
+//│                 set bindings1 = matchSuccess_P1.bindings⁰;
+//│                 return new runtime⁰.MatchSuccess⁰(input, null)
+//│               else
+//│                 return new runtime⁰.MatchFailure⁰(null)
+//│             end
+//│           else
+//│             return new runtime⁰.MatchFailure⁰(null)
+//│         end
+//│       else
+//│         return new runtime⁰.MatchFailure⁰(null)
+//│     end
+//│   }
+//│   method unapplyStringPrefix² = fun unapplyStringPrefix³(P: ?, input: ?): ? {
+//│     return new runtime⁰.MatchFailure⁰(null)
+//│   }
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// A pattern with pattern parameters takes the pattern objects before the scrutinee.
+:sir
+:siret
+:expect true
+fun bothSums(xs) = xs is Twice(SumPair)
+bothSums([Pair(1, 2), Pair(3, 4)])
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Pair⁰, tmp1: Pair⁰, tmp2: Array⁰;
+//│ define bothSums⁰ as fun bothSums¹(xs: Unknown): Bool⁰ {
+//│   let patternArgument0$: ?, unapplyResult: ?, output: ?, bindings: ?;
+//│   set patternArgument0$ = SumPair¹;
+//│   set unapplyResult = Twice¹.unapply﹖‹(?, ?) => ?›(patternArgument0$, xs);
+//│   match unapplyResult
+//│     MatchSuccess⁰ =>
+//│       set output = unapplyResult.output⁰;
+//│       set bindings = unapplyResult.bindings⁰;
+//│       return true
+//│     else
+//│       return false
+//│   end
+//│ };
+//│ set tmp = Pair¹‹(Unknown, Unknown) => Pair⁰›(1, 2);
+//│ set tmp1 = Pair¹‹(Unknown, Unknown) => Pair⁰›(3, 4);
+//│ set tmp2 = [tmp, tmp1];
+//│ return bothSums¹‹(Unknown) => Bool⁰›(tmp2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = true
