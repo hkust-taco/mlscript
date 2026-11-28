@@ -392,12 +392,15 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
         val copy = Alias(pattern(inner), id)
         source.symbolOption.foreach(sym => copy.symbol = sym.subst)
         copy
-      case Transform(inner, parameters, transform) =>
+      case source @ Transform(inner, parameters, transform) =>
         val scope = nested
         scope.bindPattern(inner)
         parameters.foreach((_, param) => scope.bindLocal(param))
-        Transform(scope.pattern(inner), parameters.map((binding, param) =>
+        val copy = Transform(scope.pattern(inner), parameters.map((binding, param) =>
           scope.mapVarSym(binding) -> scope.mapVarSym(param)), scope.term(transform))
+        if source.resultSlot.isErasureReady then
+          copy.resultSlot.erasedType = source.resultSlot.erasedType.map(scope.valueType)
+        copy
       case Annotated(inner, annotations) => Pattern.Annotated(pattern(inner), annotations.map:
         case L(loc) => L(loc)
         case R(value) => R(term(value)))

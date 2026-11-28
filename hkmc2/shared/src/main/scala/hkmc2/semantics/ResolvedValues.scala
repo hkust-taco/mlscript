@@ -20,6 +20,11 @@ private[hkmc2] final class SourceDeclarations(root: Statement):
   val parameters = mutable.LinkedHashMap.empty[VarSymbol, Param]
   val variables = mutable.LinkedHashSet.empty[InputSymbol]
   val copiedFields = mutable.ArrayBuffer.empty[RecordFieldSymbol]
+  val transforms = mutable.ArrayBuffer.empty[Pattern.Transform]
+  /** The parameters of the pattern definitions and the variables that their patterns bind. They hold pattern
+    * objects and parts of the value that the definition matches, which is any value that a match supplies:
+    * resolution of the definition observes no value for them. */
+  val patternInputs = mutable.LinkedHashSet.empty[InputSymbol]
   private val visited = mutable.Set.empty[Identity[Statement]]
 
   private def parameter(p: Param): Unit =
@@ -35,42 +40,48 @@ private[hkmc2] final class SourceDeclarations(root: Statement):
       case S(p: Param) => parameter(p)
       case _ => ()
 
-  private def pattern(pat: Pattern): Unit =
+  /** Visits the pattern `pat`. `definition` tells whether it is the pattern of a pattern definition, or a part
+    * of it, as opposed to a pattern of a match, whose variables take the values of a known scrutinee. */
+  private def pattern(pat: Pattern, definition: Bool): Unit =
+    def bound(sym: VarSymbol): Unit =
+      variable(sym)
+      if definition then patternInputs += sym
     // Transform bindings are local to their pattern and absent from its exported variables.
     // Lowering still assigns them, including unused bindings, so erase every allocated alias.
     pat match
       case Pattern.Constructor(target, arguments) =>
         visit(target)
-        arguments.foreach(_.foreach(pattern))
-      case Pattern.Composition(_, left, right) => pattern(left); pattern(right)
-      case Pattern.Negation(inner) => pattern(inner)
+        arguments.foreach(_.foreach(pattern(_, definition)))
+      case Pattern.Composition(_, left, right) => pattern(left, definition); pattern(right, definition)
+      case Pattern.Negation(inner) => pattern(inner, definition)
       case _: (Pattern.Wildcard | Pattern.Literal | Pattern.Range) => ()
-      case Pattern.Concatenation(left, right) => pattern(left); pattern(right)
+      case Pattern.Concatenation(left, right) => pattern(left, definition); pattern(right, definition)
       case Pattern.Tuple(leading, spread) =>
-        leading.foreach(pattern)
+        leading.foreach(pattern(_, definition))
         spread.foreach: (_, middle, trailing) =>
-          pattern(middle)
-          trailing.foreach(pattern)
-      case Pattern.Record(fields) => fields.foreach((_, inner) => pattern(inner))
-      case Pattern.Chain(first, second) => pattern(first); pattern(second)
+          pattern(middle, definition)
+          trailing.foreach(pattern(_, definition))
+      case Pattern.Record(fields) => fields.foreach((_, inner) => pattern(inner, definition))
+      case Pattern.Chain(first, second) => pattern(first, definition); pattern(second, definition)
       case alias @ Pattern.Alias(inner, _) =>
-        alias.symbolOption.foreach(variable)
-        pattern(inner)
-      case Pattern.Transform(inner, parameters, transform) =>
-        pattern(inner)
-        parameters.foreach((_, param) => variable(param))
+        alias.symbolOption.foreach(bound)
+        pattern(inner, definition)
+      case transformation @ Pattern.Transform(inner, parameters, transform) =>
+        transforms += transformation
+        pattern(inner, definition)
+        parameters.foreach((_, param) => bound(param))
         visit(transform)
       case Pattern.Annotated(inner, annotations) =>
-        pattern(inner)
+        pattern(inner, definition)
         annotations.foreach(_.foreach(visit))
-      case Pattern.Guarded(inner, guard) => pattern(inner); visit(guard)
+      case Pattern.Guarded(inner, guard) => pattern(inner, definition); visit(guard)
 
   private def split(branches: SimpleSplit): Unit = branches match
     case SimpleSplit.Cons(SimpleSplit.Head.Let(sym, _), tail) =>
       variable(sym)
       split(tail)
     case SimpleSplit.Cons(SimpleSplit.Head.Match(_, pat, consequent), tail) =>
-      pattern(pat)
+      pattern(pat, definition = false)
       split(consequent)
       split(tail)
     case SimpleSplit.Else(_) | SimpleSplit.End => ()
@@ -87,8 +98,10 @@ private[hkmc2] final class SourceDeclarations(root: Statement):
         cls.ext.foreach(visit)
         cls match
           case pat: PatternDef =>
-            pat.parameters.foreach(parameter)
-            pattern(pat.pattern)
+            pat.parameters.foreach: p =>
+              parameter(p)
+              patternInputs += p.sym
+            pattern(pat.pattern, definition = true)
           case _ => ()
       case Lam(ps, _) => ps.foreach(parameter)
       case Forall(params, _, _) => params.foreach: param =>
@@ -144,6 +157,8 @@ private[hkmc2] final class ResolvedValues:
       case td: TermDefinition => observeDefinition(td, resolver)
       case lam: Lam => observeViews(lam.resultSlot, resolver)(resolver.listenTerm(lam.body))
       case _ => ()
+    declarations.transforms.foreach: transformation =>
+      observeViews(transformation.resultSlot, resolver)(resolver.listenTerm(transformation.transform))
 
     // Interface exposure can discover new fields, and observing a field can in turn expose a value.
     // Keep this observation live until exposure has processed those values.

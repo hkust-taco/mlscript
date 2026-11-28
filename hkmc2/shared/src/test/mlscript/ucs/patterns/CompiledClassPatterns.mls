@@ -88,7 +88,7 @@ case @compile Add(0, 0) then 1
 //│     end
 //│   };
 //│   set matcher__0$ = lambda²;
-//│   set matchSuccess = (matcher__Addʿ0ꓹ0ʾ$(caseScrut) as!! Bool⁰);
+//│   set matchSuccess = matcher__Addʿ0ꓹ0ʾ$(caseScrut);
 //│   match matchSuccess
 //│     true =>
 //│       return 1
@@ -111,44 +111,34 @@ case @compile (Box(0) | Box(1)) then 1
 //│ let lambda;
 //│ @private
 //│ define lambda as fun lambda⁴(caseScrut) {
-//│   let matchSuccess, inlinedVal, value, result1$, result2$;
+//│   let value, result1$, result2$;
 //│   match caseScrut
 //│     Box⁰ =>
-//│       let inlinedVal1;
+//│       let inlinedVal;
 //│       set value = caseScrut.value⁰;
 //│       match value
 //│         0 =>
-//│           set inlinedVal1 = { "p_1": true, "p_2": false };
+//│           set inlinedVal = { "p_1": true, "p_2": false };
 //│           end
 //│         1 =>
-//│           set inlinedVal1 = { "p_1": false, "p_2": true };
+//│           set inlinedVal = { "p_1": false, "p_2": true };
 //│           end
 //│         else
-//│           set inlinedVal1 = { "p_1": false, "p_2": false };
+//│           set inlinedVal = { "p_1": false, "p_2": false };
 //│           end
-//│       set result1$ = inlinedVal1.p_1﹖;
+//│       set result1$ = inlinedVal.p_1﹖;
 //│       match result1$
 //│         true =>
-//│           set inlinedVal = true;
-//│           end
+//│           return 1
 //│         else
-//│           set result2$ = inlinedVal1.p_2﹖;
+//│           set result2$ = inlinedVal.p_2﹖;
 //│           match result2$
 //│             true =>
-//│               set inlinedVal = true;
-//│               end
+//│               return 1
 //│             else
-//│               set inlinedVal = false;
-//│               end
+//│               throw new globalThis⁰.Error⁰("match error")
 //│           end
 //│       end
-//│     else
-//│       set inlinedVal = false;
-//│       end
-//│   set matchSuccess = (inlinedVal as!! Bool⁰);
-//│   match matchSuccess
-//│     true =>
-//│       return 1
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
@@ -220,7 +210,7 @@ fun compiledInner(module Inner: Outer.Inner, x) =
 //│     end
 //│   };
 //│   set matcher__3$ = lambda⁶;
-//│   set matchSuccess = (matcher__Wrappedʿ3ʾ$(x) as!! Bool⁰);
+//│   set matchSuccess = matcher__Wrappedʿ3ʾ$(x);
 //│   match matchSuccess
 //│     true =>
 //│       return true

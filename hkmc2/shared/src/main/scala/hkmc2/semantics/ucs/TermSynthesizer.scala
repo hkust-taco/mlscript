@@ -4,7 +4,8 @@ package ucs
 
 import hkmc2.utils.*, shorthands.*
 import syntax.Tree, Tree.*, Elaborator.{Ctx, State, ctx}
-import hkmc2.codegen.{ErasedCallee, ErasedFuncSignature, ErasedParamList, ErasedResult, LoweredParamList}
+import hkmc2.codegen.{ErasedCallee, ErasedFuncSignature, ErasedParamList, ErasedResult, ErasedType, ErasedValueType,
+  LoweredParamList}
 
 /** Build matcher terms after resolution. Nominal references carry their known
   * targets; accesses to generated records and pattern protocols use structural
@@ -54,16 +55,20 @@ trait TermSynthesizer(using State):
     application
   
   /** The signature of a function that these compilers generate with the parameter list `params` and a body
-    * whose result has no known representation (see `Term.erasedLambda`). */
-  protected final def generatedSignature(params: ParamList): ErasedFuncSignature =
-    ErasedFuncSignature.Signature(LoweredParamList.erasedLayout(params) :: Nil, ErasedResult.Direct(N))
+    * that returns values of `result`, as they tell `Term.erasedLambda`. `N` stands for a result without a known
+    * representation. */
+  protected final def generatedSignature(params: ParamList, result: Opt[ErasedValueType]): ErasedFuncSignature =
+    ErasedFuncSignature.Signature(LoweredParamList.erasedLayout(params) :: Nil, ErasedResult.Direct(result))
   
-  /** The signature of a function with `arity` parameters, of which neither the parameters nor the result have a
-    * known representation: a matcher function that these compilers generate, whose parameters are symbols
-    * that they create, or a method of the pattern protocol applied to a pattern object of unknown definition.
-    */
-  protected final def positionalSignature(arity: Int): ErasedFuncSignature =
-    ErasedFuncSignature.Signature(ErasedParamList(List.fill(arity)(N), N) :: Nil, ErasedResult.Direct(N))
+  /** The signature of a function that takes the value to match and returns values of `result`: a matcher
+    * function that these compilers generate, or a method of the pattern protocol applied to a pattern object
+    * of unknown definition. */
+  protected final def matcherSignature(result: Opt[ErasedValueType]): ErasedFuncSignature =
+    ErasedFuncSignature.Signature(ErasedParamList(S(ErasedType.Unknown) :: Nil, N) :: Nil, ErasedResult.Direct(result))
+  
+  /** A parameter that receives the value to match, which can be any value: a reference of unknown class. */
+  protected final def inputSymbol(name: Str): VarSymbol =
+    VarSymbol(Ident(name), erasedType = S(ErasedType.Unknown), mut = false)
   protected final def `new`(cls: Term, args: Ls[Term], label: Str): Term.New = 
     Term.New(cls, args, N)(FlowSymbol.neww(), N)
   protected final def rcd(fields: RcdField*): Term.Rcd = Term.Rcd(false, fields.toList)
@@ -160,7 +165,7 @@ trait TermSynthesizer(using State):
       inner: => Split,
   )(fallback: Split): Split =
     val result = call(localPatternSymbol.safeRef, tup(fld(scrut)), s"result of ${localPatternSymbol.nme}",
-      positionalSignature(1))
+      matcherSignature(S(ErasedType.MatchResult)))
     tempLet("matchSuccess", result): resultSymbol =>
       Branch(resultSymbol.safeRef, matchSuccessPattern(N), inner) ~: fallback
   

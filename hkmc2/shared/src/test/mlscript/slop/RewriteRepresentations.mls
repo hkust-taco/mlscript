@@ -105,7 +105,7 @@ pattern Lower = "a"..="z"
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let scrut: Str⁰, scrut1: Str⁰, unapplyResult: ?, output: ?, bindings: ?, tmp: Bool⁰, unapplyResult1: ?, output1: ?, bindings1: ?, tmp1: Bool⁰;
 //│ define Lower⁰ as pattern Lower¹ {
-//│   method unapply⁰ = fun unapply¹(input: ?): ? {
+//│   method unapply⁰ = fun unapply¹(input: Unknown): Object⁰ {
 //│     let isGreaterThanLower: Bool⁰, isLessThanUpper: Bool⁰;
 //│     set isGreaterThanLower = <=⁰‹(?, ?) => Bool⁰›("a", input);
 //│     match isGreaterThanLower
@@ -121,7 +121,7 @@ pattern Lower = "a"..="z"
 //│         return new runtime⁰.MatchFailure⁰(null)
 //│     end
 //│   }
-//│   method unapplyStringPrefix⁰ = fun unapplyStringPrefix¹(input: ?): ? {
+//│   method unapplyStringPrefix⁰ = fun unapplyStringPrefix¹(input: Unknown): Object⁰ {
 //│     let stringHead: Str⁰, stringTail: Str⁰, nonEmpty: Bool⁰, isGreaterThanLower: Bool⁰, isLessThanUpper: Bool⁰, tmp2: ?, tmp3: Array⁰;
 //│     match input
 //│       Str⁰ =>
@@ -154,7 +154,7 @@ pattern Lower = "a"..="z"
 //│   }
 //│ };
 //│ set scrut = "q";
-//│ set unapplyResult = Lower¹.unapply﹖‹(?) => ?›(scrut);
+//│ set unapplyResult = Lower¹.unapply﹖‹(Unknown) => Object⁰›(scrut);
 //│ match unapplyResult
 //│   MatchSuccess⁰ =>
 //│     set output = unapplyResult.output⁰;
@@ -165,7 +165,7 @@ pattern Lower = "a"..="z"
 //│     set tmp = false;
 //│     end
 //│ set scrut1 = "Q";
-//│ set unapplyResult1 = Lower¹.unapply﹖‹(?) => ?›(scrut1);
+//│ set unapplyResult1 = Lower¹.unapply﹖‹(Unknown) => Object⁰›(scrut1);
 //│ match unapplyResult1
 //│   MatchSuccess⁰ =>
 //│     set output1 = unapplyResult1.output⁰;

@@ -4,6 +4,7 @@ package ups
 
 
 import hkmc2.utils.*, shorthands.*
+import hkmc2.codegen.{ErasedType, ErasedValueType}
 
 import syntax.{Keyword, LetBind, Tree}, Tree.{BoolLit, DecLit, Ident, IntLit, StrLit, UnitLit}
 import Term.{Blk, Rcd, SynthIf}
@@ -108,6 +109,23 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
   
   private val multiMatchers: MutMap[Set[Label], LocalVarSymbol] = MutMap.empty
   
+  // The representation of what each multi-matcher returns (see `matcherResultType`).
+  private val matcherResults: MutMap[LocalVarSymbol, ErasedValueType] = MutMap.empty
+  
+  /** The representation of the match of one pattern: a Boolean in match-only mode, and a match result
+    * otherwise (see `emptyMatchResult`). */
+  private def matchType(using ResultMode): ErasedValueType =
+    if isMatchOnly then ErasedType.Bool else ErasedType.MatchResult
+  
+  /** The representation of what the multi-matcher of `count` patterns returns (see `multiMatcherBranch`): the
+    * match of its only pattern, or a record with the match of each of its patterns. */
+  private def matcherResultType(count: Int)(using ResultMode): ErasedValueType =
+    if count == 1 then matchType else ErasedType.Unknown
+  
+  /** The signature of the calls of `matcher`, a multi-matcher of this compiler. */
+  private def matcherSignature(matcher: LocalVarSymbol): codegen.ErasedFuncSignature =
+    matcherSignature(matcherResults.get(matcher))
+  
   
   // Matcher identity is an unordered set of labels, but code emission follows
   // the first request's pattern order, including its fields and transformations.
@@ -124,7 +142,7 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
     while buildQueue.nonEmpty do
       val (symbol, patterns) = buildQueue.dequeue()
       val (paramList, term) = buildMultiMatcherBody(patterns)
-      implementations += ((symbol, paramList, term))
+      implementations += ((symbol, paramList, term, matcherResults(symbol)))
     entryPointSymbol -> implementations.result()
   
   /** Reuse or schedule a multi-matcher and return its callable symbol.
@@ -137,6 +155,7 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
     multiMatchers.get(labels).getOrElse:
       val f = TempSymbol(N, initErasedType = N, makeMultiMatcherName(distinctPatterns))
       multiMatchers += (labels -> f)
+      matcherResults += (f -> matcherResultType(distinctPatterns.length))
       buildQueue enqueue (f -> distinctPatterns)
       f // Return the symbol of the built function.
   
@@ -151,7 +170,7 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
     val expandedPatterns = patterns.map(p => (p.label, p.expand(Set.empty)))
     val heads = expandedPatterns.iterator.flatMap((_, p) => p.heads).distinct
     // This is the parameter of the current multi-matcher.
-    val scrutinee = VarSymbol(Ident("input"), erasedType = N, mut = false)
+    val scrutinee = inputSymbol("input")
     // Allocate branches in source order before the default, but accumulate
     // them in reverse order so they can be prepended to the default below.
     val branches = heads.foldLeft(Ls.empty[Branch]): (branches, head) =>
@@ -208,7 +227,7 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
       /** Shorthands for the result of the matcher branch. */
       def makeResult(fieldSymbol: LocalVarSymbol) = matcherResult(
           fieldSymbol.safeRef,
-          call(subMatcherSymbol.safeRef, tup(fld(fieldSymbol.safeRef)), "result", positionalSignature(1)))
+          call(subMatcherSymbol.safeRef, tup(fld(fieldSymbol.safeRef)), "result", matcherSignature(subMatcherSymbol)))
       val result = knownFields.get(field) match
         case S(fieldSymbol) => makeResult(fieldSymbol)
         case N =>
@@ -225,7 +244,7 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
     val z = (bindings, Nil: Ls[(Label, Term)])
     val (statements, resultTerms) = patterns.foldLeft(z):
       case ((stmts, results), (label, pattern)) =>
-        val symbol = TempSymbol(N, initErasedType = N, label.asFieldName + "$")
+        val symbol = TempSymbol(N, initErasedType = S(matchType), label.asFieldName + "$")
         val makeSplit = completePattern(pattern, scrutinee, subScrutinees, Nil)
         val split = makeSplit(
           // There is no topmost transform here, so we emit the direct success
@@ -284,7 +303,7 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
       val resultSymbol = TempSymbol(N, initErasedType = N, "transformResult")
       val bindingsTerm = nullifyEmptyBindings(bindings)
       val transformTerm = call(transform.safeRef, tup(fld(bindingsTerm)), "the transform's result",
-        positionalSignature(1))
+        matcherSignature(N))
       Split.Let(resultSymbol, transformTerm, Split.Else(
         makeMatchSuccess(resultSymbol.safeRef)))
   
@@ -523,8 +542,11 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
       // declared at the outermost level.
         val transformSymbol = TempSymbol(N, initErasedType = N, "transform")
         // The transform function takes a single record as the argument.
-        val bindingsSymbol = VarSymbol(Ident("args"), erasedType = N, mut = false)
+        // The record of the values that the pattern binds.
+        val bindingsSymbol = inputSymbol("args")
         val params = paramList(param(bindingsSymbol))
+        // The transform function returns what the transformation term produces.
+        val transformResult = summon[codegen.Erasure].transformResultType(term)
         // Because we pass the extracted values using recoreds. We need to bind
         // each property to its corresponding variable which is accessible from
         // then `term`.
@@ -535,14 +557,14 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
         val makeSplit = completePattern(pattern, scrutinee, subScrutinees, Nil)
         (makeConsequent, alternative) => Split.Let(
           sym = transformSymbol,
-          term = Term.erasedLambda(params, Blk(letBindings, term), N).mkClone,
+          term = Term.erasedLambda(params, Blk(letBindings, term), transformResult).mkClone,
           tail = makeSplit(
             // The `outputSymbol` is the output of `pattern`.
             //                vvvvvvvvvvvv
             makeConsequent = (outputSymbol, bindings) =>
               // Apply the transform to the bindings.
               val transformTerm = call(transformSymbol.safeRef,
-                tup(fld(bindings.use)), "the transform's result", generatedSignature(params))
+                tup(fld(bindings.use)), "the transform's result", generatedSignature(params, transformResult))
               // Bind the transformation result to a new output symbol.
               val resultSymbol = TempSymbol(N, initErasedType = N, "transformResult")
               // Don't forget that current pattern may also have aliases which are
@@ -569,8 +591,9 @@ object Compiler:
   enum ResultMode:
     case Full, MatchOnly
   
-  /** A multi-matcher implementation. */
-  type Implementation = (LocalVarSymbol, ParamList, Term)
+  /** A multi-matcher implementation: the symbol that holds the function, its parameter list, its body, and the
+    * representation of what it returns. */
+  type Implementation = (LocalVarSymbol, ParamList, Term, ErasedValueType)
   
   /** Clone a source-level constructor reference for insertion into synthesized
     * matcher code, preserving the path chosen by source resolution.

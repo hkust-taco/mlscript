@@ -41,9 +41,9 @@ pattern Steps = @compile (Step as Steps | _)
 //│                   let inlinedVal1, a, b, c, tmp3, tmp4, tmp5, tmp6, tmp7;
 //│                   set bindings1 = result2$.bindings⁰;
 //│                   set tmp2 = { ...bindings, ...bindings1 };
-//│                   set a = tmp2.a﹖;
-//│                   set b = tmp2.b﹖;
-//│                   set c = (+⁰(a, b) as! Int⁰);
+//│                   set a = (tmp2.a﹖ as! Int⁰);
+//│                   set b = (tmp2.b﹖ as! Int⁰);
+//│                   set c = +⁰(a, b);
 //│                   set tmp3 = +⁰("reduce ", a);
 //│                   set tmp4 = +⁰(tmp3, " + ");
 //│                   set tmp5 = +⁰(tmp4, b);

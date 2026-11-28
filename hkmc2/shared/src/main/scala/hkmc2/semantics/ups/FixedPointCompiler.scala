@@ -11,7 +11,7 @@ import ucs.{FlatPattern, TermSynthesizer, warn, safeRef}
 import semantics.Pattern as SP
 import Pattern.*, Context.*
 import Compiler.ResultMode
-import codegen.{ErasedType, PrimitiveType}
+import codegen.{ErasedType, ErasedValueType, PrimitiveType}
 
 object FixedPointCompiler:
   /** One alternative of the context pattern that descends into the hole.
@@ -646,9 +646,10 @@ class FixedPointCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, 
 
   private def intPattern(value: Int): FlatPattern = FlatPattern.Lit(IntLit(BigInt(value)))
 
-  // Every matcher function of a machine takes the value to match as its single parameter.
-  private def callMatcher(matcher: LocalVarSymbol, argument: Term, label: Str): Term =
-    call(matcher.safeRef, tup(fld(argument)), label, positionalSignature(1))
+  // Every matcher function of a machine is the entry point of a `Compiler`: it takes the value to match and
+  // returns the match of its pattern, whose representation `result` depends on the result mode of the compiler.
+  private def callMatcher(matcher: LocalVarSymbol, argument: Term, label: Str, result: ErasedValueType): Term =
+    call(matcher.safeRef, tup(fld(argument)), label, matcherSignature(S(result)))
 
   private def refEq(left: Term, right: Term): Term =
     app(State.builtinOpsMap("===").safeRef, tup(fld(left), fld(right)), "reference equality")
@@ -724,7 +725,7 @@ class FixedPointCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, 
         postCompiler.buildMatcher(postPattern, ResultMode.Full)
       (stepMatcher, stepImpls, postMatcherOpt)
 
-    val inputSymbol = VarSymbol(Ident("input"), erasedType = N, mut = false)
+    val inputSymbol = this.inputSymbol("input")
     val phaseSymbol = TempSymbol(N, initErasedType = N, "phase")
     val focusSymbol = TempSymbol(N, initErasedType = N, "focus")
     // The phase whose step failed, selecting the link whose alternatives
@@ -738,7 +739,7 @@ class FixedPointCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, 
         val resultSym = TempSymbol(N, initErasedType = N, s"step$index$$Result")
         val outputSym = TempSymbol(N, initErasedType = N, "stepOutput")
         Branch(phaseSymbol.safeRef, intPattern(index),
-          Split.Let(resultSym, callMatcher(stepMatcher, focusSymbol.safeRef, "step result"),
+          Split.Let(resultSym, callMatcher(stepMatcher, focusSymbol.safeRef, "step result", ErasedType.MatchResult),
             Branch(resultSym.safeRef, matchSuccessPattern(S(outputSym :: Nil)),
               perform(
                 setStmt(focusSymbol, outputSym.safeRef),
@@ -755,15 +756,15 @@ class FixedPointCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, 
         case (((_, _, postMatcherOpt), index), rest) =>
           val success = postMatcherOpt match
             case S((postMatcher, _)) =>
-              callMatcher(postMatcher, focusSymbol.safeRef, "post-processed result")
+              callMatcher(postMatcher, focusSymbol.safeRef, "post-processed result", ErasedType.MatchResult)
             case N => makeMatchSuccess(focusSymbol.safeRef)
           Branch(failPhaseSymbol.safeRef, intPattern(index), Split.Else(success)) ~: rest)
 
     val matcherDefinitions =
       matchers.iterator.flatMap((_, stepImpls, postMatcherOpt) =>
         stepImpls.iterator ++ postMatcherOpt.iterator.flatMap(_._2)
-      ).flatMap: (symbol, params, body) =>
-        Iterator(LetDecl(symbol, Nil)(N), DefineVar(symbol, Term.erasedLambda(params, body, N))(N))
+      ).flatMap: (symbol, params, body, result) =>
+        Iterator(LetDecl(symbol, Nil)(N), DefineVar(symbol, Term.erasedLambda(params, body, S(result)))(N))
     val prelude =
       (matcherDefinitions ++ Iterator(
         LetDecl(phaseSymbol, Nil)(N), DefineVar(phaseSymbol, int(0))(N),
@@ -804,7 +805,7 @@ class FixedPointCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, 
     log(dbg"Classes: ${classes.map(cls => s"${cls.symbol.nme}(${cls.alts})").mkString(", ")}")
 
     // ---- Machine state ----
-    val inputSymbol = VarSymbol(Ident("input"), erasedType = N, mut = false)
+    val inputSymbol = this.inputSymbol("input")
     val modeSymbol = TempSymbol(N, initErasedType = N, "mode")
     val focusSymbol = TempSymbol(N, initErasedType = N, "focus")
     val stackSymbol = TempSymbol(N, initErasedType = N, "stack")
@@ -848,14 +849,14 @@ class FixedPointCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, 
         case Nil => success
         case (index, side) :: rest =>
           val okSymbol = TempSymbol(N, initErasedType = N, "sideOk")
-          Split.Let(okSymbol, callMatcher(sideMatchers(side), child(index), "side condition"),
+          Split.Let(okSymbol, callMatcher(sideMatchers(side), child(index), "side condition", ErasedType.Bool),
             Branch(okSymbol.safeRef, sideChecks(rest, child, success, failure)) ~: failure())
 
     /** Call the redex matcher on `scrutinee` and branch on its result. */
     def matchRedex(scrutinee: Term, onSuccess: TempSymbol => Split, onFailure: Split): Split =
       val resultSym = TempSymbol(N, initErasedType = N, "redexResult")
       val outputSym = TempSymbol(N, initErasedType = N, "contractum")
-      Split.Let(resultSym, callMatcher(redexMatcher, scrutinee, "redex match"),
+      Split.Let(resultSym, callMatcher(redexMatcher, scrutinee, "redex match", ErasedType.MatchResult),
         Branch(resultSym.safeRef, matchSuccessPattern(S(outputSym :: Nil)),
           onSuccess(outputSym)) ~: onFailure)
 
@@ -968,8 +969,8 @@ class FixedPointCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, 
 
     val matcherDefinitions =
       (redexImpls.iterator ++ compiledSides.iterator.flatMap(_._2._2) ++ postMatcherOpt.iterator.flatMap(_._2))
-        .flatMap: (symbol, params, body) =>
-          Iterator(LetDecl(symbol, Nil)(N), DefineVar(symbol, Term.erasedLambda(params, body, N))(N))
+        .flatMap: (symbol, params, body, result) =>
+          Iterator(LetDecl(symbol, Nil)(N), DefineVar(symbol, Term.erasedLambda(params, body, S(result)))(N))
     val prelude =
       (matcherDefinitions ++ Iterator(
         LetDecl(modeSymbol, Nil)(N), DefineVar(modeSymbol, int(ModeFind))(N),
@@ -987,7 +988,7 @@ class FixedPointCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, 
     // alternatives process the original scrutinee.
     val success = postMatcherOpt match
       case S((postMatcher, _)) =>
-        callMatcher(postMatcher, resultSymbol.safeRef, "post-processed result")
+        callMatcher(postMatcher, resultSymbol.safeRef, "post-processed result", ErasedType.MatchResult)
       case N => makeMatchSuccess(resultSymbol.safeRef)
     val result = Term.SynthIf(
       if requireProgress then

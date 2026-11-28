@@ -488,7 +488,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                         case (sym, params, split) =>
                           val paramLists = LoweredParamList.fixed(params) :: Nil
                           val bodyBlock = inScopedBlock(ucs.Normalization(this)(split)(Ret))
-                          FunDefn.withFreshSymbol(N, sym, paramLists, N, bodyBlock)(configOverride = N, annotations = Nil)
+                          // Each leaf of the split returns a `MatchSuccess` or a `MatchFailure` (see `compilePattern`).
+                          FunDefn.withFreshSymbol(N, sym, paramLists, S(ErasedType.MatchResult), bodyBlock)(configOverride = N, annotations = Nil)
                       // The return type is intended to be consistent with `gatherMembers`
                       (mtds, Nil, Nil, End())
                     case _ => gatherMembers(defn.body)

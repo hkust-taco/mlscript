@@ -171,6 +171,14 @@ object Pattern:
     def symbol: VarSymbol = _symbol.getOrElse:
       lastWords(s"no symbol was assigned to variable `${id.name}` at ${id.toLoc}")
 
+  /** Identifies the values that the transformation of a `Transform` pattern produces. Pattern compilation
+    * turns the transformation into a function of the variables that the pattern binds: resolution collects
+    * the values of the `transform` term under this slot, and erasure assigns the result representation of
+    * that function, as they do for the body of a lambda. */
+  trait TransformImpl:
+    self: Pattern.Transform =>
+    val resultSlot = new LambdaResultSlot
+
 import Pattern.*, InvalidReason.*
 
 /** An inductive data type for patterns. */
@@ -245,6 +253,7 @@ enum Pattern extends AutoLocated, Describable, PatternShapePublisher:
     * @param transform The term that should be applied to the extracted values.
    */
   case Transform(pattern: Pattern, parameters: Ls[(VarSymbol, VarSymbol)], transform: Term)
+    extends Pattern with TransformImpl
   
   /** If the term is `Error`, we add `Opt[Loc]` to the list instead. */
   case Annotated(pattern: Pattern, annotations: Vector[Opt[Loc] \/ Term])

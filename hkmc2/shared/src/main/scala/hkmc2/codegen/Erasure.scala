@@ -39,6 +39,16 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
     */
   def sourceStatements: Iterator[Statement] = declarations.statements.iterator
 
+  // Transformations are compared by the identity of their term, which pattern compilation holds on to.
+  private val transformResults = mutable.Map.empty[Identity[Term], Opt[ErasedValueType]]
+
+  /** The representation of the values that `transform`, the term of a `Transform` pattern of this program,
+    * produces, or `N` when it is unknown. Pattern compilation gives it to the function that it generates for
+    * the transformation. A term that this instance did not erase, such as a clone, has no known result.
+    */
+  def transformResultType(transform: Term): Opt[ErasedValueType] =
+    transformResults.getOrElse(Identity(transform), N)
+
   /** Checks that lowering uses the same source root whose signatures this instance initialized. */
   def requireCompleted(statement: Statement): Unit =
     assert(root is statement, "Lowering requires completed erasure of this program")
@@ -129,6 +139,13 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
 
   private def inferredType(symbol: ResolvedValues.InputSlot): Opt[ErasedValueType] =
     joined(observations(symbol).flatMap(valueType).toList)
+
+  /** The representation of a parameter of a pattern definition, or of a variable that its pattern binds, for
+    * which resolution observed no value: a reference of unknown class. Such a symbol holds a pattern object or
+    * a part of the value to match, which the matches of every compilation unit supply.
+    */
+  private def patternInputType(symbol: ResolvedValues.InputSymbol): Opt[ErasedValueType] =
+    Option.when(config.language.useNewResolution && declarations.patternInputs(symbol))(ErasedType.Unknown)
 
   /** The representation of a slot that holds values of each of `types`, or `N` when there are none. */
   private def joined(types: Ls[ErasedValueType]): Opt[ErasedValueType] = types match
@@ -508,6 +525,7 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
             // Rest binding constructs an Array, including when lowering slices off trailing
             // arguments. Use that representation unless a declared or inherited type supplies one.
             case N => Option.when(restParameters(p.sym))(ErasedType.Array).orElse(inferredType(p.sym))
+              .orElse(patternInputType(p.sym))
         // Inherited parameter types can also join into a type without a representation.
         p.sym.erasedType = erased.map(representable(_, p.sign.flatMap(_.toLoc).orElse(p.toLoc),
           if declared.isEmpty && !inheritedParams.contains(p.sym) then S(p.sym) else N))
@@ -557,7 +575,7 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
           if td.isErroneous then N else erasedDefinitionSignature(td, overrideChecks)
     sourceDefinitions.foreach(eraseDefinition(_, Set.empty))
     def variableType(sym: ResolvedValues.InputSymbol): Opt[ErasedValueType] =
-      inferredType(sym).map(representable(_, sym.toLoc, S(sym)))
+      inferredType(sym).map(representable(_, sym.toLoc, S(sym))).orElse(patternInputType(sym))
     declarations.variables.foreach:
       case sym: VarSymbol if !sym.isErasureReady => sym.erasedType = variableType(sym)
       case sym: TermSymbol if sym.needsErasure => sym.initializeErasure(variableType(sym))
@@ -565,6 +583,11 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
       // unknown, as it was before erasure.
       case sym: TempSymbol if sym.erasedType.isEmpty => variableType(sym).foreach(tpe => sym.erasedType = S(tpe))
       case _ => ()
+    declarations.transforms.foreach: transformation =>
+      val slot = transformation.resultSlot
+      if !slot.isErasureReady then
+        slot.erasedType = inferredType(slot).map(representable(_, transformation.transform.toLoc, S(slot)))
+      transformResults(Identity(transformation.transform)) = slot.erasedType
     // The callees of an application include the definitions and lambdas of this program, whose signatures
     // the steps above assign.
     statements.foreach:

@@ -15,10 +15,10 @@ data class Pair[A, B](first: A, second: B)
 pattern SumPair = Pair(a, b) => a + b
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define SumPair⁰ as pattern SumPair¹ {
-//│   method unapply⁰ = fun unapply¹(input: ?): ? {
+//│   method unapply⁰ = fun unapply¹(input: Unknown): Object⁰ {
 //│     let transform: ?, arg$Pair$0$: Unknown, arg$Pair$1$: Unknown, transformResult: ?, lambda;
 //│     @private
-//│     define lambda as fun lambda⁰(a: ?, b: ?): ? {
+//│     define lambda as fun lambda⁰(a: Unknown, b: Unknown): Unknown {
 //│       return +⁰‹(?, ?) => ?›(a, b)
 //│     };
 //│     set transform = lambda⁰;
@@ -26,13 +26,13 @@ pattern SumPair = Pair(a, b) => a + b
 //│       Pair⁰ =>
 //│         set arg$Pair$0$ = input.first⁰;
 //│         set arg$Pair$1$ = input.second⁰;
-//│         set transformResult = transform‹(?, ?) => ?›(arg$Pair$0$, arg$Pair$1$);
+//│         set transformResult = transform‹(Unknown, Unknown) => Unknown›(arg$Pair$0$, arg$Pair$1$);
 //│         return new runtime⁰.MatchSuccess⁰(transformResult, null)
 //│       else
 //│         return new runtime⁰.MatchFailure⁰(null)
 //│     end
 //│   }
-//│   method unapplyStringPrefix⁰ = fun unapplyStringPrefix¹(input: ?): ? {
+//│   method unapplyStringPrefix⁰ = fun unapplyStringPrefix¹(input: Unknown): Object⁰ {
 //│     return new runtime⁰.MatchFailure⁰(null)
 //│   }
 //│ };
@@ -49,7 +49,7 @@ sum(Pair(1, 2))
 //│ let tmp: Pair⁰;
 //│ define sum⁰ as fun sum¹(p: Unknown): Int⁰ {
 //│   let total: ?, unapplyResult: ?, output: ?, bindings: ?;
-//│   set unapplyResult = SumPair¹.unapply﹖‹(?) => ?›(p);
+//│   set unapplyResult = SumPair¹.unapply﹖‹(Unknown) => Object⁰›(p);
 //│   match unapplyResult
 //│     MatchSuccess⁰ =>
 //│       set output = unapplyResult.output⁰;
@@ -71,18 +71,18 @@ sum(Pair(1, 2))
 pattern Twice(pattern P) = [P, P]
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define Twice⁰ as pattern Twice¹ {
-//│   method unapply² = fun unapply³(P: ?, input: ?): ? {
+//│   method unapply² = fun unapply³(P: Unknown, input: Unknown): Object⁰ {
 //│     let element1$: ?, element0$: ?, matchSuccess_P: ?, output: ?, bindings: ?, matchSuccess_P1: ?, output1: ?, bindings1: ?;
 //│     match input
 //│       Array(2) =>
 //│         set element0$ = runtime⁰.Tuple⁰.get⁰‹(Unknown, Int⁰) => Unknown›(input, 0);
 //│         set element1$ = runtime⁰.Tuple⁰.get⁰‹(Unknown, Int⁰) => Unknown›(input, 1);
-//│         set matchSuccess_P = P.unapply﹖‹(?) => ?›(element0$);
+//│         set matchSuccess_P = P.unapply﹖‹(Unknown) => Object⁰›(element0$);
 //│         match matchSuccess_P
 //│           MatchSuccess⁰ =>
 //│             set output = matchSuccess_P.output⁰;
 //│             set bindings = matchSuccess_P.bindings⁰;
-//│             set matchSuccess_P1 = P.unapply﹖‹(?) => ?›(element1$);
+//│             set matchSuccess_P1 = P.unapply﹖‹(Unknown) => Object⁰›(element1$);
 //│             match matchSuccess_P1
 //│               MatchSuccess⁰ =>
 //│                 set output1 = matchSuccess_P1.output⁰;
@@ -98,7 +98,7 @@ pattern Twice(pattern P) = [P, P]
 //│         return new runtime⁰.MatchFailure⁰(null)
 //│     end
 //│   }
-//│   method unapplyStringPrefix² = fun unapplyStringPrefix³(P: ?, input: ?): ? {
+//│   method unapplyStringPrefix² = fun unapplyStringPrefix³(P: Unknown, input: Unknown): Object⁰ {
 //│     return new runtime⁰.MatchFailure⁰(null)
 //│   }
 //│ };
@@ -116,7 +116,7 @@ bothSums([Pair(1, 2), Pair(3, 4)])
 //│ define bothSums⁰ as fun bothSums¹(xs: Unknown): Bool⁰ {
 //│   let patternArgument0$: ?, unapplyResult: ?, output: ?, bindings: ?;
 //│   set patternArgument0$ = SumPair¹;
-//│   set unapplyResult = Twice¹.unapply﹖‹(?, ?) => ?›(patternArgument0$, xs);
+//│   set unapplyResult = Twice¹.unapply﹖‹(Unknown, Unknown) => Object⁰›(patternArgument0$, xs);
 //│   match unapplyResult
 //│     MatchSuccess⁰ =>
 //│       set output = unapplyResult.output⁰;

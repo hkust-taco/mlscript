@@ -3721,7 +3721,8 @@ extends Importer:
           // We create a symbol specifically for `Param` for each variable to
           // avoid redundantly redeclaring symbols in `Scope` during code
           // generation, which triggers the assertion in `Scope.addToBindings`.
-          val parameterSymbol = VarSymbol(symbol.id, erasedType = N, mut = false)
+          // Erasure assigns its representation with those of the other variables of the pattern.
+          val parameterSymbol = VarSymbol(symbol.id, mut = false)
           (name -> parameterSymbol, symbol -> parameterSymbol)
       .toList.unzip
       pattern.variables.report // Report all invalid variables we found in `pattern`.

@@ -139,6 +139,12 @@ object ErasedType:
   /** The builtin `Unit` reference type. */
   def Unit: ErasedValueType = ErasedType.ValueLike(rsc = S(false), summon[State].unitSymbol)
 
+  /** The type of the results of the pattern protocol: an instance of the `MatchSuccess` or of the
+    * `MatchFailure` class of the runtime, as its `MatchResult` type says. */
+  def MatchResult: ErasedValueType = union(
+    ErasedType.ValueLike(rsc = S(false), summon[State].matchSuccessClsSymbol),
+    ErasedType.ValueLike(rsc = S(false), summon[State].matchFailureClsSymbol))
+
   /** The builtin `Bool` reference type. */
   def Bool: ErasedValueType = ErasedType.ValueLike(rsc = S(false), ctx.builtins.Bool)
 
