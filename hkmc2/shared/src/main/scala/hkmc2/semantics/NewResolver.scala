@@ -2084,11 +2084,27 @@ class NewResolver:
           instantiated
 
   def checkAscription(body: Term, sign: Term)(using ResolutionContext): Unit =
+    constrainBy(sign, body)(listenTerm(body))
+
+  /** Constrain the values that the function body `body` returns, including those of its explicit returns,
+    * by the result type `sign` that its function declares. */
+  def checkDeclaredResult(body: Term, sign: Term)(using ResolutionContext): Unit =
+    constrainBy(sign, body)(listenResult(body))
+
+  /** Register the written type `sign` and constrain by it each value that `values` delivers to its argument.
+    * `site` is the term that produces these values, where diagnostics report them. */
+  private def constrainBy(sign: Term, site: Term)(values: Listener => Unit)(using ResolutionContext): Unit =
     val resolution = typeResolution(sign)
     sign.typeInterpretation = S(resolution)
     val expected = declaredType(resolution, Map.empty)
-    listenTerm(body): shape =>
-      inferTypeArguments(expected.instantiate(rctx.instances), shape, Nil, S(body))
+    values(shape => inferTypeArguments(expected.instantiate(rctx.instances), shape, Nil, S(site)))
+
+  /** The results that callers of the function `lam` observe: instances of its declared result type, which is
+    * an abstraction boundary as a definition's result annotation is, or the values that its body returns. */
+  private[semantics] def listenLambdaResult(lam: Lam)(listener: Listener)(using ResolutionContext): Unit =
+    lam.declaredResult match
+      case S(sign) => listenTypeInstances(sign)(listener)
+      case N => listenResult(lam.body)(listener)
 
   /** The lower endpoint is an ordinary observed value. inferTypeArguments installs
     * the edge before following either endpoint, including still-unbounded parameters.
@@ -2597,7 +2613,7 @@ class NewResolver:
     val context = actual.applicationHead._2
     def results(listener: Listener)(using ResolutionContext): Unit = actual.applicationHead._1 match
       case intro: IntroShape => intro.trm match
-        case Lam(_, body) => listenResult(body)(shape => listener(instantiateShape(shape, instances)))(using rctx.withInstances(instances))
+        case lam: Lam => listenLambdaResult(lam)(shape => listener(instantiateShape(shape, instances)))(using rctx.withInstances(instances))
         case _ => ()
       case ds: DefnShape => ds.defn match
         case td: TermDefinition => listenDefinitionResult(td, instances)(shape =>
@@ -4026,7 +4042,7 @@ class NewResolver:
           softAssert(rctx.hasError(res))
       case intro: IntroShape =>
         intro.trm match
-        case Lam(_, body) => listenResult(body)(returned)
+        case lam: Lam => listenLambdaResult(lam)(returned)
         case _ =>
           softAssert(rctx.hasError(res))
       case _ =>

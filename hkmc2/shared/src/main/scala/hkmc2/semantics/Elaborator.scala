@@ -1451,7 +1451,7 @@ extends Importer:
     if unders.isEmpty && !alwaysLambda then st
     else
       val params = unders.iterator.map(Param.simple).toList
-      withTypeBinders(Term.Lam(PlainParamList(params)(N), st))
+      withTypeBinders(Term.Lam(PlainParamList(params)(N), st)(N))
   
   /** Record the explicit type binders in scope where `term` is written, for
     * new resolution's binder-support analysis (see NewResolver.shapeSupport).
@@ -1974,7 +1974,7 @@ extends Importer:
       Term.FunTy(funTyParams(lhs), subterm(rhs, Tpe), N)
     case InfixApp(lhs, Keywrd(Keyword.`=>`), rhs) =>
       lhs match
-      case Tup(_) => lambda(lhs)(term(rhs, Trm))
+      case Tup(_) => lambda(lhs, N)(term(rhs, Trm))
       case TyTup(tys) =>
         val constraints = tys.flatMap(maybeConstraint)
         val body = term(rhs, interp)
@@ -2171,7 +2171,7 @@ extends Importer:
           syntheticLocalRef(args))(
           App(nme, Tup(Nil)) // FIXME
           , N, rs)
-      ))
+      )(N))
     case tree @ Tup(TermDef(Ins, f, N) :: fs) =>
       tupleLiteral(new Term.CtxTup((f :: fs).map(fld(_, interp.elements)))(tree), interp)
     case Modified(kw @ Keywrd(Keyword.`mut`), tree @ Tup(fields)) =>
@@ -2240,7 +2240,7 @@ extends Importer:
       val scrut = VarSymbol(Ident("caseScrut"), mut = false)
       val body = caseSplit(scrut, tree)
       val params = Param.simple(scrut) :: Nil
-      withTypeBinders(Term.Lam(PlainParamList(params)(N), body)).mkLocWith(kw)
+      withTypeBinders(Term.Lam(PlainParamList(params)(N), body)(N)).mkLocWith(kw)
     case PrefixApp(kw @ Keywrd(Keyword.`return`), body) =>
       ctx.getRetHandler match
       case ReturnHandler.Required(sym) =>
@@ -3045,6 +3045,9 @@ extends Importer:
               val sign = resultTree.filter(_ => resultLists.isEmpty).map:
                 case TypeDef(Mod, st, N) => term(st, Tpe)(using newCtx)
                 case st => term(st, Tpe)(using newCtx)
+              // * A result annotation that follows parameter lists of the returned function declares the result of
+              // * that function, not the result of this definition.
+              val returnedResultTree = resultTree.filter(_ => resultLists.nonEmpty)
               val signatureParams = separate match
                 case S(decl) => decl.signatureParams
                 case N if newResolution && (k is Fun) && pss.isEmpty =>
@@ -3097,25 +3100,26 @@ extends Importer:
                           EffectHandlerMethodSpec("ret", S("value"), requireEffectMethodValue("ret", _)) :: Nil,
                           b,
                         )
-                  // * The function that takes the parameter lists `lists`, which the definition writes after those of
-                  // * its signature. Its last list binds the parameters of the written body, so that body is the body
-                  // * of the returned function: a `return` in `fun f(x)(y) = ...` returns from the application to `y`
-                  // * even when `f` itself only takes `x`. Leaving the body in the enclosing definition would make
-                  // * that `return` a non-local one, to a call of `f` that has already returned.
-                  // * A function literal declares no result type, so a result annotation ascribes the value that
-                  // * the body completes with, and does not ascribe the values of explicit returns.
-                  def returnedFunction(lists: Ls[Tree])(using Ctx): Term = lists match
-                    case params :: rest => lambda(params)(returnedFunction(rest))
-                    case Nil => functionBody(isGenerator = false, isAsync = false):
-                      term(resultTree.fold(rhs)(tpe => InfixApp(rhs, Keywrd(Keyword.`as`), tpe)), Trm)
+                  // * The function that takes the parameter list `params` and then the lists `rest`, which the
+                  // * definition writes after those of its signature. The last list binds the parameters of the
+                  // * written body, so that body is the body of the function that takes this list: a `return` in
+                  // * `fun f(x)(y) = ...` returns from the application to `y` even when `f` itself only takes `x`.
+                  // * Leaving the body in the enclosing definition would make that `return` a non-local one, to a
+                  // * call of `f` that has already returned.
+                  // * A result annotation follows the last list, so it declares the result of the same function.
+                  def returnedFunction(params: Tree, rest: Ls[Tree])(using Ctx): Term = rest match
+                    case next :: rest => lambda(params, N)(returnedFunction(next, rest))
+                    case Nil => lambda(params, returnedResultTree):
+                      functionBody(isGenerator = false, isAsync = false)(term(rhs, Trm))
                   functionBody(hasParamLists && hasGeneratorAnnotation, hasAsyncAnnotation)(literal match
                     case S(FunctionLiteral(_, caseTree: Case, S(_))) => caseSplit(caseParams.get.params.head.sym, caseTree)
                     case S(FunctionLiteral(_, PrefixApp(_, body), S(_))) =>
                       given UnderCtx = UnderCtx(placeholders)
                       subterm(body, Trm)
                     case S(FunctionLiteral(_, body, _)) => term(body, Trm)
-                    case N if resultLists.isEmpty => term(rhs, Trm)
-                    case N => returnedFunction(resultLists)
+                    case N => resultLists match
+                      case Nil => term(rhs, Trm)
+                      case params :: rest => returnedFunction(params, rest)
                   )(using newCtx)
               
               val mfn = if td.annotatedResultType.exists(_.isModified(Mod)) then Modulefulness.ofSign(sign)(true) else Modulefulness.none
@@ -3772,13 +3776,17 @@ extends Importer:
       msg"A ${kind} cannot have parameter lists" -> tree.toLoc ::
       msg"A parenthesized function type declares a ${kind} that holds a function." -> N :: Nil))
   
-  /** Elaborate the function literal whose parameter list is `params`. Its body `body` is elaborated in
-    * the context of the literal, which includes these parameters. */
-  private def lambda(params: Tree)(body: Ctxl[Term]): Ctxl[Term] =
+  /** Elaborate the function whose parameter list is `params`. Its body `body` and the result type
+    * `declaredResult` that it may declare (see `Term.Lam`) are elaborated in the context of the function,
+    * which includes these parameters. */
+  private def lambda(params: Tree, declaredResult: Opt[Tree])(body: Ctxl[Term]): Ctxl[Term] =
     ctx.nest(OuterCtx.LambdaOrHandlerBlock).givenIn:
       val (syms, nestCtx) = funParams(params)
       seedRestParameter(syms)
-      withTypeBinders(Term.Lam(syms, body(using nestCtx)))
+      val result = declaredResult.map(term(_, Tpe)(using nestCtx))
+      val bodyTerm = body(using nestCtx)
+      if newResolution then result.foreach(checkDeclaredResult(bodyTerm, _))
+      withTypeBinders(Term.Lam(syms, bodyTerm)(result))
   
   def funParams(t: Tree): Ctxl[(ParamList, Ctx)] =
     val ps_ctx = params(t, inDataClass = false, inPattern = false, inFunction = true, inConstructor = false)

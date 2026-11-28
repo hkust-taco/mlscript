@@ -252,15 +252,95 @@ fun earlyResult(x)(y) =
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 // A `return` in a lambda nested in that body also returns from the application of the last written list.
+// The iteration is written in MLscript: an effect cannot leave a native loop such as `Array.forEach`.
 :effectHandlers
 :lift
-:expect [4, 0]
+:expect [3, 0]
+fun each(xs: Array[Int], f: Int -> ()) =
+  let i = 0
+  while i < xs.length do
+    f(xs.[i])
+    set i += 1
 fun firstOver: Int -> (Array[Int] -> Int)
 fun firstOver(limit)(xs) =
-  xs.forEach(x => if x > limit do return x)
+  each(xs, x => if x > limit do return x)
   0
 [firstOver(2)([1, 2, 3, 4]), firstOver(9)([1, 2, 3])]
-//│ = [4, 0]
+//│ = [3, 0]
+
+// A result annotation follows the last written list, so it declares the result of the function that takes
+// this list. The returned function has this result type.
+:sir
+:siret
+fun declared: Int -> (Int -> Num)
+fun declared(x)(y): Num =
+  if y > 0 do return x
+  y
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define declared⁰ as fun declared¹(x: Int⁰): Function⁰ {
+//│   let lambda;
+//│   @private
+//│   define lambda as fun lambda¹(y: Int⁰): Num⁰ {
+//│     let scrut: Bool⁰;
+//│     set scrut = >⁰(y, 0);
+//│     match scrut
+//│       true =>
+//│         return x
+//│       else
+//│         return y
+//│     end
+//│   };
+//│   return lambda¹
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect [1, 0, 7]
+class Declared(k: Int) with
+  fun scale: Int -> (Int -> Num)
+  fun scale(x)(y): Num =
+    if y > 0 do return k * x + y
+    y
+type Unary = Int -> Int
+fun declaredGetter: Unary
+fun declaredGetter(x): Int = x + 1
+[declared(1)(2), declared(1)(0), Declared(2).scale(3)(1)]
+//│ = [1, 0, 7]
+
+:expect 3
+declaredGetter(2)
+//│ = 3
+
+// The values that the body returns must have the declared type, including those of explicit returns.
+:e
+fun misdeclared: Int -> (Int -> Int)
+fun misdeclared(x)(y): Int = "s"
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.+2: 	fun misdeclared(x)(y): Int = "s"
+//│ ╙──      	                             ^^^
+
+:e
+fun misreturned: Int -> (Int -> Int)
+fun misreturned(x)(y): Int =
+  if y > 0 do return "s"
+  x
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.+3: 	  if y > 0 do return "s"
+//│ ╙──      	                     ^^^
+
+:e
+fun misdeclaredInner: Int -> (Int -> (Int -> Int))
+fun misdeclaredInner(x)(y)(z): Int = "s"
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.+2: 	fun misdeclaredInner(x)(y)(z): Int = "s"
+//│ ╙──      	                                     ^^^
+
+:e
+fun misdeclaredGetter: Unary
+fun misdeclaredGetter(x): Int = "s"
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.+2: 	fun misdeclaredGetter(x): Int = "s"
+//│ ╙──      	                                ^^^
 
 // A dropped public argument remains available to a subclass implementing the full declaration.
 :expect [3, 7]
@@ -352,7 +432,8 @@ computedValue(2)
 // *** Copied definitions ***
 
 // Compiling a pattern copies its transformation for each use, along with the definitions it contains,
-// their signatures, and the parameter lists that these signatures spell out.
+// their signatures, the parameter lists that these signatures spell out, and the result type that a
+// definition declares for the function it returns.
 :checkIR
 :noOpt
 :expect [25, 29]
@@ -364,7 +445,7 @@ pattern Scaled = x =>
     fun tupled: ([Int, Int]) -> Int = p => p.0
     fun rest: (Int, ...Array[Int], Int) -> Int = (a, ...bs, c) => a + c
     fun shorthand: Int -> (Int -> Int)
-    fun shorthand(a)(b) =
+    fun shorthand(a)(b): Int =
       if b > 0 do return a
       b
     scale(x) + curried(0)("s") + tupled([0, 1]) + rest(1, 2, 3, 4) + shorthand(1)(1)

@@ -325,8 +325,10 @@ sealed trait TupleLiteral extends ShapeHost:
     case Spd(SpreadKind.Lazy, _, _) => true
     case _ => false
 
-/** Identifies the values a lambda body produces on normal completion.
-  * Resolution collects those values under this slot and erasure assigns their common representation.
+/** Identifies the values that a lambda returns: the value that its body completes with and, when a `return`
+  * in its body returns from the lambda itself (see `Lam`), the values of these returns.
+  * Resolution collects these values under this slot. Erasure gives the slot the representation of the
+  * lambda's declared result type or, without one, the common representation of the collected values.
   */
 final class LambdaResultSlot extends HasDelayedErasedType[ErasedValueType]
 
@@ -397,7 +399,15 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
    *  branch matches. Used by `ups.FixedPointCompiler` to drive the generated
    *  matcher machine. */
   case SynthWhile(split: Split)
-  case Lam(params: ParamList, body: Term) extends Term, LambdaImpl
+  /** A function that takes `params` and returns the result of `body`.
+    * A function literal declares no result type, and a `return` in its body returns from the enclosing definition.
+    * A definition is also elaborated into one `Lam` for each parameter list that it writes after those of its
+    * signature, as `fun f(x)(y): Int = ...` does for `(y)` following `fun f: Int -> (Int -> Int)`.
+    * The body of the last of these functions is the body of the definition: a `return` in it returns from this
+    * function, and `declaredResult` is the result type that the definition declares. As for a definition, the
+    * values that the body returns must have this type, and callers observe it in place of those values.
+    */
+  case Lam(params: ParamList, body: Term)(val declaredResult: Opt[Term]) extends Term, LambdaImpl
   case FunTy(lhs: Term, rhs: Term, eff: Opt[Term])
   case Forall(tvs: Ls[QuantVar], outer: Opt[VarSymbol], body: Term)
   case Constrained(constraints: Ls[SubConstraint], body: Term)
@@ -598,7 +608,7 @@ object Term:
     * Pass `N` when the generated body has no known result representation.
     */
   def erasedLambda(params: ParamList, body: Term, resultType: Opt[ErasedValueType]): Lam =
-    val lam: Lam = Lam(params, body)
+    val lam: Lam = Lam(params, body)(N)
     lam.resultSlot.erasedType = resultType
     lam
 

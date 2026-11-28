@@ -461,7 +461,9 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
       case lam: Lam if !lam.resultSlot.isErasureReady =>
         val slot = lam.resultSlot
         slot.erasedType = parameterError(Iterator.single(lam.params)).orElse:
-          inferredType(slot).map(representable(_, lam.body.toLoc, S(slot)))
+          lam.declaredResult match
+            case S(sign) => eraseSignature(sign).map(representable(_, sign.toLoc, N))
+            case N => inferredType(slot).map(representable(_, lam.body.toLoc, S(slot)))
       case asc: Asc if !asc.isErasureReady =>
         asc.erasedType = eraseSignature(asc.ty).map(representable(_, asc.ty.toLoc, N))
       case cls: ClassLikeDef => cls.ctorSym.foreach: symbol =>

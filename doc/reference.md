@@ -516,6 +516,10 @@ For example, given `type Unary = Int -> Int`, both `fun f(x) = x` and `fun f = x
 implement `fun f: Unary` as a getter. Likewise, after `fun f: Int -> (Int -> Int)`,
 `fun f(x)(y) = x + y` means `fun f(x) = y => x + y`. Overrides see one method parameter list.
 A `return` in the body of such a definition returns from the application of its last written list.
+A result annotation on such a definition, as in `fun f(x)(y): Int = x + y`, declares the result of
+that application: the values that the body returns, including those of its `return`s, must have this type.
+Without the annotation, the result of the returned function is inferred from its body and is not
+checked against the function type that the signature declares, as for any other function value.
 A result annotation following written parameter lists is the type of their result:
 `fun f(x): Int -> Int` takes one parameter list and returns a function.
 A value cannot have parameter lists, so the function type of a `val` must be parenthesized,
