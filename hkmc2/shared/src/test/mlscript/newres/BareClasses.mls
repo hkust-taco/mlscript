@@ -20,7 +20,7 @@ class Foo {
 //│             tsym = term:Foo⁰/b¹
 //│             body = S of Lit of IntLit of 1
 //│             flags = (method)
-//│             modulefulness = Modulefulness of N
+//│             writtenModulefulness = Modulefulness of N
 //│         res = Lit of UnitLit of false
 //│   res = Lit of UnitLit of false
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

@@ -1,0 +1,900 @@
+:.
+
+// A signature written apart from its definition must precede it.
+// A bodiless declaration written after its definition is reported and ignored.
+
+
+fun ok: Int -> Int
+fun ok(x) = x
+ok(1)
+//│ = 1
+
+// Elaborating the late declaration would make it the member's definition, so `late(1)` would call a function without
+// parameters.
+:e
+fun late(x) = x
+fun late: Int -> Int
+late(1)
+//│ ╔══[COMPILATION ERROR] The signature of 'late' must be written before its definition
+//│ ║  l.+2: 	fun late: Int -> Int
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── defined here
+//│ ║  l.+1: 	fun late(x) = x
+//│ ╙──      	^^^^^^^^^^^^^^^
+//│ = 1
+
+// The rule also applies when the definition has no parameters.
+:e
+fun lateGetter = 1
+fun lateGetter: Int
+lateGetter
+//│ ╔══[COMPILATION ERROR] The signature of 'lateGetter' must be written before its definition
+//│ ║  l.+2: 	fun lateGetter: Int
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ╟── defined here
+//│ ║  l.+1: 	fun lateGetter = 1
+//│ ╙──      	^^^^^^^^^^^^^^^^^^
+//│ = 1
+
+// A late signature that names a class shadowed by the definition's parameter `C`.
+:e
+class C()
+fun lateShadowing(C) = C
+fun lateShadowing: C -> C
+lateShadowing(C())
+//│ ╔══[COMPILATION ERROR] The signature of 'lateShadowing' must be written before its definition
+//│ ║  l.+3: 	fun lateShadowing: C -> C
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── defined here
+//│ ║  l.+2: 	fun lateShadowing(C) = C
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = C()
+
+// The rule also applies to `val` pairs.
+:e
+val lateVal = 1
+val lateVal: Str
+lateVal
+//│ ╔══[COMPILATION ERROR] The signature of 'lateVal' must be written before its definition
+//│ ║  l.+2: 	val lateVal: Str
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╟── defined here
+//│ ║  l.+1: 	val lateVal = 1
+//│ ╙──      	^^^^^^^^^^^^^^^
+//│ = 1
+//│ lateVal = 1
+
+:e
+class K with
+  fun k(x) = x
+  fun k: Int -> Int
+(new K).k(1)
+//│ ╔══[COMPILATION ERROR] The signature of 'k' must be written before its definition
+//│ ║  l.+3: 	  fun k: Int -> Int
+//│ ║        	  ^^^^^^^^^^^^^^^^^
+//│ ╟── defined here
+//│ ║  l.+2: 	  fun k(x) = x
+//│ ╙──      	  ^^^^^^^^^^^^
+//│ = 1
+
+// A late declaration of any other shape is rejected too.
+:e
+fun lateParams(x) = x
+fun lateParams(x: Int): Int
+lateParams(1)
+//│ ╔══[COMPILATION ERROR] A declaration of 'lateParams' cannot follow its definition
+//│ ║  l.+2: 	fun lateParams(x: Int): Int
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── defined here
+//│ ║  l.+1: 	fun lateParams(x) = x
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Only a signature without parameter lists (`fun f: T`) can be written apart from a definition
+//│ = 1
+
+:e
+fun lateCurried(x) = x
+fun lateCurried(x: Int)(y: Int): Int
+lateCurried(1)
+//│ ╔══[COMPILATION ERROR] A declaration of 'lateCurried' cannot follow its definition
+//│ ║  l.+2: 	fun lateCurried(x: Int)(y: Int): Int
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── defined here
+//│ ║  l.+1: 	fun lateCurried(x) = x
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Only a signature without parameter lists (`fun f: T`) can be written apart from a definition
+//│ = 1
+
+:e
+fun lateBare(x) = x
+fun lateBare
+lateBare(1)
+//│ ╔══[COMPILATION ERROR] A declaration of 'lateBare' cannot follow its definition
+//│ ║  l.+2: 	fun lateBare
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── defined here
+//│ ║  l.+1: 	fun lateBare(x) = x
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ╙── Only a signature without parameter lists (`fun f: T`) can be written apart from a definition
+//│ = 1
+
+:e
+val lateBareVal = 1
+val lateBareVal
+lateBareVal
+//│ ╔══[COMPILATION ERROR] A declaration of 'lateBareVal' cannot follow its definition
+//│ ║  l.+2: 	val lateBareVal
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ╟── defined here
+//│ ║  l.+1: 	val lateBareVal = 1
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ╙── Only a signature without parameter lists (`fun f: T`) can be written apart from a definition
+//│ = 1
+//│ lateBareVal = 1
+
+// The reported location excludes the modifier.
+:e
+class KBare with
+  fun k(x) = x
+  open fun k(x: Int): Int
+(new KBare).k(1)
+//│ ╔══[COMPILATION ERROR] A declaration of 'k' cannot follow its definition
+//│ ║  l.+3: 	  open fun k(x: Int): Int
+//│ ║        	       ^^^^^^^^^^^^^^^^^^
+//│ ╟── defined here
+//│ ║  l.+2: 	  fun k(x) = x
+//│ ║        	  ^^^^^^^^^^^^
+//│ ╙── Only a signature without parameter lists (`fun f: T`) can be written apart from a definition
+//│ = 1
+
+// A skipped declaration still reports a malformed symbolic name.
+:e
+fun lateSymbolic(x) = x
+fun (class Lol) lateSymbolic: Int
+lateSymbolic(1)
+//│ ╔══[COMPILATION ERROR] This type definition is not a valid symbolic name
+//│ ║  l.+2: 	fun (class Lol) lateSymbolic: Int
+//│ ╙──      	     ^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] The signature of 'lateSymbolic' must be written before its definition
+//│ ║  l.+2: 	fun (class Lol) lateSymbolic: Int
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── defined here
+//│ ║  l.+1: 	fun lateSymbolic(x) = x
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
+//│ = 1
+
+
+// The definition elaborates its separate signature once, without the definition's value parameters in scope.
+:e
+fun notFound: Foo -> Int
+fun notFound(x) = x
+//│ ╔══[COMPILATION ERROR] Name not found: Foo
+//│ ║  l.+1: 	fun notFound: Foo -> Int
+//│ ╙──      	              ^^^
+
+class D()
+fun paramNamedLikeClass: D -> D
+fun paramNamedLikeClass(D) = D
+paramNamedLikeClass(D())
+//│ = D()
+
+// Its names resolve where it is written, so an `open` between the two does not reach it.
+module Opened with
+  class Hidden(val y: Int)
+  class Shadow(val y: Int)
+
+:e
+fun openedLater: Hidden -> Int
+open Opened.{ Hidden }
+fun openedLater(h) = h.y
+//│ ╔══[COMPILATION ERROR] Name not found: Hidden
+//│ ║  l.+1: 	fun openedLater: Hidden -> Int
+//│ ╙──      	                 ^^^^^^
+//│ ╔══[COMPILATION ERROR] This selection of member 'y' has no resolved target
+//│ ║  l.+3: 	fun openedLater(h) = h.y
+//│ ╙──      	                     ^^^
+
+class Shadow(val x: Int)
+
+// The signature's `Shadow` is the outer class, which has `x`; the opened one has `y`.
+fun shadowed() =
+  fun h: Shadow -> Int
+  open Opened.{ Shadow }
+  fun h(s) = s.x
+  h
+shadowed()(Shadow(1))
+//│ = 1
+
+// Each body gets its own signature and type parameters when definitions arrive in reverse order.
+:expect [1, 2]
+class LeftField(val left: Int)
+class RightField(val right: Int)
+fun interleaved() =
+  fun left[A]: (LeftField, A) -> Int
+  fun right[A]: (RightField, A) -> Int
+  fun right[A](obj, value: A) = obj.right
+  fun left[A](obj, value: A) = obj.left
+  [left(LeftField(1), true), right(RightField(2), "ok")]
+interleaved()
+//│ = [1, 2]
+
+// A use between the signature and the definition calls the definition.
+fun usedBetween: Int -> Int
+val usedBetweenResult = usedBetween(1)
+fun usedBetween(x) = x + 1
+usedBetweenResult
+//│ = 2
+//│ usedBetweenResult = 2
+
+:expect 42
+fun moduleResult: module ResultModule
+module ResultModule with
+  val answer = 42
+fun moduleResult = ResultModule
+moduleResult.answer
+//│ = 42
+
+private fun bothPrivate: Int -> Int
+private fun bothPrivate(x) = x
+bothPrivate(1)
+//│ = 1
+
+// Visibility belongs on the signature.
+private fun privateSignature: Int -> Int
+fun privateSignature(x) = x
+privateSignature(1)
+//│ = 1
+
+:w
+fun privateDefinition: Int -> Int
+private fun privateDefinition(x) = x
+//│ ╔══[WARNING] This modifier belongs on the signature of 'privateDefinition', not on its definition
+//│ ║  l.+2: 	private fun privateDefinition(x) = x
+//│ ║        	^^^^^^^
+//│ ╟── signature here
+//│ ║  l.+1: 	fun privateDefinition: Int -> Int
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+// Different visibilities written on the two sides contradict each other.
+:e
+private fun contradictoryVisibility: Int -> Int
+public fun contradictoryVisibility(x) = x
+//│ ╔══[COMPILATION ERROR] The signature and the definition of 'contradictoryVisibility' must have the same visibility
+//│ ╟── signature here
+//│ ║  l.+1: 	private fun contradictoryVisibility: Int -> Int
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── definition here
+//│ ║  l.+2: 	public fun contradictoryVisibility(x) = x
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+declare fun declared: Int -> Int
+fun declared(x) = x
+//│ ╔══[COMPILATION ERROR] A 'declare'd signature cannot have a definition
+//│ ║  l.+1: 	declare fun declared: Int -> Int
+//│ ║        	^^^^^^^
+//│ ╟── definition here
+//│ ║  l.+2: 	fun declared(x) = x
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
+
+:expect 42
+fun annotatedResult: Int -> Int
+fun annotatedResult(x): Int = x
+annotatedResult(42)
+//│ = 42
+
+open annotations.{ * }
+
+// An annotation on the wrong side warns but still applies.
+:w
+@tailrec fun tailrecSignature: Int -> Int
+fun tailrecSignature(x) = x
+//│ ╔══[WARNING] This annotation belongs on the definition of 'tailrecSignature', not on its signature
+//│ ║  l.+1: 	@tailrec fun tailrecSignature: Int -> Int
+//│ ║        	^^^^^^^^
+//│ ╟── definition here
+//│ ║  l.+2: 	fun tailrecSignature(x) = x
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[WARNING] This function is marked @tailrec but has no direct self-recursion.
+//│ ║  l.+2: 	fun tailrecSignature(x) = x
+//│ ╙──      	    ^^^^^^^^^^^^^^^^
+
+:e
+fun tailrecDefinition: Int -> Int
+@tailrec fun tailrecDefinition(x) = tailrecDefinition(x) + 1
+//│ ╔══[COMPILATION ERROR] This function is marked @tailrec but is not tail recursive.
+//│ ║  l.+2: 	@tailrec fun tailrecDefinition(x) = tailrecDefinition(x) + 1
+//│ ║        	             ^^^^^^^^^^^^^^^^^
+//│ ╟── It could self-recurse through this call, which is not a tail call.
+//│ ║  l.+2: 	@tailrec fun tailrecDefinition(x) = tailrecDefinition(x) + 1
+//│ ╙──      	                                    ^^^^^^^^^^^^^^^^^^^^
+
+// The definition's settings override the signature's: `count` becomes a loop.
+:w
+:soir
+@config(tailRecOpt: false) fun count: Int -> Int
+@config(tailRecOpt: true) fun count(n) = if n > 0 then count(n - 1) else 0
+//│ ╔══[WARNING] This annotation belongs on the definition of 'count', not on its signature
+//│ ║  l.+1: 	@config(tailRecOpt: false) fun count: Int -> Int
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── definition here
+//│ ║  l.+2: 	@config(tailRecOpt: true) fun count(n) = if n > 0 then count(n - 1) else 0
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[WARNING] This annotation is written on both the signature and the definition of 'count'
+//│ ║  l.+1: 	@config(tailRecOpt: false) fun count: Int -> Int
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── also written here
+//│ ║  l.+2: 	@config(tailRecOpt: true) fun count(n) = if n > 0 then count(n - 1) else 0
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @config(...) @config(...)
+//│ define count⁰ as fun count¹(n) {
+//│   loop loopLabel:
+//│     let scrut, tmp;
+//│     set scrut = >⁰(n, 0);
+//│     match scrut
+//│       true =>
+//│         set tmp = -⁰(n, 1);
+//│         set n = tmp;
+//│         continue loopLabel
+//│       else
+//│         return 0
+//│     end
+//│   unreachable /* Rest of abortive labelled block */
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:w
+fun pureDefinition: Int -> Int
+@pure fun pureDefinition(x) = x
+//│ ╔══[WARNING] This annotation belongs on the signature of 'pureDefinition', not on its definition
+//│ ║  l.+2: 	@pure fun pureDefinition(x) = x
+//│ ║        	^^^^^
+//│ ╟── signature here
+//│ ║  l.+1: 	fun pureDefinition: Int -> Int
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+@pure fun pureSignature: Int -> Int
+fun pureSignature(x) = x
+pureSignature(1)
+//│ = 1
+
+// An annotation on both sides warns and is kept twice, as when written twice on one side.
+:w
+:sir
+@pure fun pureBoth: Int -> Int
+@pure fun pureBoth(x) = x
+//│ ╔══[WARNING] This annotation is written on both the signature and the definition of 'pureBoth'
+//│ ║  l.+1: 	@pure fun pureBoth: Int -> Int
+//│ ║        	^^^^^
+//│ ╟── also written here
+//│ ║  l.+2: 	@pure fun pureBoth(x) = x
+//│ ╙──      	^^^^^
+//│ ╔══[WARNING] This annotation belongs on the signature of 'pureBoth', not on its definition
+//│ ║  l.+2: 	@pure fun pureBoth(x) = x
+//│ ║        	^^^^^
+//│ ╟── signature here
+//│ ║  l.+1: 	@pure fun pureBoth: Int -> Int
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ @pure @pure define pureBoth⁰ as fun pureBoth¹(x) { return x }; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// Different arguments on the two sides: both are kept.
+:w
+:sir
+@affine(0) fun affineBoth: Int -> Int -> Int
+@affine(1) fun affineBoth(x)(y) = x
+//│ ╔══[WARNING] This annotation belongs on the signature of 'affineBoth', not on its definition
+//│ ║  l.+2: 	@affine(1) fun affineBoth(x)(y) = x
+//│ ║        	^^^^^^^^^^
+//│ ╟── signature here
+//│ ║  l.+1: 	@affine(0) fun affineBoth: Int -> Int -> Int
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ @affine(0) @affine(1) define affineBoth⁰ as fun affineBoth¹(x)(y) { return x }; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+module Keys with
+  @fresh val key = Symbol("key")
+  @fresh val other = Symbol("other")
+
+// `@jsSymbol` on both sides is an error.
+:e
+:w
+class WithKey with
+  @jsSymbol(Keys.key) fun keyed: () -> Int
+  @jsSymbol(Keys.key) fun keyed() = 1
+(new WithKey).(Keys.key)()
+//│ ╔══[COMPILATION ERROR] This annotation must be written only on the signature of 'keyed'
+//│ ║  l.+3: 	  @jsSymbol(Keys.key) fun keyed() = 1
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^
+//│ ╟── signature's annotation here
+//│ ║  l.+2: 	  @jsSymbol(Keys.key) fun keyed: () -> Int
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[WARNING] This annotation belongs on the signature of 'keyed', not on its definition
+//│ ║  l.+3: 	  @jsSymbol(Keys.key) fun keyed() = 1
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^
+//│ ╟── signature here
+//│ ║  l.+2: 	  @jsSymbol(Keys.key) fun keyed: () -> Int
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = 1
+
+// Different keys are rejected as well, since the member is installed under only one key.
+:e
+:w
+class WithKeys with
+  @jsSymbol(Keys.key) fun keyed: () -> Int
+  @jsSymbol(Keys.other) fun keyed() = 1
+(new WithKeys).(Keys.key)()
+//│ ╔══[COMPILATION ERROR] This annotation must be written only on the signature of 'keyed'
+//│ ║  l.+3: 	  @jsSymbol(Keys.other) fun keyed() = 1
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── signature's annotation here
+//│ ║  l.+2: 	  @jsSymbol(Keys.key) fun keyed: () -> Int
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[WARNING] This annotation belongs on the signature of 'keyed', not on its definition
+//│ ║  l.+3: 	  @jsSymbol(Keys.other) fun keyed() = 1
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── signature here
+//│ ║  l.+2: 	  @jsSymbol(Keys.key) fun keyed: () -> Int
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = 1
+
+// `@async` and `@generator` may be written on either side: the signature describes the body's result.
+:await
+:expect 1
+fun asyncDefinition: Int -> Int
+@async fun asyncDefinition(x) = x
+asyncDefinition(1)
+//│ = 1
+
+:expect 1
+@generator fun generatorSignature: Int -> Int
+fun generatorSignature(x) =
+  yield x
+  x
+generatorSignature(1).next().value
+//│ = 1
+
+// On both sides, it warns as any other annotation does, and both copies are kept.
+:w
+:await
+:expect 1
+@async fun asyncBoth: Int -> Int
+@async fun asyncBoth(x) = x
+asyncBoth(1)
+//│ ╔══[WARNING] This annotation is written on both the signature and the definition of 'asyncBoth'
+//│ ║  l.+1: 	@async fun asyncBoth: Int -> Int
+//│ ║        	^^^^^^
+//│ ╟── also written here
+//│ ║  l.+2: 	@async fun asyncBoth(x) = x
+//│ ╙──      	^^^^^^
+//│ = 1
+
+// `@js.plainField` and `@fresh` describe what users of the member see.
+:w
+class PlainFieldDefinition with
+  mut val value: Int
+  @js.plainField mut val value = 1
+//│ ╔══[WARNING] This annotation belongs on the signature of 'value', not on its definition
+//│ ║  l.+3: 	  @js.plainField mut val value = 1
+//│ ║        	  ^^^^^^^^^^^^^^
+//│ ╟── signature here
+//│ ║  l.+2: 	  mut val value: Int
+//│ ╙──      	      ^^^^^^^^^^^^^^
+
+class PlainFieldSignature with
+  @js.plainField mut val value: Int
+  mut val value = 1
+
+:w
+val freshDefinition: Any
+@fresh val freshDefinition = Symbol("freshDefinition")
+//│ ╔══[WARNING] This annotation belongs on the signature of 'freshDefinition', not on its definition
+//│ ║  l.+2: 	@fresh val freshDefinition = Symbol("freshDefinition")
+//│ ║        	^^^^^^
+//│ ╟── signature here
+//│ ║  l.+1: 	val freshDefinition: Any
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ freshDefinition = Symbol("freshDefinition")
+
+@fresh val freshSignature: Any
+val freshSignature = Symbol("freshSignature")
+//│ freshSignature = Symbol("freshSignature")
+
+object myAnn
+
+:w
+:sir
+@myAnn fun userBoth: Int -> Int
+@myAnn fun userBoth(x) = x
+//│ ╔══[WARNING] This annotation is written on both the signature and the definition of 'userBoth'
+//│ ║  l.+1: 	@myAnn fun userBoth: Int -> Int
+//│ ║        	^^^^^^
+//│ ╟── also written here
+//│ ║  l.+2: 	@myAnn fun userBoth(x) = x
+//│ ╙──      	^^^^^^
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.+1: 	@myAnn fun userBoth: Int -> Int
+//│ ╙──      	^^^^^^
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.+2: 	@myAnn fun userBoth(x) = x
+//│ ╙──      	^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ @myAnn @myAnn define userBoth⁰ as fun userBoth¹(x) { return x }; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+module Markers with
+  object marker
+
+// A later receiver cannot supply an annotation on a signature or inside its type.
+:e
+fun forwardSignatureAnnotation() =
+  @later.marker fun inner: Int -> Int
+  val later = Markers
+  fun inner(x) = x
+  inner(1)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	  @later.marker fun inner: Int -> Int
+//│ ║        	  ^^^^^^^^^^^^^
+//│ ╙── An annotation's main symbol must be uniquely known when the annotation is elaborated.
+
+:e
+fun forwardTypeAnnotation() =
+  fun inner: (@later.marker Int) -> Int
+  val later = Markers
+  fun inner(x) = x
+  inner(1)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	  fun inner: (@later.marker Int) -> Int
+//│ ║        	              ^^^^^^^^^^^^^
+//│ ╙── An annotation's main symbol must be uniquely known when the annotation is elaborated.
+
+// Both paths resolve to the same user annotation, even through a wildcard open.
+:w
+fun wildcardDuplicate() =
+  open Markers.{ * }
+  @marker fun inner: Int -> Int
+  @Markers.marker fun inner(x) = x
+  inner(1)
+//│ ╔══[WARNING] This annotation is written on both the signature and the definition of 'inner'
+//│ ║  l.+3: 	  @marker fun inner: Int -> Int
+//│ ║        	  ^^^^^^^
+//│ ╟── also written here
+//│ ║  l.+4: 	  @Markers.marker fun inner(x) = x
+//│ ╙──      	  ^^^^^^^^^^^^^^^
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.+3: 	  @marker fun inner: Int -> Int
+//│ ╙──      	  ^^^^^^^
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.+4: 	  @Markers.marker fun inner(x) = x
+//│ ╙──      	  ^^^^^^^^^^^^^^^
+
+// A modifier on the signature applies to the definition.
+open class Base() with
+  open fun scale: (Int, Int) -> Int
+  fun scale(x, y) = x * y
+class Derived() extends Base() with
+  override fun scale(x, y) = x + y
+Derived().scale(2, 3)
+//│ = 5
+
+open class OpenBase() with
+  open fun g(x: Int): Int = x
+
+class OverrideSignature() extends OpenBase() with
+  override fun g: Int -> Int
+  fun g(x) = x + 1
+OverrideSignature().g(1)
+//│ = 2
+
+// A modifier written only on the definition is misplaced: it warns, and still applies.
+:w
+class OverrideDefinition() extends OpenBase() with
+  fun g: Int -> Int
+  override fun g(x) = x + 2
+OverrideDefinition().g(1)
+//│ ╔══[WARNING] This modifier belongs on the signature of 'g', not on its definition
+//│ ║  l.+3: 	  override fun g(x) = x + 2
+//│ ║        	  ^^^^^^^^
+//│ ╟── signature here
+//│ ║  l.+2: 	  fun g: Int -> Int
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^
+//│ = 3
+
+// `staged` fits either side.
+:staging
+fun stagedDefinition: () -> Int
+staged fun stagedDefinition() = 1
+
+
+// The signature and the definition must have the same symbolic name, if both give one.
+:e
+fun (+++) plus: (Int, Int) -> Int
+fun (***) plus(a, b) = a + b
+//│ ╔══[COMPILATION ERROR] The signature and the definition of 'plus' must have the same symbolic name
+//│ ╟── signature's symbolic name
+//│ ║  l.+1: 	fun (+++) plus: (Int, Int) -> Int
+//│ ║        	     ^^^
+//│ ╟── definition's symbolic name
+//│ ║  l.+2: 	fun (***) plus(a, b) = a + b
+//│ ╙──      	     ^^^
+
+fun (+++) plusSignature: (Int, Int) -> Int
+fun plusSignature(a, b) = a + b
+1 +++ 2
+//│ = 3
+
+// Like a modifier, a symbolic name belongs on the signature: written only on the definition, it warns and still
+// applies, and repeating it there is silent.
+:w
+fun plusDefinition: (Int, Int) -> Int
+fun (***) plusDefinition(a, b) = a + b
+1 *** 2
+//│ ╔══[WARNING] This symbolic name belongs on the signature of 'plusDefinition', not on its definition
+//│ ║  l.+2: 	fun (***) plusDefinition(a, b) = a + b
+//│ ║        	     ^^^
+//│ ╟── signature here
+//│ ║  l.+1: 	fun plusDefinition: (Int, Int) -> Int
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = 3
+
+fun (<+>) plusBoth: (Int, Int) -> Int
+fun (<+>) plusBoth(a, b) = a + b
+1 <+> 2
+//│ = 3
+
+:w
+module Ops with
+  fun minus: (Int, Int) -> Int
+  fun (<->) minus(a, b) = a - b
+open Ops.{ <-> }
+3 <-> 1
+//│ ╔══[WARNING] This symbolic name belongs on the signature of 'minus', not on its definition
+//│ ║  l.+3: 	  fun (<->) minus(a, b) = a - b
+//│ ║        	       ^^^
+//│ ╟── signature here
+//│ ║  l.+2: 	  fun minus: (Int, Int) -> Int
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = 2
+
+
+// A second declaration is reported, and the member still gets its definition.
+:e
+fun twice: Int -> Int
+fun twice: Int -> Int
+fun twice(x) = x
+twice(1)
+//│ ╔══[COMPILATION ERROR] Multiple declarations of symbol 'twice'
+//│ ╟── declared here
+//│ ║  l.+1: 	fun twice: Int -> Int
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── declared here
+//│ ║  l.+2: 	fun twice: Int -> Int
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
+//│ = 1
+
+
+// The signature and the definition must be of the same kind.
+:e
+val valSignature: Int
+fun valSignature = 1
+//│ ╔══[COMPILATION ERROR] The signature and the definition of 'valSignature' must be of the same kind
+//│ ╟── Value signature here
+//│ ║  l.+1: 	val valSignature: Int
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Function definition here
+//│ ║  l.+2: 	fun valSignature = 1
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^
+
+:e
+fun funSignature: Int
+val funSignature = 1
+//│ ╔══[COMPILATION ERROR] The signature and the definition of 'funSignature' must be of the same kind
+//│ ╟── Function signature here
+//│ ║  l.+1: 	fun funSignature: Int
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Value definition here
+//│ ║  l.+2: 	val funSignature = 1
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^
+//│ funSignature = 1
+
+val bothVal: Int
+val bothVal = 1
+bothVal
+//│ = 1
+//│ bothVal = 1
+
+// Callers can instantiate a type parameter written only on the signature.
+fun adopted[A]: A -> A
+fun adopted(x) = x
+adopted[Int](1)
+//│ = 1
+
+// The implementation's parameter annotation resolves to the outer alias.
+:el
+fun outerAlias() =
+  type A = Int
+  fun f[A]: Int -> A -> A
+  fun f(x: A) = y => y
+  f[Str](1)("ok")
+outerAlias()
+//│ Elab: { fun member:outerAlias⁰() = { type type:A⁰ = member:Int⁰^term:outerAlias¹; fun member:f⁰[List(A¹)]: member:Int⁰^term:outerAlias¹^term:f¹ -> A¹ -> A¹; fun member:f⁰(x⁰: member:A²^term:f¹)(y⁰) = y⁰; member:f⁰[member:Str⁰^term:outerAlias¹](1)("ok") }; member:outerAlias⁰() }
+//│ = "ok"
+
+// With no outer binding, the implementation's parameter annotation is unbound.
+:e
+fun onlyOnSignature[A]: Int -> A -> A
+fun onlyOnSignature(x: A) = y => y
+//│ ╔══[COMPILATION ERROR] Name not found: A
+//│ ║  l.+2: 	fun onlyOnSignature(x: A) = y => y
+//│ ╙──      	                       ^
+
+fun sameTypeParams[A]: A -> A
+fun sameTypeParams[A](x) = x
+sameTypeParams(1)
+//│ = 1
+
+// The signature sees the type parameter, not a value parameter of the same name.
+:el
+fun typeParamNamedLikeParam[A]: A -> A
+fun typeParamNamedLikeParam[A](A) = A
+typeParamNamedLikeParam(1)
+//│ Elab: { fun member:typeParamNamedLikeParam⁰[List(A³)]: A³ -> A³; fun member:typeParamNamedLikeParam⁰[List(A⁴)](A⁵) = A⁵; member:typeParamNamedLikeParam⁰(1) }
+//│ = 1
+
+:el
+fun adoptedNamedLikeParam[A]: A -> A
+fun adoptedNamedLikeParam(A) = A
+adoptedNamedLikeParam(1)
+//│ Elab: { fun member:adoptedNamedLikeParam⁰[List(A⁶)]: A⁶ -> A⁶; fun member:adoptedNamedLikeParam⁰(A⁷) = A⁷; member:adoptedNamedLikeParam⁰(1) }
+//│ = 1
+
+// Swapping the written names preserves the positions of the two type arguments.
+:el
+:expect [1, 2]
+fun positional[A, B]: (A, B) -> [A, B]
+fun positional[B, A](first: B, second: A) = [first, second]
+let pair = positional[LeftField, RightField](LeftField(1), RightField(2))
+[pair.0.left, pair.1.right]
+//│ Elab: { fun member:positional⁰[List(A⁸, B⁰)]: A⁸, B⁰ -> [A⁸, B⁰]; fun member:positional⁰[List(B¹, A⁹)](first⁰: B¹, second⁰: A⁹) = [first⁰, second⁰]; let pair⁰; pair⁰ = member:positional⁰[member:LeftField⁰, member:RightField⁰](member:LeftField⁰(1), member:RightField⁰(2)); [pair⁰.0.left‹term:LeftField¹/left⁰›, pair⁰.1.right‹term:RightField¹/right⁰›] }
+//│ = [1, 2]
+//│ pair = [LeftField(1), RightField(2)]
+
+// The same pair of polymorphic headers can be written as a split signature or an override.
+:expect [1, 2, 3, 4]
+fun first[A, B]: (A, B) -> A
+fun first[X, Y] = (x: X, y: Y) => x
+abstract class Projection { fun get[A, B]: (A, B) -> A }
+let projection = new Projection with { fun get[X, Y](x: X, y: Y) = x }
+[first[LeftField, RightField](LeftField(1), RightField(0)).left,
+ first[RightField, LeftField](RightField(2), LeftField(0)).right,
+ projection.get[LeftField, RightField](LeftField(3), RightField(0)).left,
+ projection.get[RightField, LeftField](RightField(4), LeftField(0)).right]
+//│ = [1, 2, 3, 4]
+//│ projection = $anon
+
+// Inference at two calls must keep the two instantiations of the implementation independent.
+:expect [5, 6]
+fun inferFirst[A, B]: (A, B) -> A
+fun inferFirst[X, Y](x: X, y) = x
+[inferFirst(LeftField(5), RightField(0)).left, inferFirst(RightField(6), LeftField(0)).right]
+//│ = [5, 6]
+
+// Only the header binder is repeated in the implementation. The signature also
+// quantifies B, so callers supply two type arguments.
+:expect [7, 8]
+fun splitQuantified[A]: [B] -> (A, B) -> [A, B]
+fun splitQuantified[X](x: X, y) = [x, y]
+let mixed = splitQuantified[LeftField, RightField](LeftField(7), RightField(8))
+[mixed.0.left, mixed.1.right]
+//│ = [7, 8]
+//│ mixed = [LeftField(7), RightField(8)]
+
+// The caller supplies the signature's one argument. Y is local to the implementation.
+:expect 3
+fun moreTypeParams[A]: A -> A
+fun moreTypeParams[X, Y](x: X) = x
+moreTypeParams[LeftField](LeftField(3)).left
+//│ = 3
+
+:ge
+moreTypeParams[LeftField, RightField](LeftField(3))
+//│ ╔══[COMPILATION ERROR] Resolution error in type application
+//│ ║  l.+1: 	moreTypeParams[LeftField, RightField](LeftField(3))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Function 'moreTypeParams' expected 1 type argument, but got 2
+//│ ║  l.XX: 	fun moreTypeParams[A]: A -> A
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = LeftField(3)
+
+// An unmatched public parameter can be supplied explicitly or inferred at a call.
+:expect [4, 5]
+fun fewerTypeParams[A, B]: (A, B) -> B
+fun fewerTypeParams[X](x: X, y) = y
+[fewerTypeParams[Int, RightField](0, RightField(4)).right,
+ fewerTypeParams(0, LeftField(5)).left]
+//│ = [4, 5]
+
+// The signature is elaborated in its own scope, even when the implementation introduces A.
+:e
+fun definitionTypeParams: A -> A
+fun definitionTypeParams[A](x) = x
+//│ ╔══[COMPILATION ERROR] Name not found: A
+//│ ║  l.+1: 	fun definitionTypeParams: A -> A
+//│ ╙──      	                          ^
+//│ ╔══[COMPILATION ERROR] Name not found: A
+//│ ║  l.+1: 	fun definitionTypeParams: A -> A
+//│ ╙──      	                               ^
+
+// The signature can also introduce its public binder with a leading quantifier.
+:expect 6
+fun quantifiedSignature: [A] -> A -> A
+fun quantifiedSignature[X](x: X) = x
+quantifiedSignature[LeftField](LeftField(6)).left
+//│ = 6
+
+// Each header diagnoses malformed binders independently.
+:e
+fun shapedTypeParams: Int -> Int
+fun shapedTypeParams[A, in B](x) = x
+//│ ╔══[COMPILATION ERROR] Unsupported type parameter shape: 'in'-modified identifier
+//│ ║  l.+2: 	fun shapedTypeParams[A, in B](x) = x
+//│ ╙──      	                           ^
+
+
+// Class members follow the same rules...
+class Members with
+  fun method: Int -> Int
+  fun method(x) = x + 1
+  fun getter: Int
+  fun getter = 1
+  private fun privateMember: Int -> Int
+  fun privateMember(x) = x
+let m = new Members
+[m.method(1), m.getter]
+//│ = [2, 1]
+//│ m = Members
+
+// ... and so do `val` pairs, and pairs in modules, objects, and nested blocks.
+class ValMembers with
+  val field: Int
+  val field = 1
+(new ValMembers).field
+//│ = 1
+
+module ModuleMembers with
+  fun f: Int -> Int
+  fun f(x) = x + 1
+  val v: Int
+  val v = 2
+[ModuleMembers.f(1), ModuleMembers.v]
+//│ = [2, 2]
+
+object ObjectMembers with
+  fun f: Int -> Int
+  fun f(x) = x * 2
+ObjectMembers.f(3)
+//│ = 6
+
+fun nested(x) =
+  fun inner: Int -> Int
+  fun inner(y) = y + x
+  inner(1)
+nested(2)
+//│ = 3
+
+:e
+fun nestedLate(x) =
+  fun inner(y) = y
+  fun inner: Int -> Int
+  inner(x)
+//│ ╔══[COMPILATION ERROR] The signature of 'inner' must be written before its definition
+//│ ║  l.+3: 	  fun inner: Int -> Int
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── defined here
+//│ ║  l.+2: 	  fun inner(y) = y
+//│ ╙──      	  ^^^^^^^^^^^^^^^^
+
+

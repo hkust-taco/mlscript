@@ -120,7 +120,7 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
 
   private def signature(td: TermDefinition, path: Path)(using ResolutionContext): Unit =
     resolver.writtenSignature(td).foreach(annotation(_, path))
-    td.params.foreach(_.allParams.foreach(_.sign.foreach(annotation(_, path))))
+    td.signatureHeader.params.foreach(_.allParams.foreach(_.sign.foreach(annotation(_, path))))
 
   /** Expose a member through its declaring class. Without a written result type, a caller
     * can obtain any value returned by the member or an override.
@@ -164,10 +164,11 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
 
   private def parameter(param: Param, rest: Bool, marks: Ls[Marks], path: Path, method: Opt[TermDefinition])(using ResolutionContext): Unit =
     if !rctx.state.isOwnedSym(param.sym) then return
-    param.sign.foreach(annotation(_, path))
     // An inherited signature can arrive after this walk. Its listener only needs the resolver.
     val resolver = this.resolver
-    if resolver.parameterSignature(param).isEmpty then
+    resolver.parameterSignature(param) match
+    case S(tpe) => exposeType(tpe.resolution, path)
+    case N =>
       val (unknown, input) = externalArguments.getOrElseUpdate(param.sym,
         InterfaceExposure.parameterInput(param, rest, path)(resolver))
       resolver.listenInheritedParameterType(method, param, marks):

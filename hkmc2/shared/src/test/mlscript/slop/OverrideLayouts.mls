@@ -52,7 +52,7 @@ private class OptionalBase() with
   open fun pick(value?: Any): Any = value
 private class RequiredOverride() extends OptionalBase() with
   override fun pick(value: Any): Any = value
-//│ ╔══[COMPILATION ERROR] Overriding member 'pick' requires at least 1 argument, but the overridden member permits 0
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' requires at least 1 argument, but the declared parameter list permits 0
 //│ ║  l.+4: 	  override fun pick(value: Any): Any = value
 //│ ║        	                   ^^^^^^^^^^^^
 //│ ╟── The overridden member 'pick' is defined here
@@ -66,7 +66,7 @@ private class LeadingBase() with
   open fun pick(first: Any, second?: Any): Any = second
 private class ReboundTail() extends LeadingBase() with
   override fun pick(...middle: Array[Any], last: Any): Any = last
-//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the arguments bound to inherited parameter 'first'
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the arguments bound to parameter 'first'
 //│ ║  l.+4: 	  override fun pick(...middle: Array[Any], last: Any): Any = last
 //│ ║        	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The overridden member 'pick' is defined here
@@ -80,7 +80,7 @@ private class RestBase() with
   open fun collect(...values: Array[Any]): Any = values
 private class StolenRest() extends RestBase() with
   override fun collect(first?: Any, ...values: Array[Any]): Any = values
-//│ ╔══[COMPILATION ERROR] Overriding member 'collect' must preserve the arguments bound to inherited parameter 'values'
+//│ ╔══[COMPILATION ERROR] Overriding member 'collect' must preserve the arguments bound to parameter 'values'
 //│ ║  l.+4: 	  override fun collect(first?: Any, ...values: Array[Any]): Any = values
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The overridden member 'collect' is defined here
@@ -92,7 +92,7 @@ private class StolenRest() extends RestBase() with
 :ge
 private class StolenMiddle() extends LayoutBase() with
   override fun collect(first: Any, optional?: Any, extra?: Any, ...middle: Array[Any], last: Any): Any = middle
-//│ ╔══[COMPILATION ERROR] Overriding member 'collect' must preserve the arguments bound to inherited parameter 'middle'
+//│ ╔══[COMPILATION ERROR] Overriding member 'collect' must preserve the arguments bound to parameter 'middle'
 //│ ║  l.+2: 	  override fun collect(first: Any, optional?: Any, extra?: Any, ...middle: Array[Any], last: Any): Any = middle
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The overridden member 'collect' is defined here
@@ -117,7 +117,7 @@ private class DropMiddle() with
   open fun pick(first: Any, drop ignored: Any, last: Any): Any = last
 private class ShiftedAfterDrop() extends DropMiddle() with
   override fun pick(first: Any, last: Any): Any = last
-//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the arguments bound to inherited parameter 'last'
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the arguments bound to parameter 'last'
 //│ ║  l.+4: 	  override fun pick(first: Any, last: Any): Any = last
 //│ ║        	                   ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The overridden member 'pick' is defined here
@@ -141,7 +141,7 @@ private class DropMiddleRest() with
   open fun pick(first: Any, drop ...ignored: Array[Any], last: Any): Any = last
 private class ShiftedAfterRest() extends DropMiddleRest() with
   override fun pick(first: Any, last: Any): Any = last
-//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the arguments bound to inherited parameter 'last'
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the arguments bound to parameter 'last'
 //│ ║  l.+4: 	  override fun pick(first: Any, last: Any): Any = last
 //│ ║        	                   ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The overridden member 'pick' is defined here
@@ -153,7 +153,7 @@ private class ShiftedAfterRest() extends DropMiddleRest() with
 :ge
 private class LostInput() extends FixedPair() with
   override fun pair(first: Any): Any = first
-//│ ╔══[COMPILATION ERROR] Overriding member 'pair' must preserve the arguments bound to inherited parameter 'second'
+//│ ╔══[COMPILATION ERROR] Overriding member 'pair' must preserve the arguments bound to parameter 'second'
 //│ ║  l.+2: 	  override fun pair(first: Any): Any = first
 //│ ║        	                   ^^^^^^^^^^^^
 //│ ╟── The overridden member 'pair' is defined here
@@ -181,7 +181,7 @@ private abstract class AbstractLayout() with
   fun pick(value?: Any): Any
 private abstract class AbstractNarrowing() extends AbstractLayout() with
   override fun pick(value: Any): Any
-//│ ╔══[COMPILATION ERROR] Overriding member 'pick' requires at least 1 argument, but the overridden member permits 0
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' requires at least 1 argument, but the declared parameter list permits 0
 //│ ║  l.+4: 	  override fun pick(value: Any): Any
 //│ ║        	                   ^^^^^^^^^^^^
 //│ ╟── The overridden member 'pick' is defined here
@@ -198,7 +198,7 @@ declare class DeclaredBase {
 declare class DeclaredRebinding extends DeclaredBase {
   declare override fun pick(...middle: Array[Any], last: Any): Any
 }
-//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the arguments bound to inherited parameter 'first'
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the arguments bound to parameter 'first'
 //│ ║  l.+5: 	  declare override fun pick(...middle: Array[Any], last: Any): Any
 //│ ║        	                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The overridden member 'pick' is defined here
@@ -344,7 +344,7 @@ private class DropBeforeOptional() with
   open fun pick(first: Any, drop ignored: Any, last?: Any): Any = last
 private class FilledAbsentOptional() extends DropBeforeOptional() with
   override fun pick(first: Any, last?: Any): Any = last
-//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the arguments bound to inherited parameter 'last'
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the arguments bound to parameter 'last'
 //│ ║  l.+4: 	  override fun pick(first: Any, last?: Any): Any = last
 //│ ║        	                   ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The overridden member 'pick' is defined here

@@ -56,13 +56,13 @@ private abstract class Pair() with
 private class FirstOnly() extends Pair() with
   fun pick(x) = x
   fun pickLabeled(x) = x
-//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the arguments bound to inherited parameter 2
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the arguments bound to parameter 2
 //│ ║  l.+5: 	  fun pick(x) = x
 //│ ║        	          ^^^
 //│ ╟── The overridden member 'pick' is defined here
 //│ ║  l.+2: 	  fun pick: (Int, Int) -> Int
 //│ ╙──      	      ^^^^
-//│ ╔══[COMPILATION ERROR] Overriding member 'pickLabeled' must preserve the arguments bound to inherited parameter 'second'
+//│ ╔══[COMPILATION ERROR] Overriding member 'pickLabeled' must preserve the arguments bound to parameter 'second'
 //│ ║  l.+6: 	  fun pickLabeled(x) = x
 //│ ║        	                 ^^^
 //│ ╟── The overridden member 'pickLabeled' is defined here
@@ -102,6 +102,45 @@ fun addTo(x) = y => x + y
 [twice(3), addTo(1)(2)]
 //│ = [6, 3]
 
+// A split implementation can write the parameters of its returned lambda in its header.
+// Overrides and calls through the base see the getter or the single method list in the signature.
+:expect [4, 9, 6, 12]
+type UnaryOp = Int -> Int
+private class Operations with
+  open fun getter: UnaryOp
+  fun getter(x): Int = x + 1
+  open fun add: Int -> (Int -> Int)
+  fun add(x)(y) = x + y
+private class Changed extends Operations with
+  override fun getter = x => x * 2
+  override fun add(x) = y => x * y
+private fun evaluate(o: Operations) = [o.getter(3), o.add(3)(6)]
+[evaluate(new Operations).0, evaluate(new Operations).1, evaluate(new Changed).0, (new Changed).add(3)(4)]
+//│ = [4, 9, 6, 12]
+
+// The shorthand does not give the getter a method parameter list.
+:ge
+private class WrongGetter extends Operations with
+  override fun getter(x) = x
+//│ ╔══[COMPILATION ERROR] Overriding member 'getter' must preserve the number of parameter lists
+//│ ║  l.+2: 	  override fun getter(x) = x
+//│ ║        	                     ^^^
+//│ ╟── The overridden member 'getter' is defined here
+//│ ║  l.XX: 	  open fun getter: UnaryOp
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A dropped public argument remains available to a subclass implementing the full declaration.
+:expect [3, 7]
+private class Project with
+  open fun pick: (Int, drop Int) -> Int
+  fun pick(x) = x
+private class Add extends Project with
+  override fun pick(x, y) = x + y
+private fun run(p: Project) = p.pick(3, 4)
+[run(new Project), run(new Add)]
+//│ = [3, 7]
+
 // Optional and variadic parameters work as written ones do.
 :expect [[1, null], [1, 2], [1, [2, 3], "z"]]
 fun optional: (Int, Int?) -> Any = (x, y?) => [x, y]
@@ -139,10 +178,10 @@ private val shared = make
 // The literal's parameters must agree with the signature's.
 :e
 fun mismatched: (Int, Int?) -> Int = (x, y) => x
-//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its signature.
+//│ ╔══[COMPILATION ERROR] Implementation of 'mismatched' requires at least 2 arguments, but the declared parameter list permits 1
 //│ ║  l.+1: 	fun mismatched: (Int, Int?) -> Int = (x, y) => x
 //│ ║        	                                     ^^^^^^
-//│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
+//│ ╟── The signature is declared here
 //│ ║  l.+1: 	fun mismatched: (Int, Int?) -> Int = (x, y) => x
 //│ ╙──      	                ^^^^^^^^^^^^^^^^^^
 
@@ -151,24 +190,24 @@ fun mismatched: (Int, Int?) -> Int = (x, y) => x
 fun computed: Int -> Int =
   let offset = 1
   x => x + offset
-//│ ╔══[COMPILATION ERROR] Function 'computed' writes fewer parameter lists than its signature spells out
+//│ ╔══[COMPILATION ERROR] Implementation of 'computed' must preserve the number of parameter lists
 //│ ║  l.+1: 	fun computed: Int -> Int =
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── This signature spells out 1 parameter list
+//│ ╟── The signature is declared here
 //│ ║  l.+1: 	fun computed: Int -> Int =
 //│ ║        	              ^^^^^^^^^^
-//│ ╙── The body can write the missing lists as an immediate function literal. A parenthesized function type declares a function that returns a function value.
+//│ ╙── The body can write the missing lists as an immediate function literal. Parenthesize the result type to return a function value.
 
 :e
 fun separate: (Int) -> Int
 fun separate = if true then x => x else x => x + 1
-//│ ╔══[COMPILATION ERROR] Function 'separate' writes fewer parameter lists than its signature spells out
+//│ ╔══[COMPILATION ERROR] Implementation of 'separate' must preserve the number of parameter lists
 //│ ║  l.+2: 	fun separate = if true then x => x else x => x + 1
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── This signature spells out 1 parameter list
+//│ ╟── The signature is declared here
 //│ ║  l.+1: 	fun separate: (Int) -> Int
 //│ ║        	              ^^^^^^^^^^^^
-//│ ╙── The body can write the missing lists as an immediate function literal. A parenthesized function type declares a function that returns a function value.
+//│ ╙── The body can write the missing lists as an immediate function literal. Parenthesize the result type to return a function value.
 
 :expect 3
 fun computedValue: (Int -> Int) =

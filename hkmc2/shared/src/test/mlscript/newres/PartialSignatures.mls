@@ -283,7 +283,7 @@ new NamedIdentity().id[General](new Special).extra
 class First(val first: Int)
 class Second(val second: Int)
 private fun identity: [A] -> A -> A
-private fun identity(x) = x
+fun identity(x) = x
 [identity[First](First(11)).first, identity[Second](Second(12)).second]
 //│ = [11, 12]
 

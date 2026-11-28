@@ -469,10 +469,10 @@ new HiddenAction().apply({only: 1})
 :expect 42
 private type FactoryFor[A, B] = A -> B -> Int
 private class Factory with
-  fun get: FactoryFor[Int, Keyed]
-  open fun get(n) = x => x.key
+  open fun get: FactoryFor[Int, Keyed]
+  fun get(n) = x => x.key
 private class ReaderFactory extends Factory with
-  override fun get(n) = x => x.key + n
+  override fun get = n => x => x.key + n
 fun factory(): Factory = new ReaderFactory
 factory().get(2)(Keyed(40))
 //│ = 42
@@ -480,17 +480,17 @@ factory().get(2)(Keyed(40))
 // The implementation receives a Keyed, but the callback it returns must accept Any.
 :e
 private class AnyFactory with
-  fun get: FactoryFor[Keyed, Any]
-  open fun get(n) = x => n.key
+  open fun get: FactoryFor[Keyed, Any]
+  fun get(n) = x => n.key
 private class UnsafeFactory extends AnyFactory with
-  override fun get(n) = x => x.key
+  override fun get = n => x => x.key
 fun anyFactory(): AnyFactory = new UnsafeFactory
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.+5: 	  override fun get(n) = x => x.key
-//│ ║        	                             ^^^^^
+//│ ║  l.+5: 	  override fun get = n => x => x.key
+//│ ║        	                               ^^^^^
 //│ ╟── Value with an empty interface does not contain member 'key'
-//│ ║  l.+2: 	  fun get: FactoryFor[Keyed, Any]
-//│ ║        	                             ^^^
+//│ ║  l.+2: 	  open fun get: FactoryFor[Keyed, Any]
+//│ ║        	                                  ^^^
 //│ ╟── Type 'Any' is declared without a member interface.
 //│ ║  in ../../decls/Prelude.mls
 //│ ║  l.XX: 	declare type Any

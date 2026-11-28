@@ -77,8 +77,8 @@ private class Inheriting() extends Declared() with
 :ge
 :noInline
 private class SeparateBase() with
-  fun take: (Int) -> Int
-  open fun take(x) = x
+  open fun take: (Int) -> Int
+  fun take(x) = x
 private class SeparateChild() extends SeparateBase() with
   override fun take(x) = x
 SeparateChild().take("s")
@@ -91,10 +91,10 @@ SeparateChild().take("s")
 // Aliases and later curried parameter lists retain the same declared boundary.
 :ge
 :noInline
-type CurriedContract = (Int) -> (Str) -> Int
+type CurriedLabel = Str
 private class CurriedBase() with
-  fun take: CurriedContract
-  open fun take(x)(label) = x
+  open fun take: Int -> CurriedLabel -> Int
+  fun take(x)(label) = x
 private class CurriedChild() extends CurriedBase() with
   override fun take(x)(label) = x
 CurriedChild().take(1)(2)
@@ -109,12 +109,12 @@ CurriedChild().take(1)(2)
 private class InferredBase() with
   open fun take(x) = 0
 private class SeparateNarrow() extends InferredBase() with
-  fun take: (Str) -> Int
-  override fun take(x) = 0
+  override fun take: (Str) -> Int
+  fun take(x) = 0
 InferredBase().take(1)
-//│ ╔══[COMPILATION ERROR] Parameter 'x' of overriding member 'take' is represented as 'Str', which cannot hold the values represented as 'Int' that the member it overrides accepts
-//│ ║  l.+5: 	  override fun take(x) = 0
-//│ ║        	                    ^
+//│ ╔══[COMPILATION ERROR] Parameter 1 of overriding member 'take' is represented as 'Str', which cannot hold the values represented as 'Int' that the member it overrides accepts
+//│ ║  l.+4: 	  override fun take: (Str) -> Int
+//│ ║        	                      ^^^
 //│ ╟── The overridden member 'take' is defined here
 //│ ║  l.+2: 	  open fun take(x) = 0
 //│ ╙──      	           ^^^^

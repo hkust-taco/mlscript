@@ -509,8 +509,10 @@ them as an immediate function literal: `fun add: (Int, Int) -> Int = (x, y) => x
 `fun add: (Int, Int) -> Int`. Curried lambdas, implicit lambdas (`=> _ + _`), and `case` functions
 write lists in the same way. Any other body is an error unless the function type is parenthesized,
 as in `fun adder: (Int -> Int) = ...`, which returns the function value that its body computes.
-An implementation can also write more parameter lists than its signature spells out, when the
-type of the signature supplies them, as in `fun f: Unary[Int, Int]` followed by `fun f(x) = x`.
+A split definition can write additional parameter lists as shorthand for returned lambdas.
+For example, given `type Unary = Int -> Int`, both `fun f(x) = x` and `fun f = x => x`
+implement `fun f: Unary` as a getter. Likewise, after `fun f: Int -> (Int -> Int)`,
+`fun f(x)(y) = x + y` means `fun f(x) = y => x + y`. Overrides see one method parameter list.
 A result annotation following written parameter lists is the type of their result:
 `fun f(x): Int -> Int` takes one parameter list and returns a function.
 A value cannot have parameter lists, so the function type of a `val` must be parenthesized,
@@ -793,7 +795,7 @@ be omitted only when this leaves the other parameters' bindings unchanged. Addit
 parameters are permitted only when they cannot consume arguments belonging to inherited parameters.
 Equal parameter counts alone do not establish compatibility: moving a trailing parameter or changing
 where a rest slice begins can change which argument a parameter receives. A member's parameter lists
-are the ones it writes, followed by those its signature spells out (see Function Signatures): an
+come from its public signature when it has one (see Function Signatures). An
 abstract or `declare`d `fun f: (Int) -> Int` and `fun f(x: Int): Int` both have one, so either can
 override the other, while an abstract `fun f: ((Int) -> Int)` has none and holds a function value.
 
@@ -2011,8 +2013,8 @@ app(x => x)              // error: the optional parameter is not droppable
 ```
 
 A separate signature, as in `fun f: (Int, Int?) -> Int` followed by `fun f(x, y?) = x`,
-must agree with the definition on which parameters are required, optional, and variadic.
-Such a signature spells out the parameter lists of the function (see Function Signatures).
+spells out the method parameter lists (see Function Signatures). The implementation must bind
+arguments compatibly with those lists under the same positional rules as a method override.
 
 ### `forall` (Universal Quantification)
 

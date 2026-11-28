@@ -242,18 +242,22 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
     case sc: SetConfig => sc
 
   def annotation(source: Annot): Annot = source match
-    case Annot.Trm(t) => Annot.Trm(term(t))(source.toLoc)
+    case a @ Annot.Trm(t) => Annot.Trm(term(t))(a.symbol.map(_.subst), a.toLoc)
     case Annot.JsSymbol(key) => Annot.JsSymbol(key.copy(path = key.path.map(_.subst))(term(key.term)))(source.toLoc)
     case _ => source
 
   private def modulefulness(source: Modulefulness): Modulefulness =
     Modulefulness(source.msym.map(_.subst))(source.modified)
 
-  private def parameter(source: Param): Param =
-    val copy = Param(source.flags, source.sym.subst, source.sign.map(term), modulefulness(source.modulefulness),
+  private def parameter(source: Param): Param = parameterWithType(source, source.sign.map(term))
+
+  private def parameterWithType(source: Param, sign: Opt[Term]): Param =
+    val copy = Param(source.flags, source.sym.subst, sign, modulefulness(source.modulefulness),
       source.annotations.map(annotation))(source.toLoc)
     copy.fldSym = source.fldSym.map(_.subst)
-    copy.sym.decl = S(copy)
+    source.sym.decl match
+      case S(tp: TyParam) => typeParameter(tp)
+      case _ => copy.sym.decl = S(copy)
     source.fldSym.toList.flatMap:
       case s: TermSymbol => s :: Nil
       case s: BlockMemberSymbol => s.tsym.toList
@@ -274,18 +278,44 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
     copy.sym.decl = S(copy)
     copy
 
+  /** Copy arrow parameters with the domain terms of the cloned signature. A domain can refer to
+    * a quantifier inside the signature, whose fresh binder does not belong to the header scope. */
+  private def signatureParameters(lists: Ls[ParamList], original: Term, copied: Term): Ls[ParamList] =
+    if lists.isEmpty then Nil else (original, copied) match
+      case (Forall(_, _, body), Forall(_, _, fresh)) => signatureParameters(lists, body, fresh)
+      case (FunTy(domain, result, _), FunTy(fresh, rest, _)) =>
+        val list = lists.head
+        val domains = fresh match
+          case Tup(fields) if !list.allParams.headOption.exists(_.sign.exists(_ is domain)) =>
+            fields.iterator.map(_.term)
+          case single => Iterator.single(single)
+        def copy(p: Param): Param = parameterWithType(p, S(domains.next()))
+        val params = list.copy(params = list.params.map(copy), variadic = list.variadic.map(_.map(copy)))(list.toLoc)
+        assert(!domains.hasNext, "Each arrow parameter must have one domain")
+        params :: signatureParameters(lists.tail, result, rest)
+      case _ => lastWords("A signature parameter list must come from an arrow")
+
   private def termDefinition(source: TermDefinition): TermDefinition =
-    val scope = nested
-    scope.bindParameters(source.physicalParams)
-    source.tparams.foreach(_.foreach(p => scope.bindLocal(p.sym)))
-    val copy = source.copy(sym = source.sym.subst, tsym = source.tsym.subst,
-      params = source.params.map(scope.parameterList), signatureParams = source.signatureParams.map(scope.parameterList),
-      tparams = source.tparams.map(_.map(scope.parameter)),
-      sign = source.sign.map(scope.term), body = source.body.map(scope.term),
-      modulefulness = modulefulness(source.modulefulness), annotations = source.annotations.map(scope.annotation),
-      companion = source.companion.map(mapType))(source.toLoc, source.headerLoc, source.scope)
+    def copyHeader(source: TermDefinition): TermDefinition =
+      val scope = nested
+      scope.bindParameters(source.params)
+      scope.bindParameters(source.signatureParams)
+      source.tparams.foreach(_.foreach(p => scope.bindLocal(p.sym)))
+      val writtenType = source.writtenType.map(scope.term)
+      val signatureParams = if source.signatureParams.isEmpty then Nil
+        else scope.signatureParameters(source.signatureParams, source.writtenType.get, writtenType.get)
+      val copy = source.copy(sym = source.sym.subst, tsym = source.tsym.subst,
+        params = source.params.map(scope.parameterList), signatureParams = signatureParams,
+        tparams = source.tparams.map(_.map(scope.parameter)),
+        writtenType = writtenType, body = source.body.map(scope.term),
+        writtenModulefulness = modulefulness(source.writtenModulefulness), annotations = source.annotations.map(scope.annotation),
+        companion = source.companion.map(mapType))(source.toLoc, source.headerLoc, source.scope)
+      copy.isErroneous = source.isErroneous
+      copy
+    val symbol = source.tsym.subst
+    source.tsym.termDeclaration.foreach(decl => symbol.decl = S(copyHeader(decl)))
+    val copy = copyHeader(source)
     copy.tsym.defn = S(copy)
-    copy.isErroneous = source.isErroneous
     copy
 
   private def knownDefinition(source: Definition): Opt[Definition] =

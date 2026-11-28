@@ -223,41 +223,21 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
       case S(msym) => S(ErasedType.ValueLike(rsc = S(false), msym))
       case N => sign.flatMap(eraseSignature)
 
-  /** The representation a parameter declares through an inline annotation, a module requirement,
-    * or a separate function signature. Parameters without a declared interface return `N`.
+  /** The parameter's public representation. A separate signature supplies its domain, otherwise
+    * the parameter can declare its representation with an inline type or a module requirement.
     */
   private def declaredParameterType(parameter: Param): Opt[ErasedValueType] =
-    declaredType(parameter.sign, parameter.modulefulness).orElse:
-      if !config.language.useNewResolution then N
-      else
-        val resolver = parameter.sym.getState.newResolverState
-        if resolver.signatureParameters.get(parameter.sym)(using resolver.context).isEmpty then N
-        else
-          // In `fun f: (Int) -> Int; fun f(x) = ...`, x has no inline annotation; neither has the parameter
-          // that `declare fun f: (Int) -> Int` only spells out in its signature.
-          // The resolver records the signature's Int in x's observed shapes and excludes argument types
-          // supplied by callers. Thus inferredType reads the separately declared representation here.
-          // Treat it as declared so inherited types and calls to overrides cannot change it.
-          // If the signature supplies no value shapes, S(Unknown) still prevents fallback to family inference.
-          S(inferredType(parameter.sym).getOrElse(ErasedType.Unknown))
+    val resolver = parameter.sym.getState.newResolverState
+    if config.language.useNewResolution && resolver.signatureParameters.get(parameter.sym)(using resolver.context).nonEmpty then
+      val domain = resolver.resolvedValues.observations(parameter.sym)
+      S(joined(domain.flatMap(valueType).toList).getOrElse(ErasedType.Unknown))
+    else declaredType(parameter.sign, parameter.modulefulness)
 
   /** The result representation that `td` declares, with a result annotation or with a full signature
     * such as `fun f: (Int) -> Int`, whose leading arrows describe the physical parameter lists.
     */
   private def declaredResultType(td: TermDefinition): Opt[ErasedValueType] =
-    def fullResult(res: TypeResolution, count: Int, seen: Set[TypeResolution]): ErasedValueType =
-      if seen(res) then ErasedType.Unknown
-      else if count == 0 then erase(res, Set.empty)
-      else res.shapes.toList match
-        case TypeShape.Alias(_, S(rhs)) :: Nil => fullResult(rhs, count, seen + res)
-        case TypeShape.Reference(base, _, _, _) :: Nil => fullResult(base, count, seen + res)
-        case TypeShape.Applied(base, _) :: Nil => fullResult(base, count, seen + res)
-        case TypeShape.Polymorphic(_, _, body) :: Nil => fullResult(body, count, seen + res)
-        case TypeShape.Function(_, ret) :: Nil => fullResult(ret, count - 1, seen + res)
-        case _ => ErasedType.Unknown
-    if config.language.useNewResolution && td.sign.nonEmpty && td.signatureListCount > 0 && !td.modulefulness.isModuleful
-    then S(fullResult(td.sign.get.typeInterpretation.get, td.signatureListCount, Set.empty))
-    else declaredType(td.resultSignature, td.modulefulness)
+    declaredType(td.resultSignature, td.modulefulness)
 
   /** The result of `td`, whose body produces values represented as `bodyType`. The body of an async or
     * generator function produces a payload, while its callers receive the wrapper object.
@@ -272,8 +252,8 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
 
   /** Computes the representation to publish on a member symbol: a value type, a getter result,
     * or a function's parameter lists and result. Parameter symbols must already have their erased
-    * types. A definition's physical parameter lists are its written ones, followed by those that only
-    * its signature spells out (see TermDefinition): `declare fun f: (Int) -> Str` has one list, whereas
+    * types. A definition uses its implementation's parameter bindings or, for a bodiless member, the
+    * lists spelled by its signature (see TermDefinition). For example, `declare fun f: (Int) -> Str` has one list, whereas
     * `declare fun f: ((Int) -> Str)` has none and denotes a function value. A record type field with
     * parameter lists is a method. Unannotated overrides can obtain their result from an inherited member
     * that passed source layout validation in `overrides` and has completed erasure. Other unannotated

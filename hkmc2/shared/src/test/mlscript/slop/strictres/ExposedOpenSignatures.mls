@@ -39,7 +39,7 @@ abstract class Shape() with
 // A separate full signature types the written parameters.
 open class Signed() with
   open fun scale: (Int, Int) -> Int
-  open fun scale(x, y) = x * y
+  fun scale(x, y) = x * y
 
 // An override inherits a specified signature unchanged and need not restate it.
 open class Typed() with

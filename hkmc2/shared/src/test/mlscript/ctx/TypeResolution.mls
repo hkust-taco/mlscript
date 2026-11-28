@@ -87,7 +87,7 @@ fun f(x: Foo) = x
 //│                 thru = term:f¹
 //│               modulefulness = Modulefulness of N
 //│       body = S of SimpleRef of x⁰
-//│       modulefulness = Modulefulness of N
+//│       writtenModulefulness = Modulefulness of N
 //│   res = Lit of UnitLit of false
 
 module M
@@ -138,12 +138,12 @@ fun f(module m: M): module M = m
 //│                 base = MemberRef of member:M⁰
 //│                 thru = term:f³
 //│               modulefulness = Modulefulness of N
-//│       sign = S of Capture:
+//│       writtenType = S of Capture:
 //│         base = MemberRef of member:M⁰
 //│         thru = term:f³
 //│       body = S of SimpleRef of m¹
 //│       flags = (result annotation)
-//│       modulefulness = Modulefulness of N
+//│       writtenModulefulness = Modulefulness of N
 //│   res = Lit of UnitLit of false
 
 :rt
@@ -165,7 +165,7 @@ fun f(o: O) = o
 //│                 thru = term:f⁵
 //│               modulefulness = Modulefulness of N
 //│       body = S of SimpleRef of o¹
-//│       modulefulness = Modulefulness of N
+//│       writtenModulefulness = Modulefulness of N
 //│   res = Lit of UnitLit of false
 
 // The implicit `this` (class:Foo) in the SynthSel(class:Foo, "foo") should be resolved correctly.
@@ -188,7 +188,7 @@ class Foo with
 //│             tsym = term:Foo¹/foo³
 //│             body = S of Lit of IntLit of 42
 //│             flags = (method)
-//│             modulefulness = Modulefulness of N
+//│             writtenModulefulness = Modulefulness of N
 //│         res = NewSel:
 //│           prefix = SelfRef of class:Foo¹
 //│           id = Ident of "foo"
@@ -214,7 +214,7 @@ class Foo with
 //│             tsym = term:Foo³/foo⁵
 //│             body = S of Lit of IntLit of 42
 //│             flags = (method)
-//│             modulefulness = Modulefulness of N
+//│             writtenModulefulness = Modulefulness of N
 //│         res = NewSel:
 //│           prefix = SelfRef of class:Foo³
 //│           id = Ident of "foo"

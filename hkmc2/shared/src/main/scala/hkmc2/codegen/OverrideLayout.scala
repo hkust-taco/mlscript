@@ -11,13 +11,10 @@ import hkmc2.Message.MessageContext
   * have a counterpart receiving the same argument, omitted-argument default, or rest slice on every
   * call permitted by the inherited signature. Only an inherited `drop` flag permits omitting a parameter.
   *
-  * A member's parameter lists are its physical ones (see TermDefinition): its written lists, followed by
-  * those that only its signature spells out. For example, `declare fun f: (Int) -> Int`, an abstract
-  * `fun f: (Int) -> Int`, and `fun f(x: Int): Int` all have one parameter list, whereas an abstract
-  * `fun f: ((Int) -> Int)` has none and holds a function value.
-  *
-  * [[correspondingParameters]] compares two members' physical parameter lists and returns the
-  * matching parameter pairs or a failure explaining why the override changes the bindings.
+  * An unparenthesized arrow in a function signature declares a parameter list. Both
+  * `fun f: Int -> Int` and `fun f(x: Int): Int` declare one list, and `fun f: (Int -> Int)`
+  * declares a getter. [[correspondingParameters]] matches an implementation's lists to a signature,
+  * and an overriding member's public lists to the public lists of its base (see TermDefinition).
   * [[Erasure]] uses these pairs to inherit parameter representations; [[OverrideChecks]] then checks
   * representation compatibility. The comparison depends on argument positions and parameter flags,
   * not names or types. It runs before lowering replaces optional and trailing parameters with
@@ -82,8 +79,12 @@ object OverrideLayout:
     def fail(message: Message): Left[Failure, Nothing] = Left(Failure(message, overriding.toLoc))
     if overriding.flags != inherited.flags then
       fail(msg"must preserve contextual parameter lists")
+    else if overriding.params.length == inherited.params.length && overriding.leadingRequiredCount == inherited.leadingRequiredCount
+        && overriding.variadic.isDefined == inherited.variadic.isDefined && overriding.trailingParams.length == inherited.trailingParams.length then
+      // Identical layouts give each position the same binding at every argument count.
+      Right(overriding.allParams.lazyZip(inherited.allParams).map(_ -> _))
     else if overriding.paramCountLB > inherited.paramCountLB then
-      fail(msg"requires at least ${overriding.paramCountLB.toString} ${"argument".pluralized(overriding.paramCountLB)}, but the overridden member permits ${inherited.paramCountLB.toString}")
+      fail(msg"requires at least ${overriding.paramCountLB.toString} ${"argument".pluralized(overriding.paramCountLB)}, but the declared parameter list permits ${inherited.paramCountLB.toString}")
     else
       // All optional slots are filled once n reaches leading + trailing. Above both such
       // boundaries, prefixes are constant indices, suffixes are n-relative indices, and rest
@@ -100,7 +101,7 @@ object OverrideLayout:
       val matches = expected.map(binding => actualPositions.getOrElse(binding, -1))
       val missing = inherited.allParams.zip(matches).collectFirst:
         case (param, -1) if !param.flags.droppable =>
-          Failure(msg"must preserve the arguments bound to inherited ${label(param, inherited :: Nil)}", overriding.toLoc)
+          Failure(msg"must preserve the arguments bound to ${label(param, inherited :: Nil)}", overriding.toLoc)
       missing match
         case S(failure) => Left(failure)
         case N =>
@@ -109,7 +110,7 @@ object OverrideLayout:
             case ((param, binding), index) if !matched(index) && binding.exists {
               case Binding.Default | Binding.EmptySlice => false
               case _ => true
-            } => Failure(msg"${label(param, overriding :: Nil)} would receive arguments assigned to a different inherited parameter",
+            } => Failure(msg"${label(param, overriding :: Nil)} would receive arguments assigned to a different declared parameter",
               param.toLoc)
           extra match
             case S(failure) => Left(failure)
@@ -132,6 +133,9 @@ object OverrideLayout:
   def correspondingParameters(overriding: Ls[ParamList], inherited: Ls[ParamList]): Either[Failure, Ls[(Param, Param)]] =
     if overriding.length != inherited.length then
       Left(Failure(msg"must preserve the number of parameter lists", overriding.headOption.flatMap(_.toLoc)))
-    else overriding.zip(inherited).foldLeft[Either[Failure, Ls[(Param, Param)]]](Right(Nil)):
-      case (Left(failure), _) => Left(failure)
-      case (Right(pairs), (actual, expected)) => correspondingList(actual, expected).map(pairs ::: _)
+    else
+      // Prepend each list's pairs so a curried signature visits each parameter once.
+      overriding.iterator.zip(inherited.iterator).foldLeft[Either[Failure, Ls[(Param, Param)]]](Right(Nil)):
+        case (Left(failure), _) => Left(failure)
+        case (Right(reversed), (actual, expected)) => correspondingList(actual, expected).map(_ reverse_::: reversed)
+      .map(_.reverse)

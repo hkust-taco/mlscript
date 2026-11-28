@@ -50,10 +50,10 @@ fun sig(x, y?) = x
 :e
 fun sig2: (Int, Int?) -> Int
 fun sig2(x, y) = x
-//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its signature.
+//│ ╔══[COMPILATION ERROR] Implementation of 'sig2' requires at least 2 arguments, but the declared parameter list permits 1
 //│ ║  l.+2: 	fun sig2(x, y) = x
 //│ ║        	        ^^^^^^
-//│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
+//│ ╟── The signature is declared here
 //│ ║  l.+1: 	fun sig2: (Int, Int?) -> Int
 //│ ╙──      	          ^^^^^^^^^^^^^^^^^^
 
@@ -64,8 +64,8 @@ sig()
 //│ ║  l.+1: 	sig()
 //│ ║        	^^^^^
 //│ ╟── Function 'sig' expected 1 to 2 arguments, but got 0
-//│ ║  l.XX: 	fun sig(x, y?) = x
-//│ ╙──      	^^^^^^^^^^^^^^
+//│ ║  l.XX: 	fun sig: (Int, Int?) -> Int
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'sig' expected at least 1 argument but got 0
 
 // Aliases must not hide a mismatch between a signature and its implementation.
@@ -73,83 +73,82 @@ type OptionalFn = (Int?) -> Int
 
 :e
 private fun aliased: OptionalFn
-private fun aliased(x) = x
-//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its signature.
-//│ ║  l.+2: 	private fun aliased(x) = x
-//│ ║        	                   ^^^
-//│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
-//│ ║  l.+1: 	private fun aliased: OptionalFn
-//│ ╙──      	                     ^^^^^^^^^^
+fun aliased(x) = x
+//│ ╔══[COMPILATION ERROR] Resolution error in function literal
+//│ ║  l.+2: 	fun aliased(x) = x
+//│ ║        	           ^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.+2: 	fun aliased(x) = x
+//│ ║        	           ^^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  l.XX: 	type OptionalFn = (Int?) -> Int
+//│ ╙──      	                  ^^^^^^^^^^^^^
 
 :e
 private fun tooFew: (Int, Int) -> Int
-private fun tooFew(x) = x
-//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its signature.
-//│ ║  l.+2: 	private fun tooFew(x) = x
-//│ ║        	                  ^^^
-//│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
+fun tooFew(x) = x
+//│ ╔══[COMPILATION ERROR] Implementation of 'tooFew' must preserve the arguments bound to parameter 2
+//│ ║  l.+2: 	fun tooFew(x) = x
+//│ ║        	          ^^^
+//│ ╟── The signature is declared here
 //│ ║  l.+1: 	private fun tooFew: (Int, Int) -> Int
 //│ ╙──      	                    ^^^^^^^^^^^^^^^^^
 
-:e
-private fun tooMany: Int -> Int
-private fun tooMany(x, y?) = x
-//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its signature.
-//│ ║  l.+2: 	private fun tooMany(x, y?) = x
-//│ ║        	                   ^^^^^^^
-//│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
-//│ ║  l.+1: 	private fun tooMany: Int -> Int
-//│ ╙──      	                     ^^^^^^^^^^
+// An additional optional parameter receives its default on every declared call.
+:expect 4
+private fun withDefault: Int -> Int
+fun withDefault(x, y?) = if y is null then x else 0
+withDefault(4)
+//│ = 4
 
 :e
 private fun missingRest: (Int, ...Array[Int], Str) -> Str
-private fun missingRest(x, y?) = y
-//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its signature.
-//│ ║  l.+2: 	private fun missingRest(x, y?) = y
-//│ ║        	                       ^^^^^^^
-//│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
+fun missingRest(x, y?) = y
+//│ ╔══[COMPILATION ERROR] Implementation of 'missingRest' must preserve the arguments bound to parameter 2
+//│ ║  l.+2: 	fun missingRest(x, y?) = y
+//│ ║        	               ^^^^^^^
+//│ ╟── The signature is declared here
 //│ ║  l.+1: 	private fun missingRest: (Int, ...Array[Int], Str) -> Str
 //│ ╙──      	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 private fun misplacedRest: (Int, ...Array[Int], Str) -> Str
-private fun misplacedRest(x, y, ...rest) = "ok"
-//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its signature.
-//│ ║  l.+2: 	private fun misplacedRest(x, y, ...rest) = "ok"
-//│ ║        	                         ^^^^^^^^^^^^^^^
-//│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
+fun misplacedRest(x, y, ...rest) = "ok"
+//│ ╔══[COMPILATION ERROR] Implementation of 'misplacedRest' must preserve the arguments bound to parameter 2
+//│ ║  l.+2: 	fun misplacedRest(x, y, ...rest) = "ok"
+//│ ║        	                 ^^^^^^^^^^^^^^^
+//│ ╟── The signature is declared here
 //│ ║  l.+1: 	private fun misplacedRest: (Int, ...Array[Int], Str) -> Str
 //│ ╙──      	                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-:e
+:expect 0
 private fun extraRest: Int -> Int
-private fun extraRest(x, ...rest) = x
-//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its signature.
-//│ ║  l.+2: 	private fun extraRest(x, ...rest) = x
-//│ ║        	                     ^^^^^^^^^^^^
-//│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
-//│ ║  l.+1: 	private fun extraRest: Int -> Int
-//│ ╙──      	                       ^^^^^^^^^^
+fun extraRest(x, ...rest) = rest.length
+extraRest(1)
+//│ = 0
 
 // A matching generic alias retains its parameter annotations.
 :expect 3
 type Unary[A, B] = (value: A) -> B
 private fun length: Unary[Str, Int]
-private fun length(s) = s.length
+fun length(s) = s.length
 length("abc")
 //│ = 3
 
 // A forward type alias can get its entire parameter list from its argument.
 :e
 private fun binary: ForwardSignature[(Int, Int) -> Int]
-private fun binary(x) = x
+fun binary(x) = x
 type ForwardSignature[A] = A
-//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its signature.
-//│ ║  l.+2: 	private fun binary(x) = x
-//│ ║        	                  ^^^
-//│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
+//│ ╔══[COMPILATION ERROR] Resolution error in function literal
+//│ ║  l.+2: 	fun binary(x) = x
+//│ ║        	          ^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.+2: 	fun binary(x) = x
+//│ ║        	          ^^^^^^^
+//│ ╟── The expected function type is declared here.
 //│ ║  l.+1: 	private fun binary: ForwardSignature[(Int, Int) -> Int]
-//│ ╙──      	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	                                     ^^^^^^^^^^^^^^^^^
 
 // The receiver of a type member can also supply the arrow.
 :e
@@ -157,26 +156,32 @@ class Signatures[T] with
   type Fn = T
 val signatures: Signatures[(Int, Int) -> Int] = new Signatures[(Int, Int) -> Int]
 private fun selected: signatures.Fn
-private fun selected(x) = x
-//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its signature.
-//│ ║  l.+5: 	private fun selected(x) = x
-//│ ║        	                    ^^^
-//│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
-//│ ║  l.+4: 	private fun selected: signatures.Fn
-//│ ╙──      	                      ^^^^^^^^^^^^^
+fun selected(x) = x
+//│ ╔══[COMPILATION ERROR] Resolution error in function literal
+//│ ║  l.+5: 	fun selected(x) = x
+//│ ║        	            ^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.+5: 	fun selected(x) = x
+//│ ║        	            ^^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  l.+3: 	val signatures: Signatures[(Int, Int) -> Int] = new Signatures[(Int, Int) -> Int]
+//│ ╙──      	                           ^^^^^^^^^^^^^^^^^
 //│ signatures = Signatures
 
 // Check each written curried list, including aliases of later arrows.
 :e
 type Next = (Int?) -> Int
 private fun curried: Int -> Next
-private fun curried(x)(y) = x
-//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its signature.
-//│ ║  l.+3: 	private fun curried(x)(y) = x
-//│ ║        	                      ^^^
-//│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
-//│ ║  l.+2: 	private fun curried: Int -> Next
-//│ ╙──      	                     ^^^^^^^^^^^
+fun curried(x)(y) = x
+//│ ╔══[COMPILATION ERROR] Resolution error in function literal
+//│ ║  l.+3: 	fun curried(x)(y) = x
+//│ ║        	              ^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.+3: 	fun curried(x)(y) = x
+//│ ║        	              ^^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  l.+1: 	type Next = (Int?) -> Int
+//│ ╙──      	            ^^^^^^^^^^^^^
 
 
 // *** Variadic and curried signature inputs ***
@@ -223,21 +228,21 @@ curried(1)("a", "bb", "tail")
 // There are no calls here from which to recover a missing declared input.
 type UnionInputs = (Str -> Int) | ((Str, Str) -> Int)
 private fun unionInput: UnionInputs
-private fun unionInput(...xs) = xs.map(x => x.length).length
+fun unionInput(...xs) = xs.map(x => x.length).length
 
 type IntersectionInputs = (Str -> Int) & ((Str, Str) -> Int)
 private fun intersectionInput: IntersectionInputs
-private fun intersectionInput(...xs) = xs.map(x => x.length).length
+fun intersectionInput(...xs) = xs.map(x => x.length).length
 
 // A disagreement in an earlier list must not erase later curried parameters.
 type CurriedInputs = (Int -> (Str -> Int)) | ((Int, Int) -> (Str -> Int))
 private fun curriedInput: CurriedInputs
-private fun curriedInput(...xs)(s) = s.length
+fun curriedInput(...xs)(s) = s.length
 
 // Later lists remain alternatives; inspecting one arrow must not reject its layout.
 type CurriedAlternatives = (Int -> (Str -> Int)) | (Int -> ((Str, Str) -> Int))
 private fun curriedAlternatives: CurriedAlternatives
-private fun curriedAlternatives(n)(...xs) = xs.map(x => x.length).length
+fun curriedAlternatives(n)(...xs) = xs.map(x => x.length).length
 
 class Left(val value: Int)
 class Right(val value: Int)
@@ -245,10 +250,19 @@ class Right(val value: Int)
 // Both member targets must survive; choosing only the matching arrow hides ambiguity.
 :e
 private fun unionAmbiguous: (Left -> Int) | ((Right, Int) -> Int)
-private fun unionAmbiguous(x) = x.value
+fun unionAmbiguous(x) = x.value
+//│ ╔══[COMPILATION ERROR] Resolution error in function literal
+//│ ║  l.+2: 	fun unionAmbiguous(x) = x.value
+//│ ║        	                  ^^^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.+2: 	fun unionAmbiguous(x) = x.value
+//│ ║        	                  ^^^^^^^^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  l.+1: 	private fun unionAmbiguous: (Left -> Int) | ((Right, Int) -> Int)
+//│ ╙──      	                                             ^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] This selection of member 'value' is ambiguous, as it has multiple resolved targets
-//│ ║  l.+2: 	private fun unionAmbiguous(x) = x.value
-//│ ║        	                                ^^^^^^^
+//│ ║  l.+2: 	fun unionAmbiguous(x) = x.value
+//│ ║        	                        ^^^^^^^
 //│ ╟── target: value 'value' in overloaded function and class 'Right'
 //│ ║  l.XX: 	class Right(val value: Int)
 //│ ║        	                ^^^^^
@@ -258,10 +272,19 @@ private fun unionAmbiguous(x) = x.value
 
 :e
 private fun intersectionAmbiguous: (Left -> Int) & ((Right, Int) -> Int)
-private fun intersectionAmbiguous(x) = x.value
+fun intersectionAmbiguous(x) = x.value
+//│ ╔══[COMPILATION ERROR] Resolution error in function literal
+//│ ║  l.+2: 	fun intersectionAmbiguous(x) = x.value
+//│ ║        	                         ^^^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.+2: 	fun intersectionAmbiguous(x) = x.value
+//│ ║        	                         ^^^^^^^^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  l.+1: 	private fun intersectionAmbiguous: (Left -> Int) & ((Right, Int) -> Int)
+//│ ╙──      	                                                    ^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] This selection of member 'value' is ambiguous, as it has multiple resolved targets
-//│ ║  l.+2: 	private fun intersectionAmbiguous(x) = x.value
-//│ ║        	                                       ^^^^^^^
+//│ ║  l.+2: 	fun intersectionAmbiguous(x) = x.value
+//│ ║        	                               ^^^^^^^
 //│ ╟── target: value 'value' in overloaded function and class 'Right'
 //│ ║  l.XX: 	class Right(val value: Int)
 //│ ║        	                ^^^^^
@@ -274,11 +297,82 @@ private fun intersectionAmbiguous(x) = x.value
 #lang(eagerResolution: false)
 private fun domains[A, B](a: A, b: B) =
   private fun apply: ((A -> Int) -> Int) & (((B -> Int), Int) -> Int)
-  private fun apply(f, padding?) = f({first: 1, second: "two"})
+  fun apply(f, padding?) = f({first: 1, second: "two"})
   [a.first, b.second]
 
-// An inline annotation receives constraints without exposing additional members.
+// A separate domain supplies no evidence for an explicitly annotated implementation parameter.
+:e
 private fun explicit[A](a: A) =
   private fun read: Str -> Int
-  private fun read(s: A) = s.length
+  fun read(s: A) = s.length
   a.length
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+3: 	  fun read(s: A) = s.length
+//│ ║        	                   ^^^^^^^^
+//│ ╟── Cannot resolve member 'length' of a value with unknown shape.
+//│ ║  l.+3: 	  fun read(s: A) = s.length
+//│ ║        	              ^
+//│ ╟── Type parameter 'A' does not specify a member interface.
+//│ ║  l.+1: 	private fun explicit[A](a: A) =
+//│ ╙──      	                     ^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+4: 	  a.length
+//│ ║        	  ^^^^^^^^
+//│ ╟── Cannot resolve member 'length' of a value with unknown shape.
+//│ ║  l.+1: 	private fun explicit[A](a: A) =
+//│ ║        	                           ^
+//│ ╟── Type parameter 'A' does not specify a member interface.
+//│ ║  l.+1: 	private fun explicit[A](a: A) =
+//│ ╙──      	                     ^
+
+// The body resolves its parameter and its returned lambda using the implementation annotations.
+// Callers see the domain and result written on the declaration.
+:expect 9
+class Face(val field: Int)
+class Detail(val detail: Int) extends Face(detail)
+fun reader: Face -> (Face -> Face)
+fun reader(x: Detail): Detail -> Detail = y => Detail(x.detail + y.detail)
+reader(Detail(4))(Detail(5)).field
+//│ = 9
+
+:e
+reader(Detail(4))(Detail(5)).detail
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	reader(Detail(4))(Detail(5)).detail
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Value of type 'Face' does not contain member 'detail'
+//│ ║  l.XX: 	fun reader: Face -> (Face -> Face)
+//│ ╙──      	                             ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A caller's callback receives the publicly declared argument type.
+:e
+fun consume: (Face -> Int) -> Int
+fun consume(f: Detail -> Int) = f(Detail(7))
+consume(x => x.detail)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+3: 	consume(x => x.detail)
+//│ ║        	             ^^^^^^^^
+//│ ╟── Value of type 'Face' does not contain member 'detail'
+//│ ║  l.+1: 	fun consume: (Face -> Int) -> Int
+//│ ╙──      	              ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// The incoming argument occupies the public parameter slot.
+:expect 7
+fun ignoreArgument: Int -> Int
+fun ignoreArgument(x: Str): Int = 7
+ignoreArgument(42)
+//│ = 7
+
+// Unrelated annotations alone are valid. A throwing body needs no return slot conversion.
+private fun disagree: Int -> Str
+fun disagree(x: Str): Int = throw "unused"
+
+// A value returned normally must fit the public return slot.
+:e
+private fun badReturn: Int -> Str
+fun badReturn(x): Int = 1
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Str'
+//│ ║  l.+2: 	fun badReturn(x): Int = 1
+//│ ╙──      	                        ^

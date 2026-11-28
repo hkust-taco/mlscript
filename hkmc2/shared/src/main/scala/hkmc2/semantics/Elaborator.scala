@@ -1008,7 +1008,19 @@ extends Importer:
             return S(Annot.Pure()(tree.toLoc))
           case _ => ()
         case _ => ()
-        S(Annot.Trm(trm)(tree.toLoc))
+        S(Annot.Trm(trm)(if newResolution then symbol else legacyAnnotSymbol(trm), tree.toLoc))
+  
+  private def legacyAnnotSymbol(trm: Term): Opt[Symbol] = trm.withoutCaptures match
+    case Term.App(base, _) => legacyAnnotSymbol(base)
+    case Term.TyApp(base, _) => legacyAnnotSymbol(base)
+    case t => t.symbol
+  
+  /** The identity used to diagnose a repeated annotation across a split definition. */
+  private def annotationKey(a: Annot): Opt[Symbol | Annot | Int] = a match
+    case t: Annot.Trm => t.symbol
+    // These annotations configure one property even when their arguments differ.
+    case _: Annot.Config | _: Annot.Debug | _: Annot.JsSymbol => S(a.ordinal)
+    case _ => S(a)
   
   private final case class EffectHandlerMethodSpec(
       methodName: Str,
@@ -1475,9 +1487,7 @@ extends Importer:
     rctx.state.lexicalTypeBinders(field.tsym) = ctx.typeBinders
     if newResolution then
       field.tsym.defn.foreach: defn =>
-        defn.sign.foreach: sign =>
-          registerSignature(sign)
-          if defn.signatureParams.nonEmpty then registerParameterSignature(defn.signatureParams, sign)
+        defn.sign.foreach(registerSignature)
       field.rhs match
         case Term.WildcardTy(input, _) => input.foreach(registerSignature)
         case _ => ()
@@ -1876,13 +1886,13 @@ extends Importer:
       case trm => raise(WarningReport(msg"Terms in handler block do nothing" -> trm.toLoc :: Nil))
       
       val tds = elabed.stats.map {
-          case td @ TermDefinition(k = Fun, params = params, annotations = annotations) =>
-            params.reverse match
+          case td @ TermDefinition(k = Fun) =>
+            td.params.reverse match
               case ParamList(_, value :: Nil, _) :: newParams =>
                 if newParams.isEmpty then
                   raise(ErrorReport(msg"Handler function must have a parameter list before its continuation parameter list" -> td.toLoc :: Nil))
                 val newTd = td.copy(params = newParams.reverse, annotations = Nil)(td.toLoc, td.headerLoc, td.scope)
-                S(HandlerTermDefinition(value.sym, newTd, annotations))
+                S(HandlerTermDefinition(value.sym, newTd, td.annotations))
               case _ =>
                 raise(ErrorReport(msg"Handler function is missing resumption parameter" -> td.toLoc :: Nil))
                 None
@@ -2589,6 +2599,101 @@ extends Importer:
     MutVal -> Mod,
   )
   
+  private def reportLateDeclaration(name: Str, decl: TermDef, impl: TermDef): Unit =
+    raise:
+      ErrorReport:
+        // * A declaration of another shape is no separate signature wherever it is written, so the message does
+        // * not suggest moving it.
+        if decl.isSeparateSignature then
+          msg"The signature of '$name' must be written before its definition" -> decl.toLoc
+          :: msg"defined here" -> impl.toLoc
+          :: Nil
+        else
+          msg"A declaration of '$name' cannot follow its definition" -> decl.toLoc
+          :: msg"defined here" -> impl.toLoc
+          :: msg"Only a signature without parameter lists (`fun f: T`) can be written apart from a definition"
+            -> N
+          :: Nil
+  
+  /** Check the member kind and symbolic name shared by the two headers. */
+  private def checkSeparateSignature(name: Str, sig: TermDef, impl: TermDef): Unit =
+    if sig.k isnt impl.k then raise:
+      ErrorReport:
+        msg"The signature and the definition of '$name' must be of the same kind" -> N
+        :: msg"${sig.k.desc.capitalize} signature here" -> sig.toLoc
+        :: msg"${impl.k.desc.capitalize} definition here" -> impl.toLoc
+        :: Nil
+    // * Like a modifier, a symbolic name belongs on the signature, which declares how callers refer to the member.
+    // * `definedSymbols` registers the symbolic names of both sides, so differing ones would both resolve.
+    (sig.symbName, impl.symbName) match
+    case (S(R(sigName)), S(R(implName))) if sigName.name =/= implName.name => raise:
+      ErrorReport:
+        msg"The signature and the definition of '$name' must have the same symbolic name" -> N
+        :: msg"signature's symbolic name" -> sigName.toLoc
+        :: msg"definition's symbolic name" -> implName.toLoc
+        :: Nil
+    case (N, S(R(implName))) => raise:
+      WarningReport:
+        msg"This symbolic name belongs on the signature of '$name', not on its definition" -> implName.toLoc
+        :: msg"signature here" -> sig.toLoc
+        :: Nil
+    case _ => ()
+  
+  /** Combines the annotations in source order so the definition's `@config` and `@dbg` settings take precedence.
+    * Reports misplaced annotations at their source and preserves their effect on the member. */
+  private def mergeSignatureAnnotations(sig: TermDefinition, annotations: Ls[Annot], statementLoc: Opt[Loc]): Ls[Annot] =
+    val name = sig.sym.nme
+    def warn(annot: Annot, problem: Message, other: Message -> Opt[Loc]): Unit =
+      raise(WarningReport(problem -> annot.toLoc :: other :: Nil))
+    // Keep the first occurrence for diagnostic locations.
+    val onDefinition = annotations.reverseIterator.flatMap(a => annotationKey(a).map(_ -> a)).toMap
+    val inherited = sig.annotations.filter:
+      case a @ Annot.Modifier(Keyword.`declare`) =>
+        raise(ErrorReport(msg"A 'declare'd signature cannot have a definition" -> a.toLoc
+          :: msg"definition here" -> statementLoc :: Nil))
+        false
+      case _: Annot.Modifier => true
+      case a =>
+        if Annot.Placement.of(a) is Annot.Placement.Definition then
+          warn(a, msg"This annotation belongs on the definition of '$name', not on its signature",
+            msg"definition here" -> statementLoc)
+        annotationKey(a).flatMap(onDefinition.get).foreach: other =>
+          a match
+          // * The member is installed under only one key.
+          case _: Annot.JsSymbol => raise:
+            ErrorReport:
+              msg"This annotation must be written only on the signature of '$name'" -> other.toLoc
+              :: msg"signature's annotation here" -> a.toLoc
+              :: Nil
+          case _ =>
+            warn(a, msg"This annotation is written on both the signature and the definition of '$name'",
+              msg"also written here" -> other.toLoc)
+        true
+    val sigVisibility = Visibility.written(sig.annotations)
+    val sigModifiers = sig.annotations.iterator.collect { case Annot.Modifier(mod) => mod }.toSet
+    val extras = annotations.filter:
+      case Annot.Modifier(Keyword.`private` | Keyword.`public`) if sigVisibility.nonEmpty => false
+      case Annot.Modifier(mod) if sigModifiers(mod) => false
+      case Annot.Modifier(Keyword.`declare` | Keyword.`staged`) => true
+      case m: Annot.Modifier =>
+        warn(m, msg"This modifier belongs on the signature of '$name', not on its definition",
+          msg"signature here" -> sig.toLoc)
+        true
+      case a =>
+        if Annot.Placement.of(a) is Annot.Placement.Signature then
+          warn(a, msg"This annotation belongs on the signature of '$name', not on its definition",
+            msg"signature here" -> sig.toLoc)
+        true
+    (sigVisibility, Visibility.written(annotations)) match
+      case (S(sigVis), S(defnVis)) if sigVis isnt defnVis => raise:
+        ErrorReport:
+          msg"The signature and the definition of '$name' must have the same visibility" -> N
+          :: msg"signature here" -> sig.toLoc
+          :: msg"definition here" -> statementLoc
+          :: Nil
+      case _ => ()
+    inherited ::: extras
+  
   // * Some blocks do not have a meaningful result,
   // * e.g., constructor blocks or top-level blocks (in MLscript files and diff-tests);
   // * for these, elaborate with `hasResult = false`, which uses `undefined` as the result
@@ -2608,13 +2713,9 @@ extends Importer:
     def completeIfReady(member: BlockMemberSymbol): Unit =
       if member.trees.forall:
           case td: Tree.TypeDef => td.symbol.defn.nonEmpty
-          case _: Tree.TermDef => member.asTrm.flatMap(_.defn).exists: defn =>
-            // A separate signature is elaborated before the implementation;
-            // listeners must observe the final symbol and body together.
-            member.trmImplTree.isEmpty || defn.body.nonEmpty
+          case td: Tree.TermDef => member.asTrm.flatMap(_.defn).exists(defn => td.rhs.isEmpty || defn.body.nonEmpty)
       then member.complete()
     val fieldInterpretation = resultInterp.elements
-    val newSignatureTrees = mutable.Map.empty[Str, Tree] // * Store trees of signatures
     
     // * Check for double/incompatible definitions and declarations
     blk.definedSymbols.foreach: (name, sym) =>
@@ -2679,13 +2780,6 @@ extends Importer:
         if decls.length > 1 then
           raise(ErrorReport(msg"Multiple declarations of symbol '$name'" -> N ::
             decls.map(msg"declared here" -> _.toLoc)))
-        val sig = decls.collectFirst:
-          case td
-            if td.annotatedResultType.isDefined
-            && td.paramLists.isEmpty
-            => td.annotatedResultType.get
-        sig.foreach: sig =>
-          newSignatureTrees += name -> sig
     
     // TODO extract this into a separate method
     // * @param funs:
@@ -2892,17 +2986,26 @@ extends Importer:
         td.name match
           case R(id) =>
             val sym = members.getOrElse(id.name, die)
-            val owner =
-              // * Instance declarations are not meant to be exported as externally-available members,
-              // * even when declared within some class or module.
-              if (k is Ins) then N else ctx.outer.inner
-            if (k is MutVal) && owner.isEmpty then
+            val signatureFor = if rhs.nonEmpty then N else sym.trmImplTree match
+              case S(impl) if sym.trees.iterator.takeWhile(_ isnt td).exists(_ is impl) =>
+                reportLateDeclaration(id.name, td, impl)
+                return go(sts, Nil, acc)(N)
+              case impl => impl.filter(_ => td.isSeparateSignature)
+            // Multiple declarations have already been diagnosed. Only the first supplies the signature.
+            val separate = sym.tsym.filter(_.defn.isEmpty).flatMap(_.termDeclaration)
+            if rhs.isEmpty && separate.isDefined then return go(sts, Nil, acc)(N)
+            signatureFor.foreach(checkSeparateSignature(id.name, td, _))
+            val defnAnnotations = separate.fold(annotations)(mergeSignatureAnnotations(_, annotations, statementLoc))
+            val definition = signatureFor.getOrElse(td)
+            // Instances are local even inside a class or module.
+            val owner = if definition.k is Ins then N else ctx.outer.inner
+            if signatureFor.isEmpty && (k is MutVal) && owner.isEmpty then
               raise:
                 ErrorReport:
                   msg"Mutable 'val' definitions are only valid as members of a module, object, or class definition" -> statementLoc
                   :: Nil
               return go(sts, Nil, acc)(N)
-            if owner.isDefined && !identifierPattern.matches(id.name) then
+            if signatureFor.isEmpty && owner.isDefined && !identifierPattern.matches(id.name) then
               raise:
                 ErrorReport:
                   msg"Illegal ${k.desc} member name: '${id.name}'" -> nme.toLoc
@@ -2918,61 +3021,43 @@ extends Importer:
               case pss => pss
             val isMethod = owner.exists(_.isInstanceOf[ClassSymbol])
             
-            val tsym = TermSymbol(k, owner, id) // TODO?
+            val tsym = separate.map(_.tsym).getOrElse:
+              val tsym = TermSymbol(definition.k, owner, definition.name.getOrElse(die))
+              rctx.state.lexicalTypeBinders(tsym) = ctx.typeBinders
+              tsym
             val bindingScope = ctx.scope
-            // Recorded before the definition's own type parameters enter scope.
-            rctx.state.lexicalTypeBinders(tsym) = ctx.typeBinders
             
-            val elaborateDefinition: Ctx ?=> TermDefinition = newCtx ?=>
+            val headerCtx = ctx.nest(OuterCtx.NonReturnContext(S(tsym)))
+            val newAcc = debugElaboration(defnAnnotations):
+              given Ctx = headerCtx
               
               log(dbg"Processing term definition $nme")
-              // * Add type parameters to context
-              val (tps, newCtx1) = td.typeParams match
-                case S(t) =>
-                  val (tps, ctx) = typeParams(t)
-                  (S(tps), ctx)
-                case N => (N, ctx)
-              if newResolution then tps.foreach(ps => registerTypeParameters(tsym, ps.map(_.sym)))
-              // * Add parameters to context
-              var newCtx = newCtx1
-              val pss = paramLists.map: ps =>
+              val tps = td.typeParams.map(typeParams)
+              val own = tps.iterator.flatten.map(_.sym).toList
+              if newResolution then registerTypeParameters(tsym, own)
+              var newCtx = headerCtx ++ own.iterator.map(p => p.name -> p)
+              // Lists beyond the public method's last arrow belong to its returned function.
+              // Elaborating them as lambdas also puts their parameters in the lambda's lexical scope.
+              val (methodLists, resultLists) = separate match
+                case S(decl) if newResolution && (k is Fun) => paramLists.splitAt(decl.signatureParams.length)
+                case _ => (paramLists, Nil)
+              val pss = methodLists.map: ps =>
                 val (res, newCtx2) = funParams(ps)(using newCtx)
                 newCtx = newCtx2
                 res
               
-              // * Elaborate signature
-              val st = td.annotatedResultType.orElse(newSignatureTrees.get(id.name)) // FIXME: may elaborate external sig twice!!
-              val s = st.map:
-                // unwrap possible module modifier
-                // e.g, `fun f: module M`
-                //              ^^^^^^
+              val resultTree = td.annotatedResultType
+              val sign = resultTree.filter(_ => resultLists.isEmpty).map:
                 case TypeDef(Mod, st, N) => term(st, Tpe)(using newCtx)
                 case st => term(st, Tpe)(using newCtx)
-              
-              // * In new resolution, a signature written without parameter lists, either inline or separately,
-              // * spells out parameter lists with its unparenthesized arrows (see `TermDefinition`).
-              // * An annotation following written parameter lists is the type of their result.
-              val signature = (st, s) match
-                case (S(TypeDef(Mod, _, N)), _) => N
-                case (S(tree), S(sign)) if newResolution && (k is Fun) && (td.annotatedResultType.isEmpty || pss.isEmpty) =>
-                  S(tree -> sign)
-                case _ => N
-              val missingLists = signature.fold(0)((tree, _) => spelledParamListCount(tree) - pss.length)
-              if newResolution && k.isInstanceOf[Val] then st.foreach(rejectParamLists(_, k.desc))
-              // * A body must write the lists that the signature spells out, which it can do as an immediate
-              // * function literal: `fun f: (Int) -> Int = x => x` is `fun f(x) = x`.
-              val literal = (rhs, signature) match
-                case (S(body), S((tree, sign))) if missingLists > 0 =>
-                  val literal = literalParamLists(body, missingLists)
-                  val spelled = spelledParamListCount(tree)
-                  if literal.isEmpty then raise(ErrorReport(
-                    msg"Function '${id.name}' writes fewer parameter lists than its signature spells out" ->
-                      definitionHeaderLoc(td, annotations, statementLoc) ::
-                    msg"This signature spells out ${spelled.toString} parameter ${"list".pluralized(spelled)}" -> sign.toLoc ::
-                    msg"The body can write the missing lists as an immediate function literal. A parenthesized function type declares a function that returns a function value." -> N ::
-                    Nil))
-                  literal
-                case _ => N
+              val signatureParams = separate match
+                case S(decl) => decl.signatureParams
+                case N if newResolution && (k is Fun) && pss.isEmpty =>
+                  sign.toList.flatMap(signatureParamLists(resultTree.get, _))
+                case _ => Nil
+              if newResolution && k.isInstanceOf[Val] then resultTree.foreach(rejectParamLists(_, k.desc))
+              val missingLists = signatureParams.length - pss.length
+              val literal = rhs.filter(_ => missingLists > 0).flatMap(literalParamLists(_, missingLists))
               val literalPss = literal.fold(Nil)(_.params).map: ps =>
                 val (res, newCtx2) = funParams(ps)(using newCtx)
                 newCtx = newCtx2
@@ -2986,29 +3071,21 @@ extends Importer:
               softTODO(placeholders.isEmpty || (ctx.mode is Mode.Full),
                 "Lightweight elaboration cannot determine the parameters of an implicit lambda without its body")
               val writtenBeforeBody = pss ::: literalPss ::: caseParams.toList
-              // * Only a declaration without a body takes the lists that its signature spells out as they are.
-              val sigParams = (rhs, signature) match
-                case (N, S((tree, sign))) => signatureParamLists(tree, sign, pss.length)
-                case _ => Nil
-              
-              // * A separate signature types the definition's lists, and so does an inline one when the definition
-              // * takes the lists that it spells out; otherwise, an inline annotation is the type of the result.
-              def registerFullSignature(lists: Ls[ParamList]): Unit =
-                if td.annotatedResultType.isEmpty then
-                  s.foreach: sign =>
-                    if newResolution then registerParameterSignature(lists, sign)
-                    else checkSignatureOptionality(lists, sign)
-                else if literal.isDefined || sigParams.nonEmpty then s.foreach(registerParameterSignature(lists, _))
-              if placeholders.isEmpty then registerFullSignature(writtenBeforeBody ::: sigParams)
-              (writtenBeforeBody ::: sigParams).foreach(seedRestParameter)
+              def register(lists: Ls[ParamList]): Unit =
+                if newResolution then separate.flatMap(_.writtenType).orElse(sign).foreach: publicType =>
+                  registerDefinitionSignature(tsym, lists, own, signatureParams, publicType,
+                    definitionHeaderLoc(td, annotations, statementLoc))
+                else separate.flatMap(_.writtenType).foreach(checkSignatureOptionality(lists, _))
+              if placeholders.isEmpty && (rhs.nonEmpty || signatureFor.isEmpty && (k is MutVal)) then register(writtenBeforeBody)
+              writtenBeforeBody.foreach(seedRestParameter)
               
               val body: Opt[Term] = rhs match
                 case N => N
                 case _ if ctx.mode is Mode.Light => S(Term.Missing)
                 case S(rhs) => S:
                   val nonLocalRetHandler = TempSymbol(N, initErasedType = N, s"nonLocalRetHandler$$${id.name}")
-                  val hasGeneratorAnnotation = annotations.exists(_.isInstanceOf[Annot.Generator])
-                  val hasAsyncAnnotation = annotations.exists(_.isInstanceOf[Annot.Async])
+                  val hasGeneratorAnnotation = defnAnnotations.exists(_.isInstanceOf[Annot.Generator])
+                  val hasAsyncAnnotation = defnAnnotations.exists(_.isInstanceOf[Annot.Async])
                   val hasParamLists = writtenBeforeBody.nonEmpty || placeholders.nonEmpty
                   if !hasParamLists && hasGeneratorAnnotation then
                     raise(ErrorReport(msg"Generators are not supported on functions without a parameter list" -> statementLoc :: Nil))
@@ -3019,7 +3096,10 @@ extends Importer:
                         given UnderCtx = UnderCtx(placeholders)
                         subterm(body, Trm)(using newCtx)
                       case S(FunctionLiteral(_, body, _)) => term(body, Trm)(using newCtx)
-                      case N => term(rhs, Trm)(using newCtx)
+                      case N =>
+                        val result = if resultLists.isEmpty then rhs else resultTree.fold(rhs): tpe =>
+                          InfixApp(rhs, Keywrd(Keyword.`as`), tpe)
+                        term(resultLists.foldRight(result)((ps, body) => InfixApp(ps, Keywrd(Keyword.`=>`), body)), Trm)(using newCtx)
                     if nonLocalRetHandler.directRefs.isEmpty then b else
                       mkEffectHandleAbortive(
                         nonLocalRetHandler,
@@ -3027,40 +3107,32 @@ extends Importer:
                         EffectHandlerMethodSpec("ret", S("value"), requireEffectMethodValue("ret", _)) :: Nil,
                         b,
                       )
-              val r = FlowSymbol(s"‹result of ${sym}›")
               
-              val mfn = st match
-                // st.isModified(Mod) indicates if the function marks
-                // its result as "module". e.g, `fun f: module M`
-                //                                      ^^^^^^
-                case S(st) if st.isModified(Mod) =>
-                  Modulefulness.ofSign(s)(true)
-                case _ =>
-                  Modulefulness.none
+              val mfn = if td.annotatedResultType.exists(_.isModified(Mod)) then Modulefulness.ofSign(sign)(true) else Modulefulness.none
               
               val placeholderParams = placeholders.map(ps => PlainParamList(ps.iterator.map(Param.simple).toList)(N))
               placeholderParams.foreach: ps =>
-                registerFullSignature(writtenBeforeBody ::: ps :: Nil)
+                register(writtenBeforeBody ::: ps :: Nil)
                 seedRestParameter(ps)
               
-              // Erasure reads the physical parameter and result types from the parts of the signature.
-              if newResolution then s.foreach(registerSignature)
-              val tdf = TermDefinition(k, sym, tsym, writtenBeforeBody ::: placeholderParams.toList, sigParams, tps, s, body,
-                // An inline signature whose lists a function literal writes is a full signature, not a result annotation.
-                TermDefFlags.empty.copy(isMethod = isMethod, hasResultAnnotation = td.annotatedResultType.isDefined && literal.isEmpty),
-                mfn, annotations, N)(
+              val tdf = TermDefinition(definition.k, sym, tsym, writtenBeforeBody ::: placeholderParams.toList,
+                if separate.isEmpty then signatureParams else Nil, tps, sign, body,
+                TermDefFlags.empty.copy(isMethod = isMethod, hasResultAnnotation = signatureFor.isEmpty &&
+                  sign.isDefined && (separate.nonEmpty || signatureParams.isEmpty)), mfn, defnAnnotations, N)(
                 statementLoc, definitionHeaderLoc(td, annotations, statementLoc), S(bindingScope))
-              sym.tsym = S(tsym)
-              tsym.defn = S(tdf)
-              if newResolution then registerResultSignature(tdf)
               
-              tdf
+              sym.tsym = S(tsym)
+              if newResolution then sign.foreach(registerSignature)
+              if signatureFor.nonEmpty then
+                tsym.decl = S(tdf)
+                acc
+              else
+                val r = FlowSymbol(s"‹result of ${sym}›")
+                tsym.defn = S(tdf)
+                completeIfReady(sym)
+                tdf :: acc
             
-            val tdf = debugElaboration(annotations):
-              ctx.nest(OuterCtx.NonReturnContext(S(tsym))).givenIn(elaborateDefinition)
-            
-            completeIfReady(sym)
-            go(sts, Nil, tdf :: acc)(N)
+            go(sts, Nil, newAcc)(N)
           case L(d) =>
             reportUnusedAnnotations
             raise(d)
@@ -3604,19 +3676,18 @@ extends Importer:
     case _ => 0
   
   /** The parameter lists that the function signature `tree`, elaborated as `sign`, spells out (see
-    * [[spelledParamListCount]]) after the first `written` ones, which the definition writes itself.
+    * [[spelledParamListCount]]) in source order.
     * In new resolution, these make `fun f: (Int, Int) -> Int` a method with an `(Int, Int)` parameter list.
-    * Their parameters have no inline annotations: the separate signature types them.
+    * Each parameter retains the corresponding domain type in the signature's scope.
     */
-  private def signatureParamLists(tree: Tree, sign: Term, written: Int)(using State): Ls[ParamList] = (tree, sign) match
+  private def signatureParamLists(tree: Tree, sign: Term)(using State): Ls[ParamList] = (tree, sign) match
     case (InfixApp(TyTup(_), Keywrd(Keyword.`->`), body), Term.Forall(_, _, bodyTerm)) =>
-      signatureParamLists(body, bodyTerm, written)
+      signatureParamLists(body, bodyTerm)
     case (InfixApp(domain, Keywrd(Keyword.`->`), result), Term.FunTy(domainTerm, resultTerm, _)) =>
       val resultTree = result match
         case Effectful(_, result) => result
         case result => result
-      val later = signatureParamLists(resultTree, resultTerm, written - 1)
-      if written > 0 then later else signatureParamList(domain, domainTerm) :: later
+      signatureParamList(domain, domainTerm) :: signatureParamLists(resultTree, resultTerm)
     case _ =>
       softAssert(spelledParamListCount(tree) == 0 || sign.isInstanceOf[Term.Error],
         "An elaborated signature must retain the arrows that its tree spells out")
@@ -3648,10 +3719,10 @@ extends Importer:
       case InfixApp(Optional(id: Ident), Keywrd(Keyword.`:`), _) => S(id)
       case InfixApp(id: Ident, Keywrd(Keyword.`:`), _) => S(id)
       case _ => N
-    def param(flags: FldFlags, field: Tree): Param =
+    def param(flags: FldFlags, field: Tree, tpe: Term): Param =
       val id = label(field).getOrElse(new Ident("").withLocOf(field))
       val sym = VarSymbol(id, mut = false)
-      val p = Param(flags, sym, N, Modulefulness.none, Nil)(field.toLoc)
+      val p = Param(flags, sym, S(tpe), Modulefulness.none, Nil)(field.toLoc)
       sym.decl = S(p)
       p
     (domain, domainTerm) match
@@ -3659,15 +3730,15 @@ extends Importer:
       // `funTyParams` elaborates each field into one element.
       softAssert(fields.sizeCompare(elems) == 0, "A function type domain has one element per field")
       val params = fields.lazyZip(elems).map:
-        case (field, Fld(flags, _, _)) => L(param(FldFlags.empty.copy(opt = flags.opt, droppable = flags.droppable), field))
-        case (field, spd: Spd) => R(param(FldFlags.empty.copy(droppable = spd.droppable), field))
+        case (field, Fld(flags, tpe, _)) => L(param(flags, field, tpe))
+        case (field, spd: Spd) => R(param(FldFlags.empty.copy(droppable = spd.droppable), field, spd.term))
       // `funTyParams` reports any spread after the first one; such a spread is kept as a trailing parameter.
       val (leading, rest) = params.span(_.isLeft)
       val variadic = rest match
         case R(rest) :: trailing => S(Variadic(rest, trailing.map(_.merge)))
         case _ => N
       ParamList(ParamListFlags.empty, leading.map(_.merge), variadic)(domain.toLoc)
-    case _ => ParamList(ParamListFlags.empty, param(FldFlags.empty, domain) :: Nil, N)(domain.toLoc)
+    case _ => ParamList(ParamListFlags.empty, param(FldFlags.empty, domain, domainTerm) :: Nil, N)(domain.toLoc)
   
   /** The parameter lists of a record type field whose type is `tree`, elaborated as `tpe`. A field whose
     * type spells out parameter lists is a method (see TermDefinition). A method cannot be assigned, so
@@ -3677,7 +3748,7 @@ extends Importer:
     if mutable then
       rejectParamLists(tree, "mutable record field")
       Nil
-    else signatureParamLists(tree, tpe, 0)
+    else signatureParamLists(tree, tpe)
   
   /** Report the parameter lists that the type `tree` of a `kind`, such as a `val` definition or a mutable record
     * field, spells out: values cannot have parameter lists, so their function types must be parenthesized. */
@@ -4035,22 +4106,14 @@ extends Importer:
         Pattern.Wildcard()
     go(t)
   
-  def typeParams(t: Tree): Ctxl[(Ls[Param], Ctx)] = t match
-    case TyTup(ps) =>
-      val vs = ps.flatMap:
-        case id: Ident =>
-          val sym = VarSymbol(id, erasedType = N, mut = false)
-          sym.decl = S(TyParam(FldFlags.empty, N, sym)(id.toLoc))
-          Param.simple(sym) :: Nil
-        case t =>
-          raise(ErrorReport(msg"Unsupported type parameter shape: ${t.describe}" -> t.toLoc :: Nil))
-          Nil
-      (vs, ctx ++ vs.map(p => p.sym.name -> p.sym))
-    case _ =>
-      raise:
-        ErrorReport:
-          msg"Expected a type parameter list (a tuple of identifiers), but found ${t.describe}" -> t.toLoc :: Nil
-      (Nil, ctx)
+  private def typeParams(t: TyTup): Ls[Param] = t.tys.flatMap:
+    case id: Ident =>
+      val sym = VarSymbol(id, erasedType = N, mut = false)
+      sym.decl = S(TyParam(FldFlags.empty, N, sym)(id.toLoc))
+      Param.simple(sym) :: Nil
+    case t =>
+      raise(ErrorReport(msg"Unsupported type parameter shape: ${t.describe}" -> t.toLoc :: Nil))
+      Nil
   
   def importFrom(sts: Block, exports: Ls[BlockMemberSymbol]): Ctxl[(Blk, Ctx)] =
     given UnderCtx = UnderCtx.none

@@ -320,7 +320,7 @@ InheritedTail().apply("wrong")
 private class ExtraTail() extends TailBase() with
   override fun apply(...rest, first: Int, value: Int): Int = 0
 useTailBase(ExtraTail())
-//│ ╔══[COMPILATION ERROR] Overriding member 'apply' requires at least 2 arguments, but the overridden member permits 1
+//│ ╔══[COMPILATION ERROR] Overriding member 'apply' requires at least 2 arguments, but the declared parameter list permits 1
 //│ ║  l.+2: 	  override fun apply(...rest, first: Int, value: Int): Int = 0
 //│ ║        	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The overridden member 'apply' is defined here
