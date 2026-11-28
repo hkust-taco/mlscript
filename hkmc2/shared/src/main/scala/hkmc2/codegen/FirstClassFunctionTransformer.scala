@@ -89,7 +89,10 @@ class FirstClassFunctionTransformer
   private def etaExpandMethod(p: Path, s: TermSymbol)(k: Path => Block): Block =
     if isGetter(s) then k(p)
     else
-      val params = getParamList(s).getOrElse:
+      // A virtual call can reach an override that uses an argument dropped by the selected implementation.
+      // Forward the arguments promised by the method's signature through the wrapper.
+      val declared = s.defn.flatMap(_.signatureHeader.signatureParams.headOption)
+      val params = declared.map(LoweredParamList.callingConvention).orElse(getParamList(s)).getOrElse:
         raise:
           ErrorReport(msg"Cannot get ${s.nme}'s parameter list."
             -> p.toLoc :: Nil,

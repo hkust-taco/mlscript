@@ -1,0 +1,19 @@
+:.
+
+// A bound method forwards both arguments of its public signature. The base ignores the second
+// argument, and the override uses it.
+:ftc
+:noInline
+:checkIR
+:expect [[3, 2], [7, 8]]
+private class Parent with
+  open fun pick: (Int, drop Int) -> Int
+  fun pick(x) = x
+private class Child extends Parent with
+  override fun pick(x, y) = x + y
+private fun invoke(p: Parent) =
+  let f = p.pick
+  let g = p.pick
+  [f(3, 4), g(2, 6)]
+[invoke(new Parent), invoke(new Child)]
+//│ = [[3, 2], [7, 8]]
