@@ -375,21 +375,26 @@ object ErasedType:
 sealed trait Canonicalizable:
   type Canonical <: Canonicalizable
 
-  /** Memoized canonical form, written once by [[canonicalize]] and read only through it.
+  /** Memoized canonical form with the `State` that it was computed under, written by [[canonicalize]] and read
+    * only through it.
     *
-    * Note that the canonical form is only meaningful within the `State` it was computed under.
+    * The canonical form is only meaningful within that `State`: it refers to symbols of the runtime that the
+    * state loaded, such as the `Unit` object. A type of the Prelude is shared by the states of all the
+    * compilation units, including the ones that load a rebuilt runtime, whose symbols are other ones. A form
+    * memoized for one of them would name a `Unit` that is unrelated to the `Unit` of the others.
     */
-  private var _canonicalized: Opt[Canonical] = N
+  private var _canonicalized: Opt[(State, Canonical)] = N
 
-  /** The canonical form, computed by [[computeCanonicalize]] on first use and memoized thereafter.
+  /** The canonical form in the given state, computed by [[computeCanonicalize]] on first use in that state and
+    * memoized until another state asks for it.
     *
     * Callers are encouraged to always canonicalize types before using them.
     */
-  final def canonicalize(using Ctx, State): Canonical = _canonicalized match
-    case S(n) => n
-    case N =>
+  final def canonicalize(using Ctx)(using state: State): Canonical = _canonicalized match
+    case S((owner, n)) if owner is state => n
+    case _ =>
       val n = computeCanonicalize
-      _canonicalized = S(n)
+      _canonicalized = S((state, n))
       n
 
   /** Computes the canonical form, by resolving type aliases to their target type, reclassifying unboxed primitive
