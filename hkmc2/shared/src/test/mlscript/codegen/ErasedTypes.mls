@@ -922,10 +922,11 @@ fun test: Function = new Object()
 
 // A written arrow type erases to `Function` in every position it can be written - parameter, result and `val`
 // alike - and the parameter and result shapes erase away with it. A lambda already has the `Function`
-// representation and needs no cast when flowing into such a slot.
+// representation and needs no cast when flowing into such a slot. The result type of `mk` is parenthesized:
+// otherwise, its arrow would spell out a parameter list of `mk`.
 fun applyF(f: Int -> Int): Int = f(1)
 applyF((x: Int) => x)
-fun mk: Int -> Int = (x: Int) => x
+fun mk: (Int -> Int) = (x: Int) => x
 val g: Int -> Int = (x: Int) => x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let lambda, lambda1;
@@ -971,14 +972,26 @@ fun useStr(s: Str) = s
 
 
 // A `declare`d function is never auto-invoked - `Lowering.ref` lowers the reference to a `globalThis`
-// selection. Its parameter lists are its written ones: with none, the arrows of its type describe the
-// function value that the selection yields, so a call applies that value, whose result is not erased.
+// selection. The unparenthesized arrow of its signature spells out its parameter list, so a call is typed
+// by the result of that list.
 declare fun addInts: (Int, Int) -> Int
 fun useAdd() = useInt(addInts(1, 2))
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define useAdd⁰ as fun useAdd¹(): Int⁰ {
-//│   let tmp: ?;
+//│   let tmp: Int⁰;
 //│   set tmp = globalThis⁰.addInts⁰(1, 2);
+//│   return useInt¹(tmp)
+//│ };
+//│ end
+
+// With a parenthesized type, the selection yields a function value, so a call applies that value, whose result
+// is not erased.
+declare fun addFn: ((Int, Int) -> Int)
+fun useAddFn() = useInt(addFn(1, 2))
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define useAddFn⁰ as fun useAddFn¹(): Int⁰ {
+//│   let tmp: ?;
+//│   set tmp = globalThis⁰.addFn⁰(1, 2);
 //│   return useInt¹((tmp as! Int⁰))
 //│ };
 //│ end
@@ -1034,9 +1047,10 @@ fun badParse() = useStr(parseIt("1", 10))
 //│ end
 
 
-// A *non*-`declare`d `fun` writing no parameter lists is a getter: referencing it calls it, so its arrows
-// are the *result*. Reading them as parameters would type `getFn` as `Int` when it yields a function.
-fun getFn: Int -> Int
+// A *non*-`declare`d `fun` without parameter lists is a getter: referencing it calls it, so the arrows of its
+// parenthesized type are the *result*. Reading them as parameters would type `getFn` as `Int` when it yields a
+// function.
+fun getFn: (Int -> Int)
 fun useGetFn() = useFn(getFn)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define useGetFn⁰ as fun useGetFn¹(): Unknown {
@@ -1075,7 +1089,7 @@ fun viaTyped(s, radix): Str = parseIt(s, radix)
 // A member is reached by *selection*, which - unlike a bare reference - is never auto-invoked, so its
 // signature is its own type.
 module Plain with
-  fun f: Int -> Int = (x: Int) => x
+  fun f: (Int -> Int) = (x: Int) => x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define Plain⁰ as class Plain¹
 //│ module Plain² {
@@ -1089,7 +1103,7 @@ module Plain with
 //│ end
 
 declare module Ext with
-  fun member: Int -> Int
+  fun member: (Int -> Int)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
 

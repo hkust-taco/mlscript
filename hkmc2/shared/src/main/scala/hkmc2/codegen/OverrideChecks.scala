@@ -38,7 +38,7 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
       base.defn.toList.filterNot(Inheritance.changesMemberKind(td, _)).flatMap: inherited =>
         // A handler member traversed by erasure has no resumption parameter list, unlike its symbol's
         // declaration, so the overriding side's lists come from `td`.
-        OverrideLayout.correspondingParameters(td.params, inherited.params) match
+        OverrideLayout.correspondingParameters(td.physicalParams, inherited.physicalParams) match
           case Left(failure) =>
             invalid(base, failure)
             Nil
@@ -80,7 +80,7 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
     edges.filter(edge => Inheritance.isOpen(edge.inherited)).flatMap: edge =>
       edge.parameters.collect:
         case (actual, base) if unannotated(actual) && unannotated(base)
-          && !edge.inherited.params.exists(_.variadic.exists(_.param.sym is base.sym)) => base.sym -> actual.sym
+          && !edge.inherited.physicalParams.exists(_.variadic.exists(_.param.sym is base.sym)) => base.sym -> actual.sym
     .toList.groupMap(_._1)(_._2)
 
   /** Reports overridable members that [[InterfaceExposure]] found reachable from this compilation unit's
@@ -96,10 +96,10 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
     * other units override.
     */
   def checkExposedSignatures(): Unit =
-    // A separate signature, as in `fun f: (Int) -> Int` followed by `fun f(x) = x`, types every written
+    // A signature, as in `fun f: (Int) -> Int` followed by `fun f(x) = x` or alone, types every physical
     // parameter; a result annotation describes only the result.
     def hasFullSignature(td: TermDefinition): Bool =
-      td.sign.isDefined && !td.flags.hasResultAnnotation && td.params.nonEmpty
+      td.sign.isDefined && td.signatureListCount > 0
     /** Whether `base`, overridden from `td`, specifies a part; `visiting` stops at inheritance cycles. */
     def inheritedSpecifies(td: TermDefinition, base: TermDefinition, visiting: Set[TermSymbol])(
         specifies: Set[TermSymbol] => Bool): Bool =
@@ -118,7 +118,7 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
     definitions.foreach: td =>
       td.tsym.getState.newResolverState.exposedOpenMember(td.tsym).foreach: path =>
         val visiting = Set.single(td.tsym)
-        val missing = td.params.iterator.flatMap(_.allParams).filterNot(parameterSpecified(td, _, visiting)).toList
+        val missing = td.physicalParams.iterator.flatMap(_.allParams).filterNot(parameterSpecified(td, _, visiting)).toList
         val missingResult = !resultSpecified(td, visiting)
         val required = (missingResult, missing.nonEmpty) match
           case (true, true) => S("its result type and the types of its parameters")
@@ -140,8 +140,8 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
     * must preserve every list's length even when its source bindings permit adding or dropping inputs.
     */
   private def wasmLayoutFailure(edge: Edge): Opt[OverrideLayout.Failure] =
-    val actual = edge.overriding.params
-    val inherited = edge.inherited.params
+    val actual = edge.overriding.physicalParams
+    val inherited = edge.inherited.physicalParams
     actual.iterator.flatMap(_.variadic).nextOption() match
       case S(rest) => S(OverrideLayout.Failure(
         msg"cannot use a variadic signature on the Wasm target", rest.param.toLoc.orElse(edge.overriding.headerLoc)))

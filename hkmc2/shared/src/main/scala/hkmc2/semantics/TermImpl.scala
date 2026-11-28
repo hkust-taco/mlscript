@@ -266,8 +266,8 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     case SetRef(lhs, rhs) => Vector.double(lhs, rhs)
     case Drop(term) => Vector.single(term)
     case Deref(term) => Vector.single(term)
-    case TermDefinition(_, _, _, pss, tps, sign, body, _, _, annotations, _) =>
-      pss.toVector.flatMap(_.subTerms) ++ tps.getOrElse(Nil).flatMap(_.subTerms).toVector ++ sign.toVector ++ body.toVector ++ annotations.flatMap(_.subTerms).toVector
+    case TermDefinition(params = pss, signatureParams = sps, tparams = tps, sign = sign, body = body, annotations = annotations) =>
+      (pss ::: sps).toVector.flatMap(_.subTerms) ++ tps.getOrElse(Nil).flatMap(_.subTerms).toVector ++ sign.toVector ++ body.toVector ++ annotations.flatMap(_.subTerms).toVector
     case cls: ClassDef =>
       (cls.paramsOpt.toVector.flatMap(_.subTerms) :+ cls.body.blk) ++ cls.annotations.flatMap(_.subTerms).toVector
     case mod: ModuleOrObjectDef =>
@@ -576,7 +576,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     case Tup(fields) => fields.map(_.showDbg).mkString("[", ", ", "]")
     case Mut(und) => s"mut ${und.showDbg}"
     case CtxTup(fields) => fields.map(_.showDbg).mkString("‹using›[", ", ", "]")
-    case TermDefinition(k, sym, tsym, pss, tps, sign, body, flags, _, _, _) =>
+    case TermDefinition(k = k, sym = sym, params = pss, tparams = tps, sign = sign, body = body, flags = flags) =>
       s"${flags.showDbg}${k.str} ${sym.showDbg}${
         tps.map(_.map(_.showDbg)).mkStringOr(", ", "[", "]")
       }${

@@ -44,8 +44,8 @@ class FirstClassFunctionTransformer
     ts.irFunDefn.flatMap(_.params.headOption).orElse:
       // FIXME: remove this fallback once imported functions have their `irFunDefn` properly linked.
       ts.defn.collectFirst:
-        case TermDefinition(k = syntax.Fun, params = params @ (_ :: _)) =>
-          LoweredParamList.callingConvention(params.head)
+        case td @ TermDefinition(k = syntax.Fun) if td.physicalParams.nonEmpty =>
+          LoweredParamList.callingConvention(td.physicalParams.head)
   
   private def isGetter(l: BlockMemberSymbol): Bool = funDefns.get(l) match
     case Some(fd) => fd.params.isEmpty
@@ -55,7 +55,7 @@ class FirstClassFunctionTransformer
     ts.irFunDefn.exists(_.params.isEmpty) ||
       // FIXME: remove this fallback once imported functions have their `irFunDefn` properly linked.
       ts.defn.exists:
-        case TermDefinition(k = syntax.Fun, params = Nil) => true
+        case td @ TermDefinition(k = syntax.Fun) => td.physicalParams.isEmpty
         case _ => false
   
   private def etaExpandPath(p: Path, params: LoweredParamList)(k: Path => Block): Block =

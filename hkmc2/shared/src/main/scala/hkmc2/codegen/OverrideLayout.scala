@@ -11,11 +11,12 @@ import hkmc2.Message.MessageContext
   * have a counterpart receiving the same argument, omitted-argument default, or rest slice on every
   * call permitted by the inherited signature. Only an inherited `drop` flag permits omitting a parameter.
   *
-  * A member's parameter lists are its written ones; arrows in its type annotation describe the value
-  * it returns and never add lists. For example, `declare fun f: (Int) -> Int` and an abstract
-  * `fun f: (Int) -> Int` both have no parameter lists, while `declare fun f(x: Int): Int` has one.
+  * A member's parameter lists are its physical ones (see TermDefinition): its written lists, followed by
+  * those that only its signature spells out. For example, `declare fun f: (Int) -> Int`, an abstract
+  * `fun f: (Int) -> Int`, and `fun f(x: Int): Int` all have one parameter list, whereas an abstract
+  * `fun f: ((Int) -> Int)` has none and holds a function value.
   *
-  * [[correspondingParameters]] compares two members' written parameter lists and returns the
+  * [[correspondingParameters]] compares two members' physical parameter lists and returns the
   * matching parameter pairs or a failure explaining why the override changes the bindings.
   * [[Erasure]] uses these pairs to inherit parameter representations; [[OverrideChecks]] then checks
   * representation compatibility. The comparison depends on argument positions and parameter flags,

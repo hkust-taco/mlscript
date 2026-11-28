@@ -686,21 +686,25 @@ final case class RcdField(field: Term, rhs: Term, sym: BlockMemberSymbol)(val mu
 object RcdField:
   /** Construct a generated value field of an immutable record, whose symbol does not participate in source erasure. */
   def apply(field: Term, rhs: Term)(using State): RcdField =
-    make(field, rhs, signature = N, initializer = S(rhs), source = false, mut = false, mutable = false, symbol = N)
+    make(field, rhs, signature = N, signatureParams = Nil, initializer = S(rhs), source = false, mut = false,
+      mutable = false, symbol = N)
   /** Construct a field that a record literal declares with the value `rhs`. It is written with `mut` if `mut`,
     * and its record is written with `mut` if `mutableRecord`. */
   def source(field: Term, rhs: Term, mut: Bool, mutableRecord: Bool)(using State): RcdField =
-    make(field, rhs, signature = N, initializer = S(rhs), source = true, mut = mut, mutable = mut || mutableRecord, symbol = N)
+    make(field, rhs, signature = N, signatureParams = Nil, initializer = S(rhs), source = true, mut = mut,
+      mutable = mut || mutableRecord, symbol = N)
   /** Declare a structural field with the given type or bounds. Its term symbol carries the
     * read type for erasure. The field retains the written bounds for reads and assignments.
-    * `mut` and `mutableRecord` are those of `source`. */
-  def signature(field: Term, bounds: Term, mut: Bool, mutableRecord: Bool, symbol: Opt[SymbolKey])(using State, Ctx): RcdField =
+    * A method field has the parameter lists `signatureParams`, which its type spells out
+    * (see TermDefinition). `mut` and `mutableRecord` are those of `source`. */
+  def signature(field: Term, bounds: Term, signatureParams: Ls[ParamList], mut: Bool, mutableRecord: Bool,
+      symbol: Opt[SymbolKey])(using State, Ctx): RcdField =
     val readType = bounds match
       case Term.WildcardTy(_, output) =>
         output.getOrElse(ctx.builtins.Any.ref(new Tree.Ident("Any").withLocOf(bounds)))
       case tpe => tpe
-    make(field, bounds, signature = S(readType), initializer = N, source = true, mut = mut, mutable = mut || mutableRecord,
-      symbol = symbol)
+    make(field, bounds, signature = S(readType), signatureParams = signatureParams, initializer = N, source = true,
+      mut = mut, mutable = mut || mutableRecord, symbol = symbol)
   /** Create the field that `spread` copies from `origin`. The field name retains its declaration site.
     * The spread identifies the copy in the receiving record, whose mutability determines whether it can be assigned.
     * Resolution reads its initial value through the field's `root`, so its definition has no body. */
@@ -725,18 +729,19 @@ object RcdField:
     val sym = new BlockMemberSymbol(name, Nil)
     val tsym = new RecordFieldSymbol(id, mutable, origin)
     sym.tsym = S(tsym)
-    tsym.defn = S(TermDefinition(RecordField, sym, tsym, Nil, N, signature, N, TermDefFlags.empty,
+    tsym.defn = S(TermDefinition(RecordField, sym, tsym, Nil, Nil, N, signature, N, TermDefFlags.empty,
       Modulefulness.none, annotations, N)(loc, loc, N))
     sym.complete()
     tsym
   /** Create a record property with a fresh member symbol so that selection can identify its definition.
     * The field retains `rhs`, a value expression or structural field bounds. Its member definition
-    * takes its declared read type from `signature` and its body from `initializer` independently.
+    * takes its declared read type from `signature`, the parameter lists of a method field from
+    * `signatureParams`, and its body from `initializer` independently.
     * `source` indicates that source erasure will assign the symbol's representation.
     * `mut` tells whether the field is written with `mut`, and `mutable` whether it can be assigned.
     * `symbol` supplies the property key for an `@jsSymbol` field.
     */
-  private def make(field: Term, rhs: Term, signature: Opt[Term], initializer: Opt[Term],
+  private def make(field: Term, rhs: Term, signature: Opt[Term], signatureParams: Ls[ParamList], initializer: Opt[Term],
       source: Bool, mut: Bool, mutable: Bool, symbol: Opt[SymbolKey])(using State): RcdField =
     val name = field match
       case Term.Lit(Tree.StrLit(name)) => name
@@ -751,7 +756,7 @@ object RcdField:
     sym.tsym = S(tsym)
     // Field lookup removes this initializer's capture mark, leaving enclosing call-site marks intact.
     val body = initializer.map(Term.Capture(_, tsym))
-    tsym.defn = S(TermDefinition(RecordField, sym, tsym, Nil, N, signature, body, TermDefFlags.empty,
+    tsym.defn = S(TermDefinition(RecordField, sym, tsym, Nil, signatureParams, N, signature, body, TermDefFlags.empty,
       Modulefulness.none, symbol.toList.map(Annot.JsSymbol(_)(field.toLoc)), N)(field.toLoc, field.toLoc, N))
     sym.complete()
     RcdField(field, rhs, sym)(mut, symbol.orElse(field match
@@ -833,11 +838,23 @@ object Modulefulness:
   
   val none = Modulefulness(N)(false)
 
+/** A `fun`, `val`, record field, or other term-level definition.
+  *
+  * `params` are the parameter lists written in the definition's header. Its signature can spell out further
+  * lists with unparenthesized arrows: in new resolution, `fun f: (Int, Int) -> Int` declares a method with one
+  * `(Int, Int)` parameter list, and so does the record type field `f: (Int, Int) -> Int`, whereas
+  * `fun f: ((Int, Int) -> Int)` returns a function value. `signatureParams` holds the lists that the signature
+  * spells out after the written ones. Their parameters have no inline annotations: the signature types them.
+  * Resolution models calls of the definition as written, so its body is the result of applying the written
+  * lists, while override checks, erasure, and lowering use the [[physicalParams]], with which callers call it.
+  * Lowering applies the body to the arguments of `signatureParams` (see `Lowering.setupTermDefinition`).
+  */
 final case class TermDefinition(
     k: TermDefKind, // * The only reason we store it here in addition to tsym.k is for refining patmats
     sym: BlockMemberSymbol,
     tsym: TermSymbol,
     params: Ls[ParamList],
+    signatureParams: Ls[ParamList],
     tparams: Opt[Ls[Param]],
     sign: Opt[Term],
     body: Opt[Term],
@@ -850,8 +867,16 @@ final case class TermDefinition(
   val scope: Opt[SrcScope],
 ) extends CompanionValue:
   require(k is tsym.k)
+  require(signatureParams.isEmpty || sign.nonEmpty, "Signature parameter lists come from a signature")
   def bsym: BlockMemberSymbol = sym
   val owner = tsym.owner
+  /** The parameter lists with which callers call the definition: its written lists, followed by
+    * those that only its signature spells out. */
+  def physicalParams: Ls[ParamList] = params ::: signatureParams
+  /** The number of leading arrows of `sign` that describe physical parameter lists. A separate
+    * function signature has an arrow for each written list; a result annotation has none for them. */
+  def signatureListCount: Int =
+    (if flags.hasResultAnnotation then 0 else params.length) + signatureParams.length
   /** Only function bodies are wrapped by AsyncLowering; annotations on other
     * definitions are ignored with a warning and must not change their interface.
     */

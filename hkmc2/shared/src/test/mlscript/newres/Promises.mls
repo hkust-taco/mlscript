@@ -263,10 +263,10 @@ fun finish[T](callback: Int -> T): T = callback(38)
 finish(separatelyTyped(20)).then(value => value)
 //│ = 58
 
-// An arrow in the payload type is not an extra parameter list of the definition.
+// A parenthesized arrow in the payload type is not an extra parameter list of the definition.
 :await
 :expect 59
-fun signedClosure: () -> () -> Int
+fun signedClosure: () -> (() -> Int)
 @annotations.async
 fun signedClosure() = () => 59
 signedClosure().then(callback => callback())

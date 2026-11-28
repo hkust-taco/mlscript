@@ -362,7 +362,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             case syntax.Fun =>
               val cfgOverride = definitionConfigOverride(td.extraAnnotations)
               val (paramLists, bodyBlock) = debugLowering(td.extraAnnotations):
-                setupFunctionOrByNameDef(td.params, bod, S(td.sym.nme), td.tsym.sourceErasedResult.bodyType)
+                setupTermDefinition(td, bod)
               Define(FunDefn(td.owner, td.sym, td.tsym,
                 FunDefn.Signature.fromLowering(paramLists, td.tsym), bodyBlock)(cfgOverride, td.annotations),
                 continueBlock(stats, res))
@@ -622,7 +622,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     case S(fs: TermSymbol) =>
       fs.defn match
       case S(td: TermDefinition) =>
-        zipArgs(td.params, args, Nil, fs.mayRaiseEffects)
+        zipArgs(td.physicalParams, args, Nil, fs.mayRaiseEffects)
       case _ => zipArgs(Nil, args, Nil, fs.mayRaiseEffects)
     case _ => zipArgs(Nil, args, Nil, true)
   
@@ -805,7 +805,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   
   private def isImplicitNullaryCall(defnSym: DefinitionSymbol[?]): Bool =
     defnSym.defn.exists:
-      case td: TermDefinition => (td.k is syntax.Fun) && td.params.isEmpty
+      case td: TermDefinition => (td.k is syntax.Fun) && td.physicalParams.isEmpty
       case _ => false
   
   /** Consume wildcard lookup results, retaining the receiver selected by resolution. */
@@ -1046,7 +1046,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             N,
             FlowSymbol(sym.nme)
           ).resolve
-        val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme), sig.ret)
+        val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, Nil, bod, S(sym.nme), sig.ret)
         tl.log(dbg"Ref builtin $sym")
         assert(paramLists.length === 1)
         return k(Lambda(paramLists.head, bodyBlock)(sig.ret, Nil, ref.toLoc))
@@ -1124,6 +1124,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           bms,
           dsym,
           sem.ParamList(sem.ParamListFlags.empty, Nil, N)(N) :: Nil,
+          Nil,
           N,
           N,
           S(trm),
@@ -1429,7 +1430,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           case Some(bod) =>
             reportAnnotations(td, td.annotations)
             reportAnnotations(htd, annots)
-            val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme), td.tsym.sourceErasedResult.bodyType)
+            val (paramLists, bodyBlock) = setupTermDefinition(td, bod)
             S(Handler(td.sym, resumeSym, paramLists, bodyBlock))
       }.collect{ case Some(v) => v }
       loweringCtx.collectScopedSym(lhs)
@@ -1541,7 +1542,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     case lam @ st.Lam(params, body) =>
       warnStmt
       val bodyType = lam.resultSlot.erasedType
-      val (paramLists, bodyBlock) = setupFunctionDef(params :: Nil, body, N, bodyType)
+      val (paramLists, bodyBlock) = setupFunctionDef(params :: Nil, Nil, body, N, bodyType)
       val affineAnnots = annots.collect:
         case a @ Annot.Affine(0) => a
       if k.isInstanceOf[TailOp] || bodyBlock.size <= 5
@@ -1850,7 +1851,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       .flatMap: td =>
         td.body.map: bod =>
           val (paramLists, bodyBlock) = debugLowering(td.extraAnnotations):
-            setupFunctionDef(td.params, bod, S(td.sym.nme), td.tsym.sourceErasedResult.bodyType)
+            setupTermDefinition(td, bod)
           reportAnnotations(td, td.extraAnnotations)
           val cfgOverride = definitionConfigOverride(td.extraAnnotations)
           FunDefn(td.owner, td.sym, td.tsym,
@@ -2050,12 +2051,17 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         // || disamb.exists(_.defn.exists(_.hasDeclareModifier.isEmpty)) // * This checks `declare` members, which is normally unwanted
       )(k)
   
-  final def setupFunctionOrByNameDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str], returnType: Opt[ErasedValueType])
-      (using LoweringCtx): (List[LoweredParamList], Block) =
-    val physicalParams = paramLists match
-      case Nil => ParamList(ParamListFlags.empty, Nil, N)(N) :: Nil
-      case ps => ps
-    setupFunctionDef(physicalParams, bodyTerm, name, returnType)
+  /** Lower the function that `td` defines with the body `bodyTerm`, which `td` writes for its written parameter
+    * lists. It takes the physical lists of `td`, with an implicit empty list for a block-level nullary function,
+    * and it applies the body to the arguments of the lists that only its signature spells out (see TermDefinition).
+    * Handler members take the lists that their definition retains, without the resumption list.
+    */
+  final def setupTermDefinition(td: TermDefinition, bodyTerm: Term)(using LoweringCtx): (List[LoweredParamList], Block) =
+    // Erasure gives block-level nullary functions the same implicit list (see Erasure.erasedDefinitionSignature).
+    val written = if td.physicalParams.isEmpty && td.owner.isEmpty && (td.k is syntax.Fun)
+      then ParamList(ParamListFlags.empty, Nil, N)(N) :: Nil
+      else td.params
+    setupFunctionDef(written, td.signatureParams, bodyTerm, S(td.sym.nme), td.tsym.sourceErasedResult.bodyType)
   
   def inScopedBlock(using LoweringCtx)(mkBlock: LoweringCtx ?=> Block): Block =
     inScopedBlockExcept(Set.empty)(mkBlock)
@@ -2065,12 +2071,55 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       val scopedSyms = loweringCtx.getCollectedSym.filterNot(syms)
       Scoped(scopedSyms, body)
   
-  def setupFunctionDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str], returnType: Opt[ErasedValueType])
-      (using LoweringCtx): (List[LoweredParamList], Block) =
-    val (loweredParamLists, prologues) = paramLists.map(lowerTrailingParams(_, name)).unzip
+  /** Lower a function with the parameter lists `paramLists` and `etaParamLists`, whose body applies the value of
+    * `bodyTerm` to the arguments of `etaParamLists` (see [[etaExpandedTerm]]) and returns the result as `returnType`. */
+  def setupFunctionDef(paramLists: List[ParamList], etaParamLists: List[ParamList], bodyTerm: Term, name: Option[Str],
+      returnType: Opt[ErasedValueType])(using LoweringCtx): (List[LoweredParamList], Block) =
+    val (loweredParamLists, prologues) = (paramLists ::: etaParamLists).map(lowerTrailingParams(_, name)).unzip
     val scopedBody = inScopedBlock:
-      prologues.foldRight(returnedTerm(bodyTerm, returnType))((prologue, body) => prologue(body))
+      prologues.foldRight(etaExpandedTerm(bodyTerm, etaParamLists, returnType))((prologue, body) => prologue(body))
     (loweredParamLists, scopedBody)
+  
+  /** Lowers `t` in tail-return position after applying its value to the arguments of `etaParamLists`, one
+    * application per list, and coerces the last result to `returnType`. The parameters of `etaParamLists` must
+    * be bound in the enclosing function. A `return` in `t` returns the value of `t` itself, not the result of
+    * these applications, so a body containing one is lowered as a nested function.
+    */
+  def etaExpandedTerm(t: Term, etaParamLists: List[ParamList], returnType: Opt[ErasedValueType])(using LoweringCtx): Block =
+    etaParamLists match
+    case Nil => returnedTerm(t, returnType)
+    case _ => LoweringCtx.nestFunc(returnType).givenIn:
+      def arguments(ps: ParamList): Ls[Arg] =
+        ps.params.map(p => Arg(N, p.sym.asSimpleRef))
+          ::: ps.variadic.toList.flatMap: v =>
+            Arg(S(SpreadKind.Eager), v.param.sym.asSimpleRef) :: v.trailing.map(p => Arg(N, p.sym.asSimpleRef))
+      def apply(function: Path, lists: Ls[ParamList]): Block = lists match
+        case Nil => castTo(function, returnType, t.toLoc)(Ret(_))
+        case ps :: lists =>
+          val call = Call(function, arguments(ps) ne_:: Nil)(CallMetadata(false, true, Nil), t.toLoc)
+          val result = loweringCtx.registerTempSymbol(N, erasedType = call.erasedType, "etaResult")
+          Assign(result, call, apply(result.asSimpleRef, lists))
+      def value(k: Path => Block): Block =
+        if !containsDirectReturn(t) then subTerm(t)(k)
+        else
+          val (paramLists, bodyBlock) = setupFunctionDef(ParamList(ParamListFlags.empty, Nil, N)(N) :: Nil, Nil, t, N, N)
+          val body = loweringCtx.registerTempSymbol(N, erasedType = S(ErasedType.Function(S(false))), "etaBody")
+          val call = Call(body.asSimpleRef, Nil ne_:: Nil)(CallMetadata(true, true, Nil), t.toLoc)
+          val result = loweringCtx.registerTempSymbol(N, erasedType = call.erasedType, "etaBodyValue")
+          Assign(body, Lambda(paramLists.head, bodyBlock)(N, Nil, t.toLoc), Assign(result, call, k(result.asSimpleRef)))
+      value(apply(_, etaParamLists))
+  
+  /** Whether `t` contains a `return` that leaves the function whose body `t` is, as opposed to one in a
+    * nested function. */
+  private def containsDirectReturn(t: Term): Bool = t match
+    case _: st.Ret => true
+    case _: st.Lam => false
+    case st.Blk(stats, res) =>
+      stats.exists:
+        case _: Definition => false
+        case stat => stat.subTerms.exists(containsDirectReturn)
+      || containsDirectReturn(res)
+    case _ => t.subTerms.exists(containsDirectReturn)
   
   /** Lower a parameter list whose variadic parameter has trailing parameters, as in `fun f(x, y?, ...xs, z)`,
     * which JavaScript does not support. The lowered parameter list keeps the required leading parameters (`x`)
@@ -2216,9 +2265,11 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
   private val inspectFn = selFromGlobalThis("util", "inspect")
   
 
-  override def setupFunctionDef(paramLists: List[ParamList], bodyTerm: st, name: Option[Str], returnType: Opt[ErasedValueType])
-      (using LoweringCtx): (List[LoweredParamList], Block) =
-    if instrument then
+  override def setupFunctionDef(paramLists: List[ParamList], etaParamLists: List[ParamList], bodyTerm: st,
+      name: Option[Str], returnType: Opt[ErasedValueType])(using LoweringCtx): (List[LoweredParamList], Block) =
+    // * TODO: Instrumentation does not eta-expand bodies, so definitions with parameter lists that only their
+    // * signature spells out are compiled without it.
+    if instrument && etaParamLists.isEmpty then
       // * TODO: Instrumentation collapses the trailing parameter lists into lambdas, so `fun f(a)(b): Int` is
       // * compiled to take `a` alone and return a function, while its erased type - which `returnType` is
       // * read off - still promises two parameter lists and an `Int`.
@@ -2235,7 +2286,7 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
       val instrumentedBody = inScopedBlock(prologue(setupFunctionBody(unloweredPs, bod, name, returnType)))
       (ps :: Nil, instrumentedBody)
     else
-      super.setupFunctionDef(paramLists, bodyTerm, name, returnType)
+      super.setupFunctionDef(paramLists, etaParamLists, bodyTerm, name, returnType)
 
   def handleMultipleParamLists(paramLists: List[ParamList], bod: Term) =
     def go(paramLists: List[ParamList], bod: Term): (ParamList, Term) =

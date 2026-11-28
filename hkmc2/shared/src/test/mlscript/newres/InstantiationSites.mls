@@ -57,7 +57,7 @@ shared(Second(2)).second
 :e
 class First(val first: Int)
 class Second(val second: Int)
-private fun make[A]: A -> A =
+private fun make[A]: (A -> A) =
   let cells = mut []
   (value: A) =>
     cells.push(value)
@@ -78,7 +78,7 @@ shared(Second(4)).second
 :expect [5, 6]
 class First(val first: Int)
 class Second(val second: Int)
-private fun make[A]: A -> A = (value: A) => value
+private fun make[A]: (A -> A) = (value: A) => value
 private val left = make[First]
 private val right = make[Second]
 [left(First(5)).first, right(Second(6)).second]
@@ -91,7 +91,7 @@ private val right = make[Second]
 class First(val first: Int)
 class Second(val second: Int)
 class Factory with
-  fun make[A]: A -> A = (value: A) => value
+  fun make[A]: (A -> A) = (value: A) => value
 private val factory = new Factory
 private val left = factory.make[First]
 private val right = factory.make[Second]
@@ -105,7 +105,7 @@ private val right = factory.make[Second]
 :expect [9, 10]
 class First(val first: Int)
 class Second(val second: Int)
-private fun make[A]: A -> A = (value: A) => value
+private fun make[A]: (A -> A) = (value: A) => value
 private fun wrap[T](value: T) = make[T](value)
 [wrap[First](First(9)).first, wrap[Second](Second(10)).second]
 //│ = [9, 10]
@@ -114,7 +114,7 @@ private fun wrap[T](value: T) = make[T](value)
 :e
 class First(val first: Int)
 class Second(val second: Int)
-private fun make: [A] -> A -> A
+private fun make: [A] -> (A -> A)
 private fun make = value => value
 private val shared = make
 shared(First(11))

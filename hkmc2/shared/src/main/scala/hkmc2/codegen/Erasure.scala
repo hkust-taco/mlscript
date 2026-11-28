@@ -116,7 +116,7 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
             && td.resultWrapperAnnotation.isEmpty && inputs.isPrepared(td.tsym)
           base.defn.iterator.flatMap(td => family(td)(parent =>
             if inferred(parent) then overrideChecks.overridingMembers.getOrElse(parent.tsym, Nil).iterator else Iterator.empty
-          )).filter(td => !td.isErroneous && parameterError(td.params).isEmpty).flatMap: td =>
+          )).filter(td => !td.isErroneous && parameterError(td.physicalParams).isEmpty).flatMap: td =>
             if inferred(td) then inputs.observations(td.tsym) else Iterator.single(td)
         case _ => Iterator.empty
       inputs.observations(symbol) ++ related
@@ -233,15 +233,16 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
         val resolver = parameter.sym.getState.newResolverState
         if resolver.signatureParameters.get(parameter.sym)(using resolver.context).isEmpty then N
         else
-          // In `fun f: (Int) -> Int; fun f(x) = ...`, x has no inline annotation.
+          // In `fun f: (Int) -> Int; fun f(x) = ...`, x has no inline annotation; neither has the parameter
+          // that `declare fun f: (Int) -> Int` only spells out in its signature.
           // The resolver records the signature's Int in x's observed shapes and excludes argument types
           // supplied by callers. Thus inferredType reads the separately declared representation here.
           // Treat it as declared so inherited types and calls to overrides cannot change it.
           // If the signature supplies no value shapes, S(Unknown) still prevents fallback to family inference.
           S(inferredType(parameter.sym).getOrElse(ErasedType.Unknown))
 
-  /** The result representation that `td` declares, with a result annotation or with a separate full
-    * signature such as `fun f: (Int) -> Int`, whose arrows describe the written parameter lists.
+  /** The result representation that `td` declares, with a result annotation or with a full signature
+    * such as `fun f: (Int) -> Int`, whose leading arrows describe the physical parameter lists.
     */
   private def declaredResultType(td: TermDefinition): Opt[ErasedValueType] =
     def fullResult(res: TypeResolution, count: Int, seen: Set[TypeResolution]): ErasedValueType =
@@ -254,9 +255,8 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
         case TypeShape.Polymorphic(_, _, body) :: Nil => fullResult(body, count, seen + res)
         case TypeShape.Function(_, ret) :: Nil => fullResult(ret, count - 1, seen + res)
         case _ => ErasedType.Unknown
-    if config.language.useNewResolution && td.sign.nonEmpty && (td.k is syntax.Fun)
-        && !td.flags.hasResultAnnotation && td.params.nonEmpty && !td.modulefulness.isModuleful
-    then S(fullResult(td.sign.get.typeInterpretation.get, td.params.length, Set.empty))
+    if config.language.useNewResolution && td.sign.nonEmpty && td.signatureListCount > 0 && !td.modulefulness.isModuleful
+    then S(fullResult(td.sign.get.typeInterpretation.get, td.signatureListCount, Set.empty))
     else declaredType(td.resultSignature, td.modulefulness)
 
   /** The result of `td`, whose body produces values represented as `bodyType`. The body of an async or
@@ -272,9 +272,10 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
 
   /** Computes the representation to publish on a member symbol: a value type, a getter result,
     * or a function's parameter lists and result. Parameter symbols must already have their erased
-    * types. A function's physical parameter lists are its written ones: arrows in the type of a
-    * function without parameter lists, as in `declare fun f: (Int) -> Str`, describe the function
-    * value it returns. Unannotated overrides can obtain their result from an inherited member
+    * types. A definition's physical parameter lists are its written ones, followed by those that only
+    * its signature spells out (see TermDefinition): `declare fun f: (Int) -> Str` has one list, whereas
+    * `declare fun f: ((Int) -> Str)` has none and denotes a function value. A record type field with
+    * parameter lists is a method. Unannotated overrides can obtain their result from an inherited member
     * that passed source layout validation in `overrides` and has completed erasure. Other unannotated
     * members use the result values resolution has collected from their implementations.
     * Diagnosed parameter errors suppress result checking. The result signature retains the error
@@ -282,7 +283,7 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
     */
   private def erasedDefinitionSignature(td: TermDefinition, overrides: OverrideChecks): Opt[ErasedValueType | ErasedCallableSignature] =
     val declared = Annot.declareModifierOf(td.annotations).isDefined
-    val resultType = parameterError(td.params) match
+    val resultType = parameterError(td.physicalParams) match
       case S(error) =>
         reporter.markFailed()
         S(error)
@@ -298,7 +299,7 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
     val result = wrappedResult(td, resultType)
     td.k match
       case syntax.Fun =>
-        val paramLists = td.params.map(LoweredParamList.fixedPrefix(_).map(_.sym.erasedType))
+        val paramLists = td.physicalParams.map(LoweredParamList.fixedPrefix(_).map(_.sym.erasedType))
         // Block-level nullary functions take an implicit empty list and references auto-invoke them.
         // Member getters and global declarations denote their result directly.
         val physicalParamLists =
@@ -306,7 +307,10 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
         if physicalParamLists.isEmpty then S(ErasedGetterSignature.Signature(result))
         else S(ErasedFuncSignature.Signature(physicalParamLists, result))
       case _: syntax.Val => resultType
-      case syntax.RecordField => if config.language.useNewResolution then resultType else N
+      case syntax.RecordField =>
+        if !config.language.useNewResolution then N
+        else if td.signatureParams.isEmpty then resultType
+        else S(ErasedFuncSignature.Signature(td.signatureParams.map(LoweredParamList.fixedPrefix(_).map(_.sym.erasedType)), result))
       case _ => N
 
   locally:
@@ -326,7 +330,7 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
       case _ => ()
 
     val restParameters = statements.iterator.flatMap:
-      case td: TermDefinition => td.params.iterator
+      case td: TermDefinition => td.physicalParams.iterator
       case cls: ClassLikeDef => cls.paramsOpt.iterator ++ cls.auxParams.iterator
       case Lam(ps, _) => Iterator.single(ps)
       case _ => Iterator.empty

@@ -146,7 +146,7 @@ fun popByIndex(start, end, acc, lft: Indexable) =
 //│       return acc
 //│     }
 //│     tmp16 = start + 1;
-//│     tmp17 = runtime.safeCall(lft.at(start));
+//│     tmp17 = runtime.safeCall(lft.at(start /* as! Int */));
 //│     tmp18 = globalThis.Object.freeze([
 //│       ...acc,
 //│       tmp17

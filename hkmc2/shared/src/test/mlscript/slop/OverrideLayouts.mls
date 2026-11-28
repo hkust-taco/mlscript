@@ -249,14 +249,53 @@ private class ParameterlessOverDeclared() extends DeclaredTypedBase with
 //│ ╙──      	              ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-private abstract class AbstractFunctionValue() with
+private abstract class AbstractMethod() with
   fun pick: (Int) -> Int
 
-// The arrows in the type of a declared or abstract member without parameter lists describe
-// the function value it holds; they are not parameter lists, so a method cannot override it.
+// The unparenthesized arrow in the type of a declared or abstract member spells out its
+// parameter list, so a method overrides it, and calls through the base pass their arguments to it.
+:noInline
+:expect 4
+declare class DeclaredMethod {
+  declare fun pick: (Int) -> Int
+}
+declare class MethodOverDeclared extends DeclaredMethod {
+  declare override fun pick(value: Int): Int
+}
+private class MethodOverAbstract() extends AbstractMethod() with
+  override fun pick(value: Int): Int = value
+private fun throughMethod(base: AbstractMethod) = base.pick(4)
+throughMethod(MethodOverAbstract())
+//│ = 4
+
+// A member holding a function value has no parameter list, so it cannot implement such a method.
+:ge
+private class ValueOverAbstractMethod() extends AbstractMethod() with
+  fun pick = (value: Int) => value * 10
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the number of parameter lists
+//│ ║  l.+2: 	  fun pick = (value: Int) => value * 10
+//│ ║        	      ^^^^
+//│ ╟── The overridden member 'pick' is defined here
+//│ ║  l.XX: 	  fun pick: (Int) -> Int
+//│ ╙──      	      ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A parenthesized function type declares a member holding a function value. A member without
+// parameter lists implements it, and calls apply that value.
+private abstract class AbstractFunctionValue() with
+  fun pick: ((Int) -> Int)
+
+:noInline
+:expect 40
+private class ValueOverAbstractValue() extends AbstractFunctionValue() with
+  fun pick = (value: Int) => value * 10
+private fun throughValue(base: AbstractFunctionValue) = base.pick(4)
+throughValue(ValueOverAbstractValue())
+//│ = 40
+
 :ge
 declare class DeclaredFunctionValue {
-  declare fun pick: (Int) -> Int
+  declare fun pick: ((Int) -> Int)
 }
 declare class MethodOverDeclaredValue extends DeclaredFunctionValue {
   declare override fun pick(value: Int): Int
@@ -267,33 +306,35 @@ private class MethodOverAbstractValue() extends AbstractFunctionValue() with
 //│ ║  l.+5: 	  declare override fun pick(value: Int): Int
 //│ ║        	                           ^^^^^^^^^^^^
 //│ ╟── The overridden member 'pick' is defined here
-//│ ║  l.+2: 	  declare fun pick: (Int) -> Int
+//│ ║  l.+2: 	  declare fun pick: ((Int) -> Int)
 //│ ╙──      	              ^^^^
 //│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the number of parameter lists
 //│ ║  l.+8: 	  override fun pick(value: Int): Int = value
 //│ ║        	                   ^^^^^^^^^^^^
 //│ ╟── The overridden member 'pick' is defined here
-//│ ║  l.XX: 	  fun pick: (Int) -> Int
+//│ ║  l.XX: 	  fun pick: ((Int) -> Int)
 //│ ╙──      	      ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-// A member holding a function value implements such a member, and calls apply that value.
-:noInline
-:expect 40
-private class ValueOverAbstractValue() extends AbstractFunctionValue() with
-  fun pick = (value: Int) => value * 10
-private fun throughValue(base: AbstractFunctionValue) = base.pick(4)
-throughValue(ValueOverAbstractValue())
-//│ = 40
-
-// A function without parameter lists returns its whole annotated function value;
-// the arrows of that value are not parameter lists of the member itself.
-:expect 7
+// A signature that spells out a parameter list makes a method even with a body that is a function
+// value: the method applies that value to its arguments. Overrides can thus write the list themselves.
+:expect [7, 8]
 private class FunctionGetter() with
   open fun get: (Int) -> Int = (value: Int) => value
 private class RenamedGetter() extends FunctionGetter() with
   override fun get: (Int) -> Int = (renamed: Int) => renamed
-RenamedGetter().get(7)
+private class WrittenGetter() extends FunctionGetter() with
+  override fun get(written: Int) = written + 1
+[RenamedGetter().get(7), WrittenGetter().get(7)]
+//│ = [7, 8]
+
+// With a parenthesized function type, the members return their whole function value.
+:expect 7
+private class FunctionValueGetter() with
+  open fun get: ((Int) -> Int) = (value: Int) => value
+private class RenamedValueGetter() extends FunctionValueGetter() with
+  override fun get: ((Int) -> Int) = (renamed: Int) => renamed
+RenamedValueGetter().get(7)
 //│ = 7
 
 

@@ -2319,7 +2319,7 @@ class NewResolver:
               case MemberSlot.FieldWrite(_) => fromSlot(MemberSlot.FieldWrite(nominal))
               case MemberSlot.Result => fromSlot(MemberSlot.Result)
               case MemberSlot.Parameter(p) =>
-                val source = codegen.OverrideLayout.correspondingParameters(td.params, parent.params).toOption
+                val source = codegen.OverrideLayout.correspondingParameters(td.physicalParams, parent.physicalParams).toOption
                   .flatMap(_.collectFirst { case (target, inherited) if target.sym is p.sym => inherited })
                 source.fold(emit(td, N))(p => fromSlot(MemberSlot.Parameter(p)))
           def inherited(lookup: MemberLookup)(using ResolutionContext): Unit =
@@ -2388,7 +2388,7 @@ class NewResolver:
         parameterSignature(target) match
           case S(tpe) => exposeOmitted(tpe)
           case N =>
-            val rest = base.params.exists(_.variadic.exists(_.param.sym is inherited.sym))
+            val rest = base.physicalParams.exists(_.variadic.exists(_.param.sym is inherited.sym))
             def foreignArgument =
               InterfaceExposure.parameterInput(inherited, rest, inheritedExposure(base))(this)._2
             forwardInputs(inherited.sym, MemberSlot.Parameter(inherited), foreignArgument): value =>
@@ -2422,15 +2422,19 @@ class NewResolver:
       instances: TypeSubstitution)(using ResolutionContext): Unit =
     if writtenSignature(overriding).isEmpty then
       listenDeclaredOrInheritedType(base, MemberSlot.Result, marks, instances, signatureSite): (origin, declared) =>
-        declared.filter(_ => origin.generatorAnnotation.isEmpty).foreach: result =>
-          val expected = captureType(result, overriding.tsym)
-          overriding.body.foreach: body =>
-            listenDefinitionResult(overriding, TypeSubstitution.empty): value =>
-              val target = expected.instantiate(rctx.instances)
-              if origin.asyncAnnotation.nonEmpty then
-                // JavaScript adopts returned promises before a caller receives the fulfillment.
-                listenAwaitedValue(value, body)(constrainValue(target, _, Nil, S(body), fulfilled = true))
-              else inferTypeArguments(target, value, Nil, S(body))
+        declared.filter(_ => origin.generatorAnnotation.isEmpty).foreach: declaredResult =>
+          // The declared result follows the written lists of `origin`. The override can write lists that
+          // `origin` only spells out in its signature, as `fun f(x) = x` does for `fun f: (Int) -> Int`;
+          // its body then produces the result of applying these lists too.
+          listenCallableResults(declaredResult, (overriding.params.length - origin.params.length).max(0), TypeView.Required): result =>
+            val expected = captureType(result, overriding.tsym)
+            overriding.body.foreach: body =>
+              listenDefinitionResult(overriding, TypeSubstitution.empty): value =>
+                val target = expected.instantiate(rctx.instances)
+                if origin.asyncAnnotation.nonEmpty then
+                  // JavaScript adopts returned promises before a caller receives the fulfillment.
+                  listenAwaitedValue(value, body)(constrainValue(target, _, Nil, S(body), fulfilled = true))
+                else inferTypeArguments(target, value, Nil, S(body))
 
   /** Expand fixed tuple spreads before matching positions. Unknown-length
     * segments share the remaining middle elements, as with declared parameter
@@ -2784,13 +2788,16 @@ class NewResolver:
     * callable through a receiver with bounded type arguments. */
   private[semantics] def listenSignatureResult(td: TermDefinition, signature: DeclaredType, view: TypeView)
       (listener: ShapeListener[DeclaredType])(using ResolutionContext): Unit =
-    def loop(tpe: DeclaredType, count: Int)(using ResolutionContext): Unit =
-      if count == 0 then listener(tpe)
-      else listenTypeViews(tpe, view):
-        case Marked(callable: CallableTypeShape, marks) =>
-          callable.result.foreach(ret => loop(transportType(ret, marks :: Nil), count - 1))
-        case _ => ()
-    loop(signature, if td.flags.hasResultAnnotation then 0 else td.params.length)
+    listenCallableResults(signature, if td.flags.hasResultAnnotation then 0 else td.params.length, view)(listener)
+  
+  /** Listen to the results of applying the callable type `tpe` to `count` argument lists. */
+  private def listenCallableResults(tpe: DeclaredType, count: Int, view: TypeView)
+      (listener: ShapeListener[DeclaredType])(using ResolutionContext): Unit =
+    if count == 0 then listener(tpe)
+    else listenTypeViews(tpe, view):
+      case Marked(callable: CallableTypeShape, marks) =>
+        callable.result.foreach(ret => listenCallableResults(transportType(ret, marks :: Nil), count - 1, view)(listener))
+      case _ => ()
 
   private def tupleArrayParents(using rs: ResolutionContext) = rs.state.tupleArrayParents
   /** The Array interface for a positional layout has the union of its field shapes as its element type.
@@ -4970,7 +4977,7 @@ class NewResolver:
                   for
                     inherited <- target.defn if newResolution && Inheritance.isOpen(inherited)
                     overriding <- own.defn if !Inheritance.changesMemberKind(overriding, inherited)
-                    parameters <- codegen.OverrideLayout.correspondingParameters(overriding.params, inherited.params).toOption
+                    parameters <- codegen.OverrideLayout.correspondingParameters(overriding.physicalParams, inherited.physicalParams).toOption
                   do
                     connectOverrideInputs(inherited, overriding, parameters, marks, instances)
                     checkOverrideResult(inherited, overriding, marks, instances)

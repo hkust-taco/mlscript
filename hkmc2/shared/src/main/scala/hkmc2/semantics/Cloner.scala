@@ -276,10 +276,11 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
 
   private def termDefinition(source: TermDefinition): TermDefinition =
     val scope = nested
-    scope.bindParameters(source.params)
+    scope.bindParameters(source.physicalParams)
     source.tparams.foreach(_.foreach(p => scope.bindLocal(p.sym)))
     val copy = source.copy(sym = source.sym.subst, tsym = source.tsym.subst,
-      params = source.params.map(scope.parameterList), tparams = source.tparams.map(_.map(scope.parameter)),
+      params = source.params.map(scope.parameterList), signatureParams = source.signatureParams.map(scope.parameterList),
+      tparams = source.tparams.map(_.map(scope.parameter)),
       sign = source.sign.map(scope.term), body = source.body.map(scope.term),
       modulefulness = modulefulness(source.modulefulness), annotations = source.annotations.map(scope.annotation),
       companion = source.companion.map(mapType))(source.toLoc, source.headerLoc, source.scope)

@@ -1054,6 +1054,7 @@ extends Importer:
         mtdSym,
         tsym,
         PlainParamList(valueSym.fold(Nil)(sym => Param.simple(sym) :: Nil))(N) :: Nil,
+        Nil,
         N,
         N,
         S(spec.methodBody(valueSym)),
@@ -1473,7 +1474,10 @@ extends Importer:
   private def recordFieldScope(field: RcdField)(using Ctx): RcdField =
     rctx.state.lexicalTypeBinders(field.tsym) = ctx.typeBinders
     if newResolution then
-      field.tsym.defn.foreach(_.sign.foreach(registerSignature))
+      field.tsym.defn.foreach: defn =>
+        defn.sign.foreach: sign =>
+          registerSignature(sign)
+          if defn.signatureParams.nonEmpty then registerParameterSignature(defn.signatureParams, sign)
       field.rhs match
         case Term.WildcardTy(input, _) => input.foreach(registerSignature)
         case _ => ()
@@ -1872,12 +1876,12 @@ extends Importer:
       case trm => raise(WarningReport(msg"Terms in handler block do nothing" -> trm.toLoc :: Nil))
       
       val tds = elabed.stats.map {
-          case td @ TermDefinition(Fun, sym, tsym, params, tparams, sign, body, flags, mf, annotations, comp) =>
+          case td @ TermDefinition(k = Fun, params = params, annotations = annotations) =>
             params.reverse match
               case ParamList(_, value :: Nil, _) :: newParams =>
                 if newParams.isEmpty then
                   raise(ErrorReport(msg"Handler function must have a parameter list before its continuation parameter list" -> td.toLoc :: Nil))
-                val newTd = TermDefinition(Fun, sym, tsym, newParams.reverse, tparams, sign, body, flags, mf, Nil, comp)(td.toLoc, td.headerLoc, td.scope)
+                val newTd = td.copy(params = newParams.reverse, annotations = Nil)(td.toLoc, td.headerLoc, td.scope)
                 S(HandlerTermDefinition(value.sym, newTd, annotations))
               case _ =>
                 raise(ErrorReport(msg"Handler function is missing resumption parameter" -> td.toLoc :: Nil))
@@ -2775,22 +2779,28 @@ extends Importer:
           case Modified(Keywrd(Keyword.`mut`), name) => (name, true)
           case name => (name, false)
         var newCtx = ctx
-        val (rlhs, rhs_t) = rhs match
-          case _: Under => (lhs, subterm(rhs, fieldInterpretation))
+        // A record type field whose type spells out parameter lists is a method (see TermDefinition).
+        val (rlhs, rhs_t, fieldParams) = rhs match
+          case _: Under => (lhs, subterm(rhs, fieldInterpretation), Nil)
           case _ =>
             lhs match
             case Apps(base, tups) =>
               val rrhs = tups.foldRight(rhs):
                 InfixApp(_, Keywrd(Keyword.`=>`), _)
               val bounds = if (mutableRecord || fieldMut) && fieldInterpretation == Tpe then wildcardType(rrhs) else N
-              (base, bounds.getOrElse(term(rrhs, fieldInterpretation)))
+              val rhs_t = bounds.getOrElse(term(rrhs, fieldInterpretation))
+              val fieldParams = if newResolution && fieldInterpretation == Tpe && bounds.isEmpty
+                then recordFieldParamLists(rrhs, rhs_t, mutableRecord || fieldMut)
+                else Nil
+              (base, rhs_t, fieldParams)
         val newAcc = rlhs match
           case id: Ident if fieldInterpretation == Tpe =>
             // Record type fields declare interfaces, not local value bindings.
             // Keep their types directly so lookup never follows initializer flow.
             reportUnused(annotations.filterNot(_.isInstanceOf[Annot.JsSymbol]))
             val field = Term.Lit(StrLit(id.name)).withLocOf(id)
-            recordFieldScope(RcdField.signature(field, rhs_t, fieldMut, mutableRecord, MemberKey.symbol(annotations))) :: acc
+            recordFieldScope(RcdField.signature(field, rhs_t, fieldParams, fieldMut, mutableRecord,
+              MemberKey.symbol(annotations))) :: acc
           case id: Ident =>
             val sym = new VarSymbol(id, mut = true)
             newCtx += id.name -> sym
@@ -2803,13 +2813,13 @@ extends Importer:
             reportUnusedAnnotations
             val field = Term.Lit(lit).withLocOf(lit)
             recordFieldScope(if fieldInterpretation == Tpe
-              then RcdField.signature(field, rhs_t, fieldMut, mutableRecord, N)
+              then RcdField.signature(field, rhs_t, fieldParams, fieldMut, mutableRecord, N)
               else RcdField.source(field, rhs_t, fieldMut, mutableRecord)
             ) :: acc
           case Bra(Round, inner) =>
             reportUnusedAnnotations
             val key = term(inner, Trm)
-            recordFieldScope(if fieldInterpretation == Tpe then RcdField.signature(key, rhs_t, fieldMut, mutableRecord, N)
+            recordFieldScope(if fieldInterpretation == Tpe then RcdField.signature(key, rhs_t, fieldParams, fieldMut, mutableRecord, N)
               else RcdField.source(key, rhs_t, fieldMut, mutableRecord)) :: acc
           case _ =>
             raise(ErrorReport(msg"Unexpected record key shape." -> rlhs.toLoc :: Nil))
@@ -2939,11 +2949,33 @@ extends Importer:
                 case TypeDef(Mod, st, N) => term(st, Tpe)(using newCtx)
                 case st => term(st, Tpe)(using newCtx)
               
+              // * In new resolution, a signature written without parameter lists, either inline or separately,
+              // * spells out parameter lists with its unparenthesized arrows (see `TermDefinition`).
+              // * An annotation following written parameter lists is the type of their result.
+              val spelledParams = (st, s) match
+                case (S(TypeDef(Mod, _, N)), _) => Nil
+                case (S(tree), S(sign)) if newResolution && (k is Fun) && (td.annotatedResultType.isEmpty || pss.isEmpty) =>
+                  signatureParamLists(tree, sign, pss.length)
+                case _ => Nil
+              // * Resolution models the definition as written, with a result wrapped once its written lists are
+              // * applied, so lowering cannot apply such a wrapped result to the further lists.
+              val wrapper = if rhs.isEmpty then N else annotations.collectFirst:
+                case _: Annot.Async => "An async"
+                case _: Annot.Generator => "A generator"
+              val sigParams = (wrapper, s) match
+                case (S(kind), S(sign)) if spelledParams.nonEmpty =>
+                  raise(ErrorReport(
+                    msg"${kind} function must write all the parameter lists that its signature spells out" -> sign.toLoc :: Nil))
+                  Nil
+                case _ => spelledParams
+              
               if td.annotatedResultType.isEmpty then
                 s.foreach: sign =>
-                  if newResolution then registerParameterSignature(pss, sign)
+                  if newResolution then registerParameterSignature(pss ::: sigParams, sign)
                   else checkSignatureOptionality(pss, sign)
-              pss.foreach(seedRestParameter)
+              else if sigParams.nonEmpty then
+                s.foreach(registerParameterSignature(sigParams, _))
+              (pss ::: sigParams).foreach(seedRestParameter)
               
               val body: Opt[Term] = rhs match
                 case N => N
@@ -2974,9 +3006,9 @@ extends Importer:
                 case _ =>
                   Modulefulness.none
               
-              // Retain the source signature's meaning; Erasure decides which arrows are physical parameters.
+              // Erasure reads the physical parameter and result types from the parts of the signature.
               if newResolution then s.foreach(registerSignature)
-              val tdf = TermDefinition(k, sym, tsym, pss, tps, s, body, 
+              val tdf = TermDefinition(k, sym, tsym, pss, sigParams, tps, s, body,
                 TermDefFlags.empty.copy(isMethod = isMethod, hasResultAnnotation = td.annotatedResultType.isDefined), mfn, annotations, N)(
                 statementLoc, definitionHeaderLoc(td, annotations, statementLoc), S(bindingScope))
               sym.tsym = S(tsym)
@@ -3088,7 +3120,7 @@ extends Importer:
               tsym.k,
               fsym,
               tsym,
-              Nil, N, N,
+              Nil, Nil, N, N,
               if newResolution
                 then S(Term.Capture(Term.SimpleRef(p.sym)(N), tsym))
                 else S(p.sym.ref())
@@ -3302,6 +3334,7 @@ extends Importer:
                     sym,
                     ctsym,
                     allCtorPss,
+                    Nil,
                     S(tps.map(tp => Param(FldFlags.empty, tp.sym, N, Modulefulness.none, Nil)(tp.toLoc))),
                     S(resultType),
                     N,
@@ -3520,6 +3553,81 @@ extends Importer:
         case _ => ()
       checkSignatureOptionality(pss, rhs)
     case _ => ()
+  
+  /** The number of parameter lists that the function signature `tree` spells out: one for each
+    * unparenthesized arrow, including the arrows of its result, as in `Int -> Int -> Int`. A quantifier,
+    * as in `[A] -> A -> A`, spells out no list. Parentheses, aliases, and other type operators end the
+    * lists: `Int -> (Int -> Int)` has a single list and returns a function value. */
+  private def spelledParamListCount(tree: Tree): Int = tree match
+    case InfixApp(TyTup(_), Keywrd(Keyword.`->`), body) => spelledParamListCount(body)
+    case InfixApp(_, Keywrd(Keyword.`->`), Effectful(_, result)) => 1 + spelledParamListCount(result)
+    case InfixApp(_, Keywrd(Keyword.`->`), result) => 1 + spelledParamListCount(result)
+    case _ => 0
+  
+  /** The parameter lists that the function signature `tree`, elaborated as `sign`, spells out (see
+    * [[spelledParamListCount]]) after the first `written` ones, which the definition writes itself.
+    * In new resolution, these make `fun f: (Int, Int) -> Int` a method with an `(Int, Int)` parameter list.
+    * Their parameters have no inline annotations: the separate signature types them.
+    */
+  private def signatureParamLists(tree: Tree, sign: Term, written: Int)(using State): Ls[ParamList] = (tree, sign) match
+    case (InfixApp(TyTup(_), Keywrd(Keyword.`->`), body), Term.Forall(_, _, bodyTerm)) =>
+      signatureParamLists(body, bodyTerm, written)
+    case (InfixApp(domain, Keywrd(Keyword.`->`), result), Term.FunTy(domainTerm, resultTerm, _)) =>
+      val resultTree = result match
+        case Effectful(_, result) => result
+        case result => result
+      val later = signatureParamLists(resultTree, resultTerm, written - 1)
+      if written > 0 then later else signatureParamList(domain, domainTerm) :: later
+    case _ =>
+      softAssert(spelledParamListCount(tree) == 0 || sign.isInstanceOf[Term.Error],
+        "An elaborated signature must retain the arrows that its tree spells out")
+      Nil
+  
+  /** The parameter list described by the domain `domain` of a function type, elaborated as `domainTerm`
+    * by `funTyParams`. A labeled parameter type, as in `(x: Int) -> Int`, names its parameter;
+    * the others are named after their positions. */
+  private def signatureParamList(domain: Tree, domainTerm: Term)(using State): ParamList =
+    def label(field: Tree): Opt[Ident] = field match
+      case PrefixApp(Keywrd(Keyword.`drop`), field) => label(field)
+      case InfixApp(Optional(id: Ident), Keywrd(Keyword.`:`), _) => S(id)
+      case InfixApp(id: Ident, Keywrd(Keyword.`:`), _) => S(id)
+      case _ => N
+    def param(flags: FldFlags, field: Tree, position: Int): Param =
+      val id = label(field).getOrElse(new Ident(s"arg$position").withLocOf(field))
+      val sym = VarSymbol(id, mut = false)
+      val p = Param(flags, sym, N, Modulefulness.none, Nil)(field.toLoc)
+      sym.decl = S(p)
+      p
+    (domain, domainTerm) match
+    case (Tup(fields), Term.Tup(elems)) =>
+      // `funTyParams` elaborates each field into one element.
+      softAssert(fields.sizeCompare(elems) == 0, "A function type domain has one element per field")
+      val params = fields.iterator.zip(elems).zipWithIndex.map:
+        case ((field, Fld(flags, _, _)), index) =>
+          L(param(FldFlags.empty.copy(opt = flags.opt, droppable = flags.droppable), field, index + 1))
+        case ((field, spd: Spd), index) =>
+          R(param(FldFlags.empty.copy(droppable = spd.droppable), field, index + 1))
+      .toList
+      // `funTyParams` reports any spread after the first one; such a spread is kept as a trailing parameter.
+      val (leading, rest) = params.span(_.isLeft)
+      val variadic = rest match
+        case R(rest) :: trailing => S(Variadic(rest, trailing.map(_.merge)))
+        case _ => N
+      ParamList(ParamListFlags.empty, leading.map(_.merge), variadic)(domain.toLoc)
+    case _ => ParamList(ParamListFlags.empty, param(FldFlags.empty, domain, 1) :: Nil, N)(domain.toLoc)
+  
+  /** The parameter lists of a record type field whose type is `tree`, elaborated as `tpe`. A field whose
+    * type spells out parameter lists is a method (see TermDefinition). A method cannot be assigned, so
+    * a `mutable` field must parenthesize its function type to hold a function value.
+    */
+  private def recordFieldParamLists(tree: Tree, tpe: Term, mutable: Bool)(using State): Ls[ParamList] =
+    if spelledParamListCount(tree) == 0 then Nil
+    else if mutable then
+      raise(ErrorReport(
+        msg"A mutable record field cannot be a method" -> tree.toLoc ::
+        msg"A parenthesized function type declares a field that holds a function value." -> N :: Nil))
+      Nil
+    else signatureParamLists(tree, tpe, 0)
   
   def funParams(t: Tree): Ctxl[(ParamList, Ctx)] =
     val ps_ctx = params(t, inDataClass = false, inPattern = false, inFunction = true, inConstructor = false)

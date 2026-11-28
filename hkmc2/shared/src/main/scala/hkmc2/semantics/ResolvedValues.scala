@@ -79,7 +79,7 @@ private[hkmc2] final class SourceDeclarations(root: Statement):
     statements += statement
     statement match
       case td: TermDefinition =>
-        td.params.foreach(_.foreach(parameter))
+        td.physicalParams.foreach(_.foreach(parameter))
         td.tparams.foreach(_.foreach(parameter))
       case cls: ClassLikeDef =>
         cls.paramsOpt.foreach(_.foreach(parameter))

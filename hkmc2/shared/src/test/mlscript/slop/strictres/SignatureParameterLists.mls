@@ -1,0 +1,172 @@
+:.
+
+
+// *** Members declared by signatures ***
+
+// The unparenthesized arrows of a signature spell out parameter lists, including those of its result.
+// A parenthesized arrow ends the lists: `adder` takes one list and returns a function value.
+:expect [2, 12, 5]
+private abstract class Ops() with
+  fun scale: (Int) -> Int
+  fun combine: Int -> Int -> Int
+  fun adder: Int -> (Int -> Int)
+private class IntOps() extends Ops() with
+  fun scale(x) = x * 2
+  fun combine(x)(y) = x * 10 + y
+  fun adder(x) = y => x + y
+private fun useOps(ops: Ops) = [ops.scale(1), ops.combine(1)(2), ops.adder(2)(3)]
+useOps(IntOps())
+//│ = [2, 12, 5]
+
+// An override must take the lists that the signature spells out.
+:ge
+private class CurriedValues() extends Ops() with
+  fun scale(x) = x
+  fun combine(x) = y => x + y
+  fun adder(x)(y) = x + y
+//│ ╔══[COMPILATION ERROR] Overriding member 'combine' must preserve the number of parameter lists
+//│ ║  l.+3: 	  fun combine(x) = y => x + y
+//│ ║        	             ^^^
+//│ ╟── The overridden member 'combine' is defined here
+//│ ║  l.XX: 	  fun combine: Int -> Int -> Int
+//│ ╙──      	      ^^^^^^^
+//│ ╔══[COMPILATION ERROR] Overriding member 'adder' must preserve the number of parameter lists
+//│ ║  l.+4: 	  fun adder(x)(y) = x + y
+//│ ║        	           ^^^
+//│ ╟── The overridden member 'adder' is defined here
+//│ ║  l.XX: 	  fun adder: Int -> (Int -> Int)
+//│ ╙──      	      ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A quantifier spells out no parameter list.
+:expect ["a", 1]
+private abstract class Identity() with
+  fun id: [A] -> A -> A
+private class PlainIdentity() extends Identity() with
+  fun id(x) = x
+private fun useIdentity(identity: Identity) = [identity.id("a"), identity.id(1)]
+useIdentity(PlainIdentity())
+//│ = ["a", 1]
+
+
+// *** Bodies written for fewer parameter lists ***
+
+// A body written without the lists that the signature spells out is applied to their arguments.
+// Each call evaluates it, whereas a reference to the function does not.
+:expect [2, 3, 4]
+let evaluations = 0
+fun inc: Int -> Int =
+  set evaluations = evaluations + 1
+  x => x + 1
+let incRef = inc
+[inc(1), inc(2), incRef(3)]
+//│ = [2, 3, 4]
+//│ evaluations = 3
+//│ incRef = fun inc
+
+:expect 3
+evaluations
+//│ = 3
+
+// The function takes the physical parameter list, typed by the signature, and applies the body to its argument.
+:sir
+:siret
+fun scaled: Int -> Int = (x: Int) => x * 2
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define scaled⁰ as fun scaled¹(arg1: Int⁰): Int⁰ {
+//│   let lambda, etaResult: Int⁰;
+//│   define lambda as fun lambda⁰(x: Int⁰): Int⁰ {
+//│     return *⁰(x, 2)
+//│   };
+//│   set etaResult = lambda⁰(arg1);
+//│   return etaResult
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// A separate signature has the same effect, including after written lists.
+:expect [6, 3]
+fun twice: (Int) -> Int
+fun twice = x => x * 2
+fun add: Int -> Int -> Int
+fun add(x) = y => x + y
+[twice(3), add(1)(2)]
+//│ = [6, 3]
+
+// Optional and variadic parameters forward their arguments to the body.
+:expect [[1, null], [1, 2], [1, [2, 3], "z"]]
+fun optional: (Int, Int?) -> Any = (x, y?) => [x, y]
+fun variadic: (Int, ...Array[Int], Str) -> Any = (x, ...ys, z) => [x, ys, z]
+[optional(1), optional(1, 2), variadic(1, 2, 3, "z")]
+//│ = [[1, null], [1, 2], [1, [2, 3], "z"]]
+
+// A `return` in the body returns the body's value, which the function then applies.
+:expect [1, 2]
+let early = true
+fun pick: Int -> Int =
+  if early do return x => x
+  x => x + 1
+let first = pick(1)
+set early = false
+[first, pick(1)]
+//│ = [1, 2]
+//│ early = false
+//│ first = 1
+
+// Resolution models the definition as written: a stored reference shares one evaluation of the body
+// and one instance of its type parameter, although each call evaluates the body at run time. This rejects
+// a program that would return `Second(2)`.
+:e // TODO: allow?
+class First(val first: Int)
+class Second(val second: Int)
+private fun make[A]: A -> A = (value: A) => value
+private val shared = make
+shared(First(1))
+shared(Second(2)).second
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+6: 	shared(Second(2)).second
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'First' does not contain member 'second'
+//│ ║  l.+5: 	shared(First(1))
+//│ ╙──      	       ^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ shared = fun make
+
+// An async or generator function wraps the result of its written lists, so it must write them all.
+:e
+@annotations.async
+fun later: (Int) -> Int = x => x
+//│ ╔══[COMPILATION ERROR] An async function must write all the parameter lists that its signature spells out
+//│ ║  l.+2: 	fun later: (Int) -> Int = x => x
+//│ ╙──      	           ^^^^^^^^^^^^
+
+
+// *** Record types ***
+
+// A record type field whose type spells out parameter lists is a method. Classes implement it with a
+// method and records with a field holding a function.
+:expect [1, 2, 3]
+type Source = { next: () -> Int, nextValue: (() -> Int) }
+private class Counter(val n: Int) with
+  fun next() = n
+  fun nextValue = () => n + 1
+private fun read(source: Source) = source.next()
+[read({ next: () => 1, nextValue: () => 0 }), read(Counter(2)), Counter(2).nextValue()]
+//│ = [1, 2, 3]
+
+// A mutable field cannot be a method; a parenthesized function type makes it hold a function value.
+:e
+type Step = { mut step: Int -> Int }
+//│ ╔══[COMPILATION ERROR] A mutable record field cannot be a method
+//│ ║  l.+1: 	type Step = { mut step: Int -> Int }
+//│ ║        	                        ^^^^^^^^^^
+//│ ╙── A parenthesized function type declares a field that holds a function value.
+
+:expect 6
+let counter = mut { step: (x: Int) => x + 1 }
+private fun stepped(steps: mut { step: (Int -> Int) }) =
+  set steps.step = x => x * 2
+  steps.step(3)
+stepped(counter)
+//│ = 6
+//│ counter = {step: fun}
