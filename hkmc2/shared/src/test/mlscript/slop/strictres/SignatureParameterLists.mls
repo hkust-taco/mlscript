@@ -70,6 +70,18 @@ private class FirstOnly() extends Pair() with
 //│ ╙──      	      ^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
+// A handler implements an effect method that a signature declares, after which it takes the resumption.
+:effectHandlers
+:lift
+:expect 11
+private abstract class Scale with
+  fun scale: Int -> Int
+private fun scaled(effect: Scale) = effect.scale(1) + 1
+handle effect = Scale with
+  fun scale(x)(resume) = resume(x * 10)
+scaled(effect)
+//│ = 11
+
 
 // *** Bodies written as function literals ***
 
@@ -291,6 +303,34 @@ fun computedValue: (Int -> Int) =
   x => x + offset
 computedValue(2)
 //│ = 3
+
+
+// *** Copied definitions ***
+
+// Compiling a pattern copies its transformation for each use, along with the definitions it contains,
+// their signatures, and the parameter lists that these signatures spell out.
+:checkIR
+:noOpt
+:expect [25, 29]
+pattern Scaled = x =>
+  fun body() =
+    fun scale: (Int, Int?) -> Int = (y, z?) => y * 2
+    fun curried: [A] -> Int -> A -> Int
+    fun curried(a)(b) = a + 1
+    fun tupled: ([Int, Int]) -> Int = p => p.0
+    fun rest: (Int, ...Array[Int], Int) -> Int = (a, ...bs, c) => a + c
+    fun shorthand: Int -> (Int -> Int)
+    fun shorthand(a)(b) =
+      if b > 0 do return a
+      b
+    scale(x) + curried(0)("s") + tupled([0, 1]) + rest(1, 2, 3, 4) + shorthand(1)(1)
+  body()
+fun scaledTwice(x) =
+  if x is (@annotations.compile Scaled) as first then
+    if first is (@annotations.compile Scaled) as second then second else 0
+  else 0
+[scaledTwice(1), scaledTwice(2)]
+//│ = [25, 29]
 
 
 // *** Values ***

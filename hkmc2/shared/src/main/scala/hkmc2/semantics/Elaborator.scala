@@ -1486,8 +1486,7 @@ extends Importer:
   private def recordFieldScope(field: RcdField)(using Ctx): RcdField =
     rctx.state.lexicalTypeBinders(field.tsym) = ctx.typeBinders
     if newResolution then
-      field.tsym.defn.foreach: defn =>
-        defn.sign.foreach(registerSignature)
+      field.tsym.defn.foreach(_.sign.foreach(registerSignature))
       field.rhs match
         case Term.WildcardTy(input, _) => input.foreach(registerSignature)
         case _ => ()
