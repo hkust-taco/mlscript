@@ -44,6 +44,8 @@ trait AppImpl:
     * completeBlock seals this host along with the application; mkClone copies its snapshot.
     */
   private[semantics] val callableTargets: Publisher[TermShape] = new Publisher[TermShape] {}
+  /** The calling conventions of the values that this application can call (see [[codegen.ErasedCallee]]). */
+  val calleeSlot = new codegen.ErasedCalleeSlot
 
 trait NewSelImpl extends NewResolvableImpl:
   self: Term.NewSel =>

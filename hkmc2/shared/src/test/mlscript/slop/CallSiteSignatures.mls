@@ -226,6 +226,186 @@ useHandler(Handler(x => x + 1))
 //│ = 42
 
 
+// A function value keeps the calling convention of its declared type wherever it flows: resolution tells which
+// values each application can call. Here variables hold the value of the field and the result of a call.
+:sir
+:siret
+:expect [42, 42]
+fun makeIncrement(): Int -> Int = x => x + 1
+fun viaVariables(h: Handler) =
+  let run = h.run
+  let increment = makeIncrement()
+  [run(41), increment(41)]
+viaVariables(Handler(x => x + 1))
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda, tmp: Handler⁰;
+//│ define makeIncrement⁰ as fun makeIncrement¹(): Function⁰ {
+//│   let lambda1;
+//│   @private
+//│   define lambda1 as fun lambda⁸(x: Int⁰): Int⁰ {
+//│     return +⁰‹(?, ?) => ?›(x, 1)
+//│   };
+//│   return lambda⁸
+//│ };
+//│ define viaVariables⁰ as fun viaVariables¹(h: Handler⁰): Array⁰ {
+//│   let run: Function⁰, increment: Function⁰, tmp1: Int⁰, tmp2: Int⁰;
+//│   set run = h.run⁰;
+//│   set increment = makeIncrement¹‹() => Function⁰›();
+//│   set tmp1 = run‹(Int⁰) => Int⁰›(41);
+//│   set tmp2 = increment‹(Int⁰) => Int⁰›(41);
+//│   return [tmp1, tmp2]
+//│ };
+//│ define lambda as fun lambda⁹(x: Int⁰): Int⁰ {
+//│   return +⁰‹(?, ?) => ?›(x, 1)
+//│ };
+//│ set tmp = Handler²‹(Function⁰) => Handler⁰›(lambda⁹);
+//│ return viaVariables¹‹(Handler⁰) => Array⁰›(tmp)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [42, 42]
+
+
+// The type arguments written in a type are part of the declared function type of the callee.
+type Endo[A] = A -> A
+class Wrapper[A](val transform: A -> A)
+
+:sir
+:siret
+:expect [42, 42]
+fun viaAlias(f: Endo[Int], x: Int): Int = f(x)
+fun viaClass(w: Wrapper[Int]): Int = w.transform(41)
+[viaAlias(n => n + 1, 41), viaClass(Wrapper(n => n + 1))]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda, tmp: Int⁰, lambda1, tmp1: Wrapper⁰, tmp2: Int⁰;
+//│ define viaAlias⁰ as fun viaAlias¹(f: Function⁰, x: Int⁰): Int⁰ {
+//│   return f‹(Int⁰) => Int⁰›(x)
+//│ };
+//│ define viaClass⁰ as fun viaClass¹(w: Wrapper⁰): Int⁰ {
+//│   return w.transform⁰‹(Int⁰) => Int⁰›(41)
+//│ };
+//│ define lambda as fun lambda¹⁰(n: Int⁰): Int⁰ {
+//│   return +⁰‹(?, ?) => ?›(n, 1)
+//│ };
+//│ set tmp = viaAlias¹‹(Function⁰, Int⁰) => Int⁰›(lambda¹⁰, 41);
+//│ define lambda1 as fun lambda¹¹(n: Int⁰): Int⁰ {
+//│   return +⁰‹(?, ?) => ?›(n, 1)
+//│ };
+//│ set tmp1 = Wrapper¹‹(Function⁰) => Wrapper⁰›(lambda¹¹);
+//│ set tmp2 = viaClass¹‹(Wrapper⁰) => Int⁰›(tmp1);
+//│ return [tmp, tmp2]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [42, 42]
+
+// The type parameters of the enclosing definition stay abstract in its code, whatever its callers pass.
+:sir
+:siret
+:expect [42, "a"]
+fun viaTypeParameter[A](f: A -> A, x: A): A = f(x)
+fun viaGenericClass[A](w: Wrapper[A], x: A): A = w.transform(x)
+[viaTypeParameter(n => n + 1, 41), viaGenericClass(Wrapper(s => s), "a")]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda, tmp: Unknown, lambda1, tmp1: Wrapper⁰, tmp2: Unknown;
+//│ define viaTypeParameter⁰ as fun viaTypeParameter¹(f: Function⁰, x: Unknown): Unknown {
+//│   return f‹(Unknown) => Unknown›(x)
+//│ };
+//│ define viaGenericClass⁰ as fun viaGenericClass¹(w: Wrapper⁰, x: Unknown): Unknown {
+//│   return w.transform⁰‹(Unknown) => Unknown›(x)
+//│ };
+//│ define lambda as fun lambda¹²(n: Int⁰): Int⁰ {
+//│   return +⁰‹(?, ?) => ?›(n, 1)
+//│ };
+//│ set tmp = viaTypeParameter¹‹(Function⁰, Unknown) => Unknown›(lambda¹², 41);
+//│ define lambda1 as fun lambda¹³(s: Str⁰): Str⁰ {
+//│   return s
+//│ };
+//│ set tmp1 = Wrapper¹‹(Function⁰) => Wrapper⁰›(lambda¹³);
+//│ set tmp2 = viaGenericClass¹‹(Wrapper⁰, Unknown) => Unknown›(tmp1, "a");
+//│ return [tmp, tmp2]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [42, "a"]
+
+
+// An application that can call values of different function types takes the dynamic signature when all their
+// slots hold references. So does one that can also call a value without a declared type, such as a lambda.
+:sir
+:siret
+fun eitherCallee(c: Bool, f: Int -> Int, g: Num -> Num) =
+  let h = if c then f else g
+  h(1)
+fun declaredOrLambda(c: Bool, f: Int -> Int) =
+  let h = if c then f else x => x
+  h(1)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define eitherCallee⁰ as fun eitherCallee¹(c: Bool⁰, f: Function⁰, g: Function⁰): Num⁰ {
+//│   let h: Function⁰, tmp: Function⁰;
+//│   match c
+//│     true =>
+//│       set tmp = f;
+//│       end
+//│     else
+//│       set tmp = g;
+//│       end
+//│   set h = tmp;
+//│   return (h‹(...Array⁰) => ?›(1) as! Num⁰)
+//│ };
+//│ define declaredOrLambda⁰ as fun declaredOrLambda¹(c: Bool⁰, f: Function⁰): Int⁰ {
+//│   let h: Function⁰, tmp: Function⁰;
+//│   match c
+//│     true =>
+//│       set tmp = f;
+//│       end
+//│     else
+//│       let lambda;
+//│       @private
+//│       define lambda as fun lambda¹⁴(x: Int⁰): Int⁰ {
+//│         return x
+//│       };
+//│       set tmp = lambda¹⁴;
+//│       end
+//│   set h = tmp;
+//│   return (h‹(...Array⁰) => ?›(1) as! Int⁰)
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// A dynamic call cannot pass an unboxed value, so the possible callees of such a call must share a signature.
+:ge
+fun unboxedOrLambda(c: Bool, f: Int32 -> Int32, x: Int32) =
+  let h = if c then f else y => y
+  h(x)
+//│ ╔══[COMPILATION ERROR] Cannot determine a common calling convention for the possible function types at this call
+//│ ║  l.+3: 	  h(x)
+//│ ╙──      	   ^^^
+
+// A definition and a lambda have no declared function type: a variable that holds one is called dynamically.
+:sir
+:siret
+:expect [42, 42]
+fun increment(x: Int): Int = x + 1
+fun viaDefinitions() =
+  let named = increment
+  let anonymous = (x: Int) => x + 1
+  [named(41), anonymous(41)]
+viaDefinitions()
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define increment⁰ as fun increment¹(x: Int⁰): Int⁰ {
+//│   return +⁰‹(?, ?) => ?›(x, 1)
+//│ };
+//│ define viaDefinitions⁰ as fun viaDefinitions¹(): Array⁰ {
+//│   let named: Function⁰, anonymous: Function⁰, tmp: ?, tmp1: ?, anonymous1;
+//│   set named = increment¹;
+//│   @private
+//│   define anonymous1 as fun anonymous⁰(x: Int⁰): Int⁰ {
+//│     return +⁰‹(?, ?) => ?›(x, 1)
+//│   };
+//│   set anonymous = anonymous⁰;
+//│   set tmp = named‹(...Array⁰) => ?›(41);
+//│   set tmp1 = anonymous‹(...Array⁰) => ?›(41);
+//│   return [tmp, tmp1]
+//│ };
+//│ return viaDefinitions¹‹() => Array⁰›()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [42, 42]
+
 // A declared member without a parameter list is a getter. Applying the function that it returns is a
 // separate call, which does not pass the object as the receiver. A declared method lists its parameters.
 class HostObject with
@@ -264,7 +444,7 @@ let callback = Callback(receiverProbe)
 :expect "none"
 callback.run()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp10; tmp10 = callback; return runtime.safeCall(tmp10.run())
+//│ let tmp17; tmp17 = callback; return runtime.safeCall(tmp17.run())
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Expected: '"none"', got: '"receiver"'
 //│ = "receiver"
@@ -275,7 +455,7 @@ callback.run()
 let detached = callback.run
 detached()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let detached, tmp11; tmp11 = callback; detached = tmp11.run; return runtime.safeCall(tmp11.run())
+//│ let detached, tmp18; tmp18 = callback; detached = tmp18.run; return runtime.safeCall(tmp18.run())
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Expected: '"none"', got: '"receiver"'
 //│ = "receiver"

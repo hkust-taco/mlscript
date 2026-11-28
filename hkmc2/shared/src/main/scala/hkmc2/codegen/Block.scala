@@ -1456,7 +1456,8 @@ object CallMetadata:
   * call applies its result. A method call keeps the receiver on its selection.
   *
   * When `fun` refers to a definition that publishes a callable signature, `signature` is that signature.
-  * For other callees, lowering derives `signature` from declared types where it can, and otherwise uses
+  * Any other callee is a function value. Lowering gives its call the signature of the declared function type
+  * that every value resolution found for that application follows (see [[ErasedCallee]]), and otherwise
   * [[ErasedFuncSignature.dynamic]]. Rewrites that change the callee or the argument lists must provide the
   * corresponding signature.
   */

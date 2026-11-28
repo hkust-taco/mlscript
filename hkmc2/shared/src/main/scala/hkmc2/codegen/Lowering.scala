@@ -632,7 +632,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   /** Lower a call with multiple argument lists into `Call` nodes,
     * trying to group as many as possible into a single one
     * when they correspond to parameter lists of the same callee. */
-  def lowerMultiCall(fr: Path, isMlsFun: Bool, annotations: Ls[Annot], args: Ls[Term], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
+  def lowerMultiCall(fr: Path, isMlsFun: Bool, annotations: Ls[Annot], args: Ls[ArgumentList], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
     val (target, definition) = fr.targetSymbol match
       case S(fs: TermSymbol) => (S(fs), fs.defn)
       case _ => (N, N)
@@ -647,9 +647,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         // A constructor imported from a legacy unit has written parameters but no published signature.
         ErasedFuncSignature.Signature(definition.get.params.map(LoweredParamList.erasedLayout), ErasedResult.Direct(N))
       case sig => lastWords(s"A definition with parameter lists has no function signature (${sig})")
-    def zipArgs(remainingParamss: Ls[ParamList], remainingArgss: Ls[Term], acc: Ls[Ls[Arg]], mayRaiseEffects: Bool): Block =
+    def zipArgs(remainingParamss: Ls[ParamList], remainingArgss: Ls[ArgumentList], acc: Ls[Ls[Arg]], mayRaiseEffects: Bool): Block =
       (remainingParamss, remainingArgss) match
-      case (ps :: remainingParams, args :: remainingArgs) =>
+      case (ps :: remainingParams, ArgumentList(args, _) :: remainingArgs) =>
         def next(as: Ls[Arg]): Block = zipArgs(remainingParams, remainingArgs, as :: acc, mayRaiseEffects)
         if isConstructor then lowerConstructorArgs(args, ps, isMlsFun)(next)
         else lowerArgs(args, expectedParamTypes(ps, args))(next)
@@ -659,18 +659,16 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         acc.reverse match
         case Nil =>
           // The callee is a function value: the result of a getter, a field, a variable, or another expression.
-          // It is evaluated before the arguments, like any operand. Its declaration supplies its type even
-          // after the read is bound to a temporary.
+          // It is evaluated before the arguments, like any operand.
           def applied(callee: Path): Block =
-            lowerRemainingCalls(callee, declaredCalleeTypes(fr), args, remainingArgss, annotations, loc)(k)
+            lowerRemainingCalls(callee, args, remainingArgss, annotations, loc)(k)
           getterRead(fr) match
             case callee: Path if mayBeForeignMethod(callee) => applied(callee)
             case read => stablePath(read)(applied)
         case acc =>
           val call = new Call(fr, acc)(groupedSignature, CallMetadata(isMlsFun, mayRaiseEffects, Nil), loc)
           val tmp = loweringCtx.registerTempSymbol(N, erasedType = call.erasedType, "baseCall")
-          val resultTypes = if isConstructor then Nil else definition.flatMap(declaredResultType).map(_ :: Nil).toList
-          Assign(tmp, call, lowerRemainingCalls(tmp.asSimpleRef, resultTypes, args, remainingArgss, annotations, loc)(k))
+          Assign(tmp, call, lowerRemainingCalls(tmp.asSimpleRef, args, remainingArgss, annotations, loc)(k))
       case (_ :: _, Nil) =>
         k(new Call(fr, acc.reverse)(groupedSignature, CallMetadata(isMlsFun, mayRaiseEffects, annotations), loc))
     target match
@@ -681,82 +679,42 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case _ => zipArgs(Nil, args, Nil, fs.mayRaiseEffects)
     case N => zipArgs(Nil, args, Nil, true)
   
-  /** Each alternative describes a possible callee. Within an alternative all the listed declarations
-    * constrain the same field of an intersected record. An empty alternative has no declared arrow type.
+  /** An argument list of a source call, with the calling conventions of the values that it is applied to, as
+    * far as resolution knows them. Only the application of a function value reads `callee`: a definition
+    * with parameter lists publishes its own signature.
     */
-  private type CalleeTypes = Ls[Ls[TypeResolution]]
+  case class ArgumentList(args: Term, callee: ErasedCallee)
 
-  /** Lower the application of each argument list in turn, starting with a call of `base`. A declared function
-    * type describes each call and the type of its result. Callees without one get dynamic signatures, unless
-    * they publish their own, which only happens for definitions without source parameter lists.
+  /** Lower the application of each argument list in turn, starting with a call of `base` on `first`. Each
+    * callee is a function value, unless `base` is a definition without source parameter lists that publishes
+    * a function signature. When every value that the application can call follows one signature, which a
+    * declared function type provides, the call takes it. Any other call takes a dynamic signature.
     */
-  private def lowerRemainingCalls(base: Path, baseTypes: CalleeTypes, args: Term, remainingArgss: Ls[Term],
+  private def lowerRemainingCalls(base: Path, first: ArgumentList, remainingArgss: Ls[ArgumentList],
         annotations: Ls[Annot], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
-    val (signature, resultTypes) = Call.publishedSignature(base) match
-      case S(sig: ErasedFuncSignature) => (sig, Nil)
-      case _ =>
-        val applications = baseTypes.map(_.flatMap(summon[Erasure].application))
-        val known = applications.iterator.flatten.map(_._1)
-        known.nextOption() match
-          case N => (ErasedFuncSignature.dynamic(1), Nil)
-          case S(first) =>
-            val results = applications.map(_.map(_._2))
-            if applications.forall(_.nonEmpty) && known.forall(_.canonicalize == first.canonicalize) then
-              (first, results)
-            // A dynamic call passes and returns reference values. A disagreement about a known unboxed
-            // slot cannot use that convention, even if the arguments at this call happen to be references.
-            else if applications.forall(_.forall(app => allowsDynamicCall(app._1))) then
-              (ErasedFuncSignature.dynamic(1), results)
-            else return fail(ErrorReport(
-              msg"Cannot determine a common calling convention for the possible function types at this call" ->
-                args.toLoc.orElse(loc) :: Nil, source = Diagnostic.Source.Compilation))
-    lowerArgs(args, signature.paramLists.head.params): as =>
+    val signature = Call.publishedSignature(base) match
+      case S(sig: ErasedFuncSignature) => sig
+      case _ => first.callee.sharedSignatures match
+        case signature :: Nil => signature
+        // A dynamic call passes and returns reference values. A callee that declares an unboxed slot cannot
+        // use that convention, even if the arguments at this call happen to be references.
+        case _ if first.callee.declaredSignatures.forall(allowsDynamicCall) => ErasedFuncSignature.dynamic(1)
+        case _ => return fail(ErrorReport(
+          msg"Cannot determine a common calling convention for the possible function types at this call" ->
+            first.args.toLoc.orElse(loc) :: Nil, source = Diagnostic.Source.Compilation))
+    lowerArgs(first.args, signature.paramLists.head.params): as =>
       val call = Call(base, as :: Nil)(signature, CallMetadata(false, true, annotations), loc)
       remainingArgss match
       case Nil => k(call)
-      case args :: remainingArgss =>
+      case next :: remainingArgss =>
         val tmp = loweringCtx.registerTempSymbol(N, erasedType = call.erasedType, "callPrefix")
         Assign(tmp, call,
-          lowerRemainingCalls(tmp.asSimpleRef, resultTypes, args, remainingArgss, annotations, loc)(k))
+          lowerRemainingCalls(tmp.asSimpleRef, next, remainingArgss, annotations, loc)(k))
 
   private def allowsDynamicCall(sig: ErasedFuncSignature): Bool =
     def fitsReference(slot: Opt[ErasedValueType]): Bool =
       slot.forall(tpe => ErasedType.needsCast(tpe.canonicalize, ErasedType.Unknown).contains(false))
     fitsReference(sig.ret) && sig.paramLists.forall(ps => ps.params.forall(fitsReference) && ps.rest.forall(fitsReference))
-  
-  /** The declared types of a callee that publishes no function signature, such as a parameter, a value, or a getter
-    * whose result is applied. Only the new resolver records the interpretations of declared types.
-    */
-  private def declaredCalleeTypes(fun: Path): CalleeTypes =
-    def paramType(decl: Opt[Declaration]): Opt[TypeResolution] = decl match
-      case S(param: Param) => param.sign.flatMap(_.typeInterpretation)
-      case _ => N
-    // * Constructor fields keep their declared type on their parameter. A public one also has a definition,
-    // * which has no signature of its own.
-    def declared(sym: TermSymbol): Opt[TypeResolution] =
-      sym.defn.flatMap(declaredResultType).orElse(paramType(sym.decl))
-    // A copy holds the same value as its source. An intersection satisfies the arrow declarations from
-    // all its fields, including when a component such as Any imposes no calling convention.
-    def fieldTypes(field: RecordFieldSymbol): Iterator[TypeResolution] = field.origins match
-      case Nil => declared(field).iterator
-      case parts => parts.iterator.flatMap(fieldTypes)
-    if !newResolution then Nil
-    else fun match
-      case Value.SimpleRef(sym: VarSymbol) => paramType(sym.decl).map(_ :: Nil).toList
-      case _ => fun.targetSymbol match
-        case S(field: RecordFieldSymbol) => fieldTypes(field).toList :: Nil
-        // Any of these fields may be read, so each contributes a separate alternative.
-        case S(alts: RecordFieldAlternativesSymbol) => alts.fields.map(fieldTypes(_).toList)
-        case S(ts: TermSymbol) => declared(ts).map(_ :: Nil).toList
-        case _ => Nil
-  
-  /** The declared type of what `td` evaluates to once all of its parameter lists, if any, are applied.
-    * The results of async and generator definitions are wrapper objects, which are not described by the
-    * declaration.
-    */
-  private def declaredResultType(td: TermDefinition): Opt[TypeResolution] =
-    if !newResolution || td.resultWrapperAnnotation.isDefined then N
-    else td.resultSignature.flatMap(_.typeInterpretation)
   
   /** Lower an instantiation with multiple argument lists into `Instantiate` and `Call` nodes,
     * trying to group as many as possible into a single `Instantiate`
@@ -764,6 +722,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     * If fewer argument lists are provided than constructor parameter lists, eta-expands
     * the missing ones with fresh lambdas (avoiding reliance on mutable JS class curry semantics). */
   def lowerMultiInstantiate(mut: Bool, cls: Path, ctorParamLists: ConstructorParams, args: Ls[Term], annotations: Ls[Annot], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
+    // An argument list that follows those of the constructor is applied to the new object. No application
+    // term describes that call, so resolution records no callee for it.
+    def extraArgumentList(args: Term): ArgumentList = ArgumentList(args, ErasedCallee.unknown)
     // Nullary instantiations are represented with one empty argument list, matching existing `Instantiate` usage.
     def buildInstantiate(argss: Ls[Ls[Arg]]): Instantiate =
       Instantiate(mut, cls, if argss.isEmpty then Nil :: Nil else argss)(InstantiateMetadata(annotations), loc)
@@ -781,7 +742,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         val inst = buildInstantiate(acc.reverse)
         val tmp = loweringCtx.registerTempSymbol(N, erasedType = inst.erasedType, "baseInst")
         Assign(tmp, inst,
-          lowerRemainingCalls(tmp.asSimpleRef, Nil, args, remainingArgss, annotations, N)(k))
+          lowerRemainingCalls(tmp.asSimpleRef, extraArgumentList(args), remainingArgss.map(extraArgumentList), annotations, N)(k))
       case (remainingParamss, Nil) =>
         // * Eta-expand missing argument lists by creating lambdas for each remaining param list.
         // * This makes partial `new C(args...)` explicit instead of relying on the JS class curry.
@@ -815,7 +776,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             val inst = buildInstantiate(as :: Nil)
             val tmp = loweringCtx.registerTempSymbol(N, erasedType = inst.erasedType, "baseInst")
             Assign(tmp, inst,
-              lowerRemainingCalls(tmp.asSimpleRef, Nil, remainingArgss.head, remainingArgss.tail, annotations, N)(k))
+              lowerRemainingCalls(tmp.asSimpleRef, extraArgumentList(remainingArgss.head),
+                remainingArgss.tail.map(extraArgumentList), annotations, N)(k))
     else zipArgs(ctorParamLists.lists, args, Nil)
   
   /** Materialize omitted MLscript constructor parameters as null before optimizers
@@ -1436,18 +1398,19 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       
       // Collect chains of App nodes: `f(a)(b)(c)` → (f, [a, b, c])
       // This allows lowering curried calls as a single `Call` with multiple arg lists.
+      def argumentList(app: st.App): ArgumentList = ArgumentList(app.rhs, app.calleeSlot.callee)
       @tailrec
-      def collectAppChain(expr: st, args: Ls[Term]): (st, Ls[Term]) =
+      def collectAppChain(expr: st, args: Ls[ArgumentList]): (st, Ls[ArgumentList]) =
         expr.instantiated match
         // * Applications of builtin operators, such as `- x` in `(- x)(2)`, are lowered as primitive
         // * operations by the dedicated case above, so they cannot be part of a curried call chain;
         // * otherwise, the operator would be lowered as a function value and curried-call handling could
         // * mistake application of the primitive's result for a partial application of the operator.
         case app @ st.App(BuiltinRef(_), _) => (app, args)
-        case st.App(inner, innerArg) => collectAppChain(inner, innerArg :: args)
+        case inner: st.App => collectAppChain(inner.lhs, argumentList(inner) :: args)
         case st.TyApp(inner, _) => collectAppChain(inner, args) // type args are erased
         case expr => (expr, args)
-      val (baseF, allArgs) = collectAppChain(f, arg :: Nil)
+      val (baseF, allArgs) = collectAppChain(f, argumentList(app) :: Nil)
       
       val isMlsFun = baseF.resolvedSym.fold(baseF.isInstanceOf[st.Lam]):
         case _: sem.BuiltinSymbol => true

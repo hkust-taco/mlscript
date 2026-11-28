@@ -174,40 +174,35 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
       S(erase(sign.typeInterpretation.get, Set.empty))
     else ErasedType.eraseSign(sign)
 
-  /** If `resolution` interprets a function type, the signature of applying one argument list to a value of that
-    * type, with the interpretation of the type of the result. Declared function types are applied one argument list
-    * at a time, like other function values: a curried type such as `Int -> Int -> Int` describes a function that
-    * returns another function.
+  /** The signature of applying one argument list to a value of the declared function type that `callee`
+    * records. Each position takes the representation of the values of its declared type, as resolution
+    * interprets that type, and is unknown when resolution finds none.
     *
-    * Parameter types are only known when elaboration registered their interpretations, which it does for the arrows
-    * of complete signatures (see `NewResolver.registerSignature`); other parameter types are unknown. Following the
-    * calling convention of definitions, the rest array receives the arguments of the parameters after a spread, as
-    * well as those of the optional parameters before a spread that other parameters follow.
+    * Following the calling convention of definitions (see `LoweredParamList.callingConvention`), the rest
+    * array receives the arguments of the parameters after a spread, as well as those of the optional
+    * parameters before a spread that other parameters follow.
     */
-  def application(resolution: TypeResolution): Opt[(ErasedFuncSignature, TypeResolution)] =
-    def slot(tpe: Term): Opt[ErasedValueType] = tpe.typeInterpretation.map(erase(_, Set.empty))
-    def loop(res: TypeResolution, seen: Set[TypeResolution]): Opt[(ErasedFuncSignature, TypeResolution)] =
-      if seen(res) || res.hasErrors then N
-      else res.shapes.toList match
-        case TypeShape.Alias(_, S(rhs)) :: Nil => loop(rhs, seen + res)
-        case TypeShape.Reference(base, _, _, _) :: Nil => loop(base, seen + res)
-        case TypeShape.Applied(base, _) :: Nil => loop(base, seen + res)
-        case TypeShape.Polymorphic(_, _, body) :: Nil => loop(body, seen + res)
-        case TypeShape.Function(params, ret) :: Nil =>
-          val paramList = params match
-            case Tup(fields) =>
-              val (leading, variadic) = fields.span:
-                case _: Fld => true
-                case _: Spd => false
-              val leadingFlds = leading.collect { case fld: Fld => fld }
-              val fixed = variadic match
-                case _ :: _ :: _ => leadingFlds.take(FldFlags.requiredPrefixLength(leadingFlds.map(_.flags)))
-                case _ => leadingFlds
-              ErasedParamList(fixed.map(fld => slot(fld.term)), variadic.headOption.map(_ => S(ErasedType.Array)))
-            case single => ErasedParamList(slot(single) :: Nil, N)
-          S(ErasedFuncSignature.Signature(paramList :: Nil, ErasedResult.Direct(S(erase(ret, Set.empty)))) -> ret)
-        case _ => N
-    if config.language.useNewResolution then loop(resolution, Set.empty) else N
+  private def declaredSignature(callee: ResolvedValues.DeclaredCallee): ErasedFuncSignature =
+    def slotType(slot: ResolvedValues.InterfaceSlot): ErasedValueType = inferredType(slot).getOrElse(ErasedType.Unknown)
+    val interface = callee.interface
+    val fixed = if interface.trailing.isEmpty then callee.leading else callee.leading.take(interface.leadingRequired)
+    ErasedFuncSignature.Signature(
+      ErasedParamList(fixed.map(_.map(slotType)), interface.variadic.map(_ => S(ErasedType.Array))) :: Nil,
+      ErasedResult.Direct(S(slotType(callee.result))))
+
+  /** The alternatives of `callees` with a signature for each declared function type among them. */
+  private def erasedCallees(callees: ResolvedValues.Callees): ErasedCallee =
+    val declared = callees.declaredCallees.map(callee => ErasedCallee.Declared(declaredSignature(callee)))
+    val undeclared = Iterator.single(ErasedCallee.Undeclared).filter(_ => callees.hasUndeclaredCallee)
+    val intersections = callees.intersectionCallees.map(components => ErasedCallee.All(components.map(erasedCallees)))
+    ErasedCallee.OneOf((declared ++ undeclared ++ intersections).toList)
+
+  /** The calling conventions of the values that `app` can call, from the callees that resolution of its block
+    * recorded. Only the new resolver records them.
+    */
+  private def erasedCallee(app: App): ErasedCallee =
+    if !config.language.useNewResolution then ErasedCallee.unknown
+    else summon[State].newResolverState.resolvedValues.callees(app).fold(ErasedCallee.unknown)(erasedCallees)
 
   /** An external input that contributed to this slot's inferred representation, if any.
     * Its provenance identifies the exposed interface even when the value flowed into a private helper.
@@ -520,6 +515,7 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
           inferredType(slot).map(representable(_, lam.body.toLoc, S(slot)))
       case asc: Asc if !asc.isErasureReady =>
         asc.erasedType = eraseSignature(asc.ty).map(representable(_, asc.ty.toLoc, N))
+      case app: App if !app.calleeSlot.isErasureReady => app.calleeSlot.callee = erasedCallee(app)
       case cls: ClassLikeDef => cls.ctorSym.foreach: symbol =>
         if symbol.needsErasure then symbol.initializeErasure:
           if config.language.useNewResolution then S(ErasedFuncSignature.Signature(

@@ -478,10 +478,7 @@ sealed abstract class ErasedCallableSignature extends Canonicalizable:
     case sig: ErasedFuncSignature => sig.paramLists.length
     case _: ErasedGetterSignature => 0
 
-  def mapTypes(f: ErasedValueType => ErasedValueType): ErasedCallableSignature = this match
-    case sig: ErasedFuncSignature =>
-      ErasedFuncSignature.Signature(sig.paramLists.map(_.map(f)), result.map(f))
-    case _: ErasedGetterSignature => ErasedGetterSignature.Signature(result.map(f))
+  def mapTypes(f: ErasedValueType => ErasedValueType): ErasedCallableSignature
 
 end ErasedCallableSignature
 
@@ -552,6 +549,8 @@ object ErasedFuncSignature:
 sealed abstract class ErasedFuncSignature extends ErasedCallableSignature:
   type Canonical <: ErasedFuncSignature.CanonicalSignature
   val paramLists: Ls[ErasedParamList[ErasedValueType]]
+  def mapTypes(f: ErasedValueType => ErasedValueType): ErasedFuncSignature =
+    ErasedFuncSignature.Signature(paramLists.map(_.map(f)), result.map(f))
 
 
 object ErasedGetterSignature:
@@ -575,6 +574,8 @@ object ErasedGetterSignature:
   */
 sealed abstract class ErasedGetterSignature extends ErasedCallableSignature:
   type Canonical <: ErasedGetterSignature.CanonicalSignature
+  def mapTypes(f: ErasedValueType => ErasedValueType): ErasedGetterSignature =
+    ErasedGetterSignature.Signature(result.map(f))
 
 
 /** The canonical form of an [[ErasedValueType]]. */
@@ -626,3 +627,63 @@ trait HasDelayedErasedType[T <: ErasedValueType]:
     assert(!isErasureReady, "Erased type initialized more than once")
     assert(value != null, "An initialized erased type cannot be null")
     assignedErasedType = value
+
+
+/** The calling conventions of the function values that a source application can call, as far as resolution
+  * of its block knows them. Lowering reads them when the callee publishes no signature of its own: it is then
+  * a function value, such as a parameter, a field, a variable, or the result of another call.
+  *
+  * Each signature describes the application of one argument list.
+  */
+enum ErasedCallee:
+  /** A value of a declared function type, whose applications follow `signature`. */
+  case Declared(signature: ErasedFuncSignature)
+  /** A value without a declared calling interface, such as a definition, a lambda, or a dynamic value. */
+  case Undeclared
+  /** A value that satisfies each of `components`, as a value of an intersection type does. */
+  case All(components: Ls[ErasedCallee])
+  /** A value that is one of `alternatives`. Without alternatives, resolution knows nothing about the callee. */
+  case OneOf(alternatives: Ls[ErasedCallee])
+
+  /** The signatures that every possible callee follows, one for each canonical form. A value follows the
+    * signature of its declared type, a value that satisfies several components follows the signatures of them
+    * all, and alternatives only share the signatures that each of them follows.
+    */
+  def sharedSignatures(using Ctx, State): Ls[ErasedFuncSignature] = this match
+    case Declared(signature) => signature :: Nil
+    case Undeclared => Nil
+    case All(components) => components.iterator.flatMap(_.sharedSignatures).distinctBy(_.canonicalize).toList
+    case OneOf(Nil) => Nil
+    case OneOf(first :: others) => others.foldLeft(first.sharedSignatures): (shared, alternative) =>
+      val followed = alternative.sharedSignatures.map(_.canonicalize)
+      shared.filter(signature => followed.contains(signature.canonicalize))
+
+  /** The signatures of all the declared function types among the possible callees. */
+  def declaredSignatures: Iterator[ErasedFuncSignature] = this match
+    case Declared(signature) => Iterator.single(signature)
+    case Undeclared => Iterator.empty
+    case All(components) => components.iterator.flatMap(_.declaredSignatures)
+    case OneOf(alternatives) => alternatives.iterator.flatMap(_.declaredSignatures)
+
+  def mapTypes(f: ErasedValueType => ErasedValueType): ErasedCallee = this match
+    case Declared(signature) => Declared(signature.mapTypes(f))
+    case Undeclared => Undeclared
+    case All(components) => All(components.map(_.mapTypes(f)))
+    case OneOf(alternatives) => OneOf(alternatives.map(_.mapTypes(f)))
+
+object ErasedCallee:
+  /** A callee that resolution knows nothing about. */
+  val unknown: ErasedCallee = OneOf(Nil)
+
+
+/** Holds the possible callees of a source application. Erasure of the program that contains the application
+  * assigns them once, and cloning the application copies them. An application that erasure never visits, such
+  * as one that the desugaring of pattern matching synthesizes, keeps an unknown callee.
+  */
+final class ErasedCalleeSlot:
+  private var assigned: Opt[ErasedCallee] = N
+  def isErasureReady: Bool = assigned.isDefined
+  def callee: ErasedCallee = assigned.getOrElse(ErasedCallee.unknown)
+  def callee_=(value: ErasedCallee): Unit =
+    assert(!isErasureReady, "The callees of an application are erased once")
+    assigned = S(value)

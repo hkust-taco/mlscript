@@ -1165,15 +1165,15 @@ fun applyPlain() = useInt(Plain.f(1))
 //│ end
 
 
-// The bare-reference case *is* auto-invoked and keeps its result type; applying that result goes through a
-// local, which carries no parameter lists to match.
+// The bare-reference case *is* auto-invoked and keeps its result type; applying that result is a call of the
+// function value, which takes its signature from the declared function type of that result.
 fun applyGetFn() = useInt(getFn(1))
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define applyGetFn⁰ as fun applyGetFn¹(): Int⁰ {
-//│   let tmp: Function⁰, tmp1: ?;
+//│   let tmp: Function⁰, tmp1: Int⁰;
 //│   set tmp = getFn⁰‹() => Function⁰›();
-//│   set tmp1 = tmp‹(...Array⁰) => ?›(1);
-//│   return useInt¹‹(Int⁰) => Int⁰›((tmp1 as! Int⁰))
+//│   set tmp1 = tmp‹(Int⁰) => Int⁰›(1);
+//│   return useInt¹‹(Int⁰) => Int⁰›(tmp1)
 //│ };
 //│ end
 

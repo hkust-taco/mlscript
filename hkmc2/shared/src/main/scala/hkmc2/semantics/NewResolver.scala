@@ -3076,7 +3076,7 @@ class NewResolver:
           listenMemberValue(view.getMember(key).visibleFrom(_ => false, reportInaccessible = false),
             site, source, TypeSubstitution.empty, () => receive(UnknownValueShape.spread(source, view)))(receive)
       listenTerm(flow.iterator): iterator =>
-        select(iterator, "next", flow.nextMember)(applyShape(_, empty, flow.next, checked = false))
+        select(iterator, "next", flow.nextMember)(applyShape(_, empty, flow.next, checked = false, N))
       listenTerm(flow.next): step =>
         select(step, "done", flow.doneMember): done =>
           val completed = done match
@@ -3099,7 +3099,7 @@ class NewResolver:
       listenMemberValue(view.getMember(iteratorKey).visibleFrom(_ => false, reportInaccessible = false),
         flow.iteratorMember, flow.elements.source, TypeSubstitution.empty,
         () => flow.elements.publish(TypeShape.Inferred(UnknownValueShape.spread(flow.elements.source, view)))):
-          method => applyShape(method, flow.iterator.rhs, flow.iterator, checked = false)
+          method => applyShape(method, flow.iterator.rhs, flow.iterator, checked = false, N)
 
   private[semantics] def listenPromisePayload(shape: TermShape)(listener: Listener)(using ResolutionContext): Bool =
     listenClassArgument(shape, prelude.builtins.Promise.defn.get)(listener)
@@ -3850,13 +3850,29 @@ class NewResolver:
       case _ => unknown()
 
   def appShape(source: TermShape, args: Term, res: App)(using ResolutionContext): Unit =
-    applyShape(source, args, res, checked = true)
+    applyShape(source, args, res, checked = true, rctx.state.resolvedValues.calleesOf(res))
 
-  private def applyShape(source: TermShape, args: Term, res: App, checked: Bool)(using ResolutionContext): Unit =
+  /** Observe the application `res` of `source` to `args`. `callees` receives the calling interface of
+    * `source`, from which erasure derives the calling convention of the application (see
+    * `ResolvedValues.Callees`). The observations of an iteration protocol pass `N`: no source application
+    * performs their calls.
+    */
+  private def applyShape(source: TermShape, args: Term, res: App, checked: Bool,
+      callees: Opt[ResolvedValues.Callees])(using ResolutionContext): Unit =
     // A call passes on the probe of its callee, without recording it as a callable target.
-    ShapeObserver.dispatch(source)(applyValue(_, args, res, checked), probe => publishViewed(res, probe, rctx.instances))
+    ShapeObserver.dispatch(source)(applyValue(_, args, res, checked, callees), probe => publishViewed(res, probe, rctx.instances))
 
-  private def applyValue(source: ShapeObserver.Value, args: Term, res: App, checked: Bool)(using ResolutionContext): Unit =
+  /** `callable` as the code of its values sees it, whichever activation observes it: the type parameters of
+    * the enclosing definitions stay abstract, as they are in the compiled code of those definitions.
+    */
+  private def withoutActivation(callable: CallableTypeShape)(using ResolutionContext): CallableTypeShape =
+    def declared(tpe: DeclaredType): DeclaredType = tpe.withInstances(TypeSubstitution.empty)
+    callable.copy(paramLists = callable.paramLists.ne_map(_.mapTypes(declared)), result = callable.result.map(declared),
+      declaration = callable.declaration.map(_.copy(instances = TypeSubstitution.empty)))
+
+  private def applyValue(source: ShapeObserver.Value, args: Term, res: App, checked: Bool,
+      recorded: Opt[ResolvedValues.Callees])(using ResolutionContext): Unit =
+    val callees = rctx.state.resolvedValues.collecting(res, recorded)
     val callerInstances = rctx.instances
     val ShapeParts(lhs, lexical, supplied) = shapeParts(source)
     val captured = callerInstances.withOverrides(lexical)
@@ -3870,15 +3886,26 @@ class NewResolver:
       publishViewed(res, value, instances)(using rctx.withInstances(callerInstances))
     lhs match
       case Marked(view: IntersectionView, marks) =>
-        view.values.foreach: value =>
+        // The callee satisfies every component, so each has its own record of calling interfaces.
+        val components = callees.map(_.intersection(ShapeIdentity.key(lhs), view.values.length))
+        view.values.iterator.zipWithIndex.foreach: (value, index) =>
           transportShape(value, marks :: Nil) match
-            case value: TermShape => applyShape(value, args, res, checked)
+            case value: TermShape => applyShape(value, args, res, checked, components.map(_(index)))
             case NoShape => ()
         return
       case Marked(_: InstanceShape, _) =>
-        listenInstanceFlow(instantiateShape(lhs, instances), if checked then TypeView.Members else TypeView.Provided)(applyShape(_, args, res, checked))
+        listenInstanceFlow(instantiateShape(lhs, instances), if checked then TypeView.Members else TypeView.Provided)(
+          applyShape(_, args, res, checked, callees))
         return
       case _ => ()
+    lhs match
+      case Marked(original: CallableTypeShape, _) if !original.declaration.exists(_.remaining.nonEmpty) =>
+        callees.foreach: callees =>
+          rctx.state.resolvedValues.observeDeclaredCallee(callees, withoutActivation(original), this)(
+            using rctx.withInstances(TypeSubstitution.empty))
+      // Any other callee has no declared calling interface. This includes a method with written parameter
+      // lists left to apply: its definition fixes its calling convention, and its parameters need no annotations.
+      case _ => callees.foreach(_.undeclared = true)
     // Explicit calls require a known interface or an explicitly dynamic value.
     // Implicit protocol observations instead retain unknown results below and
     // leave protocol compatibility to type checking.

@@ -55,7 +55,7 @@ fun makeCountdown(result: Int): Int -> Int =
 let countdown = makeCountdown(42)
 [countdown(3), makeCountdown(43)(4)]
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let countdown, tmp: ?, baseCall: Function⁰, tmp1: Int⁰, countdown$;
+//│ let countdown, tmp: Int⁰, baseCall: Function⁰, tmp1: Int⁰, countdown$;
 //│ @inline
 //│ define countdown$ as fun countdown$⁰(result: Int⁰)(remaining: Int⁰): Int⁰ {
 //│   return countdown⁰‹(Int⁰, Int⁰) => Int⁰›(result, remaining)
@@ -78,7 +78,7 @@ let countdown = makeCountdown(42)
 //│   return countdown$⁰‹(Int⁰) => (Int⁰) => Int⁰›(result)
 //│ };
 //│ set countdown¹ = makeCountdown¹‹(Int⁰) => Function⁰›(42);
-//│ set tmp = countdown¹‹(...Array⁰) => ?›(3);
+//│ set tmp = countdown¹‹(Int⁰) => Int⁰›(3);
 //│ set baseCall = makeCountdown¹‹(Int⁰) => Function⁰›(43);
 //│ set tmp1 = baseCall‹(Int⁰) => Int⁰›(4);
 //│ return [tmp, tmp1]
