@@ -106,7 +106,7 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│ deforest > >>> fusing >>>
 //│ deforest > Nil⁰ ->
 //│ deforest > 	match: ls¹
-//│ deforest > Cons⁰(arg⁰, tmp¹) ->
+//│ deforest > Cons⁰(h¹, tmp¹) ->
 //│ deforest > 	match: ls¹
 //│ deforest > 	fields: ls¹.h⁰
 //│ deforest > 	fields: ls¹.t⁰

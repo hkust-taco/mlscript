@@ -9,11 +9,13 @@ fun f(x, ...xs, y) = [x, xs, y]
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f;
 //│ f = function f(x, ...args) {
-//│   let y, inlinedVal, tmp, tmp1;
-//│   tmp1 = 1 + args.length;
-//│   runtime.checkArgs("f", 2, tmp1);
-//│   tmp = args.length - 1;
-//│   inlinedVal = runtime.safeCall(args.slice(0, tmp));
+//│   let y, inlinedVal, tmp, tmp1, tmp2, tmp3;
+//│   tmp2 = args.length;
+//│   tmp3 = 1 + tmp2;
+//│   runtime.checkArgs("f", 2, tmp3);
+//│   tmp = args.length;
+//│   tmp1 = tmp - 1;
+//│   inlinedVal = runtime.safeCall(args.slice(0, tmp1));
 //│   y = args.at(-1);
 //│   return globalThis.Object.freeze([ x, inlinedVal, y ])
 //│ };
@@ -53,9 +55,10 @@ fun h(x, y?, z?, ...xs, w) = [x, y, z, xs, w]
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let h;
 //│ h = function h(x, ...args7) {
-//│   let y7, z2, w, inlinedVal12, tmp14, tmp15;
-//│   tmp15 = 1 + args7.length;
-//│   runtime.checkArgs("h", 2, tmp15);
+//│   let y7, z2, w, inlinedVal12, tmp28, tmp29, tmp30, tmp31;
+//│   tmp30 = args7.length;
+//│   tmp31 = 1 + tmp30;
+//│   runtime.checkArgs("h", 2, tmp31);
 //│   if (runtime.Tuple.isArrayLike(args7) && args7.length >= 2) {
 //│     y7 = args7.at(0);
 //│   } else {
@@ -66,8 +69,9 @@ fun h(x, y?, z?, ...xs, w) = [x, y, z, xs, w]
 //│   } else {
 //│     z2 = null;
 //│   }
-//│   tmp14 = args7.length - 1;
-//│   inlinedVal12 = runtime.safeCall(args7.slice(2, tmp14));
+//│   tmp28 = args7.length;
+//│   tmp29 = tmp28 - 1;
+//│   inlinedVal12 = runtime.safeCall(args7.slice(2, tmp29));
 //│   w = args7.at(-1);
 //│   return globalThis.Object.freeze([ x, y7, z2, inlinedVal12, w ])
 //│ };

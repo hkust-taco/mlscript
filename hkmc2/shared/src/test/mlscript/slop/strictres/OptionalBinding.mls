@@ -128,11 +128,12 @@ let missing = new Box(...makeArgs(false))
 let supplied = new Box(...makeArgs(true))
 [missing.value is null, supplied.value is null, count]
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let scrut: Unknown, scrut1: Unknown, tmp: Array⁰, constructorArgs: Array⁰, constructorArg: Int⁰, constructorArg1: Unknown, tmp1: Array⁰, constructorArgs1: Array⁰, constructorArg2: Int⁰, constructorArg3: Unknown, tmp2: Bool⁰, tmp3: Bool⁰;
+//│ let scrut: Unknown, scrut1: Unknown, tmp: Array⁰, constructorArgs: Array⁰, constructorArg: Int⁰, constructorArg1: Unknown, tmp1: Array⁰, constructorArgs1: Array⁰, constructorArg2: Int⁰, constructorArg3: Unknown, tmp2: Bool⁰, tmp3: Bool⁰, tmp4: Int⁰;
 //│ define makeArgs⁰ as fun makeArgs¹(present: Unknown): Array⁰ {
-//│   let tmp4: Int⁰;
-//│   set tmp4 = +⁰‹(?, ?) => ?›(count⁰, 1);
-//│   set count⁰ = tmp4;
+//│   let tmp5: Int⁰, tmp6: Int⁰;
+//│   set tmp5 = count⁰;
+//│   set tmp6 = +⁰‹(?, ?) => ?›(tmp5, 1);
+//│   set count⁰ = tmp6;
 //│   match present
 //│     true =>
 //│       return [1, runtime⁰.Unit⁰]
@@ -184,11 +185,12 @@ let supplied = new Box(...makeArgs(true))
 //│ match scrut1
 //│   null =>
 //│     set tmp3 = true;
-//│     return [tmp2, tmp3, count⁰]
+//│     end
 //│   else
 //│     set tmp3 = false;
-//│     return [tmp2, tmp3, count⁰]
-//│ end
+//│     end
+//│ set tmp4 = count⁰;
+//│ return [tmp2, tmp3, tmp4]
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [true, false, 2]
 //│ count = 2
@@ -216,18 +218,20 @@ fun argument(): Int =
   23
 [(new Box(1, argument())).value, evaluated]
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp: Int⁰, optionalArg: Int⁰, tmp1: Box²;
+//│ let tmp: Int⁰, optionalArg: Int⁰, tmp1: Box², tmp2: Int⁰;
 //│ define argument⁰ as fun argument¹(): Int⁰ {
-//│   let tmp2: Int⁰;
-//│   set tmp2 = +⁰‹(?, ?) => ?›(evaluated⁰, 1);
-//│   set evaluated⁰ = tmp2;
+//│   let tmp3: Int⁰, tmp4: Int⁰;
+//│   set tmp3 = evaluated⁰;
+//│   set tmp4 = +⁰‹(?, ?) => ?›(tmp3, 1);
+//│   set evaluated⁰ = tmp4;
 //│   return 23
 //│ };
 //│ set evaluated⁰ = 0;
 //│ set tmp = argument¹‹() => Int⁰›();
 //│ set optionalArg = tmp;
 //│ set tmp1 = new Box²(1, optionalArg);
-//│ return [tmp1.value¹, evaluated⁰]
+//│ set tmp2 = evaluated⁰;
+//│ return [tmp1.value¹, tmp2]
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [23, 1]
 //│ evaluated = 1

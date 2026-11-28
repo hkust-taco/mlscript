@@ -84,7 +84,7 @@ result
 //│   }
 //│ };
 //│ Handler$h$perform2 = function Handler$h$perform(arg, k) {
-//│   let v, pc;
+//│   let v, tmp7, pc;
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
 //│   } else {
@@ -102,7 +102,8 @@ result
 //│       }
 //│     case 1:
 //│       v = runtime.resumeValue;
-//│       result = result + arg;
+//│       tmp7 = result;
+//│       result = tmp7 + arg;
 //│       return v;
 //│   }
 //│ };
@@ -195,9 +196,10 @@ fun f() = case [...x, y, z] then x
 //│ define lambda as fun lambda⁰(caseScrut) {
 //│   match caseScrut
 //│     Array(2+) =>
-//│       let inlinedVal, tmp;
-//│       set tmp = -⁰(caseScrut.length⁰, 2);
-//│       set inlinedVal = caseScrut.slice⁰(0, tmp);
+//│       let inlinedVal, tmp, tmp1;
+//│       set tmp = caseScrut.length⁰;
+//│       set tmp1 = -⁰(tmp, 2);
+//│       set inlinedVal = caseScrut.slice⁰(0, tmp1);
 //│       do runtime⁰.Tuple⁰.get⁰(caseScrut, -2);
 //│       do runtime⁰.Tuple⁰.get⁰(caseScrut, -1);
 //│       return inlinedVal

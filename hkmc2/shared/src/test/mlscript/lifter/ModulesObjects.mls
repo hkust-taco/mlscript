@@ -131,7 +131,12 @@ fun foo(x, y) =
 //│   let M, y1;
 //│   set y1 = y;
 //│   define M as object M¹ {
-//│     method foo2¹ = fun foo2⁰() { set y1 = 2; return +⁰(x, y1) }
+//│     method foo2¹ = fun foo2⁰() {
+//│       let tmp;
+//│       set y1 = 2;
+//│       set tmp = y1;
+//│       return +⁰(x, tmp)
+//│     }
 //│   };
 //│   return foo3⁰(M¹)
 //│ };

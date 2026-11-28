@@ -64,13 +64,14 @@ fun foo() =
 //│   set scope0$cap = new mut Capture$scope0¹(x);
 //│   set scope0$cap.x$0⁰ = 1;
 //│   loop lbl:
-//│     let scrut, tmp;
+//│     let scrut, tmp, tmp1;
 //│     set scrut = true;
 //│     match scrut
 //│       true =>
 //│         let lambda$here;
-//│         set tmp = +⁰(scope0$cap.x$0⁰, 1);
-//│         set scope0$cap.x$0⁰ = tmp;
+//│         set tmp = scope0$cap.x$0⁰;
+//│         set tmp1 = +⁰(tmp, 1);
+//│         set scope0$cap.x$0⁰ = tmp1;
 //│         set lambda$here = lambda$⁰(scope0$cap);
 //│         return lambda$here
 //│       else

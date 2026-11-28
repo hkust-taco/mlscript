@@ -48,11 +48,14 @@ staged module Expressions with
 //│ >   y = x
 //│ >   y
 //│ > fun tup1() = [1, 2]
-//│ > fun tup2() = [1, x1]
-//│ > fun dynsel() =
+//│ > fun tup2() =
 //│ >   let {tmp}
-//│ >   tmp = [1]
-//│ >   tmp.(0)
+//│ >   tmp = x1
+//│ >   [1, tmp]
+//│ > fun dynsel() =
+//│ >   let {tmp1}
+//│ >   tmp1 = [1]
+//│ >   tmp1.(0)
 //│ > fun match1() =
 //│ >   let {scrut}
 //│ >   scrut = 9
@@ -62,12 +65,15 @@ staged module Expressions with
 //│ >     Int then 3
 //│ >     else 0
 //│ > fun match2() =
-//│ >   let {a, element1_, element0_}
-//│ >   if x1 is
+//│ >   let {a, element1_, element0_, tmp2, tmp3, tmp4}
+//│ >   tmp2 = x1
+//│ >   if tmp2 is
 //│ >     [] then 1
 //│ >     [_, _] then
-//│ >       element0_ = x1.0
-//│ >       element1_ = x1.1
+//│ >       tmp3 = x1
+//│ >       element0_ = tmp3.0
+//│ >       tmp4 = x1
+//│ >       element1_ = tmp4.1
 //│ >       if element0_ is
 //│ >         1 then
 //│ >           if element1_ is
@@ -262,7 +268,7 @@ staged module A with
   let x = C(1)
   fun f() = set x.a = 0
   fun g() = {1 : 2}
-//│ ═══[COMPILATION ERROR] Field assignment is not supported in staged modules: a
+//│ ═══[COMPILATION ERROR] Value.This not supported in staged module.
 //│ ╔══[COMPILATION ERROR] Other Results not supported in staged module: class hkmc2.codegen.Record
 //│ ║  l.+5: 	  fun g() = {1 : 2}
 //│ ╙──      	             ^^^^^

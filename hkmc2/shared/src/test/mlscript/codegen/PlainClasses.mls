@@ -128,14 +128,14 @@ let t = test()
 :expect Foo
 new t
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let classValue; classValue = t; return globalThis.Object.freeze(new classValue())
+//│ let tmp; tmp = t; return globalThis.Object.freeze(new tmp())
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > hi
 //│ = Foo
 
 new! t
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return globalThis.Object.freeze(new t())
+//│ let tmp1; tmp1 = t; return globalThis.Object.freeze(new tmp1())
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > hi
 //│ = Foo
@@ -143,14 +143,14 @@ new! t
 :expect Foo
 new t()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let classValue1; classValue1 = t; return globalThis.Object.freeze(new classValue1())
+//│ let tmp2; tmp2 = t; return globalThis.Object.freeze(new tmp2())
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > hi
 //│ = Foo
 
 new! t()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return globalThis.Object.freeze(new t())
+//│ let tmp3; tmp3 = t; return globalThis.Object.freeze(new tmp3())
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > hi
 //│ = Foo
@@ -172,7 +172,9 @@ class Foo with
 //│   }
 //│   #y;
 //│   z() {
-//│     return this.#y + this.x
+//│     let tmp4;
+//│     tmp4 = this.#y;
+//│     return tmp4 + this.x
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"];
@@ -228,9 +230,9 @@ class Foo with
 //│     return this.x + y
 //│   }
 //│   bar(z) {
-//│     let tmp;
-//│     tmp = this.foo(z);
-//│     return tmp + 1
+//│     let tmp4;
+//│     tmp4 = this.foo(z);
+//│     return tmp4 + 1
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"];
@@ -242,13 +244,13 @@ print(a.x)
 print(a.foo(1))
 print(a.bar(1))
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let a, tmp, tmp1;
+//│ let a, tmp4, tmp5;
 //│ a = globalThis.Object.freeze(new Foo12());
 //│ Predef.print(a.x);
-//│ tmp = a.foo(1);
-//│ Predef.print(tmp);
-//│ tmp1 = a.bar(1);
-//│ return Predef.print(tmp1)
+//│ tmp4 = a.foo(1);
+//│ Predef.print(tmp4);
+//│ tmp5 = a.bar(1);
+//│ return Predef.print(tmp5)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 1
 //│ > 2

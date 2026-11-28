@@ -280,17 +280,19 @@ deeper(Config(0))
 //│ let tmp: Config⁰;
 //│ @private
 //│ define deeper⁰ as fun deeper¹(c: Config⁰): Array⁰ {
-//│   let inner: Unknown, old: Unknown, tmp1: Unknown;
+//│   let inner: Unknown, old: Unknown, tmp1: Unknown, tmp2: Unknown, tmp3: Unknown;
 //│   set old = c.depth⁰;
 //│   try
 //│     set c.depth⁰ = "deep";
-//│     set tmp1 = c.depth⁰;
+//│     set tmp2 = c.depth⁰;
+//│     set tmp1 = tmp2;
 //│     end
 //│   finally
 //│     set c.depth⁰ = old;
 //│     end;
 //│     set inner = tmp1;
-//│   return [inner, c.depth⁰]
+//│   set tmp3 = c.depth⁰;
+//│   return [inner, tmp3]
 //│ };
 //│ @private
 //│ define Config¹ as class Config⁰ {

@@ -99,14 +99,14 @@ sumPlus(enum(3))
 //│ deforest > 	fields: ls⁰.t⁰
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > enum$enum⁰#0 @ <root>: [1, 8]
+//│ eta-expansion > enum$enum⁰#0 @ <root>: [1, 7]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let enum$enum$worker;
 //│ @private
-//│ define enum$enum$worker as fun enum$enum$worker⁰(x, eta$0$0, eta$0$1, eta$0$2, eta$0$3, eta$0$4, eta$0$5, eta$0$6, eta$0$7) {
+//│ define enum$enum$worker as fun enum$enum$worker⁰(x, eta$0$0, eta$0$1, eta$0$2, eta$0$3, eta$0$4, eta$0$5, eta$0$6) {
 //│   let scrut, tmp;
 //│   set scrut = <⁰(x, 0);
 //│   match scrut
@@ -115,7 +115,7 @@ sumPlus(enum(3))
 //│     else
 //│       let fv_tmp, inlinedVal;
 //│       set tmp = -⁰(x, 1);
-//│       set inlinedVal = enum$enum$worker⁰(tmp, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined);
+//│       set inlinedVal = enum$enum$worker⁰(tmp, undefined, undefined, undefined, undefined, undefined, undefined, undefined);
 //│       set fv_tmp = +⁰(x, inlinedVal);
 //│       return +⁰(fv_tmp, 1)
 //│   end
@@ -147,7 +147,7 @@ sumPlus(enum(3))
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
-//│ return enum$enum$worker⁰(3, undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined)
+//│ return enum$enum$worker⁰(3, undefined, undefined, undefined, undefined, undefined, undefined, undefined)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 11
 

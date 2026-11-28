@@ -188,20 +188,21 @@ f(1, 2, 1000)
 //│   }
 //│ };
 //│ define g as fun g²(scope0$cap, immutable) {
+//│   let tmp;
 //│   set scope0$cap.mutated$0¹ = 2;
-//│   return +⁰(immutable, scope0$cap.mutated$0¹)
+//│   set tmp = scope0$cap.mutated$0¹;
+//│   return +⁰(immutable, tmp)
 //│ };
 //│ define h as fun h⁰(scope0$cap) {
 //│   return scope0$cap.mutated$0¹
 //│ };
 //│ define f⁴ as fun f⁵(unused, immutable, mutated) {
-//│   let mutated1, a, arg, tmp, tmp1, scope0$cap;
+//│   let mutated1, a, tmp, tmp1, scope0$cap;
 //│   set scope0$cap = new mut Capture$scope0¹(mutated1);
 //│   set scope0$cap.mutated$0¹ = mutated;
 //│   set a = g²(scope0$cap, immutable);
-//│   set arg = a;
 //│   set tmp = h⁰(scope0$cap);
-//│   set tmp1 = +⁰(arg, tmp);
+//│   set tmp1 = +⁰(a, tmp);
 //│   return +⁰(tmp1, unused)
 //│ };
 //│ return f⁵(1, 2, 1000)
@@ -278,9 +279,12 @@ g()(1)
 //│   }
 //│ };
 //│ define h as fun h¹(scope0$cap, x, k) {
+//│   let tmp, tmp1;
 //│   set k = 5;
 //│   set x = 4;
-//│   return +⁰(x, scope0$cap.y$0¹)
+//│   set tmp = x;
+//│   set tmp1 = scope0$cap.y$0¹;
+//│   return +⁰(tmp, tmp1)
 //│ };
 //│ @inline
 //│ define f$ as fun f$⁰(scope0$cap)(x) {
@@ -388,21 +392,23 @@ f(0)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let g;
 //│ define g as fun g⁵(x) {
-//│   let tmp;
-//│   set tmp = +⁰(x, 1);
-//│   set x = tmp;
+//│   let tmp, tmp1;
+//│   set tmp = x;
+//│   set tmp1 = +⁰(tmp, 1);
+//│   set x = tmp1;
 //│   return x
 //│ };
 //│ define f⁷ as fun f⁸(x) {
-//│   let x1, scrut, tmp;
+//│   let x1, scrut, tmp, tmp1;
 //│   set x1 = x;
 //│   set scrut = true;
 //│   match scrut
 //│     true =>
 //│       return g⁵(x1)
 //│     else
-//│       set tmp = +⁰(x1, 1);
-//│       set x1 = tmp;
+//│       set tmp = x1;
+//│       set tmp1 = +⁰(tmp, 1);
+//│       set x1 = tmp1;
 //│       return x1
 //│   end
 //│ };
@@ -476,13 +482,14 @@ fun f(x) =
 //│   return scope0$cap.x$0¹
 //│ };
 //│ define f¹¹ as fun f¹²(x) {
-//│   let x1, a, tmp, scope0$cap, g$here;
+//│   let x1, a, tmp, tmp1, scope0$cap, g$here;
 //│   set scope0$cap = new mut Capture$scope0⁵(x1);
 //│   set scope0$cap.x$0¹ = x;
 //│   set g$here = g$²(scope0$cap);
 //│   set a = g$here;
-//│   set tmp = +⁰(scope0$cap.x$0¹, 1);
-//│   set scope0$cap.x$0¹ = tmp;
+//│   set tmp = scope0$cap.x$0¹;
+//│   set tmp1 = +⁰(tmp, 1);
+//│   set scope0$cap.x$0¹ = tmp1;
 //│   set g$here = g$²(scope0$cap);
 //│   return [a, g$here]
 //│ };

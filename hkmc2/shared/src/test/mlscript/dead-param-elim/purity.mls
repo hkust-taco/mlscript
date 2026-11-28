@@ -66,10 +66,10 @@ g(new A)
 //│ };
 //│ @private
 //│ define g⁴ as fun g⁵(o) {
-//│   let arg;
-//│   set arg = n⁰;
+//│   let tmp1;
+//│   set tmp1 = n⁰;
 //│   do o.bump⁰;
-//│   return f⁵(arg)
+//│   return f⁵(tmp1)
 //│ };
 //│ set n⁰ = 0;
 //│ define A⁰ as class A¹ {

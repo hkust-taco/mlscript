@@ -28,9 +28,10 @@ let s = Some(0)
 if s is
   Some(x) then x
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let arg$Some$0$1;
-//│ if (s instanceof Some1.class) {
-//│   arg$Some$0$1 = s.value;
+//│ let arg$Some$0$1, tmp;
+//│ tmp = s;
+//│ if (tmp instanceof Some1.class) {
+//│   arg$Some$0$1 = tmp.value;
 //│   return arg$Some$0$1 /* as! Int */
 //│ }
 //│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
@@ -49,10 +50,11 @@ if s is
   Some(1) then 0
   None then 1
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let arg$Some$0$;
-//│ match s⁰
+//│ let arg$Some$0$, tmp;
+//│ set tmp = s⁰;
+//│ match tmp
 //│   Some⁰ =>
-//│     set arg$Some$0$ = s⁰.value⁰;
+//│     set arg$Some$0$ = tmp.value⁰;
 //│     match arg$Some$0$
 //│       1 =>
 //│         return 0
@@ -65,10 +67,11 @@ if s is
 //│     throw new globalThis⁰.Error⁰("match error")
 //│ end
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let arg$Some$0$;
-//│ match s⁰
+//│ let arg$Some$0$, tmp;
+//│ set tmp = s⁰;
+//│ match tmp
 //│   Some⁰ =>
-//│     set arg$Some$0$ = s⁰.value⁰;
+//│     set arg$Some$0$ = tmp.value⁰;
 //│     match arg$Some$0$
 //│       1 =>
 //│         return 0

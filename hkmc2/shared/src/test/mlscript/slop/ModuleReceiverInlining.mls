@@ -25,7 +25,7 @@ let secondOwner = new ReceiverOwner(50)
 :expect 41
 firstOwner.Middle.Inner.read()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let receiver; set receiver = firstOwner⁰; return +⁰(receiver.value⁰, receiver.Middle⁰.extra⁰)
+//│ let tmp; set tmp = firstOwner⁰; return +⁰(tmp.value⁰, tmp.Middle⁰.extra⁰)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 41
 
@@ -33,7 +33,7 @@ firstOwner.Middle.Inner.read()
 :expect 51
 secondOwner.Middle.Inner.read()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let receiver; set receiver = secondOwner⁰; return +⁰(receiver.value⁰, receiver.Middle⁰.extra⁰)
+//│ let tmp; set tmp = secondOwner⁰; return +⁰(tmp.value⁰, tmp.Middle⁰.extra⁰)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 51
 
@@ -42,7 +42,7 @@ secondOwner.Middle.Inner.read()
 :expect 41
 firstOwner.Middle.forward()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let receiver; set receiver = firstOwner⁰; return +⁰(receiver.value⁰, receiver.Middle⁰.extra⁰)
+//│ let tmp; set tmp = firstOwner⁰; return +⁰(tmp.value⁰, tmp.Middle⁰.extra⁰)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 41
 
@@ -55,7 +55,7 @@ let detached = firstOwner.Middle.Inner
 :expect 41
 detached.read()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ return detached⁰.read⁰()
+//│ let tmp; set tmp = detached⁰; return tmp.read⁰()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 41
 
@@ -69,10 +69,11 @@ fun switchOwner() = set currentOwner = secondOwner
 :expect 41
 currentOwner.Middle.Inner.after(switchOwner)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let receiver;
-//│ set receiver = currentOwner⁰;
-//│ set currentOwner⁰ = secondOwner⁰;
-//│ return +⁰(receiver.value⁰, receiver.Middle⁰.extra⁰)
+//│ let tmp, tmp1;
+//│ set tmp = currentOwner⁰;
+//│ set tmp1 = secondOwner⁰;
+//│ set currentOwner⁰ = tmp1;
+//│ return +⁰(tmp.value⁰, tmp.Middle⁰.extra⁰)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 41
 
@@ -90,7 +91,7 @@ let derivedReceiver = new DerivedReceiver
 :expect 61
 derivedReceiver.Middle.Inner.read()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let receiver; set receiver = derivedReceiver⁰; return +⁰(receiver.value⁰, receiver.Middle⁰.extra⁰)
+//│ let tmp; set tmp = derivedReceiver⁰; return +⁰(tmp.value⁰, tmp.Middle⁰.extra⁰)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 61
 
@@ -110,7 +111,10 @@ let provider = new ReceiverProvider
 :expect 41
 provider.chosen.Middle.Inner.read()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp; set tmp = provider⁰.chosen⁰; return +⁰(tmp.value⁰, tmp.Middle⁰.extra⁰)
+//│ let tmp, tmp1;
+//│ set tmp = provider⁰;
+//│ set tmp1 = tmp.chosen⁰;
+//│ return +⁰(tmp1.value⁰, tmp1.Middle⁰.extra⁰)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 41
 
@@ -149,7 +153,7 @@ let pairedReceiver = new PairedReceiver(7)
 :expect 7
 pairedReceiver.Nested.read()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let receiver; set receiver = pairedReceiver⁰; return receiver.value¹
+//│ let tmp; set tmp = pairedReceiver⁰; return tmp.value¹
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 7
 
@@ -230,10 +234,11 @@ fun switchField() = set SwitchingReceiver.current = secondOwner
 :expect 41
 SwitchingReceiver.current.Middle.Inner.after(switchField)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let receiver;
-//│ set receiver = SwitchingReceiver⁰.current⁰;
-//│ set SwitchingReceiver⁰.current⁰ = secondOwner⁰;
-//│ return +⁰(receiver.value⁰, receiver.Middle⁰.extra⁰)
+//│ let tmp, tmp1;
+//│ set tmp = SwitchingReceiver⁰.current⁰;
+//│ set tmp1 = secondOwner⁰;
+//│ set SwitchingReceiver⁰.current⁰ = tmp1;
+//│ return +⁰(tmp.value⁰, tmp.Middle⁰.extra⁰)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 41
 
@@ -251,8 +256,9 @@ fun switchBox() = set currentBox = secondBox
 :expect 41
 currentBox.owner.Middle.Inner.after(switchBox)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let receiver;
-//│ set receiver = currentBox⁰.owner⁰;
+//│ let tmp, receiver;
+//│ set tmp = currentBox⁰;
+//│ set receiver = tmp.owner⁰;
 //│ set currentBox⁰ = secondBox⁰;
 //│ return +⁰(receiver.value⁰, receiver.Middle⁰.extra⁰)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -274,10 +280,11 @@ module ReceiverFactory with
 :expect 1
 ReceiverFactory.fresh.Nested.bump()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let inlinedVal, tmp;
+//│ let inlinedVal, tmp, tmp1;
 //│ set inlinedVal = new GeneratedReceiver⁰();
-//│ set tmp = +⁰(inlinedVal.count⁰, 1);
-//│ set inlinedVal.count⁰ = tmp;
+//│ set tmp = inlinedVal.count⁰;
+//│ set tmp1 = +⁰(tmp, 1);
+//│ set inlinedVal.count⁰ = tmp1;
 //│ return inlinedVal.count⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
@@ -327,10 +334,10 @@ liftedWriter()
 //│ let write, owner;
 //│ @noInline
 //│ define write as fun write⁰(owner1) {
-//│   let inlinedVal, inlinedVal1;
+//│   let tmp, inlinedVal, inlinedVal1;
 //│   set inlinedVal = +⁰(owner1.value⁰, owner1.Middle⁰.extra⁰);
-//│   set owner1 = secondOwner⁰;
-//│   set inlinedVal1 = +⁰(owner1.value⁰, owner1.Middle⁰.extra⁰);
+//│   set tmp = secondOwner⁰;
+//│   set inlinedVal1 = +⁰(tmp.value⁰, tmp.Middle⁰.extra⁰);
 //│   return [inlinedVal, inlinedVal1]
 //│ };
 //│ define liftedWriter⁰ as fun liftedWriter¹() {

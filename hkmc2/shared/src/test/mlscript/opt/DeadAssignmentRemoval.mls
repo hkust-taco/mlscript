@@ -116,7 +116,7 @@ let x in
     set x = 2
   finally print(x)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let x, tmp, tmp1;
+//│ let x, tmp, tmp1, tmp2;
 //│ try
 //│   set x = 1;
 //│   do Predef⁰.notImplementedError⁰;
@@ -124,7 +124,8 @@ let x in
 //│   set tmp = runtime⁰.Unit⁰;
 //│   end
 //│ finally
-//│   set tmp1 = Predef⁰.print⁰(x);
+//│   set tmp1 = x;
+//│   set tmp2 = Predef⁰.print⁰(tmp1);
 //│   end;
 //│   return tmp
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————

@@ -81,7 +81,7 @@ continueFromNestedFunctionWithEffects()
 //│   return value
 //│ };
 //│ define loop as fun loop⁰(scope0$cap, nonLocalHandler$root) {
-//│   let scrut, tmp1, pc;
+//│   let scrut, tmp1, tmp2, tmp3, tmp4, pc;
 //│   match runtime⁰.resumePc﹖
 //│     -1 =>
 //│       set pc = 0;
@@ -99,14 +99,17 @@ continueFromNestedFunctionWithEffects()
 //│         end
 //│     match pc
 //│       1 =>
-//│         set tmp1 = +⁰(scope0$cap.i$0⁰, 1);
-//│         set scope0$cap.i$0⁰ = tmp1;
+//│         set tmp3 = scope0$cap.i$0⁰;
+//│         set tmp4 = +⁰(tmp3, 1);
+//│         set scope0$cap.i$0⁰ = tmp4;
 //│         return nonLocalHandler$root.continue﹖()
 //│       0 =>
-//│         set scrut = >=⁰(scope0$cap.i$0⁰, 3);
+//│         set tmp1 = scope0$cap.i$0⁰;
+//│         set scrut = >=⁰(tmp1, 3);
 //│         match scrut
 //│           true =>
-//│             set runtime⁰.resumeValue﹖ = nonLocalHandler$root.break﹖(scope0$cap.i$0⁰);
+//│             set tmp2 = scope0$cap.i$0⁰;
+//│             set runtime⁰.resumeValue﹖ = nonLocalHandler$root.break﹖(tmp2);
 //│             match runtime⁰.curEffect﹖
 //│               null =>
 //│                 set pc = 2;

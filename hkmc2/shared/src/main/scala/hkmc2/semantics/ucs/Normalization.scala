@@ -291,8 +291,18 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
   
   import codegen.*, lowering.{term_nonTail, subTerm_nonTail, unreachableFn}
   
+  /** The paths that hold the scrutinees which the enclosing branches of a split have read.
+    *
+    * A branch tests a local variable, which elaboration uses to name a scrutinee that is evaluated once
+    * (see `Elaborator.reference`). The program can assign some variables, and lowering reads such a variable
+    * into a temporary (see `Lowering.stablePath`). The first branch that tests it reads it, and the branches
+    * nested in that one test the same temporary. The scrutinee thus keeps one value across the split, and
+    * successive tests of it remain tests of one path, which the backends merge into a single match.
+    */
+  private type Scrutinees = Map[Symbol, Path]
+  
   private def lowerSplit
-      (split: Split, cont: Result => Block)
+      (split: Split, cont: Result => Block, scrutinees: Scrutinees)
       (using form: IfLikeForm)
       (using Config, LoweringCtx)
       : Block =
@@ -300,7 +310,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
     case Split.Let(sym, trm, tl) =>
       LoweringCtx.loweringCtx.collectScopedSym(sym)
       term_nonTail(trm): r =>
-        def bind(bound: Result): Block = Assign(sym, bound, lowerSplit(tl, cont))
+        def bind(bound: Result): Block = Assign(sym, bound, lowerSplit(tl, cont, scrutinees))
         sym match
           // Pattern compilation declares the types of its temporaries, such as a string's head
           // or a matcher's Boolean result, and binds them to calls of untyped runtime helpers.
@@ -308,8 +318,13 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
           case sym: TempSymbol => bind(r.coerceToKnown(sym.erasedType.getOrElse(ErasedType.Unknown), trm.toLoc))
           case _ => lowering.castTo(r, sym.erasedType, trm.toLoc)(bind)
     case Split.Cons(Branch(scrut, pat, tail), restSplit) =>
-      subTerm_nonTail(scrut): sr =>
+      def read(k: Path => Block): Block = scrutinees.get(scrut.sym) match
+        case S(sr) => k(sr)
+        case N => subTerm_nonTail(scrut)(k)
+      read: sr =>
         tl.log(dbg"Binding scrut $scrut to $sr (${summon[LoweringCtx].localVals})")
+        val nested = scrutinees + (scrut.sym -> sr)
+        def lowerSplit(split: Split, cont: Result => Block): Block = this.lowerSplit(split, cont, nested)
         def mkMatch(cse: Case -> Block) = Match(sr, cse :: Nil,
             S(lowerSplit(restSplit, cont)),
             End()
@@ -370,8 +385,8 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
       if transfersControl then
         // Ret/Thrw emit `return`/`throw`, which transfer control out of the block
         // unconditionally; passing them through preserves tail-call position.
-        val bodyBlock = lowerSplit(sym.body, cont)
-        Label(joinLabel, false, lowerSplit(tail, cont), bodyBlock)
+        val bodyBlock = lowerSplit(sym.body, cont, scrutinees)
+        Label(joinLabel, false, lowerSplit(tail, cont, scrutinees), bodyBlock)
       else
         // Other continuations (including ImplctRet, which generates `expr;` without `return`) can fall through
         // the Label body into the rest. Wrap with an exit label and temp variable so every path stores its
@@ -386,14 +401,14 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         val exitCont: Result => Block = r =>
           pathTypes ::= r.erasedType
           Assign(tmp, r, Break(exitLabel))
-        val bodyBlock = lowerSplit(sym.body, exitCont)
-        val tailBlock = lowerSplit(tail, exitCont)
+        val bodyBlock = lowerSplit(sym.body, exitCont, scrutinees)
+        val tailBlock = lowerSplit(tail, exitCont, scrutinees)
         joinTempType(tmp, pathTypes)
         Label(exitLabel, false, Label(joinLabel, false, tailBlock, bodyBlock), cont(tmp.asSimpleRef))
     case Split.UseSplit(sym) =>
       sym.label match
         case S(label) => Break(label)
-        case N => lowerSplit(sym.body, cont) // fallback: inline if no label
+        case N => lowerSplit(sym.body, cont, scrutinees) // fallback: inline if no label
   
   /**
     * Make a block that throws the match error. We might add the information of
@@ -503,7 +518,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
           else assignResult
       val mainBlock =
         given IfLikeForm = form
-        lowerSplit(normalized, cont)
+        lowerSplit(normalized, cont, Map.empty)
       val body =
         Scoped(
           if useNestedScoped then LoweringCtx.loweringCtx.getCollectedSym else Set.empty,

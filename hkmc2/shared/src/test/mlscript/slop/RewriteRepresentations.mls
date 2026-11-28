@@ -36,10 +36,11 @@ count(0)(1, 2, 3)
 //│       Array(0) =>
 //│         return n
 //│       Array(1+) =>
-//│         let inlinedVal, tmp1;
+//│         let inlinedVal, tmp1, tmp2;
 //│         do runtime⁰.Tuple⁰.get⁰(rest1, 0);
-//│         set tmp1 = -⁰(rest1.length⁰, 0);
-//│         set inlinedVal = rest1.slice⁰(1, tmp1);
+//│         set tmp1 = rest1.length⁰;
+//│         set tmp2 = -⁰(tmp1, 0);
+//│         set inlinedVal = rest1.slice⁰(1, tmp2);
 //│         set more = (inlinedVal as! Array⁰);
 //│         set tmp = +⁰(n, 1);
 //│         set n = tmp;

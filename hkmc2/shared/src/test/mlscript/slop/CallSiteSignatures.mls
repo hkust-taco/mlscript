@@ -107,7 +107,9 @@ fun applyVariadic(f: (Int, ...Int) -> Int): Int = f(1, 2, 3)
 applyVariadic(count)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define count⁰ as fun count¹(first: Int⁰, ...rest: Array⁰): Int⁰ {
-//│   return +⁰‹(?, ?) => ?›(rest.length⁰, 1)
+//│   let tmp: Int⁰;
+//│   set tmp = rest.length⁰;
+//│   return +⁰‹(?, ?) => ?›(tmp, 1)
 //│ };
 //│ define applyVariadic⁰ as fun applyVariadic¹(f: Function⁰): Int⁰ {
 //│   return f‹(Int⁰, ...Array⁰) => Int⁰›(1, 2, 3)

@@ -56,7 +56,13 @@ Foo.x; Foo.x
 :expect 2
 Foo.y, Foo.x
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp; set tmp = +⁰(Foo⁰.x⁰, 1); set Foo⁰.x⁰ = tmp; do Predef⁰.print⁰(Foo⁰.x⁰); return Foo⁰.x⁰
+//│ let tmp, tmp1, tmp2;
+//│ set tmp = Foo⁰.x⁰;
+//│ set tmp1 = +⁰(tmp, 1);
+//│ set Foo⁰.x⁰ = tmp1;
+//│ set tmp2 = Foo⁰.x⁰;
+//│ do Predef⁰.print⁰(tmp2);
+//│ return Foo⁰.x⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 2
 //│ = 2
@@ -92,10 +98,21 @@ let a = Foo.y in Foo.x
   42
 }
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp; set tmp = +⁰(Foo⁰.x⁰, 1); set Foo⁰.x⁰ = tmp; do Predef⁰.print⁰(Foo⁰.x⁰); return 42
+//│ let tmp, tmp1, tmp2;
+//│ set tmp = Foo⁰.x⁰;
+//│ set tmp1 = +⁰(tmp, 1);
+//│ set Foo⁰.x⁰ = tmp1;
+//│ set tmp2 = Foo⁰.x⁰;
+//│ do Predef⁰.print⁰(tmp2);
+//│ return 42
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let tmp3;
-//│ tmp3 = Foo1.x + 1; Foo1.x = tmp3; runtime.checkCall(Predef.print(Foo1.x)); block$res13 = 42;
+//│ let tmp9, tmp10, tmp11;
+//│ tmp9 = Foo1.x;
+//│ tmp10 = tmp9 + 1;
+//│ Foo1.x = tmp10;
+//│ tmp11 = Foo1.x;
+//│ runtime.checkCall(Predef.print(tmp11));
+//│ block$res13 = 42;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 5
 //│ = 42

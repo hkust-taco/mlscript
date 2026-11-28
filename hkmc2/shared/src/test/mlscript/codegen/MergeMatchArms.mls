@@ -23,13 +23,15 @@ if a is
   C then 3
   D then 4
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ if (a instanceof A1.class) {
+//│ let tmp;
+//│ tmp = a;
+//│ if (tmp instanceof A1.class) {
 //│   return 1
-//│ } else if (a instanceof B1.class) {
+//│ } else if (tmp instanceof B1.class) {
 //│   return 2
-//│ } else if (a instanceof C1.class) {
+//│ } else if (tmp instanceof C1.class) {
 //│   return 3
-//│ } else if (a instanceof D1.class) {
+//│ } else if (tmp instanceof D1.class) {
 //│   return 4
 //│ }
 //│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
@@ -46,11 +48,15 @@ if a is
       B then 2
       C then 3
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ if (a instanceof A1.class) {
+//│ let tmp1, tmp2;
+//│ tmp1 = a;
+//│ if (tmp1 instanceof A1.class) {
 //│   return 1
-//│ } else if (a instanceof B1.class) {
+//│ }
+//│ tmp2 = a;
+//│ if (tmp2 instanceof B1.class) {
 //│   return 2
-//│ } else if (a instanceof C1.class) {
+//│ } else if (tmp2 instanceof C1.class) {
 //│   return 3
 //│ }
 //│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
@@ -66,16 +72,19 @@ if a is
   B then 2
   C then 3
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ if (a instanceof A1.class) {
-//│   if (b instanceof A1.class) {
+//│ let tmp3, tmp4;
+//│ tmp3 = a;
+//│ if (tmp3 instanceof A1.class) {
+//│   tmp4 = b;
+//│   if (tmp4 instanceof A1.class) {
 //│     return 1
-//│   } else if (b instanceof B1.class) {
+//│   } else if (tmp4 instanceof B1.class) {
 //│     return 2
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
-//│ } else if (a instanceof B1.class) {
+//│ } else if (tmp3 instanceof B1.class) {
 //│   return 2
-//│ } else if (a instanceof C1.class) {
+//│ } else if (tmp3 instanceof C1.class) {
 //│   return 3
 //│ }
 //│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
@@ -102,27 +111,34 @@ let x = if a is
     t
 print(x)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let x, tmp;
-//│ if (a instanceof A1.class) {
-//│   tmp = 1;
-//│ } else if (a instanceof B1.class) {
-//│   tmp = 2;
-//│ } else if (a instanceof C1.class) {
-//│   tmp = 3;
-//│ } else if (a instanceof D1.class) {
-//│   if (a instanceof A1.class) {} else if (a instanceof B1.class) {} else {
+//│ let x, tmp5, tmp6, tmp7, tmp8;
+//│ tmp5 = a;
+//│ if (tmp5 instanceof A1.class) {
+//│   tmp6 = 1;
+//│ } else if (tmp5 instanceof B1.class) {
+//│   tmp6 = 2;
+//│ } else if (tmp5 instanceof C1.class) {
+//│   tmp6 = 3;
+//│ } else {
+//│   tmp7 = a;
+//│   if (tmp7 instanceof D1.class) {
+//│     tmp8 = a;
+//│     if (tmp8 instanceof A1.class) {
+//│       /* Rest moved to non-abortive branch(es) */
+//│     } else if (tmp8 instanceof B1.class) {
+//│       /* Rest moved to non-abortive branch(es) */
+//│     } else {
+//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│     }
+//│     /* Rest moved to non-abortive branch(es) */
+//│   } else if (tmp7 instanceof E1.class) {} else {
 //│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
 //│   Predef.print("done");
-//│   tmp = 3;
-//│ } else if (a instanceof E1.class) {
-//│   Predef.print("done");
-//│   tmp = 3;
-//│ } else {
-//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│   tmp6 = 3;
 //│ }
-//│ x = tmp;
-//│ return Predef.print(tmp)
+//│ x = tmp6;
+//│ return Predef.print(tmp6)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 1
 //│ x = 1
@@ -136,9 +152,11 @@ if a is
   let tmp = 2
   B then 2 + tmp
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ if (a instanceof A1.class) {
+//│ let tmp9;
+//│ tmp9 = a;
+//│ if (tmp9 instanceof A1.class) {
 //│   return 1
-//│ } else if (a instanceof B1.class) {
+//│ } else if (tmp9 instanceof B1.class) {
 //│   return 4
 //│ }
 //│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
@@ -158,11 +176,13 @@ if a is
   let tmp = printAndId(3)
   B then 2 + tmp
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ if (a instanceof A1.class) {
+//│ let tmp10;
+//│ tmp10 = a;
+//│ if (tmp10 instanceof A1.class) {
 //│   return 1
 //│ }
 //│ Predef.print(3);
-//│ if (a instanceof B1.class) {
+//│ if (tmp10 instanceof B1.class) {
 //│   return 5
 //│ }
 //│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
@@ -181,14 +201,19 @@ if a is
       C then 3
     print(x)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ if (a instanceof A1.class) {
+//│ let tmp11, tmp12;
+//│ tmp11 = a;
+//│ if (tmp11 instanceof A1.class) {
 //│   return 1
-//│ } else if (a instanceof B1.class) {
+//│ }
+//│ tmp12 = a;
+//│ if (tmp12 instanceof B1.class) {
 //│   return Predef.print(2)
-//│ } else if (a instanceof C1.class) {
+//│ } else if (tmp12 instanceof C1.class) {
 //│   return Predef.print(3)
 //│ }
 //│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│ /* Rest moved to non-abortive branch(es) */
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -207,22 +232,24 @@ if a is
     print(x + 1)
     print(x + 2)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp1, tmp2, tmp3;
-//│ if (a instanceof B1.class) {
+//│ let tmp13, tmp14, tmp15, tmp16, tmp17;
+//│ tmp13 = a;
+//│ if (tmp13 instanceof B1.class) {
 //│   return 1
 //│ }
-//│ if (a instanceof A1.class) {
-//│   tmp1 = 2;
-//│ } else if (a instanceof C1.class) {
-//│   tmp1 = 3;
+//│ tmp14 = a;
+//│ if (tmp14 instanceof A1.class) {
+//│   tmp15 = 2;
+//│ } else if (tmp14 instanceof C1.class) {
+//│   tmp15 = 3;
 //│ } else {
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│ }
-//│ Predef.print(tmp1);
-//│ tmp2 = tmp1 + 1;
-//│ Predef.print(tmp2);
-//│ tmp3 = tmp1 + 2;
-//│ return Predef.print(tmp3);
+//│ Predef.print(tmp15);
+//│ tmp16 = tmp15 + 1;
+//│ Predef.print(tmp16);
+//│ tmp17 = tmp15 + 2;
+//│ return Predef.print(tmp17);
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 2
 //│ > 3

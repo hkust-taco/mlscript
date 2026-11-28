@@ -50,10 +50,12 @@ class Foo(x) with
 //│     end
 //│   }
 //│   method test⁰ = fun test¹ {
-//│     let tmp;
-//│     set tmp = +⁰($anon⁰.this.state⁰, 1);
-//│     set $anon⁰.this.state⁰ = tmp;
-//│     return +⁰($anon⁰.this.state⁰, $anon⁰.this.y⁰)
+//│     let tmp, tmp1, tmp2;
+//│     set tmp = $anon⁰.this.state⁰;
+//│     set tmp1 = +⁰(tmp, 1);
+//│     set $anon⁰.this.state⁰ = tmp1;
+//│     set tmp2 = $anon⁰.this.state⁰;
+//│     return +⁰(tmp2, $anon⁰.this.y⁰)
 //│   }
 //│ };
 //│ define Foo¹ as class Foo³ {

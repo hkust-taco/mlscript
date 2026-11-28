@@ -12,6 +12,7 @@ class A() with
   let z = 0
   set z += 1
 //│ ═══[INTERNAL ERROR] [BlockChecker] Invalid IR: symbol tmp:tmp⁰ is bound more than once
+//│ ═══[INTERNAL ERROR] [BlockChecker] Invalid IR: symbol tmp:tmp¹ is bound more than once
 
 
 :sjs
@@ -33,38 +34,43 @@ class A(x) with
 //│     A3.class = this
 //│   }
 //│   constructor(x) {
+//│     let tmp;
 //│     this.#x = x;
 //│     this.#x1 = this.#x;
-//│     this.#z = this.#x1;
+//│     tmp = this.#x1;
+//│     this.#z = tmp;
 //│   }
 //│   static {
 //│     A2.size = 3;
 //│   }
 //│   static ctor(buf, idx) {
 //│     return (x) => {
-//│       let idx1, idx2, idx3, idx4, idx5;
+//│       let tmp, idx1, idx2, idx3, idx4, idx5;
 //│       idx5 = idx + 0;
 //│       buf.buf[idx5] = x;
 //│       idx1 = idx + 0;
 //│       idx4 = idx + 1;
 //│       buf.buf[idx4] = buf.buf.at(idx1);
 //│       idx2 = idx + 1;
+//│       tmp = buf.buf.at(idx2);
 //│       idx3 = idx + 2;
-//│       buf.buf[idx3] = buf.buf.at(idx2);
+//│       buf.buf[idx3] = tmp;
 //│       return idx
 //│     }
 //│   }
 //│   static f(buf, idx) {
 //│     return (y) => {
-//│       let tmp, tmp1, idx1, idx2, idx3, idx4, idx5;
+//│       let tmp, tmp1, tmp2, tmp3, idx1, idx2, idx3, idx4, idx5;
 //│       idx1 = idx + 1;
-//│       tmp = buf.buf.at(idx1) + 1;
+//│       tmp = buf.buf.at(idx1);
+//│       tmp1 = tmp + 1;
 //│       idx5 = idx + 1;
-//│       buf.buf[idx5] = tmp;
+//│       buf.buf[idx5] = tmp1;
 //│       idx2 = idx + 2;
-//│       tmp1 = buf.buf.at(idx2) + 2;
+//│       tmp2 = buf.buf.at(idx2);
+//│       tmp3 = tmp2 + 2;
 //│       idx4 = idx + 2;
-//│       buf.buf[idx4] = tmp1;
+//│       buf.buf[idx4] = tmp3;
 //│       idx3 = idx + 1;
 //│       return buf.buf.at(idx3)
 //│     }
@@ -75,11 +81,13 @@ class A(x) with
 //│   get z() { return this.#z; }
 //│   set z(value) { this.#z = value; }
 //│   f(y) {
-//│     let tmp, tmp1;
-//│     tmp = this.#x1 + 1;
-//│     this.#x1 = tmp;
-//│     tmp1 = this.z + 2;
-//│     this.z = tmp1;
+//│     let tmp, tmp1, tmp2, tmp3;
+//│     tmp = this.#x1;
+//│     tmp1 = tmp + 1;
+//│     this.#x1 = tmp1;
+//│     tmp2 = this.z;
+//│     tmp3 = tmp2 + 2;
+//│     this.z = tmp3;
 //│     return this.#x1
 //│   }
 //│   toString() { return runtime.render(this); }

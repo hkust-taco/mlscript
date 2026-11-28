@@ -36,6 +36,26 @@ object Thrw extends TailOp(transfersControl = true):
   def apply(r: Result): Block = Throw(r, annotations = Nil)
 
 
+/** What lowering knows about the local variables of the compilation unit it lowers, to tell whether reading one
+  * of them always yields the same value (see `Lowering.isStable`).
+  *
+  * @param reassigned the local variables that the unit assigns with `set`
+  * @param shared the local variables that other compilation units can access, and can thus assign. Only the
+  *   blocks of a worksheet or REPL session share local variables: their top-level ones.
+  * @param ownTopLevel the top-level local variables that the unit declares. Other units only access these
+  *   once the top-level code of the unit has run.
+  */
+final case class LoweringUnit(
+  reassigned: Set[LocalVarSymbol],
+  shared: Set[LocalVarSymbol],
+  ownTopLevel: Set[LocalVarSymbol],
+):
+  /** Whether reading `sym` always yields the same value. `deferred` tells whether the read is in code that can
+    * run after the top-level code of the unit, interleaved with the code of other units (see `LoweringCtx.deferred`).
+    */
+  def isStable(sym: LocalVarSymbol, deferred: Bool): Bool =
+    !reassigned(sym) && (!shared(sym) || !deferred && ownTopLevel(sym))
+
 class LoweringCtx(
   val localVals: Map[TermSymbol, VarSymbol],
   val symbolsToPreserve: Set[ScopedSymbol],
@@ -43,9 +63,14 @@ class LoweringCtx(
   private val definedSymsDuringLowering: collection.mutable.Set[ScopedSymbol], // used to create Scoped blocks
   val returnType: Opt[ErasedValueType], // the declared return type of the enclosing function, used to coerce `return`s
   val superBases: Map[InnerSymbol, Path], // evaluated parents of the enclosing class definitions
+  val unit: LoweringUnit,
+  // Whether the code being lowered can run after the top-level code of the compilation unit, as the bodies of
+  // functions, lambdas, and class-like definitions can.
+  val deferred: Bool,
 ):
   def withLocalVals(syms: IterableOnce[TermSymbol -> VarSymbol]): LoweringCtx =
-    LoweringCtx(localVals ++ syms, symbolsToPreserve, mayRet, definedSymsDuringLowering, returnType, superBases)
+    LoweringCtx(localVals ++ syms, symbolsToPreserve, mayRet, definedSymsDuringLowering, returnType, superBases,
+      unit, deferred)
   def collectScopedSym(s: ScopedSymbol) = definedSymsDuringLowering.add(s)
   def collectScopedSyms(s: ScopedSymbol*) = definedSymsDuringLowering.addAll(s)
   def registerTempSymbol(trm: Option[Term], erasedType: Opt[ErasedValueType], dbgNme: Str = "tmp")(using State) =
@@ -59,15 +84,19 @@ class LoweringCtx(
     case _ => v
 object LoweringCtx:
   def loweringCtx(using sub: LoweringCtx): LoweringCtx = sub
-  def empty(symbolsToPreserve: Set[ScopedSymbol]) =
+  def empty(symbolsToPreserve: Set[ScopedSymbol], unit: LoweringUnit) =
     LoweringCtx(Map.empty, symbolsToPreserve, mayRet = false, collection.mutable.Set.empty, returnType = N,
-      superBases = Map.empty)
+      superBases = Map.empty, unit, deferred = false)
   def nestFunc(returnType: Opt[ErasedValueType])(using sub: LoweringCtx): LoweringCtx =
-    LoweringCtx(sub.localVals, sub.symbolsToPreserve, mayRet = true, sub.definedSymsDuringLowering, returnType, sub.superBases)
+    LoweringCtx(sub.localVals, sub.symbolsToPreserve, mayRet = true, sub.definedSymsDuringLowering, returnType, sub.superBases,
+      sub.unit, deferred = true)
   def nestScoped(using sub: LoweringCtx): LoweringCtx =
-    LoweringCtx(sub.localVals, sub.symbolsToPreserve, sub.mayRet, collection.mutable.Set.empty, sub.returnType, sub.superBases)
+    LoweringCtx(sub.localVals, sub.symbolsToPreserve, sub.mayRet, collection.mutable.Set.empty, sub.returnType, sub.superBases,
+      sub.unit, sub.deferred)
+  // The bodies of class-like definitions use this context. Their constructors can run after the top-level code.
   def withSuperBase(owner: InnerSymbol, parent: Path)(using sub: LoweringCtx): LoweringCtx =
-    LoweringCtx(sub.localVals, sub.symbolsToPreserve, sub.mayRet, sub.definedSymsDuringLowering, sub.returnType, sub.superBases + (owner -> parent))
+    LoweringCtx(sub.localVals, sub.symbolsToPreserve, sub.mayRet, sub.definedSymsDuringLowering, sub.returnType,
+      sub.superBases + (owner -> parent), sub.unit, deferred = true)
 end LoweringCtx
 
 import LoweringCtx.loweringCtx
@@ -299,7 +328,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         case R(_) => wat("RcdField in non-Rcd context", res)
         case L((mut, flds, loc)) =>
           subTerm(lhs): l =>
-            subTerm_nonTail(rhs): r =>
+            def add(r: Path): Block =
               // JavaScript can only freeze an object as a whole, so one `mut` field makes the allocated
               // record mutable. Its other fields are then assignable at run time, while resolution reads
               // them as their initializers (see RecordMember). `assignNamedField` rejects the
@@ -307,6 +336,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
               // record type making the field mutable, or through a computed key, remain: see
               // slop/strictres/MixedRecords.mls.
               continueBlock(stats, L((mut || field.mut, RcdArg(S(l), r) :: flds, loc)))
+            term_nonTail(rhs):
+              // A field written with a name is a variable of the record's block. The record reads the variable
+              // once the block has run, so the statements that follow the field can still assign it
+              // (see codegen/InterleavedRecords.mls). The path stays as it is for that reason.
+              case variable @ Value.SimpleRef(_: VarSymbol) => add(variable)
+              case r => stablePath(r)(add)
       case (decl @ LetDecl(sym, annotations)) :: stats =>
         reportAnnotations(decl, annotations)
         if sym.asTrm.forall(_.owner.isEmpty) then
@@ -625,8 +660,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         case Nil =>
           // A getter runs before the arguments of the returned function. Its declaration supplies
           // that function's type even after binding the read to a temporary.
-          bindPath(getterRead(fr)): callee =>
+          def applied(callee: Path): Block =
             lowerRemainingCalls(callee, declaredCalleeTypes(fr), args, remainingArgss, annotations, loc)(k)
+          getterRead(fr) match
+            // Any other callee stays as it is: a selection determines the receiver of the call.
+            case callee: Path => applied(callee)
+            case read => stablePath(read)(applied)
         case acc =>
           val call = new Call(fr, acc)(groupedSignature, CallMetadata(isMlsFun, mayRaiseEffects, Nil), loc)
           val tmp = loweringCtx.registerTempSymbol(N, erasedType = call.erasedType, "baseCall")
@@ -1377,9 +1416,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           case State.orSymbol => mkBooleanMatch(false)
           case _ =>
             // * Like an argument that precedes others, the left operand is evaluated before the code of the
-            // * right operand runs (see `stabilized`).
+            // * right operand runs (see `inOrder`).
             val operands = collection.mutable.Buffer.empty[Arg]
-            val evaluation = stabilized(operands, ar1)(Arg(N, _)):
+            val evaluation = inOrder(operands, ar1)(Arg(N, _)):
               subTerm_nonTail(arg2): ar2 =>
                 operands += Arg(N, ar2)
                 End()
@@ -1992,20 +2031,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                   case e :: es => (e, es)
                   case Nil => (N, Nil)
                 castPathTo(ar, expTy, a.toLoc): value =>
-                  stabilized(asr, value)(Arg(N, _))(rec(as, expRest))
+                  inOrder(asr, value)(Arg(N, _))(rec(as, expRest))
               case S(_) =>
-                stabilized(asr, ar)(Arg(spd, _))(rec(as, Nil))
+                inOrder(asr, ar)(Arg(spd, _))(rec(as, Nil))
       case L((idx, t)) :: as =>
         subTerm_nonTail(idx): ir =>
-          // * Computed keys are rare, so a key whose value can change is always read first.
-          def withKey(key: Path): Block =
-            subTerm_nonTail(t):
-              ensureOnce: (tr: Path) =>
-                stabilized(fsr, tr)(RcdArg(S(key), _))(rec(as, Nil))
-          if denotesSameValue(ir) then withKey(ir)
-          else
-            val key = loweringCtx.registerTempSymbol(N, erasedType = ir.erasedType, "key")
-            Assign(key, ir, withKey(key.asSimpleRef))
+          subTerm_nonTail(t):
+            ensureOnce: (tr: Path) =>
+              inOrder(fsr, tr)(RcdArg(S(ir), _))(rec(as, Nil))
     val b = rec(as, expectedTypes)
     if fsr.isEmpty then
       Begin(b, k(asr.toList))
@@ -2019,30 +2052,22 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           k(asr.toList :+ Arg(N, rcdSym.asSimpleRef))))
       
   
-  /** Whether `read`, the path lowered for an operand, denotes the same value after the statements lowered for
-    * the operands that follow it. A temporary of the lowering denotes the value it was assigned when it is
-    * referenced: the statements of later operands, which assign their own fresh temporaries, never assign it.
-    * Nor can they redefine a function, although `isStable` excludes references to functions, whose lifted
-    * closures do not keep their identity. An unchecked cast inherits its operand's stability.
-    * A checked cast must run before any effects of later operands, even when its operand is stable.
-    */
-  private def denotesSameValue(read: Path): Bool = read match
-    case CastPath(operand, _, false) => denotesSameValue(operand)
-    case Value.SimpleRef(_: TempSymbol) => true
-    case Value.MemberRef(_, ts: TermSymbol) if ts.k is syntax.Fun => true
-    case _ => read.isStable
+  /** Whether evaluating `read` can fail on a checked cast. */
+  private def hasCheckedCast(read: Path): Bool = read match
+    case CastPath(operand, _, check) => check || hasCheckedCast(operand)
+    case _ => false
   
-  /** Adds to `operands` the operand lowered to the path `read`, and returns the statements that evaluate it
+  /** Adds to `operands` the operand lowered to the stable path `read`, and returns the statements that evaluate it
     * followed by `rest`, the statements lowered for the operands that follow it.
     *
-    * The operands of a call or of an operator are evaluated from left to right, but an operand lowered to a path
-    * is only read when the operands are consumed, after `rest`. Unless `read` denotes the same value at that
-    * point (see [[denotesSameValue]]), it is read into a temporary first; the temporary is only kept if `rest`
-    * can run code (see [[runsCode]]).
+    * The operands of a call or of an operator are evaluated from left to right. A stable path yields the same
+    * value when the operands are consumed, after `rest` (see [[isStable]]). A checked cast of one can fail
+    * though, and its failure has to precede the effects of `rest`: it is read into a temporary first, which is
+    * only kept if `rest` can run code (see [[runsCode]]).
     */
-  private def stabilized[A](operands: collection.mutable.Buffer[A], read: Path)(mk: Path => A)(rest: => Block)
+  private def inOrder[A](operands: collection.mutable.Buffer[A], read: Path)(mk: Path => A)(rest: => Block)
         (using LoweringCtx): Block =
-    if denotesSameValue(read) then
+    if !hasCheckedCast(read) then
       operands += mk(read)
       rest
     else
@@ -2057,8 +2082,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         operands(index) = mk(read)
         restBlock
   
-  /** Whether running `b`, the statements lowered for some operands, can run code that changes the values of
-    * paths lowered for earlier operands. Defining functions does not, nor does assigning a pure result to a
+  /** Whether running `b`, the statements lowered for some operands, can run code, whose effects the failure of
+    * an earlier operand must precede. Defining functions does not, nor does assigning a pure result to a
     * temporary of the lowering, which is a fresh variable.
     */
   private def runsCode(b: Block): Bool = b match
@@ -2085,21 +2110,79 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     subTerm(t, inStmtPos = inStmtPos)(k)
   
   inline def subTerm(t: st, inStmtPos: Bool = false)(k: Path => Block)(using LoweringCtx): Block =
-    term(t, inStmtPos = inStmtPos)(bindPath(_)(k))
+    term(t, inStmtPos = inStmtPos)(stablePath(_)(k))
   
   /** Lowers the callee of an application, retaining a selected member's path. [[lowerMultiCall]] uses
     * its target to recognize a getter and type the application of its result. An unresolved member
     * may be a method and needs its receiver at the call.
+    *
+    * The selection is part of the call, which reads the member when it applies it. Only the operands of
+    * the selection are made stable, so a member whose value can change is read after the arguments.
     */
   def calleeTerm(t: st)(k: Path => Block)(using LoweringCtx): Block =
+    def selection(sel: Path): Block = sel match
+      case sel @ Select(qual, name) => stablePath(qual): q =>
+        k(if q is qual then sel else Select(q, name)(sel.symbol, sel.toLoc)(sel.sanitize))
+      case sel @ DynSelect(qual, fld, kind) => stablePath(qual): q =>
+        stablePath(fld): f =>
+          k(if (q is qual) && (f is fld) then sel else DynSelect(q, f, kind)(sel.toLoc))
+      case path => k(path)
     term_nonTail(t):
-      case Call(path, Nil) => k(path)
-      case r => bindPath(r)(k)
+      case Call(path, Nil) => selection(path)
+      case sel: (Select | DynSelect) => selection(sel)
+      case r => stablePath(r)(k)
   
-  /** Makes `r` available to `k` as a path, binding it first unless it is one. */
-  private def bindPath(r: Result)(k: Path => Block)(using LoweringCtx): Block = r match
-    case v: Value => k(v)
-    case p: Path => k(p)
+  /** Whether evaluating `p` yields the same value wherever the code that follows evaluates it. Lowering only
+    * puts such paths in the nested positions of the IR: the arguments and callees of calls, operands,
+    * the prefixes and keys of selections, the elements of tuples and records, and the scrutinees of matches
+    * (see [[stablePath]]). Evaluating a stable path can still fail, as when it selects a field of `null`.
+    *
+    * This differs from [[Path.isStable]], which the passes that follow lowering use: that property also
+    * requires repeated reads to yield the same object, which references to functions do not guarantee, and it
+    * has no access to the assignments of the source program.
+    */
+  private def isStable(p: Path)(using LoweringCtx): Bool = p match
+    case _: Value.Lit | _: Value.This => true
+    case Value.SimpleRef(_: BuiltinSymbol) => true
+    // Lowering assigns each of its temporaries before the code that reads it, and nothing assigns them again.
+    case Value.SimpleRef(_: TempSymbol) => true
+    case Value.SimpleRef(sym: VarSymbol) => !sym.mut || loweringCtx.unit.isStable(sym, loweringCtx.deferred)
+    case Value.MemberRef(_, disamb) => isStableMember(disamb)
+    case sel: Select => isStable(sel.qual) && sel.symbol.exists(isStableMember)
+    case sel: SuperSelect =>
+      isStable(sel.qual) && isStable(sel.base) && isStable(sel.key) && isStableMember(sel.symbol)
+    // An array or an object reached by a computed key can be mutated.
+    case _: DynSelect => false
+    case CastPath(value, _, _) => isStable(value)
+  
+  /** Whether a reference to `sym`, or its selection from a stable prefix, always yields the same value.
+    * Classes, modules, objects, patterns, functions with parameter lists, and immutable values do.
+    *
+    * An assignment can still reach an immutable value: `@unsafe set` skips the check, and so does a write
+    * through a receiver that also has a mutable candidate for the field (see `assignNamedField`). Such an
+    * assignment initializes the value, and reading the value before its last assignment is undefined behavior,
+    * like reading a variable before its initialization.
+    *
+    * `let` bindings and `mut val`s can be reassigned, a getter runs on each access, foreign code can modify the
+    * fields of foreign (`declare`d) definitions, and a read-only record field can alias a mutable one.
+    */
+  private def isStableMember(sym: DefinitionSymbol[?]): Bool = sym match
+    case _: (ClassLikeSymbol | PatternSymbol) => true
+    case sym: TermSymbol => sym.k match
+      case syntax.ImmutVal => sym.defn.forall(!Inheritance.isExternal(_))
+      case syntax.Ins | syntax.ParamBind => true
+      // Functions that lowering generates have no source definition, and they all take parameters.
+      case syntax.Fun => sym.defn.forall(_.params.nonEmpty)
+      case _ => false
+    case _: TypeAliasSymbol => false
+  
+  /** Makes the lowered result `r` available to `k` as a stable path (see [[isStable]]). A path whose value can
+    * change is read into a temporary here, which is where the source program evaluates it: the path that `k`
+    * receives can then be evaluated after the code of the operands that follow it. Lambdas are defined and other
+    * results are bound to temporaries.
+    */
+  private def stablePath(r: Result)(k: Path => Block)(using LoweringCtx): Block = r match
+    case p: Path if isStable(p) => k(p)
     case lam @ Lambda(params, body) =>
       val lamSym = BlockMemberSymbol("lambda", Nil, false)
       loweringCtx.collectScopedSym(lamSym)
@@ -2173,7 +2256,30 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         layout.expectedTypes(count)
 
 
-  def program(main: st.Blk, symbolsToPreserve: Set[ScopedSymbol]): Program =
+  /** The local variables that the program assigns with `set`, including from nested definitions.
+    * Reading the other local variables of the program is stable (see [[isStable]]).
+    */
+  private def reassignedLocals: Set[LocalVarSymbol] =
+    summon[Erasure].sourceStatements.collect:
+      case Assgn(lhs, _) =>
+        // This follows how the `Assgn` case of `term` finds the assigned symbol.
+        val target = lhs.withoutCaptures.instantiated match
+          case Resolved(inner, _) => inner
+          case target => target
+        target match
+          case SimpleRef(sym: LocalVarSymbol) => S(sym)
+          case Ref(sym: LocalVarSymbol) => S(sym)
+          case _ => N
+    .flatten.toSet
+  
+  /** Lowers the compilation unit `main`.
+    *
+    * @param symbolsToPreserve the symbols of the unit that the returned program leaves unscoped
+    * @param sharedLocals the local variables that other compilation units can access and assign. The blocks of
+    *   a worksheet or REPL session share their top-level variables, so each block passes those of all the
+    *   blocks so far, itself included. A unit that shares no variables passes the empty set.
+    */
+  def program(main: st.Blk, symbolsToPreserve: Set[ScopedSymbol], sharedLocals: Set[LocalVarSymbol]): Program =
     summon[Erasure].requireCompleted(main)
     
     val (imps, funs, rest) = splitBlock(main.stats, Nil, Nil, Nil)
@@ -2184,8 +2290,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     inline def topLevelVals = rest.iterator.collect:
         case td: TermDefinition if td.k.isInstanceOf[syntax.Val] => td.sym
     
+    val unit = LoweringUnit(
+      reassigned = reassignedLocals,
+      shared = sharedLocals,
+      ownTopLevel = main.stats.iterator.collect { case LetDecl(sym: LocalVarSymbol, _) => sym }.toSet,
+    )
     val blk =
-      inScopedBlockExcept(symbolsToPreserve)(using LoweringCtx.empty(symbolsToPreserve ++ topLevelVals)):
+      inScopedBlockExcept(symbolsToPreserve)(using LoweringCtx.empty(symbolsToPreserve ++ topLevelVals, unit)):
         block(funs ::: rest, R(main.res))(ImplctRet)
     
     Program(

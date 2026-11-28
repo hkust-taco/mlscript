@@ -46,11 +46,15 @@ module Test with
 //│   }
 //│   static #s;
 //│   static {
+//│     let tmp1;
 //│     Test.#s = 1;
-//│     Predef.print(Test.#s);
+//│     tmp1 = Test.#s;
+//│     Predef.print(tmp1);
 //│   }
 //│   static foo() {
-//│     return Predef.print(Test.#s)
+//│     let tmp1;
+//│     tmp1 = Test.#s;
+//│     return Predef.print(tmp1)
 //│   }
 //│   static bar() {
 //│     return Test.foo()

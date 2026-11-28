@@ -34,6 +34,11 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
     */
   def hasErrors: Bool = reporter.hasErrors
 
+  /** Every statement of the program, including the ones that `Statement.subStatements` does not reach
+    * (see SourceDeclarations).
+    */
+  def sourceStatements: Iterator[Statement] = declarations.statements.iterator
+
   /** Checks that lowering uses the same source root whose signatures this instance initialized. */
   def requireCompleted(statement: Statement): Unit =
     assert(root is statement, "Lowering requires completed erasure of this program")

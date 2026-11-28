@@ -95,7 +95,6 @@ c.Parent#x + (c is Parent)
 //│     (return
 //│       (local.get $this)))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
-//│     (local $arg (ref null any))
 //│     (local $currentTypeInfo (ref null any))
 //│     (local $targetTypeInfo (ref null any))
 //│     (local $typeInfoMatch (ref null i31))
@@ -103,9 +102,6 @@ c.Parent#x + (c is Parent)
 //│       (call $Child_ctor
 //│         (ref.i31
 //│           (i32.const 2))))
-//│     (local.set $arg
-//│       (struct.get $Child $x@1
-//│         (global.get $c)))
 //│     (block $match
 //│       (if
 //│         (ref.test (ref $Object)
@@ -153,12 +149,14 @@ c.Parent#x + (c is Parent)
 //│               (block $arm
 //│                 (return
 //│                   (call $plus_impl
-//│                     (local.get $arg)
+//│                     (struct.get $Child $x@1
+//│                       (global.get $c))
 //│                     (ref.i31
 //│                       (i32.const 1)))))))))
 //│       (return
 //│         (call $plus_impl
-//│           (local.get $arg)
+//│           (struct.get $Child $x@1
+//│             (global.get $c))
 //│           (ref.i31
 //│             (i32.const 0)))))
 //│     (unreachable))

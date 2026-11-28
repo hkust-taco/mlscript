@@ -239,7 +239,7 @@ let lifted = capturedVariadic(30)
 //│   return sum⁰‹(Int⁰, Int⁰, ...Array⁰) => (Int⁰) => Int⁰›(base, first, ...args)
 //│ };
 //│ define sum as fun sum⁰(base: Int⁰, first: Int⁰, ...args: Array⁰)(extra: Int⁰): Int⁰ {
-//│   let optional: Unknown, middle: Array⁰, last: Int⁰, tmp2: Int⁰, tmp3: Unknown, tmp4: Unknown, tmp5: Unknown, tmp6: Unknown;
+//│   let optional: Unknown, middle: Array⁰, last: Int⁰, tmp2: Int⁰, tmp3: Unknown, tmp4: Unknown, tmp5: Int⁰, tmp6: Unknown, tmp7: Unknown;
 //│   do runtime⁰.checkVariadicArgs⁰‹(Str⁰, Int⁰, Int⁰, Array⁰) => Unit⁰›("sum", 2, 1, args);
 //│   match args
 //│     Array(2+) =>
@@ -259,9 +259,10 @@ let lifted = capturedVariadic(30)
 //│       set tmp3 = 0;
 //│       end
 //│   set tmp4 = +⁰‹(?, ?) => ?›(tmp2, tmp3);
-//│   set tmp5 = +⁰‹(?, ?) => ?›(tmp4, middle.length⁰);
-//│   set tmp6 = +⁰‹(?, ?) => ?›(tmp5, last);
-//│   return (+⁰‹(?, ?) => ?›(tmp6, extra) as! Int⁰)
+//│   set tmp5 = middle.length⁰;
+//│   set tmp6 = +⁰‹(?, ?) => ?›(tmp4, tmp5);
+//│   set tmp7 = +⁰‹(?, ?) => ?›(tmp6, last);
+//│   return (+⁰‹(?, ?) => ?›(tmp7, extra) as! Int⁰)
 //│ };
 //│ define capturedVariadic⁰ as fun capturedVariadic¹(base: Int⁰): Function⁰ {
 //│   return sum$⁰‹(Int⁰) => (Int⁰, ...Array⁰) => Function⁰›(base)

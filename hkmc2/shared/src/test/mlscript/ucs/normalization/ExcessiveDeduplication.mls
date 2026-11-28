@@ -20,10 +20,13 @@ if
   x then 0
   y then 0
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ if (x === true) {
+//│ let tmp, tmp1;
+//│ tmp = x;
+//│ if (tmp === true) {
 //│   return 0
 //│ }
-//│ if (y === true) { return 0 }
+//│ tmp1 = y;
+//│ if (tmp1 === true) { return 0 }
 //│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
@@ -34,10 +37,13 @@ if
   x then 0
   y then 1
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ if (x === true) {
+//│ let tmp2, tmp3;
+//│ tmp2 = x;
+//│ if (tmp2 === true) {
 //│   return 0
 //│ }
-//│ if (y === true) { return 1 }
+//│ tmp3 = y;
+//│ if (tmp3 === true) { return 1 }
 //│ throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
@@ -65,20 +71,26 @@ if
 //│ >      $σ
 //│ >    $σ
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let element0$, tmp;
+//│ let element0$, tmp4, tmp5, tmp6, tmp7, tmp8;
 //│ σ$x: {
-//│   if (x === true) {
-//│     if (z === true) {
-//│       tmp = 1;
+//│   tmp7 = x;
+//│   if (tmp7 === true) {
+//│     tmp8 = z;
+//│     if (tmp8 === true) {
+//│       tmp4 = 1;
 //│       break σ$x
 //│     }
 //│   }
-//│   if (runtime.Tuple.isArrayLike(y) && y.length === 1) {
-//│     element0$ = runtime.checkCall(runtime.Tuple.get(y, 0));
-//│     tmp = 1 + element0$;
-//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│   tmp5 = y;
+//│   if (runtime.Tuple.isArrayLike(tmp5) && tmp5.length === 1) {
+//│     tmp6 = y;
+//│     element0$ = runtime.checkCall(runtime.Tuple.get(tmp6, 0));
+//│     tmp4 = 1 + element0$;
+//│   } else {
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│   }
 //│ }
-//│ block$res4 = tmp;
+//│ block$res4 = tmp4;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 

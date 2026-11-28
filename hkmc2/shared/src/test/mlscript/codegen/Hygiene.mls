@@ -134,10 +134,13 @@ data class Cls(x) with
 //│     Cls1.class = this
 //│   }
 //│   constructor(x2) {
+//│     let tmp, tmp1;
 //│     this.x = x2;
 //│     this.#x = this.x + 1;
-//│     this.#x1 = this.#x * 2;
-//│     Predef.print(this.x, this.#x1);
+//│     tmp = this.#x;
+//│     this.#x1 = tmp * 2;
+//│     tmp1 = this.#x1;
+//│     Predef.print(this.x, tmp1);
 //│   }
 //│   #x;
 //│   #x1;

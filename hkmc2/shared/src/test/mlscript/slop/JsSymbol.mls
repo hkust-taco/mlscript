@@ -371,9 +371,9 @@ openedAvailable()
 new SymbolKeyLibrary.FileReader().read()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ import { _$_modulePrivate_$_fileKey as fileKey } from "./../../mlscript-compile/SymbolKeyLibrary.mjs";
-//│ let tmp25;
-//│ tmp25 = globalThis.Object.freeze(new SymbolKeyLibrary.FileReader());
-//│ return tmp25[fileKey]()
+//│ let tmp27;
+//│ tmp27 = globalThis.Object.freeze(new SymbolKeyLibrary.FileReader());
+//│ return tmp27[fileKey]()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 64
 

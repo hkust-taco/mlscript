@@ -77,8 +77,9 @@ import "../../mlscript-compile/LocalValsExport.mls"
 LocalValsExport.add(1)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ import { _$_modulePrivate_$_stored as stored } from "./../../mlscript-compile/LocalValsExport.mjs";
-//│ let tmp1;
-//│ tmp1 = stored.at(0) + 1;
-//│ return tmp1 + 1
+//│ let tmp1, tmp2;
+//│ tmp1 = stored.at(0);
+//│ tmp2 = tmp1 + 1;
+//│ return tmp2 + 1
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42

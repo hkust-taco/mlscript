@@ -80,7 +80,9 @@ fun drain(flag) =
 //│   let run, flag1;
 //│   define run as fun run⁰() {
 //│     loop lbl:
-//│       match flag1
+//│       let tmp;
+//│       set tmp = flag1;
+//│       match tmp
 //│         true =>
 //│           set flag1 = false;
 //│           continue lbl
@@ -115,11 +117,12 @@ let result = if source is
   else 9
 [result, reads]
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let scrut, tmp;
+//│ let scrut, tmp, tmp1;
 //│ define source⁰ as fun source¹() {
-//│   let tmp1;
-//│   set tmp1 = +⁰(reads⁰, 1);
-//│   set reads⁰ = tmp1;
+//│   let tmp2, tmp3;
+//│   set tmp2 = reads⁰;
+//│   set tmp3 = +⁰(tmp2, 1);
+//│   set reads⁰ = tmp3;
 //│   return reads⁰
 //│ };
 //│ set reads⁰ = 0;
@@ -135,7 +138,8 @@ let result = if source is
 //│     set tmp = 9;
 //│     end
 //│ set result⁰ = tmp;
-//│ return [result⁰, reads⁰]
+//│ set tmp1 = reads⁰;
+//│ return [result⁰, tmp1]
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [7, 1]
 //│ reads = 1

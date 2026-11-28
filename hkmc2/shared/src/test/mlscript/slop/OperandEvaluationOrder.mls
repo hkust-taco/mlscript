@@ -3,10 +3,14 @@
 :flowBasedOpt off
 
 
-// Each test resets the counter through a call: a later worksheet block that assigns the variable itself
-// lets the simplifier propagate the assigned constant past the calls of `bump`, whose definition it does not see.
+// The nested positions of the IR only contain stable paths, which yield the same value wherever they are
+// evaluated: the arguments and callees of calls, operands, the prefixes and keys of selections, and the elements
+// of tuples and records. Lowering reads the other paths into temporaries where the source program evaluates
+// them, so subexpressions are evaluated from left to right.
+// See https://github.com/hkust-taco/mlscript/issues/571
+
+
 let counter = 0
-fun reset() = set counter = 0
 fun bump() =
   set counter += 1
   counter
@@ -17,61 +21,88 @@ let reader = new Reader
 //│ reader = Reader
 
 
-// The operands of a builtin operator are evaluated from left to right, like the arguments of a call.
-// The left operand is a variable that the right operand assigns, so it is read into a temporary first.
+// The left operand of an operator is a variable that the right operand assigns.
 :sir
 :expect [true, false]
-reset()
+set counter = 0
 [counter < bump(), counter === bump()]
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let arg, tmp, tmp1, arg1, tmp2, tmp3;
-//│ do reset⁰();
-//│ set arg = counter⁰;
-//│ set tmp = bump⁰();
-//│ set tmp1 = <⁰(arg, tmp);
-//│ set arg1 = counter⁰;
-//│ set tmp2 = bump⁰();
-//│ set tmp3 = ===⁰(arg1, tmp2);
-//│ return [tmp1, tmp3]
+//│ let tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
+//│ set counter⁰ = 0;
+//│ set tmp = counter⁰;
+//│ set tmp1 = bump⁰();
+//│ set tmp2 = <⁰(tmp, tmp1);
+//│ set tmp3 = counter⁰;
+//│ set tmp4 = bump⁰();
+//│ set tmp5 = ===⁰(tmp3, tmp4);
+//│ return [tmp2, tmp5]
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [true, false]
 
 // Reading a getter runs code, like a call.
 :expect 1
-reset()
+set counter = 0
 counter + reader.next
 //│ = 1
 
 // Each operator reads its own left operand before its right operand runs.
 :expect 4
-reset()
+set counter = 0
 counter + (bump() + counter) + bump()
 //│ = 4
 
-// A left operand needs no temporary if its value cannot change, or if the right operand runs no code.
+// A variable that the program never assigns is stable, like a parameter and a temporary. Reading it needs no
+// temporary of its own.
 :sir
 :expect 8
 fun stableOperands(a, b) =
-  let total = a
-  set total = total + b
+  let total = a + b
   total * 2 + (a + bump())
-reset()
+set counter = 0
 stableOperands(1, 2)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define stableOperands⁰ as fun stableOperands¹(a, b) {
-//│   let total, tmp, tmp1, tmp2, tmp3;
-//│   set total = a;
-//│   set tmp = +⁰(total, b);
-//│   set total = tmp;
-//│   set tmp1 = *⁰(total, 2);
-//│   set tmp2 = bump⁰();
-//│   set tmp3 = +⁰(a, tmp2);
-//│   return +⁰(tmp1, tmp3)
+//│   let total, tmp, tmp1, tmp2;
+//│   set total = +⁰(a, b);
+//│   set tmp = *⁰(total, 2);
+//│   set tmp1 = bump⁰();
+//│   set tmp2 = +⁰(a, tmp1);
+//│   return +⁰(tmp, tmp2)
 //│ };
-//│ do reset⁰();
+//│ set counter⁰ = 0;
 //│ return stableOperands¹(1, 2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 8
+
+// A variable that a nested function assigns is read where the source program evaluates it.
+fun first(x)(y) = x
+
+:sir
+:expect 1
+fun partial() =
+  let y = 1
+  fun update() =
+    set y = 2
+  let p = first(y)
+  update()
+  p(0)
+partial()
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define partial⁰ as fun partial¹() {
+//│   let update, y, p, tmp;
+//│   define update as fun update⁰() {
+//│     set y = 2;
+//│     return runtime⁰.Unit⁰
+//│   };
+//│   set y = 1;
+//│   set tmp = y;
+//│   set p = first⁰(tmp);
+//│   do update⁰();
+//│   return (p(0) as! Int⁰)
+//│ };
+//│ return partial¹()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1
 
 // A right operand that returns never reaches the operation.
 :sir
@@ -80,26 +111,27 @@ fun earlyReturn(a) =
   let total = a
   set total = total + 1
   total + (if a > 0 then return 5 else bump())
-reset()
+set counter = 0
 [earlyReturn(1), earlyReturn(0)]
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let tmp, tmp1;
 //│ define earlyReturn⁰ as fun earlyReturn¹(a) {
-//│   let total, scrut, tmp2, arg, tmp3;
+//│   let total, scrut, tmp2, tmp3, tmp4, tmp5;
 //│   set total = a;
-//│   set tmp2 = +⁰(total, 1);
-//│   set total = tmp2;
-//│   set arg = total;
+//│   set tmp2 = total;
+//│   set tmp3 = +⁰(tmp2, 1);
+//│   set total = tmp3;
+//│   set tmp4 = total;
 //│   set scrut = >⁰(a, 0);
 //│   match scrut
 //│     true =>
 //│       return 5
 //│     else
-//│       set tmp3 = bump⁰();
-//│       return +⁰(arg, tmp3)
+//│       set tmp5 = bump⁰();
+//│       return +⁰(tmp4, tmp5)
 //│   end
 //│ };
-//│ do reset⁰();
+//│ set counter⁰ = 0;
 //│ set tmp = earlyReturn¹(1);
 //│ set tmp1 = earlyReturn¹(0);
 //│ return [tmp, tmp1]
@@ -107,21 +139,44 @@ reset()
 //│ = [5, 2]
 
 
-// The remaining cases read a path after the code of the operands that follow it has run.
+// A mutable field is read before the operands that follow it.
+class Cell(mut val x: Int)
+fun update(cell: Cell) =
+  set cell.x = 3
+  cell
 
+:sir
+:expect 7
+let cell = new Cell(4)
+cell.x + update(cell).x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp, tmp1, tmp2;
+//│ set cell⁰ = new Cell⁰(4);
+//│ set tmp = cell⁰.x⁰;
+//│ set tmp1 = update¹(cell⁰);
+//│ set tmp2 = tmp1.x⁰;
+//│ return +⁰(tmp, tmp2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 7
+//│ cell = Cell(3)
+
+
+// The callee of a call is read before its arguments.
 let callee = x => "old"
 fun swapCallee() =
   set callee = x => "new"
   0
 //│ callee = fun callee
 
-// FIXME: The callee is read after its argument assigns it.
-:fixme
+:sir
 :expect "old"
 callee(swapCallee())
-//│ ═══[RUNTIME ERROR] Expected: '"old"', got: '"new"'
-//│ = "new"
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp, tmp1; set tmp = callee⁰; set tmp1 = swapCallee⁰(); return tmp(tmp1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = "old"
 
+// The receiver of a method call is read before the arguments.
 class Holder with
   mut val text: Str = "ab"
 let holder = new mut Holder
@@ -130,13 +185,19 @@ fun replaceText() =
   0
 //│ holder = Holder
 
-// FIXME: The receiver is read after the argument assigns the field that holds it.
-:fixme
+:sir
 :expect "a"
 holder.text.charAt(replaceText())
-//│ ═══[RUNTIME ERROR] Expected: '"a"', got: '"x"'
-//│ = "x"
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp, tmp1, tmp2;
+//│ set tmp = holder⁰;
+//│ set tmp1 = tmp.text⁰;
+//│ set tmp2 = replaceText⁰();
+//│ return tmp1.charAt⁰(tmp2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = "a"
 
+// The array of a dynamic selection is read before the index.
 let items = mut [10, 20]
 let others = mut [30, 40]
 fun swapItems() =
@@ -145,13 +206,11 @@ fun swapItems() =
 //│ items = [10, 20]
 //│ others = [30, 40]
 
-// FIXME: The indexed array is read after the index assigns the variable that holds it.
-:fixme
 :expect 20
 items.[swapItems()]
-//│ ═══[RUNTIME ERROR] Expected: '20', got: '40'
-//│ = 40
+//│ = 20
 
+// The target of an assignment is read before the assigned value.
 let targets = mut [10, 20]
 let spares = mut [30, 40]
 fun swapTargets() =
@@ -160,10 +219,46 @@ fun swapTargets() =
 //│ spares = [30, 40]
 //│ targets = [10, 20]
 
-// FIXME: The same applies to the target of an assignment, which here writes to `spares`.
-:fixme
 :expect [30, 40]
 set targets.[swapTargets()] = 99
 spares
-//│ ═══[RUNTIME ERROR] Expected: '[30, 40]', got: '[30, 99]'
-//│ = [30, 99]
+//│ = [30, 40]
+
+// The selection of a method stays on its call, which reads the member when it applies it. A member that an
+// argument assigns is therefore read after that argument.
+class Dispatcher with
+  mut val handle: Int -> Str = n => "old"
+let dispatcher = new mut Dispatcher
+fun swapHandler() =
+  set dispatcher.handle = n => "new"
+  0
+//│ dispatcher = Dispatcher
+
+:sir
+:expect "new"
+dispatcher.handle(swapHandler())
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp, tmp1; set tmp = dispatcher⁰; set tmp1 = swapHandler⁰(); return tmp.handle⁰(tmp1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = "new"
+
+
+// Any worksheet block can assign the top-level variables of the others. Such a variable is only stable in
+// the top-level code of the block that declares it.
+let shared = 1
+fun bumpShared() =
+  set shared = shared + 1
+  0
+//│ shared = 1
+
+:sir
+:expect 1
+shared + bumpShared()
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp, tmp1; set tmp = shared⁰; set tmp1 = bumpShared⁰(); return +⁰(tmp, tmp1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1
+
+:expect 2
+shared
+//│ = 2

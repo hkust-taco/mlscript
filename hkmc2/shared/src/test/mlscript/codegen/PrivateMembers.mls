@@ -73,7 +73,7 @@ f.y
 
 :re
 f.y()
-//│ ═══[RUNTIME ERROR] TypeError: f.y is not a function
+//│ ═══[RUNTIME ERROR] TypeError: tmp2.y is not a function
 
 :expect 3
 f.z
@@ -182,9 +182,10 @@ object Example {
 //│   }
 //│   #x;
 //│   get test() {
-//│     let tmp2;
-//│     tmp2 = Example1.#x + 1;
-//│     Example1.#x = tmp2;
+//│     let tmp13, tmp14;
+//│     tmp13 = Example1.#x;
+//│     tmp14 = tmp13 + 1;
+//│     Example1.#x = tmp14;
 //│     return Example1.#x;
 //│   }
 //│   toString() { return runtime.render(this); }

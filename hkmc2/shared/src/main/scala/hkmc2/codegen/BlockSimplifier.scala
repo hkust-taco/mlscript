@@ -497,6 +497,11 @@ class BlockSimplifier
         
       end new
       
+      // * A variable that the program neither scopes nor preserves belongs to another compilation unit, as the
+      // * top-level variables of the previous blocks of a worksheet do. The functions of that unit can read
+      // * and assign it during any call, like the definitions above for the variables they capture.
+      capturedVars ++= prog.main.freeVars.iterator.collect { case v: LocalVar if !symbolsToPreserve(v) => v }
+      
       log(dbg"Captured variables: ${capturedVars}")
       
       cur = applyProgram(prog)

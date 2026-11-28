@@ -245,7 +245,11 @@ fun w(txt) =
   // ()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let w;
-//│ w = function w(txt) { return runtime.safeCall(globalThis.fs.writeFileSync(outFilePath, txt)) };
+//│ w = function w(txt) {
+//│   let tmp14;
+//│   tmp14 = globalThis.fs;
+//│   return runtime.safeCall(tmp14.writeFileSync(outFilePath, txt))
+//│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 w("whoops")

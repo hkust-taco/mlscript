@@ -18,26 +18,29 @@ c
 //│ set c⁰ = 0;
 //│ set x⁰ = 0;
 //│ loop lbl:
-//│   let scrut, y, tmp;
-//│   set scrut = <⁰(x⁰, 5);
+//│   let scrut, y, tmp, tmp1, tmp2;
+//│   set tmp = x⁰;
+//│   set scrut = <⁰(tmp, 5);
 //│   match scrut
 //│     true =>
 //│       set y = 0;
 //│       loop lbl1:
-//│         let scrut1, tmp1, tmp2;
+//│         let scrut1, tmp3, tmp4, tmp5;
 //│         set scrut1 = <⁰(y, 5);
 //│         match scrut1
 //│           true =>
-//│             set tmp1 = +⁰(c⁰, 1);
-//│             set c⁰ = tmp1;
-//│             set tmp2 = +⁰(y, 1);
-//│             set y = tmp2;
+//│             set tmp3 = c⁰;
+//│             set tmp4 = +⁰(tmp3, 1);
+//│             set c⁰ = tmp4;
+//│             set tmp5 = +⁰(y, 1);
+//│             set y = tmp5;
 //│             continue lbl1
 //│           else
 //│             end
 //│         end
-//│       set tmp = +⁰(x⁰, 1);
-//│       set x⁰ = tmp;
+//│       set tmp1 = x⁰;
+//│       set tmp2 = +⁰(tmp1, 1);
+//│       set x⁰ = tmp2;
 //│       continue lbl
 //│     else
 //│       end

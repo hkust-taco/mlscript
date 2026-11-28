@@ -176,11 +176,11 @@ let f = 3
 
 :re
 (- f)(2)
-//│ ═══[RUNTIME ERROR] TypeError: tmp is not a function
+//│ ═══[RUNTIME ERROR] TypeError: tmp1 is not a function
 
 :re
 (+ f)(2)
-//│ ═══[RUNTIME ERROR] TypeError: tmp1 is not a function
+//│ ═══[RUNTIME ERROR] TypeError: tmp3 is not a function
 
 fun neg(x)(y) = - x
 
@@ -191,6 +191,6 @@ neg(f)(0)
 :sjs
 fun test(x) = (- x)(2)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let test1; test1 = function test(x6) { let tmp2; tmp2 = - x6; return runtime.safeCall(tmp2(2)) };
+//│ let test1; test1 = function test(x5) { let tmp5; tmp5 = - x5; return runtime.safeCall(tmp5(2)) };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

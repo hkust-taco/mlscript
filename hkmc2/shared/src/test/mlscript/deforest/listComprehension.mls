@@ -196,7 +196,7 @@ concatMap(f1, Pair(5, 10) :: Nil)
 //│ deforest > 	fields: xs⁰.t⁰
 //│ deforest > Nil⁰ ->
 //│ deforest > 	match: xs⁰
-//│ deforest > Cons⁰(arg⁰, tmp⁹) ->
+//│ deforest > Cons⁰(h¹, tmp⁹) ->
 //│ deforest > 	match: xs⁰
 //│ deforest > 	fields: xs⁰.h⁰
 //│ deforest > 	fields: xs⁰.t⁰
