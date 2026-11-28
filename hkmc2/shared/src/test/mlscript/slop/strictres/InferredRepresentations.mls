@@ -22,22 +22,22 @@ private fun viaBindings() =
 //│ };
 //│ @private
 //│ define applyBoth⁰ as fun applyBoth¹(f: Function⁰): Array⁰ {
-//│   let tmp2: ?, tmp3: ?;
-//│   set tmp2 = f‹(...Array⁰) => ?›(1);
-//│   set tmp3 = f‹(...Array⁰) => ?›("s");
+//│   let tmp2: Unknown, tmp3: Unknown;
+//│   set tmp2 = f‹(Unknown) => Unknown›(1);
+//│   set tmp3 = f‹(Unknown) => Unknown›("s");
 //│   return [tmp2, tmp3]
 //│ };
 //│ @private
 //│ define viaBindings⁰ as fun viaBindings¹(): Array⁰ {
-//│   let f: Function⁰, g: Function⁰, tmp2: ?, tmp3: ?, f1;
+//│   let f: Function⁰, g: Function⁰, tmp2: Unknown, tmp3: Unknown, f1;
 //│   @private
 //│   define f1 as fun f⁰(x: Unknown): Unknown {
 //│     return x
 //│   };
 //│   set f = f⁰;
 //│   set g = f;
-//│   set tmp2 = g‹(...Array⁰) => ?›(1);
-//│   set tmp3 = g‹(...Array⁰) => ?›("s");
+//│   set tmp2 = g‹(Unknown) => Unknown›(1);
+//│   set tmp3 = g‹(Unknown) => Unknown›("s");
 //│   return [tmp2, tmp3]
 //│ };
 //│ set tmp = applyBoth¹‹(Function⁰) => Array⁰›(ident¹);

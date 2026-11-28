@@ -190,19 +190,40 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
       ErasedParamList(fixed.map(_.map(slotType)), interface.variadic.map(_ => S(ErasedType.Array))) :: Nil,
       ErasedResult.Direct(S(slotType(callee.result))))
 
-  /** The alternatives of `callees` with a signature for each declared function type among them. */
+  /** The signature that a function definition or a lambda presents to an application of its value, which
+    * supplies the parameter list after the `applied` first ones: the signature of the whole function without
+    * those lists. Returns `N` for a function whose signature erasure has not assigned, as in a program that
+    * this process did not erase.
+    */
+  private def definedSignature(callee: ResolvedValues.DefinedCallee): Opt[ErasedFuncSignature] =
+    val whole: Opt[ErasedFuncSignature] = callee.function match
+      case td: TermDefinition =>
+        if td.tsym.isErasureReady then td.tsym.sourceErasure.collect { case sig: ErasedFuncSignature => sig } else N
+      case lam: Lam =>
+        Option.when(lam.resultSlot.isErasureReady && lam.params.allParams.forall(_.sym.isErasureReady)):
+          ErasedFuncSignature.Signature(LoweredParamList.erasedLayout(lam.params) :: Nil,
+            ErasedResult.Direct(lam.resultSlot.erasedType))
+    whole.flatMap: signature =>
+      if callee.applied == 0 then S(signature)
+      else signature.paramLists.drop(callee.applied) match
+        case Nil => N
+        case remaining => S(ErasedFuncSignature.Signature(remaining, signature.result))
+
+  /** The alternatives of `callees`, with the signature of each declared function type and of each function
+    * definition among them. */
   private def erasedCallees(callees: ResolvedValues.Callees): ErasedCallee =
-    val declared = callees.declaredCallees.map(callee => ErasedCallee.Declared(declaredSignature(callee)))
-    val undeclared = Iterator.single(ErasedCallee.Undeclared).filter(_ => callees.hasUndeclaredCallee)
+    val declared = callees.declaredCallees.map(callee => ErasedCallee.Known(declaredSignature(callee)))
+    val defined = callees.definedCallees.map(definedSignature(_).fold(ErasedCallee.Unknown)(ErasedCallee.Known(_)))
+    val unknown = Iterator.single(ErasedCallee.Unknown).filter(_ => callees.hasUnknownCallee)
     val intersections = callees.intersectionCallees.map(components => ErasedCallee.All(components.map(erasedCallees)))
-    ErasedCallee.OneOf((declared ++ undeclared ++ intersections).toList)
+    ErasedCallee.OneOf((declared ++ defined ++ unknown ++ intersections).toList)
 
   /** The calling conventions of the values that `app` can call, from the callees that resolution of its block
     * recorded. Only the new resolver records them.
     */
   private def erasedCallee(app: App): ErasedCallee =
-    if !config.language.useNewResolution then ErasedCallee.unknown
-    else summon[State].newResolverState.resolvedValues.callees(app).fold(ErasedCallee.unknown)(erasedCallees)
+    if !config.language.useNewResolution then ErasedCallee.Unknown
+    else summon[State].newResolverState.resolvedValues.callees(app).fold(ErasedCallee.Unknown)(erasedCallees)
 
   /** An external input that contributed to this slot's inferred representation, if any.
     * Its provenance identifies the exposed interface even when the value flowed into a private helper.
@@ -515,7 +536,6 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
           inferredType(slot).map(representable(_, lam.body.toLoc, S(slot)))
       case asc: Asc if !asc.isErasureReady =>
         asc.erasedType = eraseSignature(asc.ty).map(representable(_, asc.ty.toLoc, N))
-      case app: App if !app.calleeSlot.isErasureReady => app.calleeSlot.callee = erasedCallee(app)
       case cls: ClassLikeDef => cls.ctorSym.foreach: symbol =>
         if symbol.needsErasure then symbol.initializeErasure:
           if config.language.useNewResolution then S(ErasedFuncSignature.Signature(
@@ -545,6 +565,11 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
       // A temporary's erased type is populated at most once (see TempSymbol); without inferred inputs, it stays
       // unknown, as it was before erasure.
       case sym: TempSymbol if sym.erasedType.isEmpty => variableType(sym).foreach(tpe => sym.erasedType = S(tpe))
+      case _ => ()
+    // The callees of an application include the definitions and lambdas of this program, whose signatures
+    // the steps above assign.
+    statements.foreach:
+      case app: App if !app.calleeSlot.isErasureReady => app.calleeSlot.callee = erasedCallee(app)
       case _ => ()
     // Compare signatures only after every definition has completed erasure.
     overrideChecks.checkSignatures()

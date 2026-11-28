@@ -3870,6 +3870,36 @@ class NewResolver:
     callable.copy(paramLists = callable.paramLists.ne_map(_.mapTypes(declared)), result = callable.result.map(declared),
       declaration = callable.declaration.map(_.copy(instances = TypeSubstitution.empty)))
 
+  /** Record in `callees` the calling interface of `callee`, a value that an application calls, other than a
+    * value of an intersection or an instance of a type, which `applyValue` resolves to their components and
+    * views first.
+    *
+    * A function definition fixes its own calling convention, so `callee` is recorded as that definition
+    * whenever it is one: a function or a method with written parameter lists left to apply, including through a
+    * declared interface, whose annotations can leave parameters out, and a lambda. A class called as a function
+    * is not recorded as a definition: its constructor has its own argument conventions (see
+    * `Lowering.lowerConstructorArgs`).
+    */
+  private def recordCallee(callee: TermShape, callees: ResolvedValues.Callees)(using ResolutionContext): Unit =
+    def function(td: TermDefinition, remaining: Int): Unit =
+      val applied = td.params.length - remaining
+      if (td.k is syntax.Fun) && !td.tsym.isInstanceOf[ClassCtorSymbol] && remaining > 0 && applied >= 0
+      then callees.define(td, applied)
+      else callees.unknown = true
+    callee match
+      case Marked(callable: CallableTypeShape, _) => callable.declaration match
+        case S(method) if method.remaining.nonEmpty => function(method.definition, method.remaining.length)
+        case _ => rctx.state.resolvedValues.observeDeclaredCallee(callees, withoutActivation(callable), this)(
+          using rctx.withInstances(TypeSubstitution.empty))
+      case _ => callee.applicationHead._1 match
+        case definition: DefnShape => definition.defn match
+          case td: TermDefinition => function(td, callee.unappliedParams.length)
+          case _ => callees.unknown = true
+        case intro: IntroShape => intro.trm match
+          case lam: Lam if callee.unappliedParams.nonEmpty => callees.define(lam, 0)
+          case _ => callees.unknown = true
+        case _ => callees.unknown = true
+
   private def applyValue(source: ShapeObserver.Value, args: Term, res: App, checked: Bool,
       recorded: Opt[ResolvedValues.Callees])(using ResolutionContext): Unit =
     val callees = rctx.state.resolvedValues.collecting(res, recorded)
@@ -3898,14 +3928,7 @@ class NewResolver:
           applyShape(_, args, res, checked, callees))
         return
       case _ => ()
-    lhs match
-      case Marked(original: CallableTypeShape, _) if !original.declaration.exists(_.remaining.nonEmpty) =>
-        callees.foreach: callees =>
-          rctx.state.resolvedValues.observeDeclaredCallee(callees, withoutActivation(original), this)(
-            using rctx.withInstances(TypeSubstitution.empty))
-      // Any other callee has no declared calling interface. This includes a method with written parameter
-      // lists left to apply: its definition fixes its calling convention, and its parameters need no annotations.
-      case _ => callees.foreach(_.undeclared = true)
+    callees.foreach(recordCallee(lhs, _))
     // Explicit calls require a known interface or an explicitly dynamic value.
     // Implicit protocol observations instead retain unknown results below and
     // leave protocol compatibility to type checking.

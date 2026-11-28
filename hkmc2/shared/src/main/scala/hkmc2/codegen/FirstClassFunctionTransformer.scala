@@ -98,27 +98,28 @@ class FirstClassFunctionTransformer
         LoweredParamList.plain(Nil)(N)
       etaExpandPath(p, params)(k)
   
-  /** A resolved function member is called directly; any other term member holds a function object. */
-  private def resolvedCallee(fun: Path, s: TermSymbol): Path =
-    if s.k is syntax.Fun then fun else fun.selSN("call")
+  /** Whether a call of the resolved member `s` calls a function object that the member holds, as opposed
+    * to a function member, which is called directly. */
+  private def holdsFunctionObject(s: TermSymbol): Bool = !(s.k is syntax.Fun)
 
   override def applyResult(r: Result)(k: Result => Block): Block = r match
     // * A member read applies nothing, so its selection is not a function object.
     case Call(_, Nil) => super.applyResult(r)(k)
     case c @ Call(fun, argss) => applyListOf(argss, (args, k2) => applyArgs(args)(k2)): argss2 =>
       def call(f: Path): Block = FirstClassFunctionTransformer.bindCall(c, f, argss2)(k)
+      def callObject(obj: Path): Block = FirstClassFunctionTransformer.bindObjectCall(c, obj, argss2)(k)
       fun match
         case ref @ Value.SimpleRef(sym) => sym match
-          case _: VarSymbol |  _: TempSymbol => call(ref.selSN("call"))
+          case _: VarSymbol |  _: TempSymbol => callObject(ref)
           case _ => call(fun)
         case ref @ Value.MemberRef(_, _) => call(fun)
         case sel: Select => sel.symbol match
-          case Some(s: TermSymbol) => call(resolvedCallee(fun, s))
+          case Some(s: TermSymbol) => if holdsFunctionObject(s) then callObject(fun) else call(fun)
           case _ =>
             raise(ErrorReport(msg"Cannot determine if ${sel.name.name} is a function object." -> fun.toLoc :: Nil,
                 source = Diagnostic.Source.Compilation))
             call(fun)
-        case DynSelect(_, _, DynSelectKind.Member(s)) => call(resolvedCallee(fun, s))
+        case DynSelect(_, _, DynSelectKind.Member(s)) => if holdsFunctionObject(s) then callObject(fun) else call(fun)
         case s: DynSelect =>
           raise(ErrorReport(msg"Cannot determine if the dynamic selection is a function object." -> s.toLoc :: Nil,
               source = Diagnostic.Source.Compilation))
@@ -178,6 +179,20 @@ object FirstClassFunctionTransformer:
       case target =>
         k(if (fun is c.fun) && (argss is c.argss) && (target is c.signature) then c
           else Call(fun, argss)(target, c.metadata, c.toLoc))
+  
+  /** Passes to `k` the call `c` of a function value, as a call of the function object `obj` that stands for
+    * that value, applying `argss`.
+    *
+    * The `call` method of a function object takes one parameter list and returns the function object for the
+    * lists that follow (see `DesugarMultipleParamList`). The signature of `c` can have several lists, when `c`
+    * applies a curried definition through a function value. The call of the method then takes the signature of
+    * the application of its first list, and each later list of `argss` applies the `call` method of the object
+    * that the previous call returned.
+    */
+  def bindObjectCall(c: Call, obj: Path, argss: Ls[Ls[Arg]])(k: Result => Block)(using State): Block =
+    c.signature match
+      case source: ErasedFuncSignature => applyCurried(c, obj.selSN("call"), argss, source.firstApplication)(k)
+      case _: ErasedGetterSignature => lastWords("A call that applies argument lists has a function signature")
   
   /** Applies `argss` to `fun`, a definition converted to function objects, whose signature `entry` has a single
     * parameter list. The signature of `c`, which groups the lists as the source definition does, supplies the

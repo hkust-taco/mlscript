@@ -1456,10 +1456,11 @@ object CallMetadata:
   * call applies its result. A method call keeps the receiver on its selection.
   *
   * When `fun` refers to a definition that publishes a callable signature, `signature` is that signature.
-  * Any other callee is a function value. Lowering gives its call the signature of the declared function type
-  * that every value resolution found for that application follows (see [[ErasedCallee]]), and otherwise
-  * [[ErasedFuncSignature.dynamic]]. Rewrites that change the callee or the argument lists must provide the
-  * corresponding signature.
+  * Any other callee is a function value. Lowering gives its call the signature that every value resolution
+  * found for that application has (see [[ErasedCallee]]): that of a declared function type, or that of a
+  * function definition or lambda. Such a call is a partial application when the function is a curried
+  * definition. Lowering otherwise gives it [[ErasedFuncSignature.dynamic]]. Rewrites that change the callee, the
+  * argument lists, or the functions that a function value can be must provide the corresponding signature.
   */
 case class Call(fun: Path, argss: Ls[Ls[Arg]])
     (val signature: ErasedCallableSignature, val metadata: CallMetadata, val toLoc: Opt[Loc]) extends Result:
@@ -1536,7 +1537,9 @@ object Call:
   
   /** A pass can change a definition's signature under its existing symbol. Recursive and forward calls can
     * precede the new definition, so bind their immutable signatures once the pass has published all its definitions.
-    * Calls through function values retain the signature derived at their use site.
+    * Calls through function values retain the signature derived at their use site: a pass that also changes the
+    * calling convention of the values of a definition has to update those calls itself (see
+    * `PolyInstantiationRewrite.InstantiationRewriter.afterRewrite`).
     */
   def refreshSignatures(block: Block, changed: collection.Set[TermSymbol]): Block =
     if changed.isEmpty then block else

@@ -206,7 +206,7 @@ capturePrefix(10)
 //│ define capturePrefix⁰ as fun capturePrefix¹(n) {
 //│   let f;
 //│   set f = checkedPrefix¹((n as! Int⁰));
-//│   return (f(3) as! Int⁰)
+//│   return f(3)
 //│ };
 //│ return capturePrefix¹(10)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

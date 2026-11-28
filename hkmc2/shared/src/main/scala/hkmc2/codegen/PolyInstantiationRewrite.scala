@@ -58,6 +58,20 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
   given eState: Elaborator.State = constraintSolver.eState
   given pre: FlowPreAnalyzer = constraintSolver.preAnalyzer
   
+  /** The applications of function values that can reach a function of which this rewrite changes the calling
+    * convention: a definition whose signature it rewrites, in place or in a copy, or a lambda, whose
+    * parameters it can retype or remove without publishing a signature. Each application is identified by
+    * the call and the argument list that it supplies.
+    */
+  private lazy val rewrittenValueCalls: collection.Set[ConcreteId[CallId]] =
+    val rewritten = rewrittenSignatures.keysIterator.map(_._2).toSet
+    constraintSolver.consFunsWithSrcs.iterator.filter(_.srcs.exists:
+      case source: ProdFun => source.exprId match
+        case (fun: TermSymbol, _) => rewritten(fun)
+        case _: ResultId => true
+      case _ => false
+    ).map(_.concreteId).toSet
+  
   // Rewriters look these up for every call they keep, so index the root functions once.
   private lazy val inPlaceInstIds: Map[TermSymbol, InstantiationId] =
     collector.synthesizedInstIdToFunSym.iterator.map((instId, fun) => fun -> instId).toMap
@@ -196,6 +210,24 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
     def rewriteFunDefn(fun: FunDefn): RewrittenFunDefn
     
     extension (resId: ResultId) def concreteId = ConcreteId(resId, instId)
+    
+    /** `rewritten`, the result of rewriting the call `original`, with a signature that holds after this rewrite.
+      *
+      * The signature of a call of a function value describes the functions that the call can reach, as lowering
+      * knew them. This rewrite changes the parameters and results of some functions together with the arguments
+      * that their callers pass, including through function values. A call that can reach one of those functions
+      * (see `rewrittenValueCalls`) takes the dynamic signature, which fits any arguments and result. A call of a
+      * definition takes the signature that the definition publishes, which the rewrite refreshes separately.
+      */
+    protected def afterRewrite(original: Call, rewritten: Result): Result = rewritten match
+      case call: Call if call.argss.nonEmpty && Call.publishedSignature(call.fun).isEmpty &&
+          original.argss.indices.exists(list => rewrittenValueCalls(ConcreteId((original.uid, list), instId))) =>
+        call.copy()(ErasedFuncSignature.dynamic(call.argss.length), call.metadata, call.toLoc)
+      case _ => rewritten
+    
+    override def applyResult(r: Result)(k: Result => Block): Block = r match
+      case call: Call => super.applyResult(call)(rewritten => k(afterRewrite(call, rewritten)))
+      case _ => super.applyResult(r)(k)
     
     private def newRefId(refId: ResultId, refSym: TermSymbol): InstantiationId =
       instId match

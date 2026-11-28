@@ -79,7 +79,7 @@ g(f, 1)(2) + g(h, 3)(4)
 //│ };
 //│ @private
 //│ define g⁴ as fun g⁵(k, x) {
-//│   return (k(x) as!! Function⁰)
+//│   return k(x)
 //│ };
 //│ set baseCall = g⁵(f⁵, 1);
 //│ set tmp = baseCall(2);
@@ -106,9 +106,7 @@ g(f, 1)(2) + g(h, 3)(4)
 //│ let tmp, baseCall, tmp1, g$g;
 //│ @private @private
 //│ define g$g as fun g$g⁰(k, x)(eta$0$0) {
-//│   let eta$res;
-//│   set eta$res = (k(x) as!! Function⁰);
-//│   return eta$res(eta$0$0)
+//│   return k(x)(eta$0$0)
 //│ };
 //│ @affine(1)
 //│ define f⁶ as fun f⁷(a)(b) {
@@ -119,7 +117,7 @@ g(f, 1)(2) + g(h, 3)(4)
 //│ };
 //│ @private
 //│ define g⁶ as fun g⁷(k, x) {
-//│   return (k(x) as!! Function⁰)
+//│   return k(x)
 //│ };
 //│ set tmp = g$g⁰(f⁷, 1)(2);
 //│ set baseCall = g⁷(h⁵, 3);
@@ -280,9 +278,7 @@ app(returnRest2(0))
 //│   return rest2¹()(...eta$0$rest)
 //│ };
 //│ @private
-//│ define app⁰ as fun app¹(f) {
-//│   return (f(2, 3) as!! Array⁰)
-//│ };
+//│ define app⁰ as fun app¹(f) { return f(2, 3) };
 //│ set tmp = returnRest2¹();
 //│ return app¹(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -335,9 +331,9 @@ f(k1, 1) + f(k2, 5)
 //│   match scrut
 //│     true =>
 //│       do Predef⁰.print⁰("g");
-//│       return (k(y) as!! Function⁰)
+//│       return k(y)
 //│     else
-//│       return (k(y) as!! Function⁰)
+//│       return k(y)
 //│   end
 //│ };
 //│ @affine(1)
@@ -389,15 +385,13 @@ f(k1, 1) + f(k2, 5)
 //│ };
 //│ @private
 //│ define f_a_b$b as fun f_a_b$b⁰(k, y)(eta$0$0) {
-//│   let eta$res;
-//│   set eta$res = (k(y) as!! Function⁰);
-//│   return eta$res(eta$0$0)
+//│   return k(y)(eta$0$0)
 //│ };
 //│ define a as fun a⁰(k, y) {
 //│   return b⁰(k, y)
 //│ };
 //│ define b as fun b⁰(k, y) {
-//│   return (k(y) as!! Function⁰)
+//│   return k(y)
 //│ };
 //│ @affine(1)
 //│ define k1² as fun k1³(a1)(b1) {
@@ -439,9 +433,7 @@ f(k1, 1) + f(k2, 5)
 //│ let g, get, tmp, tmp1, f_g$g, f$f;
 //│ @private
 //│ define f_g$g as fun f_g$g⁰(k, y)(eta$0$0) {
-//│   let eta$res;
-//│   set eta$res = (k(y) as!! Function⁰);
-//│   return eta$res(eta$0$0)
+//│   return k(y)(eta$0$0)
 //│ };
 //│ @private @private
 //│ define f$f as fun f$f¹(k, x) {
@@ -466,7 +458,7 @@ f(k1, 1) + f(k2, 5)
 //│   end
 //│ };
 //│ define g as fun g⁹(k, y) {
-//│   return (k(y) as!! Function⁰)
+//│   return k(y)
 //│ };
 //│ @affine(1)
 //│ define k1⁴ as fun k1⁵(a)(b) {

@@ -68,8 +68,8 @@ fun node_unsafe(x) = leaf_unsafe(x)
 
 
 // * Propagation through higher-order calls (monomorphic).
-// The wrappers with inferred Int results include checked casts, so they are unsafe
-// even when their indirect calls are pure.
+// The indirect call of `leaf_pure_private` has the signature of `answer`, its only callee, so its result needs no
+// checked cast and the wrapper is as pure as that call.
 fun answer() = 42
 fun leaf_pure_public(x: () -> Any) = x()
 private fun leaf_pure_private(x) = x()
@@ -82,12 +82,12 @@ fun node() =
   leaf_unsafe_private(unsafe)
 //│ flow-analysis > >>> effect-analysis results >>>
 //│ flow-analysis > function answer⁰#0 @ <root> -> Pure
-//│ flow-analysis > function leaf_pure_private⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function leaf_pure_private⁰#0 @ <root> -> Pure
 //│ flow-analysis > function leaf_pure_public⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > function leaf_unsafe_private⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > function leaf_unsafe_public⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > function node⁰#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call leaf_pure_private⁰@result⁵#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call leaf_pure_private⁰@result⁵#0 @ <root> -> Pure
 //│ flow-analysis > call leaf_pure_public⁰@result⁴#0 @ <root> -> UnsafeEta
 //│ flow-analysis > call leaf_unsafe_private⁰@result⁷#0 @ <root> -> UnsafeEta
 //│ flow-analysis > call leaf_unsafe_public⁰@result⁶#0 @ <root> -> UnsafeEta
@@ -236,7 +236,7 @@ fun node() =
 //│ flow-analysis > function answer⁰#0 @ node¹.answer² -> Pure
 //│ flow-analysis > function answer⁰#0 @ node¹.answer³ -> Pure
 //│ flow-analysis > function leaf_pure_private⁰#0 @ leaf_pure_private¹ -> UnsafeEta
-//│ flow-analysis > function leaf_pure_private⁰#0 @ node¹.leaf_pure_private² -> UnsafeEta
+//│ flow-analysis > function leaf_pure_private⁰#0 @ node¹.leaf_pure_private² -> Pure
 //│ flow-analysis > function leaf_pure_public⁰#0 @ leaf_pure_public¹ -> UnsafeEta
 //│ flow-analysis > function leaf_pure_public⁰#0 @ node¹.leaf_pure_public² -> Pure
 //│ flow-analysis > function leaf_unsafe_private⁰#0 @ leaf_unsafe_private¹ -> UnsafeEta
@@ -244,7 +244,7 @@ fun node() =
 //│ flow-analysis > function leaf_unsafe_public⁰#0 @ leaf_unsafe_public¹ -> UnsafeEta
 //│ flow-analysis > function leaf_unsafe_public⁰#0 @ node¹.leaf_unsafe_public² -> UnsafeEta
 //│ flow-analysis > function node⁰#0 @ node¹ -> UnsafeEta
-//│ flow-analysis > call leaf_pure_private⁰@result⁵#0 @ node¹ -> UnsafeEta
+//│ flow-analysis > call leaf_pure_private⁰@result⁵#0 @ node¹ -> Pure
 //│ flow-analysis > call leaf_pure_public⁰@result⁴#0 @ node¹ -> Pure
 //│ flow-analysis > call leaf_unsafe_private⁰@result⁷#0 @ node¹ -> UnsafeEta
 //│ flow-analysis > call leaf_unsafe_public⁰@result⁶#0 @ node¹ -> UnsafeEta

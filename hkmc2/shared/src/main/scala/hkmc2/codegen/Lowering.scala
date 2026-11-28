@@ -687,19 +687,26 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
 
   /** Lower the application of each argument list in turn, starting with a call of `base` on `first`. Each
     * callee is a function value, unless `base` is a definition without source parameter lists that publishes
-    * a function signature. When every value that the application can call follows one signature, which a
-    * declared function type provides, the call takes it. Any other call takes a dynamic signature.
+    * a function signature. When every value that the application can call has the same signature, the call
+    * takes it: that of a declared function type, or that of a function definition or lambda. The signature of
+    * a curried definition has several parameter lists, and the call, which supplies one, is then a partial
+    * application. Callees with different signatures can still agree on the application of their first
+    * parameter list, whose signature the call then takes. Any other call takes a dynamic signature.
     */
   private def lowerRemainingCalls(base: Path, first: ArgumentList, remainingArgss: Ls[ArgumentList],
         annotations: Ls[Annot], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
+    def shared(view: ErasedFuncSignature => ErasedFuncSignature): Opt[ErasedFuncSignature] =
+      first.callee.sharedSignatures(view) match
+        case signature :: Nil => S(signature)
+        case _ => N
     val signature = Call.publishedSignature(base) match
       case S(sig: ErasedFuncSignature) => sig
-      case _ => first.callee.sharedSignatures match
-        case signature :: Nil => signature
-        // A dynamic call passes and returns reference values. A callee that declares an unboxed slot cannot
-        // use that convention, even if the arguments at this call happen to be references.
-        case _ if first.callee.declaredSignatures.forall(allowsDynamicCall) => ErasedFuncSignature.dynamic(1)
-        case _ => return fail(ErrorReport(
+      case _ => shared(identity).orElse(shared(_.firstApplication)) match
+        case S(signature) => signature
+        // A dynamic call passes and returns reference values. A callee whose signature has an unboxed slot
+        // cannot use that convention, even if the arguments at this call happen to be references.
+        case N if first.callee.knownSignatures.forall(allowsDynamicCall) => ErasedFuncSignature.dynamic(1)
+        case N => return fail(ErrorReport(
           msg"Cannot determine a common calling convention for the possible function types at this call" ->
             first.args.toLoc.orElse(loc) :: Nil, source = Diagnostic.Source.Compilation))
     lowerArgs(first.args, signature.paramLists.head.params): as =>
@@ -724,7 +731,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   def lowerMultiInstantiate(mut: Bool, cls: Path, ctorParamLists: ConstructorParams, args: Ls[Term], annotations: Ls[Annot], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
     // An argument list that follows those of the constructor is applied to the new object. No application
     // term describes that call, so resolution records no callee for it.
-    def extraArgumentList(args: Term): ArgumentList = ArgumentList(args, ErasedCallee.unknown)
+    def extraArgumentList(args: Term): ArgumentList = ArgumentList(args, ErasedCallee.Unknown)
     // Nullary instantiations are represented with one empty argument list, matching existing `Instantiate` usage.
     def buildInstantiate(argss: Ls[Ls[Arg]]): Instantiate =
       Instantiate(mut, cls, if argss.isEmpty then Nil :: Nil else argss)(InstantiateMetadata(annotations), loc)

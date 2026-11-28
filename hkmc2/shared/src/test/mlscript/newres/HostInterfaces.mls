@@ -22,9 +22,9 @@ class Element extends HTMLElement with
 let logarithm = Math.log
 [logarithm(1), Math.log(Math.E)]
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp: ?, tmp1: Num⁰, tmp2: Num⁰;
+//│ let tmp: Num⁰, tmp1: Num⁰, tmp2: Num⁰;
 //│ set logarithm⁰ = globalThis⁰.Math⁰.log⁰;
-//│ set tmp = logarithm⁰‹(...Array⁰) => ?›(1);
+//│ set tmp = logarithm⁰‹(Num⁰) => Num⁰›(1);
 //│ set tmp1 = globalThis⁰.Math⁰.E⁰;
 //│ set tmp2 = globalThis⁰.Math⁰.log⁰‹(Num⁰) => Num⁰›(tmp1);
 //│ return [tmp, tmp2]

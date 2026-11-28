@@ -1411,7 +1411,7 @@ fun capturingLoop(n: Int, acc: Str) =
     capturingLoop(n - 1, h())
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define capturingLoop⁰ as fun capturingLoop¹(n: Int⁰, acc: Str⁰): Str⁰ {
-//│   let scrut: Bool⁰, g: Function⁰, h: Function⁰, tmp: Int⁰, tmp1: ?;
+//│   let scrut: Bool⁰, g: Function⁰, h: Function⁰, tmp: Int⁰, tmp1: Str⁰;
 //│   set scrut = <=⁰‹(?, ?) => Bool⁰›(n, 0);
 //│   match scrut
 //│     true =>
@@ -1425,15 +1425,15 @@ fun capturingLoop(n: Int, acc: Str) =
 //│       set g = g⁴;
 //│       set h = g;
 //│       set tmp = -⁰‹(?, ?) => ?›(n, 1);
-//│       set tmp1 = h‹(...Array⁰) => ?›();
-//│       return capturingLoop¹‹(Int⁰, Str⁰) => Str⁰›(tmp, (tmp1 as! Str⁰))
+//│       set tmp1 = h‹() => Str⁰›();
+//│       return capturingLoop¹‹(Int⁰, Str⁰) => Str⁰›(tmp, tmp1)
 //│   end
 //│ };
 //│ end
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define capturingLoop⁰ as fun capturingLoop¹(n: Int⁰, acc: Str⁰): Str⁰ {
 //│   loop loopLabel:
-//│     let scrut: Bool⁰, tmp: Int⁰, tmp1: ?, acc1: Str⁰;
+//│     let scrut: Bool⁰, tmp: Int⁰, tmp1: Str⁰, acc1: Str⁰;
 //│     set acc1 = acc;
 //│     set scrut = <=⁰‹(?, ?) => Bool⁰›(n, 0);
 //│     match scrut
@@ -1448,7 +1448,7 @@ fun capturingLoop(n: Int, acc: Str) =
 //│         set tmp = -⁰‹(?, ?) => ?›(n, 1);
 //│         set tmp1 = g⁴‹() => Str⁰›();
 //│         set n = tmp;
-//│         set acc = (tmp1 as! Str⁰);
+//│         set acc = tmp1;
 //│         continue loopLabel
 //│     end
 //│   unreachable /* Rest of abortive labelled block */

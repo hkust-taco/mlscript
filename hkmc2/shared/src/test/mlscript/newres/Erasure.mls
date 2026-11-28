@@ -198,7 +198,7 @@ increment(41)
 //│   return +⁰‹(?, ?) => ?›(_0, 1)
 //│ };
 //│ set increment¹ = increment⁰;
-//│ return increment¹‹(...Array⁰) => ?›(41)
+//│ return increment¹‹(Unknown) => Unknown›(41)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 //│ increment = fun increment
@@ -215,7 +215,7 @@ apply(41) \ _ + 1
 //│ let lambda;
 //│ @private
 //│ define apply⁰ as fun apply¹(value: Int⁰, f: Function⁰): Int⁰ {
-//│   return (f‹(...Array⁰) => ?›(value) as! Int⁰)
+//│   return f‹(Int⁰) => Int⁰›(value)
 //│ };
 //│ define lambda as fun lambda⁰(_0: Int⁰): Int⁰ {
 //│   return +⁰‹(?, ?) => ?›(_0, 1)

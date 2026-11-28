@@ -311,7 +311,7 @@ passMono(true) + passMono(false)
 //│   set tmp3 = globalThis⁰.Math⁰.imul⁰‹(Int⁰, Int⁰) => Int32›(21, 1);
 //│   set Word_bits = tmp3;
 //│   set tmp4 = Word_bits;
-//│   return (reader‹(...Array⁰) => ?›(tmp4) as! Int⁰)
+//│   return reader‹(...Array⁰) => ?›(tmp4)
 //│ };
 //│ set tmp = passMono¹‹(Bool⁰) => Int⁰›(true);
 //│ set tmp1 = passMono¹‹(Bool⁰) => Int⁰›(false);

@@ -178,7 +178,7 @@ fun capturedGeneratorFunction(value: Int) =
   generate
 capturedGeneratorFunction(40)(2).next().value
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let generate, baseCall: Function⁰, tmp: ?, tmp1: Unknown, generate$;
+//│ let generate, baseCall: Function⁰, tmp: Unknown, tmp1: Unknown, generate$;
 //│ define generate$ as fun generate$⁰(value: Int⁰)(n: Int⁰): Unknown {
 //│   return generate⁰‹(Int⁰, Int⁰) => generator Int⁰›(value, n)
 //│ };
@@ -190,7 +190,7 @@ capturedGeneratorFunction(40)(2).next().value
 //│   return generate$⁰‹(Int⁰) => (Int⁰) => Unknown›(value)
 //│ };
 //│ set baseCall = capturedGeneratorFunction¹‹(Int⁰) => Function⁰›(40);
-//│ set tmp = baseCall‹(...Array⁰) => ?›(2);
+//│ set tmp = baseCall‹(Int⁰) => generator Int⁰›(2);
 //│ set tmp1 = tmp.next⁰‹() => Unknown›();
 //│ return tmp1.value⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -225,7 +225,7 @@ capturedAsyncFunction(40)(2)
 //│   return add$⁰‹(Int⁰) => (Int⁰) => Promise⁰›(value)
 //│ };
 //│ set baseCall = capturedAsyncFunction¹‹(Int⁰) => Function⁰›(40);
-//│ return baseCall‹(...Array⁰) => ?›(2)
+//│ return baseCall‹(Int⁰) => async Int⁰›(2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
@@ -243,7 +243,7 @@ fun capturedCurriedAsyncFunction(value: Int) =
   add
 capturedCurriedAsyncFunction(39)(1)(2)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let add, baseCall: Function⁰, callPrefix: ?, add$;
+//│ let add, baseCall: Function⁰, callPrefix: Function⁰, add$;
 //│ define add$ as fun add$¹(value: Int⁰)(first: Int⁰): Function⁰ {
 //│   return add⁴‹(Int⁰, Int⁰) => (Int⁰) => Promise⁰›(value, first)
 //│ };
@@ -260,8 +260,8 @@ capturedCurriedAsyncFunction(39)(1)(2)
 //│   return add$¹‹(Int⁰) => (Int⁰) => Function⁰›(value)
 //│ };
 //│ set baseCall = capturedCurriedAsyncFunction¹‹(Int⁰) => Function⁰›(39);
-//│ set callPrefix = baseCall‹(...Array⁰) => ?›(1);
-//│ return callPrefix‹(...Array⁰) => ?›(2)
+//│ set callPrefix = baseCall‹(Int⁰) => (Int⁰) => async Int⁰›(1);
+//│ return callPrefix‹(Int⁰) => async Int⁰›(2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 

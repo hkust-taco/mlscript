@@ -64,7 +64,7 @@ captureWord(input32)
 private val referenceFactory = (value: Int) => (ignored: Int) => value
 referenceFactory(42)(1)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let lambda, callPrefix: ?;
+//│ let lambda, callPrefix: Function⁰;
 //│ define lambda as fun lambda²(value: Int⁰): Function⁰ {
 //│   let lambda1;
 //│   @private
@@ -75,20 +75,16 @@ referenceFactory(42)(1)
 //│ };
 //│ @private
 //│ define referenceFactory⁰ as val referenceFactory¹: Function⁰ = lambda²;
-//│ set callPrefix = referenceFactory¹‹(...Array⁰) => ?›(42);
-//│ return callPrefix‹(...Array⁰) => ?›(1)
+//│ set callPrefix = referenceFactory¹‹(Int⁰) => Function⁰›(42);
+//│ return callPrefix‹(Int⁰) => Int⁰›(1)
 
-// FIXME: Calling through the function value factory uses an unknown parameter representation for its Int32 argument.
-:fixme
+// A call through the function value takes the signature of the lambda, including its unboxed parameter and result.
 :sir
 :siret
 private val factory = (value: Int32) => (ignored: Int) => value
 factory(input32)(1)
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
-//│ ║  l.+2: 	factory(input32)(1)
-//│ ╙──      	        ^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let lambda, callPrefix: ?;
+//│ let lambda, callPrefix: Function⁰;
 //│ define lambda as fun lambda⁴(value: Int32): Function⁰ {
 //│   let lambda1;
 //│   @private
@@ -99,7 +95,8 @@ factory(input32)(1)
 //│ };
 //│ @private
 //│ define factory⁰ as val factory¹: Function⁰ = lambda⁴;
-//│ throw "This code cannot be run as its compilation yielded an error."
+//│ set callPrefix = factory¹‹(Int32) => Function⁰›(input32⁰);
+//│ return callPrefix‹(Int⁰) => Int32›(1)
 
 // Erasure failure rejects the whole block before branch cloning or closure construction.
 :ge

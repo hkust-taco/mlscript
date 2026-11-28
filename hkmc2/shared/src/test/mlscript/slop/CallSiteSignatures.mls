@@ -81,9 +81,9 @@ applyDynamic(a => b => a + b)
 //│ let lambda;
 //│ @private
 //│ define applyDynamic⁰ as fun applyDynamic¹(f: Function⁰): Int⁰ {
-//│   let callPrefix: ?;
-//│   set callPrefix = f‹(...Array⁰) => ?›(1);
-//│   return (callPrefix‹(...Array⁰) => ?›(2) as! Int⁰)
+//│   let callPrefix: Function⁰;
+//│   set callPrefix = f‹(Int⁰) => Function⁰›(1);
+//│   return callPrefix‹(Int⁰) => Int⁰›(2)
 //│ };
 //│ define lambda as fun lambda⁵(a: Int⁰): Function⁰ {
 //│   let lambda1;
@@ -324,29 +324,100 @@ fun viaGenericClass[A](w: Wrapper[A], x: A): A = w.transform(x)
 //│ = [42, "a"]
 
 
-// An application that can call values of different function types takes the dynamic signature when all their
-// slots hold references. So does one that can also call a value without a declared type, such as a lambda.
+// A function definition and a lambda fix their own signature, which a call through a variable takes.
 :sir
 :siret
-fun eitherCallee(c: Bool, f: Int -> Int, g: Num -> Num) =
-  let h = if c then f else g
-  h(1)
+:expect [42, 42]
+fun increment(x: Int): Int = x + 1
+fun viaDefinitions() =
+  let named = increment
+  let anonymous = (x: Int) => x + 1
+  [named(41), anonymous(41)]
+viaDefinitions()
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define increment⁰ as fun increment¹(x: Int⁰): Int⁰ {
+//│   return +⁰‹(?, ?) => ?›(x, 1)
+//│ };
+//│ define viaDefinitions⁰ as fun viaDefinitions¹(): Array⁰ {
+//│   let named: Function⁰, anonymous: Function⁰, tmp: Int⁰, tmp1: Int⁰, anonymous1;
+//│   set named = increment¹;
+//│   @private
+//│   define anonymous1 as fun anonymous⁰(x: Int⁰): Int⁰ {
+//│     return +⁰‹(?, ?) => ?›(x, 1)
+//│   };
+//│   set anonymous = anonymous⁰;
+//│   set tmp = named‹(Int⁰) => Int⁰›(41);
+//│   set tmp1 = anonymous‹(Int⁰) => Int⁰›(41);
+//│   return [tmp, tmp1]
+//│ };
+//│ return viaDefinitions¹‹() => Array⁰›()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [42, 42]
+
+// A call that supplies fewer argument lists than its signature has parameter lists is a partial application. It
+// carries the signature of the whole definition, and a call of its result carries the lists that remain.
+:sir
+:siret
+:expect 42
+fun sumThree(a: Int)(b: Int)(c: Int): Int = a + b + c
+fun viaPartialApplications() =
+  let sum = sumThree
+  let sumOne = sum(1)
+  let sumThreeMore = sumOne(2)
+  sumThreeMore(39)
+viaPartialApplications()
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define sumThree⁰ as fun sumThree¹(a: Int⁰)(b: Int⁰)(c: Int⁰): Int⁰ {
+//│   let tmp: Int⁰;
+//│   set tmp = +⁰‹(?, ?) => ?›(a, b);
+//│   return +⁰‹(?, ?) => ?›(tmp, c)
+//│ };
+//│ define viaPartialApplications⁰ as fun viaPartialApplications¹(): Int⁰ {
+//│   let sum: Function⁰, sumOne: Function⁰, sumThreeMore: Function⁰;
+//│   set sum = sumThree¹;
+//│   set sumOne = sum‹(Int⁰) => (Int⁰) => (Int⁰) => Int⁰›(1);
+//│   set sumThreeMore = sumOne‹(Int⁰) => (Int⁰) => Int⁰›(2);
+//│   return sumThreeMore‹(Int⁰) => Int⁰›(39)
+//│ };
+//│ return viaPartialApplications¹‹() => Int⁰›()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+// The method of an object is a definition too, including through the declared type of the object.
+class Counter(val start: Int) with
+  fun plus(n: Int): Int = start + n
+
+:sir
+:siret
+:expect 42
+fun viaMethod(counter: Counter) =
+  let plus = counter.plus
+  plus(1)
+viaMethod(Counter(41))
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Counter⁰;
+//│ define viaMethod⁰ as fun viaMethod¹(counter: Counter⁰): Int⁰ {
+//│   let plus: Function⁰;
+//│   set plus = counter.plus⁰;
+//│   return plus‹(Int⁰) => Int⁰›(1)
+//│ };
+//│ set tmp = Counter¹‹(Int⁰) => Counter⁰›(41);
+//│ return viaMethod¹‹(Counter⁰) => Int⁰›(tmp)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+
+// The possible callees of an application can be several functions. The call takes their signature when they
+// all have the same one, whether a declared function type or a definition provides it.
+:sir
+:siret
 fun declaredOrLambda(c: Bool, f: Int -> Int) =
   let h = if c then f else x => x
   h(1)
+fun eitherDefinition(c: Bool) =
+  let h = if c then increment else (x: Int) => x - 1
+  h(1)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define eitherCallee⁰ as fun eitherCallee¹(c: Bool⁰, f: Function⁰, g: Function⁰): Num⁰ {
-//│   let h: Function⁰, tmp: Function⁰;
-//│   match c
-//│     true =>
-//│       set tmp = f;
-//│       end
-//│     else
-//│       set tmp = g;
-//│       end
-//│   set h = tmp;
-//│   return (h‹(...Array⁰) => ?›(1) as! Num⁰)
-//│ };
 //│ define declaredOrLambda⁰ as fun declaredOrLambda¹(c: Bool⁰, f: Function⁰): Int⁰ {
 //│   let h: Function⁰, tmp: Function⁰;
 //│   match c
@@ -362,49 +433,85 @@ fun declaredOrLambda(c: Bool, f: Int -> Int) =
 //│       set tmp = lambda¹⁴;
 //│       end
 //│   set h = tmp;
-//│   return (h‹(...Array⁰) => ?›(1) as! Int⁰)
+//│   return h‹(Int⁰) => Int⁰›(1)
+//│ };
+//│ define eitherDefinition⁰ as fun eitherDefinition¹(c: Bool⁰): Int⁰ {
+//│   let h: Function⁰, tmp: Function⁰;
+//│   match c
+//│     true =>
+//│       set tmp = increment¹;
+//│       end
+//│     else
+//│       let lambda;
+//│       @private
+//│       define lambda as fun lambda¹⁵(x: Int⁰): Int⁰ {
+//│         return -⁰‹(?, ?) => ?›(x, 1)
+//│       };
+//│       set tmp = lambda¹⁵;
+//│       end
+//│   set h = tmp;
+//│   return h‹(Int⁰) => Int⁰›(1)
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
-// A dynamic call cannot pass an unboxed value, so the possible callees of such a call must share a signature.
+// Callees with different signatures can agree on the application of their first parameter list.
+:sir
+:siret
+fun addTwo(a: Int)(b: Int): Int = a + b
+fun curriedOrDeclared(c: Bool, f: Int -> Int -> Int) =
+  let h = if c then f else addTwo
+  h(1)(2)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define addTwo⁰ as fun addTwo¹(a: Int⁰)(b: Int⁰): Int⁰ {
+//│   return +⁰‹(?, ?) => ?›(a, b)
+//│ };
+//│ define curriedOrDeclared⁰ as fun curriedOrDeclared¹(c: Bool⁰, f: Function⁰): Int⁰ {
+//│   let h: Function⁰, tmp: Function⁰, callPrefix: Function⁰;
+//│   match c
+//│     true =>
+//│       set tmp = f;
+//│       end
+//│     else
+//│       set tmp = addTwo¹;
+//│       end
+//│   set h = tmp;
+//│   set callPrefix = h‹(Int⁰) => Function⁰›(1);
+//│   return callPrefix‹(Int⁰) => Int⁰›(2)
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// Callees that disagree share the dynamic signature when all their slots hold references.
+:sir
+:siret
+fun eitherCallee(c: Bool, f: Int -> Int, g: Num -> Num) =
+  let h = if c then f else g
+  h(1)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define eitherCallee⁰ as fun eitherCallee¹(c: Bool⁰, f: Function⁰, g: Function⁰): Num⁰ {
+//│   let h: Function⁰, tmp: Function⁰;
+//│   match c
+//│     true =>
+//│       set tmp = f;
+//│       end
+//│     else
+//│       set tmp = g;
+//│       end
+//│   set h = tmp;
+//│   return (h‹(...Array⁰) => ?›(1) as! Num⁰)
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// A dynamic call cannot pass an unboxed value, so the possible callees of such a call must agree.
 :ge
-fun unboxedOrLambda(c: Bool, f: Int32 -> Int32, x: Int32) =
-  let h = if c then f else y => y
+fun unboxedOrBoxed(c: Bool, f: Int32 -> Int, x: Int32) =
+  let h = if c then f else (y: Int) => y
   h(x)
 //│ ╔══[COMPILATION ERROR] Cannot determine a common calling convention for the possible function types at this call
 //│ ║  l.+3: 	  h(x)
 //│ ╙──      	   ^^^
-
-// A definition and a lambda have no declared function type: a variable that holds one is called dynamically.
-:sir
-:siret
-:expect [42, 42]
-fun increment(x: Int): Int = x + 1
-fun viaDefinitions() =
-  let named = increment
-  let anonymous = (x: Int) => x + 1
-  [named(41), anonymous(41)]
-viaDefinitions()
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define increment⁰ as fun increment¹(x: Int⁰): Int⁰ {
-//│   return +⁰‹(?, ?) => ?›(x, 1)
-//│ };
-//│ define viaDefinitions⁰ as fun viaDefinitions¹(): Array⁰ {
-//│   let named: Function⁰, anonymous: Function⁰, tmp: ?, tmp1: ?, anonymous1;
-//│   set named = increment¹;
-//│   @private
-//│   define anonymous1 as fun anonymous⁰(x: Int⁰): Int⁰ {
-//│     return +⁰‹(?, ?) => ?›(x, 1)
-//│   };
-//│   set anonymous = anonymous⁰;
-//│   set tmp = named‹(...Array⁰) => ?›(41);
-//│   set tmp1 = anonymous‹(...Array⁰) => ?›(41);
-//│   return [tmp, tmp1]
-//│ };
-//│ return viaDefinitions¹‹() => Array⁰›()
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = [42, 42]
 
 // A declared member without a parameter list is a getter. Applying the function that it returns is a
 // separate call, which does not pass the object as the receiver. A declared method lists its parameters.
@@ -424,7 +531,7 @@ declare module host with
 //│ let tmp: ?, tmp1: ?, tmp2: Bool⁰;
 //│ set tmp = globalThis⁰.host⁰.viaGetter⁰‹=> ?›;
 //│ set tmp1 = tmp‹(...Array⁰) => ?›();
-//│ set tmp2 = globalThis⁰.host⁰.viaMethod⁰‹() => Bool⁰›();
+//│ set tmp2 = globalThis⁰.host⁰.viaMethod²‹() => Bool⁰›();
 //│ return [tmp1, tmp2]
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [false, true]
@@ -444,7 +551,7 @@ let callback = Callback(receiverProbe)
 :expect "none"
 callback.run()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp17; tmp17 = callback; return runtime.safeCall(tmp17.run())
+//│ let tmp18; tmp18 = callback; return runtime.safeCall(tmp18.run())
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Expected: '"none"', got: '"receiver"'
 //│ = "receiver"
@@ -455,7 +562,7 @@ callback.run()
 let detached = callback.run
 detached()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let detached, tmp18; tmp18 = callback; detached = tmp18.run; return runtime.safeCall(tmp18.run())
+//│ let detached, tmp19; tmp19 = callback; detached = tmp19.run; return runtime.safeCall(tmp19.run())
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Expected: '"none"', got: '"receiver"'
 //│ = "receiver"
@@ -581,4 +688,36 @@ addThree(10)(12)(20)
 // A later worksheet block calls the same function through its published, single-list entry point.
 :expect 42
 addThree(20)(12)(10)
+//│ = 42
+
+// The `call` method of a function object takes one parameter list. A partial application through a function
+// value therefore calls it with the signature of the application of that list.
+:ftc
+:checkIR
+:sir
+:siret
+:noInline
+:expect 42
+fun viaFunctionObjects() =
+  let add = addThree
+  let addTen = add(10)
+  addTen(12)(20)
+viaFunctionObjects()
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let Function$;
+//│ define Function$ as class Function$² extends globalThis⁰.Function⁰ {
+//│   method call⁴ = fun call⁵(a: Int⁰): ? {
+//│     return addThree¹‹(Int⁰) => ?›(a)
+//│   }
+//│ };
+//│ define viaFunctionObjects⁰ as fun viaFunctionObjects¹(): Int⁰ {
+//│   let add: Function⁰, addTen: Function⁰, callPrefix: Function⁰, tmp: Function$²;
+//│   set tmp = new Function$²();
+//│   set add = tmp;
+//│   set addTen = add.call﹖‹(Int⁰) => Function⁰›(10);
+//│   set callPrefix = addTen.call﹖‹(Int⁰) => Function⁰›(12);
+//│   return callPrefix.call﹖‹(Int⁰) => Int⁰›(20)
+//│ };
+//│ return viaFunctionObjects¹‹() => Int⁰›()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42

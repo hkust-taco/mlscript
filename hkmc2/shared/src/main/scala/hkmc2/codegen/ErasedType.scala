@@ -551,6 +551,14 @@ sealed abstract class ErasedFuncSignature extends ErasedCallableSignature:
   val paramLists: Ls[ErasedParamList[ErasedValueType]]
   def mapTypes(f: ErasedValueType => ErasedValueType): ErasedFuncSignature =
     ErasedFuncSignature.Signature(paramLists.map(_.map(f)), result.map(f))
+  /** The signature of applying the first parameter list alone, which returns a function when other lists
+    * follow. Two functions with this signature in common accept the same call of one argument list, even when
+    * their later lists differ.
+    */
+  def firstApplication: ErasedFuncSignature = paramLists match
+    case first :: _ :: _ =>
+      ErasedFuncSignature.Signature(first :: Nil, ErasedResult.Direct(S(ErasedType.Function(S(false)))))
+    case _ => this
 
 
 object ErasedGetterSignature:
@@ -632,48 +640,53 @@ trait HasDelayedErasedType[T <: ErasedValueType]:
 /** The calling conventions of the function values that a source application can call, as far as resolution
   * of its block knows them. Lowering reads them when the callee publishes no signature of its own: it is then
   * a function value, such as a parameter, a field, a variable, or the result of another call.
-  *
-  * Each signature describes the application of one argument list.
   */
 enum ErasedCallee:
-  /** A value of a declared function type, whose applications follow `signature`. */
-  case Declared(signature: ErasedFuncSignature)
-  /** A value without a declared calling interface, such as a definition, a lambda, or a dynamic value. */
-  case Undeclared
+  /** A value whose applications follow `signature`: a value of a declared function type, or a function
+    * definition or lambda. `signature` has the parameter lists that the value expects, starting with the one
+    * that the application supplies. It has several lists for a curried definition, of which the application
+    * then supplies the first.
+    */
+  case Known(signature: ErasedFuncSignature)
+  /** A value of which resolution knows no calling convention, such as a dynamic value, a `Function`, or a class
+    * called as a function. It also describes the callee of an application that resolution did not reach.
+    */
+  case Unknown
   /** A value that satisfies each of `components`, as a value of an intersection type does. */
   case All(components: Ls[ErasedCallee])
-  /** A value that is one of `alternatives`. Without alternatives, resolution knows nothing about the callee. */
+  /** A value that is one of `alternatives`. */
   case OneOf(alternatives: Ls[ErasedCallee])
 
   /** The signatures that every possible callee follows, one for each canonical form. A value follows the
-    * signature of its declared type, a value that satisfies several components follows the signatures of them
+    * `view` of its known signature, a value that satisfies several components follows the signatures of them
     * all, and alternatives only share the signatures that each of them follows.
+    *
+    * `view` selects what the callees must agree on: their whole signatures, or the application of their first
+    * parameter list (see `ErasedFuncSignature.firstApplication`).
     */
-  def sharedSignatures(using Ctx, State): Ls[ErasedFuncSignature] = this match
-    case Declared(signature) => signature :: Nil
-    case Undeclared => Nil
-    case All(components) => components.iterator.flatMap(_.sharedSignatures).distinctBy(_.canonicalize).toList
-    case OneOf(Nil) => Nil
-    case OneOf(first :: others) => others.foldLeft(first.sharedSignatures): (shared, alternative) =>
-      val followed = alternative.sharedSignatures.map(_.canonicalize)
-      shared.filter(signature => followed.contains(signature.canonicalize))
+  def sharedSignatures(view: ErasedFuncSignature => ErasedFuncSignature)(using Ctx, State): Ls[ErasedFuncSignature] =
+    this match
+      case Known(signature) => view(signature) :: Nil
+      case Unknown => Nil
+      case All(components) =>
+        components.iterator.flatMap(_.sharedSignatures(view)).distinctBy(_.canonicalize).toList
+      case OneOf(Nil) => Nil
+      case OneOf(first :: others) => others.foldLeft(first.sharedSignatures(view)): (shared, alternative) =>
+        val followed = alternative.sharedSignatures(view).map(_.canonicalize)
+        shared.filter(signature => followed.contains(signature.canonicalize))
 
-  /** The signatures of all the declared function types among the possible callees. */
-  def declaredSignatures: Iterator[ErasedFuncSignature] = this match
-    case Declared(signature) => Iterator.single(signature)
-    case Undeclared => Iterator.empty
-    case All(components) => components.iterator.flatMap(_.declaredSignatures)
-    case OneOf(alternatives) => alternatives.iterator.flatMap(_.declaredSignatures)
+  /** The signatures of all the possible callees that have a known one. */
+  def knownSignatures: Iterator[ErasedFuncSignature] = this match
+    case Known(signature) => Iterator.single(signature)
+    case Unknown => Iterator.empty
+    case All(components) => components.iterator.flatMap(_.knownSignatures)
+    case OneOf(alternatives) => alternatives.iterator.flatMap(_.knownSignatures)
 
   def mapTypes(f: ErasedValueType => ErasedValueType): ErasedCallee = this match
-    case Declared(signature) => Declared(signature.mapTypes(f))
-    case Undeclared => Undeclared
+    case Known(signature) => Known(signature.mapTypes(f))
+    case Unknown => Unknown
     case All(components) => All(components.map(_.mapTypes(f)))
     case OneOf(alternatives) => OneOf(alternatives.map(_.mapTypes(f)))
-
-object ErasedCallee:
-  /** A callee that resolution knows nothing about. */
-  val unknown: ErasedCallee = OneOf(Nil)
 
 
 /** Holds the possible callees of a source application. Erasure of the program that contains the application
@@ -683,7 +696,7 @@ object ErasedCallee:
 final class ErasedCalleeSlot:
   private var assigned: Opt[ErasedCallee] = N
   def isErasureReady: Bool = assigned.isDefined
-  def callee: ErasedCallee = assigned.getOrElse(ErasedCallee.unknown)
+  def callee: ErasedCallee = assigned.getOrElse(ErasedCallee.Unknown)
   def callee_=(value: ErasedCallee): Unit =
     assert(!isErasureReady, "The callees of an application are erased once")
     assigned = S(value)

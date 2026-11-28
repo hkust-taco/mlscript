@@ -4,7 +4,7 @@ package semantics
 import scala.collection.mutable
 import hkmc2.utils.*, shorthands.*
 import Term.*
-import ResolvedValues.{Callees, DeclaredCallee, InputSlot, InputSymbol, InterfaceSlot}
+import ResolvedValues.{Callees, DeclaredCallee, DefinedCallee, InputSlot, InputSymbol, InterfaceSlot}
 
 /** Source declarations and writable field copies in an elaborated block.
   * Several declarations are outside subStatements: split bindings, handler parameters,
@@ -266,22 +266,32 @@ private[hkmc2] object ResolvedValues:
     */
   final class DeclaredCallee(val interface: DeclaredParams, val leading: Ls[Opt[InterfaceSlot]], val result: InterfaceSlot)
 
+  /** A callee that is a function definition or a lambda, of which earlier applications already supplied the
+    * first `applied` parameter lists. The application supplies the next one.
+    */
+  final class DefinedCallee(val function: TermDefinition | Lam, val applied: Int)
+
   /** The values that an application can call. The callee is one of the alternatives that this record lists:
-    * a value of one of the `declared` function types, a value without a declared calling interface when
-    * `undeclared` is set, such as a definition, a lambda, or a dynamic value, or a value of one of the
-    * `intersections`, which satisfies each component of that intersection.
+    * a value of one of the `declared` function types, one of the `defined` functions, a value of which
+    * resolution knows no calling interface when `unknown` is set, such as a dynamic value, a `Function`, or a
+    * class, or a value of one of the `intersections`, which satisfies each component of that intersection.
     *
     * Resolution fills this record while it resolves the block of the application (see
-    * `ResolvedValues.calleesOf`). A record without alternatives describes a callee that resolution knows
-    * nothing about.
+    * `ResolvedValues.calleesOf`). A record without alternatives describes a callee that resolution did not
+    * reach.
     */
   final class Callees:
     private[semantics] val declared = mutable.LinkedHashMap.empty[ShapeIdentity.Key, DeclaredCallee]
-    private[semantics] var undeclared: Bool = false
+    // Definitions and lambdas are compared by identity, like applications (see `applicationCallees`).
+    private val defined = mutable.LinkedHashMap.empty[(Identity[TermDefinition | Lam], Int), DefinedCallee]
+    private[semantics] var unknown: Bool = false
     private[semantics] val intersections = mutable.LinkedHashMap.empty[ShapeIdentity.Key, Ls[Callees]]
     def declaredCallees: Iterator[DeclaredCallee] = declared.valuesIterator
-    def hasUndeclaredCallee: Bool = undeclared
+    def definedCallees: Iterator[DefinedCallee] = defined.valuesIterator
+    def hasUnknownCallee: Bool = unknown
     def intersectionCallees: Iterator[Ls[Callees]] = intersections.valuesIterator
+    private[semantics] def define(function: TermDefinition | Lam, applied: Int): Unit =
+      defined.getOrElseUpdate((Identity(function), applied), new DefinedCallee(function, applied))
     /** The records of the components of an intersection of `count` types, which `key` identifies. */
     private[semantics] def intersection(key: ShapeIdentity.Key, count: Int): Ls[Callees] =
       intersections.getOrElseUpdate(key, List.fill(count)(new Callees))

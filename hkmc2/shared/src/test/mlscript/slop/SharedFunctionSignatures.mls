@@ -233,7 +233,7 @@ fun capturedVariadic(base: Int) =
 let lifted = capturedVariadic(30)
 [lifted(1, 9)(2), lifted(1, 2, 0, 9)(2)]
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let sum, callPrefix: ?, tmp: ?, callPrefix1: ?, tmp1: ?, sum$;
+//│ let sum, callPrefix: Function⁰, tmp: Int⁰, callPrefix1: Function⁰, tmp1: Int⁰, sum$;
 //│ @inline
 //│ define sum$ as fun sum$⁰(base: Int⁰)(first: Int⁰, ...args: Array⁰): Function⁰ {
 //│   return sum⁰‹(Int⁰, Int⁰, ...Array⁰) => (Int⁰) => Int⁰›(base, first, ...args)
@@ -268,10 +268,10 @@ let lifted = capturedVariadic(30)
 //│   return sum$⁰‹(Int⁰) => (Int⁰, ...Array⁰) => Function⁰›(base)
 //│ };
 //│ set lifted⁰ = capturedVariadic¹‹(Int⁰) => Function⁰›(30);
-//│ set callPrefix = lifted⁰‹(...Array⁰) => ?›(1, 9);
-//│ set tmp = callPrefix‹(...Array⁰) => ?›(2);
-//│ set callPrefix1 = lifted⁰‹(...Array⁰) => ?›(1, 2, 0, 9);
-//│ set tmp1 = callPrefix1‹(...Array⁰) => ?›(2);
+//│ set callPrefix = lifted⁰‹(Int⁰, ...Array⁰) => (Int⁰) => Int⁰›(1, 9);
+//│ set tmp = callPrefix‹(Int⁰) => Int⁰›(2);
+//│ set callPrefix1 = lifted⁰‹(Int⁰, ...Array⁰) => (Int⁰) => Int⁰›(1, 2, 0, 9);
+//│ set tmp1 = callPrefix1‹(Int⁰) => Int⁰›(2);
 //│ return [tmp, tmp1]
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [42, 45]

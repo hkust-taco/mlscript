@@ -1,0 +1,61 @@
+:.
+:js
+:noInline
+
+
+// A flow-based rewrite changes the parameters of functions together with the arguments of the calls that reach
+// them, including the calls of function values. Such a call carried the signature of the definitions that it
+// can reach, which describes them as they were before the rewrite, so it takes the dynamic signature.
+
+// Dead parameter elimination removes the second parameter of both functions and the second argument of the call.
+:flowBasedOpt mono
+:soir
+:siret
+:expect 3
+private fun keepFirst(a: Int, b: Int): Int = a
+private fun keepFirstPlusOne(a: Int, b: Int): Int = a + 1
+private fun applyTo(f, x: Int): Int = f(x, 0)
+applyTo(keepFirst, 1) + applyTo(keepFirstPlusOne, 1)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp: Int⁰, tmp1: Int⁰;
+//│ @private
+//│ define keepFirst⁰ as fun keepFirst¹(a: Int⁰): Int⁰ {
+//│   return a
+//│ };
+//│ @private
+//│ define keepFirstPlusOne⁰ as fun keepFirstPlusOne¹(a: Int⁰): Int⁰ {
+//│   return +⁰‹(?, ?) => ?›(a, 1)
+//│ };
+//│ @private
+//│ define applyTo⁰ as fun applyTo¹(f: Function⁰, x: Int⁰): Int⁰ {
+//│   return f‹(...Array⁰) => ?›(x)
+//│ };
+//│ set tmp = applyTo¹‹(Function⁰, Int⁰) => Int⁰›(keepFirst¹, 1);
+//│ set tmp1 = applyTo¹‹(Function⁰, Int⁰) => Int⁰›(keepFirstPlusOne¹, 1);
+//│ return +⁰‹(?, ?) => ?›(tmp, tmp1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 3
+
+// A call that only reaches functions that the rewrite leaves alone keeps its signature.
+:flowBasedOpt mono
+:soir
+:siret
+:expect 3
+private fun addBoth(a: Int, b: Int): Int = a + b
+private fun applyBoth(f, x: Int): Int = f(x, 1)
+applyBoth(addBoth, 1) + applyBoth(addBoth, 0)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp: Int⁰, tmp1: Int⁰;
+//│ @private
+//│ define addBoth⁰ as fun addBoth¹(a: Int⁰, b: Int⁰): Int⁰ {
+//│   return +⁰‹(?, ?) => ?›(a, b)
+//│ };
+//│ @private
+//│ define applyBoth⁰ as fun applyBoth¹(f: Function⁰, x: Int⁰): Int⁰ {
+//│   return f‹(Int⁰, Int⁰) => Int⁰›(x, 1)
+//│ };
+//│ set tmp = applyBoth¹‹(Function⁰, Int⁰) => Int⁰›(addBoth¹, 1);
+//│ set tmp1 = applyBoth¹‹(Function⁰, Int⁰) => Int⁰›(addBoth¹, 0);
+//│ return +⁰‹(?, ?) => ?›(tmp, tmp1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 3

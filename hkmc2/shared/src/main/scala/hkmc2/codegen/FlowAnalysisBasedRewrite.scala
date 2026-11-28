@@ -219,10 +219,10 @@ class FlowAnalysisBasedRewrite(
                 k(args2 :: rest2)
         applyPath(fun): fun2 =>
           rewriteArgss(argss.iterator.zipWithIndex): argss2 =>
-            k(
+            k(afterRewrite(c,
               if (fun2 is fun) && argss2.corresponds(argss)(_ is _) then c
               else c.rebuilt(fun2, argss2)
-            )
+            ))
       case i@Instantiate(mut, cls, args :: restArgss) if args.forall(_.spread.isEmpty) =>
         val eliminable = deadParamElimSolver.eliminableCallSiteArgs(ConcreteId((i.uid, 0), instId))
         applyPath(cls): cls2 =>
