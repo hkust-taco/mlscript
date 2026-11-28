@@ -85,6 +85,24 @@ fun sign: Int -> Int = case
 [add(1, 2), sum(1, 2), curried(3)(1), sign(0), sign(5)]
 //│ = [3, 3, 7, 0, 1]
 
+// The literal can stand on an indented line of its own, and so can each of its nested lambdas.
+:expect [2, 3, 0, 1, 3, 8]
+fun onOwnLine: Int -> Int =
+  x => x + 1
+fun nestedOnOwnLine: Int -> Int -> Int = x =>
+  y => x + y
+fun caseOnOwnLine: Int -> Int =
+  case
+    0 then 0
+    _ then 1
+fun implicitOnOwnLine: (Int, Int) -> Int =
+  => _ + _
+fun separateOnOwnLine: Int -> Int
+fun separateOnOwnLine =
+  x => x * 2
+[onOwnLine(1), nestedOnOwnLine(1)(2), caseOnOwnLine(0), caseOnOwnLine(3), implicitOnOwnLine(1, 2), separateOnOwnLine(4)]
+//│ = [2, 3, 0, 1, 3, 8]
+
 // The function takes the literal's parameter list, which the signature types.
 :sir
 :siret

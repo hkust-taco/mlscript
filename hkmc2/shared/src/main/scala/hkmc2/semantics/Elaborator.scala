@@ -3700,9 +3700,12 @@ extends Importer:
   
   /** The `count` parameter lists that the definition body `body` writes as an immediate function literal, or `N`
     * if it is no such literal. A literal writes the parameter lists of its leading `=>` lambdas, as in `x => y => x`,
-    * and those of the `case` function or implicit lambda (`=> _ + _`) that may end them. */
+    * and those of the `case` function or implicit lambda (`=> _ + _`) that may end them. The literal or any of its
+    * nested lambdas can stand on an indented line of its own. */
   private def literalParamLists(body: Tree, count: Int): Opt[FunctionLiteral] = body match
     case _ if count == 0 => S(FunctionLiteral(Nil, body, N))
+    // A body on an indented line of its own is a block of one statement, which evaluates to that statement.
+    case Block(literal :: Nil) => literalParamLists(literal, count)
     case InfixApp(params: Tup, Keywrd(Keyword.`=>`), rest) =>
       literalParamLists(rest, count - 1).map(literal => literal.copy(params = params :: literal.params))
     case last: Case if count == 1 => S(FunctionLiteral(Nil, last, S(last)))
