@@ -3042,12 +3042,13 @@ extends Importer:
                 res
               
               val resultTree = td.annotatedResultType
-              val sign = resultTree.filter(_ => resultLists.isEmpty).map:
-                case TypeDef(Mod, st, N) => term(st, Tpe)(using newCtx)
-                case st => term(st, Tpe)(using newCtx)
+              val resultTypeTree = resultTree.map:
+                case TypeDef(Mod, tpe, N) => tpe
+                case tpe => tpe
+              val sign = resultTypeTree.filter(_ => resultLists.isEmpty).map(term(_, Tpe)(using newCtx))
               // * A result annotation that follows parameter lists of the returned function declares the result of
               // * that function, not the result of this definition.
-              val returnedResultTree = resultTree.filter(_ => resultLists.nonEmpty)
+              val returnedResultTree = resultTypeTree.filter(_ => resultLists.nonEmpty)
               val signatureParams = separate match
                 case S(decl) => decl.signatureParams
                 case N if newResolution && (k is Fun) && pss.isEmpty =>
@@ -3122,7 +3123,7 @@ extends Importer:
                       case params :: rest => returnedFunction(params, rest)
                   )(using newCtx)
               
-              val mfn = if td.annotatedResultType.exists(_.isModified(Mod)) then Modulefulness.ofSign(sign)(true) else Modulefulness.none
+              val mfn = if sign.nonEmpty && resultTree.exists(_.isModified(Mod)) then Modulefulness.ofSign(sign)(true) else Modulefulness.none
               
               val placeholderParams = placeholders.map(ps => PlainParamList(ps.iterator.map(Param.simple).toList)(N))
               placeholderParams.foreach: ps =>

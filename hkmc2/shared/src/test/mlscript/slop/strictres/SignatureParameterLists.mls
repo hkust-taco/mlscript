@@ -311,6 +311,15 @@ fun declaredGetter(x): Int = x + 1
 declaredGetter(2)
 //│ = 3
 
+// The module modifier belongs to the result of the last written list.
+:checkIR
+:expect 9
+module Answer { val n = 9 }
+fun answer: Int -> (Int -> Answer)
+fun answer(x)(y): module Answer = Answer
+answer(1)(2).n
+//│ = 9
+
 // The values that the body returns must have the declared type, including those of explicit returns.
 :e
 fun misdeclared: Int -> (Int -> Int)
