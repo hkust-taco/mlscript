@@ -211,8 +211,8 @@ class RightField(val right: Int)
 fun interleaved() =
   fun left[A]: (LeftField, A) -> Int
   fun right[A]: (RightField, A) -> Int
-  fun right(obj, value: A) = obj.right
-  fun left(obj, value: A) = obj.left
+  fun right[A](obj, value: A) = obj.right
+  fun left[A](obj, value: A) = obj.left
   [left(LeftField(1), true), right(RightField(2), "ok")]
 interleaved()
 //│ = [1, 2]
@@ -702,11 +702,30 @@ bothVal
 //│ = 1
 //│ bothVal = 1
 
-// Type parameters written only on the signature are the definition's.
+// Callers can instantiate a type parameter written only on the signature.
 fun adopted[A]: A -> A
 fun adopted(x) = x
-adopted(1)
+adopted[Int](1)
 //│ = 1
+
+// The implementation's parameter annotation resolves to the outer alias.
+:el
+fun outerAlias() =
+  type A = Int
+  fun f[A]: Int -> A -> A
+  fun f(x: A) = y => y
+  f[Str](1)("ok")
+outerAlias()
+//│ Elab: { fun member:outerAlias⁰() = { type type:A⁰ = member:Int⁰^term:outerAlias¹; fun member:f⁰[List(A¹)](x⁰: member:A²^term:f¹): member:Int⁰^term:outerAlias¹^term:f¹ -> A¹ -> A¹ = λ(y⁰). y⁰; member:f⁰[member:Str⁰^term:outerAlias¹](1)("ok") }; member:outerAlias⁰() }
+//│ = "ok"
+
+// With no outer binding, the implementation's parameter annotation is unbound.
+:e
+fun onlyOnSignature[A]: Int -> A -> A
+fun onlyOnSignature(x: A) = y => y
+//│ ╔══[COMPILATION ERROR] Name not found: A
+//│ ║  l.+2: 	fun onlyOnSignature(x: A) = y => y
+//│ ╙──      	                       ^
 
 fun sameTypeParams[A]: A -> A
 fun sameTypeParams[A](x) = x
@@ -718,14 +737,14 @@ sameTypeParams(1)
 fun typeParamNamedLikeParam[A]: A -> A
 fun typeParamNamedLikeParam[A](A) = A
 typeParamNamedLikeParam(1)
-//│ Elab: { fun member:typeParamNamedLikeParam⁰[List(A⁰)](A¹): A⁰ -> A⁰ = A¹; member:typeParamNamedLikeParam⁰(1) }
+//│ Elab: { fun member:typeParamNamedLikeParam⁰[List(A³)](A⁴): A³ -> A³ = A⁴; member:typeParamNamedLikeParam⁰(1) }
 //│ = 1
 
 :el
 fun adoptedNamedLikeParam[A]: A -> A
 fun adoptedNamedLikeParam(A) = A
 adoptedNamedLikeParam(1)
-//│ Elab: { fun member:adoptedNamedLikeParam⁰[List(A²)](A³): A² -> A² = A³; member:adoptedNamedLikeParam⁰(1) }
+//│ Elab: { fun member:adoptedNamedLikeParam⁰[List(A⁵)](A⁶): A⁵ -> A⁵ = A⁶; member:adoptedNamedLikeParam⁰(1) }
 //│ = 1
 
 // After a type parameter mismatch, the signature is ignored, so its names cause no further errors.

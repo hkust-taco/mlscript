@@ -2604,11 +2604,13 @@ extends Importer:
     MutVal -> Mod,
   )
   
-  /** The function or value and the type parameters shared by its signature and body. */
+  /** Symbols identifying a function or value and its type parameters for instantiation. */
   private final case class TermBinders(sym: TermSymbol, typeParams: Opt[Ls[Param]]):
-    def scopeIn(outer: Ctx): Ctx =
+    /** Opens the member's scope at this header. Each header binds only the names it declares. */
+    def scopeFor(header: TermDef)(using outer: Ctx): Ctx =
       val nested = outer.nest(OuterCtx.NonReturnContext(S(sym)))
-      typeParams.fold(nested)(ps => nested ++ ps.iterator.map(p => p.sym.name -> p.sym))
+      if header.typeParams.isEmpty then nested
+      else nested ++ typeParams.get.iterator.map(p => p.sym.name -> p.sym)
   
   private def termBinders(td: TermDef, params: Opt[TyTup])(using Ctx): TermBinders =
     // * Instance declarations are not meant to be exported as externally-available members,
@@ -2621,8 +2623,7 @@ extends Importer:
     if newResolution then tps.foreach(ps => registerTypeParameters(sym, ps.map(_.sym)))
     TermBinders(sym, tps)
   
-  /** A signature elaborated where it occurs. Its definition reuses the same type parameter symbols
-    * in the scope of the body, which may have additional imports or shadowing value parameters. */
+  /** A signature elaborated where it occurs, retained until the matching definition is visited. */
   private final case class SeparateSignature(binders: TermBinders, signature: Opt[(Term, Modulefulness)],
       annotations: Ls[Annot], loc: Opt[Loc])
   
@@ -3067,7 +3068,7 @@ extends Importer:
                   // Recover from mismatched parameters using the definition's binders for its body.
                   val binders = termBinders(impl, if compatible then td.typeParams else impl.typeParams)
                   val sign = if compatible && impl.annotatedResultType.isEmpty then debugElaboration(annotations):
-                    td.annotatedResultType.map(elaborateResultType(_)(using binders.scopeIn(ctx)))
+                    td.annotatedResultType.map(elaborateResultType(_)(using binders.scopeFor(td)))
                   else N
                   pendingSignatures(sym) = SeparateSignature(binders, sign, annotations, statementLoc)
                 return go(sts, Nil, acc)(N)
@@ -3156,7 +3157,7 @@ extends Importer:
               tdf
             
             val tdf = debugElaboration(defnAnnotations):
-              binders.scopeIn(ctx).givenIn(elaborateDefinition)
+              binders.scopeFor(td).givenIn(elaborateDefinition)
             
             completeIfReady(sym)
             go(sts, Nil, tdf :: acc)(N)
