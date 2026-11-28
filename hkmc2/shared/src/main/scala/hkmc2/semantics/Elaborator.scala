@@ -3036,11 +3036,9 @@ extends Importer:
               val sign = td.annotatedResultType.map:
                 case TypeDef(Mod, st, N) => term(st, Tpe)(using newCtx)
                 case st => term(st, Tpe)(using newCtx)
-              val checking = separate.fold(TypeSubstitution.empty): decl =>
-                if newResolution then registerParameterSignature(decl, pss, own)
-                else
-                  decl.writtenType.foreach(checkSignatureOptionality(pss, _))
-                  TypeSubstitution.empty
+              if signatureFor.isEmpty && (sign.nonEmpty || separate.nonEmpty) then
+                if newResolution then registerDefinitionSignature(tsym, pss, own)
+                else separate.flatMap(_.writtenType).foreach(checkSignatureOptionality(pss, _))
               pss.foreach(seedRestParameter)
               
               val body: Opt[Term] = rhs match
@@ -3076,7 +3074,6 @@ extends Importer:
               else
                 val r = FlowSymbol(s"‹result of ${sym}›")
                 tsym.defn = S(tdf)
-                if newResolution then registerResultSignature(tdf, checking)
                 completeIfReady(sym)
                 tdf :: acc
             

@@ -247,10 +247,10 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
         case TypeShape.Polymorphic(_, _, body) :: Nil => fullResult(body, count, seen + res)
         case TypeShape.Function(_, ret) :: Nil => fullResult(ret, count - 1, seen + res)
         case _ => ErasedType.Unknown
-    if config.language.useNewResolution && td.sign.nonEmpty && (td.k is syntax.Fun)
-        && !td.signatureHeader.flags.hasResultAnnotation && td.params.nonEmpty && !td.modulefulness.isModuleful
-    then S(fullResult(td.sign.get.typeInterpretation.get, td.params.length, Set.empty))
-    else declaredType(td.resultSignature, td.modulefulness)
+    td.fullSignature match
+      case S(sign) if config.language.useNewResolution && (td.k is syntax.Fun) && td.params.nonEmpty && !td.modulefulness.isModuleful =>
+        S(fullResult(sign.typeInterpretation.get, td.params.length, Set.empty))
+      case _ => declaredType(td.resultSignature, td.modulefulness)
 
   /** The result of `td`, whose body produces values represented as `bodyType`. The body of an async or
     * generator function produces a payload, while its callers receive the wrapper object.

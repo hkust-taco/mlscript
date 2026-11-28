@@ -231,10 +231,10 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
     val tvars = td.signatureHeader.tparams.toList.flatten.map(p => p.sym.uid -> freshVar(p.sym))
     given Map[Uid[Symbol], TypeArg] = tvars.toMap
     def signature(t: Term): GeneralType = typeAndSubstType(t, pol = true)
-    val ty = td.sign match
-      case S(sign) if !td.signatureHeader.flags.hasResultAnnotation => signature(sign)
-      case sign =>
-        td.params.foldRight(sign.fold[GeneralType](Top)(signature)): (ps, ret) =>
+    val ty = td.fullSignature match
+      case S(sign) => signature(sign)
+      case N =>
+        td.params.foldRight(td.writtenType.fold[GeneralType](Top)(signature)): (ps, ret) =>
           if ps.variadic.nonEmpty then
             error(msg"InvalML does not support variadic foreign function signatures." -> td.toLoc :: Nil)
           else
@@ -326,9 +326,10 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
   private def typeFunDef(td: TermDefinition, lam: Term)(using ctx: InvalCtx, cctx: CCtx, scope: Scope) = lam match
     case Term.Lam(params, body) =>
       val sym = td.sym
-      val signature = td.sign.map: sign =>
-        if td.signatureHeader.flags.hasResultAnnotation then typeType(sign)
-        else ctx.get(sym).getOrElse(die) // Separate signatures enter the block's context before its bodies.
+      // Separate signatures enter the block's context before its bodies.
+      val signature = td.fullSignature match
+        case S(_) => S(ctx.get(sym).getOrElse(die))
+        case N => td.writtenType.map(typeType)
       signature match
       case S(sigTy) =>
         ctx += sym -> sigTy
@@ -703,8 +704,8 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
             TODO(stat)
         // Mutually recursive functions can call each other through their separate signatures.
         stats.foreach:
-          case td @ TermDefinition(k = Fun, body = S(_)) if !td.signatureHeader.flags.hasResultAnnotation =>
-            td.sign.foreach(sig => ctx += td.sym -> typeType(sig))
+          case td @ TermDefinition(k = Fun, body = S(_)) =>
+            td.fullSignature.foreach(sig => ctx += td.sym -> typeType(sig))
           case _ => ()
         goStats(stats)
         val (ty, eff) = typeCheck(res)

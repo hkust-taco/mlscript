@@ -873,6 +873,10 @@ final case class TermDefinition(
   def signatureHeader: TermDefinition = tsym.termDeclaration.getOrElse(this)
   /** The public type supplied by the declaration or written on this definition. */
   def sign: Opt[Term] = signatureHeader.writtenType
+  /** The public type when it describes the whole member, including any parameter lists. */
+  def fullSignature: Opt[Term] =
+    val header = signatureHeader
+    if header.flags.hasResultAnnotation then N else header.writtenType
   /** Types written on the declaration and definition, in source order. */
   def typeAnnotations: Iterator[Term] =
     tsym.termDeclaration.iterator.filterNot(_ is this).flatMap(_.writtenType) ++ writtenType
@@ -906,9 +910,7 @@ final case class TermDefinition(
       case (Term.Forall(_, _, body), _) => strip(body, count)
       case (Term.FunTy(_, rhs, _), n) if n > 0 => strip(rhs, n - 1)
       case _ => sign
-    sign.map: sign =>
-      if (k is syntax.Fun) && !signatureHeader.flags.hasResultAnnotation then strip(sign, params.length)
-      else sign
+    if k is syntax.Fun then fullSignature.map(strip(_, params.length)).orElse(writtenType) else sign
   lazy val mayRaiseEffects: Bool =
     annotations.forall:
       case Annot.Pure() => false

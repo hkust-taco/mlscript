@@ -124,6 +124,53 @@ private fun callback[X](tag) = x => x.n
 //│ ╙──      	                     ^
 
 
+// The initializer of a polymorphic stored callback resolves in its implementation binders.
+:e
+private val storedCallback: [A] -> (A -> Int)
+private val storedCallback[X] = x => x.n
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	private val storedCallback[X] = x => x.n
+//│ ║        	                                     ^^^
+//│ ╟── Cannot resolve member 'n' of a value with unknown shape.
+//│ ╟── Type parameter 'X' does not specify a member interface.
+//│ ║  l.+2: 	private val storedCallback[X] = x => x.n
+//│ ╙──      	                           ^
+//│ storedCallback = fun
+
+
+// An overriding body receives the same X for the returned callback, even when its base
+// introduces A in a separate signature and has an intervening implementation header.
+:e
+private class CallbackBase with
+  open fun make: [A, B] -> Int -> (A -> Int)
+  fun make[P, Q](tag) = x => 0
+private class CallbackChild extends CallbackBase with
+  override fun make[X](tag) = x => x.n
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+5: 	  override fun make[X](tag) = x => x.n
+//│ ║        	                                   ^^^
+//│ ╟── Cannot resolve member 'n' of a value with unknown shape.
+//│ ╟── Type parameter 'X' does not specify a member interface.
+//│ ║  l.+5: 	  override fun make[X](tag) = x => x.n
+//│ ╙──      	                    ^
+
+
+// An intermediate override can omit the binder on which the returned callback depends.
+:e
+private class CallbackRoot with
+  open fun make[A, B](tag: Int): B -> Int = x => 0
+private class CallbackMiddle extends CallbackRoot with
+  open override fun make[P](tag) = x => 0
+private class CallbackLeaf extends CallbackMiddle with
+  override fun make[X](tag) = x => x.n
+private fun throughRoot(root: CallbackRoot) = root.make[Int, Item](0)(Item(9))
+throughRoot(new CallbackLeaf)
+//│ ╔══[COMPILATION ERROR] This selection of member 'n' has no resolved target
+//│ ║  l.+6: 	  override fun make[X](tag) = x => x.n
+//│ ╙──      	                                   ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
 // An implementing header may introduce a type parameter even when the public signature has none.
 // A subclass inherits the declared Item domain.
 :expect 10
