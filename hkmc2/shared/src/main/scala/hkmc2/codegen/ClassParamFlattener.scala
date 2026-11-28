@@ -79,8 +79,18 @@ class ClassParamFlattener(using State) extends BlockTransformer(SymbolSubst.Id):
           else argss2
         k:
           if flatArgss is argss then c
-          // * `super` has no fixed signature, so its call keeps the dynamic signature of the flattened lists.
-          else Call.of(r, flatArgss)(c.metadata, c.toLoc)
+          else
+            // * The call applies the constructor of the parent class, whose parameter lists this pass merges
+            // * into one, as it merges the argument lists. A list with a rest parameter cannot be followed by
+            // * another one, so such a call becomes dynamic.
+            val signature = c.signature match
+              case sig: ErasedFuncSignature if flatArgss.sizeCompare(argss2) != 0 =>
+                if sig.paramLists.forall(_.rest.isEmpty) then
+                  ErasedFuncSignature.Signature(
+                    ErasedParamList(sig.paramLists.flatMap(_.params), N) :: Nil, sig.result)
+                else ErasedFuncSignature.dynamic(1)
+              case sig => sig
+            Call(r, flatArgss)(signature, c.metadata, c.toLoc)
     case call @ Call(fun, argss) =>
       saturatedCurriedClassCall(fun, argss) match
       case S(cls) =>

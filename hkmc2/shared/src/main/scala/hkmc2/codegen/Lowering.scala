@@ -606,9 +606,22 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     * Parent construction requires all argument lists. The continuation receives only the super call,
     * so handlers can keep argument evaluation outside their generated constructor. */
   def lowerSuperCtorCall(ctorParamLists: ConstructorParams, args: Ls[Term], loc: Opt[Loc])(k: Call => Block)(using LoweringCtx): Block =
+    // The `super` builtin publishes no signature: its call applies the constructor of the parent class, so it
+    // takes the parameter lists of that constructor when it supplies one argument list for each of them. A
+    // class without parameter lists takes one empty list. The call of a parent of unknown class, or of a
+    // foreign class without declared parameters, is dynamic. The result of a `super` call is not a value.
+    def signature(listCount: Int): ErasedFuncSignature =
+      val lists = ctorParamLists.lists
+      def erased = lists.forall(_.allParams.forall(_.sym.isErasureReady))
+      if lists.nonEmpty && lists.sizeCompare(listCount) == 0 && erased then
+        ErasedFuncSignature.Signature(lists.map(LoweredParamList.erasedLayout), ErasedResult.Direct(N))
+      else if lists.isEmpty && ctorParamLists.isMls && listCount == 1 then
+        ErasedFuncSignature.Signature(ErasedParamList(Nil, N) :: Nil, ErasedResult.Direct(N))
+      else ErasedFuncSignature.dynamic(listCount)
     def call(argss: Ls[Ls[Arg]]): Block =
       val nonEmpty = if argss.isEmpty then Nil :: Nil else argss
-      k(Call.rawOf(State.builtinOpsMap("super").asSimpleRef, nonEmpty)(CallMetadata.mlsFunWithEffect, loc))
+      k(Call.raw(State.builtinOpsMap("super").asSimpleRef, nonEmpty)(
+        signature(nonEmpty.length), CallMetadata.mlsFunWithEffect, loc))
     def zipArgs(remainingParamss: Ls[ParamList], args: Ls[Term], acc: Ls[Ls[Arg]]): Block = (remainingParamss, args) match
       case (ps :: remainingParamss2, arg :: remainingArgs) => lowerConstructorArgs(arg, ps, ctorParamLists.isMls): as =>
         zipArgs(remainingParamss2, remainingArgs, as :: acc)

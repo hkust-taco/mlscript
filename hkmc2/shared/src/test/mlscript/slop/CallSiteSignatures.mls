@@ -431,6 +431,40 @@ viaInstantiation()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
 
+// A `super` call applies the constructor of the parent class, so it takes the parameter lists of that
+// constructor.
+:sir
+:siret
+:expect 42
+class Parent(val value: Int)
+class Child(start: Int) extends Parent(start + 1)
+new Child(41).value
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Child⁰;
+//│ define Parent⁰ as class Parent² {
+//│   val value²: Int⁰;
+//│   constructor Parent¹(value: Int⁰) {
+//│     define value² as val value³: Int⁰ = value;
+//│     end
+//│   }
+//│ };
+//│ define Child¹ as class Child⁰ extends Parent² {
+//│   private val start⁰: Int⁰;
+//│   constructor Child²(start: Int⁰) {
+//│     let tmp1: Int⁰;
+//│     set tmp1 = +⁰‹(?, ?) => ?›(start, 1);
+//│     do super⁰‹(Int⁰) => ?›(tmp1);
+//│     end;
+//│     @private
+//│     define start¹ as val start⁰: Int⁰ = start;
+//│     end
+//│   }
+//│ };
+//│ set tmp = new Child⁰(41);
+//│ return tmp.value³
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
 // The method of an object is a definition too, including through the declared type of the object.
 class Counter(val start: Int) with
   fun plus(n: Int): Int = start + n
@@ -599,7 +633,7 @@ let callback = Callback(receiverProbe)
 :expect "none"
 callback.run()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let tmp18; tmp18 = callback; return runtime.safeCall(tmp18.run())
+//│ let tmp19; tmp19 = callback; return runtime.safeCall(tmp19.run())
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Expected: '"none"', got: '"receiver"'
 //│ = "receiver"
@@ -610,7 +644,7 @@ callback.run()
 let detached = callback.run
 detached()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let detached, tmp19; tmp19 = callback; detached = tmp19.run; return runtime.safeCall(tmp19.run())
+//│ let detached, tmp20; tmp20 = callback; detached = tmp20.run; return runtime.safeCall(tmp20.run())
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Expected: '"none"', got: '"receiver"'
 //│ = "receiver"
@@ -695,7 +729,7 @@ addThree(10)(12)(20)
 //│   private val a⁰: Int⁰;
 //│   private val b⁰: Int⁰;
 //│   constructor(a: Int⁰, b: Int⁰) {
-//│     do super⁰‹(...Array⁰) => ?›();
+//│     do super⁰‹() => ?›();
 //│     end;
 //│     set Function$⁰.this.a⁰ = a;
 //│     set Function$⁰.this.b⁰ = b;
@@ -713,7 +747,7 @@ addThree(10)(12)(20)
 //│ define Function$1 as class Function$¹ extends globalThis⁰.Function⁰ {
 //│   private val a¹: Int⁰;
 //│   constructor(a: Int⁰) {
-//│     do super⁰‹(...Array⁰) => ?›();
+//│     do super⁰‹() => ?›();
 //│     end;
 //│     set Function$¹.this.a¹ = a;
 //│     end

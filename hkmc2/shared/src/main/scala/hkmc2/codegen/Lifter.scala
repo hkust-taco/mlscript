@@ -1293,13 +1293,24 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     
     def rewriteSuperCall(superCall: Call, argss: List[List[Arg]])(k: Result => Block): Block =
       if obj.isObj then lastWords("tried to rewrite instantiate for an object")
+      // The call applies the constructor of this class, which takes the lifter arguments as the arguments of
+      // the call do. Its signature gets their representations at the same place.
+      val signature = superCall.signature match
+        case sig: ErasedFuncSignature => sig
+        case _: ErasedGetterSignature => lastWords("A super call has a function signature")
+      val captures = formatArgs.map(_.value.erasedType)
       if isTrivial then k(superCall)
       else if cls.paramsOpt.isEmpty && cls.auxParams.isEmpty then
         // Paramless class: lifter args go directly into the Instantiate constructor
-        k(Call.of(superCall.fun, (formatArgs ::: argss.head) :: argss.tail)(CallMetadata.defaultMlsFun, superCall.toLoc))
+        val first = signature.paramLists.head
+        val lifted = ErasedFuncSignature.Signature(
+          ErasedParamList(captures ::: first.params, first.rest) :: signature.paramLists.tail, signature.result)
+        k(Call(superCall.fun, (formatArgs ::: argss.head) :: argss.tail)(lifted, CallMetadata.defaultMlsFun, superCall.toLoc))
       else
         // Parameterized class: use Instantiate with original args + lifter args inserted after the first list
-        k(Call.of(superCall.fun, argss.head :: formatArgs :: argss.tail)(CallMetadata.mlsFunWithEffect, superCall.toLoc))
+        val lifted = ErasedFuncSignature.Signature(
+          signature.paramLists.head :: ErasedParamList(captures, N) :: signature.paramLists.tail, signature.result)
+        k(Call(superCall.fun, argss.head :: formatArgs :: argss.tail)(lifted, CallMetadata.mlsFunWithEffect, superCall.toLoc))
     
     def rewriteCall(c: Call, argss: List[List[Arg]])(k: Result => Block)(using ctx: LifterCtxNew): Block =
       if obj.isObj then lastWords("tried to rewrite instantiate for an object")
