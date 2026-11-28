@@ -2613,8 +2613,8 @@ extends Importer:
             -> N
           :: Nil
   
-  /** Diagnose conflicting headers. Use the signature's type when its binders are valid
-    * and the implementation has no competing result annotation. */
+  /** Diagnose conflicting headers and select the separately written type unless
+    * the implementation supplies its own result annotation for error recovery. */
   private def checkSeparateSignature(name: Str, sig: TermDef, impl: TermDef): Opt[Tree] =
     if impl.annotatedResultType.isDefined then raise:
       ErrorReport:
@@ -2643,34 +2643,7 @@ extends Importer:
         :: msg"signature here" -> sig.toLoc
         :: Nil
     case _ => ()
-    // * Type parameters written only on the definition would be out of scope in the signature.
-    val resultType = sig.annotatedResultType.filter(_ => impl.annotatedResultType.isEmpty)
-    (impl.typeParams, sig.typeParams) match
-    case (S(own), N) =>
-      // * Other shapes are reported by `typeParams`; `…` stands for them, since `...` is the spread syntax.
-      val ownNames = own.tys.iterator.map {
-        case p: Ident => p.name
-        case _ => "…"
-      }.mkString(", ")
-      raise:
-        ErrorReport:
-          msg"The type parameters of '$name' must be written on its signature" -> own.toLoc
-          :: msg"signature here" -> sig.toLoc
-          :: msg"Write them on the signature, as in `${sig.k.str} $name[${ownNames}]: …`" -> N
-          :: Nil
-      N
-    case (S(own), S(sigTps)) if own.tys.length != sigTps.tys.length =>
-      raise:
-        ErrorReport:
-          msg"The signature and the definition of '$name' must have the same number of type parameters" -> N
-          :: msg"signature's type parameters" -> sigTps.toLoc
-          :: msg"definition's type parameters" -> own.toLoc
-          :: Nil
-      N
-    case (S(own), S(sigTps)) =>
-      // Malformed binders are diagnosed at their own headers and cannot be paired.
-      resultType.filter(_ => own.tys.forall(_.isInstanceOf[Ident]) && sigTps.tys.forall(_.isInstanceOf[Ident]))
-    case _ => resultType
+    sig.annotatedResultType.filter(_ => impl.annotatedResultType.isEmpty)
   
   /** Combines the annotations in source order so the definition's `@config` and `@dbg` settings take precedence.
     * Reports misplaced annotations at their source and preserves their effect on the member. */

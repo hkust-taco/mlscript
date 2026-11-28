@@ -796,54 +796,53 @@ let mixed = splitQuantified[LeftField, RightField](LeftField(7), RightField(8))
 //│ = [7, 8]
 //│ mixed = [LeftField(7), RightField(8)]
 
-// A different number of parameters is an error even when the names overlap.
-:e
+// The caller supplies the signature's one argument. Y is local to the implementation.
+:expect 3
 fun moreTypeParams[A]: A -> A
-fun moreTypeParams[A, B](x) = x
-//│ ╔══[COMPILATION ERROR] The signature and the definition of 'moreTypeParams' must have the same number of type parameters
-//│ ╟── signature's type parameters
-//│ ║  l.+1: 	fun moreTypeParams[A]: A -> A
-//│ ║        	                   ^
-//│ ╟── definition's type parameters
-//│ ║  l.+2: 	fun moreTypeParams[A, B](x) = x
-//│ ╙──      	                   ^^^^
+fun moreTypeParams[X, Y](x: X) = x
+moreTypeParams[LeftField](LeftField(3)).left
+//│ = 3
 
+:ge
+moreTypeParams[LeftField, RightField](LeftField(3))
+//│ ╔══[COMPILATION ERROR] Resolution error in type application
+//│ ║  l.+1: 	moreTypeParams[LeftField, RightField](LeftField(3))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Function 'moreTypeParams' expected 1 type argument, but got 2
+//│ ║  l.XX: 	fun moreTypeParams[A]: A -> A
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = LeftField(3)
+
+// An unmatched public parameter can be supplied explicitly or inferred at a call.
+:expect [4, 5]
+fun fewerTypeParams[A, B]: (A, B) -> B
+fun fewerTypeParams[X](x: X, y) = y
+[fewerTypeParams[Int, RightField](0, RightField(4)).right,
+ fewerTypeParams(0, LeftField(5)).left]
+//│ = [4, 5]
+
+// The signature is elaborated in its own scope, even when the implementation introduces A.
 :e
 fun definitionTypeParams: A -> A
 fun definitionTypeParams[A](x) = x
-//│ ╔══[COMPILATION ERROR] The type parameters of 'definitionTypeParams' must be written on its signature
-//│ ║  l.+2: 	fun definitionTypeParams[A](x) = x
-//│ ║        	                         ^
-//│ ╟── signature here
+//│ ╔══[COMPILATION ERROR] Name not found: A
 //│ ║  l.+1: 	fun definitionTypeParams: A -> A
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Write them on the signature, as in `fun definitionTypeParams[A]: …`
+//│ ╙──      	                          ^
+//│ ╔══[COMPILATION ERROR] Name not found: A
+//│ ║  l.+1: 	fun definitionTypeParams: A -> A
+//│ ╙──      	                               ^
 
-// A signature that quantifies over its own type parameters does not bind the definition's.
-:e
+// The signature can also introduce its public binder with a leading quantifier.
+:expect 6
 fun quantifiedSignature: [A] -> A -> A
-fun quantifiedSignature[A](x: A) = x
-quantifiedSignature(1)
-//│ ╔══[COMPILATION ERROR] The type parameters of 'quantifiedSignature' must be written on its signature
-//│ ║  l.+2: 	fun quantifiedSignature[A](x: A) = x
-//│ ║        	                        ^
-//│ ╟── signature here
-//│ ║  l.+1: 	fun quantifiedSignature: [A] -> A -> A
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Write them on the signature, as in `fun quantifiedSignature[A]: …`
-//│ = 1
+fun quantifiedSignature[X](x: X) = x
+quantifiedSignature[LeftField](LeftField(6)).left
+//│ = 6
 
-// A type parameter that is not a name is elided in the suggestion.
+// Each header diagnoses malformed binders independently.
 :e
 fun shapedTypeParams: Int -> Int
 fun shapedTypeParams[A, in B](x) = x
-//│ ╔══[COMPILATION ERROR] The type parameters of 'shapedTypeParams' must be written on its signature
-//│ ║  l.+2: 	fun shapedTypeParams[A, in B](x) = x
-//│ ║        	                     ^^^^^^^
-//│ ╟── signature here
-//│ ║  l.+1: 	fun shapedTypeParams: Int -> Int
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Write them on the signature, as in `fun shapedTypeParams[A, …]: …`
 //│ ╔══[COMPILATION ERROR] Unsupported type parameter shape: 'in'-modified identifier
 //│ ║  l.+2: 	fun shapedTypeParams[A, in B](x) = x
 //│ ╙──      	                           ^

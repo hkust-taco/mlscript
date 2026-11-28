@@ -64,8 +64,8 @@ sig()
 //│ ║  l.+1: 	sig()
 //│ ║        	^^^^^
 //│ ╟── Function 'sig' expected 1 to 2 arguments, but got 0
-//│ ║  l.XX: 	fun sig(x, y?) = x
-//│ ╙──      	^^^^^^^^^^^^^^
+//│ ║  l.XX: 	fun sig: (Int, Int?) -> Int
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'sig' expected at least 1 argument but got 0
 
 // Aliases must not hide a mismatch between a signature and its implementation.
