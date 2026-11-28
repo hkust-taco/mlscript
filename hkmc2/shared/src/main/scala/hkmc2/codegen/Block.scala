@@ -1539,7 +1539,7 @@ object Call:
     * precede the new definition, so bind their immutable signatures once the pass has published all its definitions.
     * Calls through function values retain the signature derived at their use site: a pass that also changes the
     * calling convention of the values of a definition has to update those calls itself (see
-    * `PolyInstantiationRewrite.InstantiationRewriter.afterRewrite`).
+    * `PolyInstantiationRewrite.rewrittenCallSignature`).
     */
   def refreshSignatures(block: Block, changed: collection.Set[TermSymbol]): Block =
     if changed.isEmpty then block else
@@ -1567,20 +1567,6 @@ object Call:
   /** Like [[of]], without folding applications of builtins. */
   def rawOf(fun: Path, argss: Ls[Ls[Arg]])(metadata: CallMetadata, toLoc: Opt[Loc]): Call =
     raw(fun, argss)(signatureOf(fun, argss.length), metadata, toLoc)
-  
-  /** Applies `argss` to `fun`, whose signature is `signature`. A single call applies as many argument lists as
-    * the signature has parameter lists; the signature says nothing about the result, so any remaining lists are
-    * applied to it by a call with a dynamic signature, through a fresh temporary.
-    */
-  def chain(fun: Path, signature: ErasedFuncSignature, argss: Ls[Ls[Arg]], metadata: CallMetadata, toLoc: Opt[Loc])
-      (k: Result => Block)(using State): Block =
-    argss.splitAt(signature.paramListCount) match
-      case (now, Nil) => k(Call(fun, now)(signature, metadata, toLoc))
-      case (now, later) =>
-        val call = Call(fun, now)(signature, metadata, toLoc)
-        val prefix = TempSymbol(N, initErasedType = call.erasedType, "callPrefix")
-        Scoped(Set.single(prefix), Assign(prefix, call,
-          k(Call(prefix.asSimpleRef, later)(ErasedFuncSignature.dynamic(later.length), metadata, toLoc))))
   
   private def literalArgValues(args: Ls[Arg]): Opt[Ls[Value]] =
     args.foldRight[Opt[Ls[Value]]](S(Nil)):

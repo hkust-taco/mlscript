@@ -220,8 +220,8 @@ declare module Math with
   declare fun abs(x: Int32): Int
 data class Word(bits: Int32)
 
-// FIXME: make() loses its Int32 result after fusion and passes undefined to read.
-:fixme
+// Fusion retypes the results of `first` and `second`. The call of `make`, a function value that is one of them,
+// takes their rewritten signature, so its Int32 result reaches `read` as it is.
 :deforest
 :expect 49
 private fun first(): Word = Word(Math.imul(42, 1))
@@ -245,8 +245,7 @@ choose(true) + choose(false)
 //│ deforest > Word⁰(tmp¹) ->
 //│ deforest > 	select: bits
 //│ deforest > <<< fusing <<<
-//│ ═══[RUNTIME ERROR] Expected: '49', got: 'NaN'
-//│ = NaN
+//│ = 49
 
 
 // In the other direction, a projected word reaches both readers as the argument of a call through a
@@ -311,7 +310,7 @@ passMono(true) + passMono(false)
 //│   set tmp3 = globalThis⁰.Math⁰.imul⁰‹(Int⁰, Int⁰) => Int32›(21, 1);
 //│   set Word_bits = tmp3;
 //│   set tmp4 = Word_bits;
-//│   return reader‹(...Array⁰) => ?›(tmp4)
+//│   return reader‹(Int32) => Int⁰›(tmp4)
 //│ };
 //│ set tmp = passMono¹‹(Bool⁰) => Int⁰›(true);
 //│ set tmp1 = passMono¹‹(Bool⁰) => Int⁰›(false);

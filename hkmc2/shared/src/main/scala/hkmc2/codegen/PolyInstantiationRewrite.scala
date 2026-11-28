@@ -56,21 +56,77 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
   given tl: TraceLogger = constraintSolver.tl
   given fState: FlowAnalysis.State = constraintSolver.fState
   given eState: Elaborator.State = constraintSolver.eState
+  given eCtx: Elaborator.Ctx = constraintSolver.collector.eCtx
   given pre: FlowPreAnalyzer = constraintSolver.preAnalyzer
   
-  /** The applications of function values that can reach a function of which this rewrite changes the calling
-    * convention: a definition whose signature it rewrites, in place or in a copy, or a lambda, whose
-    * parameters it can retype or remove without publishing a signature. Each application is identified by
-    * the call and the argument list that it supplies.
+  /** The signature of the lambda `lam` in instance `instId` once this rewrite has run, when the rewrite changes
+    * its parameter list or its result, and `N` when it changes neither. This implementation covers the
+    * parameters that `retypedVariables` retypes; a rewrite that changes lambdas in another way overrides it.
     */
-  private lazy val rewrittenValueCalls: collection.Set[ConcreteId[CallId]] =
-    val rewritten = rewrittenSignatures.keysIterator.map(_._2).toSet
-    constraintSolver.consFunsWithSrcs.iterator.filter(_.srcs.exists:
-      case source: ProdFun => source.exprId match
-        case (fun: TermSymbol, _) => rewritten(fun)
-        case _: ResultId => true
-      case _ => false
-    ).map(_.concreteId).toSet
+  protected def rewrittenLambdaSignature(instId: InstantiationId, lam: Lambda): Opt[ErasedFuncSignature] =
+    val params = retypedParams(instId, lam.params :: Nil).head
+    Option.when(params isnt lam.params):
+      ErasedFuncSignature.Signature(ErasedParamList.of(params) :: Nil, ErasedResult.Direct(lam.bodyType))
+  
+  /** What the function value `source` is called with once this rewrite has run. `signature` starts with the
+    * parameter list that `source` stands for: a function producer stands for one parameter list of a definition,
+    * whose earlier lists are already applied, or for the parameter list of a lambda. It is `N` when no function
+    * signature describes the value. `rewritten` tells whether this rewrite changes that signature.
+    */
+  protected def calledSignature(source: ProdFun): (signature: Opt[ErasedFuncSignature], rewritten: Bool) =
+    val instance = source.concreteId.instId
+    source.exprId match
+      case (fun: TermSymbol, list: Int) =>
+        val current = signatureAt(instance, fun)
+        val signature = current.erasure match
+          case sig: ErasedFuncSignature => sig.afterLists(list)
+          case _: ErasedGetterSignature => N
+        (signature, current isnt pre.res.funSymToFunDefn(fun).signature)
+      case lambda: ResultId => lambda.getResult match
+        case lam: Lambda =>
+          val rewritten = rewrittenLambdaSignature(instance, lam)
+          val signature = rewritten.getOrElse:
+            ErasedFuncSignature.Signature(ErasedParamList.of(lam.params) :: Nil, ErasedResult.Direct(lam.bodyType))
+          (S(signature), rewritten.isDefined)
+        case other => lastWords(s"expected lambda result, got $other")
+  
+  /** The possible callees of a call whose callee is one of `sources`, with the signatures that those functions
+    * have once this rewrite has run (see [[ErasedCallee]]), and whether the rewrite changes one of them. A source
+    * that is not a known function is an unknown callee.
+    */
+  protected def calleeAfterRewrite(sources: Iterable[ProdFun | MarkerProdStrat]): (callee: ErasedCallee, rewritten: Bool) =
+    // The sources come from sets. Their order selects which of several equivalent signatures a call takes, so
+    // it has to be the same in every run.
+    val functions = sources.iterator.collect { case source: ProdFun => source }.toList.sortBy: source =>
+      source.exprId match
+        case (fun: TermSymbol, list: Int) => (fun.uid, list)
+        case lambda: ResultId => (lambda.uid, 0)
+    val called = functions.map(calledSignature)
+    val known = called.map(_.signature.fold(ErasedCallee.Unknown)(ErasedCallee.Known(_)))
+    val callees = if functions.sizeCompare(sources) == 0 then known else known ::: ErasedCallee.Unknown :: Nil
+    (ErasedCallee.OneOf(callees), called.exists(_.rewritten))
+  
+  /** The signature that a call of `listCount` argument lists has once this rewrite has run, when its callee is
+    * one of `sources`, and `N` when the rewrite changes none of them, so that the call keeps its signature.
+    *
+    * The signature of a call of a function value describes the functions that the call can reach, as lowering
+    * knew them. This rewrite changes the parameters and results of some functions together with the arguments
+    * that their callers pass, including through function values, and the flow analysis tells which functions
+    * each of those calls reaches. Their rewritten signatures describe the call like the callees that resolution
+    * found do in lowering: the call takes the signature that they share, and the dynamic signature when they
+    * share none or when one of the sources is not a known function.
+    */
+  protected def rewrittenCallSignature(sources: Iterable[ProdFun | MarkerProdStrat], listCount: Int): Opt[ErasedFuncSignature] =
+    val (callee, rewritten) = calleeAfterRewrite(sources)
+    Option.when(rewritten)(callee.callSignature(listCount).getOrElse(ErasedFuncSignature.dynamic(listCount)))
+  
+  /** The function values that reach each application of a function value, which the call and the argument list
+    * that it supplies identify. */
+  private lazy val valueCallSources: collection.Map[ConcreteId[CallId], Ls[ProdFun | MarkerProdStrat]] =
+    val res = LinkedHashMap.empty[ConcreteId[CallId], Ls[ProdFun | MarkerProdStrat]]
+    for consFun <- constraintSolver.consFunsWithSrcs do
+      res(consFun.concreteId) = res.getOrElse(consFun.concreteId, Nil) ::: consFun.srcs.toList
+    res
   
   // Rewriters look these up for every call they keep, so index the root functions once.
   private lazy val inPlaceInstIds: Map[TermSymbol, InstantiationId] =
@@ -211,18 +267,16 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
     
     extension (resId: ResultId) def concreteId = ConcreteId(resId, instId)
     
-    /** `rewritten`, the result of rewriting the call `original`, with a signature that holds after this rewrite.
-      *
-      * The signature of a call of a function value describes the functions that the call can reach, as lowering
-      * knew them. This rewrite changes the parameters and results of some functions together with the arguments
-      * that their callers pass, including through function values. A call that can reach one of those functions
-      * (see `rewrittenValueCalls`) takes the dynamic signature, which fits any arguments and result. A call of a
-      * definition takes the signature that the definition publishes, which the rewrite refreshes separately.
+    /** `rewritten`, the result of rewriting the call `original`, with a signature that holds after this rewrite
+      * (see `rewrittenCallSignature`). A call of a definition takes the signature that the definition publishes,
+      * which the rewrite refreshes separately. Only the callee of the first argument list has function values
+      * as its sources: the later lists of a call apply the functions that it returns.
       */
     protected def afterRewrite(original: Call, rewritten: Result): Result = rewritten match
-      case call: Call if call.argss.nonEmpty && Call.publishedSignature(call.fun).isEmpty &&
-          original.argss.indices.exists(list => rewrittenValueCalls(ConcreteId((original.uid, list), instId))) =>
-        call.copy()(ErasedFuncSignature.dynamic(call.argss.length), call.metadata, call.toLoc)
+      case call: Call if call.argss.nonEmpty && Call.publishedSignature(call.fun).isEmpty =>
+        valueCallSources.get(ConcreteId((original.uid, 0), instId))
+          .flatMap(rewrittenCallSignature(_, call.argss.length))
+          .fold(call)(signature => call.copy()(signature, call.metadata, call.toLoc))
       case _ => rewritten
     
     override def applyResult(r: Result)(k: Result => Block): Block = r match

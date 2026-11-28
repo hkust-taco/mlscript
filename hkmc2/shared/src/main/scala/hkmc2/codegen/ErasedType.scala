@@ -559,6 +559,14 @@ sealed abstract class ErasedFuncSignature extends ErasedCallableSignature:
     case first :: _ :: _ =>
       ErasedFuncSignature.Signature(first :: Nil, ErasedResult.Direct(S(ErasedType.Function(S(false)))))
     case _ => this
+  /** The signature of the function that the application of the first `count` parameter lists returns, or `N`
+    * when no parameter list remains.
+    */
+  def afterLists(count: Int): Opt[ErasedFuncSignature] =
+    if count == 0 then S(this)
+    else paramLists.drop(count) match
+      case Nil => N
+      case remaining => S(ErasedFuncSignature.Signature(remaining, result))
 
 
 object ErasedGetterSignature:
@@ -643,13 +651,13 @@ trait HasDelayedErasedType[T <: ErasedValueType]:
   */
 enum ErasedCallee:
   /** A value whose applications follow `signature`: a value of a declared function type, or a function
-    * definition or lambda. `signature` has the parameter lists that the value expects, starting with the one
+    * definition, including the constructor function of a class, or a lambda. `signature` has the parameter lists that the value expects, starting with the one
     * that the application supplies. It has several lists for a curried definition, of which the application
     * then supplies the first.
     */
   case Known(signature: ErasedFuncSignature)
-  /** A value of which resolution knows no calling convention, such as a dynamic value, a `Function`, or a class
-    * called as a function. It also describes the callee of an application that resolution did not reach.
+  /** A value of which resolution knows no calling convention, such as a dynamic value or a `Function`. It also
+    * describes the callee of an application that resolution did not reach.
     */
   case Unknown
   /** A value that satisfies each of `components`, as a value of an intersection type does. */
@@ -674,6 +682,18 @@ enum ErasedCallee:
       case OneOf(first :: others) => others.foldLeft(first.sharedSignatures(view)): (shared, alternative) =>
         val followed = alternative.sharedSignatures(view).map(_.canonicalize)
         shared.filter(signature => followed.contains(signature.canonicalize))
+
+  /** The signature of a call that applies `listCount` argument lists to this callee, when its possible values
+    * agree on one: the signature that they all have, or, for a call of one list, that of the application of
+    * their first parameter list.
+    */
+  def callSignature(listCount: Int)(using Ctx, State): Opt[ErasedFuncSignature] =
+    def unique(view: ErasedFuncSignature => ErasedFuncSignature): Opt[ErasedFuncSignature] =
+      sharedSignatures(view) match
+        case signature :: Nil => S(signature)
+        case _ => N
+    unique(identity).filter(_.paramListCount >= listCount).orElse:
+      if listCount == 1 then unique(_.firstApplication) else N
 
   /** The signatures of all the possible callees that have a known one. */
   def knownSignatures: Iterator[ErasedFuncSignature] = this match

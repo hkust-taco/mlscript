@@ -695,13 +695,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     */
   private def lowerRemainingCalls(base: Path, first: ArgumentList, remainingArgss: Ls[ArgumentList],
         annotations: Ls[Annot], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
-    def shared(view: ErasedFuncSignature => ErasedFuncSignature): Opt[ErasedFuncSignature] =
-      first.callee.sharedSignatures(view) match
-        case signature :: Nil => S(signature)
-        case _ => N
     val signature = Call.publishedSignature(base) match
       case S(sig: ErasedFuncSignature) => sig
-      case _ => shared(identity).orElse(shared(_.firstApplication)) match
+      case _ => first.callee.callSignature(1) match
         case S(signature) => signature
         // A dynamic call passes and returns reference values. A callee whose signature has an unboxed slot
         // cannot use that convention, even if the arguments at this call happen to be references.

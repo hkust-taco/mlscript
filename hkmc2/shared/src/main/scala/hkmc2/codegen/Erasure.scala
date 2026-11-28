@@ -203,11 +203,7 @@ final class Erasure(root: Statement, report: Raise)(using Config, Ctx, State):
         Option.when(lam.resultSlot.isErasureReady && lam.params.allParams.forall(_.sym.isErasureReady)):
           ErasedFuncSignature.Signature(LoweredParamList.erasedLayout(lam.params) :: Nil,
             ErasedResult.Direct(lam.resultSlot.erasedType))
-    whole.flatMap: signature =>
-      if callee.applied == 0 then S(signature)
-      else signature.paramLists.drop(callee.applied) match
-        case Nil => N
-        case remaining => S(ErasedFuncSignature.Signature(remaining, signature.result))
+    whole.flatMap(_.afterLists(callee.applied))
 
   /** The alternatives of `callees`, with the signature of each declared function type and of each function
     * definition among them. */

@@ -142,7 +142,7 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│   let arg$Cons$1$;
 //│   match xs
 //│     Nil⁰ =>
-//│       return (ys(eta$0$1, eta$0$2, eta$0$4) as! Int⁰)
+//│       return ys(eta$0$1, eta$0$2, eta$0$4)
 //│     Cons¹ =>
 //│       let inlinedVal;
 //│       set arg$Cons$1$ = xs.t⁰;

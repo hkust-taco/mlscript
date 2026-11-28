@@ -18,7 +18,9 @@ class FlowAnalysisBasedRewrite(
   val deadConstructorElimSolver: DeadConstructorElimResult,
 )(using Raise) extends PolyInstantiationRewrite(constraintSolver):
 
-  private case class EtaParamList(params: LoweredParamList):
+  /** A parameter list that eta expansion appends to a function. Its arguments are applied to the function that
+    * the expanded function returned, which is one of `targets`. */
+  private case class EtaParamList(params: LoweredParamList, targets: EtaTargets):
     def args: Ls[Arg] = params.params.map(p => Arg(N, p.sym.asSimpleRef)) :::
       params.restParam.toList.map(p => Arg(S(SpreadKind.Eager), p.sym.asSimpleRef))
   
@@ -95,7 +97,7 @@ class FlowAnalysisBasedRewrite(
           else optionalEtaParam(i.toString, etaParamType(targets, i))
         .toList
         val restParam = Option.when(targets.hasRestParam)(etaParam("rest", N))
-        EtaParamList(LoweredParamList(ParamListFlags.empty, params, restParam)(N))
+        EtaParamList(LoweredParamList(ParamListFlags.empty, params, restParam)(N), targets)
   
   class Rewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[Symbol, Symbol]]) extends InstantiationRewriter(instId, refreshSymbolMappingForCopy):
     
@@ -110,20 +112,43 @@ class FlowAnalysisBasedRewrite(
         finally activeEliminatedParams --= removed
     
     // eta expansion states and helper functions
-    private var activeEtaArgss: Ls[Ls[Arg]] = Nil
+    private var activeEtaLists: Ls[EtaParamList] = Nil
     
-    private def withEtaArgss[A](etaArgss: Ls[Ls[Arg]])(thunk: => A): A =
-      val saved = activeEtaArgss
-      activeEtaArgss = etaArgss
+    private def withEtaLists[A](etaLists: Ls[EtaParamList])(thunk: => A): A =
+      val saved = activeEtaLists
+      activeEtaLists = etaLists
       try thunk
-      finally activeEtaArgss = saved
+      finally activeEtaLists = saved
+    
+    /** The signature of a call that applies eta-expanded argument lists to one of `targets`: the signature that
+      * those functions share once rewritten. When they share none, a dynamic call applies the `listCount` lists
+      * that remain.
+      */
+    private def etaSignature(targets: EtaTargets, listCount: Int): ErasedFuncSignature =
+      calleeAfterRewrite(targets.prodFuns).callee.callSignature(1).getOrElse(ErasedFuncSignature.dynamic(listCount))
+    
+    /** Passes to `k` the result of applying to `fun` the argument lists `supplied`, followed by those of the
+      * eta-expanded `lists`. The first call has `signature` and applies as many lists as it has parameter lists.
+      * Each later call applies the function that the previous one returned, which is one of the eta targets of
+      * the first list that it applies.
+      */
+    private def applyEtaLists(fun: Path, signature: ErasedFuncSignature, supplied: Ls[Ls[Arg]], lists: Ls[EtaParamList],
+          metadata: CallMetadata, loc: Opt[Loc])(k: Result => Block): Block =
+      val (now, later) = lists.splitAt(signature.paramListCount - supplied.length)
+      val call = Call(fun, supplied ::: now.map(_.args))(signature, metadata, loc)
+      later match
+        case Nil => k(call)
+        case next :: _ =>
+          val prefix = TempSymbol(N, initErasedType = call.erasedType, "callPrefix")
+          Scoped(Set.single(prefix), Assign(prefix, call,
+            applyEtaLists(prefix.asSimpleRef, etaSignature(next.targets, later.length), Nil, later, metadata, loc)(k)))
     
     /** Returns the result of applying the eta-expanded argument lists to `base`. */
     private def etaReturn(base: Path, loc: Opt[Loc]): Block =
       val signature = Call.publishedSignature(base) match
         case S(sig: ErasedFuncSignature) => sig
-        case _ => ErasedFuncSignature.dynamic(activeEtaArgss.length)
-      Call.chain(base, signature, activeEtaArgss, CallMetadata.mlsFunWithEffect, loc)(Return(_))
+        case _ => etaSignature(activeEtaLists.head.targets, activeEtaLists.length)
+      applyEtaLists(base, signature, Nil, activeEtaLists, CallMetadata.mlsFunWithEffect, loc)(Return(_))
     
     
     override def rewriteFunDefn(fun: FunDefn): RewrittenFunDefn =
@@ -131,12 +156,14 @@ class FlowAnalysisBasedRewrite(
       val signature = rewrite.fold(fun.signature)(_.signature)
       val params2 = signature.params.mapConserve(applyParamList)
       val signature2 = if params2 is signature.params then signature else signature.copy(params = params2)
-      val etaArgss = signature2.params.takeRight(rewrite.fold(0)(_.etaCount)).map(EtaParamList(_).args)
+      val etaTargets = rewrite.fold(Nil)(_.etaTargets)
+      // The signature ends with one parameter list for each of the eta targets.
+      val etaLists = signature2.params.takeRight(etaTargets.length).lazyZip(etaTargets).map(EtaParamList(_, _))
       val body2 = withEliminatedParams(rewrite.fold(Set.empty[VarSymbol])(_.removed)):
-        withEtaArgss(etaArgss):
+        withEtaLists(etaLists):
           applyFunBodyLikeBlock(fun.body)
       // Calls added for eta expansion may be effectful even when the original body was pure.
-      val annotations = if rewrite.exists(_.etaCount > 0) then fun.annotations.filterNot(_.isInstanceOf[Annot.Pure])
+      val annotations = if etaTargets.nonEmpty then fun.annotations.filterNot(_.isInstanceOf[Annot.Pure])
         else fun.annotations
       (signature2, body2, annotations)
     
@@ -159,16 +186,16 @@ class FlowAnalysisBasedRewrite(
       case Assign(lhs: VarSymbol, rhs, rst) if activeEliminatedParams(lhs) =>
         applyResult(rhs): rhs2 =>
           Assign.discard(rhs2, applySubBlock(rst))
-      case Return(res) if activeEtaArgss.nonEmpty =>
+      case Return(res) if activeEtaLists.nonEmpty =>
         applyResult(res): res2 =>
-          if activeEtaArgss.isEmpty then Return(res2)
+          if activeEtaLists.isEmpty then Return(res2)
           else res2 match
           case p: Path =>
             etaReturn(p, res2.toLoc)
           // * A call with argument lists also applies the eta-expanded ones, as far as its signature allows.
           case c @ Call(fun, argss) if argss.nonEmpty => c.signature match
             case sig: ErasedFuncSignature =>
-              Call.chain(fun, sig, argss ++ activeEtaArgss, c.metadata.copy(
+              applyEtaLists(fun, sig, argss, activeEtaLists, c.metadata.copy(
                 mayRaiseEffects = true,
                 annotations = c.metadata.annotations.filterNot(_.isInstanceOf[Annot.Pure])), c.toLoc)(Return(_))
             case _: ErasedGetterSignature => lastWords("A call with argument lists has a function signature")
@@ -242,13 +269,13 @@ class FlowAnalysisBasedRewrite(
         k(defn2)
       defn match
       case cls: ClsLikeDefn =>
-        withEtaArgss(Nil):
+        withEtaLists(Nil):
           super.applyDefn(cls)(checkedK)
       case _ =>
         super.applyDefn(defn)(checkedK)
     
     override def applyObjBody(defn: ClsLikeBody): ClsLikeBody =
-      withEtaArgss(Nil):
+      withEtaLists(Nil):
         super.applyObjBody(defn)
     
     override def applyFunDefn(fun: FunDefn): FunDefn =
@@ -265,7 +292,7 @@ class FlowAnalysisBasedRewrite(
       val (params2, removed) =
         filterParamList(lam.params, deadParamElimSolver.eliminableParams(lamId))
       val body2 = withEliminatedParams(removed):
-        withEtaArgss(etaParams.map(_.args)):
+        withEtaLists(etaParams):
           applyFunBodyLikeBlock(lam.body)
       val wrappedBody = etaParams.map(_.params).foldRight(body2): (params, body) =>
         Return(Lambda(params, body)(Block.returnType(body), Nil, N))
@@ -295,7 +322,9 @@ class FlowAnalysisBasedRewrite(
   
   def retypedVariables: LinkedHashMap[(InstantiationId, ValueSymbol), ErasedValueType] = LinkedHashMap.empty
   
-  private case class FunctionRewrite(signature: FunDefn.Signature, removed: Set[VarSymbol], etaCount: Int)
+  /** The planned rewrite of a function: its `signature`, which ends with one parameter list for each of
+    * `etaTargets`, and the parameters `removed` from its original lists. */
+  private case class FunctionRewrite(signature: FunDefn.Signature, removed: Set[VarSymbol], etaTargets: Ls[EtaTargets])
   
   // Compute the rewritten parameters and signatures before rewriting function bodies.
   // Reuse these signatures for recursive and forward calls and their target definitions.
@@ -323,11 +352,22 @@ class FlowAnalysisBasedRewrite(
             case _ => N
         val result = if results.forall(_.isDefined) then S(ErasedType.Union.mk(results.flatten)) else N
         FunDefn.Signature.fromParams(params, ErasedResult.Direct(result))
-      res(instId -> fun) = FunctionRewrite(signature, removed, etaParams.size)
+      res(instId -> fun) = FunctionRewrite(signature, removed, eta.map(_._1))
     res
   
   lazy val rewrittenSignatures: LinkedHashMap[(InstantiationId, TermSymbol), FunDefn.Signature] =
     functionRewrites.map((id, rewrite) => id -> rewrite.signature)
+  
+  /** A lambda keeps its single parameter list without the parameters that dead parameter elimination removes.
+    * Eta expansion makes it return the lambda that takes the next parameter list (see `Rewriter.applyLam`).
+    */
+  override protected def rewrittenLambdaSignature(instId: InstantiationId, lam: Lambda): Opt[ErasedFuncSignature] =
+    val lamId: ConcreteFunId = ConcreteId(lam.uid, instId)
+    val expanded = etaTargetLists(lamId, lam.params :: Nil).nonEmpty
+    val (kept, removed) = filterParamList(lam.params, deadParamElimSolver.eliminableParams(lamId))
+    Option.when(expanded || removed.nonEmpty):
+      val result = if expanded then S(ErasedType.Function(S(false))) else lam.bodyType
+      ErasedFuncSignature.Signature(ErasedParamList.of(kept) :: Nil, ErasedResult.Direct(result))
   // ====== end: implements the abstract members of `PolyInstantiationRewrite` ======
   
 end FlowAnalysisBasedRewrite

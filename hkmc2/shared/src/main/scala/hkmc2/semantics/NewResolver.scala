@@ -3876,24 +3876,36 @@ class NewResolver:
     *
     * A function definition fixes its own calling convention, so `callee` is recorded as that definition
     * whenever it is one: a function or a method with written parameter lists left to apply, including through a
-    * declared interface, whose annotations can leave parameters out, and a lambda. A class called as a function
-    * is not recorded as a definition: its constructor has its own argument conventions (see
-    * `Lowering.lowerConstructorArgs`).
+    * declared interface, whose annotations can leave parameters out, a lambda, and the constructor function of
+    * a class, which a class with parameters defines next to itself and which a reference to the class as a
+    * value denotes.
+    *
+    * An instantiation that lacks argument lists, as in `new C`, is a different function: lowering expands it
+    * into lambdas that instantiate the class (see `Lowering.lowerMultiInstantiate`), and it is not recorded as
+    * the constructor function.
     */
   private def recordCallee(callee: TermShape, callees: ResolvedValues.Callees)(using ResolutionContext): Unit =
     def function(td: TermDefinition, remaining: Int): Unit =
       val applied = td.params.length - remaining
-      if (td.k is syntax.Fun) && !td.tsym.isInstanceOf[ClassCtorSymbol] && remaining > 0 && applied >= 0
-      then callees.define(td, applied)
+      if (td.k is syntax.Fun) && remaining > 0 && applied >= 0 then callees.define(td, applied)
       else callees.unknown = true
+    def instantiates(shape: TermShape): Bool = shape match
+      case MarkedShape(inner, _) => instantiates(inner)
+      case application: AppShape => instantiates(application.receiver)
+      case _: NewShape => true
+      case _ => false
     callee match
       case Marked(callable: CallableTypeShape, _) => callable.declaration match
         case S(method) if method.remaining.nonEmpty => function(method.definition, method.remaining.length)
         case _ => rctx.state.resolvedValues.observeDeclaredCallee(callees, withoutActivation(callable), this)(
           using rctx.withInstances(TypeSubstitution.empty))
+      case _ if instantiates(callee) => callees.unknown = true
       case _ => callee.applicationHead._1 match
         case definition: DefnShape => definition.defn match
           case td: TermDefinition => function(td, callee.unappliedParams.length)
+          case cls: ClassDef => cls.ctorSym.flatMap(_.defn) match
+            case S(constructor) => function(constructor, callee.unappliedParams.length)
+            case N => callees.unknown = true
           case _ => callees.unknown = true
         case intro: IntroShape => intro.trm match
           case lam: Lam if callee.unappliedParams.nonEmpty => callees.define(lam, 0)

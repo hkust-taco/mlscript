@@ -266,15 +266,16 @@ private[hkmc2] object ResolvedValues:
     */
   final class DeclaredCallee(val interface: DeclaredParams, val leading: Ls[Opt[InterfaceSlot]], val result: InterfaceSlot)
 
-  /** A callee that is a function definition or a lambda, of which earlier applications already supplied the
-    * first `applied` parameter lists. The application supplies the next one.
+  /** A callee that is a function definition, which includes the constructor function of a class, or a lambda,
+    * of which earlier applications already supplied the first `applied` parameter lists. The application
+    * supplies the next one.
     */
   final class DefinedCallee(val function: TermDefinition | Lam, val applied: Int)
 
   /** The values that an application can call. The callee is one of the alternatives that this record lists:
     * a value of one of the `declared` function types, one of the `defined` functions, a value of which
-    * resolution knows no calling interface when `unknown` is set, such as a dynamic value, a `Function`, or a
-    * class, or a value of one of the `intersections`, which satisfies each component of that intersection.
+    * resolution knows no calling interface when `unknown` is set, such as a dynamic value or a `Function`, or a
+    * value of one of the `intersections`, which satisfies each component of that intersection.
     *
     * Resolution fills this record while it resolves the block of the application (see
     * `ResolvedValues.calleesOf`). A record without alternatives describes a callee that resolution did not

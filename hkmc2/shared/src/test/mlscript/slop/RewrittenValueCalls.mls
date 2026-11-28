@@ -4,8 +4,8 @@
 
 
 // A flow-based rewrite changes the parameters of functions together with the arguments of the calls that reach
-// them, including the calls of function values. Such a call carried the signature of the definitions that it
-// can reach, which describes them as they were before the rewrite, so it takes the dynamic signature.
+// them, including the calls of function values. Such a call carries the signature of the functions that it can
+// reach, so the rewrite gives it the signature that those functions have once rewritten.
 
 // Dead parameter elimination removes the second parameter of both functions and the second argument of the call.
 :flowBasedOpt mono
@@ -28,7 +28,7 @@ applyTo(keepFirst, 1) + applyTo(keepFirstPlusOne, 1)
 //│ };
 //│ @private
 //│ define applyTo⁰ as fun applyTo¹(f: Function⁰, x: Int⁰): Int⁰ {
-//│   return f‹(...Array⁰) => ?›(x)
+//│   return f‹(Int⁰) => Int⁰›(x)
 //│ };
 //│ set tmp = applyTo¹‹(Function⁰, Int⁰) => Int⁰›(keepFirst¹, 1);
 //│ set tmp1 = applyTo¹‹(Function⁰, Int⁰) => Int⁰›(keepFirstPlusOne¹, 1);
@@ -57,5 +57,89 @@ applyBoth(addBoth, 1) + applyBoth(addBoth, 0)
 //│ set tmp = applyBoth¹‹(Function⁰, Int⁰) => Int⁰›(addBoth¹, 1);
 //│ set tmp1 = applyBoth¹‹(Function⁰, Int⁰) => Int⁰›(addBoth¹, 0);
 //│ return +⁰‹(?, ?) => ?›(tmp, tmp1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 3
+
+// Eta expansion appends a parameter list to the copy of `viaPrefix` that `addCurried` reaches, and applies its
+// arguments to the function that the call in its body returns. That call has the signature of `addCurried`,
+// which has room for the appended argument list.
+:lift
+:flowBasedOpt debugEta poly
+:soir
+:siret
+:expect 15
+@affine(1) fun addCurried(a: Int)(b: Int): Int = a + b
+fun mulCurried(a: Int)(b: Int): Int = a * b
+private fun viaPrefix(k, x: Int) = k(x)
+viaPrefix(addCurried, 1)(2) + viaPrefix(mulCurried, 3)(4)
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > viaPrefix⁰#0 @ viaPrefix¹: [2, 1]
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp: Int⁰, baseCall: Function⁰, tmp1: Int⁰, viaPrefix$viaPrefix;
+//│ @private @private
+//│ define viaPrefix$viaPrefix as fun viaPrefix$viaPrefix⁰(k: Function⁰, x: Int⁰)(eta$0$0: Int⁰): Int⁰ {
+//│   return k‹(Int⁰) => (Int⁰) => Int⁰›(x)(eta$0$0)
+//│ };
+//│ @affine(1)
+//│ define addCurried⁰ as fun addCurried¹(a: Int⁰)(b: Int⁰): Int⁰ {
+//│   return +⁰‹(?, ?) => ?›(a, b)
+//│ };
+//│ define mulCurried⁰ as fun mulCurried¹(a: Int⁰)(b: Int⁰): Int⁰ {
+//│   return *⁰‹(?, ?) => ?›(a, b)
+//│ };
+//│ @private
+//│ define viaPrefix⁰ as fun viaPrefix¹(k: Function⁰, x: Int⁰): Function⁰ {
+//│   return k‹(Int⁰) => (Int⁰) => Int⁰›(x)
+//│ };
+//│ set tmp = viaPrefix$viaPrefix⁰‹(Function⁰, Int⁰) => (Int⁰) => Int⁰›(addCurried¹, 1)(2);
+//│ set baseCall = viaPrefix¹‹(Function⁰, Int⁰) => Function⁰›(mulCurried¹, 3);
+//│ set tmp1 = baseCall‹(Int⁰) => Int⁰›(4);
+//│ return +⁰‹(?, ?) => ?›(tmp, tmp1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 15
+
+// When the body returns a function value as it is, the appended arguments are applied to that value by a call
+// that takes the signature of the functions that the body can return.
+:lift
+:flowBasedOpt debugEta poly
+:soir
+:siret
+:expect 3
+@affine(1) fun addOnce(a: Int)(b: Int): Int = a + b
+private fun pass(k) = k
+private fun viaValue(k, x: Int) = pass(k(x))
+viaValue(addOnce, 1)(2)
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > pass⁰#0 @ viaValue⁰.pass¹: [1, 1]
+//│ eta-expansion > viaValue¹#0 @ viaValue⁰: [2, 1]
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let viaValue_pass$pass, viaValue$viaValue;
+//│ @private @private
+//│ define viaValue_pass$pass as fun viaValue_pass$pass⁰(k: Function⁰)(eta$0$0: Int⁰): Int⁰ {
+//│   return k‹(Int⁰) => Int⁰›(eta$0$0)
+//│ };
+//│ @private @private
+//│ define viaValue$viaValue as fun viaValue$viaValue⁰(k: Function⁰, x: Int⁰)(eta$0$0: Int⁰): Int⁰ {
+//│   let tmp: Function⁰;
+//│   set tmp = k‹(Int⁰) => (Int⁰) => Int⁰›(x);
+//│   return viaValue_pass$pass⁰‹(Function⁰) => (Int⁰) => Int⁰›(tmp)(eta$0$0)
+//│ };
+//│ @affine(1)
+//│ define addOnce⁰ as fun addOnce¹(a: Int⁰)(b: Int⁰): Int⁰ {
+//│   return +⁰‹(?, ?) => ?›(a, b)
+//│ };
+//│ @private
+//│ define pass⁰ as fun pass¹(k: Function⁰): Function⁰ {
+//│   return k
+//│ };
+//│ @private
+//│ define viaValue⁰ as fun viaValue¹(k: Function⁰, x: Int⁰): Function⁰ {
+//│   let tmp: Function⁰;
+//│   set tmp = k‹(Int⁰) => (Int⁰) => Int⁰›(x);
+//│   return pass¹‹(Function⁰) => Function⁰›(tmp)
+//│ };
+//│ return viaValue$viaValue⁰‹(Function⁰, Int⁰) => (Int⁰) => Int⁰›(addOnce¹, 1)(2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
