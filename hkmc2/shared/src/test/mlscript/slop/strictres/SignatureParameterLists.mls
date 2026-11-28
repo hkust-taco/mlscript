@@ -148,6 +148,64 @@ private class WrongGetter extends Operations with
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
+// A `return` in the body of a split implementation returns from the application of its last written list,
+// including when that list belongs to the returned lambda.
+:checkIR
+:expect [1, 2, 7, 0, 3, 5, 2]
+fun early: UnaryOp
+fun early(x) =
+  if x > 0 do return 1
+  2
+fun earlyAdd: Int -> (Int -> Int)
+fun earlyAdd(x)(y) =
+  if y > 0 do return x + y
+  0
+private class Limit(val limit: Int) with
+  fun over: Int -> (Int -> Int)
+  fun over(x)(y) =
+    if x > limit do return x
+    if y > limit do return y
+    limit
+[early(5), early(0), earlyAdd(3)(4), earlyAdd(3)(0), Limit(2).over(3)(0), Limit(2).over(0)(5), Limit(2).over(0)(0)]
+//│ = [1, 2, 7, 0, 3, 5, 2]
+
+// The returned lambda has the results of these returns.
+:sir
+:siret
+fun earlyResult: Int -> (Int -> Any)
+fun earlyResult(x)(y) =
+  if y > 0 do return "early"
+  x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define earlyResult⁰ as fun earlyResult¹(x: Int⁰): Function⁰ {
+//│   let lambda;
+//│   @private
+//│   define lambda as fun lambda⁰(y: Int⁰): Unknown {
+//│     let scrut: Bool⁰;
+//│     set scrut = >⁰(y, 0);
+//│     match scrut
+//│       true =>
+//│         return "early"
+//│       else
+//│         return x
+//│     end
+//│   };
+//│   return lambda⁰
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// A `return` in a lambda nested in that body also returns from the application of the last written list.
+:effectHandlers
+:lift
+:expect [4, 0]
+fun firstOver: Int -> (Array[Int] -> Int)
+fun firstOver(limit)(xs) =
+  xs.forEach(x => if x > limit do return x)
+  0
+[firstOver(2)([1, 2, 3, 4]), firstOver(9)([1, 2, 3])]
+//│ = [4, 0]
+
 // A dropped public argument remains available to a subclass implementing the full declaration.
 :expect [3, 7]
 private class Project with

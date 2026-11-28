@@ -514,6 +514,7 @@ A split definition can write additional parameter lists as shorthand for returne
 For example, given `type Unary = Int -> Int`, both `fun f(x) = x` and `fun f = x => x`
 implement `fun f: Unary` as a getter. Likewise, after `fun f: Int -> (Int -> Int)`,
 `fun f(x)(y) = x + y` means `fun f(x) = y => x + y`. Overrides see one method parameter list.
+A `return` in the body of such a definition returns from the application of its last written list.
 A result annotation following written parameter lists is the type of their result:
 `fun f(x): Int -> Int` takes one parameter list and returns a function.
 A value cannot have parameter lists, so the function type of a `val` must be parenthesized,
