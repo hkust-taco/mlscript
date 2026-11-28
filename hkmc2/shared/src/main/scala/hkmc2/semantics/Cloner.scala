@@ -284,7 +284,7 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
       val copy = source.copy(sym = source.sym.subst, tsym = source.tsym.subst,
         params = source.params.map(scope.parameterList), tparams = source.tparams.map(_.map(scope.parameter)),
         writtenType = source.writtenType.map(scope.term), body = source.body.map(scope.term),
-        modulefulness = modulefulness(source.modulefulness), annotations = source.annotations.map(scope.annotation),
+        writtenModulefulness = modulefulness(source.writtenModulefulness), annotations = source.annotations.map(scope.annotation),
         companion = source.companion.map(mapType))(source.toLoc, source.headerLoc, source.scope)
       copy.isErroneous = source.isErroneous
       copy

@@ -857,7 +857,7 @@ final case class TermDefinition(
     writtenType: Opt[Term],
     body: Opt[Term],
     flags: TermDefFlags,
-    modulefulness: Modulefulness,
+    writtenModulefulness: Modulefulness,
     annotations: Ls[Annot],
     companion: Opt[CompanionSymbol],
 )(val toLoc: Opt[Loc], val headerLoc: Opt[Loc],
@@ -874,6 +874,7 @@ final case class TermDefinition(
   def signatureHeader: TermDefinition = tsym.termDeclaration.filter(_.writtenType.nonEmpty).getOrElse(this)
   /** The public type supplied by the declaration or written on this definition. */
   def sign: Opt[Term] = signatureHeader.writtenType
+  def modulefulness: Modulefulness = signatureHeader.writtenModulefulness
   /** Only function bodies are wrapped by AsyncLowering; annotations on other
     * definitions are ignored with a warning and must not change their interface.
     */

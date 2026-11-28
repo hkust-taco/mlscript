@@ -1644,7 +1644,16 @@ class NewResolver:
   // Register these before its body is elaborated, so observed calls can never
   // publish inferred alternatives for parameters behind this boundary.
   private def signatureParameters(using rs: ResolutionContext) = rs.state.signatureParameters
-  def registerParameterSignature(paramLists: Ls[ParamList], sign: Term, checking: TypeSubstitution)(using ResolutionContext): Unit =
+  /** Give implementation parameters their declared domains before elaborating the body.
+    * Return the same substitution for checking its result in the implementation's binders.
+    */
+  def registerParameterSignature(declaration: TermDefinition, paramLists: Ls[ParamList], own: Ls[VarSymbol])
+      (using ResolutionContext): TypeSubstitution =
+    val sign = declaration.writtenType match
+      case S(t) => t
+      case N => return TypeSubstitution.empty
+    val checking = if own.isEmpty then TypeSubstitution.empty else
+      instantiateMethodSignature(declaration, declaration.typeParamSymbols, declaration.tsym, own, signatureSite(declaration), Nil)
     // When the headers bind different symbols, calls and overrides need the signature's
     // domain even for an annotated parameter. Only the body reads it in the local binders.
     paramLists.iterator.flatMap(_.allParams).filter(p => p.sign.isEmpty || checking.nonEmpty).foreach: param =>
@@ -1664,6 +1673,7 @@ class NewResolver:
       param.sign.foreach: inlineType =>
         val expected = declaredType(typeResolution(inlineType), Map.empty).instantiate(rctx.instances)
         inferTypeArguments(expected, instanceShape(component.instantiate(checking)), Nil, N)
+    checking
 
   /** The written type of a member, including a separate function signature or a constructor field's parameter type. */
   private[semantics] def writtenSignature(td: TermDefinition): Opt[Term] = td.tsym.decl match
@@ -2254,8 +2264,9 @@ class NewResolver:
     case MemberSlot.Parameter(p) => parameterSignature(p).orElse:
       // A legacy producer stores its full signature in the AST. Interpret its domains
       // in the consumer using the same parameter correspondence as a local signature.
-      td.sign.filter(_ => !td.flags.hasResultAnnotation && !rctx.state.isOwnedSym(td.tsym)).flatMap: full =>
-        registerParameterSignature(td.params, full, TypeSubstitution.empty)(using rctx.state.context)
+      if td.flags.hasResultAnnotation || rctx.state.isOwnedSym(td.tsym) then N
+      else
+        registerParameterSignature(td.signatureHeader, td.params, Nil)(using rctx.state.context)
         parameterSignature(p)
 
   /** The site that reads a member's signature independently of calls to its implementation. */
@@ -2274,7 +2285,7 @@ class NewResolver:
     * override supplies the path between method scopes. A split signature shares the member's
     * scope with its implementation. Unpaired signature parameters remain available for inference.
     */
-  def instantiateMethodSignature(base: TermDefinition, formals: Ls[VarSymbol], implementation: TermSymbol,
+  private def instantiateMethodSignature(base: TermDefinition, formals: Ls[VarSymbol], implementation: TermSymbol,
       own: => Ls[VarSymbol], methodSite: => Opt[FlowSymbol], path: => Ls[Marks])(using ResolutionContext): TypeSubstitution =
     if formals.isEmpty then return TypeSubstitution.empty
     methodSite.fold(TypeSubstitution.empty): site =>

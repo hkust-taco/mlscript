@@ -225,6 +225,14 @@ usedBetweenResult
 //│ = 2
 //│ usedBetweenResult = 2
 
+:expect 42
+fun moduleResult: module ResultModule
+module ResultModule with
+  val answer = 42
+fun moduleResult = ResultModule
+moduleResult.answer
+//│ = 42
+
 private fun bothPrivate: Int -> Int
 private fun bothPrivate(x) = x
 bothPrivate(1)

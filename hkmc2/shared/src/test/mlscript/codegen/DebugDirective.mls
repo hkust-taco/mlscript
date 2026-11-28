@@ -71,7 +71,7 @@ module Main with
 //│         term = Lit of IntLit of 2
 //│       Fld:
 //│         term = Lit of IntLit of 2
-//│   modulefulness = Modulefulness of N
+//│   writtenModulefulness = Modulefulness of N
 //│   annotations = Ls of
 //│     Debug of ...
 //│ —————————————| Elaborated term |————————————————————————————————————————————————————————————————————

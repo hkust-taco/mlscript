@@ -360,7 +360,8 @@ class Resolver(tl: TraceLogger)
   trace(dbg"Resolving definition: $defn"):
     def traverseTermDef(tdf: TermDefinition) =
       val TermDefinition(params = pss, tparams = tps, body = body,
-        flags = TermDefFlags(isMethod, _), modulefulness = modulefulness, annotations = annotations) = tdf
+        flags = TermDefFlags(isMethod, _), annotations = annotations) = tdf
+      val modulefulness = tdf.modulefulness
       /** 
        * Add the contextual parameters in pss to the ICtx so that they
        * can later be referred (be resolved to) in the body of the term
