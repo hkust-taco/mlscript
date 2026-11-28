@@ -400,24 +400,24 @@ declare module Reflect {
 declare module console {
   declare
     fun
-      log(...args)
-      debug(...args)
-      info(...args)
-      warn(...args)
-      error(...args)
+      log(...args): ()
+      debug(...args): ()
+      info(...args): ()
+      warn(...args): ()
+      error(...args): ()
       // assert
-      clear()
-      count(label?)
-      countReset(label?)
-      dir(item?, options?)
-      dirxml(...args)
-      group(...args)
-      groupCollapsed(...args)
-      groupEnd()
-      table(items?, columns?)
-      time(label?)
-      timeEnd(label?)
-      trace(...args)
+      clear(): ()
+      count(label?): ()
+      countReset(label?): ()
+      dir(item?, options?): ()
+      dirxml(...args): ()
+      group(...args): ()
+      groupCollapsed(...args): ()
+      groupEnd(): ()
+      table(items?, columns?): ()
+      time(label?): ()
+      timeEnd(label?): ()
+      trace(...args): ()
 }
 
 declare module process {

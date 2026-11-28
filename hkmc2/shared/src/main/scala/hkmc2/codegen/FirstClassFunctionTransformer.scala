@@ -40,7 +40,8 @@ class FirstClassFunctionTransformer
       callDef :: Nil, Nil, Nil, Assign.discard(
         // The parent is the JavaScript `Function` class, whose constructor is called without arguments.
         Call(State.builtinOpsMap("super").asSimpleRef, Nil :: Nil)(
-          ErasedFuncSignature.Signature(ErasedParamList(Nil, N) :: Nil, ErasedResult.Direct(N)), CallMetadata.defaultFun, N),
+          ErasedFuncSignature.Signature(ErasedParamList(Nil, N) :: Nil, ErasedResult.Direct(S(ErasedType.Unit))),
+          CallMetadata.defaultFun, N),
         End()), End(), None, None, None, methodKeys = Map.empty)(N, annotations = Nil)
 
   private def getParamList(l: BlockMemberSymbol): Option[LoweredParamList] = funDefns.get(l) match

@@ -23,7 +23,7 @@ fun main() =
 //│   return x
 //│ };
 //│ define main⁰ as fun main¹() {
-//│   let x, scrut, tmp;
+//│   let scrut, tmp;
 //│   block σ$x:
 //│     match 0
 //│       true =>
@@ -38,10 +38,9 @@ fun main() =
 //│     do Predef⁰.print⁰("hi");
 //│     set tmp = Predef⁰.print⁰("hi");
 //│     end
-//│   set x = (tmp as! Int⁰);
 //│   do Predef⁰.print⁰("bye");
 //│   do Predef⁰.print⁰("bye");
-//│   return foo$⁰(x)
+//│   return foo$⁰(tmp)
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

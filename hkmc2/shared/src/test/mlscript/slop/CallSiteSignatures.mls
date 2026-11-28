@@ -453,7 +453,7 @@ new Child(41).value
 //│   constructor Child²(start: Int⁰) {
 //│     let tmp1: Int⁰;
 //│     set tmp1 = +⁰‹(?, ?) => ?›(start, 1);
-//│     do super⁰‹(Int⁰) => ?›(tmp1);
+//│     do super⁰‹(Int⁰) => Unit⁰›(tmp1);
 //│     end;
 //│     @private
 //│     define start¹ as val start⁰: Int⁰ = start;
@@ -729,7 +729,7 @@ addThree(10)(12)(20)
 //│   private val a⁰: Int⁰;
 //│   private val b⁰: Int⁰;
 //│   constructor(a: Int⁰, b: Int⁰) {
-//│     do super⁰‹() => ?›();
+//│     do super⁰‹() => Unit⁰›();
 //│     end;
 //│     set Function$⁰.this.a⁰ = a;
 //│     set Function$⁰.this.b⁰ = b;
@@ -747,7 +747,7 @@ addThree(10)(12)(20)
 //│ define Function$1 as class Function$¹ extends globalThis⁰.Function⁰ {
 //│   private val a¹: Int⁰;
 //│   constructor(a: Int⁰) {
-//│     do super⁰‹() => ?›();
+//│     do super⁰‹() => Unit⁰›();
 //│     end;
 //│     set Function$¹.this.a¹ = a;
 //│     end

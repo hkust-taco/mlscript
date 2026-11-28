@@ -88,7 +88,7 @@ class ClassParamFlattener(using State) extends BlockTransformer(SymbolSubst.Id):
                 if sig.paramLists.forall(_.rest.isEmpty) then
                   ErasedFuncSignature.Signature(
                     ErasedParamList(sig.paramLists.flatMap(_.params), N) :: Nil, sig.result)
-                else ErasedFuncSignature.dynamic(1)
+                else ErasedFuncSignature.Signature(ErasedFuncSignature.dynamic(1).paramLists, sig.result)
               case sig => sig
             Call(r, flatArgss)(signature, c.metadata, c.toLoc)
     case call @ Call(fun, argss) =>

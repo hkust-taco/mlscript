@@ -87,7 +87,7 @@ fun f() =
 //│         return runtime.Unit
 //│       }
 //│     case 1:
-//│       runtime.resumeValue;
+//│       runtime.resumeValue /* as! Runtime.Unit */;
 //│       return j / i;
 //│   }
 //│ };

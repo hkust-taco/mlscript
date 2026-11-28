@@ -269,7 +269,7 @@ q()
 //│   define lambda as fun lambda³(b) {
 //│     return Predef⁰.print⁰(b)
 //│   };
-//│   return tmp.app⁴(lambda³)
+//│   return (tmp.app⁴(lambda³) as! Unit⁰)
 //│ };
 //│ return q¹()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
